@@ -1,0 +1,50 @@
+# proj_004: ドリフト項の非無視性・数値検証 — 実験 config (v2 仕様書準拠)
+# 出典記法: [D]=Dohare et al. Nature 2024 (+公式repo shibhansh/loss-of-plasticity で照合済み),
+#           [J]=Joudaki et al. ICLR 2026 Appendix B, [NEW]=本プロジェクト独自
+#
+# ==== 原典照合結果 (2026-08-09, 公式repo main ブランチ) ====
+# beta = 0.7            <- cfg/sgd/bp/relu.json "beta": 0.7 (FixLTUNet デフォルト 0.75 は上書きされる)
+# T 標準値 = 10000      <- cfg/sgd/bp/relu.json "flip_after": 10000
+# lr グリッド = [0.01, 0.003, 0.001]  <- cfg/sgd/bp/relu.json "step_size" (仕様書 v2 の 1e-4 は誤り、公式値を採用)
+# 学習器初期化: 入力層 kaiming_uniform_(nonlinearity='relu'), bias=0;
+#               出力層 kaiming_uniform_(nonlinearity='linear'), bias=0  <- lop/nets/ffnn.py
+# 入力は実装上 20 次元 (論文の「21番目の定数1ビット」は各層の bias 項として実現) <- lop/nets/fix_ltu_net.py
+# LTU 閾値: tau = beta*(m+1) - S, S = (m - sum(W) + b)/2 (バイアス重み込み) <- fix_ltu_net.py
+# flip 方式: 1ビット一様選択で反転 (flip_one=True 経路), 初期値 randint{0,1} <- slowly_changing_regression.py
+
+common:
+  total_steps: 1000000          # 1M デフォルト ([D] cfg/sgd は 1e6)
+  seeds: [0, 1, 2, 3, 4]        # 各条件 5 シード [J]
+  lr_main: 0.01                 # 主報告 [J]
+  device: auto                  # auto: cuda があれば cuda, スモークで CPU/GPU 速い方を選択
+  eval_batch: 2000              # LoP 計測用固定バッチ [J]
+  lop_every: 10000              # LoP メトリクス計測間隔 [NEW]
+  loss_bin: 1000                # オンライン損失の窓平均 [J]
+  checkpoints: [0, 10000, 50000, 100000, 300000, 1000000]  # 凍結測定チェックポイント [NEW]
+  freeze_min_periods: 50        # M = min(50*T, freeze_M_cap)
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7              # |活性| < tol [J]
+  dead_tau: 0.95                # サンプル割合閾値 [J]
+  dup_tau: 0.95                 # 活性コサイン閾値 [J]
+  sat_ratio_tol: 1.0e-4         # |勾配|/max(平均活性,eps) [J]
+  sat_frac: 0.99                # サンプル割合 [J]
+  sign_match_tau: 0.95          # 符号一致率のクローン判定閾値 [NEW]
+
+condA:                          # Slowly-Changing Regression [D]
+  m: 20                         # 入力ビット数 (バイアス除く) [D]
+  f: 15                         # flipping bits [D]
+  target_hidden: 100            # 教師 LTU 隠れユニット [D]
+  beta: 0.7                     # LTU 閾値パラメータ [D, 照合済]
+  T_values: [100, 1000, 10000, 100000]   # 10^4 が [D] 標準
+  widths: [5, 100]              # 5=[D] 標準, 100=[J] 幅スイープ最大
+  encodings: [std, centered]    # centered = オンライン中心化 (走行平均減算) [NEW]
+  center_alpha: 0.01            # 中心化 EMA 係数 (時定数 100 step) [NEW]
+  lr_grid: [0.003, 0.001]       # lr_main に追加するグリッド [D, 照合済]
+  lr_grid_condition: {width: 100, T: 10000, encoding: std}
+
+condB:                          # ガウス入力・教師切り替え [NEW]
+  d: 21                        # 入力次元 (条件Aの m+1 に揃える)
+  K_values: [100, 10000]        # 教師再サンプル周期
+  c_values: [0.0, 2.0]          # mu = c/sqrt(d) * 1
+  widths: [5, 100]
+  # 教師 = 学習器と同構造・同初期化則のランダム MLP (bias=0), K ごとに再サンプル
