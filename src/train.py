@@ -8,6 +8,7 @@ import time
 import csv
 import torch
 
+from .common import group_name
 from .envs import SCREnv, LTUTarget, GaussEnv, MLPTeacher
 from .nets import VecMLP
 from .lop_metrics import compute_lop_metrics
@@ -27,9 +28,9 @@ def make_gens(exp, width, device, offset=0):
 
 
 def setup_group(gkey, runs, cfg, device):
-    exp, width = gkey
+    exp, width, batch = gkey
     R = len(runs)
-    gens = make_gens(exp, width, device)
+    gens = make_gens(exp, width, device)   # batch を含めない -> batch 条件間で init/教師が一致
     A, B = cfg["condA"], cfg["condB"]
 
     period = torch.tensor([r["period"] for r in runs], dtype=torch.long)  # CPU
@@ -43,8 +44,17 @@ def setup_group(gkey, runs, cfg, device):
     else:
         d = B["d"]
         cvals = [r["c"] for r in runs]
-        env = GaussEnv(R, d, cvals, gens["input"], device)
+        kvals = [r.get("kappa", 1) for r in runs]
+        env = GaussEnv(R, d, cvals, gens["input"], device, kappa=kvals)
         teacher = MLPTeacher(R, width, d, period, gens["teacher"], device)
+
+    # batch: 1=オンライン SGD, 整数=iid ミニバッチ平均, "full"=フルバッチ GD
+    #   (A: 全サポート厳密列挙 / B: full_batch_B サンプル近似)
+    batch_n = None
+    if batch != 1 and batch != "full":
+        batch_n = int(batch)
+    elif batch == "full" and exp == "B":
+        batch_n = int(B.get("full_batch_B", 1024))
 
     net = VecMLP(R, width, d, gens["init"], device)
     running_mean = torch.zeros(R, d, device=device)
@@ -57,10 +67,11 @@ def setup_group(gkey, runs, cfg, device):
     else:
         eval_fixed = torch.randn(N, d, generator=gens["eval"], device=device)
 
-    return dict(exp=exp, width=width, R=R, d=d, env=env, teacher=teacher, net=net,
+    return dict(exp=exp, width=width, batch=batch, batch_n=batch_n, R=R, d=d,
+                env=env, teacher=teacher, net=net,
                 running_mean=running_mean, lr=lr, centered=centered, period=period,
                 eval_fixed=eval_fixed, runs=runs, device=device,
-                alpha=A["center_alpha"])
+                alpha=A["center_alpha"], gname=group_name(gkey))
 
 
 def eval_batch(st):
@@ -72,13 +83,14 @@ def eval_batch(st):
         rnd = st["eval_fixed"][:, None, :].expand(-1, st["R"], -1)        # [N,R,m-f]
         x = torch.cat([flip, rnd], dim=2)
     else:
-        x = st["env"].mu[None] + st["eval_fixed"][:, None, :]
+        # 異方 Sigma でも eval が入力分布と一致するよう z に Sigma^{1/2} を適用
+        x = st["env"].mu[None] + st["env"]._transform(st["eval_fixed"][:, None, :])
     y = st["teacher"](x)
     return x, y
 
 
 def save_ckpt(st, step, outdir):
-    path = os.path.join(outdir, "ckpts", f"{st['exp']}_w{st['width']}_step{step}.pt")
+    path = os.path.join(outdir, "ckpts", f"{st['gname']}_step{step}.pt")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     torch.save(dict(step=step,
                     net=st["net"].state_dict(),
@@ -101,6 +113,8 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
     loss_acc = torch.zeros(st["R"], device=device)
     t0 = time.time()
 
+    batch, batch_n = st["batch"], st["batch_n"]
+
     for t in range(total):
         if t in ckpt_set:
             save_ckpt(st, t, outdir)
@@ -108,18 +122,37 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
         if st["exp"] == "B":
             teacher.t = env.t
             teacher.maybe_resample()
-        x_raw = env.step()                                   # [R,d]
-        y = teacher(x_raw)                                   # [R]
 
-        x_in = x_raw - cmask * st["running_mean"]
-        st["running_mean"].mul_(1 - alpha).add_(alpha * x_raw)
+        if batch == 1:
+            x_raw = env.step()                               # [R,d]
+            y = teacher(x_raw)                               # [R]
 
-        pre, a, yhat = net.forward(x_in)
-        delta = yhat - y
-        gW, gb, gv, gc = net.grads(x_in, pre, a, delta)
-        net.sgd_step(lr, gW, gb, gv, gc)
+            x_in = x_raw - cmask * st["running_mean"]
+            st["running_mean"].mul_(1 - alpha).add_(alpha * x_raw)
 
-        loss_acc += delta ** 2
+            pre, a, yhat = net.forward(x_in)
+            delta = yhat - y
+            gW, gb, gv, gc = net.grads(x_in, pre, a, delta)
+            net.sgd_step(lr, gW, gb, gv, gc)
+
+            loss_acc += delta ** 2
+        else:
+            # ミニバッチ/フルバッチ: バッチ平均勾配で 1 ステップ更新
+            if batch == "full" and st["exp"] == "A":
+                x_raw = env.full_support()                   # [2^(m-f),R,d] 厳密列挙
+            else:
+                x_raw = env.step_batch(batch_n)              # [B,R,d]
+            y = teacher(x_raw)                               # [B,R]
+
+            x_in = x_raw - cmask[None] * st["running_mean"][None]
+            st["running_mean"].mul_(1 - alpha).add_(alpha * x_raw.mean(dim=0))
+
+            pre, a, yhat = net.forward_batch(x_in)
+            delta = yhat - y
+            gW, gb, gv, gc = net.grads_batch(x_in, pre, a, delta)
+            net.sgd_step(lr, gW.mean(0), gb.mean(0), gv.mean(0), gc.mean(0))
+
+            loss_acc += (delta ** 2).mean(dim=0)
         if (t + 1) % C["loss_bin"] == 0:
             loss_rows.append((t + 1, (loss_acc / C["loss_bin"]).cpu().numpy().copy()))
             loss_acc.zero_()
@@ -140,7 +173,7 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
 
 def write_logs(st, loss_rows, lop_rows, outdir):
     os.makedirs(outdir, exist_ok=True)
-    gname = f"{st['exp']}_w{st['width']}"
+    gname = st["gname"]
     ids = [r["run_id"] for r in st["runs"]]
 
     with open(os.path.join(outdir, f"online_loss_{gname}.csv"), "w", newline="") as fh:

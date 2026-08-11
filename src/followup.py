@@ -26,7 +26,7 @@ import time
 import numpy as np
 import torch
 
-from .common import load_config, pick_device, build_runs, group_runs
+from .common import load_config, pick_device, build_runs, group_runs, group_name
 from .freeze import SEG, _restore, _ema_toeplitz
 from .train import make_gens
 
@@ -65,7 +65,7 @@ def followup_measure(gkey, ckpt_path, cfg, device):
     ckpt = torch.load(ckpt_path, map_location=device, weights_only=False)
     step = ckpt["step"]
     runs, env, teacher, net, rm0, centered, period, d = _restore(gkey, ckpt, cfg, device)
-    exp, width = gkey
+    exp, width = gkey[0], gkey[1]
     R, h = len(runs), width
     alpha = cfg["condA"]["center_alpha"]
     cmask = centered[:, None].float()
@@ -162,18 +162,18 @@ def followup_measure(gkey, ckpt_path, cfg, device):
 
 
 def run_group(gkey, cfg, device, outdir, steps=None):
-    exp, width = gkey
+    gname = group_name(gkey)
     steps = steps if steps is not None else cfg["common"]["checkpoints"]
     done = []
     for step in steps:
-        p = os.path.join(outdir, "ckpts", f"{exp}_w{width}_step{step}.pt")
+        p = os.path.join(outdir, "ckpts", f"{gname}_step{step}.pt")
         if not os.path.exists(p):
             continue
         t0 = time.time()
         out = followup_measure(gkey, p, cfg, device)
-        dst = os.path.join(outdir, f"followup_Eg_{exp}_w{width}_step{step}.npz")
+        dst = os.path.join(outdir, f"followup_Eg_{gname}_step{step}.npz")
         np.savez_compressed(dst, **out)
-        print(f"    {exp}_w{width} step={step} -> {os.path.basename(dst)} "
+        print(f"    {gname} step={step} -> {os.path.basename(dst)} "
               f"({time.time()-t0:.1f}s)", flush=True)
         done.append(step)
     return done
@@ -194,7 +194,7 @@ def main():
 
     meta = {}
     for gkey in groups:
-        gname = f"{gkey[0]}_w{gkey[1]}"
+        gname = group_name(gkey)
         if args.groups and gname not in args.groups:
             continue
         print(f"=== followup measure {gname}", flush=True)

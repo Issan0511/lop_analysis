@@ -1,0 +1,46 @@
+# proj_004: 異方性 Sigma (スパイク型) 検証 — 条件B のみ
+# Sigma = I + (kappa-1) u u^T, u = 1/sqrt(d)*1 (mu と平行、mu = c/sqrt(d)*1)。
+# 予測: E[g] の入力層成分は Sigma mu = kappa*mu に比例して増幅されるため、
+# 凍結測定の cos_inter/cos_intra と snr_W が kappa とともに単調増加する。
+# kappa=1 は等方対照。学習は batch=1 の plain SGD (drift_0809 と同じ計測系)。
+#
+# lr: 主報告の 0.01 は kappa>=4, w=100 でスモーク段階から発散する
+#     (スパイク方向の入力分散が kappa 倍 -> 勾配も増幅) ため、公式 lr グリッドの
+#     {0.003, 0.001} を両方走らせる。20k ステップのスモークで両者とも全 kappa 安定を確認済み。
+
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4]
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 1000
+  checkpoints: [0, 10000, 50000, 100000, 300000, 1000000]
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:                          # 条件A は走らせない (widths 空)。center_alpha は共通処理が参照
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: []
+  widths: []
+  encodings: [std]
+  center_alpha: 0.01
+  lr_grid: []
+
+condB:
+  d: 21
+  K_values: [10000]
+  c_values: [2.0]
+  kappa_values: [1, 4, 16]      # スパイク強度 (1=等方対照)
+  lr_values: [0.003, 0.001]     # lr_main=0.01 は kappa>=4, w=100 で発散するため除外
+  widths: [5, 100]

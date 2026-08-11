@@ -50,6 +50,11 @@ def compute_lop_metrics(net, x_eval, y_eval, cfg):
         s2 = torch.linalg.svdvals(a_c.permute(1, 0, 2)) ** 2
         stable_rank = s2.sum(dim=1) ** 2 / (s2 ** 2).sum(dim=1).clamp_min(1e-24)
 
+        # --- 重み行ベクトルの pair |cos| 平均 ([NEW], Path B の整列時系列)
+        Wn = net.W / net.W.norm(dim=2, keepdim=True).clamp_min(1e-12)
+        wG = torch.einsum("rid,rjd->rij", Wn, Wn)        # [R,h,h]
+        wcos_mean = wG[:, iu[0], iu[1]].abs().mean(dim=1)
+
         # --- 符号一致率 ([NEW]): sign(w_i) と sign(w_j) の成分一致割合
         sgn = torch.sign(net.W)                          # [R,h,d]
         match = torch.einsum("rid,rjd->rij", sgn, sgn)   # 一致 d - 2*不一致
@@ -63,7 +68,7 @@ def compute_lop_metrics(net, x_eval, y_eval, cfg):
         eval_loss = (delta ** 2).mean(dim=0)
 
     out = dict(dead_frac=dead_frac, dup_frac=dup_frac, sat_frac=sat_frac,
-               eff_rank=eff_rank, stable_rank=stable_rank,
+               eff_rank=eff_rank, stable_rank=stable_rank, wcos_mean=wcos_mean,
                sign_match_mean=sign_match_mean, sign_clone_frac=sign_clone_frac,
                eval_loss=eval_loss)
     nan = torch.full_like(finite.float(), float("nan"))

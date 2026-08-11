@@ -19,7 +19,7 @@ import time
 import torch
 
 from .common import (ROOT, load_config, pick_device, build_runs, group_runs,
-                     config_title, resolve_outdir)
+                     group_name, config_title, resolve_outdir)
 from .train import train_group
 from .freeze import run_freeze_all
 
@@ -94,7 +94,7 @@ def main():
 
     t_start = time.time()
     for gkey, gruns in groups.items():
-        gname = f"{gkey[0]}_w{gkey[1]}"
+        gname = group_name(gkey)
         if sel and gname not in sel:
             continue
         print(f"=== train {gname}: R={len(gruns)} device={device}", flush=True)

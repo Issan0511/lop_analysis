@@ -18,6 +18,7 @@ import csv
 import math
 import torch
 
+from .common import group_name
 from .envs import SCREnv, LTUTarget, GaussEnv, MLPTeacher
 from .nets import VecMLP
 from .train import make_gens
@@ -26,7 +27,7 @@ SEG = 100  # セグメント長 = 全周期値の最大公約数
 
 
 def _restore(gkey, ckpt, cfg, device):
-    exp, width = gkey
+    exp, width = gkey[0], gkey[1]
     runs = ckpt["runs"]
     R = len(runs)
     A, B = cfg["condA"], cfg["condB"]
@@ -40,7 +41,8 @@ def _restore(gkey, ckpt, cfg, device):
     else:
         d = B["d"]
         cvals = [r["c"] for r in runs]
-        env = GaussEnv(R, d, cvals, gens["input"], device)
+        kvals = [r.get("kappa", 1) for r in runs]   # 旧 ckpt (kappa なし) は等方で復元
+        env = GaussEnv(R, d, cvals, gens["input"], device, kappa=kvals)
         teacher = MLPTeacher(R, width, d, period, gens["teacher"], device)
 
     # 状態復元 (教師 A は ckpt に完全保存されている; B は再サンプルで進むので状態から再開)
@@ -71,7 +73,7 @@ def freeze_measure(gkey, ckpt_path, cfg, device):
     ckpt = torch.load(ckpt_path, map_location=device, weights_only=False)
     step = ckpt["step"]
     runs, env, teacher, net, rm0, centered, period, d = _restore(gkey, ckpt, cfg, device)
-    exp, width = gkey
+    exp, width = gkey[0], gkey[1]
     R, h = len(runs), width
     alpha = cfg["condA"]["center_alpha"]
     cmask = centered[:, None].float()
@@ -180,11 +182,11 @@ def freeze_measure(gkey, ckpt_path, cfg, device):
 
 
 def run_freeze_all(gkey, cfg, device, outdir, ckpt_steps=None):
-    exp, width = gkey
+    gname = group_name(gkey)
     steps = ckpt_steps if ckpt_steps is not None else cfg["common"]["checkpoints"]
     g_all, n_all = [], []
     for step in steps:
-        p = os.path.join(outdir, "ckpts", f"{exp}_w{width}_step{step}.pt")
+        p = os.path.join(outdir, "ckpts", f"{gname}_step{step}.pt")
         if not os.path.exists(p):
             continue
         g, n = freeze_measure(gkey, p, cfg, device)
@@ -193,7 +195,7 @@ def run_freeze_all(gkey, cfg, device, outdir, ckpt_steps=None):
     for name, rows in [("freeze_global", g_all), ("freeze_neurons", n_all)]:
         if not rows:
             continue
-        path = os.path.join(outdir, f"{name}_{exp}_w{width}.csv")
+        path = os.path.join(outdir, f"{name}_{gname}.csv")
         with open(path, "w", newline="") as fh:
             w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
             w.writeheader()

@@ -38,6 +38,36 @@ C=configs/drift_0809.yaml; R=results/drift_0809
 
 この名前(`drift_0809` 等)は怪文書・レポート・Canvas で実験を参照するときにもそのまま使う。
 
+## 実験 2・3 (2026-08-12 追加): fullbatch_0812 / aniso_0812
+
+**`configs/fullbatch_0812.yaml`** — full-batch GD vs mini-batch SGD(SDE の Drift/Diffusion 分離)。
+仮説: ノイズ(Diffusion 項)が Path A(dead unit 化)を生み、ドリフト E[g] が Path B
+(低ランク整列)を生む → full-batch では dead が消え、整列と可塑性喪失は残る。
+
+- config の `batch_values` で系列ごとのバッチを指定: `1`(従来のオンライン SGD)、
+  整数 B(毎ステップ iid B サンプルの平均勾配、ノイズ分散 1/B)、`full`(フルバッチ GD)。
+- `full` の意味 — 条件A: flip_state 固定下の全サポート 2^(m−f)=32 パターンの**厳密平均勾配**
+  (乱数を消費しない、ノイズ厳密ゼロ)。B=32(iid)との比較が「同サイズ・ノイズ有無」の対照。
+  条件B: 毎ステップ fresh な `full_batch_B`(=1024)サンプルによる期待勾配の MC 近似。
+- グループは (exp, width, batch) 単位(`A_w100_bfull` 等)。batch=1 のグループ名・run_id は
+  従来と同一(drift_0809 の成果物・再解析スクリプトと互換)。
+- シードは (exp, width) 単位のまま → **batch 条件間で学習器初期化と教師系列が一致**する
+  matched 比較。ただし入力乱数の消費数が batch で異なるため flip 選択・入力実現値は分岐する。
+- 凍結測定(E[g], SNR)は従来どおり batch=1 のサンプル勾配定義 → 学習バッチによらず比較可能。
+- 図: `python -m src.figures_fullbatch results/fullbatch_0812`
+- 計算量: 大バッチグループは GPU が速い(スモーク実測 CPU で `B_w100_bfull` 58 steps/s
+  → 1M steps ≈ 5h。他グループは CPU で十分)。
+
+**`configs/aniso_0812.yaml`** — スパイク型異方共分散 Σ = I + (κ−1)uu^T(条件B のみ)。
+
+- u = 1/√d·**1**(µ と平行)。x = µ + z + (√κ−1)(uᵀz)u、つまり Σ^{1/2} = I + (√κ−1)uu^T。
+  `kappa_values: [1, 4, 16]`(κ=1 が等方対照)。予測: E[g] の入力層成分 ∝ Σµ = κµ →
+  cos_inter/cos_intra と snr_W が κ とともに増加。
+- κ=1 は旧 GaussEnv と**乱数消費含め bit 一致**(検証済み)。eval バッチも同じ Σ^{1/2} を適用。
+- lr は `lr_values: [0.003, 0.001]`(lr=0.01 は κ≥4, w=100 でスモーク段階から発散。
+  スパイク方向の入力分散が κ 倍になるため。0.003/0.001 は 20k step スモークで全 κ 安定)。
+- 図: `python -m src.figures_aniso results/aniso_0812`
+
 ## 原典照合の結果 (configs/drift_0809.yaml にも記載)
 
 公式リポジトリ `shibhansh/loss-of-plasticity`(main, 2026-08-09 取得)で照合:

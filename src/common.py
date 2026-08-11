@@ -33,41 +33,58 @@ def pick_device(cfg):
 
 
 def build_runs(cfg):
-    """全 run (条件×シード) の平坦リストを返す。各 run は dict。"""
+    """全 run (条件×シード) の平坦リストを返す。各 run は dict。
+
+    batch_values (default [1]): ミニバッチサイズ。1=従来のオンライン SGD、
+      整数 B=iid B サンプル平均勾配、"full"=フルバッチ GD
+      (条件A: 2^(m-f) パターン厳密列挙 / 条件B: full_batch_B サンプル近似)。
+    kappa_values (条件B, default [1]): スパイク共分散 Sigma = I + (kappa-1)uu^T。"""
     runs = []
     A, B, C = cfg["condA"], cfg["condB"], cfg["common"]
     lr0 = C["lr_main"]
-    for width in A["widths"]:
-        for T in A["T_values"]:
+    for width in A.get("widths", []):
+        for T in A.get("T_values", []):
             for enc in A["encodings"]:
-                for seed in C["seeds"]:
-                    runs.append(dict(exp="A", width=width, period=T, enc=enc,
-                                     c=None, lr=lr0, seed=seed))
-    gc_ = A["lr_grid_condition"]
-    for lr in A["lr_grid"]:
+                for batch in A.get("batch_values", [1]):
+                    for seed in C["seeds"]:
+                        runs.append(dict(exp="A", width=width, period=T, enc=enc,
+                                         c=None, kappa=1, lr=lr0, batch=batch, seed=seed))
+    gc_ = A.get("lr_grid_condition")
+    for lr in A.get("lr_grid", []):
         for seed in C["seeds"]:
             runs.append(dict(exp="A", width=gc_["width"], period=gc_["T"],
-                             enc=gc_["encoding"], c=None, lr=lr, seed=seed))
-    for width in B["widths"]:
-        for K in B["K_values"]:
-            for c in B["c_values"]:
-                for seed in C["seeds"]:
-                    runs.append(dict(exp="B", width=width, period=K, enc="std",
-                                     c=c, lr=lr0, seed=seed))
+                             enc=gc_["encoding"], c=None, kappa=1, lr=lr, batch=1, seed=seed))
+    for width in B.get("widths", []):
+        for K in B.get("K_values", []):
+            for c in B.get("c_values", []):
+                for kappa in B.get("kappa_values", [1]):
+                    for batch in B.get("batch_values", [1]):
+                        for lr in B.get("lr_values", [lr0]):
+                            for seed in C["seeds"]:
+                                runs.append(dict(exp="B", width=width, period=K, enc="std",
+                                                 c=c, kappa=kappa, lr=lr, batch=batch, seed=seed))
     for r in runs:
         r["run_id"] = run_id(r)
     return runs
 
 
 def run_id(r):
+    b = f"_b{r.get('batch', 1)}" if r.get("batch", 1) != 1 else ""
     if r["exp"] == "A":
-        return f"A_w{r['width']}_T{r['period']}_{r['enc']}_lr{r['lr']}_s{r['seed']}"
-    return f"B_w{r['width']}_K{r['period']}_c{r['c']}_lr{r['lr']}_s{r['seed']}"
+        return f"A_w{r['width']}_T{r['period']}_{r['enc']}_lr{r['lr']}{b}_s{r['seed']}"
+    k = f"_k{r.get('kappa', 1)}" if r.get("kappa", 1) != 1 else ""
+    return f"B_w{r['width']}_K{r['period']}_c{r['c']}{k}_lr{r['lr']}{b}_s{r['seed']}"
 
 
 def group_runs(runs):
-    """(exp, width) ごとにグループ化。グループ内は R 次元でベクトル化して学習する。"""
+    """(exp, width, batch) ごとにグループ化。グループ内は R 次元でベクトル化して学習する。"""
     groups = {}
     for r in runs:
-        groups.setdefault((r["exp"], r["width"]), []).append(r)
+        groups.setdefault((r["exp"], r["width"], r.get("batch", 1)), []).append(r)
     return groups
+
+
+def group_name(gkey):
+    """グループ名。batch=1 は従来どおり A_w5 等 (drift_0809 の成果物と互換)。"""
+    exp, width, batch = gkey
+    return f"{exp}_w{width}" + (f"_b{batch}" if batch != 1 else "")

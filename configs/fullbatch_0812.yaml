@@ -1,0 +1,50 @@
+# proj_004: full-batch GD vs mini-batch SGD 比較 — SDE の Drift/Diffusion 項分離検証
+# 仮説 (先生仕様 2026-08-12): ノイズ (Diffusion 項 sqrt(C(w))) が Path A (dead unit 化) を生み、
+# ドリフト (E[g]) が Path B (低ランク整列) を生む。full-batch GD では dead unit がほぼ消失するが、
+# 整列と可塑性喪失は残るはず。
+#
+# batch の意味 (src/common.py build_runs 参照):
+#   1     = 従来のオンライン SGD ([D] 準拠、drift_0809 と同一パス)
+#   32/128 = iid ミニバッチ平均勾配 (ノイズ分散 1/B)
+#   full  = フルバッチ GD。条件A: flip_state 固定下の全サポート 2^(m-f)=32 パターンの
+#           厳密平均勾配 (ノイズ厳密ゼロ)。B=32 (iid) と full (同サイズ・ノイズゼロ) が対照。
+#           条件B: 毎ステップ fresh な full_batch_B=1024 サンプルで期待勾配を近似。
+# シードは (exp, width) 単位なので batch 条件間で学習器初期化・教師系列は一致 (matched 比較)。
+
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4]
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 1000
+  checkpoints: [0, 10000, 50000, 100000, 300000, 1000000]
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:                          # Slowly-Changing Regression [D], T=1e4 標準のみ
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: [5, 100]
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [1, 32, 128, full]
+  lr_grid: []                   # lr スイープなし (lr_main=0.01 のみ)
+
+condB:                          # ガウス入力・教師切り替え [NEW], K=1e4 のみ
+  d: 21
+  K_values: [10000]
+  c_values: [0.0, 2.0]
+  widths: [5, 100]
+  batch_values: [1, 32, 128, full]
+  full_batch_B: 1024            # 条件B の "full" のバッチサイズ (期待勾配のMC近似)

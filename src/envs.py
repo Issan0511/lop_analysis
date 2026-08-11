@@ -45,6 +45,9 @@ class SCREnv:
         self.T = T                          # [R] long (CPU tensor)
         self.gen, self.device = gen, device
         self.flip_state = torch.randint(0, 2, (R, f), generator=gen, device=device).float()
+        # ランダムビット部の全サポート列挙 [2^(m-f), m-f] (full-batch GD 用)
+        self.patterns = ((torch.arange(2 ** (m - f), device=device)[:, None]
+                          >> torch.arange(m - f, device=device)) & 1).float()
         self.t = 0
 
     def state_dict(self):
@@ -70,6 +73,25 @@ class SCREnv:
                             generator=self.gen, device=self.device).float()
         self.t += 1
         return torch.cat([self.flip_state, rnd], dim=1)
+
+    def step_batch(self, B):
+        """1 ステップ分の iid ミニバッチ [B, R, m] (flip 処理は 1 ステップ分)。"""
+        self.maybe_flip()
+        rnd = torch.randint(0, 2, (B, self.R, self.m - self.f),
+                            generator=self.gen, device=self.device).float()
+        self.t += 1
+        flip = self.flip_state.unsqueeze(0).expand(B, -1, -1)
+        return torch.cat([flip, rnd], dim=2)
+
+    def full_support(self):
+        """現在の flip_state 下の入力分布の全サポート [2^(m-f), R, m] (一様重み)。
+        乱数を消費しない厳密フルバッチ (flip 選択のみ gen を使う)。"""
+        self.maybe_flip()
+        self.t += 1
+        P = self.patterns.shape[0]
+        flip = self.flip_state.unsqueeze(0).expand(P, -1, -1)
+        rnd = self.patterns[:, None, :].expand(-1, self.R, -1)
+        return torch.cat([flip, rnd], dim=2)
 
     def segment(self, C):
         """C ステップ分をまとめて生成 [C,R,m]。セグメント内に周期境界が無いことが前提
@@ -131,12 +153,23 @@ class MLPTeacher:
 
 
 class GaussEnv:
-    """x = mu + z, z ~ N(0, I_d), mu = c/sqrt(d) * 1 (系列別 c)。"""
+    """x = mu + Sigma^{1/2} z, z ~ N(0, I_d), mu = c/sqrt(d) * 1 (系列別 c)。
 
-    def __init__(self, R, d, c, gen, device):
+    Sigma = I + (kappa-1) u u^T (スパイク型, u = 1/sqrt(d) * 1, mu と平行) [NEW]。
+    Sigma^{1/2} = I + (sqrt(kappa)-1) u u^T なので行列平方根は不要。
+    kappa=None または全て 1 なら等方 (従来と乱数消費含め bit 一致)。"""
+
+    def __init__(self, R, d, c, gen, device, kappa=None):
         self.R, self.d = R, d
         self.mu = (torch.as_tensor(c, device=device).float() / math.sqrt(d)).unsqueeze(1) \
             .expand(R, d).contiguous()     # [R,d]
+        self.u = torch.full((d,), 1.0 / math.sqrt(d), device=device)
+        self.sk = None                     # sqrt(kappa) - 1 [R], None なら等方
+        if kappa is not None:
+            k = torch.as_tensor(kappa, device=device).float()
+            sk = k.expand(R).sqrt() - 1.0
+            if bool((sk != 0).any()):
+                self.sk = sk.contiguous()
         self.gen, self.device = gen, device
         self.t = 0
 
@@ -146,11 +179,24 @@ class GaussEnv:
     def load_state(self, s):
         self.t = s["t"]
 
+    def _transform(self, z):
+        """z [..., R, d] -> Sigma^{1/2} z = z + (sqrt(kappa)-1)(u^T z) u。"""
+        if self.sk is None:
+            return z
+        proj = torch.einsum("...rd,d->...r", z, self.u)
+        return z + (self.sk * proj)[..., None] * self.u
+
     def step(self):
         self.t += 1
-        return self.mu + torch.randn(self.R, self.d, generator=self.gen, device=self.device)
+        z = torch.randn(self.R, self.d, generator=self.gen, device=self.device)
+        return self.mu + self._transform(z)
+
+    def step_batch(self, B):
+        self.t += 1
+        z = torch.randn(B, self.R, self.d, generator=self.gen, device=self.device)
+        return self.mu.unsqueeze(0) + self._transform(z)
 
     def segment(self, C):
         z = torch.randn(C, self.R, self.d, generator=self.gen, device=self.device)
         self.t += C
-        return self.mu.unsqueeze(0) + z
+        return self.mu.unsqueeze(0) + self._transform(z)
