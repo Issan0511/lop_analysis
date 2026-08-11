@@ -1,0 +1,47 @@
+# proj_004: mu 符号反転スイープ — gamma(1次項) がアーティファクトか力学かの判別
+# mu_sweep_norm_0811 と同一設定のまま c_values を ±対称に拡張しただけ。
+#   env は mu = c/sqrt(d) * 1 (src/envs.py) なので c<0 は mu の向きの反転。||mu||^2 = c^2 は不変。
+# 判別 (P4): invD(-c) == invD(+c) なら gamma はアーティファクト確定。
+#            破れていれば mu 符号に対する対称性仮定の棄却。
+# 正負を同一バッチに入れてあるため、両符号は同じコードパス・同じ seed 集合で走る。
+# 実行 (GPU): python3 -m src.run_all --config configs/mu_sweep_norm_signed_0812.yaml --skip-freeze
+# 解析:       python3 -m src.mu_sweep_norm_analysis results/mu_sweep_norm_signed_0812
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]   # 12 replicas / cell (0811 と同一)
+  lr_main: 0.01
+  device: auto                                     # GPU があれば cuda
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 1000
+  checkpoints: [0, 1000000]                        # freeze しないため最初と最後のみ
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:                                             # ダミー: 条件 A は走らせない
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: []
+  encodings: [std]
+  center_alpha: 0.01
+  lr_grid: []
+  lr_grid_condition: {width: 100, T: 10000, encoding: std}
+
+condB:
+  d: 21
+  K_values: [10000]
+  # 0811 の [0.0 .. 2.0] を ±対称に。||mu||^2 = c^2 は ±c で共通。
+  c_values: [-2.0, -1.5, -1.25, -1.0, -0.75, -0.5, -0.25,
+             0.0,
+             0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+  widths: [100]
+  norm_modes: [free, fixed]                        # R = 15c × 12seed × 2arm = 360
