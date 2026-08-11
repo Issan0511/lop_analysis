@@ -97,6 +97,15 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
     alpha, centered, lr = st["alpha"], st["centered"], st["lr"]
     cmask = centered[:, None].float()
 
+    # [NEW norm_sweep] norm=fixed の run は毎ステップ後に W の各行を初期ノルムへ再射影
+    # (球面上の SDE の直接離散化。b, v, c は両アームとも自由。SDEノート 8/10 問題③対策)
+    fixmask = torch.tensor([r.get("norm", "free") == "fixed" for r in runs],
+                           device=device)
+    fix_any = bool(fixmask.any())
+    if fix_any:
+        w0norm = net.W.norm(dim=2).clone()               # [R,h] 初期ノルム (凍結目標)
+        fmask = fixmask[:, None].float()                  # [R,1]
+
     loss_rows, lop_rows = [], []
     loss_acc = torch.zeros(st["R"], device=device)
     t0 = time.time()
@@ -118,6 +127,9 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
         delta = yhat - y
         gW, gb, gv, gc = net.grads(x_in, pre, a, delta)
         net.sgd_step(lr, gW, gb, gv, gc)
+        if fix_any:
+            cur = net.W.norm(dim=2).clamp_min(1e-12)
+            net.W.mul_((1.0 + fmask * (w0norm / cur - 1.0))[:, :, None])
 
         loss_acc += delta ** 2
         if (t + 1) % C["loss_bin"] == 0:

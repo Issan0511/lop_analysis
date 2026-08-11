@@ -59,12 +59,40 @@ def compute_lop_metrics(net, x_eval, y_eval, cfg):
         sign_match_mean = pair_match.mean(dim=1)
         sign_clone_frac = (pair_match >= C["sign_match_tau"]).float().mean(dim=1)
 
+        # --- [NEW mu_sweep] 重み方向の多様性 D (W の行方向。E[g] ではない点に注意)
+        Wn = net.W / net.W.norm(dim=2, keepdim=True).clamp_min(1e-12)   # u_i [R,h,d]
+        ubar_all = Wn.mean(dim=1)                                        # [R,d]
+        w_D_all = 1.0 - (ubar_all ** 2).sum(dim=1)                       # D = 1 - ||ubar||^2
+        alive = ~dead_i                                                  # [R,h]
+        n_alive = alive.float().sum(dim=1)                               # [R]
+        ubar_al = (Wn * alive.float().unsqueeze(2)).sum(dim=1) / n_alive.clamp_min(1).unsqueeze(1)
+        w_D_alive = torch.where(n_alive >= 2, 1.0 - (ubar_al ** 2).sum(dim=1),
+                                torch.full_like(n_alive, float("nan")))
+        Gu = torch.einsum("rid,rjd->rij", Wn, Wn)
+        w_paircos_all = Gu[:, iu[0], iu[1]].mean(dim=1)                  # 符号付き平均 pairwise cos
+        # [NEW norm_sweep] 生存ユニット限定 pairwise cos (D_alive とは独立経路で計算し、
+        # 恒等式 D = (1-1/n)(1-cbar) の数値確認に使う)
+        Am = alive.float()
+        pairmask_al = Am[:, :, None] * Am[:, None, :]
+        sumG_al = (Gu * pairmask_al).sum(dim=(1, 2))                     # 対角込み (対角和 = n_alive)
+        npairs_al = (n_alive * (n_alive - 1.0)).clamp_min(1.0)
+        w_paircos_alive = torch.where(n_alive >= 2, (sumG_al - n_alive) / npairs_al,
+                                      torch.full_like(n_alive, float("nan")))
+        rnorm = net.W.norm(dim=2)                                        # [R,h]
+        w_rnorm_mean = rnorm.mean(dim=1)
+        w_rnorm_alive = torch.where(n_alive >= 1,
+                                    (rnorm * alive.float()).sum(dim=1) / n_alive.clamp_min(1),
+                                    torch.full_like(n_alive, float("nan")))
+
         # eval バッチ上の損失 (公式同様 (yhat-y)^2 平均)
         eval_loss = (delta ** 2).mean(dim=0)
 
     out = dict(dead_frac=dead_frac, dup_frac=dup_frac, sat_frac=sat_frac,
                eff_rank=eff_rank, stable_rank=stable_rank,
                sign_match_mean=sign_match_mean, sign_clone_frac=sign_clone_frac,
-               eval_loss=eval_loss)
+               eval_loss=eval_loss,
+               w_D_all=w_D_all, w_D_alive=w_D_alive, n_alive=n_alive,
+               w_paircos_all=w_paircos_all, w_paircos_alive=w_paircos_alive,
+               w_rnorm_mean=w_rnorm_mean, w_rnorm_alive=w_rnorm_alive)
     nan = torch.full_like(finite.float(), float("nan"))
     return {k: torch.where(finite, v.float(), nan) for k, v in out.items()}

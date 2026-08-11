@@ -1,0 +1,37 @@
+# proj_004: mu 強度スイープ — 1/D* の ||mu||^2 直線性検証 (SDEノート 2026-08-10 の予測)
+# 予測: 1/D* = 2*lambda_align/sigma^2 + (2*kappa/sigma^2) * ||mu||^2,  ||mu|| = c
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7]     # 8 replicas / c
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 1000
+  checkpoints: [0, 1000000]           # ckpt は最初と最後のみ (freeze しないため)
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:                                # ダミー: widths/lr_grid を空にして条件Aは走らせない
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: []
+  encodings: [std]
+  center_alpha: 0.01
+  lr_grid: []
+  lr_grid_condition: {width: 100, T: 10000, encoding: std}
+
+condB:
+  d: 21
+  K_values: [10000]
+  c_values: [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0]   # ||mu||^2 = 0 〜 4
+  widths: [100]

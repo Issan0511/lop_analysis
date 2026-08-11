@@ -1,0 +1,44 @@
+# proj_004: mu 強度 × ノルム固定スイープ — SDEノート 2026-08-10「検証可能な予測」の検証
+# 予測 (P1): 1/D* を ||mu||^2 = c^2 に対してプロットすると直線 (1/D* = alpha + beta*||mu||^2)
+# 予測 (P2): 縦軸 D は pairwise cos cbar から D = (1-1/n)(1-cbar) で読める (恒等式の数値確認)
+# 問題③対策 (P3): ||w|| が交絡するため、W 行ノルムを初期値に毎ステップ再射影する
+#   norm=fixed アームを主判定に使う。free アームは従来動力学 (rnorm 共変量つき二次解析)。
+#   バイアス b と出力層 v, c は両アームとも自由。
+# 実行 (GPU): python3 -m src.run_all --config configs/mu_sweep_norm_0811.yaml --skip-freeze
+# 解析:       python3 -m src.mu_sweep_norm_analysis results/mu_sweep_norm_0811
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]   # 12 replicas / cell (gamma CI の検出力向上)
+  lr_main: 0.01
+  device: auto                                     # GPU があれば cuda
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 1000
+  checkpoints: [0, 1000000]                        # freeze しないため最初と最後のみ
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:                                             # ダミー: 条件 A は走らせない
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: []
+  encodings: [std]
+  center_alpha: 0.01
+  lr_grid: []
+  lr_grid_condition: {width: 100, T: 10000, encoding: std}
+
+condB:
+  d: 21
+  K_values: [10000]
+  c_values: [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0]   # ||mu||^2 = 0 〜 4
+  widths: [100]
+  norm_modes: [free, fixed]                        # R = 8c × 12seed × 2arm = 192

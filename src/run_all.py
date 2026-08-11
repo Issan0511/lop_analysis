@@ -47,6 +47,8 @@ def main():
     ap.add_argument("--device", default=None)
     ap.add_argument("--outdir", default=None, help="出力先の明示指定 (通常は不要)")
     ap.add_argument("--steps", type=int, default=None)
+    ap.add_argument("--skip-freeze", action="store_true",
+                    help="学習後の凍結測定 (E[g] 測定) をスキップ。D 計測のみの実験用")
     args = ap.parse_args()
 
     cfg = load_config(args.config)
@@ -103,9 +105,12 @@ def main():
                                   total_steps=total_steps, ckpts=ckpts)
         print(f"    train done in {elapsed:.1f}s "
               f"({(total_steps or cfg['common']['total_steps'])/elapsed:.0f} steps/s)", flush=True)
-        ng, nn = run_freeze_all(gkey, cfg, device, outdir, ckpt_steps=ckpts)
-        print(f"    freeze done: {ng} global rows, {nn} neuron rows "
-              f"(+{time.time()-t0-elapsed:.1f}s)", flush=True)
+        if args.skip_freeze:
+            print("    freeze skipped (--skip-freeze)", flush=True)
+        else:
+            ng, nn = run_freeze_all(gkey, cfg, device, outdir, ckpt_steps=ckpts)
+            print(f"    freeze done: {ng} global rows, {nn} neuron rows "
+                  f"(+{time.time()-t0-elapsed:.1f}s)", flush=True)
 
     meta["elapsed_sec"] = round(time.time() - t_start, 1)
     write_meta(outdir, meta)

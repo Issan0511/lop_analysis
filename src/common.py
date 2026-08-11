@@ -42,18 +42,19 @@ def build_runs(cfg):
             for enc in A["encodings"]:
                 for seed in C["seeds"]:
                     runs.append(dict(exp="A", width=width, period=T, enc=enc,
-                                     c=None, lr=lr0, seed=seed))
+                                     c=None, lr=lr0, seed=seed, norm="free"))
     gc_ = A["lr_grid_condition"]
     for lr in A["lr_grid"]:
         for seed in C["seeds"]:
             runs.append(dict(exp="A", width=gc_["width"], period=gc_["T"],
-                             enc=gc_["encoding"], c=None, lr=lr, seed=seed))
+                             enc=gc_["encoding"], c=None, lr=lr, seed=seed, norm="free"))
     for width in B["widths"]:
         for K in B["K_values"]:
             for c in B["c_values"]:
-                for seed in C["seeds"]:
-                    runs.append(dict(exp="B", width=width, period=K, enc="std",
-                                     c=c, lr=lr0, seed=seed))
+                for nm in B.get("norm_modes", ["free"]):
+                    for seed in C["seeds"]:
+                        runs.append(dict(exp="B", width=width, period=K, enc="std",
+                                         c=c, lr=lr0, seed=seed, norm=nm))
     for r in runs:
         r["run_id"] = run_id(r)
     return runs
@@ -62,7 +63,8 @@ def build_runs(cfg):
 def run_id(r):
     if r["exp"] == "A":
         return f"A_w{r['width']}_T{r['period']}_{r['enc']}_lr{r['lr']}_s{r['seed']}"
-    return f"B_w{r['width']}_K{r['period']}_c{r['c']}_lr{r['lr']}_s{r['seed']}"
+    tag = "" if r.get("norm", "free") == "free" else "_nfix"
+    return f"B_w{r['width']}_K{r['period']}_c{r['c']}_lr{r['lr']}_s{r['seed']}{tag}"
 
 
 def group_runs(runs):
