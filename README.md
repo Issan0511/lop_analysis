@@ -12,13 +12,33 @@
 python3 -m venv .venv
 .venv/bin/pip install torch numpy matplotlib pyyaml pandas \
     --index-url https://download.pytorch.org/whl/cu128 --extra-index-url https://pypi.org/simple
-.venv/bin/python -m src.run_all --device cpu   # フル実行 (~1時間, CPU の方が速い: 行列が小さい)
-.venv/bin/python -m src.make_figures           # figures/ に図 1-7 を生成
+
+C=configs/drift_0809.yaml; R=results/drift_0809
+
+.venv/bin/python -m src.run_all --config $C --device cpu  # フル実行 (~35分, CPU の方が速い: 行列が小さい)
+.venv/bin/python -m src.make_figures $R                   # $R/figures/ に図 1-7 を生成
+
+# フォローアップ (Part A / task_074) — 再学習不要、既存 $R/ckpts/*.pt から測定
+.venv/bin/python -m src.followup $R                       # 拡張凍結測定 -> $R/followup_Eg_*.npz (~20分)
+.venv/bin/python -m src.followup_analysis $R              # A1/A2/A4/A5/A6 の CSV と図
 ```
 
-スモークテスト(数十秒): `.venv/bin/python -m src.run_all --smoke`
+スモークテスト(数秒): `.venv/bin/python -m src.run_all --config $C --smoke`
+(出力は常に `results/_smoke/`。捨てる前提なので `.gitignore` 済み)
 
-## 原典照合の結果 (config.yaml にも記載)
+## 実験の追加方法
+
+**コードを触らず config を1枚足すだけ**で新しい実験を定義する。
+
+1. `configs/<短いタイトル>_<月日>.yaml` を作る(例: `configs/resid_cos_0820.yaml`)。
+   タイトルは英小文字スネークケース2語以内、月日は実行日。同日に取り直したら末尾に `_b` `_c`。
+2. `python -m src.run_all --config configs/resid_cos_0820.yaml` を走らせる。
+   出力先 `results/resid_cos_0820/` は **config のファイル名から自動決定**される。
+3. 図も CSV もその中に出る。図がどの実行のものかは path で確定するので上書き事故が起きない。
+
+この名前(`drift_0809` 等)は怪文書・レポート・Canvas で実験を参照するときにもそのまま使う。
+
+## 原典照合の結果 (configs/drift_0809.yaml にも記載)
 
 公式リポジトリ `shibhansh/loss-of-plasticity`(main, 2026-08-09 取得)で照合:
 
@@ -37,6 +57,11 @@ python3 -m venv .venv
 
 - **オンライン中心化** (enc=centered): 学習器入力から生入力の EMA(α=0.01, 時定数 100 step)を
   減算。教師は生入力を見る(中心化は学習器側の介入)。減算に使う平均は前ステップまでの値。
+  - **A3 確認結果 (2026-08-09)**: 中心化条件でも教師 (LTU / MLP) に渡すのは生の {0,1} 入力で、
+    µ̂ の減算は学習器入力にしか掛かっていない (`train.py:111-115` の `y = teacher(x_raw)` /
+    `x_in = x_raw - cmask * running_mean`、凍結測定も `freeze.py:99-107` で同じ、eval バッチも
+    `train.py:128-130` で同じ)。**タスクは不変で、eval_loss の改善は介入効果と解釈してよい。
+    再走は不要。**
 - **凍結測定** (`src/freeze.py`): 周期境界(全 T, K は 100 の倍数)でセグメントを切り、
   セグメント内は時間方向に完全ベクトル化した閉形式勾配で積算。中心化系列の EMA は
   下三角 Toeplitz 行列で逐次値を厳密再現(逐次実装と一致することをテスト済み、誤差 ~1e-6)。
@@ -55,13 +80,41 @@ python3 -m venv .venv
 
 ## ディレクトリ
 
-- `config.yaml` — 全パラメータ+出典コメント
-- `src/` — `envs.py`(SCR / ガウス環境・教師)、`nets.py`(閉形式勾配の学習器)、
+```
+configs/
+  drift_0809.yaml            全パラメータ+出典コメント (実験1つにつき1枚)
+src/                         コード (実験に依存しない)
+results/
+  drift_0809/                実験ディレクトリ = 出力の単位
+    config_used.yaml         実行時の config の実体コピー
+    meta.json                title / date / git_hash / device / smoke / elapsed_sec
+    runs.csv                 130 系列の一覧
+    online_loss_*.csv  lop_metrics_*.csv  freeze_global_*.csv  freeze_neurons_*.csv
+    followup_A*.csv          Part A の集計
+    followup_Eg_*.npz        Ê[g] の生テンソル
+    ckpts/                   .pt (gitignore)
+    figures/                 図 1–7 と Part A の fig_a1〜fig_a6
+  _smoke/                    --smoke の出力先 (gitignore, 上書き前提)
+```
+
+- `src/` の内訳 — `envs.py`(SCR / ガウス環境・教師)、`nets.py`(閉形式勾配の学習器)、
   `train.py`(学習ループ)、`freeze.py`(凍結測定 M1–M4)、`lop_metrics.py`(LoP 症状)、
-  `run_all.py`(CLI)、`make_figures.py`(図 1–7)
-- `results/` — CSV(`runs.csv`, `online_loss_*`, `lop_metrics_*`, `freeze_global_*`,
-  `freeze_neurons_*`)、`config_used.yaml`、`meta.json`(git hash, デバイス)、`ckpts/`
-- `figures/` — 仕様書 §6 の図 1–7
+  `run_all.py`(CLI)、`make_figures.py`(図 1–7)、
+  `followup.py`(Part A の拡張凍結測定)、`followup_analysis.py`(A1/A2/A4/A5/A6)
+- CSV も図も git に commit して残す。どちらも小さく、共有と再現性の証拠になる
+- `meta.json` の `git_hash` で「この図を出したコードの状態」が一意に復元できる
+- 実行環境(CPU/GPU、smoke か否か)はディレクトリ名ではなく `meta.json` のフィールドで表す
+
+## Part A 追加解析の CSV スキーマ
+
+- `followup_A1_pairwise.csv`: run_id, ckpt, `pcos_*`(生の符号付き pairwise cos),
+  `vpcos_*`(sign(v_i)sign(v_j) 補正版), `vpcos_perp_alive_mean`(µ̂ 成分を抜いた残差),
+  `eig1_frac*`(単位化 Ê[g_i] の Gram 最大固有値/h = 共線性), `n_alive`, `finite`
+- `followup_A1_hist.csv`: 条件×ckpt×kind(raw/vsigned) の 40 ビンヒストグラム(alive のみ)
+- `followup_A2_deadcross.csv`: cos 符号(step 1e4)× dead(step 1e6) の分割表
+- `followup_A4_ckptcos.csv`: 連続 ckpt 間の cos。`cos_null` は「別 run と組ませた」対照
+- `followup_A5_period.csv`: `ratio` = ‖Ê[g]‖/mean_τ‖ḡ_τ‖ と非整合予測 `ratio_pred` = 1/√n
+- `followup_A6_splithalf.csv`: 同一サンプル版と split-half 版の |cos|、`cos_chance` = √(2/πd)
 
 ## CSV スキーマ(抜粋)
 

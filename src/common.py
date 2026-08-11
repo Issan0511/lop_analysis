@@ -6,9 +6,23 @@ import torch
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def load_config(path=None):
-    with open(path or os.path.join(ROOT, "config.yaml")) as f:
+def load_config(path):
+    with open(path) as f:
         return yaml.safe_load(f)
+
+
+def config_title(config_path):
+    """config のファイル名 (拡張子なし) が実験のタイトル兼出力ディレクトリ名。"""
+    return os.path.splitext(os.path.basename(config_path))[0]
+
+
+def resolve_outdir(config_path, smoke=False, outdir=None):
+    """出力先: --outdir 明示 > --smoke なら results/_smoke > config 名から results/<title>。"""
+    if outdir:
+        return outdir
+    if smoke:
+        return os.path.join(ROOT, "results", "_smoke")
+    return os.path.join(ROOT, "results", config_title(config_path))
 
 
 def pick_device(cfg):

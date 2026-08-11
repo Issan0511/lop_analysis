@@ -1,6 +1,9 @@
 """成果物図 1-7 の生成 (仕様書 §6)。
 
-  python -m src.make_figures [--results results] [--figdir figures]
+  python -m src.make_figures results/drift_0809
+
+図は対象ディレクトリ内の figures/ に出る (results/drift_0809/figures/fig1_*.png)。
+どの実行から出た図かが path で確定し、上書き事故が起きない。
 """
 import argparse
 import glob
@@ -11,8 +14,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-from .common import ROOT
 
 T_COLORS = {100: "tab:blue", 1000: "tab:orange", 10000: "tab:green", 100000: "tab:red"}
 
@@ -219,9 +220,11 @@ def fig7_online_loss(d, figdir):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--results", default=os.path.join(ROOT, "results"))
-    ap.add_argument("--figdir", default=os.path.join(ROOT, "figures"))
+    ap.add_argument("results", help="実験ディレクトリ (例: results/drift_0809)")
+    ap.add_argument("--figdir", default=None,
+                    help="図の出力先 (既定: <results>/figures)")
     args = ap.parse_args()
+    args.figdir = args.figdir or os.path.join(args.results, "figures")
     os.makedirs(args.figdir, exist_ok=True)
     d = load_all(args.results)
     for f in [fig1_snr_vs_step, fig2_snr_vs_T, fig3_cos_dist, fig4_adelta_hist,

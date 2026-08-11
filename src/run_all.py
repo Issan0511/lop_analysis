@@ -1,8 +1,11 @@
 """実験一括実行 CLI。
 
-  python -m src.run_all --smoke          # 短縮スモークテスト (パイプライン検証)
-  python -m src.run_all                  # フル実行 (config.yaml どおり)
-  python -m src.run_all --groups A_w5    # グループ指定
+  python -m src.run_all --config configs/drift_0809.yaml           # フル実行
+  python -m src.run_all --config configs/drift_0809.yaml --smoke   # 短縮スモークテスト
+  python -m src.run_all --config configs/drift_0809.yaml --groups A_w5
+
+出力先は config のファイル名から決まる (configs/drift_0809.yaml -> results/drift_0809/)。
+--smoke のときは常に results/_smoke/ (.gitignore 済み、上書き前提の捨て場)。
 """
 import argparse
 import copy
@@ -15,7 +18,8 @@ import time
 
 import torch
 
-from .common import ROOT, load_config, pick_device, build_runs, group_runs
+from .common import (ROOT, load_config, pick_device, build_runs, group_runs,
+                     config_title, resolve_outdir)
 from .train import train_group
 from .freeze import run_freeze_all
 
@@ -28,17 +32,24 @@ def git_hash():
         return "N/A"
 
 
+def write_meta(outdir, meta):
+    with open(os.path.join(outdir, "meta.json"), "w") as fh:
+        json.dump(meta, fh, indent=1)
+
+
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--config", required=True,
+                    help="実験 config (例: configs/drift_0809.yaml)。出力先はこの名前で決まる")
     ap.add_argument("--smoke", action="store_true", help="短縮実行でパイプライン検証")
     ap.add_argument("--groups", nargs="*", default=None,
                     help="実行グループ (例: A_w5 A_w100 B_w5 B_w100)")
     ap.add_argument("--device", default=None)
-    ap.add_argument("--outdir", default=None)
+    ap.add_argument("--outdir", default=None, help="出力先の明示指定 (通常は不要)")
     ap.add_argument("--steps", type=int, default=None)
     args = ap.parse_args()
 
-    cfg = load_config()
+    cfg = load_config(args.config)
     if args.device:
         cfg["common"]["device"] = args.device
     device = pick_device(cfg)
@@ -47,8 +58,9 @@ def main():
     torch.backends.cuda.matmul.allow_tf32 = True  # 仕様書 §8: TF32 可
     torch.backends.cudnn.allow_tf32 = True
 
-    outdir = args.outdir or os.path.join(ROOT, "results" + ("_smoke" if args.smoke else ""))
+    outdir = resolve_outdir(args.config, smoke=args.smoke, outdir=args.outdir)
     os.makedirs(outdir, exist_ok=True)
+    print(f"outdir: {outdir}", flush=True)
 
     total_steps, ckpts = None, None
     if args.smoke:
@@ -70,14 +82,17 @@ def main():
         w = csv.DictWriter(fh, fieldnames=list(runs[0].keys()))
         w.writeheader()
         w.writerows(runs)
-    with open(os.path.join(outdir, "meta.json"), "w") as fh:
-        json.dump(dict(git_hash=git_hash(), device=device,
-                       torch=torch.__version__, argv=sys.argv[1:],
-                       date=time.strftime("%Y-%m-%d %H:%M:%S")), fh, indent=1)
+    meta = dict(title=config_title(args.config), date=time.strftime("%Y-%m-%d"),
+                git_hash=git_hash(), device=device, smoke=args.smoke,
+                elapsed_sec=None, torch=torch.__version__,
+                config=os.path.relpath(os.path.abspath(args.config), ROOT),
+                started=time.strftime("%Y-%m-%d %H:%M:%S"), argv=sys.argv[1:])
+    write_meta(outdir, meta)   # 途中で落ちても「どの状態で走ったか」は残す
     import yaml
     with open(os.path.join(outdir, "config_used.yaml"), "w") as fh:
         yaml.safe_dump(cfg, fh, allow_unicode=True)
 
+    t_start = time.time()
     for gkey, gruns in groups.items():
         gname = f"{gkey[0]}_w{gkey[1]}"
         if sel and gname not in sel:
@@ -92,6 +107,8 @@ def main():
         print(f"    freeze done: {ng} global rows, {nn} neuron rows "
               f"(+{time.time()-t0-elapsed:.1f}s)", flush=True)
 
+    meta["elapsed_sec"] = round(time.time() - t_start, 1)
+    write_meta(outdir, meta)
     print("ALL DONE", flush=True)
 
 
