@@ -69,11 +69,15 @@ def fig_cos_by_kappa(d, figdir):
     last = n.ckpt.max()
     n = n[n.ckpt == last]
     widths = sorted(n.width.unique())
-    fig, axes = plt.subplots(2, len(widths), figsize=(5.5 * len(widths), 7),
+    cols = ["cos_inter", "cos_intra"]
+    if "cos_spike" in n.columns and n.cos_spike.notna().any():
+        cols.append("cos_spike")             # mu ⊥ u 実験: u との整列を併記
+    fig, axes = plt.subplots(len(cols), len(widths),
+                             figsize=(5.5 * len(widths), 3.5 * len(cols)),
                              sharex=True, squeeze=False)
     bins = np.linspace(-1, 1, 41)
     for j, width in enumerate(widths):
-        for i, col in enumerate(["cos_inter", "cos_intra"]):
+        for i, col in enumerate(cols):
             ax = axes[i][j]
             for k in sorted(n.kappa.unique()):
                 for lr in sorted(n.lr.unique()):
@@ -89,8 +93,8 @@ def fig_cos_by_kappa(d, figdir):
             if j == 0:
                 ax.set_ylabel("density")
     for ax in axes[-1]:
-        ax.set_xlabel("cos(E[g_w_i], mu_hat)")
-    fig.suptitle(f"cos(E[g_w_i], mu_hat) distribution vs kappa (ckpt={last:g})")
+        ax.set_xlabel("cos(E[g_w_i], ref)  (inter/intra: ref=mu, spike: ref=u)")
+    fig.suptitle(f"cos(E[g_w_i], ref) distribution vs kappa (ckpt={last:g})")
     fig.tight_layout()
     fig.savefig(os.path.join(figdir, "fig_an_cos_kappa.png"), dpi=150)
     plt.close(fig)

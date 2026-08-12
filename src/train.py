@@ -45,7 +45,8 @@ def setup_group(gkey, runs, cfg, device):
         d = B["d"]
         cvals = [r["c"] for r in runs]
         kvals = [r.get("kappa", 1) for r in runs]
-        env = GaussEnv(R, d, cvals, gens["input"], device, kappa=kvals)
+        env = GaussEnv(R, d, cvals, gens["input"], device, kappa=kvals,
+                       spike_dir=B.get("spike_dir", "ones"))
         teacher = MLPTeacher(R, width, d, period, gens["teacher"], device)
 
     # batch: 1=オンライン SGD, 整数=iid ミニバッチ平均, "full"=フルバッチ GD

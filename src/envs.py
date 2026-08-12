@@ -155,15 +155,26 @@ class MLPTeacher:
 class GaussEnv:
     """x = mu + Sigma^{1/2} z, z ~ N(0, I_d), mu = c/sqrt(d) * 1 (系列別 c)。
 
-    Sigma = I + (kappa-1) u u^T (スパイク型, u = 1/sqrt(d) * 1, mu と平行) [NEW]。
+    Sigma = I + (kappa-1) u u^T (スパイク型) [NEW]。
     Sigma^{1/2} = I + (sqrt(kappa)-1) u u^T なので行列平方根は不要。
-    kappa=None または全て 1 なら等方 (従来と乱数消費含め bit 一致)。"""
+    kappa=None または全て 1 なら等方 (従来と乱数消費含め bit 一致)。
 
-    def __init__(self, R, d, c, gen, device, kappa=None):
+    spike_dir: "ones" = u ∝ 1 (mu と平行, 従来) /
+               "alt"  = u ∝ (+1,-1,+1,...,0) (1 と直交 -> mu ⊥ u, 決定的ベクトル)。"""
+
+    def __init__(self, R, d, c, gen, device, kappa=None, spike_dir="ones"):
         self.R, self.d = R, d
         self.mu = (torch.as_tensor(c, device=device).float() / math.sqrt(d)).unsqueeze(1) \
             .expand(R, d).contiguous()     # [R,d]
-        self.u = torch.full((d,), 1.0 / math.sqrt(d), device=device)
+        if spike_dir == "ones":
+            self.u = torch.full((d,), 1.0 / math.sqrt(d), device=device)
+        elif spike_dir == "alt":
+            n = d - (d % 2)
+            u = torch.zeros(d, device=device)
+            u[:n] = torch.tensor([1.0, -1.0], device=device).repeat(n // 2)
+            self.u = u / u.norm()
+        else:
+            raise ValueError(f"unknown spike_dir: {spike_dir}")
         self.sk = None                     # sqrt(kappa) - 1 [R], None なら等方
         if kappa is not None:
             k = torch.as_tensor(kappa, device=device).float()

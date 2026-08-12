@@ -42,7 +42,8 @@ def _restore(gkey, ckpt, cfg, device):
         d = B["d"]
         cvals = [r["c"] for r in runs]
         kvals = [r.get("kappa", 1) for r in runs]   # 旧 ckpt (kappa なし) は等方で復元
-        env = GaussEnv(R, d, cvals, gens["input"], device, kappa=kvals)
+        env = GaussEnv(R, d, cvals, gens["input"], device, kappa=kvals,
+                       spike_dir=B.get("spike_dir", "ones"))
         teacher = MLPTeacher(R, width, d, period, gens["teacher"], device)
 
     # 状態復元 (教師 A は ckpt に完全保存されている; B は再サンプルで進むので状態から再開)
@@ -155,6 +156,10 @@ def freeze_measure(gkey, ckpt_path, cfg, device):
 
     cos_intra = cosine(mW, mu_intra)
     cos_inter = cosine(mW, mu_inter)
+    if exp == "B":                                               # スパイク方向 u との整列
+        cos_spike = cosine(mW, env.u[None].expand(R, d))
+    else:
+        cos_spike = torch.full((R, h), float("nan"), device=device)
     snr_i = (mW ** 2).sum(2).sqrt() / vW.sum(2).clamp_min(1e-30).sqrt()
     E_adelta = s_adelta / M[:, None]
     cov = s_e1x / M[:, None, None] - (s_e1 / M[:, None])[..., None] * (s_xin / M[:, None])[:, None, :]
@@ -176,6 +181,7 @@ def freeze_measure(gkey, ckpt_path, cfg, device):
             n_rows.append(dict(run_id=r["run_id"], ckpt=step, neuron=j,
                                w_norm=float(w_norm[i, j]), snr_i=float(snr_i[i, j]),
                                cos_intra=float(cos_intra[i, j]), cos_inter=float(cos_inter[i, j]),
+                               cos_spike=float(cos_spike[i, j]),
                                E_adelta=float(E_adelta[i, j]), sign_v=float(torch.sign(net.v[i, j])),
                                cov_norm=float(cov_norm[i, j]), cov_proj=float(cov_proj[i, j])))
     return g_rows, n_rows

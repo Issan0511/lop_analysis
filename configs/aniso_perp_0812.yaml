@@ -1,0 +1,49 @@
+# proj_004: 異方性 Sigma 検証その2 — mu ⊥ u (判別実験)
+# aniso_0812 (mu ∥ u) では「潮流 mu の方向」と「Sigma の最大固有方向 u」が同一軸で、
+# ドリフトがどちらに引かれているか判別できなかった。本実験は u を 1 と直交する
+# 決定的ベクトル (+1,-1,...,0)/sqrt(20) にして両者を分離する (mu = c/sqrt(d)*1 は据え置き)。
+#
+# 予測の判別:
+#   - ドリフトが二次統計量 (Sigma) 支配なら: cos_spike が kappa とともに増加、
+#     cos_inter/cos_intra (mu との整列) は kappa で減少または不変
+#   - ドリフトが一次統計量 (mu) 支配なら: cos_inter/cos_intra が kappa によらず高いまま、
+#     cos_spike は偶然水準 (~sqrt(2/pi d)=0.17)
+# kappa=1 は等方対照 (spike_dir は効かないので aniso_0812 の kappa=1 と同一系列)。
+
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4]
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 1000
+  checkpoints: [0, 10000, 50000, 100000, 300000, 1000000]
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:                          # 条件A は走らせない
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: []
+  widths: []
+  encodings: [std]
+  center_alpha: 0.01
+  lr_grid: []
+
+condB:
+  d: 21
+  K_values: [10000]
+  c_values: [2.0]
+  kappa_values: [1, 4, 16]
+  lr_values: [0.003, 0.001]     # aniso_0812 と同じ (0.01 は kappa>=4, w=100 で発散)
+  widths: [5, 100]
+  spike_dir: alt                # u = (+1,-1,+1,...,0)/sqrt(20) ⊥ 1 (mu ⊥ u)
