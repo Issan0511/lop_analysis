@@ -79,6 +79,8 @@ def compute_lop_metrics(net, x_eval, y_eval, cfg):
         pw = sw / sw.sum(dim=1, keepdim=True).clamp_min(1e-12)
         eff_rank_W = torch.exp(-(pw * pw.clamp_min(1e-12).log()).sum(dim=1))
         top1_frac = sw[:, 0] ** 2 / (sw ** 2).sum(dim=1).clamp_min(1e-24)
+        # srank(W) = ||W||_F^2 / ||W||_2^2 (実験(5) coupling_ab の指標①の厳密定義)
+        stable_rank_W = (sw ** 2).sum(dim=1) / (sw[:, 0] ** 2).clamp_min(1e-24)
 
         # --- [methods_sde_0813] ③: gate 開放率ベースの dead (Leaky 用)。
         #     Leaky では |a|<tol 基準の dead_frac が定義上ほぼ 0 になるため、
@@ -93,7 +95,7 @@ def compute_lop_metrics(net, x_eval, y_eval, cfg):
                eff_rank=eff_rank, stable_rank=stable_rank, wcos_mean=wcos_mean,
                sign_match_mean=sign_match_mean, sign_clone_frac=sign_clone_frac,
                drift_sq_W=drift_sq_W, trC_W=trC_W, snr_drift=snr_drift,
-               eff_rank_W=eff_rank_W, top1_frac=top1_frac,
+               eff_rank_W=eff_rank_W, top1_frac=top1_frac, stable_rank_W=stable_rank_W,
                neg_gate_frac=neg_gate_frac,
                eval_loss=eval_loss)
     nan = torch.full_like(finite.float(), float("nan"))

@@ -1,0 +1,60 @@
+# proj_004: coupling_ab_0813 — Path B (低ランク化) と Path A (Dead unit 化) の結合ダイナミクス
+# (先生の提案実験(5), 2026-08-13 仕様)
+#
+# 「Path B が表現力を奪うことで Diffusion 項を増大させ、Path A を誘発する」という
+# 因果連鎖 srank(W)↓ → E[e^2](切替直後)↑ → tr C(w)(勾配分散)↑ → dead_frac↑ を
+# 同一時間軸上で追跡する。タスク境界 (condA: T ステップ毎の1ビット flip、
+# condB: K ステップ毎の教師全再サンプル) を継続学習のタスク切替として使う。
+#
+# 計測は2系統:
+#   (a) 粗い定期計測 (lop_every=1000, 1000点/run) で学習全体のマクロなトレンド
+#       (①srank(W)=eff_rank_W, ③tr C(w)=trC_W, ④dead_frac) を追う
+#   (b) タスク境界 ±window の密な計測 (coupling.*) でイベント整列平均 (peristimulus) 用
+#   ②切替直後誤差は境界から postswitch_n ステップの online loss を別途平均 (postswitch_err_*.csv)
+#
+# 解析: src.figures_coupling が上記を読み、(1) 全区間トレンド図、(2) タスク境界に揃えた
+# イベント整列平均図、(3) 各指標の「立ち上がり時刻」のブートストラップ順序検定を出力する。
+
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4]
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 1000000]
+  run_freeze: false
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+coupling:
+  pre_window: 200        # タスク境界の pre_window ステップ前から密測定
+  post_window: 3000       # 境界から post_window ステップ後まで密測定
+  fine_stride: 100        # 密測定の間隔
+  postswitch_n: 10        # 仕様②: 切替直後の平均誤差を取るステップ数
+
+condA:                          # Slowly-Changing Regression [D], T=1e4 (100 タスク境界)
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: [5, 100]
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [1]
+  lr_grid: []
+
+condB:                          # ガウス入力・教師全再サンプル (最も明確な「新タスク」境界)
+  d: 21
+  K_values: [10000]
+  c_values: [0.0, 2.0]
+  widths: [5, 100]
+  batch_values: [1]

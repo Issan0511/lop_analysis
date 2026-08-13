@@ -8,7 +8,7 @@ import time
 import csv
 import torch
 
-from .common import group_name
+from .common import group_name, switch_steps
 from .envs import SCREnv, LTUTarget, GaussEnv, MLPTeacher, kaiming_mlp_params
 from .nets import VecMLP
 from .lop_metrics import compute_lop_metrics
@@ -157,6 +157,24 @@ def save_ckpt(st, step, outdir):
                     runs=st["runs"]), path)
 
 
+def build_lop_steps(cfg, total, period_val):
+    """計測ステップ集合: 粗い定期計測 (lop_every) + タスク境界周辺の密な窓
+    (cfg["coupling"]: pre_window/post_window/fine_stride、実験(5) methods coupling_ab 用)。
+    coupling キーが無い既存 config では従来の (t+1)%lop_every==0 と等価。"""
+    C = cfg["common"]
+    steps = set(range(0, total + 1, C["lop_every"]))
+    cp = cfg.get("coupling") or {}
+    pre, post = cp.get("pre_window", 0), cp.get("post_window", 0)
+    stride = max(1, cp.get("fine_stride", C["lop_every"]))
+    if (pre or post) and period_val:
+        for s0 in switch_steps(period_val, total):
+            lo, hi = max(0, s0 - pre), min(total, s0 + post)
+            steps.update(range(lo, hi + 1, stride))
+    steps.add(0)
+    steps.add(total)
+    return steps
+
+
 def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
     C = cfg["common"]
     total = total_steps or C["total_steps"]
@@ -165,6 +183,22 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
     net, env, teacher = st["net"], st["env"], st["teacher"]
     alpha, centered, lr = st["alpha"], st["centered"], st["lr"]
     cmask = centered[:, None].float()
+
+    period_val = int(st["period"][0].item()) if len(st["period"]) else 0
+    if cfg.get("coupling") and len(set(int(p) for p in st["period"])) > 1:
+        raise ValueError("coupling 計測はグループ内 period 一様が前提 (イベント整列が壊れる)")
+    lop_steps = build_lop_steps(cfg, total, period_val)
+
+    # 実験(5) coupling_ab: タスク境界 (period, 2*period, ...) 直後 postswitch_n ステップの
+    # 平均二乗誤差 (§②「新タスク切り替え直後の予測誤差」)。coupling キーが無ければ全て無効。
+    coupling_cfg = cfg.get("coupling")
+    sw_list = switch_steps(period_val, total) if coupling_cfg and period_val else []
+    postswitch_n = (coupling_cfg or {}).get("postswitch_n", 10)
+    sw_ptr = 0
+    active_switch = None
+    post_acc = torch.zeros(st["R"], device=device)
+    post_count = 0
+    postswitch_rows = []
 
     loss_rows, lop_rows = [], []
     loss_acc = torch.zeros(st["R"], device=device)
@@ -175,6 +209,12 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
     for t in range(total):
         if t in ckpt_set:
             save_ckpt(st, t, outdir)
+
+        if sw_ptr < len(sw_list) and t == sw_list[sw_ptr]:
+            active_switch = sw_list[sw_ptr]
+            sw_ptr += 1
+            post_acc = torch.zeros(st["R"], device=device)
+            post_count = 0
 
         if st["exp"] == "B":
             teacher.t = env.t
@@ -212,11 +252,20 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
             net.sgd_step(lr, gW.mean(0), gb.mean(0), gv.mean(0), gc.mean(0))
 
             loss_acc += (delta ** 2).mean(dim=0)
+
+        if active_switch is not None:
+            d2 = delta ** 2 if batch == 1 else (delta ** 2).mean(dim=0)
+            post_acc += d2
+            post_count += 1
+            if post_count == postswitch_n:
+                postswitch_rows.append((active_switch, post_acc.cpu().numpy().copy() / postswitch_n))
+                active_switch = None
+
         if (t + 1) % C["loss_bin"] == 0:
             loss_rows.append((t + 1, (loss_acc / C["loss_bin"]).cpu().numpy().copy()))
             loss_acc.zero_()
 
-        if (t + 1) % C["lop_every"] == 0 or t == 0:
+        if (t + 1) in lop_steps or t == 0:
             x_ev, y_ev = eval_batch(st)
             x_ev_in = x_ev - cmask[None] * st["running_mean"][None]
             m = compute_lop_metrics(net, x_ev_in, y_ev, cfg)
@@ -226,11 +275,11 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
         save_ckpt(st, total, outdir)
 
     elapsed = time.time() - t0
-    write_logs(st, loss_rows, lop_rows, outdir)
+    write_logs(st, loss_rows, lop_rows, outdir, postswitch_rows=postswitch_rows)
     return st, elapsed
 
 
-def write_logs(st, loss_rows, lop_rows, outdir):
+def write_logs(st, loss_rows, lop_rows, outdir, postswitch_rows=None):
     os.makedirs(outdir, exist_ok=True)
     gname = st["gname"]
     ids = [r["run_id"] for r in st["runs"]]
@@ -250,3 +299,11 @@ def write_logs(st, loss_rows, lop_rows, outdir):
             for step, m in lop_rows:
                 for i, rid in enumerate(ids):
                     w.writerow([step, rid] + [f"{m[k][i]:.6g}" for k in keys])
+
+    if postswitch_rows:
+        with open(os.path.join(outdir, f"postswitch_err_{gname}.csv"), "w", newline="") as fh:
+            w = csv.writer(fh)
+            w.writerow(["switch_step", "run_id", "post_err"])
+            for switch_step, arr in postswitch_rows:
+                for i, rid in enumerate(ids):
+                    w.writerow([switch_step, rid, f"{arr[i]:.6g}"])

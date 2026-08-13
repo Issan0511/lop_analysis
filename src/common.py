@@ -120,6 +120,16 @@ def group_runs(runs):
     return groups
 
 
+def switch_steps(period, total_steps):
+    """タスク境界 (period, 2*period, ...) の 0-indexed ループ変数 t の一覧
+    (period, 2*period 到達時点の学習ステップで教師/flip が切り替わる。§ train.py 参照)。
+    total_steps ちょうどの境界は post-window が取れないため含めても実害はないが、
+    呼び出し側で clip する。"""
+    if not period:
+        return []
+    return list(range(period, total_steps + 1, period))
+
+
 def group_name(gkey):
     """グループ名。batch=1・method=none は従来どおり A_w5 等 (drift_0809 の成果物と互換)。"""
     exp, width, batch, mtag = gkey
