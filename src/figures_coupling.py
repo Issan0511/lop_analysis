@@ -35,6 +35,8 @@ MET_COLOR = {"srank_drop": "tab:blue", "srank_alive_drop": "tab:purple",
 
 def load_all(resdir):
     runs = pd.read_csv(os.path.join(resdir, "runs.csv")).set_index("run_id")
+    # batch 列は int と "full" の混在で dtype が揺れるため文字列に正規化
+    runs["batch"] = runs["batch"].astype(str)
 
     def cat(prefix):
         fs = sorted(glob.glob(os.path.join(resdir, f"{prefix}_*.csv")))
@@ -47,22 +49,28 @@ def load_all(resdir):
 
 
 def cells(lop):
-    """パネル単位 = (exp, width, c)。A は c=NaN で 1 セル。"""
+    """パネル単位 = (exp, width, batch, c)。A は c=NaN。batch は文字列 ("1"/"full")。"""
     out = []
-    for (exp, width), sub in lop.groupby(["exp", "width"]):
+    for (exp, width, batch), sub in lop.groupby(["exp", "width", "batch"]):
         if exp == "A":
-            out.append((exp, width, np.nan))
+            out.append((exp, width, batch, np.nan))
         else:
-            out += [(exp, width, c) for c in sorted(sub.c.dropna().unique())]
+            out += [(exp, width, batch, c) for c in sorted(sub.c.dropna().unique())]
     return out
 
 
 def cell_mask(df, cell):
-    exp, width, c = cell
-    m = (df.exp == exp) & (df.width == width)
+    exp, width, batch, c = cell
+    m = (df.exp == exp) & (df.width == width) & (df.batch == batch)
     if not np.isnan(c):
         m &= df.c == c
     return m
+
+
+def cell_title(cell):
+    exp, width, batch, c = cell
+    return (f"cond {exp}, w={width}" + ("" if np.isnan(c) else f", c={c:g}")
+            + ("" if batch == "1" else f", batch={batch}"))
 
 
 def series_for_run(lop_r, post_r, srank_col):
@@ -139,8 +147,7 @@ def fig_trend(d, srank_col, figdir):
             mean = pd.concat(xs_all, axis=1).mean(axis=1)   # seed 平均 (step で整列)
             ax.plot(mean.index, norm01(smooth(mean.values)), lw=1.4,
                     color=MET_COLOR[met], label=MET_LABEL[met])
-        exp, width, c = cell
-        ax.set_title(f"cond {exp}, width={width}" + ("" if np.isnan(c) else f", c={c:g}"))
+        ax.set_title(cell_title(cell))
         ax.set_xlabel("step")
         ax.set_ylabel("normalized [0,1]")
         ax.grid(alpha=0.3)
@@ -198,8 +205,7 @@ def fig_event(d, cfg_coupling, period, figdir):
                 ax.plot(base.index, base.values - pre_mean, marker="o", ms=2.5,
                         lw=1.2, color=color, label=ph)
             ax.axvline(0, color="gray", lw=0.8, ls="--")
-            exp, width, c = cell
-            ax.set_title(f"cond {exp}, w={width}" + ("" if np.isnan(c) else f", c={c:g}"))
+            ax.set_title(cell_title(cell))
             ax.set_xlabel("step - switch")
             ax.grid(alpha=0.3)
             if k == 0:
@@ -233,12 +239,13 @@ def order_stats(d, srank_col, resdir, n_boot=4000, rng_seed=0):
                 x, y = ss[met]
                 t = t_half(np.asarray(x, float), np.asarray(y, float), MIN_CHANGE[met])
                 t50[met][rid] = t
-                rows.append(dict(exp=cell[0], width=cell[1], c=cell[2],
+                rows.append(dict(exp=cell[0], width=cell[1], batch=cell[2], c=cell[3],
                                  run_id=rid, metric=met, t50=t))
         for a, b in combinations(mets, 2):
             ids = [r for r in t50[a] if np.isfinite(t50[a][r]) and np.isfinite(t50[b].get(r, np.nan))]
             if len(ids) < 3:
-                pair_rows.append(dict(exp=cell[0], width=cell[1], c=cell[2], pair=f"{a}<{b}",
+                pair_rows.append(dict(exp=cell[0], width=cell[1], batch=cell[2], c=cell[3],
+                                      pair=f"{a}<{b}",
                                       n=len(ids), p_order=np.nan, lag_mean=np.nan,
                                       lag_lo=np.nan, lag_hi=np.nan))
                 continue
@@ -247,7 +254,8 @@ def order_stats(d, srank_col, resdir, n_boot=4000, rng_seed=0):
             diff = lb - la
             bs = rng.choice(len(ids), (n_boot, len(ids)), replace=True)
             bmean = diff[bs].mean(axis=1)
-            pair_rows.append(dict(exp=cell[0], width=cell[1], c=cell[2], pair=f"{a}<{b}",
+            pair_rows.append(dict(exp=cell[0], width=cell[1], batch=cell[2], c=cell[3],
+                                  pair=f"{a}<{b}",
                                   n=len(ids), p_order=float((bmean > 0).mean()),
                                   lag_mean=float(diff.mean()),
                                   lag_lo=float(np.quantile(bmean, 0.025)),

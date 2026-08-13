@@ -1,0 +1,65 @@
+# proj_004: coupling_fbw_0813 — 境界 dead パルスの drift/diffusion 帰属 + condA 幅スイープ
+# (spec_coupling_fbw_0813、先生提案実験(1)+(5)の合成、task_083)
+#
+# 目的:
+#   (1) fullbatch × coupling イベント整列の合成で、タスク境界の dead パルスが
+#       drift (期待勾配) の仕事か diffusion (勾配ノイズ) の仕事かを帰属する。
+#       full 訓練アームは訓練ノイズ厳密ゼロ (condA: 2^5=32 パターン厳密列挙 /
+#       condB: fresh 1024 サンプル近似) だが、trC_W は eval バッチ 2000 の
+#       per-sample 勾配分散 (診断量、lop_metrics.py) として b=1 と同一に計測される。
+#       「診断の trC はジャンプするが訓練ノイズはゼロ」の状況を作るのが肝。
+#   (2) condA 幅スイープ [5..100] で結合方向 (B→A / A→B) の交差点 w* を測定。
+#       既知アンカー: w5 で Δt50=+92k (B→A) / w100 で −9.7k (A→B)。
+#
+# condB の幅スイープは行わない (教師幅が学習器に連動し余剰を操作できないため。theory メモ参照)。
+# b=1 と full で lr は同一 (0.01)。有効学習率差の議論はスコープ外。
+# シードは (exp, width) 単位 → b=1 / full で初期化・教師・タスク系列が一致 (matched、振幅比 r 用)。
+#
+# 解析: src.figures_coupling (トレンド/境界整列/全ペア順序検定、batch 対応)
+#       + src.figures_coupling_fbw (正規化パルス振幅・振幅比 r・パルス形状・
+#         交差プロット Δt50(w)・バッファ散布図・初期 dead)。
+
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4]
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 1000000]
+  run_freeze: false
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+coupling:
+  pre_window: 200        # タスク境界の pre_window ステップ前から密測定
+  post_window: 3000      # 境界から post_window ステップ後まで密測定
+  fine_stride: 100       # 密測定の間隔
+  postswitch_n: 10       # 切替直後の平均誤差を取るステップ数
+
+condA:                          # Slowly-Changing Regression [D], T=1e4 (100 タスク境界)
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: [5, 10, 20, 50, 100]
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [1, full]
+  lr_grid: []
+
+condB:                          # ガウス入力・教師全再サンプル、主張の最も明確な「新タスク」境界
+  d: 21
+  K_values: [10000]
+  c_values: [2.0]
+  widths: [100]
+  batch_values: [1, full]
+  full_batch_B: 1024            # condB の "full" (期待勾配の MC 近似)
