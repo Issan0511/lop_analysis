@@ -1,0 +1,62 @@
+common:
+  checkpoints: []
+  dead_tau: 0.95
+  dead_tol: 1.0e-07
+  device: cpu
+  dup_tau: 0.95
+  eval_batch: 2000
+  freeze_M_cap: 500000
+  freeze_min_periods: 50
+  lop_every: 1000
+  loss_bin: 1000
+  lr_main: 0.01
+  run_freeze: false
+  sat_frac: 0.99
+  sat_ratio_tol: 0.0001
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  sign_match_tau: 0.95
+  total_steps: 350000
+condA:
+  T_values:
+  - 10000
+  batch_values:
+  - full
+  beta: 0.7
+  center_alpha: 0.01
+  encodings:
+  - std
+  f: 15
+  lr_grid: []
+  m: 20
+  target_hidden: 100
+  widths:
+  - 10
+  - 20
+condB:
+  K_values: []
+  batch_values: []
+  c_values: []
+  d: 21
+  widths: []
+coupling:
+  fine_stride: 100
+  post_window: 3000
+  postswitch_n: 10
+  pre_window: 200
+rank_int:
+  arms:
+  - none
+  - svdrec
+  - shuffle
+  energy_frac: 0.99
+  eps_lo: 1.0e-06
+  match_tol: 1.0e-06
+  post_steps: 200000
+  shuffle_seed_base: 777000
+  srank_tol: 0.001
+  t_int: 150000

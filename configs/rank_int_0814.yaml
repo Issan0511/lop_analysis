@@ -1,0 +1,63 @@
+# proj_004: rank_int_0814 — 実験(4) 低ランク崩壊への介入 (spec_rank_int_0814)
+#
+# レジーム: condA × batch=full × width {10, 20} (coupling_fbw_0813 P2′ に基づく選定。
+# full-batch 決定論なので同一 seed のアーム間差は介入操作のみに帰着する)。
+# アーム: none (対照 = 連続 run) / svdrec (SVD ランク回復、ノルム・基底固定) /
+#         shuffle (基底保持・ランク不変の等量摂動 = top-k 部分空間内回転)。
+# 実行は src.rank_int (run_all ではない): pre 0→t_int は seed×width で 1 本共有し
+# t_int で完全スナップショット → S1 (bit 一致 resume) → 介入 → +200k 継続。
+# 判定基準は specs/spec_rank_int_0814.md §6 (事前登録) を参照。
+
+common:
+  total_steps: 350000        # t_int + post_steps (連続 run の長さ)
+  seeds: [0, 1, 2, 3, 4]
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: []
+  run_freeze: false
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+coupling:                    # 既存踏襲: 境界密測定 + 切替直後誤差 (postswitch_n=10)
+  pre_window: 200
+  post_window: 3000
+  fine_stride: 100
+  postswitch_n: 10
+
+rank_int:
+  t_int: 150000              # 主 t_int (タスク境界 = period の倍数)。副 300k は主判定後に必要なら
+  post_steps: 200000         # 介入後の継続 step 数 (20 タスク)
+  arms: [none, svdrec, shuffle]
+  energy_frac: 0.99          # shuffle の top-k を張るエネルギー割合
+  eps_lo: 1.0e-6             # svdrec の ε bisect 範囲
+  match_tol: 1.0e-6          # S2: ΔF マッチング・特異値/ノルム保存の相対許容
+  srank_tol: 1.0e-3          # ε bisect の srank_target への相対許容
+  shuffle_seed_base: 777000  # shuffle の G 用 generator シード (base + 1000*width + seed)
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: [10, 20]
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [full]
+  lr_grid: []
+
+condB:
+  d: 21
+  K_values: []
+  c_values: []
+  widths: []
+  batch_values: []

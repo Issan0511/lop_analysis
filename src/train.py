@@ -86,7 +86,7 @@ def setup_group(gkey, runs, cfg, device):
                 running_mean=running_mean, lr=lr, centered=centered, period=period,
                 eval_fixed=eval_fixed, runs=runs, device=device,
                 alpha=A["center_alpha"], gname=group_name(gkey),
-                method=mcfg, gen_method=gens["method"], cbp=cbp)
+                method=mcfg, gen_method=gens["method"], cbp=cbp, gens=gens)
 
 
 def apply_method(st, a):
@@ -157,6 +157,31 @@ def save_ckpt(st, step, outdir):
                     runs=st["runs"]), path)
 
 
+def save_snapshot(st, step, outdir):
+    """完全再開スナップショット [rank_int_0814 §3]。save_ckpt との違いは RNG 状態
+    (gens) を含むこと。full-batch 決定論下では resume 後の軌道が bit 一致する。"""
+    path = os.path.join(outdir, "snapshots", f"{st['gname']}_step{step}.pt")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    torch.save(dict(step=step,
+                    net=st["net"].state_dict(),
+                    env=st["env"].state_dict(),
+                    teacher=st["teacher"].state_dict(),
+                    running_mean=st["running_mean"].clone(),
+                    gens={k: g.get_state() for k, g in st["gens"].items()},
+                    runs=st["runs"]), path)
+    return path
+
+
+def load_resume(st, snap):
+    """setup_group 済みの st にスナップショット状態を書き戻す (in-place)。"""
+    st["net"].load_state(snap["net"])
+    st["env"].load_state(snap["env"])
+    st["teacher"].load_state(snap["teacher"])
+    st["running_mean"].copy_(snap["running_mean"])
+    for k, g in st["gens"].items():
+        g.set_state(snap["gens"][k])
+
+
 def build_lop_steps(cfg, total, period_val):
     """計測ステップ集合: 粗い定期計測 (lop_every) + タスク境界周辺の密な窓
     (cfg["coupling"]: pre_window/post_window/fine_stride、実験(5) methods coupling_ab 用)。
@@ -175,11 +200,20 @@ def build_lop_steps(cfg, total, period_val):
     return steps
 
 
-def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
+def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
+                start_step=0, resume_state=None, gname=None, snapshot_steps=()):
+    """start_step / resume_state / gname / snapshot_steps は warm-start 用
+    [rank_int_0814 §3]。resume_state は save_snapshot が書いた dict (介入アームでは
+    呼び出し側が net["W"] を差し替えてから渡す)。gname はログファイル名の上書き
+    (同一グループ条件で複数アームを別名保存するため)。"""
     C = cfg["common"]
     total = total_steps or C["total_steps"]
     ckpt_set = set(ckpts if ckpts is not None else C["checkpoints"])
     st = setup_group(gkey, runs, cfg, device)
+    if gname:
+        st["gname"] = gname
+    if resume_state is not None:
+        load_resume(st, resume_state)
     net, env, teacher = st["net"], st["env"], st["teacher"]
     alpha, centered, lr = st["alpha"], st["centered"], st["lr"]
     cmask = centered[:, None].float()
@@ -195,6 +229,8 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
     sw_list = switch_steps(period_val, total) if coupling_cfg and period_val else []
     postswitch_n = (coupling_cfg or {}).get("postswitch_n", 10)
     sw_ptr = 0
+    while sw_ptr < len(sw_list) and sw_list[sw_ptr] < start_step:
+        sw_ptr += 1
     active_switch = None
     post_acc = torch.zeros(st["R"], device=device)
     post_count = 0
@@ -205,10 +241,22 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
     t0 = time.time()
 
     batch, batch_n = st["batch"], st["batch_n"]
+    snap_set = set(snapshot_steps)
 
-    for t in range(total):
+    if start_step > 0:
+        # resume 直後 (介入後・タスク切替前) の状態を step=start_step として記録。
+        # 連続 run の同 step 行と直接比較できる (none アームなら bit 一致 = S1)。
+        assert start_step % C["loss_bin"] == 0, "start_step は loss_bin 境界であること"
+        x_ev, y_ev = eval_batch(st)
+        x_ev_in = x_ev - cmask[None] * st["running_mean"][None]
+        m = compute_lop_metrics(net, x_ev_in, y_ev, cfg)
+        lop_rows.append((start_step, {k: v.cpu().numpy().copy() for k, v in m.items()}))
+
+    for t in range(start_step, total):
         if t in ckpt_set:
             save_ckpt(st, t, outdir)
+        if t in snap_set:
+            save_snapshot(st, t, outdir)
 
         if sw_ptr < len(sw_list) and t == sw_list[sw_ptr]:
             active_switch = sw_list[sw_ptr]
