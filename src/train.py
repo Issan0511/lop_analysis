@@ -9,7 +9,7 @@ import csv
 import torch
 
 from .common import group_name
-from .envs import SCREnv, LTUTarget, GaussEnv, MLPTeacher
+from .envs import SCREnv, LTUTarget, GaussEnv, MLPTeacher, kaiming_mlp_params
 from .nets import VecMLP
 from .lop_metrics import compute_lop_metrics
 
@@ -17,10 +17,11 @@ SEED_BASE = {"A": 10000, "B": 20000}
 
 
 def make_gens(exp, width, device, offset=0):
-    """入力・教師・初期化・eval で generator を分離 (仕様書 §8)。"""
+    """入力・教師・初期化・eval・method (S&P ノイズ / CBP 再サンプル) で generator を分離
+    (仕様書 §8)。既存 4 本のシードは不変 (method 追加は末尾)。"""
     base = SEED_BASE[exp] + width + offset
     gens = {}
-    for i, name in enumerate(["init", "input", "teacher", "eval"]):
+    for i, name in enumerate(["init", "input", "teacher", "eval", "method"]):
         g = torch.Generator(device=device)
         g.manual_seed(base + 100 * (i + 1))
         gens[name] = g
@@ -28,9 +29,9 @@ def make_gens(exp, width, device, offset=0):
 
 
 def setup_group(gkey, runs, cfg, device):
-    exp, width, batch = gkey
+    exp, width, batch = gkey[0], gkey[1], gkey[2]
     R = len(runs)
-    gens = make_gens(exp, width, device)   # batch を含めない -> batch 条件間で init/教師が一致
+    gens = make_gens(exp, width, device)   # batch/method を含めない -> 条件間で init/教師が一致
     A, B = cfg["condA"], cfg["condB"]
 
     period = torch.tensor([r["period"] for r in runs], dtype=torch.long)  # CPU
@@ -57,8 +58,20 @@ def setup_group(gkey, runs, cfg, device):
     elif batch == "full" and exp == "B":
         batch_n = int(B.get("full_batch_B", 1024))
 
-    net = VecMLP(R, width, d, gens["init"], device)
+    # 介入手法 [methods_sde_0813]: グループ内で単一 (group_runs のキーに method を含む)
+    mcfg = runs[0].get("method_cfg", {"name": "none"})
+    if mcfg["name"] != "none" and batch != 1:
+        raise NotImplementedError("methods は batch=1 (標準 SGD) のみ対応")
+    act_alpha = float(mcfg.get("alpha", 0.0)) if mcfg["name"] == "leaky" else 0.0
+
+    net = VecMLP(R, width, d, gens["init"], device, act_alpha=act_alpha)
     running_mean = torch.zeros(R, d, device=device)
+
+    cbp = None
+    if mcfg["name"] == "cbp":
+        cbp = dict(util=torch.zeros(R, width, device=device),
+                   age=torch.zeros(R, width, device=device),
+                   acc=0.0)   # 置換数の端数アキュムレータ (rho, h はグループ内で共通)
 
     # LoP 計測用固定バッチ素材 (eval generator)
     N = cfg["common"]["eval_batch"]
@@ -72,7 +85,50 @@ def setup_group(gkey, runs, cfg, device):
                 env=env, teacher=teacher, net=net,
                 running_mean=running_mean, lr=lr, centered=centered, period=period,
                 eval_fixed=eval_fixed, runs=runs, device=device,
-                alpha=A["center_alpha"], gname=group_name(gkey))
+                alpha=A["center_alpha"], gname=group_name(gkey),
+                method=mcfg, gen_method=gens["method"], cbp=cbp)
+
+
+def apply_method(st, a):
+    """介入フック: sgd_step 直後に呼ぶ (batch=1 のみ)。a は当ステップの活性 [R,h]。
+
+    - snp: 毎ステップ w <- (1-shrink) w + perturb*zeta (W, b, v のみ、c は対象外)。
+      perturb は初期化スケールに正規化しない素の等方ガウス (SDE 上は等方 diffusion 床)。
+    - cbp: Dohare 準拠の R 次元ベクトル化。util = decay*util + (1-decay)|v||a|、
+      acc += rho*h の floor 分だけ age > maturity の util 最小ユニットを再初期化
+      (W kaiming 再サンプル / b=0 / v=0 で関数を壊さない)。端数は繰越。
+      eligible 不足時は不足分を切り捨てる (積み残しはしない)。"""
+    m, net = st["method"], st["net"]
+    name = m["name"]
+    if name == "snp":
+        shrink, perturb = float(m["shrink"]), float(m["perturb"])
+        for p in (net.W, net.b, net.v):
+            p.mul_(1.0 - shrink)
+            if perturb > 0:
+                p.add_(perturb * torch.randn(p.shape, generator=st["gen_method"],
+                                             device=st["device"]))
+    elif name == "cbp":
+        cb = st["cbp"]
+        decay = float(m["decay"])
+        cb["util"].mul_(decay).add_((1 - decay) * (net.v.abs() * a.abs()))
+        cb["age"] += 1
+        cb["acc"] += float(m["rho"]) * st["width"]
+        n = int(cb["acc"])
+        if n > 0:
+            cb["acc"] -= n
+            eligible = cb["age"] > float(m["maturity"])                  # [R,h]
+            util_m = cb["util"].masked_fill(~eligible, float("inf"))
+            vals, idx = torch.topk(util_m, min(n, st["width"]), dim=1, largest=False)
+            sel = torch.zeros_like(eligible)
+            sel.scatter_(1, idx, vals.isfinite())                        # eligible のみ置換
+            if sel.any():
+                Wn, _, _, _ = kaiming_mlp_params(st["R"], st["width"], st["d"],
+                                                 st["gen_method"], st["device"])
+                net.W[sel] = Wn[sel]
+                net.b[sel] = 0.0
+                net.v[sel] = 0.0
+                cb["util"][sel] = 0.0
+                cb["age"][sel] = 0.0
 
 
 def eval_batch(st):
@@ -135,6 +191,8 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None):
             delta = yhat - y
             gW, gb, gv, gc = net.grads(x_in, pre, a, delta)
             net.sgd_step(lr, gW, gb, gv, gc)
+            if st["method"]["name"] not in ("none", "leaky"):
+                apply_method(st, a)
 
             loss_acc += delta ** 2
         else:

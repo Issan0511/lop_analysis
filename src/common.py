@@ -32,13 +32,36 @@ def pick_device(cfg):
     return dev
 
 
+def _fmt_sci(v):
+    """1e-4 -> "1e-4", 0 -> "0" (method タグ用の短縮表記)。"""
+    if v == 0:
+        return "0"
+    m, e = f"{v:.0e}".split("e")
+    return f"{m}e{int(e)}"
+
+
+def method_tag(m):
+    """介入手法 dict -> run_id / グループ名タグ。none は "" (既存互換)。"""
+    name = m.get("name", "none")
+    if name == "none":
+        return ""
+    if name == "leaky":
+        return f"leaky{m['alpha']:g}"
+    if name == "snp":
+        return f"snpS{_fmt_sci(m['shrink'])}P{_fmt_sci(m['perturb'])}"
+    if name == "cbp":
+        return f"cbp{_fmt_sci(m['rho'])}"
+    raise ValueError(f"unknown method: {name}")
+
+
 def build_runs(cfg):
     """全 run (条件×シード) の平坦リストを返す。各 run は dict。
 
     batch_values (default [1]): ミニバッチサイズ。1=従来のオンライン SGD、
       整数 B=iid B サンプル平均勾配、"full"=フルバッチ GD
       (条件A: 2^(m-f) パターン厳密列挙 / 条件B: full_batch_B サンプル近似)。
-    kappa_values (条件B, default [1]): スパイク共分散 Sigma = I + (kappa-1)uu^T。"""
+    kappa_values (条件B, default [1]): スパイク共分散 Sigma = I + (kappa-1)uu^T。
+    methods (default [{name: none}]): 介入手法軸 [methods_sde_0813]。全条件との直積。"""
     runs = []
     A, B, C = cfg["condA"], cfg["condB"], cfg["common"]
     lr0 = C["lr_main"]
@@ -63,6 +86,15 @@ def build_runs(cfg):
                             for seed in C["seeds"]:
                                 runs.append(dict(exp="B", width=width, period=K, enc="std",
                                                  c=c, kappa=kappa, lr=lr, batch=batch, seed=seed))
+    methods = cfg.get("methods", [{"name": "none"}])
+    expanded = []
+    for r in runs:
+        for m in methods:
+            r2 = dict(r)
+            r2["method"] = method_tag(m) or "none"
+            r2["method_cfg"] = dict(m)
+            expanded.append(r2)
+    runs = expanded
     for r in runs:
         r["run_id"] = run_id(r)
     return runs
@@ -70,21 +102,26 @@ def build_runs(cfg):
 
 def run_id(r):
     b = f"_b{r.get('batch', 1)}" if r.get("batch", 1) != 1 else ""
+    mt = r.get("method", "none")
+    m = f"_{mt}" if mt not in ("none", "") else ""
     if r["exp"] == "A":
-        return f"A_w{r['width']}_T{r['period']}_{r['enc']}_lr{r['lr']}{b}_s{r['seed']}"
+        return f"A_w{r['width']}_T{r['period']}_{r['enc']}_lr{r['lr']}{b}{m}_s{r['seed']}"
     k = f"_k{r.get('kappa', 1)}" if r.get("kappa", 1) != 1 else ""
-    return f"B_w{r['width']}_K{r['period']}_c{r['c']}{k}_lr{r['lr']}{b}_s{r['seed']}"
+    return f"B_w{r['width']}_K{r['period']}_c{r['c']}{k}_lr{r['lr']}{b}{m}_s{r['seed']}"
 
 
 def group_runs(runs):
-    """(exp, width, batch) ごとにグループ化。グループ内は R 次元でベクトル化して学習する。"""
+    """(exp, width, batch, method) ごとにグループ化。グループ内は R 次元でベクトル化して
+    学習する (method によって forward/step が分岐するため method もキーに含める)。"""
     groups = {}
     for r in runs:
-        groups.setdefault((r["exp"], r["width"], r.get("batch", 1)), []).append(r)
+        groups.setdefault((r["exp"], r["width"], r.get("batch", 1),
+                           r.get("method", "none")), []).append(r)
     return groups
 
 
 def group_name(gkey):
-    """グループ名。batch=1 は従来どおり A_w5 等 (drift_0809 の成果物と互換)。"""
-    exp, width, batch = gkey
-    return f"{exp}_w{width}" + (f"_b{batch}" if batch != 1 else "")
+    """グループ名。batch=1・method=none は従来どおり A_w5 等 (drift_0809 の成果物と互換)。"""
+    exp, width, batch, mtag = gkey
+    return (f"{exp}_w{width}" + (f"_b{batch}" if batch != 1 else "")
+            + (f"_{mtag}" if mtag != "none" else ""))

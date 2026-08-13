@@ -14,9 +14,21 @@ from .envs import kaiming_mlp_params
 
 
 class VecMLP:
-    def __init__(self, R, h, d, gen, device):
+    def __init__(self, R, h, d, gen, device, act_alpha=0.0):
         self.R, self.h, self.d = R, h, d
+        self.act_alpha = act_alpha        # Leaky ReLU 負側勾配 (0.0 = ReLU, 既存互換)
         self.W, self.b, self.v, self.c = kaiming_mlp_params(R, h, d, gen, device)
+
+    def _act(self, pre):
+        if self.act_alpha == 0.0:
+            return torch.relu(pre)        # 既存実験と bit 一致を保つ
+        return torch.where(pre > 0, pre, self.act_alpha * pre)
+
+    def _gate(self, pre):
+        gate = (pre > 0).float()
+        if self.act_alpha == 0.0:
+            return gate
+        return gate + self.act_alpha * (1.0 - gate)
 
     def params(self):
         return {"W": self.W, "b": self.b, "v": self.v, "c": self.c}
@@ -30,14 +42,14 @@ class VecMLP:
     def forward(self, x):
         """x: [R,d] -> (pre [R,h], a [R,h], yhat [R])"""
         pre = torch.einsum("rhd,rd->rh", self.W, x) + self.b
-        a = torch.relu(pre)
+        a = self._act(pre)
         yhat = (a * self.v).sum(dim=1) + self.c
         return pre, a, yhat
 
     def forward_batch(self, x):
         """x: [N,R,d] or [C,R,d] -> (pre, a, yhat) with leading batch dim."""
         pre = torch.einsum("rhd,nrd->nrh", self.W, x) + self.b
-        a = torch.relu(pre)
+        a = self._act(pre)
         yhat = (a * self.v).sum(dim=-1) + self.c
         return pre, a, yhat
 
@@ -46,7 +58,7 @@ class VecMLP:
         d2 = 2.0 * delta
         gv = d2[:, None] * a                        # [R,h]
         gc = d2                                     # [R]
-        gate = (pre > 0).float()
+        gate = self._gate(pre)
         gb = d2[:, None] * self.v * gate            # [R,h]
         gW = gb[:, :, None] * x[:, None, :]         # [R,h,d]
         return gW, gb, gv, gc
@@ -56,7 +68,7 @@ class VecMLP:
         d2 = 2.0 * delta
         gv = d2[..., None] * a
         gc = d2
-        gate = (pre > 0).float()
+        gate = self._gate(pre)
         gb = d2[..., None] * self.v * gate
         gW = gb[..., None] * x[:, :, None, :]
         return gW, gb, gv, gc

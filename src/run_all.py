@@ -32,9 +32,17 @@ def git_hash():
         return "N/A"
 
 
+def atomic_write(path, writer):
+    """並列実行 (--groups でグループ別プロセス) でも安全な一時ファイル + rename 書き込み。"""
+    tmp = f"{path}.tmp{os.getpid()}"
+    with open(tmp, "w", newline="") as fh:
+        writer(fh)
+    os.replace(tmp, path)
+
+
 def write_meta(outdir, meta):
-    with open(os.path.join(outdir, "meta.json"), "w") as fh:
-        json.dump(meta, fh, indent=1)
+    atomic_write(os.path.join(outdir, "meta.json"),
+                 lambda fh: json.dump(meta, fh, indent=1))
 
 
 def main():
@@ -78,10 +86,11 @@ def main():
     runs = build_runs(cfg)
     groups = group_runs(runs)
     sel = args.groups
-    with open(os.path.join(outdir, "runs.csv"), "w", newline="") as fh:
+    def _write_runs(fh):
         w = csv.DictWriter(fh, fieldnames=list(runs[0].keys()))
         w.writeheader()
         w.writerows(runs)
+    atomic_write(os.path.join(outdir, "runs.csv"), _write_runs)
     meta = dict(title=config_title(args.config), date=time.strftime("%Y-%m-%d"),
                 git_hash=git_hash(), device=device, smoke=args.smoke,
                 elapsed_sec=None, torch=torch.__version__,
@@ -89,8 +98,8 @@ def main():
                 started=time.strftime("%Y-%m-%d %H:%M:%S"), argv=sys.argv[1:])
     write_meta(outdir, meta)   # 途中で落ちても「どの状態で走ったか」は残す
     import yaml
-    with open(os.path.join(outdir, "config_used.yaml"), "w") as fh:
-        yaml.safe_dump(cfg, fh, allow_unicode=True)
+    atomic_write(os.path.join(outdir, "config_used.yaml"),
+                 lambda fh: yaml.safe_dump(cfg, fh, allow_unicode=True))
 
     t_start = time.time()
     for gkey, gruns in groups.items():
@@ -103,9 +112,10 @@ def main():
                                   total_steps=total_steps, ckpts=ckpts)
         print(f"    train done in {elapsed:.1f}s "
               f"({(total_steps or cfg['common']['total_steps'])/elapsed:.0f} steps/s)", flush=True)
-        ng, nn = run_freeze_all(gkey, cfg, device, outdir, ckpt_steps=ckpts)
-        print(f"    freeze done: {ng} global rows, {nn} neuron rows "
-              f"(+{time.time()-t0-elapsed:.1f}s)", flush=True)
+        if cfg["common"].get("run_freeze", True):
+            ng, nn = run_freeze_all(gkey, cfg, device, outdir, ckpt_steps=ckpts)
+            print(f"    freeze done: {ng} global rows, {nn} neuron rows "
+                  f"(+{time.time()-t0-elapsed:.1f}s)", flush=True)
 
     meta["elapsed_sec"] = round(time.time() - t_start, 1)
     write_meta(outdir, meta)

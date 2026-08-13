@@ -1,0 +1,82 @@
+common:
+  checkpoints:
+  - 0
+  - 10000
+  - 50000
+  - 100000
+  - 300000
+  - 1000000
+  dead_tau: 0.95
+  dead_tol: 1.0e-07
+  device: cpu
+  dup_tau: 0.95
+  eval_batch: 2000
+  freeze_M_cap: 500000
+  freeze_min_periods: 50
+  lop_every: 10000
+  loss_bin: 1000
+  lr_main: 0.01
+  run_freeze: false
+  sat_frac: 0.99
+  sat_ratio_tol: 0.0001
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  sign_match_tau: 0.95
+  total_steps: 1000000
+condA:
+  T_values:
+  - 10000
+  batch_values:
+  - 1
+  beta: 0.7
+  center_alpha: 0.01
+  encodings:
+  - std
+  f: 15
+  lr_grid: []
+  m: 20
+  target_hidden: 100
+  widths:
+  - 5
+  - 100
+condB:
+  K_values:
+  - 10000
+  batch_values:
+  - 1
+  c_values:
+  - 0.0
+  - 2.0
+  d: 21
+  widths:
+  - 5
+  - 100
+methods:
+- name: none
+- alpha: 0.01
+  name: leaky
+- alpha: 0.1
+  name: leaky
+- alpha: 0.3
+  name: leaky
+- name: snp
+  perturb: 0.0
+  shrink: 0.0001
+- name: snp
+  perturb: 0.001
+  shrink: 0.0
+- name: snp
+  perturb: 0.001
+  shrink: 0.0001
+- decay: 0.99
+  maturity: 100
+  name: cbp
+  rho: 0.0001
+- decay: 0.99
+  maturity: 100
+  name: cbp
+  rho: 1.0e-05

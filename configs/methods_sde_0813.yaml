@@ -1,0 +1,65 @@
+# proj_004: methods_sde_0813 — 既存手法 (Leaky ReLU / S&P / CBP) の SDE 分解
+# (先生の提案実験(6), 2026-08-13 仕様)
+#
+# 標準 SGD (none) を基準に、各介入が統一 SDE dw = E[g]dt + sqrt(C(w))dW の
+# drift / diffusion / 吸収壁 / ジャンプ項のどれをどの程度抑制するかを
+# ①勾配分散 (drift_sq_W / trC_W / snr_drift) ②W の有効ランク・特異値集中度
+# (eff_rank_W / top1_frac) ③dead 割合 (dead_frac / neg_gate_frac) の同時計測で定量化。
+#
+# - 基準条件は fullbatch_0812 踏襲: batch=1 (標準 SGD) のみ、1M step、seed 5本
+# - S&P は毎ステップ適用 (w <- (1-shrink)w - lr*g + perturb*zeta)。shrink/perturb の
+#   分離アームは D* = sigma^2/(2 lambda_align + 2 lambda_lock) の分子・分母の分離に必須
+# - CBP は Dohare 準拠 (utility 最小の成熟ユニットを kaiming 再サンプル、v=0)
+# - condA は Path A (dead) 測定系、condB は Path B (整列) 測定系。
+#   GPU/CPU 予算が厳しければ condA を w100 のみに縮約可 (w5 の dead は fullbatch_0812 で既知)
+# - 凍結測定 (freeze) は本実験ではスキップ (run_freeze: false)。指定①の snr_drift を
+#   lop_metrics 内で eval バッチ計測するため。必要なら true に戻して再実行可
+
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4]
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 1000
+  checkpoints: [0, 10000, 50000, 100000, 300000, 1000000]
+  run_freeze: false
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+methods:
+  - {name: none}                                    # 基準アーム (標準 SGD)
+  - {name: leaky, alpha: 0.01}
+  - {name: leaky, alpha: 0.1}
+  - {name: leaky, alpha: 0.3}
+  - {name: snp,   shrink: 1.0e-4, perturb: 0.0}     # shrink-only
+  - {name: snp,   shrink: 0.0,    perturb: 1.0e-3}  # perturb-only
+  - {name: snp,   shrink: 1.0e-4, perturb: 1.0e-3}  # 両方 (標準 S&P)
+  - {name: cbp,   rho: 1.0e-4, maturity: 100, decay: 0.99}
+  - {name: cbp,   rho: 1.0e-5, maturity: 100, decay: 0.99}
+
+condA:                          # Slowly-Changing Regression [D], T=1e4 標準のみ
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: [5, 100]
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [1]
+  lr_grid: []                   # lr スイープなし (lr_main=0.01 のみ)
+
+condB:                          # ガウス入力・教師切り替え [NEW], K=1e4, kappa=1 固定
+  d: 21
+  K_values: [10000]
+  c_values: [0.0, 2.0]
+  widths: [5, 100]
+  batch_values: [1]

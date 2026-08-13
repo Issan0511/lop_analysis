@@ -64,12 +64,37 @@ def compute_lop_metrics(net, x_eval, y_eval, cfg):
         sign_match_mean = pair_match.mean(dim=1)
         sign_clone_frac = (pair_match >= C["sign_match_tau"]).float().mean(dim=1)
 
+        # --- SDE 分解 [methods_sde_0813] ①: eval バッチ上の drift / diffusion (W 勾配)
+        #     snr_drift = |E[g]|^2 / tr C(w) がその run の drift 支配 / diffusion 支配の直接指標
+        x_z = torch.where(finite[None, :, None], x_eval, torch.zeros_like(x_eval))
+        gW = net.grads_batch(x_z, pre, a, delta)[0]         # [N,R,h,d]
+        drift_sq_W = gW.mean(0).pow(2).sum((1, 2))          # |E[g]|^2   [R]
+        trC_W = gW.var(0, unbiased=False).sum((1, 2))       # tr C(w)    [R]
+        snr_drift = drift_sq_W / trC_W.clamp_min(1e-30)
+
+        # --- [methods_sde_0813] ②: 重み行列 W 本体の有効ランクと特異値集中度
+        #     (既存 eff_rank は活性 a のランク。整列による低ランク化を W 側で直接見る)
+        Wz = torch.where(finite[:, None, None], net.W, torch.zeros_like(net.W))
+        sw = torch.linalg.svdvals(Wz)                       # [R,min(h,d)]
+        pw = sw / sw.sum(dim=1, keepdim=True).clamp_min(1e-12)
+        eff_rank_W = torch.exp(-(pw * pw.clamp_min(1e-12).log()).sum(dim=1))
+        top1_frac = sw[:, 0] ** 2 / (sw ** 2).sum(dim=1).clamp_min(1e-24)
+
+        # --- [methods_sde_0813] ③: gate 開放率ベースの dead (Leaky 用)。
+        #     Leaky では |a|<tol 基準の dead_frac が定義上ほぼ 0 になるため、
+        #     ReLU 換算で dead 相当 (P(pre>0) < 1-dead_tau) のユニット割合を併記
+        open_frac = (pre > 0).float().mean(dim=0)           # [R,h]
+        neg_gate_frac = (open_frac < 1 - C["dead_tau"]).float().mean(dim=1)
+
         # eval バッチ上の損失 (公式同様 (yhat-y)^2 平均)
         eval_loss = (delta ** 2).mean(dim=0)
 
     out = dict(dead_frac=dead_frac, dup_frac=dup_frac, sat_frac=sat_frac,
                eff_rank=eff_rank, stable_rank=stable_rank, wcos_mean=wcos_mean,
                sign_match_mean=sign_match_mean, sign_clone_frac=sign_clone_frac,
+               drift_sq_W=drift_sq_W, trC_W=trC_W, snr_drift=snr_drift,
+               eff_rank_W=eff_rank_W, top1_frac=top1_frac,
+               neg_gate_frac=neg_gate_frac,
                eval_loss=eval_loss)
     nan = torch.full_like(finite.float(), float("nan"))
     return {k: torch.where(finite, v.float(), nan) for k, v in out.items()}

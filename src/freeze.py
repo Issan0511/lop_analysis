@@ -51,7 +51,10 @@ def _restore(gkey, ckpt, cfg, device):
     tstate = {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in ckpt["teacher"].items()}
     teacher.load_state(tstate)
 
-    net = VecMLP(R, width, d, gens["init"], device)
+    # leaky アームの ckpt は act_alpha を復元 (旧 ckpt は method_cfg なし -> ReLU)
+    mcfg = runs[0].get("method_cfg", {"name": "none"})
+    act_alpha = float(mcfg.get("alpha", 0.0)) if mcfg.get("name") == "leaky" else 0.0
+    net = VecMLP(R, width, d, gens["init"], device, act_alpha=act_alpha)
     net.load_state({k: v.to(device) for k, v in ckpt["net"].items()})
     rm = ckpt["running_mean"].to(device)
     centered = torch.tensor([r["enc"] == "centered" for r in runs], device=device)
