@@ -82,6 +82,16 @@ def compute_lop_metrics(net, x_eval, y_eval, cfg):
         # srank(W) = ||W||_F^2 / ||W||_2^2 (実験(5) coupling_ab の指標①の厳密定義)
         stable_rank_W = (sw ** 2).sum(dim=1) / (sw[:, 0] ** 2).clamp_min(1e-24)
 
+        # dead 行除外 srank (④→① 逆流の分離用): dead 行をゼロ化した W の srank。
+        # ゼロ行の追加は非ゼロ特異値を変えないため部分行列の srank と等価。
+        # 全行 dead の run は NaN。
+        W_alive = torch.where(dead_i[:, :, None], torch.zeros_like(Wz), Wz)
+        sa = torch.linalg.svdvals(W_alive)
+        stable_rank_W_alive = (sa ** 2).sum(dim=1) / (sa[:, 0] ** 2).clamp_min(1e-24)
+        any_alive = ~dead_i.all(dim=1)
+        stable_rank_W_alive = torch.where(any_alive, stable_rank_W_alive,
+                                          torch.full_like(stable_rank_W_alive, float("nan")))
+
         # --- [methods_sde_0813] ③: gate 開放率ベースの dead (Leaky 用)。
         #     Leaky では |a|<tol 基準の dead_frac が定義上ほぼ 0 になるため、
         #     ReLU 換算で dead 相当 (P(pre>0) < 1-dead_tau) のユニット割合を併記
@@ -96,6 +106,7 @@ def compute_lop_metrics(net, x_eval, y_eval, cfg):
                sign_match_mean=sign_match_mean, sign_clone_frac=sign_clone_frac,
                drift_sq_W=drift_sq_W, trC_W=trC_W, snr_drift=snr_drift,
                eff_rank_W=eff_rank_W, top1_frac=top1_frac, stable_rank_W=stable_rank_W,
+               stable_rank_W_alive=stable_rank_W_alive,
                neg_gate_frac=neg_gate_frac,
                eval_loss=eval_loss)
     nan = torch.full_like(finite.float(), float("nan"))

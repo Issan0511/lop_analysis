@@ -25,11 +25,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-MET_LABEL = {"srank_drop": "1) srank(W) drop", "post_err": "2) post-switch E[e^2]",
+MET_LABEL = {"srank_drop": "1) srank(W) drop", "srank_alive_drop": "1b) srank(alive W) drop",
+             "post_err": "2) post-switch E[e^2]",
              "trC": "3) tr C(w) (log)", "dead": "4) dead_frac"}
-MET_ORDER = ["srank_drop", "post_err", "trC", "dead"]
-MET_COLOR = {"srank_drop": "tab:blue", "post_err": "tab:orange",
-             "trC": "tab:green", "dead": "tab:red"}
+MET_ORDER = ["srank_drop", "srank_alive_drop", "post_err", "trC", "dead"]
+MET_COLOR = {"srank_drop": "tab:blue", "srank_alive_drop": "tab:purple",
+             "post_err": "tab:orange", "trC": "tab:green", "dead": "tab:red"}
 
 
 def load_all(resdir):
@@ -65,15 +66,18 @@ def cell_mask(df, cell):
 
 
 def series_for_run(lop_r, post_r, srank_col):
-    """1 run の 4 指標の (step, 生値) 系列 dict。"""
+    """1 run の各指標の (step, 生値) 系列 dict。srank 系は低下 -> 上昇に反転。"""
     lop_r = lop_r.sort_values("step")
     post_r = post_r.sort_values("switch_step")
-    return {
-        "srank_drop": (lop_r.step.values, -lop_r[srank_col].values),   # 低下 -> 上昇に反転
+    out = {
+        "srank_drop": (lop_r.step.values, -lop_r[srank_col].values),
         "post_err": (post_r.switch_step.values, post_r.post_err.values),
         "trC": (lop_r.step.values, np.log10(np.maximum(lop_r.trC_W.values, 1e-30))),
         "dead": (lop_r.step.values, lop_r.dead_frac.values),
     }
+    if "stable_rank_W_alive" in lop_r.columns:
+        out["srank_alive_drop"] = (lop_r.step.values, -lop_r.stable_rank_W_alive.values)
+    return out
 
 
 def smooth(y, k=5):
@@ -107,7 +111,8 @@ def t_half(x, y, min_change):
 
 
 # 生値スケールでの最小変化量 (これ未満は「その Path が発現していない」として除外)
-MIN_CHANGE = {"srank_drop": 0.5, "post_err": 0.05, "trC": 0.3, "dead": 0.05}
+MIN_CHANGE = {"srank_drop": 0.5, "srank_alive_drop": 0.5,
+              "post_err": 0.05, "trC": 0.3, "dead": 0.05}
 
 
 def fig_trend(d, srank_col, figdir):
@@ -123,7 +128,10 @@ def fig_trend(d, srank_col, figdir):
             xs_all, ys_all = [], []
             for rid, lr in lsub.groupby("run_id"):
                 pr = psub[psub.run_id == rid] if "run_id" in psub.columns else psub.iloc[0:0]
-                x, y = series_for_run(lr, pr, srank_col)[met]
+                ss = series_for_run(lr, pr, srank_col)
+                if met not in ss:
+                    continue
+                x, y = ss[met]
                 if len(x):
                     xs_all.append(pd.Series(y, index=x))
             if not xs_all:
@@ -166,7 +174,10 @@ def fig_event(d, cfg_coupling, period, figdir):
 
     for met, col, tf in [("trC", "trC_W", lambda v: np.log10(np.maximum(v, 1e-30))),
                          ("dead", "dead_frac", lambda v: v),
-                         ("srank", None, lambda v: v)]:
+                         ("srank", None, lambda v: v),
+                         ("srank_alive", "stable_rank_W_alive", lambda v: v)]:
+        if col is not None and col not in lop.columns:
+            continue
         cl = cells(lop)
         ncol = 2
         nrow = int(np.ceil(len(cl) / ncol))
@@ -203,24 +214,28 @@ def fig_event(d, cfg_coupling, period, figdir):
 
 
 def order_stats(d, srank_col, resdir, n_boot=4000, rng_seed=0):
-    """run 別 t50 → セル別に「仕様の因果順 srank→err→trC→dead」の隣接ペア順序を
-    seed ブートストラップで検定。P(t50_X < t50_Y) と平均ラグを出す。"""
+    """run 別 t50 → セル別に**全ペア**の順序を seed ブートストラップで検定
+    (隣接ペアのみの連鎖推論は post_err のような非単調指標を挟むと壊れるため)。
+    P(t50_X < t50_Y) と平均ラグを出す。"""
+    from itertools import combinations
     lop, post = d["lop"], d["post"]
     rng = np.random.default_rng(rng_seed)
     rows, pair_rows = [], []
     for cell in cells(lop):
         lsub, psub = lop[cell_mask(lop, cell)], post[cell_mask(post, cell)]
-        t50 = {m: {} for m in MET_ORDER}
+        mets = [m for m in MET_ORDER
+                if m != "srank_alive_drop" or "stable_rank_W_alive" in lop.columns]
+        t50 = {m: {} for m in mets}
         for rid, lr in lsub.groupby("run_id"):
             pr = psub[psub.run_id == rid] if len(psub) else psub
             ss = series_for_run(lr, pr, srank_col)
-            for met in MET_ORDER:
+            for met in mets:
                 x, y = ss[met]
                 t = t_half(np.asarray(x, float), np.asarray(y, float), MIN_CHANGE[met])
                 t50[met][rid] = t
                 rows.append(dict(exp=cell[0], width=cell[1], c=cell[2],
                                  run_id=rid, metric=met, t50=t))
-        for a, b in zip(MET_ORDER[:-1], MET_ORDER[1:]):
+        for a, b in combinations(mets, 2):
             ids = [r for r in t50[a] if np.isfinite(t50[a][r]) and np.isfinite(t50[b].get(r, np.nan))]
             if len(ids) < 3:
                 pair_rows.append(dict(exp=cell[0], width=cell[1], c=cell[2], pair=f"{a}<{b}",
