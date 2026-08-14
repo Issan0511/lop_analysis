@@ -1,0 +1,66 @@
+# proj_004: condA_freeze_0815 — 条件A の freeze_bias 腕 (レベル1「必要性」の判定)
+#
+# 位置づけ: bias_margin_0814 で言えたのは**レベル0**「µ=0 でも b で dead を作れる」
+# (+ ノイズ経路の dead は症状ですらない) まで。「b が**既存の** LoP に関与する」と
+# 言うにはレベル1 = 必要性の判定が要る。既存 LoP レジーム (条件A, µ≠0) で b を凍結し、
+# dead と eval が変わるかを見る。
+#
+# **事前登録の判定基準 (実行前に固定、2026-08-15)**
+#   PA-1: dead_frac 最終値が frozen < free、paired seed bootstrap 95%CI がゼロ非含有
+#         → 条件A の dead に b が寄与している
+#   PA-2: 寄与の大きさ。減少率 (free−frozen)/free が
+#         < 0.20 → **b は脇役** (Phase 0 の「b 主導 dead は 5.3%」と整合)
+#         ≥ 0.20 → b は無視できない寄与。Phase 0 の静的分解では捉えられない
+#                  「b の沈降が dead の必要条件になっている」経路を示唆
+#   PA-3: eval_loss 最終値の paired 差。frozen が有意に良ければ b 経路は有害、
+#         有意に悪ければ b 凍結は表現力を削る副作用が勝る (bias_margin の frozen 対照と
+#         同じ交絡: frozen は「死のない同一ネット」ではない)
+#
+# **事前予測**: Phase 0 (rank_int スナップショットの分解) では dead の負性を
+# w_flip·flip (−1.463) が担い b (−0.151) は約 10%、b 主導の dead は 5.3% のみだった。
+# よって PA-1 は成立するが PA-2 は「脇役」側 (減少率 < 0.20) に落ちると予測する。
+# これが外れて大きな減少が出た場合、「b は磁石ではなく引き金」という別の読みが要る。
+#
+# 比較の厳密性: free / frozen は同一 config・同一 seed・同一乱数ストリームで、
+# 差は sgd_step の b 更新のみ (freeze_bias は勾配計算も乱数消費も変えない)。
+
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4]
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 100000, 1000000]
+  run_freeze: false
+  b_metrics: true
+  w_dir_metrics: false
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:                          # 既存 LoP レジーム (Dohare 準拠、µ≠0)
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: [5, 100]
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [1]
+  lr_grid: []
+  freeze_bias: false            # src.condA_freeze が {false, true} で上書き
+
+condB:
+  d: 21
+  K_values: []
+  c_values: []
+  widths: []
+  batch_values: []
