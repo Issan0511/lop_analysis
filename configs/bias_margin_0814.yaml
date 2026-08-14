@@ -1,0 +1,67 @@
+# proj_004: bias_margin_0814 Phase 2 — 本実験 (spec §3 Phase 2)
+#
+# Phase 1 の採用セル: route1 (target_noise_sd) × width 20 (dead_end 0.850 で最大)。
+# 基準3 (eval_loss 1.5倍) を満たすセルは無く、基準2 までを満たすセルから採用した
+# (仕様に規定の無いケース。summary に明記)。
+#
+# アーム (全て c=0.0, κ=1 → β_i = b_i/‖w_i‖ ちょうど、seeds [0..4], 1M step):
+#   A1: 採用経路 target_noise_sd ∈ {0, 0.5, 1, 2} × freeze_bias ∈ {false, true}
+#   A2: もう一方の経路 K ∈ {1000, 100} × freeze_bias ∈ {false, true}  (noise=0)
+#   A3: A1 の採用セル (noise 2.0, freeze false) で checkpoint 保存を有効化
+#       → A1 のそのセルに checkpoints を付けて兼用する
+#
+# freeze_bias / target_noise_sd / K は run 軸ではないので src.bias_margin が
+# セルごとに config を差し替えて実行する。
+
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4]
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: []               # A3 セルのみ src.bias_margin が付与
+  run_freeze: false
+  b_metrics: true
+  w_dir_metrics: false
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: []
+  widths: []
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [1]
+  lr_grid: []
+
+condB:
+  d: 21
+  K_values: [10000]
+  c_values: [0.0]
+  kappa_values: [1]
+  widths: [20]                  # Phase 1 採用幅
+  lr_values: [0.01]
+  batch_values: [1]
+  spike_dir: alt
+  target_hidden: 100
+  target_noise_sd: 0.0
+  freeze_bias: false
+
+bias_margin:
+  a1_noise_sd: [0.0, 0.5, 1.0, 2.0]     # A1: 採用経路の強度スイープ (K=1e4)
+  a2_K: [1000, 100]                     # A2: もう一方の経路 (noise=0)
+  freeze_values: [false, true]
+  a3_cell: {noise_sd: 2.0, K: 10000, freeze_bias: false}   # checkpoint を付けるセル
+  a3_checkpoints: [0, 10000, 50000, 100000, 300000, 1000000]

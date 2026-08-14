@@ -1,0 +1,64 @@
+# proj_004: bias_margin_0814 Phase 1 — レジーム探索 (spec §3)
+#
+# 目的: µ=0 (c=0, κ=1 → β_i = b_i/‖w_i‖ ちょうど) を厳密に保ったまま dead_frac > 0 が
+# 出る条件を1つ選ぶ。残差経路は2本:
+#   経路1: target_noise_sd ∈ {0, 0.5, 1, 2} (教師出力への加法ノイズ、K=1e4 固定)
+#   経路2: K ∈ {1e4, 1e3, 1e2}            (タスク切替がフィットより速い、noise=0 固定)
+# 両経路とも T4 の「フィットし切れない残差の持続」を与えるのが狙い。
+#
+# noise_sd と K は run 軸ではないので src.bias_margin_p1 が値ごとに config を差し替える。
+# 停止規則 (spec §3): 基準2 (dead_frac ≥ 0.1) を満たすセルが1つも無ければ Phase 2 に
+# 進まず停止し「µ=0 下では b が沈まず Path A は発現しない」と記録する。グリッドは広げない。
+
+common:
+  total_steps: 200000
+  seeds: [0, 1]
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: []
+  run_freeze: false
+  b_metrics: true              # §2.3 の b/β 指標
+  w_dir_metrics: false
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:                          # Phase 1 は条件B のみ
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: []
+  widths: []
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [1]
+  lr_grid: []
+
+condB:
+  d: 21
+  K_values: [10000]             # 経路2 で上書き
+  c_values: [0.0]               # µ=0 厳密
+  kappa_values: [1]
+  widths: [5, 20]
+  lr_values: [0.01]
+  batch_values: [1]
+  spike_dir: alt
+  target_hidden: 100
+  target_noise_sd: 0.0          # 経路1 で上書き
+  freeze_bias: false
+
+bias_margin_p1:
+  route1_noise_sd: [0.0, 0.5, 1.0, 2.0]   # K=1e4 固定
+  route2_K: [10000, 1000, 100]            # noise_sd=0 固定
+  dead_min: 0.1                           # 基準2
+  evalloss_ratio_min: 1.5                 # 基準3
+  wnorm_blowup: 100.0                     # 基準1

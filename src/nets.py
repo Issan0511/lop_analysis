@@ -14,9 +14,10 @@ from .envs import kaiming_mlp_params
 
 
 class VecMLP:
-    def __init__(self, R, h, d, gen, device, act_alpha=0.0):
+    def __init__(self, R, h, d, gen, device, act_alpha=0.0, freeze_bias=False):
         self.R, self.h, self.d = R, h, d
         self.act_alpha = act_alpha        # Leaky ReLU 負側勾配 (0.0 = ReLU, 既存互換)
+        self.freeze_bias = freeze_bias    # True で b を初期値 0 に固定 [bias_margin_0814]
         self.W, self.b, self.v, self.c = kaiming_mlp_params(R, h, d, gen, device)
 
     def _act(self, pre):
@@ -74,8 +75,10 @@ class VecMLP:
         return gW, gb, gv, gc
 
     def sgd_step(self, lr, gW, gb, gv, gc):
-        """lr: [R]"""
+        """lr: [R]。freeze_bias が真なら b の更新のみ止める (勾配計算・乱数消費は不変、
+        b は初期値 0 のまま) [bias_margin_0814 §2.2]。"""
         self.W -= lr[:, None, None] * gW
-        self.b -= lr[:, None] * gb
+        if not self.freeze_bias:
+            self.b -= lr[:, None] * gb
         self.v -= lr[:, None] * gv
         self.c -= lr * gc

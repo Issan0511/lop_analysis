@@ -39,7 +39,83 @@ def compute_w_dir(net, dead_i, wdir_ctx):
             for k, v in out.items()}
 
 
-def compute_lop_metrics(net, x_eval, y_eval, cfg, wdir_ctx=None):
+B_KEYS = ["b_mean_alive", "b_mean_dead", "b_std", "b_min", "beta_mean", "beta_p10",
+          "beta_min", "p_min", "p_mean", "dead_b_dominant_frac", "dead_persist_frac",
+          "p_zero_frac", "p_zero_persist_frac"]
+
+
+def compute_b_metrics(net, dead_i, open_frac, x_eval, bctx):
+    """b / β 系指標 [bias_margin_0814 §2.3]。
+
+    β_i = (w_iᵀµ + b_i)/√(w_iᵀΣw_i)。条件B は µ,Σ を解析値で渡す (bctx["mu"],
+    bctx["sigma_diag_fn"]) 。条件A は µ,Σ を eval バッチから経験推定する。
+    dead_persist_frac は直前 lop step の dead マスクとの比較 (bctx が持ち回る)。"""
+    R, h, d = net.W.shape
+    W, b = net.W, net.b
+    if bctx.get("mu") is not None:                       # 条件B: 解析値
+        mu = torch.as_tensor(bctx["mu"], dtype=W.dtype, device=W.device)   # [R,d]
+        u = bctx.get("u")
+        kap = torch.as_tensor(bctx["kappa"], dtype=W.dtype, device=W.device)  # [R]
+        wSw = (W ** 2).sum(2)                            # Σ=I 部分
+        if u is not None:
+            uu = torch.as_tensor(u, dtype=W.dtype, device=W.device)
+            wSw = wSw + (kap - 1)[:, None] * torch.einsum("rhd,d->rh", W, uu) ** 2
+        wmu = torch.einsum("rhd,rd->rh", W, mu)
+    else:                                                # 条件A: eval バッチから推定
+        xm = x_eval.mean(dim=0)                          # [R,d]
+        xc = x_eval - xm[None]
+        wmu = torch.einsum("rhd,rd->rh", W, xm)
+        proj = torch.einsum("rhd,nrd->nrh", W, xc)
+        wSw = proj.var(dim=0, unbiased=False)            # w^T Σ w
+    beta = (wmu + b) / wSw.clamp_min(1e-24).sqrt()       # [R,h]
+
+    alive = ~dead_i
+    nan = torch.tensor(float("nan"), device=W.device)
+    mean_or_nan = lambda t, m: torch.where(m.any(dim=1),
+                                           (t * m).sum(1) / m.sum(1).clamp_min(1),
+                                           nan.expand(R))
+    out = dict(
+        b_mean_alive=mean_or_nan(b, alive), b_mean_dead=mean_or_nan(b, dead_i),
+        b_std=b.std(dim=1, unbiased=False), b_min=b.min(dim=1).values,
+        beta_mean=mean_or_nan(beta, alive),
+        beta_p10=torch.quantile(torch.where(alive, beta, torch.full_like(beta,
+                                float("nan"))).double(), 0.1, dim=1,
+                                interpolation="linear").float(),
+        beta_min=beta.min(dim=1).values,
+        p_min=open_frac.min(dim=1).values, p_mean=open_frac.mean(dim=1),
+    )
+    # dead の負性を b が担う割合 (|b| > |w^T µ|)。µ=0 の条件B では定義上ほぼ 1。
+    dom = (b.abs() > wmu.abs()) & (b < 0) & dead_i
+    out["dead_b_dominant_frac"] = torch.where(
+        dead_i.any(dim=1), dom.sum(1).float() / dead_i.sum(1).clamp_min(1), nan.expand(R))
+    prev = bctx.get("prev_dead")
+    if prev is None:
+        out["dead_persist_frac"] = nan.expand(R).clone()
+    else:
+        still = (prev & dead_i).sum(1).float()
+        out["dead_persist_frac"] = torch.where(prev.any(dim=1),
+                                               still / prev.sum(1).clamp_min(1),
+                                               nan.expand(R))
+    bctx["prev_dead"] = dead_i.clone()
+
+    # 厳密吸収 (PB-5 の本判定): dead_frac は dead_tau=0.95 の閾値判定なので p<0.05 の
+    # 「まだ生きているユニット」を含む。T5 が予言するのは p=0 (eval バッチ上で 1 度も
+    # 発火しない) の絶対吸収なので、その部分集合の持続率を別に測る。
+    pzero = open_frac <= 0.0
+    out["p_zero_frac"] = pzero.float().mean(dim=1)
+    prevz = bctx.get("prev_pzero")
+    if prevz is None:
+        out["p_zero_persist_frac"] = nan.expand(R).clone()
+    else:
+        still = (prevz & pzero).sum(1).float()
+        out["p_zero_persist_frac"] = torch.where(prevz.any(dim=1),
+                                                 still / prevz.sum(1).clamp_min(1),
+                                                 nan.expand(R))
+    bctx["prev_pzero"] = pzero.clone()
+    return out
+
+
+def compute_lop_metrics(net, x_eval, y_eval, cfg, wdir_ctx=None, bctx=None):
     """x_eval: [N,R,d], y_eval: [N,R] -> dict of per-run tensors [R]
 
     wdir_ctx を渡すと §2.2 の W 方向指標を追加する (None なら従来カラムのみ)。"""
@@ -145,5 +221,7 @@ def compute_lop_metrics(net, x_eval, y_eval, cfg, wdir_ctx=None):
                eval_loss=eval_loss)
     if wdir_ctx is not None:
         out.update(compute_w_dir(net, dead_i, wdir_ctx))
+    if bctx is not None:
+        out.update(compute_b_metrics(net, dead_i, open_frac, x_eval, bctx))
     nan = torch.full_like(finite.float(), float("nan"))
     return {k: torch.where(finite, v.float(), nan) for k, v in out.items()}

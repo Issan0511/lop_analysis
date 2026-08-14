@@ -1,0 +1,79 @@
+bias_margin:
+  a1_noise_sd:
+  - 0.0
+  - 0.5
+  - 1.0
+  - 2.0
+  a2_K:
+  - 1000
+  - 100
+  a3_cell:
+    K: 10000
+    freeze_bias: false
+    noise_sd: 2.0
+  a3_checkpoints:
+  - 0
+  - 10000
+  - 50000
+  - 100000
+  - 300000
+  - 1000000
+  freeze_values:
+  - false
+  - true
+common:
+  b_metrics: true
+  checkpoints: []
+  dead_tau: 0.95
+  dead_tol: 1.0e-07
+  device: cpu
+  dup_tau: 0.95
+  eval_batch: 2000
+  freeze_M_cap: 500000
+  freeze_min_periods: 50
+  lop_every: 1000
+  loss_bin: 1000
+  lr_main: 0.01
+  run_freeze: false
+  sat_frac: 0.99
+  sat_ratio_tol: 0.0001
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  sign_match_tau: 0.95
+  total_steps: 1000000
+  w_dir_metrics: false
+condA:
+  T_values: []
+  batch_values:
+  - 1
+  beta: 0.7
+  center_alpha: 0.01
+  encodings:
+  - std
+  f: 15
+  lr_grid: []
+  m: 20
+  target_hidden: 100
+  widths: []
+condB:
+  K_values:
+  - 10000
+  batch_values:
+  - 1
+  c_values:
+  - 0.0
+  d: 21
+  freeze_bias: true
+  kappa_values:
+  - 1
+  lr_values:
+  - 0.01
+  spike_dir: alt
+  target_hidden: 100
+  target_noise_sd: 2.0
+  widths:
+  - 20

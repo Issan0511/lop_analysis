@@ -21,7 +21,8 @@ def make_gens(exp, width, device, offset=0):
     (仕様書 §8)。既存 4 本のシードは不変 (method 追加は末尾)。"""
     base = SEED_BASE[exp] + width + offset
     gens = {}
-    for i, name in enumerate(["init", "input", "teacher", "eval", "method"]):
+    # 既存 5 本のシードは不変 (noise は末尾に追加 [bias_margin_0814 §2.1])
+    for i, name in enumerate(["init", "input", "teacher", "eval", "method", "noise"]):
         g = torch.Generator(device=device)
         g.manual_seed(base + 100 * (i + 1))
         gens[name] = g
@@ -67,7 +68,9 @@ def setup_group(gkey, runs, cfg, device):
         raise NotImplementedError("methods は batch=1 (標準 SGD) のみ対応")
     act_alpha = float(mcfg.get("alpha", 0.0)) if mcfg["name"] == "leaky" else 0.0
 
-    net = VecMLP(R, width, d, gens["init"], device, act_alpha=act_alpha)
+    cond = A if exp == "A" else B
+    net = VecMLP(R, width, d, gens["init"], device, act_alpha=act_alpha,
+                 freeze_bias=bool(cond.get("freeze_bias", False)))
     running_mean = torch.zeros(R, d, device=device)
 
     cbp = None
@@ -89,7 +92,10 @@ def setup_group(gkey, runs, cfg, device):
                 running_mean=running_mean, lr=lr, centered=centered, period=period,
                 eval_fixed=eval_fixed, runs=runs, device=device,
                 alpha=A["center_alpha"], gname=group_name(gkey),
-                method=mcfg, gen_method=gens["method"], cbp=cbp, gens=gens)
+                method=mcfg, gen_method=gens["method"], cbp=cbp, gens=gens,
+                # 教師出力への加法ノイズ [bias_margin_0814 §2.1]。学習ループ専用で、
+                # eval_batch() には決して適用しない (clean teacher 基準を保つ)。
+                noise_sd=float(cond.get("target_noise_sd", 0.0) or 0.0))
 
 
 def apply_method(st, a):
@@ -185,6 +191,23 @@ def load_resume(st, snap):
         g.set_state(snap["gens"][k])
 
 
+def make_bctx(st, cfg):
+    """b/β 指標用のコンテキスト [bias_margin_0814 §2.3]。
+    cfg["common"]["b_metrics"] が真のときだけ有効 (既定は無効 = 既存 config 互換)。
+    条件B は µ, Σ を解析値で渡し、条件A は None にして eval バッチからの経験推定に落とす。"""
+    import numpy as np
+    from .w_direction import spike_dir_vec
+
+    if not cfg["common"].get("b_metrics"):
+        return None
+    if st["exp"] == "B":
+        return dict(mu=st["env"].mu.detach().cpu().numpy().astype(np.float64),
+                    kappa=np.array([float(r.get("kappa", 1)) for r in st["runs"]]),
+                    u=spike_dir_vec(cfg["condB"].get("spike_dir", "ones"), st["d"]),
+                    prev_dead=None)
+    return dict(mu=None, kappa=None, u=None, prev_dead=None)
+
+
 def make_wdir_ctx(st, cfg):
     """W 方向指標用の解析パラメータ [center_selfcov_0814 §2.2]。
     cfg["common"]["w_dir_metrics"] が真のときだけ有効 (既定は無効 = 既存 config 互換)。
@@ -254,6 +277,7 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
         raise ValueError("coupling 計測はグループ内 period 一様が前提 (イベント整列が壊れる)")
     lop_steps = build_lop_steps(cfg, total, period_val)
     wdir_ctx = make_wdir_ctx(st, cfg)
+    bctx = make_bctx(st, cfg)
 
     # 実験(5) coupling_ab: タスク境界 (period, 2*period, ...) 直後 postswitch_n ステップの
     # 平均二乗誤差 (§②「新タスク切り替え直後の予測誤差」)。coupling キーが無ければ全て無効。
@@ -273,6 +297,7 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
     t0 = time.time()
 
     batch, batch_n = st["batch"], st["batch_n"]
+    noise_sd = st["noise_sd"]
     snap_set = set(snapshot_steps)
 
     if start_step > 0:
@@ -281,7 +306,7 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
         assert start_step % C["loss_bin"] == 0, "start_step は loss_bin 境界であること"
         x_ev, y_ev = eval_batch(st)
         x_ev_in = x_ev - cmask[None] * st["running_mean"][None]
-        m = compute_lop_metrics(net, x_ev_in, y_ev, cfg, wdir_ctx=wdir_ctx)
+        m = compute_lop_metrics(net, x_ev_in, y_ev, cfg, wdir_ctx=wdir_ctx, bctx=bctx)
         lop_rows.append((start_step, {k: v.cpu().numpy().copy() for k, v in m.items()}))
 
     for t in range(start_step, total):
@@ -303,6 +328,9 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
         if batch == 1:
             x_raw = env.step()                               # [R,d]
             y = teacher(x_raw)                               # [R]
+            if noise_sd > 0:                                 # 学習信号のみ汚す (eval は clean)
+                y = y + noise_sd * torch.randn(y.shape, generator=st["gens"]["noise"],
+                                               device=device)
 
             x_in = x_raw - cmask * st["running_mean"]
             st["running_mean"].mul_(1 - alpha).add_(alpha * x_raw)
@@ -322,6 +350,9 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
             else:
                 x_raw = env.step_batch(batch_n)              # [B,R,d]
             y = teacher(x_raw)                               # [B,R]
+            if noise_sd > 0:
+                y = y + noise_sd * torch.randn(y.shape, generator=st["gens"]["noise"],
+                                               device=device)
 
             x_in = x_raw - cmask[None] * st["running_mean"][None]
             st["running_mean"].mul_(1 - alpha).add_(alpha * x_raw.mean(dim=0))
@@ -348,7 +379,7 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
         if (t + 1) in lop_steps or t == 0:
             x_ev, y_ev = eval_batch(st)
             x_ev_in = x_ev - cmask[None] * st["running_mean"][None]
-            m = compute_lop_metrics(net, x_ev_in, y_ev, cfg, wdir_ctx=wdir_ctx)
+            m = compute_lop_metrics(net, x_ev_in, y_ev, cfg, wdir_ctx=wdir_ctx, bctx=bctx)
             lop_rows.append((t + 1 if t > 0 else 0, {k: v.cpu().numpy().copy() for k, v in m.items()}))
 
     if total in ckpt_set:
