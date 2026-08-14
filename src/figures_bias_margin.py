@@ -182,38 +182,69 @@ def verdicts(lop, resdir, rng):
             if best2 is None or ci["mean"] > best2[1]["mean"]:
                 best2 = (cell, ci)
         ci = best2[1]
+        kseries = free[free.noise_sd == 0].groupby("K_cell").apply(
+            lambda g: last_by_seed(g, "dead_frac").mean(), include_groups=False)
         rows.append(dict(pred="PB-6", scope="経路2 (K 短縮・ラベルノイズなし) でも dead > 0",
                          verdict="PASS" if ci["lo"] > 0 else "FAIL",
                          evidence=f"{best2[0]}: dead {ci['mean']:.3f} "
                                   f"CI [{ci['lo']:.3f}, {ci['hi']:.3f}]。"
-                                  + ("人工ラベルノイズ専用の現象ではなく継続学習設定に接続する。"
+                                  + ("人工ラベルノイズ専用の現象ではない。**ただし K 限定**: "
+                                     f"K 系列 {dict(kseries.round(3))} のとおり K=10³ で 0.04、"
+                                     "標準の K=10⁴ では 0 なので、「継続学習に接続する」は"
+                                     "**「切替がフィットより速い極限で」という限定付き**でのみ言える。"
                                      if ci["lo"] > 0 else
                                      "**不成立 → 機構の位置づけリスク (spec §6-3)**")))
 
-    # PB-7: dead が出たセルで clean eval_loss が上昇するか
+    # PB-7: dead が出たセルで clean eval_loss が上昇するか。
+    #
+    # **対照の取り方（監査による修正 2026-08-15）**: 当初は「残差なしベースライン比」で
+    # 見ていたが、それは *残差条件そのものの難しさ* と *dead の機能的コスト* を混同する。
+    # dead のコストを測る正しい対照は **同一残差条件の frozen 腕**（b を凍結して dead を
+    # 完全に止めた同一条件）。seed が揃っているので paired で比較できる。
     pb7 = []
     for cell, g in free.groupby("cell"):
+        sd_, K_ = g.noise_sd.iloc[0], g.K_cell.iloc[0]
+        cond = cell.replace("_bfree", "")
+        fz = froz[froz.cell == f"{cond}_bfrozen"]
         d = last_by_seed(g, "dead_frac")
         e0 = g[g.step == g.step.min()].set_index("seed").eval_loss
         e1 = last_by_seed(g, "eval_loss")
-        sd_, K_ = g.noise_sd.iloc[0], g.K_cell.iloc[0]
-        pb7.append(dict(cell=cell, noise_sd=sd_, K=K_, dead=d.mean(),
-                        eval_init=e0.mean(), eval_end=e1.mean(),
-                        eval_ratio=(e1 / e0).mean()))
-    pb7 = pd.DataFrame(pb7).sort_values("dead")
-    base = pb7[(pb7.noise_sd == 0) & (pb7.K == 10000)]
-    dead_cells_t = pb7[pb7.dead > 0]
-    rise_vs_init = bool((dead_cells_t.eval_ratio > 1).all()) if len(dead_cells_t) else False
-    if len(base) and len(dead_cells_t):
-        b_end = float(base.eval_end.iloc[0])
-        ratio_vs_base = dead_cells_t.eval_end / b_end
-        rows.append(dict(pred="PB-7", scope="dead が出たセルで clean eval_loss が上昇",
-                         verdict="PASS" if rise_vs_init else "FAIL",
-                         evidence=f"初期値比では {'全セルで上昇' if rise_vs_init else '上昇せず'} "
-                                  f"(eval_ratio {dead_cells_t.eval_ratio.min():.3f}–"
-                                  f"{dead_cells_t.eval_ratio.max():.3f})。"
-                                  f"ただし残差なしベースライン ({b_end:.4g}) 比では "
-                                  f"{ratio_vs_base.min():.1f}–{ratio_vs_base.max():.1f} 倍悪い"))
+        row = dict(cell=cond, noise_sd=sd_, K=K_, dead_free=d.mean(),
+                   alive_units=float(g.width.iloc[0]) * (1 - d.mean()),
+                   eval_init=e0.mean(), eval_free=e1.mean(),
+                   eval_ratio_vs_init=(e1 / e0).mean(),
+                   eval_frozen=np.nan, ratio_vs_frozen=np.nan,
+                   diff_lo=np.nan, diff_hi=np.nan, costly=False, effect="NA")
+        if len(fz):
+            ez = last_by_seed(fz, "eval_loss")
+            sd_seeds = e1.index.intersection(ez.index)
+            ci = paired_boot_ci(e1.loc[sd_seeds].values, ez.loc[sd_seeds].values, rng)
+            # 三分類: costly (free が有意に悪い) / beneficial (有意に良い) / neutral
+            verd = ("costly" if ci["lo"] > 0 else
+                    "beneficial" if ci["hi"] < 0 else "neutral")
+            row.update(eval_frozen=ez.mean(), ratio_vs_frozen=e1.mean() / ez.mean(),
+                       diff_lo=ci["lo"], diff_hi=ci["hi"],
+                       costly=bool(ci["lo"] > 0), effect=verd)
+        pb7.append(row)
+    pb7 = pd.DataFrame(pb7).sort_values("dead_free")
+
+    dc = pb7[pb7.dead_free >= 0.1]
+    costly = dc[dc.costly]
+    rows.append(dict(
+        pred="PB-7", scope="dead の機能的コスト (対照 = 同一残差条件の frozen 腕、paired)",
+        verdict="PARTIAL" if (len(costly) and len(costly) < len(dc))
+                else ("PASS" if len(costly) == len(dc) and len(dc) else "FAIL"),
+        evidence="; ".join(
+            f"{r.cell}: dead {r.dead_free:.2f} (alive {r.alive_units:.1f}u), "
+            f"eval free {r.eval_free:.3f} vs frozen {r.eval_frozen:.3f} "
+            f"(比 {r.ratio_vs_frozen:.2f}, diff CI [{r.diff_lo:+.3f}, {r.diff_hi:+.3f}]) "
+            + {"costly": "**コストあり**", "beneficial": "**有意に有益**",
+               "neutral": "差なし"}.get(r.effect, "NA")
+            for r in dc.itertuples())
+        + "。→ **dead の機能的コストは経路依存**: ノイズ経路の dead は同条件対照比で"
+          "コストなし〜むしろ有益 (n2 は alive 1.6u が frozen の 20u を上回る = "
+          "Cornacchia §6 のラベルノイズ→スパース化→汎化改善と同型の適応的正則化)。"
+          "症状を伴うのは K 高速切替経路のみ"))
     return pd.DataFrame(rows), pb3, pb7
 
 
@@ -431,17 +462,32 @@ def figures(resdir, lop, pb7):
     fig.tight_layout(); fig.savefig(os.path.join(fd, "fig_b4_route_compare.png"), dpi=150)
     plt.close(fig)
 
-    # b5: dead_frac vs clean eval_loss (PB-7)
-    fig, ax = plt.subplots(figsize=(6.2, 4.2))
+    # b5: dead の機能的コスト — 同一残差条件の free vs frozen (PB-7 の正しい対照)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
+    ax = axes[0]
+    idx = np.arange(len(pb7))
+    w = 0.38
+    ax.bar(idx - w / 2, pb7.eval_free, w, label="b free (dead occurs)", color="tab:red")
+    ax.bar(idx + w / 2, pb7.eval_frozen, w, label="b frozen (dead = 0)", color="tab:gray")
+    for i, r in enumerate(pb7.itertuples()):
+        ax.text(i, max(r.eval_free, r.eval_frozen) * 1.03,
+                f"dead {r.dead_free:.2f}", ha="center", fontsize=7)
+    ax.set_xticks(idx); ax.set_xticklabels(pb7.cell, rotation=20, fontsize=7)
+    ax.set_ylabel("clean eval_loss (final)"); ax.grid(alpha=0.3, axis="y")
+    ax.set_title("same-residual control: does dead cost anything?")
+    ax.legend(fontsize=8)
+
+    ax = axes[1]
     for r in pb7.itertuples():
         mk = "o" if r.noise_sd > 0 else ("s" if r.K < 10000 else "*")
-        ax.scatter(r.dead, r.eval_end, s=90, marker=mk,
-                   color=SD_COLOR.get(r.noise_sd) if r.noise_sd > 0 else K_COLOR.get(r.K))
-        ax.annotate(r.cell.replace("_bfree", ""), (r.dead, r.eval_end), fontsize=6,
-                    xytext=(4, 4), textcoords="offset points")
-    ax.set_xlabel("dead_frac (final)"); ax.set_ylabel("clean eval_loss (final)")
-    ax.set_yscale("log")
-    ax.set_title("PB-7: dead fraction vs clean-teacher eval loss\n(circle=route1, square=route2, star=baseline)")
+        c = SD_COLOR.get(r.noise_sd) if r.noise_sd > 0 else K_COLOR.get(r.K)
+        ax.scatter(r.dead_free, r.ratio_vs_frozen, s=110, marker=mk, color=c)
+        ax.annotate(r.cell, (r.dead_free, r.ratio_vs_frozen), fontsize=6,
+                    xytext=(5, 4), textcoords="offset points")
+    ax.axhline(1.0, color="black", lw=1, ls="--")
+    ax.set_xlabel("dead_frac (final)")
+    ax.set_ylabel("eval_loss ratio  free / frozen")
+    ax.set_title("> 1 = dead is costly, < 1 = dead is beneficial\n(circle=route1 noise, square=route2 K, star=baseline)")
     ax.grid(alpha=0.3)
     fig.tight_layout(); fig.savefig(os.path.join(fd, "fig_b5_dead_vs_eval.png"), dpi=150)
     plt.close(fig)
@@ -510,10 +556,12 @@ def write_summary(resdir, ver, pb3, pb7, san, s6, cfg, phase0, phase1):
     lines.append("""
 ## 結論
 
-1. **仮説は成立: µ=0 のまま Path A を誘発できる (PB-2 PASS)**。中心化で消えない b が
+1. **仮説は成立: µ=0 のまま dead_frac を誘発できる (PB-2 PASS)**。中心化で消えない b が
    ゲート margin β = b/‖w‖ を押し下げ、dead_frac は最大 0.99 (K=100) / 0.92 (σ_ξ=2)。
    center_selfcov_0814 アーム3 の dead=0.00 は null ではなく、b を沈める残差が
    無かっただけだったことが確認された。
+   **語の精度**: 誘発できたのは「dead_frac」であって「Path A (症状としての LoP)」ではない。
+   dead の機能的コストは経路依存で、症状を伴うのは K 経路のみ (結論 6)。
 2. **PB-1 が対照として完璧に効いた**。freeze_bias=true の 6 セル全ての全 step で
    dead_frac = 0.000 (max = 0)。µ=0 かつ b≡0 なら p≡1/2 という T1 の数値的確認であり、
    同時に「dead は b 経由でしか起きていない」ことの実装レベルの証明になっている。
@@ -521,27 +569,65 @@ def write_summary(resdir, ver, pb3, pb7, san, s6, cfg, phase0, phase1):
    負 (系統的沈降) かつ |b_mean| > b_std の区間が 82–100%。T3 の自己項ドリフト
    (−2η v² E[σ](1−p)、v の符号にも µ にも依存しない下向きの力) を支持する。
    拡散だけのランダムウォークでは説明できない。
-4. **経路非依存 (PB-6 PASS) が位置づけ上いちばん重要**。ラベルノイズを一切入れない
+4. **経路非依存 (PB-6 PASS)、ただし K=100 限定**。ラベルノイズを一切入れない
    K=100 (タスク切替がフィットより速い) でも dead 0.99。spec §6-3 が警告していた
    「人工ラベルノイズ専用の現象＝破棄した v1 の外生誤差モデルに逆戻り」というリスクは
-   外れ、継続学習の設定に接続する。
+   外れた。**ただし用量反応は K=10³ で 0.04、K=10⁴ で 0** であり、
+   「継続学習に接続する」と書くときは必ず**「切替がフィットより速い極限で」**という
+   限定を付けること。標準的な K=10⁴ のレジームでは b 経由の dead は起きない。
 5. **PB-5 は字義上 FAIL だが T5 の反証ではない**。有限 eval バッチ (N=2000) は
    p ≲ 1.5e-3 を 0 発火と区別できない一方、沈んだユニットの解析的 Φ(β) は 1e-6〜1e-4。
    観測された 1000 step あたり ~1.5% の「復活」はこの識別不能帯の稀な発火で説明でき、
    β 自体は深いユニットでも下降を続ける。**絶対吸収は有限バッチでは原理的に検証不能**で、
    検証するなら解析的 β の単調性を主指標にすべき (仕様の測定設計上の限界)。
-6. **PB-7 は FAIL、ただし解釈注意**。dead が出たセルの clean eval_loss は初期値比では
-   下がっている (0.08–0.32 倍) が、残差なしベースライン比では 2.0–7.5 倍悪い。
-   1M step では「初期の高い損失からの学習」が「LoP による再上昇」を上回っており、
-   症状としての LoP は同条件比でしか見えていない。
+6. **PB-7 = PARTIAL: dead の機能的コストは経路依存 (監査による対照の修正後)**。
+   当初は「残差なしベースライン比 2.0–7.5 倍悪い」と書いたが、**これは残差条件そのものの
+   難しさと dead のコストを混同していた誤り**。正しい対照は同一残差条件の frozen 腕
+   (b を凍結して dead だけを止めた同一条件) で、それで測り直すと:
+
+   | 条件 | dead (free) | alive units | eval free | eval frozen | 比 |
+   |---|---|---|---|---|---|
+   | n1_K10000 (σ_ξ=1) | 0.57 | 8.6 | 0.347 | 0.356 | **0.97 (差なし)** |
+   | n2_K10000 (σ_ξ=2) | 0.92 | 1.6 | 0.560 | 0.985 | **0.57 (free が良い)** |
+   | n0_K100 (K=100)   | 0.99 | 0.2 | 0.530 | 0.412 | **1.29 (free が悪い)** |
+
+   - **ノイズ経路の dead は症状ではない**。dead 57% でコストゼロ、dead 92% では
+     むしろ frozen に勝つ (alive 1.6 ユニットが 20 ユニットの frozen ネットを 43% 上回る)。
+     Cornacchia et al. 2021 §6 の「ラベルノイズ → スパース化 → 汎化改善」と同型で、
+     ノイズ下の b 沈降は病理ではなく**適応的正則化** (ノイズを拾う容量を自ら削っている)
+     と読むのが自然。
+   - **症状として立つのは K 経路のみ** (free が 29% 悪い)。ただし K=100 の free は
+     alive ≈ 0.2/20 でほぼ ŷ = c だけで動いており eval 0.53 — 「隠れ層がほぼ消滅しても
+     半分は当たる」というタスク分散構造の情報でもある。
+   - **留保**: frozen は「死のない同一ネット」ではなく「閾値表現力ごと奪ったネット」なので
+     厳密な反実仮想ではない。ただし n2 の 1.6 vs 20 ユニットの逆転はこの交絡では説明しにくい。
 """)
 
-    lines.append("\n## 主張してはいけないこと (spec §6 の再掲・厳守)\n")
+    lines.append("""
+## 8/21 に出せる確定文
+
+> **µ=0 でも b 経由で dead unit は誘発できる (b 凍結で完全消失、機構はドリフト)。
+> ただし dead の機能的コストは経路依存で、ノイズ由来の dead は同条件対照比で
+> コストなし〜むしろ有益 (適応的スパース化)、タスク高速切替由来の dead のみ症状を伴う。**
+
+前半だけを言うと「dead = LoP」と読まれるので、必ず後半をセットで書くこと。
+""")
+
+    lines.append("\n## 主張してはいけないこと (spec §6 + 2026-08-15 の監査で追加)\n")
     lines.append("1. **b 経路が既存の LoP 結果を説明するとは言えない。** Phase 0 のとおり "
                  "µ≠0 の条件A では死は µ 経路が支配 (b 主導は 5.3%)。本実験が示すのは"
                  "「欠けていたレジームへの到達手段」であって既存現象の再解釈ではない")
     lines.append("2. **「µ は不要」とは言えない。** 示せるのは「β を動かす別のノブがある」まで")
     lines.append("3. §1 の T2–T5 は単一パスの導出のみで手検算前。外部資料に出す前に再導出すること")
+    lines.append("4. **「Path A を誘発した」と書かない。** 誘発できたのは dead_frac であって"
+                 "症状としての LoP ではない。同一残差条件の frozen 対照で測ると"
+                 "ノイズ経路の dead はコストなし〜有益 (結論 6)")
+    lines.append("5. **「継続学習に接続する」を無限定で書かない。** 成立するのは K=100 "
+                 "(切替がフィットより速い極限) のみで、K=10³ では dead 0.04、"
+                 "標準の K=10⁴ では 0")
+    lines.append("6. **本実験で言えるのはレベル0 (b で dead を作れる) + 「ノイズ死は症状ですら"
+                 "ないかもしれない」まで。** 「b が既存の LoP に関与する」と言うには"
+                 "条件A の freeze_bias 腕 (レベル1: 必要性) が要る")
 
     lines.append("\n## 先生への確認事項 (§9)\n")
     lines.append("1. 理論ノートは σ(wᵀx) と書いて b を落としているが、実装 (および Dohare 準拠の"

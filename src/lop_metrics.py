@@ -78,9 +78,11 @@ def compute_b_metrics(net, dead_i, open_frac, x_eval, bctx):
         b_mean_alive=mean_or_nan(b, alive), b_mean_dead=mean_or_nan(b, dead_i),
         b_std=b.std(dim=1, unbiased=False), b_min=b.min(dim=1).values,
         beta_mean=mean_or_nan(beta, alive),
-        beta_p10=torch.quantile(torch.where(alive, beta, torch.full_like(beta,
-                                float("nan"))).double(), 0.1, dim=1,
-                                interpolation="linear").float(),
+        # dead 行を NaN で除外するので nanquantile を使う (quantile は NaN を伝播して
+        # dead が 1 つでも出た時点で全体が NaN になる)
+        beta_p10=torch.nanquantile(torch.where(alive, beta, torch.full_like(beta,
+                                   float("nan"))).double(), 0.1, dim=1,
+                                   interpolation="linear").float(),
         beta_min=beta.min(dim=1).values,
         p_min=open_frac.min(dim=1).values, p_mean=open_frac.mean(dim=1),
     )
