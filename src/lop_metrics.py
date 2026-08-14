@@ -7,8 +7,42 @@ saturated の「勾配」はニューロン i のプリ活性勾配 |2 delta v_i
 import torch
 
 
-def compute_lop_metrics(net, x_eval, y_eval, cfg):
-    """x_eval: [N,R,d], y_eval: [N,R] -> dict of per-run tensors [R]"""
+W_DIR_KEYS = ["cos_e1W_e1Sig", "cos_e1W_e1M2", "cos_e1W_e1Sig_pca", "cos_e1W_mu",
+              "cos_e1W_e1Sig_signed", "top1_frac_alive", "w_norm_mean", "e1_stability"]
+
+
+def compute_w_dir(net, dead_i, wdir_ctx):
+    """W 方向指標 [center_selfcov_0814 §2.2]。wdir_ctx は
+    dict(u=[d] or None, kappa=[R], mu=[R,d], prev_e1=[R,d] or None) で、
+    train.py が env の解析パラメータから作る (サンプル推定はしない)。
+    prev_e1 は呼び出し側が持ち回り、e1_stability (直前 lop step との |cos|) に使う。"""
+    from .w_direction import w_dir_metrics_np
+    import numpy as np
+
+    R = net.W.shape[0]
+    W = net.W.detach().cpu().numpy()
+    dead = dead_i.detach().cpu().numpy()
+    u = wdir_ctx.get("u")
+    mu = wdir_ctx["mu"]
+    kap = wdir_ctx["kappa"]
+    prev = wdir_ctx.get("prev_e1")
+    out = {k: np.full(R, np.nan, dtype=np.float64) for k in W_DIR_KEYS}
+    new_e1 = [None] * R
+    for i in range(R):
+        m = w_dir_metrics_np(W[i], dead[i], u, mu[i], kappa=kap[i],
+                             prev_e1=None if prev is None else prev[i])
+        new_e1[i] = m.pop("e1_vec")
+        for k in W_DIR_KEYS:
+            out[k][i] = m[k]
+    wdir_ctx["prev_e1"] = new_e1
+    return {k: torch.as_tensor(v, dtype=torch.float32, device=net.W.device)
+            for k, v in out.items()}
+
+
+def compute_lop_metrics(net, x_eval, y_eval, cfg, wdir_ctx=None):
+    """x_eval: [N,R,d], y_eval: [N,R] -> dict of per-run tensors [R]
+
+    wdir_ctx を渡すと §2.2 の W 方向指標を追加する (None なら従来カラムのみ)。"""
     C = cfg["common"]
     N = x_eval.shape[0]
     with torch.no_grad():
@@ -109,5 +143,7 @@ def compute_lop_metrics(net, x_eval, y_eval, cfg):
                stable_rank_W_alive=stable_rank_W_alive,
                neg_gate_frac=neg_gate_frac,
                eval_loss=eval_loss)
+    if wdir_ctx is not None:
+        out.update(compute_w_dir(net, dead_i, wdir_ctx))
     nan = torch.full_like(finite.float(), float("nan"))
     return {k: torch.where(finite, v.float(), nan) for k, v in out.items()}

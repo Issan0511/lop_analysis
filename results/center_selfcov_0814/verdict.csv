@@ -1,0 +1,10 @@
+pred,scope,verdict,evidence
+P3-1,condA w100 dead_frac 最終値 (centered < std),PASS,"centered 0.294 vs std 0.964, diff -0.67 CI [-0.724, -0.612]"
+P3-2,condA w5 wcos_mean 前半傾き (centered < std),FAIL,"centered 3.475e-07 vs std 2.358e-07, diff +1.117e-07 CI [-4.452e-08, 3.503e-07]"
+P3-2,condA w100 wcos_mean 前半傾き (centered < std),PASS,"centered 1.065e-08 vs std 1.832e-07, diff -1.726e-07 CI [-1.956e-07, -1.42e-07]"
+P3-3,‖w‖ 交絡統制 (差が ‖w‖ 差で説明されうるか),CONFOUNDED,"w5: ‖w‖ centered 3.39 vs std 4.54 (diff CI [-1.64, -0.659], 有意); w100: ‖w‖ centered 2.01 vs std 4.44 (diff CI [-2.85, -2.13], 有意)"
+P3-2b,condB κ=1 wcos_mean 前半傾き (c=0 < c=2、µ=0 厳密版),PASS,"c=0 -1.015e-07 vs c=2 4.819e-08, diff -1.497e-07 CI [-3.736e-07, -6.675e-09]"
+P3-4,κ=16 cos_e1W_e1Sig: (a) 単調増加 (b) 床超え,FAIL,"(a) [0,300k] 傾き +3.78e-08/step CI [5.9e-09, 8.37e-08]、init→final -0.037 CI [-0.096, 0.034] → 増加と言えない (系列は床付近で往復); (b) 最終 0.105 CI [0.021, 0.200] vs 床 0.174 → 床を超えない"
+P3-6,先生の予言: cos_e1W_e1Sig → 1.0 (判定は 0.9 到達),FAIL,"κ=16 最終 0.105 (0.9 未到達なら部分整列)。srank_alive=2.20, top1_frac=0.46 → rank-1 に落ちていないので e1 が支配的でないのは整合的"
+P3-5,κ 単調性 (実質 κ=4 < κ=16),FAIL,"κ16 0.105 − κ4 0.312 = -0.207 CI [-0.442, 0.001] (予測と逆符号)。ただし両 κ の最終値 CI が床 0.174 を含むため大小関係の解釈は弱い"
+P3-7,"κ=16 最終 ckpt: |cos(E[g],u)| > cos_e1W_e1Sig",PASS,"E[g] 0.907 vs W 0.105, diff +0.801 CI [0.747, 0.849]"

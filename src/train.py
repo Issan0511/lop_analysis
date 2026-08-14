@@ -48,7 +48,10 @@ def setup_group(gkey, runs, cfg, device):
         kvals = [r.get("kappa", 1) for r in runs]
         env = GaussEnv(R, d, cvals, gens["input"], device, kappa=kvals,
                        spike_dir=B.get("spike_dir", "ones"))
-        teacher = MLPTeacher(R, width, d, period, gens["teacher"], device)
+        # 教師幅は既定で学習器幅 (従来互換)。target_hidden 指定時のみ分離し、
+        # 条件A と同じ容量ギャップを条件B にも作る [center_selfcov_0814 §2.1]。
+        th = B.get("target_hidden") or width
+        teacher = MLPTeacher(R, th, d, period, gens["teacher"], device)
 
     # batch: 1=オンライン SGD, 整数=iid ミニバッチ平均, "full"=フルバッチ GD
     #   (A: 全サポート厳密列挙 / B: full_batch_B サンプル近似)
@@ -182,6 +185,34 @@ def load_resume(st, snap):
         g.set_state(snap["gens"][k])
 
 
+def make_wdir_ctx(st, cfg):
+    """W 方向指標用の解析パラメータ [center_selfcov_0814 §2.2]。
+    cfg["common"]["w_dir_metrics"] が真のときだけ有効 (既定は無効 = 既存 config 互換)。
+
+    条件A: Σ = (1/4)I で完全等方 → u=None (Σ 系は NaN)。µ は E[xxᵀ] 側でのみ意味を持つ。
+    条件B: u は spike_dir から決定的、κ は run 別、µ = (c/√d)·1。
+    サンプル推定はせず解析値を使う。"""
+    import numpy as np
+    from .w_direction import spike_dir_vec
+
+    if not cfg["common"].get("w_dir_metrics"):
+        return None
+    R, d = st["R"], st["d"]
+    if st["exp"] == "B":
+        u = spike_dir_vec(cfg["condB"].get("spike_dir", "ones"), d)
+        kappa = np.array([float(r.get("kappa", 1)) for r in st["runs"]])
+        mu = st["env"].mu.detach().cpu().numpy().astype(np.float64)
+    else:
+        # 条件A: 等方 → Σ 系は縮退。µ は現在の flip 状態 + ランダムビットの 1/2
+        u = None
+        kappa = np.ones(R)
+        f = st["env"].f
+        mu = np.concatenate(
+            [st["env"].flip_state.detach().cpu().numpy().astype(np.float64),
+             0.5 * np.ones((R, d - f))], axis=1)
+    return dict(u=u, kappa=kappa, mu=mu, prev_e1=None)
+
+
 def build_lop_steps(cfg, total, period_val):
     """計測ステップ集合: 粗い定期計測 (lop_every) + タスク境界周辺の密な窓
     (cfg["coupling"]: pre_window/post_window/fine_stride、実験(5) methods coupling_ab 用)。
@@ -222,6 +253,7 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
     if cfg.get("coupling") and len(set(int(p) for p in st["period"])) > 1:
         raise ValueError("coupling 計測はグループ内 period 一様が前提 (イベント整列が壊れる)")
     lop_steps = build_lop_steps(cfg, total, period_val)
+    wdir_ctx = make_wdir_ctx(st, cfg)
 
     # 実験(5) coupling_ab: タスク境界 (period, 2*period, ...) 直後 postswitch_n ステップの
     # 平均二乗誤差 (§②「新タスク切り替え直後の予測誤差」)。coupling キーが無ければ全て無効。
@@ -249,7 +281,7 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
         assert start_step % C["loss_bin"] == 0, "start_step は loss_bin 境界であること"
         x_ev, y_ev = eval_batch(st)
         x_ev_in = x_ev - cmask[None] * st["running_mean"][None]
-        m = compute_lop_metrics(net, x_ev_in, y_ev, cfg)
+        m = compute_lop_metrics(net, x_ev_in, y_ev, cfg, wdir_ctx=wdir_ctx)
         lop_rows.append((start_step, {k: v.cpu().numpy().copy() for k, v in m.items()}))
 
     for t in range(start_step, total):
@@ -316,7 +348,7 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
         if (t + 1) in lop_steps or t == 0:
             x_ev, y_ev = eval_batch(st)
             x_ev_in = x_ev - cmask[None] * st["running_mean"][None]
-            m = compute_lop_metrics(net, x_ev_in, y_ev, cfg)
+            m = compute_lop_metrics(net, x_ev_in, y_ev, cfg, wdir_ctx=wdir_ctx)
             lop_rows.append((t + 1 if t > 0 else 0, {k: v.cpu().numpy().copy() for k, v in m.items()}))
 
     if total in ckpt_set:

@@ -1,0 +1,63 @@
+center_selfcov_p1:
+  dead_max: 0.5
+  evalloss_ratio_min: 2.0
+  srank_ratio_max: 0.8
+  target_hidden_values:
+  - null
+  - 100
+  wnorm_blowup: 100.0
+common:
+  checkpoints:
+  - 0
+  - 200000
+  dead_tau: 0.95
+  dead_tol: 1.0e-07
+  device: cpu
+  dup_tau: 0.95
+  eval_batch: 2000
+  freeze_M_cap: 500000
+  freeze_min_periods: 50
+  lop_every: 1000
+  loss_bin: 1000
+  lr_main: 0.003
+  run_freeze: false
+  sat_frac: 0.99
+  sat_ratio_tol: 0.0001
+  seeds:
+  - 0
+  - 1
+  sign_match_tau: 0.95
+  total_steps: 200000
+  w_dir_metrics: true
+condA:
+  T_values: []
+  batch_values:
+  - 1
+  beta: 0.7
+  center_alpha: 0.01
+  encodings:
+  - std
+  f: 15
+  lr_grid: []
+  m: 20
+  target_hidden: 100
+  widths: []
+condB:
+  K_values:
+  - 10000
+  batch_values:
+  - 1
+  c_values:
+  - 0.0
+  d: 21
+  kappa_values:
+  - 1
+  - 16
+  lr_values:
+  - 0.003
+  - 0.01
+  spike_dir: alt
+  target_hidden: null
+  widths:
+  - 5
+  - 20

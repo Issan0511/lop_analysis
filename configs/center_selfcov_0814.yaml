@@ -1,0 +1,56 @@
+# proj_004: center_selfcov_0814 Phase 2 — 実験(3) 入力中心化と C_self 残存 (spec §5)
+#
+# アーム1 (項目2, 条件A): std vs centered、widths [5,100]、1M step
+# アーム2 (項目2, 条件B): c ∈ {0,2} で µ=0 が厳密な頑健性確認 (κ=1 の部分集合)
+# アーム3 (項目3, 主判定): c=0 (µ=0 厳密) × κ ∈ {1,4,16}、spike_dir alt
+#   → condB は c × κ の直積で回す (アーム2/3 はその部分集合。余剰セルは κ×c 交互作用)
+#
+# レジームは Phase 1 の採用セル: target_hidden=100 (教師幅を学習器から分離)、
+# width=5、lr=0.01。**ただし Phase 1 で基準4 (LoP 発現) を満たすセルは無く、
+# 基準3 までを満たすセルから採用した (仕様に規定の無いケース。summary に明記)。**
+#
+# w_dir_metrics: true で §2.2 の W 方向指標を lop_every ごとに記録する。
+# 条件A は Σ=(1/4)I の等方縮退のため Σ 系は NaN、E[xxᵀ] 系のみ有効 (§1.1)。
+
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4]
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 10000, 50000, 100000, 300000, 1000000]
+  run_freeze: false
+  w_dir_metrics: true
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:                          # アーム1: 増幅因子 (std vs centered)
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: [5, 100]
+  encodings: [std, centered]
+  center_alpha: 0.01
+  batch_values: [1]
+  lr_grid: []
+
+condB:                          # アーム2 (κ=1, c∈{0,2}) + アーム3 (c=0, κ∈{1,4,16})
+  d: 21
+  K_values: [10000]
+  c_values: [0.0, 2.0]
+  kappa_values: [1, 4, 16]
+  widths: [5]
+  lr_values: [0.01]
+  batch_values: [1]
+  spike_dir: alt
+  target_hidden: 100            # Phase 1 採用: 教師幅を学習器幅から分離

@@ -44,7 +44,10 @@ def _restore(gkey, ckpt, cfg, device):
         kvals = [r.get("kappa", 1) for r in runs]   # 旧 ckpt (kappa なし) は等方で復元
         env = GaussEnv(R, d, cvals, gens["input"], device, kappa=kvals,
                        spike_dir=B.get("spike_dir", "ones"))
-        teacher = MLPTeacher(R, width, d, period, gens["teacher"], device)
+        # 教師幅は setup_group と同一規約 (target_hidden 指定時は学習器幅から分離)
+        # [center_selfcov_0814 §2.1]。未指定なら学習器幅で従来どおり。
+        teacher = MLPTeacher(R, cfg["condB"].get("target_hidden") or width, d,
+                             period, gens["teacher"], device)
 
     # 状態復元 (教師 A は ckpt に完全保存されている; B は再サンプルで進むので状態から再開)
     env.load_state({k: (v.to(device) if torch.is_tensor(v) else v) for k, v in ckpt["env"].items()})

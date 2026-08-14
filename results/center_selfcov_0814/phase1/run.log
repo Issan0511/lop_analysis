@@ -1,0 +1,24 @@
+    [th=same] B_w5: R=8
+      14s
+    [th=same] B_w20: R=8
+      17s
+    [th=100] B_w5: R=8
+      16s
+    [th=100] B_w20: R=8
+      17s
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/issan/Projects/claude/proj_004_drift/src/center_selfcov_p1.py", line 162, in <module>
+    main()
+  File "/home/issan/Projects/claude/proj_004_drift/src/center_selfcov_p1.py", line 146, in main
+    lines.append(chosen.round(4).to_string())
+                 ^^^^^^^^^^^^^^^
+  File "/home/issan/Projects/claude/proj_004_drift/.venv/lib/python3.12/site-packages/pandas/core/series.py", line 2597, in round
+    result = lib.map_infer(values, lambda x: round(x, decimals), convert=False)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pandas/_libs/lib.pyx", line 3071, in pandas._libs.lib.map_infer
+  File "/home/issan/Projects/claude/proj_004_drift/.venv/lib/python3.12/site-packages/pandas/core/series.py", line 2597, in <lambda>
+    result = lib.map_infer(values, lambda x: round(x, decimals), convert=False)
+                                             ^^^^^^^^^^^^^^^^^^
+TypeError: type str doesn't define __round__ method
