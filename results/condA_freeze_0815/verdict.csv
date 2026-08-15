@@ -1,0 +1,4 @@
+pred,scope,verdict,evidence
+PA-1,条件A で b 凍結が dead を減らす (frozen < free),FAIL,"w5: free 0.800 → frozen 0.720 (diff -0.080 CI [-0.240, +0.000]); w100: free 0.968 → frozen 0.970 (diff +0.002 CI [-0.004, +0.008])"
+PA-2,寄与の大きさ (減少率 < 0.2 なら b は脇役),MINOR,w5: 減少率 0.100; w100: 減少率 -0.002。→ **b は脇役** (Phase 0 の「b 主導 dead は 5.3%」と整合)
+PA-3,"b 凍結の機能的影響 (eval_loss, frozen − free)",MIXED_OR_NULL,"w5: free 0.8485 → frozen 0.7499 (diff -0.0986 CI [-0.1943, -0.0101]); w100: free 0.9374 → frozen 1.0583 (diff +0.1209 CI [+0.0141, +0.2804])。留保: frozen は「死のない同一ネット」ではなく閾値表現力ごと奪ったネットなので厳密な反実仮想ではない"
