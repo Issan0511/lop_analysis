@@ -1,0 +1,69 @@
+# proj_004: cbp_harm_0815 — CBP が有害になるレジームの判定 (spec_cbp_harm_0815)
+#
+# 目的: dead_frac を下げる治療 (CBP) がかえって clean eval を悪化させるレジームの存在。
+# 目玉は PC-1 (経路N σ_ξ=2 で悪化) と PC-2 (経路K K=100 では悪化しない) の符号反転で、
+# dead_frac が 0.92 vs 0.99 とほぼ同じでも治療の符号が逆になる = dead_frac は治療の
+# 要否を決めない、の直接実証。**判定は clean eval_loss のみ** (dead_frac は CBP が
+# 定義上下げるので判定に使うと循環する)。
+#
+# 設定は bias_margin_0814 の該当セルと同一 (rho=0 腕が bit 一致するのが S1)。
+# CBP ハイパラは methods_sde_0813 と揃える (maturity 100, decay 0.99)。
+#
+# セル (5) × rho (3) = 15 グループ。経路N と経路K は (σ_ξ=0, K=1e4) を共有する。
+# target_noise_sd と K は run 軸ではないので src.cbp_harm がセルごとに config を
+# 差し替え、rho は methods 軸 (build_runs が直積、group_runs が method でグループ化) で回す。
+
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4]
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: []
+  run_freeze: false
+  b_metrics: true
+  w_dir_metrics: false
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+methods:                        # rho=0 は name:none (既存互換、group 名は無印)
+  - {name: none}
+  - {name: cbp, rho: 1.0e-5, maturity: 100, decay: 0.99}
+  - {name: cbp, rho: 1.0e-4, maturity: 100, decay: 0.99}
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: []
+  widths: []
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [1]
+  lr_grid: []
+
+condB:
+  d: 21
+  K_values: [10000]             # 経路K で上書き
+  c_values: [0.0]               # µ=0 厳密
+  kappa_values: [1]
+  widths: [20]
+  lr_values: [0.01]
+  batch_values: [1]
+  spike_dir: alt
+  target_hidden: 100
+  target_noise_sd: 0.0          # 経路N で上書き
+  freeze_bias: false            # S5: b は全アームで学習可能
+
+cbp_harm:
+  routeN_noise_sd: [0.0, 1.0, 2.0]    # K=1e4 固定
+  routeK_K: [10000, 1000, 100]        # noise_sd=0 固定 (K=1e4 は routeN と共有)

@@ -77,7 +77,8 @@ def setup_group(gkey, runs, cfg, device):
     if mcfg["name"] == "cbp":
         cbp = dict(util=torch.zeros(R, width, device=device),
                    age=torch.zeros(R, width, device=device),
-                   acc=0.0)   # 置換数の端数アキュムレータ (rho, h はグループ内で共通)
+                   acc=0.0,   # 置換数の端数アキュムレータ (rho, h はグループ内で共通)
+                   n_reset=torch.zeros(R, device=device))  # 累積 reset 数 [cbp_harm_0815 S3]
 
     # LoP 計測用固定バッチ素材 (eval generator)
     N = cfg["common"]["eval_batch"]
@@ -138,6 +139,7 @@ def apply_method(st, a):
                 net.v[sel] = 0.0
                 cb["util"][sel] = 0.0
                 cb["age"][sel] = 0.0
+                cb["n_reset"] += sel.sum(dim=1).float()
 
 
 def eval_batch(st):
@@ -386,14 +388,26 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
         save_ckpt(st, total, outdir)
 
     elapsed = time.time() - t0
-    write_logs(st, loss_rows, lop_rows, outdir, postswitch_rows=postswitch_rows)
+    write_logs(st, loss_rows, lop_rows, outdir, postswitch_rows=postswitch_rows,
+               total=total)
     return st, elapsed
 
 
-def write_logs(st, loss_rows, lop_rows, outdir, postswitch_rows=None):
+def write_logs(st, loss_rows, lop_rows, outdir, postswitch_rows=None, total=None):
     os.makedirs(outdir, exist_ok=True)
     gname = st["gname"]
     ids = [r["run_id"] for r in st["runs"]]
+
+    # CBP の累積 reset 数 (理論値 rho*width*steps との照合用) [cbp_harm_0815 S3]
+    if st.get("cbp") is not None:
+        exp_n = float(st["method"].get("rho", 0.0)) * st["width"] * (total or 0)
+        with open(os.path.join(outdir, f"cbp_stats_{gname}.csv"), "w", newline="") as fh:
+            w = csv.writer(fh)
+            w.writerow(["run_id", "n_reset", "expected", "rho", "width", "steps"])
+            nr = st["cbp"]["n_reset"].cpu().numpy()
+            for i, rid in enumerate(ids):
+                w.writerow([rid, f"{nr[i]:.0f}", f"{exp_n:.2f}",
+                            st["method"].get("rho", 0.0), st["width"], total or 0])
 
     with open(os.path.join(outdir, f"online_loss_{gname}.csv"), "w", newline="") as fh:
         w = csv.writer(fh)
