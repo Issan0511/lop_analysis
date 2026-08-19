@@ -1,0 +1,30 @@
+outdir: /home/issan/Projects/claude/proj_004_drift/results/posreset_0819
+=== [A_w100] continuous trunk 0->1000000
+    done 365.4s (2737 steps/s)
+    treated_frac: [0.8500000238418579, 0.9800000190734863, 0.9700000286102295, 0.9599999785423279, 0.9700000286102295, 0.9200000166893005, 0.8100000023841858, 0.949999988079071, 0.7599999904632568, 0.9800000190734863]
+    S3: PASS  worst_f64={'s3_posonly_cos_err_f64': 4.440892098500626e-16, 's3_posonly_norm_relerr_f64': 3.417331519034691e-16, 's3_dironly_norm_relerr_f64': 2.902908719095189e-16, 's3_dironly_cos_g_f64': 4.440892098500626e-16, 's3_full_exact_f64': 0.0, 's3_guard_full_exact_f64': 0.0}
+=== [A_w100] arm none 500000->1000000
+    done 194.3s
+    S2: PASS
+=== [A_w100] arm posonly 500000->1000000
+    done 183.4s
+=== [A_w100] arm dironly 500000->1000000
+    done 183.6s
+=== [A_w100] arm full 500000->1000000
+    done 183.1s
+=== [B_w20] continuous trunk 0->1000000
+    done 123.8s (8076 steps/s)
+    treated_frac: [0.949999988079071, 0.949999988079071, 1.0, 0.8999999761581421, 0.949999988079071, 0.949999988079071, 0.949999988079071, 0.8999999761581421, 0.949999988079071, 0.949999988079071]
+    S3: PASS  worst_f64={'s3_posonly_cos_err_f64': 4.440892098500626e-16, 's3_posonly_norm_relerr_f64': 2.5410778867497687e-16, 's3_dironly_norm_relerr_f64': 3.0765033219438983e-16, 's3_dironly_cos_g_f64': 4.440892098500626e-16, 's3_full_exact_f64': 0.0, 's3_guard_full_exact_f64': 0.0}
+=== [B_w20] arm none 500000->1000000
+    done 61.4s
+    S2: PASS
+=== [B_w20] arm posonly 500000->1000000
+    done 63.2s
+=== [B_w20] arm dironly 500000->1000000
+    done 63.5s
+=== [B_w20] arm full 500000->1000000
+    done 63.2s
+[A] S2=PASS S3=PASS treated_frac={'values': [0.85, 0.98, 0.97, 0.96, 0.97, 0.92, 0.81, 0.95, 0.76, 0.98], 'mean': 0.915, 'min': 0.76, 'n_ge_min': 10, 'n_seeds': 10, 'eligible': True}
+[B] S2=PASS S3=PASS treated_frac={'values': [0.95, 0.95, 1.0, 0.9, 0.95, 0.95, 0.95, 0.9, 0.95, 0.95], 'mean': 0.945, 'min': 0.9, 'n_ge_min': 10, 'n_seeds': 10, 'eligible': True}
+ALL DONE

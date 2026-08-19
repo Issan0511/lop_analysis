@@ -682,18 +682,32 @@ def sanity(resdir, ilog, meta, pr, mtab):
     s["S2_recheck"] = {r: compare_cont_vs_none(resdir, r, pr["t_int"]) for r in REGIMES}
 
     if len(ilog):
-        # 誤差列 (cos_err / norm_relerr) は数値許容、*_exact_* / *_ok / s3_pass は論理判定。
-        # bool 列は pandas 上 numeric 扱いなので dtype ではなく列名で振り分ける
+        # S3 列の振り分けは**列名ではなく中身**で行う。ランナーは cos/ノルム誤差だけでなく
+        # *_exact_* も float (厳密 0 が期待値) で書くので、名前で「論理」に振ると 0.0 が
+        # False と解釈されて S3 が誤って FAIL 表示になる (実際に一度そうなった)。
+        # 真の論理列は s3_*_ok / s3_pass のみで、いずれも bool か "True"/"False" 文字列。
         s3 = [c for c in ilog.columns if c.startswith("s3_")]
-        errc = [c for c in s3 if "err" in c and pd.api.types.is_numeric_dtype(ilog[c])
-                and ilog[c].dtype != bool]
-        boolc = [c for c in s3 if c not in errc]
+        def _is_logical(col):
+            if ilog[col].dtype == bool:
+                return True
+            return bool(ilog[col].astype(str).str.strip().str.lower()
+                        .isin(["true", "false"]).all())
+        boolc = [c for c in s3 if _is_logical(c)]
+        errc = [c for c in s3 if c not in boolc]
+        # *_exact_* は許容ではなく厳密 0 が要求値なので別枠で判定する
+        exactc = [c for c in errc if "_exact_" in c]
+        tolc = [c for c in errc if c not in exactc]
         s["S3_max_f64"] = {c: float(pd.to_numeric(ilog[c], errors="coerce").abs().max())
-                           for c in errc if c.endswith("_f64")}
+                           for c in tolc if c.endswith("_f64")}
         s["S3_max_f32"] = {c: float(pd.to_numeric(ilog[c], errors="coerce").abs().max())
-                           for c in errc if c.endswith("_f32")}
+                           for c in tolc if c.endswith("_f32")}
+        s["S3_exact_max"] = {c: float(pd.to_numeric(ilog[c], errors="coerce").abs().max())
+                             for c in exactc}
+        s["S3_exact_ok"] = bool(all(v == 0.0 for v in s["S3_exact_max"].values())) \
+            if s["S3_exact_max"] else None
         s["S3_bool"] = {c: bool(_as_bool(ilog[c]).all()) for c in boolc}
-        s["S3_pass_all"] = bool(all(s["S3_bool"].values())) if s["S3_bool"] else None
+        s["S3_pass_all"] = bool(all(s["S3_bool"].values())
+                                and (s["S3_exact_ok"] is not False)) if s["S3_bool"] else None
         s["S3_tol_f64"] = pr.get("s3_tol_f64")
         if s.get("S3_tol_f64") is not None and s["S3_max_f64"]:
             s["S3_within_tol_f64"] = bool(max(s["S3_max_f64"].values()) < pr["s3_tol_f64"])
@@ -1016,6 +1030,9 @@ def write_summary(resdir, ver, da, boot, elig, san, runs, ilog, pr, notes, missi
                  f"(許容 {san.get('S3_tol_f64')}) → "
                  f"{'PASS' if san.get('S3_within_tol_f64') else '要確認'}")
         L.append(f"  - float32 丸め後 (学習再開に使う値、eps≈1.2e-7 律速): {san.get('S3_max_f32')}")
+        L.append(f"  - 厳密一致列 (w_post ≡ g / ガード時の full フォールバック) の最大差: "
+                 f"{san.get('S3_exact_max')} → "
+                 f"{'PASS (全て厳密 0)' if san.get('S3_exact_ok') else '要確認'}")
         L.append(f"  - 論理判定 (a←0 / b 規約 / treated 外 hash 不変 / ランナー総合): "
                  f"{san.get('S3_bool')} → 総合 {san.get('S3_pass_all')}")
     if "S4_pass" in san:
