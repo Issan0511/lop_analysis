@@ -162,7 +162,7 @@ treated の各ユニット i について、t=0 と同一分布から fresh draw
 
 本文 §6 の判定基準・§3 の設計は上記のまま凍結する。以下は実装上の事実確認のみ。
 
-- **リポジトリ**: 本文ヘッダは「lop_analysis」だが、§2 が参照する `src/train.py` の resume 機構・`configs/methods_sde_0813.yaml`・`configs/cbp_harm_0815.yaml`・`results/{methods_sde_0813,cbp_harm_0815}/` が実在するのは **`proj_004_drift`**（`lop_analysis` は 2026-08-12 で更新が止まった旧リポジトリで、これらを含まない）。実装・実行は proj_004_drift で行う。
+- **リポジトリ**: 本文ヘッダの「lop_analysis」は正しい（`github.com/Issan0511/lop_analysis`）。ただしローカルには同一 origin のクローンが 2 つあり、§2 が参照する `src/train.py` の resume 機構・`configs/methods_sde_0813.yaml`・`configs/cbp_harm_0815.yaml`・`results/{methods_sde_0813,cbp_harm_0815}/` を含む**最新のクローンは `~/Projects/claude/proj_004_drift`** の方（`~/Projects/claude/lop_analysis` は 2026-08-12 で更新が止まった古いクローンでこれらを含まない）。実装・実行は前者で行う。
 - **§3.4 の記号 a_i**: 本文の「a_i（読み出し）」は実装上の `VecMLP.v`（隠れ→出力の読み出し重み）を指す。実装の `a` は活性ベクトルであり別物。CBP の reset 規約（`train.py:apply_method`）は `net.W[sel]=kaiming再サンプル / net.b[sel]=0 / net.v[sel]=0` なので、full アームはこの規約と厳密に一致する。
 - **レジーム B の幅**: §3.1 が継承元とする `cbp_harm_0815` の condB は `widths: [20]`、`target_hidden: 100`、`spike_dir: alt`。レジーム B は w=20 で実施する。
 - **b_init = 0**: `envs.kaiming_mlp_params` が b を zeros で返すことを確認（§3.4 の「b_init（=0）」と一致）。
