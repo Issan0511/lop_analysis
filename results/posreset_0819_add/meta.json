@@ -1,0 +1,105 @@
+{
+ "elapsed_sec": 540.4,
+ "arm_elapsed_sec": {
+  "posflip": 179.2,
+  "vzero": 180.4,
+  "dirkeep": 180.6
+ },
+ "device": "cpu",
+ "date": "2026-08-19 15:50:51",
+ "started": "2026-08-19 15:41:51",
+ "omp_num_threads": "1",
+ "torch_num_threads": 1,
+ "arms": [
+  "posflip",
+  "vzero",
+  "dirkeep"
+ ],
+ "regimes": [
+  "A"
+ ],
+ "trunk_retrained": false,
+ "source_results": "results/posreset_0819",
+ "source_snapshot": "results/posreset_0819/snapshots/A_w100_cont_step500000.pt",
+ "source_snapshot_file_sha256": "09339d65c3efc545681dfb3fe298773207e027df39957739d04d497c82d408cb",
+ "source_manifest_n_files": 118,
+ "source_manifest_sha256_before": "a53083ef413124cdab971414838d81cf72dc4493d05b1dfc361d92703639b5cc",
+ "source_manifest_sha256_after": "a53083ef413124cdab971414838d81cf72dc4493d05b1dfc361d92703639b5cc",
+ "source_readonly_pass": true,
+ "snapshot_tensor_sha256": {
+  "W": "bf8ef95e1dc549ea289f6d47716e57d9c194d00882c161cbe9e20eeab8ca930b",
+  "b": "36ed4527ccdec40f11efad409cd6ab77fe6c34dbff27ab1e4b99a21380a00731",
+  "v": "1df3e599e37c096ec89dff09d4f881d4eb08eb2cdf9990dbe9a6f557ec4c2a94",
+  "c": "3c7a3c39db6567a862527cab907ef42e5763b3ebbbf0273cf2326991bd114b94",
+  "running_mean": "ed1963daf2993144579f6cda4353e3af50b5526bf1bc734693de4084df2d096a"
+ },
+ "mutant_sanity": {
+  "result": "PASS",
+  "n_mutants": 8,
+  "records": [
+   {
+    "check": "S3a",
+    "mutant": "posflip の treated 方向を反転前へ戻す",
+    "baseline": "PASS",
+    "mutant_result": "FAIL",
+    "detected": true
+   },
+   {
+    "check": "S3a",
+    "mutant": "posflip の fresh norm を 1% 膨らませる",
+    "baseline": "PASS",
+    "mutant_result": "FAIL",
+    "detected": true
+   },
+   {
+    "check": "S3b",
+    "mutant": "treated W を変更",
+    "baseline": "PASS",
+    "mutant_result": "FAIL",
+    "detected": true
+   },
+   {
+    "check": "S3b",
+    "mutant": "treated b を変更",
+    "baseline": "PASS",
+    "mutant_result": "FAIL",
+    "detected": true
+   },
+   {
+    "check": "S3b",
+    "mutant": "treated v を非ゼロ化",
+    "baseline": "PASS",
+    "mutant_result": "FAIL",
+    "detected": true
+   },
+   {
+    "check": "S2a",
+    "mutant": "非 treated W を 1 要素変更",
+    "baseline": "PASS",
+    "mutant_result": "FAIL",
+    "detected": true
+   },
+   {
+    "check": "S2a",
+    "mutant": "出力 bias c を変更",
+    "baseline": "PASS",
+    "mutant_result": "FAIL",
+    "detected": true
+   },
+   {
+    "check": "S4a",
+    "mutant": "treated mask の 1 bit を反転",
+    "baseline": "PASS",
+    "mutant_result": "FAIL",
+    "detected": true
+   }
+  ]
+ },
+ "sanity": {
+  "S1": true,
+  "S2a": true,
+  "S3a": true,
+  "S3b": true,
+  "S4a": true
+ }
+}
