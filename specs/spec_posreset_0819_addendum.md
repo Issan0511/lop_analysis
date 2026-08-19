@@ -123,7 +123,7 @@ proj_004 / 作成 2026-08-19 / 対象リポジトリ: lop_analysis / 本体: `sp
 
 ## 9. 実装ノート（事前登録コミット時に追記、§4 の判定基準は不変）
 
-- **実行主体**: 本追補の実装・実行は外部エージェント（OpenAI Codex, gpt-5.6-sol, reasoning=ultra）に委譲する。引き継ぎ資料は `specs/HANDOFF_posreset_addendum.md`。
+- **実行主体**: 本追補の実装・実行は外部エージェント（OpenAI Codex, gpt-5.6-sol, reasoning=ultra）に委譲する。引き継ぎ資料は `specs/HANDOFF_posreset_addendum.md`。実行には Codex CLI 0.148.0 以上が必要（snap 版 0.114.0 はサーバ側で `gpt-5.6-sol` を拒否し、`ultra` も CLI の enum に無い）。npm 版を user prefix に入れて使う: `~/.nvm/versions/node/v22.22.2/bin/codex`。
 - **§2 の記号 a_i**: 本体 §12 と同じく、実装上は `VecMLP.v`（隠れ→出力の読み出し重み）。実装の `a` は活性ベクトルで別物。
 - **posflip のマージン反転が「反転」である根拠**: b_init=0 なので β_post = (w_postᵀµ)/‖w_post‖_Σ。w_post = −‖g‖·ŵ_pre より w_postᵀµ = −‖g‖·ŵ_preᵀµ。すなわち β の符号が厳密に反転する（‖w‖_Σ は符号不変）。posonly は同じ ‖g‖ スケールで符号を保つので、**posonly と posflip の差は β の符号のみ**。
 - **Q1 の「≥ 0」の読み**: 統計量 Δ_posflip − 0.9·Δ_dironly の bootstrap CI 下限 > 0 を PASS とする（本体 §6 の「CI が 0 を除外」と同じ片側の読み）。
