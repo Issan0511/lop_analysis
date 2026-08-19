@@ -257,11 +257,22 @@ def build_lop_steps(cfg, total, period_val):
 
 
 def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
-                start_step=0, resume_state=None, gname=None, snapshot_steps=()):
+                start_step=0, resume_state=None, gname=None, snapshot_steps=(),
+                probe=None, probe_steps=()):
     """start_step / resume_state / gname / snapshot_steps は warm-start 用
     [rank_int_0814 §3]。resume_state は save_snapshot が書いた dict (介入アームでは
     呼び出し側が net["W"] を差し替えてから渡す)。gname はログファイル名の上書き
-    (同一グループ条件で複数アームを別名保存するため)。"""
+    (同一グループ条件で複数アームを別名保存するため)。
+
+    probe / probe_steps は treated ユニットの副次時系列取得用フック
+    [posreset_0819 §5]。probe が None でないとき、絶対 step が probe_steps に含まれる
+    時点で probe(st, step) を呼ぶ。snapshot_steps と同じくループ本体先頭で判定するので
+    step==start_step (介入直後の状態) も対象になり、末尾 total はループ後に補う。
+
+    probe は st を読むだけで、内部から eval_batch(st) を呼んでよい: eval_batch は
+    exp=A なら事前抽選済み st["eval_fixed"] と env.flip_state、exp=B なら env.mu と
+    eval_fixed への Sigma^{1/2} 適用しか使わず、**generator を一切消費せず env.t も
+    進めない**ため、probe の有無で学習軌道は変わらない (probe=None は厳密な no-op)。"""
     C = cfg["common"]
     total = total_steps or C["total_steps"]
     ckpt_set = set(ckpts if ckpts is not None else C["checkpoints"])
@@ -301,6 +312,8 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
     batch, batch_n = st["batch"], st["batch_n"]
     noise_sd = st["noise_sd"]
     snap_set = set(snapshot_steps)
+    # probe=None なら空集合 -> 判定は毎ステップ False で既存挙動と完全一致 [posreset_0819 §5]
+    probe_set = set(probe_steps) if probe is not None else set()
 
     if start_step > 0:
         # resume 直後 (介入後・タスク切替前) の状態を step=start_step として記録。
@@ -316,6 +329,8 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
             save_ckpt(st, t, outdir)
         if t in snap_set:
             save_snapshot(st, t, outdir)
+        if t in probe_set:
+            probe(st, t)
 
         if sw_ptr < len(sw_list) and t == sw_list[sw_ptr]:
             active_switch = sw_list[sw_ptr]
@@ -384,6 +399,8 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
             m = compute_lop_metrics(net, x_ev_in, y_ev, cfg, wdir_ctx=wdir_ctx, bctx=bctx)
             lop_rows.append((t + 1 if t > 0 else 0, {k: v.cpu().numpy().copy() for k, v in m.items()}))
 
+    if total in probe_set:                 # 末尾 step はループ本体を通らないので補う
+        probe(st, total)
     if total in ckpt_set:
         save_ckpt(st, total, outdir)
 

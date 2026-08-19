@@ -1,0 +1,85 @@
+# proj_004: posreset_0819 — E1 同方向・小ノルムリセット判別 (spec_posreset_0819 §3)
+#
+# 目的: 「新しいランダム特徴を一切供給しない座標復元リセット」が full 再初期化の便益を
+# どこまで再現するかを 2×2 要因 (方向 新/旧 × ノルム・b 新/旧) で測り、位置仮説 B1
+# (reinit が回復するのは操舵権限 1/‖w‖ とゲートマージン β) を判別する。
+#
+# レジーム (§3.1):
+#   A = condA A_w100 (methods_sde_0813 継承): batch=1, lr=0.01, µ≠0 の µ経路 dead
+#   B = condB routeK K=100 (cbp_harm_0815 継承): µ=0 厳密 (c=0, kappa=1), b 学習可の b経路 dead
+# build_runs は上の 2 つのみを生成し、group_runs は ("A",100,1,"none") / ("B",20,1,"none")
+# の 2 グループ = ログ名 A_w100 / B_w20 になる (seed 各 10 本)。
+#
+# アーム (§3.4、a_i は実装の VecMLP.v = 読み出し重み。§12 参照):
+#   none    変更なし (= トランクの無介入継続)
+#   posonly w <- ‖g‖·(w/‖w‖) / b <- 0 / v <- 0   … 方向は旧のまま、座標だけ復元
+#   dironly w <- ‖w‖·(g/‖g‖) / b は保持 / v <- 0  … 新方向だけ供給する逆向き対照
+#   full    w <- g / b <- 0 / v <- 0              … CBP の reset 規約と厳密一致
+# g_i は t=0 と同一分布 (envs.kaiming_mlp_params の入力層) からレジームごとに 1 回だけ
+# 引き、3 つの reset アームで再利用する。
+#
+# 実行は src.posreset (run_all ではない): トランク 0→t_int を seed×レジームで 1 本共有し
+# t_int で完全スナップショット → none アームで S2 (bit 一致 resume) → 介入 (float64) →
+# +500k 継続。判定基準は specs/spec_posreset_0819.md §6 (事前登録) を参照。
+# **判定は clean eval_loss のみ。dead_frac は判定に使用禁止** (§9)。
+
+common:
+  total_steps: 1000000       # t_int + post_steps (トランク+参照 run の長さ)
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  lr_main: 0.01
+  device: auto
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: []
+  run_freeze: false
+  b_metrics: true            # レジーム B の β=b/‖w‖ 系列を lop_metrics 側でも残す
+  w_dir_metrics: false
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95             # treated 判定 p̂ < 1-dead_tau = 0.05 と整合 (§3.3)
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+methods:
+  - {name: none}             # 介入手法軸は使わない (アームは posreset 側で分岐)
+
+posreset:
+  t_int: 500000              # 主 t_int (§3.2、A は period=10000 の倍数 = タスク境界)
+  post_steps: 500000         # 介入後の継続 step 数
+  arms: [none, posonly, dironly, full]
+  p_hat_tau: 0.05            # treated = {i : p̂_i < 0.05} (§3.3、neg_gate 基準と一致)
+  norm_guard: 1.0e-8         # ‖w_i‖ < これなら posonly を full にフォールバック (§3.4)
+  reset_seed_base: 819000    # fresh draw g_i 用 generator シード (base + レジーム offset)
+  probe_every: 10000         # treated ユニット副次時系列のサンプリング間隔 (§5)
+  treated_frac_min: 0.3      # 適格性 (§3.3): treated_frac ≥ 0.3 が
+  treated_frac_min_seeds: 8  #   10 seed 中 8 未満なら主判定を参考格に降格 (記録のみ)
+  s3_tol_f64: 1.0e-12        # S3 の数値保証は float64 の介入結果に対して判定 (§7, §12)
+
+condA:                       # Slowly-Changing Regression [D], T=1e4, width 100
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: [100]
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [1]
+  lr_grid: []
+
+condB:                       # ガウス入力・教師切替、µ=0 厳密 (c=0) ・Σ=I (kappa=1)
+  d: 21
+  K_values: [100]
+  c_values: [0.0]
+  kappa_values: [1]
+  widths: [20]
+  lr_values: [0.01]
+  batch_values: [1]
+  spike_dir: alt
+  target_hidden: 100
+  target_noise_sd: 0.0
+  freeze_bias: false         # b 経路を作るので b は学習可能
