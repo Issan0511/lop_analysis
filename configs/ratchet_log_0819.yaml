@@ -1,0 +1,58 @@
+# proj_004: ratchet_log_0819 — 整流モデルの時間発展検証 (ロギング走)
+# 仕様: specs/spec_ratchet_log_0819.md (実行前に事前登録コミット)
+#
+# condA A_w100 (m=20, f=15, T=1e4, std, batch=1, lr=0.01) を seed 10 本で 1M step 走らせ、
+# タスク境界近傍を毎 step・それ以外を 1000 step ごとに probe フックで読み取り専用記録する。
+# 介入アームなし。judgment は §6 の P1-P5 / E1。
+#
+# 土台は methods_sde_0813 の condA none アーム。相違は
+#   (1) seeds 5 -> 10 本 (R が変わるので methods_sde とは bit 一致しない。既知・§4.3)
+#   (2) lop_every 10000 -> 1000。methods_sde の 10k 格子は T=1e4 と完全同期しており
+#       タスク切替直前の位相だけを見る系統誤差を持つ [posreset_0819 phase0_summary §5.1]。
+#       本実験の判定は lop_metrics を使わないが、誤った格子の成果物を残さないため是正する。
+#   (3) widths [5,100] -> [100] のみ、methods は none のみ
+
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  lr_main: 0.01
+  device: cpu                   # batch=1 はカーネル起動律速で CPU が速い [memory 0812]
+  eval_batch: 2000              # S3 の経験 p̂ 比較用 (判定には使わない)
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 1000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+ratchet:
+  boundary_window: 100          # 境界の [-w, +w] を毎 step 記録 [§3.3]
+  bulk_every: 1000              # それ以外の粒度 [§3.3]
+  p_hat_tau: 0.05               # 凍結 / 死亡の閾値 [§3.5]。lop_metrics の 1-dead_tau と一致
+  death_recover_periods: 1      # 死亡判定: 下方クロス後この周期数だけ回復しないこと [§3.5]
+  bootstrap_B: 10000            # paired bootstrap の resample 数 [§5]
+  bootstrap_seed: 20260819      # 事前登録の抽選列 [§5]
+  perm_null_n: 1000             # P3 の符号置換 null の反復数 [§6]
+
+condA:                          # Slowly-Changing Regression [D], T=1e4 標準のみ
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: [100]
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [1]
+  lr_grid: []
+
+condB:                          # 本実験では未使用 (condB への外挿は禁止 [§9])
+  d: 21
+  K_values: []
+  c_values: []
+  widths: []
+  batch_values: [1]
