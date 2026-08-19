@@ -488,10 +488,15 @@ def judge(df, pe_inc, bc_all, stair, P, seeds, period, half_w):
     thr = 3 * NULL_BC
     mbc, lobc, hibc = boot_ci(rng, df.BC_median, B)
     p4 = bool(np.isfinite(lobc) and lobc > thr)
-    add(id="P4", statistic="median BC (区間分割版)", point=mbc, ci_lo=lobc, ci_hi=hibc,
+    add(id="P4", statistic="median BC (cos 基準・事前登録)", point=mbc,
+        ci_lo=lobc, ci_hi=hibc,
         threshold=f"CI 下端 > 3 x {NULL_BC:.4f} = {thr:.4f}",
-        result="PASS" if p4 else "FAIL",
-        note="解像度差を除いた区間分割版。生グリッド版は BC_naive 行を参照")
+        result="無効 (指標がトートロジー)",
+        note=f"閾値そのものは満たす ({'超える' if p4 else '超えない'}) が、**PASS と書いては"
+             "いけない**。p̂=0 のユニットは勾配が恒等的に 0 で w が動かず、cos(u,µ̂) が "
+             "動くのは µ̂ が動く境界だけなので BC(cos)→1 が機構と無関係に成立する "
+             "(バルク変位が厳密に 0.000)。事前登録指標は**測るべきものを測っていない**。"
+             "判定は amended 指標 P4-mech で行う (rank_int_0814 の width プールと同じ扱い)")
     mn, lon, hin = boot_ci(rng, df.BC_naive_median, B)
     add(id="P4-naive", statistic="median BC (生グリッド)", point=mn, ci_lo=lon, ci_hi=hin,
         threshold="(参考・判定に使わない)", result="—",
@@ -499,9 +504,11 @@ def judge(df, pe_inc, bc_all, stair, P, seeds, period, half_w):
     # --- P4 の機構分離 (事後追加。§6 の事前登録判定ではない)
     mw, low, hiw = boot_ci(rng, df.BCw_median, B)
     mf, lof, hif = boot_ci(rng, df.frac_w_moves, B)
-    add(id="P4-mech", statistic="median BC (‖w‖ 基準)", point=mw, ci_lo=low, ci_hi=hiw,
-        threshold=f"(事後追加) 参考閾値 3 x {NULL_BC:.4f} = {thr:.4f}",
-        result="—",
+    add(id="P4-mech", statistic="median BC (‖w‖ 基準・amended)", point=mw,
+        ci_lo=low, ci_hi=hiw,
+        threshold=f"(amended) 3 x {NULL_BC:.4f} = {thr:.4f}",
+        result=("支持 (amended)" if np.isfinite(low) and low > thr
+                else "不支持 (amended)"),
         note="p̂=0 のユニットは勾配が恒等的に 0 で w が動かないため BC(cos)=1 は恒真。"
              "匍匐仮説が要求する「一押し」は w が動くことなので、機構判断はこの行を見る")
     add(id="P4-move", statistic="凍結区間のうち ‖w‖ が動いた割合 (再露出率)", point=mf,
@@ -668,6 +675,15 @@ def write_summary(resdir, df, V, cfg, meta, dec=None):
          f"レジーム: condA A_w100 / m=20, f=15, T={cfg['condA']['T_values'][0]}, std, "
          f"batch=1, lr={cfg['common']['lr_main']} / seed {len(df)} 本 / "
          f"{cfg['common']['total_steps']:,} step", "",
+         "## リポジトリ来歴 (監査用)", "",
+         "本実験は `github.com/Issan0511/lop_analysis` の **main ブランチ**上で実施した。"
+         "作業ディレクトリ名がローカルで `proj_004_drift` なのは同一 origin の 2 つ目の "
+         "clone だからで、別リポジトリではない (`git remote -v` で確認可能)。"
+         "もう一方のローカル clone `lop_analysis/` は古い feature ブランチ "
+         "`mu_sweep_norm_0811` を checkout したままなので、その作業ツリーには "
+         "probe フックも `full_support()` も無い。**「lop_analysis は古い」という "
+         "記述は誤り**で、正しくは「そのローカル clone のチェックアウトが古い」。"
+         "origin/main には両方存在する。", "",
          "## 結論 (一行)", "",
          "**整流モデルの「駆動が境界で反転する」部分は棄却**され (P1/P2 とも FAIL、"
          "境界は駆動符号にとって特別な瞬間ですらない)、代わりに **(i) 常に下向きの "
@@ -682,7 +698,7 @@ def write_summary(resdir, df, V, cfg, meta, dec=None):
          "特別な瞬間ではない |",
          "| 死亡の軌跡 | 単調輸送 | **支持** (P3 PASS)。median PE 0.396 > 符号置換帰無の "
          "95%点 0.218。拡散到着ではなく方向のそろった輸送 |",
-         "| 凍結ユニットの匍匐 | 境界で再露出 → 一押し → 再凍結 | **支持、ただし機構指標で** "
+         "| 凍結ユニットの匍匐 | 境界で再露出 → 一押し → 再凍結 | **amended 指標で支持** "
          "(P4-mech)。‖w‖ の変位の 31.5% CI[0.300,0.331] が時間の 2.01% しかない境界窓で "
          "起きる = **15.7 倍の濃縮**。凍結区間の 76.5% で ‖w‖ が実際に動いており、"
          "「押されている」こと自体も確認された |",
@@ -692,7 +708,8 @@ def write_summary(resdir, df, V, cfg, meta, dec=None):
          "F_self,i = −2η·v_i²·E[a_i·gate_i·(x·µ̂)] は condA では入力も µ̂ も非負なため "
          "**構造的に ≤ 0**。大きさは rest の 0.62 倍 |", "",
          "### 読むときの注意", "",
-         "- **P4 の事前登録行 (BC on cos = 0.924) を単独で引用しないこと**。p̂=0 の "
+         "- **P4 は「PASS」ではない。事前登録指標が無効、amended 指標で支持**、が正しい "
+         "書き方 (rank_int_0814 の width プールと同じ扱い)。p̂=0 の "
          "ユニットは勾配が恒等的に 0 で w が動かないので、cos(u,µ̂) が動くのは µ̂ が "
          "動く境界だけ = **BC(cos)=1 が機構と無関係に恒真**。匍匐の証拠になるのは "
          "`P4-mech` / `P4-move` の行だけである。",
@@ -703,8 +720,9 @@ def write_summary(resdir, df, V, cfg, meta, dec=None):
          "| ID | 予測 | 統計量 | 点推定 | 95%CI | 基準 | 判定 |",
          "|---|---|---|---|---|---|---|"]
     pred = {"P1": "駆動符号はタスク内で安定", "P2": "境界で反転 (コイン化)",
-            "P3": "死亡は単調輸送", "P4": "凍結ユニットの変位は境界集中",
-            "P5": "帯深は切替回数スケール"}
+            "P3": "死亡は単調輸送",
+            "P4": "凍結ユニットの変位は境界集中 (指標無効 → amended へ)",
+            "P5": "帯深は切替回数スケール (字義のみ)"}
     for i in ("P1", "P2", "P3", "P4", "P5"):
         r = g(i)
         ci = (f"[{r.ci_lo:.4f}, {r.ci_hi:.4f}]"
