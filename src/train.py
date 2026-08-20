@@ -42,7 +42,10 @@ def setup_group(gkey, runs, cfg, device):
     if exp == "A":
         d = A["m"]
         env = SCREnv(R, A["m"], A["f"], period, gens["input"], device)
-        teacher = LTUTarget(R, A["m"], A["target_hidden"], A["beta"], gens["teacher"], device)
+        # target_out_scale は教師出力全体に掛ける定数 [teachw_0820 §3]。未指定 = 1.0 で
+        # 既存 config は bit 一致 (LTUTarget 側で恒等分岐)。
+        teacher = LTUTarget(R, A["m"], A["target_hidden"], A["beta"], gens["teacher"],
+                            device, out_scale=float(A.get("target_out_scale", 1.0) or 1.0))
     else:
         d = B["d"]
         cvals = [r["c"] for r in runs]
@@ -401,6 +404,8 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
 
     if total in probe_set:                 # 末尾 step はループ本体を通らないので補う
         probe(st, total)
+    if total in snap_set:                  # 同上 (既存呼び出しは t_int < total なので影響なし)
+        save_snapshot(st, total, outdir)
     if total in ckpt_set:
         save_ckpt(st, total, outdir)
 

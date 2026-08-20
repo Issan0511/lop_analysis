@@ -1,0 +1,63 @@
+# proj_004: teachw_0820 — 教師複雑度スイープ (生存者数 = 必要ユニット数か)
+# 仕様: specs/spec_teachw_0820.md (実行前に事前登録コミット)
+#
+# condA A_w100 (m=20, f=15, T=1e4, std, batch=1, lr=0.01) を seed 10 本 × 1M step、
+# 教師 LTU 幅 H_T ∈ {1,2,4,8,32,100} の 6 アームで走らせる。入力ビット列は seed 固定で
+# 全アーム同一 (SCREnv は gens["input"]、教師は gens["teacher"] と別ストリーム [§1])。
+#
+# 土台は configs/ratchet_log_0819.yaml (= methods_sde_0813 の condA none アーム、
+# lop_every は T=1e4 との同期を避けて 1000)。相違は
+#   (1) teachw セクション追加 (アーム軸 hidden_values と出力スケーリング則)
+#   (2) probe は厳密 p̂ / eval_loss_exact のみ (ratchet_log の F 系は記録しない)
+#   (3) 最終 step のスナップショットを保存 (§3 の事後台帳解析用)
+#
+# H_T=100 アームは target_out_scale=1.0 で ratchet_log_0819 と bit 一致する (§7 S3)。
+
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  lr_main: 0.01
+  device: cpu                   # batch=1 はカーネル起動律速で CPU が速い [memory 0812]
+  eval_batch: 2000              # lop_metrics の固定 eval バッチ (判定には使わない)
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: []               # ckpt は使わない (最終スナップショットで代替)
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+teachw:
+  hidden_values: [1, 2, 4, 8, 32, 100]   # アーム軸 = 教師 LTU 幅 H_T [§3]
+  scale_ref: 100                # y_scaled = y_raw * sqrt(scale_ref / H_T) [§3]
+  p_hat_tau: 0.05               # alive = 厳密 p̂ >= この値 [§3]。ratchet_log と同一定義
+  probe_every: 1000             # 厳密 p̂ / eval_loss_exact の記録粒度 (判定は t=1M のみ)
+  var_band: [0.5, 2.0]          # Phase 0-2 / S4 の Var[y] 帯 (H_T=100 比) [§4, §7]
+  bootstrap_B: 10000            # [§8]
+  bootstrap_seed: 20260820      # [§8]
+  rho_median_min: 0.6           # P1 (ii) の Spearman ρ 中央値の下限 [§6]
+  p0_dead_min: 0.5              # P0 ゲート: dead_frac_final の下限 [§6]
+  p0_min_levels: 4              # 有効レベルがこれ未満なら全体判定保留 [§6]
+
+condA:                          # Slowly-Changing Regression [D], T=1e4 標準のみ
+  m: 20
+  f: 15
+  target_hidden: 100            # src.teachw が hidden_values で上書きする (既定 = アンカー)
+  target_out_scale: 1.0         # 同上 (sqrt(scale_ref / H_T))。1.0 は厳密な恒等
+  beta: 0.7
+  T_values: [10000]
+  widths: [100]
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [1]
+  lr_grid: []
+
+condB:                          # 本実験では未使用 (condB への外挿は禁止 [§9])
+  d: 21
+  K_values: []
+  c_values: []
+  widths: []
+  batch_values: [1]

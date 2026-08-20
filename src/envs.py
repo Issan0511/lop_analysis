@@ -11,9 +11,14 @@ import torch
 
 class LTUTarget:
     """[D] FixLTUNet のベクトル化版 (R 系列分の独立教師)。重み・バイアス ±1、
-    tau = beta*(m+1) - S, S = (m - sum(W) + b)/2  (公式実装 fix_ltu_net.py に一致)。"""
+    tau = beta*(m+1) - S, S = (m - sum(W) + b)/2  (公式実装 fix_ltu_net.py に一致)。
 
-    def __init__(self, R, m, hidden, beta, gen, device):
+    out_scale は教師出力全体 (cout 込み) に掛ける定数 [teachw_0820 §3]。LTU 出力は
+    正規化されておらず Var[y] ≈ O(hidden) なので、教師幅 hidden を振ると複雑度と
+    損失スケールが交絡する。既定 1.0 は厳密な恒等 (乱数消費も不変) で既存実験と
+    bit 一致する。"""
+
+    def __init__(self, R, m, hidden, beta, gen, device, out_scale=1.0):
         pm = lambda *s: (torch.randint(0, 2, s, generator=gen, device=device).float() * 2 - 1)
         self.W = pm(R, hidden, m)          # [R,H,m]
         self.b = pm(R, hidden)             # [R,H]
@@ -21,6 +26,7 @@ class LTUTarget:
         self.cout = pm(R)                  # [R]
         S = (m - self.W.sum(dim=2) + self.b) / 2
         self.tau = beta * (m + 1) - S      # [R,H]
+        self.out_scale = float(out_scale)
 
     def state_dict(self):
         return {k: getattr(self, k).clone() for k in ("W", "b", "v", "cout", "tau")}
@@ -33,7 +39,10 @@ class LTUTarget:
         """x: [..., R, m] -> y: [..., R]"""
         pre = torch.einsum("rhm,...rm->...rh", self.W, x) + self.b
         h = (pre >= self.tau).float()
-        return (h * self.v).sum(dim=-1) + self.cout
+        y = (h * self.v).sum(dim=-1) + self.cout
+        if self.out_scale == 1.0:          # 既存 run との bit 一致を明示的に保つ
+            return y
+        return y * self.out_scale
 
 
 class SCREnv:

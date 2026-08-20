@@ -37,7 +37,9 @@ def _restore(gkey, ckpt, cfg, device):
     if exp == "A":
         d = A["m"]
         env = SCREnv(R, A["m"], A["f"], period, gens["input"], device)
-        teacher = LTUTarget(R, A["m"], A["target_hidden"], A["beta"], gens["teacher"], device)
+        # 教師出力スケールは setup_group と同一規約 [teachw_0820 §3]
+        teacher = LTUTarget(R, A["m"], A["target_hidden"], A["beta"], gens["teacher"],
+                            device, out_scale=float(A.get("target_out_scale", 1.0) or 1.0))
     else:
         d = B["d"]
         cvals = [r["c"] for r in runs]

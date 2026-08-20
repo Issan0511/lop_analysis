@@ -55,10 +55,12 @@ def full_support_ro(env):
 
 def teacher_f64(teacher, X):
     """`envs.LTUTarget.__call__` の float64 版 (式は逐語的に同一)。
-    tau は beta*(m+1)-S で非整数になるため、境界判定を float32 の丸めに委ねない。"""
+    tau は beta*(m+1)-S で非整数になるため、境界判定を float32 の丸めに委ねない。
+    out_scale [teachw_0820 §3] も本家と同じく cout 込みの全体に掛ける (既定 1.0)。"""
     pre = torch.einsum("rhm,prm->prh", teacher.W.double(), X) + teacher.b.double()
     h = (pre >= teacher.tau.double()).double()
-    return (h * teacher.v.double()).sum(dim=-1) + teacher.cout.double()
+    y = (h * teacher.v.double()).sum(dim=-1) + teacher.cout.double()
+    return y * float(getattr(teacher, "out_scale", 1.0))
 
 
 def exact_record(st, as_f64=False):
