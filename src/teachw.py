@@ -267,8 +267,12 @@ def main():
                              if args.smoke else resolve_outdir(args.config))
     os.makedirs(outdir, exist_ok=True)
     print(f"outdir: {outdir}", flush=True)
-    with open(os.path.join(outdir, "config_used.yaml"), "w") as fh:
+    # アーム別プロセスで並列に走らせるので tmp+rename [run_all.atomic_write と同じ規約]
+    top = os.path.join(outdir, "config_used.yaml")
+    tmp = f"{top}.tmp{os.getpid()}"
+    with open(tmp, "w") as fh:
         yaml.safe_dump(cfg, fh, allow_unicode=True)
+    os.replace(tmp, top)
 
     hiddens = args.hidden if args.hidden else list(cfg["teachw"]["hidden_values"])
     for hd in hiddens:

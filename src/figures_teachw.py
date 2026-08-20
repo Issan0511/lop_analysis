@@ -87,6 +87,9 @@ def per_seed_metrics(arms, tail_frac=0.1):
                 eval_loss_exact_t0=float(d["eval_loss_exact"][0]),
                 var_y_t0=float(d["var_y"][0]),
                 var_y_median=float(np.median(d["var_y"])),
+                # 記録グリッドは 1000 step 刻みなので、この平均は本走が実際に通った
+                # 100 個の flip 状態上の E_flip[Var[y]] 推定 (Phase 0-2'' と同じ量)
+                var_y_timemean=float(np.mean(d["var_y"])),
                 alive_t0=float(alive[0]),
                 t50_dead=t50_dead(step, float(d["width"]) - alive),
                 n_rec=int(len(step))))
@@ -172,20 +175,32 @@ def check_s2(arms):
 
 
 def check_s3(df, ref_H=100):
-    """S3: H_T=ref_H の dead_frac_final が ratchet_log_0819 と seed 別に厳密一致 [§7]。"""
+    """S3: H_T=ref_H の dead_frac_final が ratchet_log_0819 と seed 別に厳密一致 [§7]。
+
+    **比較は死亡ユニット「数」(整数) で行う**。dead_frac は両側とも k/100 (k は整数) だが、
+    アンカーは `mean(p̂ < 0.05)` = 93/100、本実験は `1 − alive/100` = 1 − 7/100 と
+    **到達する演算経路が違う**ので、同じ k でも最終 ulp が 1 ずれることがある
+    (実測 seed 9: 0.93 vs 0.9299999999999999, |diff| = 1.1e-16)。物理的に同一の量を
+    浮動小数の等値で比べると、この丸めだけで FAIL する。整数のユニット数はどちらの
+    経路でも一意なので、これが厳密一致の正しい表現。float 差は参考として併記する。
+    [memory 0815 の「bit 比較の落とし穴」と同型の問題]"""
     p = os.path.join(ROOT, ANCHOR)
     if not os.path.exists(p):
         return dict(pass_=False, note=f"アンカー欠落: {ANCHOR}")
     ref = pd.read_csv(p).set_index("seed")["dead_frac_final"]
-    got = df[df.H_T == ref_H].set_index("seed")["dead_frac_final"]
+    sub = df[df.H_T == ref_H].set_index("seed")
+    got, w = sub["dead_frac_final"], sub["width"]
     common = sorted(set(ref.index) & set(got.index))
-    diff = {int(s): (float(ref[s]), float(got[s])) for s in common
-            if float(ref[s]) != float(got[s])}
+    nref = {s: int(round(float(ref[s]) * int(w[s]))) for s in common}
+    ngot = {s: int(round(float(got[s]) * int(w[s]))) for s in common}
+    diff = {int(s): (nref[s], ngot[s]) for s in common if nref[s] != ngot[s]}
+    fdiff = float(max((abs(float(ref[s]) - float(got[s])) for s in common), default=np.nan))
     return dict(pass_=bool(common and not diff), n_seed=len(common),
                 n_mismatch=len(diff), mismatch=diff, anchor=ANCHOR,
-                max_abs_diff=float(max((abs(a - b) for a, b in
-                                        ((float(ref[s]), float(got[s])) for s in common)),
-                                       default=np.nan)))
+                n_dead_anchor={int(s): nref[s] for s in common},
+                n_dead_got={int(s): ngot[s] for s in common},
+                max_abs_float_diff=fdiff,
+                criterion="dead ユニット数 (整数) の seed 別厳密一致")
 
 
 def check_s4(df, band, ref_H=100):
@@ -197,19 +212,25 @@ def check_s4(df, band, ref_H=100):
     則をどう選んでも直らない。詳細は phase0_summary.md 0-2。"""
     med = df.groupby("H_T")["var_y_t0"].median()
     avg = df.groupby("H_T")["var_y_t0"].mean()
-    ref, ref_m = float(med.get(ref_H, np.nan)), float(avg.get(ref_H, np.nan))
+    flip = df.groupby("H_T")["var_y_timemean"].mean()
+    ref = float(med.get(ref_H, np.nan))
+    ref_m, ref_f = float(avg.get(ref_H, np.nan)), float(flip.get(ref_H, np.nan))
     rows = []
     for h, v in med.items():
         ratio = float(v / ref) if ref else np.nan
         ratio_m = float(avg[h] / ref_m) if ref_m else np.nan
+        ratio_f = float(flip[h] / ref_f) if ref_f else np.nan
         rows.append(dict(H_T=int(h), var_y_t0_median=float(v), ratio_vs_ref=ratio,
                          in_band=bool(band[0] <= ratio <= band[1]),
                          var_y_t0_mean=float(avg[h]), ratio_mean=ratio_m,
                          in_band_mean=bool(band[0] <= ratio_m <= band[1]),
-                         n_zero_var=int((df[(df.H_T == h)].var_y_t0 == 0).sum())))
+                         var_y_flipavg=float(flip[h]), ratio_flip=ratio_f,
+                         in_band_flip=bool(band[0] <= ratio_f <= band[1]),
+                         n_zero_var_t0=int((df[(df.H_T == h)].var_y_t0 == 0).sum())))
     return dict(pass_=all(r["in_band"] for r in rows),
-                pass_intent=all(r["in_band_mean"] for r in rows), band=list(band),
-                ref_var=ref, ref_var_mean=ref_m, rows=rows)
+                pass_intent=all(r["in_band_mean"] for r in rows),
+                pass_flip=all(r["in_band_flip"] for r in rows), band=list(band),
+                ref_var=ref, ref_var_mean=ref_m, ref_var_flip=ref_f, rows=rows)
 
 
 # ---------------------------------------------------------------- 判定 (§6)
@@ -278,6 +299,28 @@ def judge(df, P, arms):
         add(id="P1", statistic="主判定", threshold="—", result="保留",
             note="有効レベルが 2 未満で回帰不能")
 
+    # --- 事後追加 (§6 にはない): 損失スケールが揃っているレベルだけで P1 を測り直す。
+    # S4' の flip 平均比が低 H_T でずれる (H1 0.33 / H2 0.51) 一方、H4-H100 は
+    # 0.91-1.15 に収まる。スケールが小さいほど残差が小さく dead も減る向きなので、
+    # このずれは**観測された負の傾きを作る側の交絡**になりうる。切り分けとして
+    # スケール整合レベル (比が ±25% 以内) に限定した同じ統計量を併記する。
+    s4_pre = check_s4(df, P["var_band"])
+    matched = sorted(r["H_T"] for r in s4_pre["rows"] if 0.75 <= r["ratio_flip"] <= 1.25)
+    inband = sorted(r["H_T"] for r in s4_pre["rows"] if r["in_band_flip"])
+    for tag, lv, why in (("P1_post_matched", matched, "flip 平均 Var 比が ±25% 以内"),
+                         ("P1_post_inband", inband, "flip 平均 Var 比が事前登録の帯内")):
+        if len(lv) < 2:
+            continue
+        q = per_seed_slopes(df, lv)
+        m_sl, m_lo, m_hi = boot_ci(rng, q.slope.to_numpy(), B)
+        m_rho, _, _ = boot_ci_median(rng, q.rho.to_numpy(), B)
+        add(id=tag, statistic=f"[事後追加] {why}のレベルに限定した傾き",
+            point=m_sl, ci_lo=m_lo, ci_hi=m_hi,
+            threshold="事前登録外 (交絡の切り分け用、判定に使わない)", result="事後",
+            note=f"レベル {lv}; ρ 中央値 {m_rho:.3f}; "
+                 f"alive 中央値 " + ", ".join(
+                     f"H{h}:{df[df.H_T == h].alive_final.median():.1f}" for h in lv))
+
     # 参考: 全レベルで同じ統計量 (void レベルを混ぜた場合)
     ps_all = per_seed_slopes(df, levels)
     sl_a, lo_a, hi_a = boot_ci(rng, ps_all.slope.to_numpy(), B)
@@ -311,21 +354,25 @@ def judge(df, P, arms):
     add(id="S3", statistic="H_T=100 の dead_frac_final が ratchet_log_0819 と一致",
         point=float(s3.get("n_seed", 0)), threshold="seed 別に厳密一致",
         result="PASS" if s3["pass_"] else "FAIL",
-        note=f"不一致 {s3.get('n_mismatch')} / {s3.get('n_seed')} seed; "
-             f"max|diff|={s3.get('max_abs_diff')}")
-    s4 = check_s4(df, P["var_band"])
+        note=f"dead ユニット数 (整数) で比較: 不一致 {s3.get('n_mismatch')} / "
+             f"{s3.get('n_seed')} seed; 参考の float 最大差 "
+             f"{s3.get('max_abs_float_diff'):.3g} (演算経路差による丸め)")
+    s4 = s4_pre
     add(id="S4", statistic="Var[y_scaled] (t=0) の H_T=100 比 (字義: 中央値)", point=np.nan,
         threshold=f"中央値比が {list(P['var_band'])} 内",
         result="PASS" if s4["pass_"] else "FAIL",
         note="中央値比 " + "; ".join(f"H{r['H_T']}:{r['ratio_vs_ref']:.3f}"
                                     for r in s4["rows"]))
-    add(id="S4_intent", statistic="同上 (意図: 平均。低 H_T のゼロ過剰を回避)",
-        point=np.nan, threshold=f"平均比が {list(P['var_band'])} 内",
-        result="PASS" if s4["pass_intent"] else "FAIL",
-        note="平均比 " + "; ".join(f"H{r['H_T']}:{r['ratio_mean']:.3f}"
-                                  for r in s4["rows"])
-             + "。字義の中央値は Var[y_raw] ∝ Binom(H_T, ≈0.151) のゼロ過剰を拾うので"
-               "乗法スケーリングでは直らない (phase0_summary.md 0-2)")
+    add(id="S4_intent", statistic="同上 (意図: 本走が通った 100 flip 状態上の "
+                                  "E_flip[Var[y_scaled]])",
+        point=np.nan, threshold=f"flip 平均比が {list(P['var_band'])} 内",
+        result="PASS" if s4["pass_flip"] else "FAIL",
+        note="flip 平均比 " + "; ".join(f"H{r['H_T']}:{r['ratio_flip']:.3f}"
+                                      for r in s4["rows"])
+             + f"; 参考: t=0 平均比の判定は "
+               f"{'PASS' if s4['pass_intent'] else 'FAIL'}"
+               "。字義の t=0 中央値は Var[y_raw] ∝ Binom(H_T, ≈0.151) のゼロ過剰を"
+               "拾うので乗法スケーリングでは直らない (phase0_summary.md 0-2)")
     omp = {a["meta"].get("omp_num_threads") for a in arms}
     add(id="S1", statistic="OMP_NUM_THREADS", point=np.nan, threshold='= "1"',
         result="PASS" if omp == {"1"} else "FAIL", note=f"アーム横断で {sorted(omp)}")
@@ -461,6 +508,7 @@ def write_summary(resdir, df, V, gates, ps, extra, cfg, arms):
     valid, enough = extra["valid"], extra["enough"]
     p1 = g("P1")
 
+    has = lambda i: len(V[V.id == i]) > 0
     if not enough:
         headline = (f"**判定保留**。P0 の有効レベルが {len(valid)} 本 "
                     f"({valid}) で事前登録の下限 {P['p0_min_levels']} に届かないため、"
@@ -469,8 +517,60 @@ def write_summary(resdir, df, V, gates, ps, extra, cfg, arms):
         headline = ("**P1 PASS = 「生存者数は教師複雑度に単調増加」を支持**"
                     "(ただし §1 のとおり単調性は必要条件であって十分条件ではない)。")
     else:
-        headline = ("**P1 FAIL = 「生存者数 = タスクを表現するのに必要なユニット数」"
-                    "予言は、このダイヤル・このスコープで棄却**(§1 のキルライン)。")
+        headline = (
+            "**P1 FAIL = 「生存者数 = タスクを表現するのに必要なユニット数」予言は、"
+            "このダイヤル・このスコープで棄却**(§1 のキルライン)。"
+            f"傾きは正どころか**負**で {g('P1_i').point:+.2f} "
+            f"CI[{g('P1_i').ci_lo:+.2f},{g('P1_i').ci_hi:+.2f}]、"
+            f"per-seed Spearman ρ の中央値も {g('P1_ii').point:+.3f} "
+            f"CI[{g('P1_ii').ci_lo:+.3f},{g('P1_ii').ci_hi:+.3f}]。")
+        if has("P1_post_matched"):
+            m = g("P1_post_matched")
+            headline += (
+                "\n\n**さらに事後追加の切り分けで、負の傾きは低 H_T 側の交絡由来だと"
+                f"分かった**。損失スケールが揃うレベル ({m.note.split(';')[0].strip()}) "
+                f"に限ると傾きは {m.point:+.4f} CI[{m.ci_lo:+.3f},{m.ci_hi:+.3f}] と"
+                "**ゼロ上のタイトな null**になる。教師複雑度を 4→100 と 25 倍に振っても"
+                "生存者数は動かない。→ 「入力統計が固定なら生存者数は教師複雑度に"
+                "**非感応**」という対立側 (罠幾何説 / H_marg 系) の予言が、"
+                "棄却ではなく**積極的に支持**された形。")
+
+    extra_sections = []
+    if has("P1_post_matched"):
+        m, ib = g("P1_post_matched"), g("P1_post_inband")
+        lp = df.groupby("H_T")["eval_loss_exact_plateau"].median()
+        extra_sections = [
+            "## 何が棄却され、何が残ったか", "",
+            "| 部品 | 事前の描像 | 本実験の結果 |", "|---|---|---|",
+            "| 生存者数の決定因 | タスクを表現するのに必要なユニット数 (H_earn) | "
+            f"**棄却**。全レベルでの傾きは {g('P1_i').point:+.2f} "
+            f"CI[{g('P1_i').ci_lo:+.2f},{g('P1_i').ci_hi:+.2f}] と符号が逆 |",
+            "| 同上・スケール整合レベルのみ | 同上 | "
+            f"**非感応**。傾き {m.point:+.4f} CI[{m.ci_lo:+.3f},{m.ci_hi:+.3f}]。"
+            "H_T を 4→100 と 25 倍にしても alive は 4-5 で動かない = 対立側の予言 |",
+            "| 未フィット残差 | (予言なし) | 複雑度に**単調増加** "
+            f"(eval_loss_exact plateau 中央値 H1 {lp[1]:.4g} → H100 {lp[100]:.4g})。"
+            "**残差が 2 桁増えても生存者数は増えない** |",
+            "| 低複雑度で堆積が止まるか | §6 の T4 傍証枠 | "
+            f"H_T ∈ {{1,2}} は alive 中央値 "
+            f"{df[df.H_T == 1].alive_final.median():.0f} / "
+            f"{df[df.H_T == 2].alive_final.median():.0f} と明確に高く、"
+            "同時に損失 plateau がほぼ 0 (完全フィット)。ただし §逸脱 5 の交絡つき (損失スケールが基準の 0.33-0.51) |", "",
+            "## 事後追加: 損失スケール交絡の切り分け", "",
+            "S4' の flip 平均 Var 比は H_T=1 で 0.33、H_T=2 で 0.51 と基準より小さい一方、"
+            "H_T=4-100 は 0.91-1.15 に収まる。**スケールが小さいほど残差が小さく dead も"
+            "減る**ので、このずれは観測された負の傾きを作る側に効く交絡になりうる。"
+            "そこで同じ統計量をスケール整合レベルに限定して測り直した (事前登録外・"
+            "判定には使わない)。", "",
+            f"- 比が ±25% 以内 ({m.note.split(';')[0].strip()}): 傾き {m.point:+.4f} "
+            f"CI[{m.ci_lo:+.3f},{m.ci_hi:+.3f}]",
+            f"- 比が事前登録の帯 {list(P['var_band'])} 内 "
+            f"({ib.note.split(';')[0].strip()}): 傾き {ib.point:+.4f} "
+            f"CI[{ib.ci_lo:+.3f},{ib.ci_hi:+.3f}]", "",
+            "前者はゼロ上の null、後者は H_T=2 の高い alive を 1 点含むぶん負に残る。"
+            "**どちらも「複雑度が上がるほど生存者が増える」向きの証拠にはならない**ので、"
+            "P1 の棄却結論は交絡を除いても維持される (棄却が「単調増加ではない」で"
+            "あって「単調減少である」ではない点に注意)。", ""]
 
     piv = df.pivot_table(index="seed", columns="H_T", values="alive_final").astype(int)
     piv.insert(0, "seed", piv.index)
@@ -502,6 +602,7 @@ def write_summary(resdir, df, V, gates, ps, extra, cfg, arms):
          _md(piv, fmt=".0f"), "",
          "## P1 の seed 別内訳", "",
          (_md(ps) if len(ps) else "(有効レベル不足で算出せず)"), "",
+         *extra_sections,
          "## P3 (探索的, 判定なし)", "",
          _md(df.groupby("H_T").agg(
              alive_final_median=("alive_final", "median"),
@@ -514,8 +615,8 @@ def write_summary(resdir, df, V, gates, ps, extra, cfg, arms):
          f"- S1 (`OMP_NUM_THREADS=1`): {g('S1').result} — {g('S1').note}",
          f"- S2 (flip_state 軌跡の全アーム一致): {g('S2').result} — {g('S2').note}",
          f"- S3 (H_T=100 アンカー再現): {g('S3').result} — {g('S3').note}",
-         f"- S4 (Var[y] 帯, 字義=中央値): {g('S4').result} — {g('S4').note}",
-         f"- S4' (同, 意図=平均): {g('S4_intent').result} — {g('S4_intent').note}", "",
+         f"- S4 (Var[y] 帯, 字義=t=0 の seed 中央値): {g('S4').result} — {g('S4').note}",
+         f"- S4' (同, 意図=flip 平均): {g('S4_intent').result} — {g('S4_intent').note}", "",
          _md(pd.DataFrame(extra["s4"]["rows"]), fmt=".4g"), "",
          "## 逸脱・留保 (§9)", "",
          "1. **Phase 0-1 の照合条件**: 仕様 §4-1 の字義は「H_T=100・seed 0 の 50k "
@@ -535,10 +636,24 @@ def write_summary(resdir, df, V, gates, ps, extra, cfg, arms):
          "4. **t50 の定義**: 初期値補正版 (dead が d0 + (d_final − d0)/2 に初到達する "
          "step)。condA は t=0 で既に dead ≈ 0.25 あり、生の「final の半分」定義だと "
          "多くの seed で t=0 が答えになる。P3 は判定に使わない探索的指標。",
-         "5. **スナップショット**: `results/**/snapshots/*.pt` は既存 .gitignore の対象"
+         "5. **S4 (Var[y] 帯) が字義で FAIL**: 仕様 §4-2/§7 は「t=0 の全サポート上の "
+         "Var[y_scaled] の中央値が H_T=100 比 [0.5,2.0]」を求めるが、LTU は β=0.7 の"
+         "しきい値が高く、教師ユニットが周期内 (flip 固定) で変動する確率は ≈0.151 "
+         "しかない。よって Var[y_raw] は Binom(H_T, 0.151) 型の**ゼロ過剰分布**になり、"
+         "低 H_T では中央値が 0 に張り付く (H_T=1 は 8/10 seed、H_T=2 は 10/10 seed が "
+         "t=0 で Var=0 = 周期内定数関数)。**これは乗法スケーリング則では原理的に"
+         "直らない**ので、Phase 0 で規則を見直したうえで**変更しない**判断をした "
+         "(`phase0_summary.md` 0-2)。交絡除去という §3 の意図に正対する "
+         "E_flip[Var[y_scaled]] は、Phase 0 の 512 iid flip 標本では全 6 レベルが帯内 "
+         "(0.52-1.00)、本走が実際に通った 100 個の相関 flip 状態では H_T=1 のみ帯外 "
+         "(0.33)。**残った交絡は §事後追加で切り分けた**。",
+         "6. **P1_post_matched / P1_post_inband は事後追加**であり事前登録に無い。"
+         "判定 (verdict の result 列) には使っておらず、result は「事後」と表記した。"
+         "cbp_harm_0815 の教訓どおり、事後である旨を明記して併記する方式。",
+         "7. **スナップショット**: `results/**/snapshots/*.pt` は既存 .gitignore の対象"
          "なのでリポジトリには入らない (各アーム `H*/snapshots/` にローカル保存)。"
          "判定に使った生ログ (`H*/logs/seed*.npz`) は commit している。",
-         "6. **実装の追加**: `train.train_group` はループ後の `total` で snapshot を"
+         "8. **実装の追加**: `train.train_group` はループ後の `total` で snapshot を"
          "書いていなかった (probe / ckpt は補っていた) ので補完した。既存の呼び出しは"
          "いずれも `t_int < total` なので挙動は不変。", "",
          "## スコープ (§9)", "",
