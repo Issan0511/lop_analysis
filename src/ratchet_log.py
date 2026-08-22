@@ -1,4 +1,4 @@
-"""ratchet_log_0819 Phase 1: 整流モデルの時間発展ロギング走 (spec_ratchet_log_0819 §3)。
+"""ratchet_log: 整流モデルの時間発展ロギング走。
 
   OMP_NUM_THREADS=1 .venv/bin/python -m src.ratchet_log --config configs/ratchet_log_0819.yaml
   OMP_NUM_THREADS=1 .venv/bin/python -m src.ratchet_log --smoke     # 0->50k, seed 1 本
@@ -72,22 +72,21 @@ def exact_record(st, as_f64=False):
     出て判定が意味を失う)。
 
     記号 (net の勾配は nets.VecMLP.grads と同じ係数 2 込み):
-      δ = ŷ − y、G = E[δx]、µ̂ = E[x] = flip_state ‖ 0.5·1
-      F_i^gate = −2η v_i E[δ·gate_i·x]、F_i^ungate = −2η v_i G
-      δ = δ_self,i + δ_rest,i、δ_self,i = v_i σ(w_iᵀx+b_i)
-    F の µ̂ 射影は**単位ベクトル** µ̂/‖µ̂‖ に対して取る (‖µ̂‖ は flip の 1 の個数で
-    時間変動するため、そのまま内積すると self/rest 系列が境界で不連続に見える)。
-    ‖µ̂‖ は mu_norm として保存するので生の内積は事後復元できる。"""
+      δ = ŷ − y、G = E[δx_in]、µ = E[x_in]
+      F_i^gate = −2η v_i E[δ·gate_i·x_in]、F_i^ungate = −2η v_i G
+      δ = δ_self,i + δ_rest,i、δ_self,i = v_i σ(w_iᵀx_in+b_i)
+    std では µ = flip_state ‖ 0.5·1、centered では
+    µ = E[x] − running_mean。いずれも 32 パターンの x_in から数値計算する。
+    F の µ 射影は**単位ベクトル** µ/‖µ‖ に対して取る。‖µ‖ は mu_norm として保存する
+    ので生の内積は事後復元できる。"""
     env, net, teacher = st["env"], st["net"], st["teacher"]
     with torch.no_grad():
         X = full_support_ro(env).double()                     # [P,R,m]
         y = teacher_f64(teacher, X)                           # [P,R]
 
-        # enc=std のみを対象とする (§3.1)。centered なら x_in が running_mean に依存し、
-        # µ̂ = E[x] の解析形も変わるので、黙って通さず落とす。
+        # train_group の同じ step の forward と同じく、更新前の running_mean を使う。
+        # µ は enc に依らず、以下の x_in の 32 パターン平均から数値計算する。
         cmask = st["centered"][:, None].double()              # [R,1]
-        if bool(st["centered"].any()):
-            raise NotImplementedError("ratchet_log は enc=std 専用 (§3.1)")
         x_in = X - cmask[None] * st["running_mean"].double()[None]
 
         W, b = net.W.double(), net.b.double()
@@ -101,7 +100,7 @@ def exact_record(st, as_f64=False):
         delta = yhat - y                                      # [P,R]
 
         # --- run レベル
-        mu = x_in.mean(dim=0)                                 # [R,m] = flip ‖ 0.5·1
+        mu = x_in.mean(dim=0)                                 # [R,m] = E[x_in]
         mu_norm = mu.norm(dim=1)                              # [R]
         mu_u = mu / mu_norm.clamp_min(1e-300)[:, None]
         G = (delta[:, :, None] * x_in).mean(dim=0)            # [R,m]
@@ -384,7 +383,7 @@ def run(cfg, device, outdir, s2_steps=0):
                 n_record_steps=len(steps), n_boundaries=len(switch_steps(period, total)),
                 n_realized_flips=int(sanity["S4"]["s4_n_flip_transitions"]),
                 logs_mb=round(size_mb, 1), sanity=sanity,
-                spec="specs/spec_ratchet_log_0819.md")
+                spec=cfg.get("spec", "specs/spec_ratchet_log_0819.md"))
     with open(os.path.join(outdir, "meta.json"), "w") as fh:
         json.dump(meta, fh, indent=1, default=str, ensure_ascii=False)
     print(f"  logs {size_mb:.0f} MB -> {outdir}/logs/", flush=True)

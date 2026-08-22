@@ -132,8 +132,8 @@ def s_series(ck_paths, cfg, select, device="cpu"):
         if not idx:
             continue
         st = build_st(ck, cfg, idx=idx, device=device)
-        # centered 腕は µ̂ の解析形が running_mean 依存になるので exact_record が弾く。
-        # ここでは std 腕だけを select で渡す前提。
+        # ここでは 0819 の再現対象である std 腕だけを select で渡す。
+        # exact_record 自体は centered も x_in の数値平均で扱える。
         rec = exact_record(st)
         out.append(np.sign(rec["G_dot_mu"]))
         ids = [r["run_id"] for r in st["runs"]]
