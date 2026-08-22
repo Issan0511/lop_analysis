@@ -1,0 +1,95 @@
+{
+ "elapsed_sec": 694.0,
+ "train_sec": 592.5,
+ "device": "cpu",
+ "date": "2026-08-22 19:08:51",
+ "group": "('A', 100, 1, 'none')",
+ "R": 10,
+ "width": 100,
+ "total_steps": 1000000,
+ "period": 10000,
+ "n_record_steps": 20901,
+ "n_boundaries": 100,
+ "n_realized_flips": 99,
+ "logs_mb": 385.2,
+ "sanity": {
+  "S3": {
+   "s3_pass": true,
+   "s3_median_abs_z": 0.6004,
+   "s3_n_gt3": 5,
+   "s3_expected_gt3": 6.66,
+   "s3_binom_tail_p": 0.79409,
+   "s3_max_abs_z": 3.1486,
+   "s3_n_z": 2467,
+   "s3_n_degenerate": 533,
+   "s3_max_degenerate_err": 0.0,
+   "s3_eval_N": 2000,
+   "s3_criterion": "median|z|<=1.0 かつ |z|>3 の個数の二項上側 p>=0.001 かつ 退化ユニット厳密一致 (§7 字義の max ±3σ からの逸脱)",
+   "s3_note": "eval バッチは固定なので、ゲート集合が安定なユニットの z は 記録点をまたいで同値になる (独立でない)。二項検定は n を 水増しする向き = PASS しやすい向きに保守的でないが、median|z| 側が主判定なので許容する。",
+   "s3_per_step": [
+    {
+     "step": 250075,
+     "n_z": 890,
+     "median_abs_z": 0.5783,
+     "max_abs_z": 3.1486,
+     "frac_gt3": 0.00225,
+     "n_degenerate": 110,
+     "max_degenerate_err": 0.0
+    },
+    {
+     "step": 500050,
+     "n_z": 824,
+     "median_abs_z": 0.6466,
+     "max_abs_z": 3.1486,
+     "frac_gt3": 0.00364,
+     "n_degenerate": 176,
+     "max_degenerate_err": 0.0
+    },
+    {
+     "step": 1000000,
+     "n_z": 753,
+     "median_abs_z": 0.6004,
+     "max_abs_z": 2.3304,
+     "frac_gt3": 0.0,
+     "n_degenerate": 247,
+     "max_degenerate_err": 0.0
+    }
+   ]
+  },
+  "S4": {
+   "s4_pass": true,
+   "s4_n_flip_transitions": 99,
+   "s4_n_adjacent": 99,
+   "s4_bad_steps": [],
+   "s4_n_bad_bitcount": 0
+  },
+  "S1": {
+   "omp_num_threads": "1",
+   "torch_num_threads": 1
+  },
+  "S2": {
+   "s2_pass": true,
+   "s2_steps": 100000,
+   "s2_diffs": [],
+   "s2_hash_with_probe": {
+    "net.W": "fc24c9c09377ccd63f3c59b43a8f18954280ac5d0ed926565e95ebf2f6d15da1",
+    "net.b": "05b716f9aec431d8b76cb06aa4cbbdb96b9634448e088d1bb64ef9cb86537587",
+    "net.v": "dabf9f57212ff1b468a63761f50024e1ad20e9598d7c6172419078eb9e484b03",
+    "net.c": "8db9dd914e0b5b7ed9a3b19ed5fc3607910082c842eab8ac850ea7c843bc15dc",
+    "env.flip_state": "602d7bccf6a939be9c345b079f0cfeb4493e34724c187b7567ec28c44a2a53f6",
+    "env.t": "100000",
+    "running_mean": "a2b395f08ded6e10838cf44d57309eba84ea2b181a6246efb467288947c03b80"
+   },
+   "s2_hash_no_probe": {
+    "net.W": "fc24c9c09377ccd63f3c59b43a8f18954280ac5d0ed926565e95ebf2f6d15da1",
+    "net.b": "05b716f9aec431d8b76cb06aa4cbbdb96b9634448e088d1bb64ef9cb86537587",
+    "net.v": "dabf9f57212ff1b468a63761f50024e1ad20e9598d7c6172419078eb9e484b03",
+    "net.c": "8db9dd914e0b5b7ed9a3b19ed5fc3607910082c842eab8ac850ea7c843bc15dc",
+    "env.flip_state": "602d7bccf6a939be9c345b079f0cfeb4493e34724c187b7567ec28c44a2a53f6",
+    "env.t": "100000",
+    "running_mean": "a2b395f08ded6e10838cf44d57309eba84ea2b181a6246efb467288947c03b80"
+   }
+  }
+ },
+ "spec": "specs/spec_ratchet_centered_0822.md"
+}

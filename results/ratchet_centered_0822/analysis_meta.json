@@ -1,0 +1,105 @@
+{
+ "date": "2026-08-22 19:14:14",
+ "elapsed_sec": 4.9,
+ "spec": "specs/spec_ratchet_centered_0822.md",
+ "analysis_git_hash": "ec5bc34",
+ "prereg_git_hash": "a08645c",
+ "std_source": "/home/issan/Projects/claude/proj_004_drift/results/ratchet_log_0819",
+ "centered_source": "/home/issan/Projects/claude/proj_004_drift/results/ratchet_centered_0822",
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9
+ ],
+ "n_record_steps": 20901,
+ "cos_range": [
+  -0.6,
+  0.6
+ ],
+ "bin_width": 0.05,
+ "min_bin_n": 1000,
+ "bootstrap_B": 10000,
+ "bootstrap_seed": 20260822,
+ "python": "3.12.3",
+ "numpy": "2.5.1",
+ "pandas": "3.0.5",
+ "verdict": [
+  {
+   "id": "C1",
+   "question": "centered曲線はstdと可比か",
+   "result": "不可比",
+   "theta_centered": NaN,
+   "theta_std": -0.15000000000000002,
+   "delta_theta": NaN,
+   "ci_lo": NaN,
+   "ci_hi": NaN,
+   "detail": "centered theta_med finite=False, cos<0有効ビン=12"
+  },
+  {
+   "id": "C2",
+   "question": "消灯点は動いたか（主判定）",
+   "result": "不可比（C2を実施しない）",
+   "theta_centered": NaN,
+   "theta_std": -0.15000000000000002,
+   "delta_theta": NaN,
+   "ci_lo": NaN,
+   "ci_hi": NaN,
+   "detail": "paired seed bootstrap 95%CI; 分解能0.05"
+  },
+  {
+   "id": "C3",
+   "question": "四分位層別で一貫するか",
+   "result": "不可比のため未実施",
+   "theta_centered": NaN,
+   "theta_std": NaN,
+   "delta_theta": NaN,
+   "ci_lo": NaN,
+   "ci_hi": NaN,
+   "detail": "報告のみ。C2を覆さない"
+  }
+ ],
+ "delta": [
+  {
+   "scope": "all",
+   "delta_theta_med": NaN,
+   "ci_lo": NaN,
+   "ci_hi": NaN,
+   "bootstrap_finite": 0
+  },
+  {
+   "scope": "w_q1",
+   "delta_theta_med": NaN,
+   "ci_lo": NaN,
+   "ci_hi": NaN,
+   "bootstrap_finite": 0
+  },
+  {
+   "scope": "w_q2",
+   "delta_theta_med": NaN,
+   "ci_lo": NaN,
+   "ci_hi": NaN,
+   "bootstrap_finite": 0
+  },
+  {
+   "scope": "w_q3",
+   "delta_theta_med": NaN,
+   "ci_lo": NaN,
+   "ci_hi": NaN,
+   "bootstrap_finite": 0
+  },
+  {
+   "scope": "w_q4",
+   "delta_theta_med": NaN,
+   "ci_lo": NaN,
+   "ci_hi": NaN,
+   "bootstrap_finite": 0
+  }
+ ]
+}
