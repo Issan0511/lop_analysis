@@ -32,10 +32,19 @@ from .train import setup_group, train_group
 # F_gate は F_self + F_rest と数学的に同値だが**別に保存する**。δ_self,i = v_i·a_i と
 # δ_rest,i = δ − δ_self,i は個別には大きく和が小さい (δ は残差) ため、float32 に丸めてから
 # 足すと桁落ちで有効数字が数桁飛ぶ (実測: 相対 7e-5)。合計を使う解析はこの列を読むこと。
-UNIT_KEYS = ["cos_u_mu", "p_hat", "w_norm", "b", "v", "F_self", "F_rest", "F_gate"]
+LEGACY_UNIT_KEYS = ["cos_u_mu", "p_hat", "w_norm", "b", "v",
+                    "F_self", "F_rest", "F_gate"]
+UNIT_KEYS = LEGACY_UNIT_KEYS + [
+    # mu titration [中心主張 v3 作業5]。M は自由 bit 部の最大変動、s は平均場。
+    "M", "s", "b_plus_M", "cos_crit", "delta_b_field", "delta_wmu_field",
+]
 RUN_VEC_KEYS = {"G": "m", "flip_state": "f"}          # [n_rec, R, dim]
 RUN_SCA_KEYS = ["E_delta", "mu_norm", "ratio_mu_cov", "cos_G_mu", "G_dot_mu",
                 "eval_loss_exact"]
+
+# `max(pre) = s + M` は float64 の有限和どうしの比較だが、加算順による丸めを許容する。
+# mu titration spec S5a--c の固定閾値。
+FIELD_IDENTITY_ATOL = 1e-12
 
 
 # ---------------------------------------------------------------- 読み取り専用の厳密列挙
@@ -63,7 +72,7 @@ def teacher_f64(teacher, X):
     return y * float(getattr(teacher, "out_scale", 1.0))
 
 
-def exact_record(st, as_f64=False):
+def exact_record(st, as_f64=False, _with_sanity=False):
     """1 記録点ぶんの 32 パターン厳密期待値 [§3.4]。全て float64 で計算。
 
     返り値は numpy の dict (run 配列 [R,*] / unit 行列 [R,h])。既定は保存用の float32
@@ -124,15 +133,80 @@ def exact_record(st, as_f64=False):
         # 合計は float64 のまま作る (float32 の F_self + F_rest では桁落ちする)
         F_gate = pref * (delta[:, :, None] * gate * xdm[:, :, None]).mean(dim=0)
 
+        # --- mu titration の unit-level 十分統計 [中心主張 v3 作業5]
+        # x_in = mu + delta_x。flip 部は固定なので delta_x=0、自由 bit 部は ±1/2。
+        # 従って max_delta w.delta = (1/2)||w_free||_1 を全32支持点を列挙せずにも書ける。
+        free = slice(int(env.f), int(env.m))
+        M = 0.5 * W[:, :, free].abs().sum(dim=2)              # [R,h]
+        s = torch.einsum("rhd,rd->rh", W, mu) + b            # [R,h] = w.mu+b
+        b_plus_M = b + M
+        cos_crit = -(b_plus_M) / (
+            w_norm * mu_norm[:, None]).clamp_min(1e-300)
+
+        # 期待 full-support SGD update の bias と mu 方向成分。
+        # delta_wmu_field は Δw.mu（単位 mu 方向への射影ではない）。
+        delta_b_field = pref * (delta[:, :, None] * gate).mean(dim=0)
+        xdmu = (x_in * mu[None]).sum(dim=-1)                  # [P,R] = x_in.mu
+        delta_wmu_field = pref * (
+            delta[:, :, None] * gate * xdmu[:, :, None]).mean(dim=0)
+
+        # S5c の独立な縮約順: full-support の ΔW, Δb を先に作り、最後に Δs=Δb+ΔW.mu。
+        Pn = int(x_in.shape[0])
+        delta_W_direct = pref[:, :, None] * torch.einsum(
+            "pr,prh,prd->rhd", delta, gate, x_in) / Pn
+        delta_b_direct = pref * torch.einsum("pr,prh->rh", delta, gate) / Pn
+        delta_s_direct = delta_b_direct + torch.einsum("rhd,rd->rh", delta_W_direct, mu)
+        delta_s_fields = delta_b_field + delta_wmu_field
+
+        # probe sanity: 解析式 M と32支持点の max、および gate=0 の恒等式を同一状態で検査。
+        max_pre = pre.max(dim=0).values
+        max_delta_support = torch.einsum(
+            "rhd,prd->prh", W, x_in - mu[None]).max(dim=0).values
+        field_max = s + M
+        p_zero = gate.sum(dim=0) == 0
+        pred_zero = field_max <= 0
+        # |field_max|<=atol の点は丸め順だけでは符号を確定できない。直接一致数も別に残す。
+        mismatch_tol = ((p_zero & (field_max > FIELD_IDENTITY_ATOL)) |
+                        ((~p_zero) & (field_max <= -FIELD_IDENTITY_ATOL)))
+        denom_raw = w_norm * mu_norm[:, None]
+        finite_denom = torch.isfinite(denom_raw) & (denom_raw > 0)
+        if bool(finite_denom.any()):
+            cos_ref = -(b_plus_M[finite_denom] / denom_raw[finite_denom])
+            cos_formula_err = float((cos_crit[finite_denom] - cos_ref).abs().max().item())
+        else:
+            cos_formula_err = 0.0
+        tracked_tensors = (G, E_delta, mu_norm, ratio, cos_G_mu, G_dot_mu, delta,
+                           cos_u_mu, p_hat, w_norm, b, v, F_self, F_rest, F_gate,
+                           M, s, b_plus_M, cos_crit, delta_b_field, delta_wmu_field)
+        sanity = dict(
+            n_units=int(p_zero.numel()),
+            n_zero=int(p_zero.sum().item()),
+            n_mismatch_raw=int((p_zero != pred_zero).sum().item()),
+            n_mismatch_beyond_tol=int(mismatch_tol.sum().item()),
+            n_near_boundary=int((field_max.abs() <= FIELD_IDENTITY_ATOL).sum().item()),
+            max_pre_identity_abs_err=float((max_pre - field_max).abs().max().item()),
+            max_M_support_abs_err=float((max_delta_support - M).abs().max().item()),
+            max_cos_crit_formula_abs_err=cos_formula_err,
+            n_finite_cos_crit_denominator=int(finite_denom.sum().item()),
+            max_delta_s_field_abs_err=float((delta_s_fields - delta_s_direct).abs().max().item()),
+            max_p_hat_quantization_abs_err=float(
+                (p_hat * Pn - torch.round(p_hat * Pn)).abs().max().item()),
+            n_nonfinite_all_stats=int(sum((~torch.isfinite(t)).sum().item()
+                                          for t in tracked_tensors)),
+        )
+
         dt = np.float64 if as_f64 else np.float32
         cv = lambda t: t.detach().cpu().numpy().astype(dt)
-        return dict(
+        out = dict(
             G=cv(G), flip_state=cv(env.flip_state.double()),
             E_delta=cv(E_delta), mu_norm=cv(mu_norm), ratio_mu_cov=cv(ratio),
             cos_G_mu=cv(cos_G_mu), G_dot_mu=cv(G_dot_mu),
             eval_loss_exact=cv((delta ** 2).mean(dim=0)),
             cos_u_mu=cv(cos_u_mu), p_hat=cv(p_hat), w_norm=cv(w_norm),
-            b=cv(b), v=cv(v), F_self=cv(F_self), F_rest=cv(F_rest), F_gate=cv(F_gate))
+            b=cv(b), v=cv(v), F_self=cv(F_self), F_rest=cv(F_rest), F_gate=cv(F_gate),
+            M=cv(M), s=cv(s), b_plus_M=cv(b_plus_M), cos_crit=cv(cos_crit),
+            delta_b_field=cv(delta_b_field), delta_wmu_field=cv(delta_wmu_field))
+        return (out, sanity) if _with_sanity else out
 
 
 # ---------------------------------------------------------------- 記録グリッド
@@ -152,6 +226,32 @@ def record_steps(total, period, half_window, bulk_every):
     return sorted(steps)
 
 
+def record_key_selection(ratchet_cfg):
+    """保存列を config から選ぶ（未指定なら従来 schema の列だけ）。
+
+    長い mu titration では解析に不要な旧 F 分解などを落として NPZ / 常駐メモリを節約
+    できる。exact_record 自体は常に全統計を計算するため、sanity の内容は列選択に依存しない。
+    `run_vec_keys` は初期案との互換 alias、正本は `run_vector_keys`。"""
+    def take(name, allowed, alias=None, default=None):
+        raw = ratchet_cfg.get(name)
+        if raw is None and alias:
+            raw = ratchet_cfg.get(alias)
+        vals = list(allowed if default is None else default) if raw is None else list(raw)
+        if len(vals) != len(set(vals)):
+            raise ValueError(f"ratchet.{name} に重複キー: {vals}")
+        bad = sorted(set(vals) - set(allowed))
+        if bad:
+            raise ValueError(f"ratchet.{name} の未知キー: {bad}; 選択肢={list(allowed)}")
+        return vals
+
+    return dict(
+        # 旧 config の NPZ schema / 常駐メモリは不変。新列は config で明示した走だけ保存。
+        unit_keys=take("unit_keys", UNIT_KEYS, default=LEGACY_UNIT_KEYS),
+        run_vector_keys=take("run_vector_keys", RUN_VEC_KEYS, alias="run_vec_keys"),
+        run_scalar_keys=take("run_scalar_keys", RUN_SCA_KEYS),
+    )
+
+
 class Recorder:
     """probe(st, step) として train_group に渡す読み取り専用アキュムレータ。
 
@@ -160,17 +260,41 @@ class Recorder:
     eval_batch は generator を消費せず env.t も進めないので probe から呼んでよい
     (train_group の docstring 参照)。"""
 
-    def __init__(self, steps, R, h, m, f, s3_steps=()):
+    def __init__(self, steps, R, h, m, f, s3_steps=(), unit_keys=None,
+                 run_vector_keys=None, run_scalar_keys=None):
         self.steps = np.asarray(steps, dtype=np.int64)
         self.index = {int(s): i for i, s in enumerate(self.steps)}
         n = len(self.steps)
-        self.buf = {k: np.zeros((n, R, h), dtype=np.float32) for k in UNIT_KEYS}
-        self.buf["G"] = np.zeros((n, R, m), dtype=np.float32)
-        self.buf["flip_state"] = np.zeros((n, R, f), dtype=np.float32)
-        for k in RUN_SCA_KEYS:
+        self.unit_keys = list(LEGACY_UNIT_KEYS if unit_keys is None else unit_keys)
+        self.run_vector_keys = list(RUN_VEC_KEYS if run_vector_keys is None
+                                    else run_vector_keys)
+        self.run_scalar_keys = list(RUN_SCA_KEYS if run_scalar_keys is None
+                                    else run_scalar_keys)
+        self.buf = {k: np.zeros((n, R, h), dtype=np.float32) for k in self.unit_keys}
+        dims = {"m": m, "f": f}
+        for k in self.run_vector_keys:
+            self.buf[k] = np.zeros((n, R, dims[RUN_VEC_KEYS[k]]), dtype=np.float32)
+        for k in self.run_scalar_keys:
             self.buf[k] = np.zeros((n, R), dtype=np.float32)
+        # S4 は保存列から flip_state を外しても必ず実施する。保存する場合は同じ配列を共有。
+        self.flip_state_sanity = self.buf.get(
+            "flip_state", np.zeros((n, R, f), dtype=np.float32))
+        # S5: 記録点ごとの全 R*h unit を集約するための小さな診断配列。
+        self.field_n_units = np.zeros(n, dtype=np.int64)
+        self.field_n_zero = np.zeros(n, dtype=np.int64)
+        self.field_mismatch_raw = np.zeros(n, dtype=np.int64)
+        self.field_mismatch_tol = np.zeros(n, dtype=np.int64)
+        self.field_near_boundary = np.zeros(n, dtype=np.int64)
+        self.field_pre_err = np.zeros(n, dtype=np.float64)
+        self.field_M_err = np.zeros(n, dtype=np.float64)
+        self.field_cos_crit_err = np.zeros(n, dtype=np.float64)
+        self.field_n_finite_cos_denom = np.zeros(n, dtype=np.int64)
+        self.field_delta_s_err = np.zeros(n, dtype=np.float64)
+        self.p_hat_quant_err = np.zeros(n, dtype=np.float64)
+        self.n_nonfinite_stats = np.zeros(n, dtype=np.int64)
         self.filled = np.zeros(n, dtype=bool)
         self.n_calls = 0
+        self.step0_repro_hash = None
         self.s3_steps = set(int(s) for s in s3_steps)
         self.s3 = {}                        # step -> (p_exact [R,h], p_emp [R,h], N)
 
@@ -178,9 +302,25 @@ class Recorder:
         i = self.index.get(int(step))
         if i is None:                       # probe_steps と一致するはずだが保険
             return
-        rec = exact_record(st)
+        if int(step) == 0 and self.step0_repro_hash is None:
+            self.step0_repro_hash = reproducibility_hash(st)
+        rec, fs = exact_record(st, _with_sanity=True)
         for k, arr in self.buf.items():
             arr[i] = rec[k]
+        if "flip_state" not in self.buf:
+            self.flip_state_sanity[i] = rec["flip_state"]
+        self.field_n_units[i] = fs["n_units"]
+        self.field_n_zero[i] = fs["n_zero"]
+        self.field_mismatch_raw[i] = fs["n_mismatch_raw"]
+        self.field_mismatch_tol[i] = fs["n_mismatch_beyond_tol"]
+        self.field_near_boundary[i] = fs["n_near_boundary"]
+        self.field_pre_err[i] = fs["max_pre_identity_abs_err"]
+        self.field_M_err[i] = fs["max_M_support_abs_err"]
+        self.field_cos_crit_err[i] = fs["max_cos_crit_formula_abs_err"]
+        self.field_n_finite_cos_denom[i] = fs["n_finite_cos_crit_denominator"]
+        self.field_delta_s_err[i] = fs["max_delta_s_field_abs_err"]
+        self.p_hat_quant_err[i] = fs["max_p_hat_quantization_abs_err"]
+        self.n_nonfinite_stats[i] = fs["n_nonfinite_all_stats"]
         self.filled[i] = True
         self.n_calls += 1
         if int(step) in self.s3_steps:
@@ -193,7 +333,7 @@ class Recorder:
                                f"{self.steps[miss][:10]} ...")
 
 
-def write_logs(rec, runs, outdir):
+def write_logs(rec, runs, outdir, center_alpha=None):
     """seed ごとに logs/seed{k}.npz を書く [§3.4]。"""
     logdir = os.path.join(outdir, "logs")
     os.makedirs(logdir, exist_ok=True)
@@ -202,6 +342,8 @@ def write_logs(rec, runs, outdir):
         out = dict(step=rec.steps, run_id=np.array(r["run_id"]), seed=np.int64(r["seed"]),
                    lr=np.float32(r["lr"]), period=np.int64(r["period"]),
                    width=np.int64(r["width"]))
+        if center_alpha is not None:
+            out["center_alpha"] = np.float32(center_alpha)
         for k, arr in rec.buf.items():
             out[k] = arr[:, i]
         p = os.path.join(logdir, f"seed{r['seed']}.npz")
@@ -223,6 +365,19 @@ def state_hash(st):
     hs["env.flip_state"] = _sha(st["env"].flip_state)
     hs["env.t"] = str(st["env"].t)
     hs["running_mean"] = _sha(st["running_mean"])
+    return hs
+
+
+def reproducibility_hash(st):
+    """S6 用: step 0 の net / teacher / env と全 generator 状態の hash。"""
+    hs = state_hash(st)
+    for k, v in st["teacher"].state_dict().items():
+        hs[f"teacher.{k}"] = _sha(v)
+    hs["teacher.out_scale"] = str(float(getattr(st["teacher"], "out_scale", 1.0)))
+    if hasattr(st["env"], "patterns"):
+        hs["env.patterns"] = _sha(st["env"].patterns)
+    for name, gen in sorted(st.get("gens", {}).items()):
+        hs[f"generator.{name}"] = _sha(gen.get_state())
     return hs
 
 
@@ -306,7 +461,7 @@ def check_s4(rec, period):
     probe は train_group のループ本体先頭 (env.step() の前) で呼ばれるので、
     境界 B の flip は「記録点 B」と「記録点 B+1」の間で起きる。したがって
     flip_state が動く記録点ペアの左端は必ず period の倍数になる。"""
-    fs = rec.buf["flip_state"]                                     # [n,R,f]
+    fs = rec.flip_state_sanity                                     # [n,R,f]
     changed = (np.abs(np.diff(fs, axis=0)) > 0).any(axis=(1, 2))   # [n-1]
     left = rec.steps[:-1][changed]
     right = rec.steps[1:][changed]
@@ -322,10 +477,75 @@ def check_s4(rec, period):
                 s4_bad_steps=bad[:10], s4_n_bad_bitcount=bad_bits)
 
 
+def check_s5(rec, atol=FIELD_IDENTITY_ATOL):
+    """S5: 全記録点で `p_hat==0 iff s+M<=0` と解析式 M を検査する。
+
+    `raw` は浮動小数の符号をそのまま比較した不一致数。PASS はさらに、境界から atol
+    より離れた不一致が 0 で、32支持点から得た max(pre) / max(w.delta) と解析式の最大
+    絶対誤差が atol 以下であることを要求する。これにより丸めだけで符号が変わり得る
+    |s+M|<=atol の点を誤って理論反例とは数えない一方、その個数は隠さず記録する。"""
+    n = int(rec.field_n_units.sum())
+    raw = int(rec.field_mismatch_raw.sum())
+    beyond = int(rec.field_mismatch_tol.sum())
+    near = int(rec.field_near_boundary.sum())
+    max_pre = float(rec.field_pre_err.max(initial=0.0))
+    max_M = float(rec.field_M_err.max(initial=0.0))
+    max_cos = float(rec.field_cos_crit_err.max(initial=0.0))
+    max_delta_s = float(rec.field_delta_s_err.max(initial=0.0))
+    max_p_quant = float(rec.p_hat_quant_err.max(initial=0.0))
+    n_nonfinite = int(rec.n_nonfinite_stats.sum())
+    n_finite_denom = int(rec.field_n_finite_cos_denom.sum())
+    # spec S5b は論理不一致を厳密に 0 と固定。tolerance-aware 値も診断として残すが、
+    # raw mismatch を隠して PASS にはしない。
+    ok = bool(n > 0 and raw == 0 and beyond == 0 and n_finite_denom > 0 and
+              max_pre <= atol and max_M <= atol and max_cos <= atol and
+              max_delta_s <= atol and max_p_quant <= atol and n_nonfinite == 0)
+    return dict(
+        s5_pass=ok,
+        s5_n_unit_points=n,
+        s5_n_zero=int(rec.field_n_zero.sum()),
+        s5_n_mismatch_raw=raw,
+        s5_all_points_raw_match=bool(raw == 0),
+        s5_n_mismatch_beyond_tol=beyond,
+        s5_all_points_match_with_tol=bool(beyond == 0),
+        s5_n_near_boundary=near,
+        s5_max_pre_identity_abs_err=max_pre,
+        s5_max_M_support_abs_err=max_M,
+        s5_max_cos_crit_formula_abs_err=max_cos,
+        s5_n_finite_cos_crit_denominator=n_finite_denom,
+        s5_max_delta_s_field_abs_err=max_delta_s,
+        s5_max_p_hat_times_32_integer_abs_err=max_p_quant,
+        s5_n_nonfinite_all_stats=n_nonfinite,
+        s5_atol=float(atol),
+        s5_criterion=("raw論理不一致=0 かつ max|pre_max-(s+M)|<=atol かつ "
+                      "max|max_support(w.delta)-M|<=atol かつ有限分母上の "
+                      "cos_crit式誤差<=atol かつ直接full-support Δsとの誤差<=atol かつ "
+                      "p_hat*32量子化誤差<=atol かつ非有限値0"),
+    )
+
+
+def check_s7(rec, R, expected_steps):
+    """S7: shape / finite / p_hat の 1/32 量子化。"""
+    actual_steps = int(len(rec.steps))
+    max_quant = float(rec.p_hat_quant_err.max(initial=0.0))
+    n_nonfinite = int(rec.n_nonfinite_stats.sum())
+    ok = bool(R == 10 and actual_steps == int(expected_steps) and
+              max_quant <= FIELD_IDENTITY_ATOL and n_nonfinite == 0)
+    return dict(
+        s7_pass=ok, s7_R=int(R), s7_n_record_steps=actual_steps,
+        s7_expected_record_steps=int(expected_steps),
+        s7_max_p_hat_times_32_integer_abs_err=max_quant,
+        s7_n_nonfinite_all_stats=n_nonfinite,
+        s7_criterion="R=10、記録点数がgrid通り、p_hat*32が整数、非有限統計0",
+    )
+
+
 # ---------------------------------------------------------------- 実行
 
 def run(cfg, device, outdir, s2_steps=0):
     C, P = cfg["common"], cfg["ratchet"]
+    center_alpha = float(cfg["condA"]["center_alpha"])
+    selected_keys = record_key_selection(P)
     total = int(C["total_steps"])
     runs = build_runs(cfg)
     groups = group_runs(runs)
@@ -344,16 +564,20 @@ def run(cfg, device, outdir, s2_steps=0):
 
     # S3 の突き合わせ点 3 箇所 (§7): 序盤 / 中盤 / 末尾の記録点
     s3_steps = sorted({steps[len(steps) // 4], steps[len(steps) // 2], steps[-1]})
-    rec = Recorder(steps, R, h, m, f, s3_steps=s3_steps)
+    rec = Recorder(steps, R, h, m, f, s3_steps=s3_steps, **selected_keys)
     t0 = time.time()
     st, elapsed = train_group(gkey, gruns, cfg, device, outdir,
                               total_steps=total, probe=rec, probe_steps=steps)
     rec.check_complete()
     print(f"  train+probe {elapsed:.1f}s  probe 呼び出し {rec.n_calls}", flush=True)
 
-    sanity = dict(S3=check_s3(rec), S4=check_s4(rec, period))
-    sanity["S1"] = dict(omp_num_threads=os.environ.get("OMP_NUM_THREADS", "(未設定)"),
+    sanity = dict(S3=check_s3(rec), S4=check_s4(rec, period), S5=check_s5(rec))
+    omp_threads = os.environ.get("OMP_NUM_THREADS", "(未設定)")
+    sanity["S1"] = dict(s1_pass=bool(omp_threads == "1" and torch.get_num_threads() == 1),
+                        omp_num_threads=omp_threads,
                         torch_num_threads=torch.get_num_threads())
+    if "mu_titration" in cfg:
+        sanity["S7"] = check_s7(rec, R, expected_steps=20901)
 
     # --- S2: probe の無擾乱性 (§7)。同一 config を probe なしで再走させ最終状態を比較
     if s2_steps:
@@ -363,7 +587,7 @@ def run(cfg, device, outdir, s2_steps=0):
                               probe=Recorder(record_steps(s2_steps, period,
                                                           int(P["boundary_window"]),
                                                           int(P["bulk_every"])),
-                                             R, h, m, f),
+                                             R, h, m, f, **selected_keys),
                               probe_steps=record_steps(s2_steps, period,
                                                        int(P["boundary_window"]),
                                                        int(P["bulk_every"])))
@@ -375,14 +599,25 @@ def run(cfg, device, outdir, s2_steps=0):
                             s2_hash_with_probe=ha, s2_hash_no_probe=hb)
         print(f"  S2: {'PASS' if not diffs else 'FAIL ' + str(diffs)}", flush=True)
 
-    paths = write_logs(rec, gruns, outdir)
+    required_checks = [sanity["S3"]["s3_pass"], sanity["S4"]["s4_pass"],
+                       sanity["S5"]["s5_pass"]]
+    if "mu_titration" in cfg:
+        required_checks.extend([sanity["S1"]["s1_pass"], sanity["S7"]["s7_pass"]])
+    if "S2" in sanity:
+        required_checks.append(sanity["S2"]["s2_pass"])
+    sanity["all_required_pass"] = bool(all(required_checks))
+
+    paths = write_logs(rec, gruns, outdir, center_alpha=center_alpha)
     size_mb = sum(os.path.getsize(p) for p in paths) / 1e6
     meta = dict(elapsed_sec=round(time.time() - t0, 1), train_sec=round(elapsed, 1),
                 device=device, date=time.strftime("%Y-%m-%d %H:%M:%S"),
                 group=str(gkey), R=R, width=h, total_steps=total, period=period,
+                alpha=center_alpha, center_alpha=center_alpha,
                 n_record_steps=len(steps), n_boundaries=len(switch_steps(period, total)),
                 n_realized_flips=int(sanity["S4"]["s4_n_flip_transitions"]),
                 logs_mb=round(size_mb, 1), sanity=sanity,
+                tracked_keys=list(rec.buf),
+                step0_repro_hash=rec.step0_repro_hash,
                 spec=cfg.get("spec", "specs/spec_ratchet_log_0819.md"))
     with open(os.path.join(outdir, "meta.json"), "w") as fh:
         json.dump(meta, fh, indent=1, default=str, ensure_ascii=False)
@@ -391,6 +626,13 @@ def run(cfg, device, outdir, s2_steps=0):
           f"(max|z|={sanity['S3']['s3_max_abs_z']:.2f})", flush=True)
     print(f"  S4: {'PASS' if sanity['S4']['s4_pass'] else 'FAIL'} "
           f"(flip 遷移 {sanity['S4']['s4_n_flip_transitions']})", flush=True)
+    print(f"  S5: {'PASS' if sanity['S5']['s5_pass'] else 'FAIL'} "
+          f"(raw mismatch={sanity['S5']['s5_n_mismatch_raw']}, "
+          f"max identity err={sanity['S5']['s5_max_pre_identity_abs_err']:.2e})", flush=True)
+    if "S7" in sanity:
+        print(f"  S7: {'PASS' if sanity['S7']['s7_pass'] else 'FAIL'} "
+              f"(R={sanity['S7']['s7_R']}, records={sanity['S7']['s7_n_record_steps']}, "
+              f"nonfinite={sanity['S7']['s7_n_nonfinite_all_stats']})", flush=True)
     return meta
 
 
