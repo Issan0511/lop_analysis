@@ -47,12 +47,12 @@ condA・w100 の各ランドマークで、各ユニットを一つだけ消音�
 
 `utility_nmse>0` はその時点・その現タスクで消音すると損失が増える正の限界寄与、0付近は冗長、負値は消音で損失が下がることを表す。unitの普遍的価値、将来タスク価値、Shapley値ではない。
 
-同じprobeで `p_hat`, `x=w·mu_hat`, `r=sqrt(||w||^2-x^2)`, `w_norm`, `b`, `v`, `eval_nmse`, `Var(y)` を保存する。
+同じprobeで `p_hat`, `pre_max=max_32(W_i x_in+b_i)`, `x=w·mu_hat`, `r=sqrt(||w||^2-x^2)`, `w_norm`, `b`, `v`, `eval_nmse`, `Var(y)` を保存する。`pre_max` は現在タスクの厳密な壁マージンで、`strict_dead ⇔ pre_max<=0` をsanityで照合する。
 
 ## 4. パイロットで確認するもの
 
 1. `delta_mse` のベクトル式を、seed×step×unitから決定的に選ぶ少なくとも20例について、実際にunitを一つずつ消音して再forwardした値と最大絶対誤差 `<1e-12` で照合
-2. p̂ がk/32に量子化し、`x^2+r^2=||w||^2` の最大相対誤差 `<1e-10`
+2. p̂ がk/32に量子化し、`x^2+r^2=||w||^2` の最大相対誤差 `<1e-10`、`strict_dead ⇔ pre_max<=0` が全点で一致
 3. pilotの offset=0 の p̂・x・r が、共通記録点で `ratchet_log_0819` と保存float32の丸め許容内で一致
 4. probeあり/なしの同一短走で、net・env・teacher・running_mean・全generator stateがbit一致
 5. utilityの有限性、符号分布、seed×taskごとのリスク数・転帰率、p̂/x/rとの相関
