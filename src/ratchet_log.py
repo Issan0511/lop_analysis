@@ -793,6 +793,17 @@ def check_s7(rec, R, expected_steps):
 
 # ---------------------------------------------------------------- 実行
 
+def _format_s3_status(s3):
+    """S3のconsole要約。非退化unitが無い場合のz診断は ``NA`` とする。"""
+    max_z = s3.get("s3_max_abs_z")
+    max_z_text = "NA" if max_z is None else f"{float(max_z):.2f}"
+    return (
+        f"{'PASS' if s3['s3_pass'] else 'FAIL'} "
+        f"(exact err={s3['s3_max_exact_uniform_abs_err']:.2e}, "
+        f"reweight err={s3['s3_max_empirical_reweighted_abs_err']:.2e}, "
+        f"max|z| diagnostic={max_z_text})"
+    )
+
 def run(cfg, device, outdir, s2_steps=0):
     C, P = cfg["common"], cfg["ratchet"]
     center_alpha = float(cfg["condA"]["center_alpha"])
@@ -833,22 +844,56 @@ def run(cfg, device, outdir, s2_steps=0):
     # --- S2: probe の無擾乱性 (§7)。同一 config を probe なしで再走させ最終状態を比較
     if s2_steps:
         print(f"  S2: probe なしで {s2_steps} step 再走 ...", flush=True)
+        s2_probe_steps = record_steps(s2_steps, period, int(P["boundary_window"]),
+                                      int(P["bulk_every"]))
+        s2_s3_steps = sorted({s2_probe_steps[len(s2_probe_steps) // 4],
+                              s2_probe_steps[len(s2_probe_steps) // 2],
+                              s2_probe_steps[-1]})
+        if len(s2_s3_steps) != 3:
+            raise ValueError("S2 grid は S3 hook 3点を選べる長さが必要: "
+                             f"steps={s2_steps}, grid={s2_probe_steps}")
+        s2_rec = Recorder(s2_probe_steps, R, h, m, f, s3_steps=s2_s3_steps,
+                          **selected_keys)
         st_a, _ = train_group(gkey, gruns, cfg, device, outdir, total_steps=s2_steps,
                               ckpts=[], gname="S2_with_probe",
-                              probe=Recorder(record_steps(s2_steps, period,
-                                                          int(P["boundary_window"]),
-                                                          int(P["bulk_every"])),
-                                             R, h, m, f, **selected_keys),
-                              probe_steps=record_steps(s2_steps, period,
-                                                       int(P["boundary_window"]),
-                                                       int(P["bulk_every"])))
+                              probe=s2_rec, probe_steps=s2_probe_steps)
+        s2_rec.check_complete()
+        s2_s3 = check_s3(s2_rec)
+        s2_probe_calls = int(s2_rec.n_calls)
+        s2_hook_steps = sorted(int(step) for step in s2_rec.s3)
+        s2_hook_calls = len(s2_hook_steps)
+        s2_probe_contract_pass = bool(
+            s2_probe_calls == len(s2_probe_steps) and
+            s2_hook_calls == 3 and s2_hook_steps == s2_s3_steps and
+            s2_s3["s3_pass"]
+        )
+        # 100k S2 Recorderは大きい。必要なsanityを抽出後、no-probe走の前に解放する。
+        del s2_rec
         st_b, _ = train_group(gkey, gruns, cfg, device, outdir, total_steps=s2_steps,
                               ckpts=[], gname="S2_no_probe")
         ha, hb = state_hash(st_a), state_hash(st_b)
         diffs = [k for k in ha if ha[k] != hb[k]]
-        sanity["S2"] = dict(s2_pass=not diffs, s2_steps=int(s2_steps), s2_diffs=diffs,
-                            s2_hash_with_probe=ha, s2_hash_no_probe=hb)
-        print(f"  S2: {'PASS' if not diffs else 'FAIL ' + str(diffs)}", flush=True)
+        ra, rb = reproducibility_hash(st_a), reproducibility_hash(st_b)
+        repro_diffs = [k for k in ra if ra[k] != rb[k]]
+        generator_diffs = [k for k in repro_diffs if k.startswith("generator.")]
+        s2_pass = bool(not diffs and not repro_diffs and s2_probe_contract_pass)
+        sanity["S2"] = dict(
+            s2_pass=s2_pass, s2_steps=int(s2_steps), s2_diffs=diffs,
+            s2_repro_diffs=repro_diffs, s2_generator_diffs=generator_diffs,
+            s2_hash_with_probe=ha, s2_hash_no_probe=hb,
+            s2_repro_hash_with_probe=ra, s2_repro_hash_no_probe=rb,
+            s2_probe_recorder_complete=True,
+            s2_probe_record_calls=s2_probe_calls,
+            s2_probe_record_expected=len(s2_probe_steps),
+            s2_s3_hook_calls=s2_hook_calls,
+            s2_s3_steps=s2_hook_steps,
+            s2_s3_expected_steps=s2_s3_steps,
+            s2_probe_contract_pass=s2_probe_contract_pass,
+            s2_s3=s2_s3,
+        )
+        detail = "" if s2_pass else f" diffs={diffs}, repro={repro_diffs}"
+        print(f"  S2: {'PASS' if s2_pass else 'FAIL'}"
+              f" (S3 hook={s2_hook_calls}/3){detail}", flush=True)
 
     required_checks = [sanity["S3"]["s3_pass"], sanity["S4"]["s4_pass"],
                        sanity["S5"]["s5_pass"]]
@@ -873,10 +918,7 @@ def run(cfg, device, outdir, s2_steps=0):
     with open(os.path.join(outdir, "meta.json"), "w") as fh:
         json.dump(meta, fh, indent=1, default=str, ensure_ascii=False)
     print(f"  logs {size_mb:.0f} MB -> {outdir}/logs/", flush=True)
-    print(f"  S3: {'PASS' if sanity['S3']['s3_pass'] else 'FAIL'} "
-          f"(exact err={sanity['S3']['s3_max_exact_uniform_abs_err']:.2e}, "
-          f"reweight err={sanity['S3']['s3_max_empirical_reweighted_abs_err']:.2e}, "
-          f"max|z| diagnostic={sanity['S3']['s3_max_abs_z']:.2f})", flush=True)
+    print(f"  S3: {_format_s3_status(sanity['S3'])}", flush=True)
     print(f"  S4: {'PASS' if sanity['S4']['s4_pass'] else 'FAIL'} "
           f"(flip 遷移 {sanity['S4']['s4_n_flip_transitions']})", flush=True)
     print(f"  S5: {'PASS' if sanity['S5']['s5_pass'] else 'FAIL'} "
