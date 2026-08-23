@@ -32,11 +32,14 @@ import torch
 
 ROOT = Path(__file__).resolve().parents[2]
 T0S = (200_000, 300_000, 400_000, 500_000, 600_000)
+ENDPOINT_T0S = tuple(range(200_000, 600_001, 1_000))
 HORIZON = 300_000
 TAU = 0.05
 BOOT_N = 10_000
 H_BOOT_SEED = 20260823
 O_BOOT_SEED = 20260824
+ENDPOINT_BOOT_SEED = 20260825
+LEGACY_BOOT_SEED = 20260827
 EQUIV_MARGIN = 0.05
 KICKS = (0.1, 0.25, 0.5, 1.0)
 OPT_LR = 0.03
@@ -174,6 +177,41 @@ def build_exposures(logs: list[dict]) -> pd.DataFrame:
     return df.sort_values(["seed", "unit", "t0"]).reset_index(drop=True)
 
 
+def build_endpoint_exposures(logs: list[dict]) -> pd.DataFrame:
+    """追補 §2: bulk 401起点から300k後の状態占有率を作る。"""
+    rows = []
+    for t0 in ENDPOINT_T0S:
+        for d in logs:
+            step = d["step"]
+            i0s = np.flatnonzero(step == t0)
+            i1s = np.flatnonzero(step == t0 + HORIZON)
+            if i0s.size != 1 or i1s.size != 1:
+                raise SystemExit(f"[H-end] seed={int(d['seed'])} t0={t0}: endpoint不在")
+            i0, i1 = int(i0s[0]), int(i1s[0])
+            p0 = d["p_hat"][i0].astype(np.float64)
+            p1 = d["p_hat"][i1].astype(np.float64)
+            at_risk = p0 >= TAU
+            cos = d["cos_u_mu"][i0].astype(np.float64)
+            wn = d["w_norm"][i0].astype(np.float64)
+            x = wn * cos
+            r = wn * np.sqrt(np.maximum(0.0, 1.0 - cos * cos))
+            for unit in np.flatnonzero(at_risk):
+                rows.append(dict(seed=int(d["seed"]), unit=int(unit), t0=t0,
+                                 p_hat=float(p0[unit]), x=float(x[unit]),
+                                 r=float(r[unit]), w_norm=float(wn[unit]),
+                                 cos_u_mu=float(cos[unit]),
+                                 end_dead_0_05=int(p1[unit] < TAU),
+                                 end_strict_dead=int(p1[unit] == 0.0)))
+    df = pd.DataFrame(rows)
+    for _, idx in df.groupby("t0", sort=True).groups.items():
+        df.loc[idx, "r_group"] = qlabels(df.loc[idx, "r"])
+        df.loc[idx, "p_bin"] = qlabels(df.loc[idx, "p_hat"])
+        df.loc[idx, "x_bin"] = qlabels(df.loc[idx, "x"])
+    for c in ("r_group", "p_bin", "x_bin"):
+        df[c] = pd.Categorical(df[c], categories=GROUPS, ordered=True)
+    return df.sort_values(["seed", "unit", "t0"]).reset_index(drop=True)
+
+
 def seed_group_rates(df: pd.DataFrame, outcome: str) -> pd.DataFrame:
     return (df.groupby(["seed", "r_group"], observed=False)[outcome]
             .agg(["sum", "count", "mean"]).reset_index())
@@ -298,6 +336,66 @@ def run_hazard(logs: list[dict], outdir: Path):
     cells.to_csv(outdir / "hazard_cells_3x3.csv", index=False)
     risk_counts.to_csv(outdir / "hazard_risk_counts.csv", index=False)
     repeat.to_csv(outdir / "hazard_repeat_exposure.csv", index=False)
+    return df, rates, verdict, cells, sanity
+
+
+def run_endpoint(logs: list[dict], outdir: Path):
+    """追補 §2 の300k後状態占有率。H-any の主判定は置換しない。"""
+    df = build_endpoint_exposures(logs)
+    df.to_csv(outdir / "endpoint_exposures.csv", index=False)
+    repeat = (df.groupby(["seed", "unit"]).size().value_counts().sort_index()
+              .rename_axis("n_exposure").reset_index(name="n_unit"))
+    risk_counts = df.groupby(["seed", "t0"]).size().reset_index(name="n_at_risk")
+    sanity = dict(
+        pass_all=bool(df.t0.nunique() == len(ENDPOINT_T0S)
+                      and int(df.t0.min()) == ENDPOINT_T0S[0]
+                      and int(df.t0.max()) == ENDPOINT_T0S[-1]
+                      and risk_counts.shape[0] == 10 * len(ENDPOINT_T0S)),
+        n_t0=int(df.t0.nunique()), n_exposure=int(df.shape[0]),
+        repeat_exposure_distribution=repeat.to_dict(orient="records"),
+        risk_counts=risk_counts.to_dict(orient="records"))
+    if not sanity["pass_all"]:
+        raise SystemExit("[H-end] sanity failed")
+
+    rate_rows, verdict_rows, cell_rows = [], [], []
+    outcomes = (("end_strict_dead", "end_strict_dead", True),
+                ("end_dead_0_05", "end_dead_0.05", False))
+    for oi, (outcome, label, primary) in enumerate(outcomes):
+        sr = seed_group_rates(df, outcome)
+        rng = np.random.default_rng(ENDPOINT_BOOT_SEED + oi)
+        point, lo, hi, rd, rd_lo, rd_hi, draws = boot_hazard(sr, BOOT_N, rng)
+        for gi, rg in enumerate(GROUPS):
+            d = df[df.r_group == rg]
+            rate_rows.append(dict(outcome=label, r_group=rg,
+                                  n_exposure=int(d.shape[0]), n_event=int(d[outcome].sum()),
+                                  pooled_risk=float(d[outcome].mean()),
+                                  seed_equal_risk=float(point[gi]),
+                                  ci_lo=float(lo[gi]), ci_hi=float(hi[gi])))
+        adj, adj_lo, adj_hi = adjusted_rd(df, outcome, draws)
+        verdict_rows.append(dict(outcome=label, primary=primary,
+                                 rd_high_low=rd, ci_lo=rd_lo, ci_hi=rd_hi,
+                                 equiv_margin=EQUIV_MARGIN,
+                                 verdict=classify_rd(rd_lo, rd_hi),
+                                 rd_adj_3x3=adj, rd_adj_ci_lo=adj_lo,
+                                 rd_adj_ci_hi=adj_hi))
+        ctab = (df.groupby(["p_bin", "x_bin", "r_group"], observed=False)[outcome]
+                .agg(n_event="sum", n_exposure="count", risk="mean").reset_index())
+        ctab.insert(0, "outcome", label)
+        for (_, _), dc in ctab.groupby(["p_bin", "x_bin"], observed=False):
+            rr = {str(r.r_group): r for _, r in dc.iterrows()}
+            rd_cell = (float(rr["high"].risk - rr["low"].risk)
+                       if rr["high"].n_exposure > 0 and rr["low"].n_exposure > 0
+                       else np.nan)
+            ctab.loc[dc.index, "rd_high_low_cell"] = rd_cell
+        cell_rows.append(ctab)
+    rates = pd.DataFrame(rate_rows)
+    verdict = pd.DataFrame(verdict_rows)
+    cells = pd.concat(cell_rows, ignore_index=True)
+    rates.to_csv(outdir / "endpoint_rates.csv", index=False)
+    verdict.to_csv(outdir / "endpoint_verdict.csv", index=False)
+    cells.to_csv(outdir / "endpoint_cells_3x3.csv", index=False)
+    risk_counts.to_csv(outdir / "endpoint_risk_counts.csv", index=False)
+    repeat.to_csv(outdir / "endpoint_repeat_exposure.csv", index=False)
     return df, rates, verdict, cells, sanity
 
 
@@ -457,6 +555,18 @@ def boot_median_diff(a: np.ndarray, b: np.ndarray, seed: int):
     return point, float(lo), float(hi)
 
 
+def boot_mean_recovery(current: np.ndarray, repair: np.ndarray, seed: int):
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, len(current), size=(BOOT_N, len(current)))
+    den = current[idx].mean(axis=1)
+    num = repair[idx].mean(axis=1)
+    valid = den > 0
+    bs = 1.0 - num[valid] / den[valid]
+    point = 1.0 - float(repair.mean()) / float(current.mean())
+    lo, hi = np.quantile(bs, (0.025, 0.975))
+    return point, float(lo), float(hi), int((~valid).sum())
+
+
 def run_oracle(snapshot: Path, outdir: Path):
     snap, net, X, y, shape = exact_snapshot(snapshot)
     W_hash, v_hash = tensor_hash(net["W"]), tensor_hash(net["v"])
@@ -487,6 +597,18 @@ def run_oracle(snapshot: Path, outdir: Path):
     verdict_rows = [dict(test="O1_RECOVER", comparison="repair_dead_0.05_k0.5/current",
                          estimate=recovery, ci_lo=np.nan, ci_hi=np.nan,
                          threshold=0.90, verdict="PASS" if recovery >= 0.90 else "FAIL")]
+
+    cur_nmse = (per[per.arm == "current"].sort_values("seed").nmse
+                .to_numpy(dtype=float))
+    repair_nmse = (per[per.arm == "repair_dead_0.05_k0.5"].sort_values("seed").nmse
+                   .to_numpy(dtype=float))
+    legacy_rec, legacy_lo, legacy_hi, n_zero = boot_mean_recovery(
+        cur_nmse, repair_nmse, LEGACY_BOOT_SEED)
+    verdict_rows.append(dict(test="O1_LEGACY_MEAN_NMSE",
+                             comparison="repair_dead_0.05_k0.5/current",
+                             estimate=legacy_rec, ci_lo=legacy_lo, ci_hi=legacy_hi,
+                             threshold=0.90,
+                             verdict="PASS" if legacy_rec >= 0.90 else "FAIL"))
     learned = vals("control_learned")
     all_better = True
     for j, control in enumerate(("control_fresh_he", "control_row_shuffle",
@@ -508,16 +630,27 @@ def run_oracle(snapshot: Path, outdir: Path):
     y_ref = (torch.relu(pre_ref) * net["v"]).sum(dim=-1) + net["c"]
     pred_err = float((current - y_ref).abs().max())
     quant_err = float((p_hat * 32 - torch.round(p_hat * 32)).abs().max())
+    per_check = pd.read_csv(outdir / "oracle_per_seed.csv")
+    check_current = float(per_check[per_check.arm == "current"].nmse.mean())
+    check_repair = float(per_check[per_check.arm == "repair_dead_0.05_k0.5"].nmse.mean())
+    legacy_recalc_err = max(abs(check_current - float(cur_nmse.mean())),
+                            abs(check_repair - float(repair_nmse.mean())))
     sanity = dict(
         pass_all=bool(shape == dict(R=10, h=100, d=20, f=15, patterns=32)
                       and pred_err < 1e-10 and quant_err < 1e-7
                       and W_hash == tensor_hash(net["W"])
                       and v_hash == tensor_hash(net["v"])
-                      and max(kick_err.values(), default=0.0) < 1e-10),
+                      and max(kick_err.values(), default=0.0) < 1e-10
+                      and legacy_recalc_err < 1e-12),
         shape=shape, prediction_max_abs_error=pred_err,
         phat_quant_maxerr=quant_err, W_hash_unchanged=W_hash == tensor_hash(net["W"]),
         v_hash_unchanged=v_hash == tensor_hash(net["v"]),
         kick_max_errors=kick_err,
+        legacy_nmse_current_mean=float(cur_nmse.mean()),
+        legacy_nmse_repair_mean=float(repair_nmse.mean()),
+        legacy_recovery=float(legacy_rec),
+        legacy_csv_recalc_max_abs_error=legacy_recalc_err,
+        legacy_bootstrap_zero_denominator=n_zero,
         n_dead_0_05=[int(x) for x in masks["dead_0.05"].sum(dim=1)],
         n_strict_dead=[int(x) for x in masks["strict_dead"].sum(dim=1)])
     if not sanity["pass_all"]:
@@ -525,7 +658,7 @@ def run_oracle(snapshot: Path, outdir: Path):
     return per, verdict, trace, sanity
 
 
-def make_figures(outdir, rates, cells, oracle):
+def make_figures(outdir, rates, cells, endpoint_rates, oracle):
     fdir = outdir / "figures"
     fdir.mkdir(exist_ok=True)
 
@@ -538,6 +671,17 @@ def make_figures(outdir, rates, cells, oracle):
     ax.set_xticks(x, GROUPS); ax.set_ylabel("300k内 dead_0.05 リスク")
     ax.set_title("r 三分位別の同時刻ハザード"); ax.grid(alpha=.3)
     fig.tight_layout(); fig.savefig(fdir / "fig_hazard_r_tertile.png", dpi=150); plt.close(fig)
+
+    end = endpoint_rates[endpoint_rates.outcome == "end_strict_dead"]
+    ey = end.seed_equal_risk.to_numpy()
+    elo, ehi = end.ci_lo.to_numpy(), end.ci_hi.to_numpy()
+    fig, ax = plt.subplots(figsize=(5.6, 4.0))
+    ax.errorbar(x, ey, yerr=[ey - elo, ehi - ey], fmt="o-", capsize=4,
+                color="tab:purple")
+    ax.set_xticks(x, GROUPS); ax.set_ylabel("300k後 strict_dead 占有率")
+    ax.set_title("追補: r 三分位別の300k後凍結")
+    ax.grid(alpha=.3); fig.tight_layout()
+    fig.savefig(fdir / "fig_endpoint_strict_r_tertile.png", dpi=150); plt.close(fig)
 
     cm = cells[cells.outcome == "dead_0.05"].drop_duplicates(["p_bin", "x_bin"])
     mat = np.full((3, 3), np.nan)
@@ -576,11 +720,13 @@ def make_figures(outdir, rates, cells, oracle):
 
 
 def make_summary(outdir, h_rates, h_verdict, h_cells, h_sanity,
+                 endpoint_rates, endpoint_verdict, endpoint_sanity,
                  oracle, o_verdict, o_sanity, elapsed):
     lines = ["# function_blind_0823 結果", "",
              "`specs/spec_function_blind_0823.md` の再現仕様どおりに、既存ログと既存スナップショットだけを解析した。**既知の事後値を見た後の再現解析であり、盲検事前登録・独立確認ではない。**", "",
              "## 1. サニティ", "",
              f"- H: PASS={h_sanity['pass_all']}、p_hat量子化最大誤差={h_sanity['phat_quant_maxerr']:.3g}、x/r幾何最大相対誤差={h_sanity['geom_max_relerr']:.3g}",
+             f"- H-end追補: PASS={endpoint_sanity['pass_all']}、起点={endpoint_sanity['n_t0']}、曝露={endpoint_sanity['n_exposure']:,}",
              f"- O: PASS={o_sanity['pass_all']}、予測式最大誤差={o_sanity['prediction_max_abs_error']:.3g}、kick最大誤差={max(o_sanity['kick_max_errors'].values()):.3g}",
              f"- 経過時間: {elapsed:.1f} sec", "", "## 2. H: 同時刻ハザード", ""]
     for outcome in ("dead_0.05", "strict_dead"):
@@ -592,19 +738,31 @@ def make_summary(outdir, h_rates, h_verdict, h_cells, h_sanity,
                   f"- RD(high-low) = **{v.rd_high_low:+.4f}** [{v.ci_lo:+.4f}, {v.ci_hi:+.4f}] → **{v.verdict}**",
                   f"- p_hat×x 3×3調整 RD = {v.rd_adj_3x3:+.4f} [{v.rd_adj_ci_lo:+.4f}, {v.rd_adj_ci_hi:+.4f}]", ""]
     lines += ["主判定の EQUIV は95% CI全体が ±0.05 に入った場合だけ。0を含むだけなら無相関とは呼ばない。", "",
-              "## 3. O: オラクル bias 修復", ""]
+              "## 3. H-end追補: 300k後の状態占有率", "",
+              "初回H-anyの天井効果を見た後に追加した事後追補で、主判定を置換しない。", ""]
+    for outcome in ("end_strict_dead", "end_dead_0.05"):
+        d = endpoint_rates[endpoint_rates.outcome == outcome]
+        vals = " / ".join(f"{r.seed_equal_risk:.3f}" for _, r in d.iterrows())
+        v = endpoint_verdict[endpoint_verdict.outcome == outcome].iloc[0]
+        lines += [f"### {outcome}", "",
+                  f"- seed等重み占有率（r low / mid / high）: **{vals}**",
+                  f"- RD(high-low) = **{v.rd_high_low:+.4f}** [{v.ci_lo:+.4f}, {v.ci_hi:+.4f}] → **{v.verdict}**",
+                  f"- p_hat×x 3×3調整 RD = {v.rd_adj_3x3:+.4f} [{v.rd_adj_ci_lo:+.4f}, {v.rd_adj_ci_hi:+.4f}]", ""]
+    lines += ["## 4. O: オラクル bias 修復", "",
+              f"- 旧見出しの集約（seed平均 NMSE）: **{o_sanity['legacy_nmse_current_mean']:.6f} → {o_sanity['legacy_nmse_repair_mean']:.6f}**（回復率 {o_sanity['legacy_recovery']:.3%}）", ""]
     arms = ["current", "repair_dead_0.05_k0.5", "control_learned",
             "control_row_shuffle", "control_rnd_randomized", "control_fresh_he"]
-    lines += ["| arm | unfit_var median | nmse median |", "|---|---:|---:|"]
+    lines += ["| arm | nmse mean | unfit_var median | nmse median |", "|---|---:|---:|---:|"]
     for arm in arms:
         d = oracle[oracle.arm == arm]
-        lines.append(f"| {arm} | {d.unfit_var.median():.6f} | {d.nmse.median():.6f} |")
+        lines.append(f"| {arm} | {d.nmse.mean():.6f} | {d.unfit_var.median():.6f} | {d.nmse.median():.6f} |")
     lines += [""]
     for _, row in o_verdict.iterrows():
         est = "NA" if pd.isna(row.estimate) else f"{row.estimate:+.6f}"
         ci = "" if pd.isna(row.ci_lo) else f" [{row.ci_lo:+.6f}, {row.ci_hi:+.6f}]"
         lines.append(f"- **{row.test} {row.verdict}** ({row.comparison}): {est}{ci}")
-    lines += ["", "## 4. 解釈と限界", "",
+    lines += ["", "対照3種は本specで新しく固定した操作の結果であり、元の使い捨て解析の対照値の再現ではない。", "",
+              "## 5. 解釈と限界", "",
               "- H は保存記録点上の300k累積転帰で、一時消灯と反復曝露を含む。連続時間ハザードでも恒久死でもない。",
               "- r は入力応答重みの大きさの代理で、教師への因果的寄与そのものではない。",
               "- O は W と v を固定したオラクル容量診断。動的再開を含まず、学習手法ではない。",
@@ -629,26 +787,35 @@ def main(argv=None):
 
     logs = load_logs(logdir)
     _, h_rates, h_verdict, h_cells, h_sanity = run_hazard(logs, outdir)
+    _, endpoint_rates, endpoint_verdict, endpoint_cells, endpoint_sanity = run_endpoint(
+        logs, outdir)
     oracle, o_verdict, _, o_sanity = run_oracle(snapshot, outdir)
-    make_figures(outdir, h_rates, h_cells, oracle)
+    make_figures(outdir, h_rates, h_cells, endpoint_rates, oracle)
     elapsed = time.time() - t_start
     make_summary(outdir, h_rates, h_verdict, h_cells, h_sanity,
+                 endpoint_rates, endpoint_verdict, endpoint_sanity,
                  oracle, o_verdict, o_sanity, elapsed)
 
     spec = ROOT / "specs/spec_function_blind_0823.md"
+    addendum = ROOT / "specs/spec_function_blind_0823_addendum.md"
     inputs = {relpath(d["path"]): sha256(d["path"]) for d in logs}
     inputs[relpath(snapshot)] = sha256(snapshot)
     meta = dict(git_hash=git_hash(), spec=relpath(spec), spec_sha256=sha256(spec),
+                addendum=relpath(addendum), addendum_sha256=sha256(addendum),
                 inputs_sha256=inputs, elapsed_sec=elapsed,
                 omp_threads=os.environ.get("OMP_NUM_THREADS"),
                 python=sys.version, platform=platform.platform(),
                 numpy=np.__version__, pandas=pd.__version__, torch=torch.__version__,
                 rng=dict(hazard=H_BOOT_SEED, oracle=O_BOOT_SEED,
+                         endpoint=ENDPOINT_BOOT_SEED, legacy=LEGACY_BOOT_SEED,
                          controls="20260823 + seed"),
                 constants=dict(t0=list(T0S), horizon=HORIZON, tau=TAU,
+                               endpoint_t0_start=ENDPOINT_T0S[0],
+                               endpoint_t0_stop=ENDPOINT_T0S[-1],
+                               endpoint_t0_step=1_000,
                                bootstrap_n=BOOT_N, equiv_margin=EQUIV_MARGIN,
                                kicks=list(KICKS), opt_lr=OPT_LR, opt_steps=OPT_STEPS),
-                sanity=dict(hazard=h_sanity, oracle=o_sanity))
+                sanity=dict(hazard=h_sanity, endpoint=endpoint_sanity, oracle=o_sanity))
     (outdir / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2),
                                       encoding="utf-8")
     print(f"[function_blind] wrote {outdir} ({elapsed:.1f}s)")
