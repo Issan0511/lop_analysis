@@ -1,4 +1,4 @@
-"""Direct functional-utility instrumentation for work item 6 (pilot only).
+"""Direct functional-utility instrumentation for work item 6.
 
 Run the registered pilot with::
 
@@ -6,11 +6,17 @@ Run the registered pilot with::
       --config configs/function_blind_direct_0823_pilot.yaml \
       --reference-logs results/ratchet_log_0819/logs
 
-The probe is read-only: at every registered landmark it enumerates condA's 32
+Run the independent confirmation with::
+
+    OMP_NUM_THREADS=1 .venv/bin/python -m src.function_blind_direct \
+      --config configs/function_blind_direct_0823_confirm.yaml
+
+The pilot and independent confirmation use the same read-only probe.  At every
+registered landmark it enumerates condA's 32
 inputs in float64 and records the loss change caused by silencing each hidden
 unit.  It never calls ``SCREnv.full_support()`` because that method advances the
 environment.  ``--smoke`` changes only the instrumentation grid (B=0) and the
-run length/seed count; it is not a scientific pilot result.
+run length/seed count; it is not a scientific result.
 """
 
 from __future__ import annotations
@@ -41,6 +47,10 @@ UNIT_KEYS = (
 )
 RUN_KEYS = ("eval_nmse", "y_var")
 SUPPORT_SIZE = 32
+DIRECT_MODES = ("pilot", "confirmation")
+CONFIRMATION_OFFSET_KEYS = (
+    "net.W", "net.v", "env.flip_state", "teacher.W", "teacher.v",
+)
 
 
 def git_hash() -> str:
@@ -373,6 +383,39 @@ def check_default_zero_offset(cfg, gkey, runs, device) -> dict[str, Any]:
                 implicit_hashes=a, explicit_zero_hashes=b)
 
 
+def check_actual_offset_vs_zero(cfg, gkey, runs, device,
+                                *, mode: str) -> dict[str, Any]:
+    """Compare the configured initialization with the legacy offset-zero one.
+
+    The comparison is reported for both modes.  The independent confirmation
+    additionally requires every preregistered key to differ, rather than merely
+    trusting that a non-zero integer was present in the YAML.
+    """
+    actual_offset = int(cfg["common"].get("generator_offset", 0))
+    zero_cfg = copy.deepcopy(cfg)
+    zero_cfg["common"]["generator_offset"] = 0
+    actual = complete_state_hashes(setup_group(gkey, runs, cfg, device))
+    zero = complete_state_hashes(setup_group(gkey, runs, zero_cfg, device))
+    all_keys = sorted(set(actual) | set(zero))
+    differences = sorted(key for key in all_keys
+                         if actual.get(key) != zero.get(key))
+    required_key_differences = {
+        key: bool(actual.get(key) != zero.get(key))
+        for key in CONFIRMATION_OFFSET_KEYS
+    }
+    required = mode == "confirmation"
+    passed = (all(required_key_differences.values())
+              if required else True)
+    return dict(
+        pass_=bool(passed), mode=mode, required=required,
+        actual_offset=actual_offset, zero_offset=0,
+        required_keys=list(CONFIRMATION_OFFSET_KEYS),
+        required_key_differences=required_key_differences,
+        differences=differences, actual_hashes=actual,
+        zero_offset_hashes=zero,
+    )
+
+
 def _reference_files(reference: str) -> list[str]:
     path = Path(reference)
     if path.is_dir():
@@ -466,6 +509,7 @@ def write_npz_logs(rec: DirectRecorder, runs: list[dict[str, Any]], outdir: str,
             period=np.int64(run["period"]),
             lr=np.float64(run["lr"]),
             generator_offset=np.int64(common.get("generator_offset", 0)),
+            mode=np.asarray(cfg["function_blind_direct"].get("mode", "pilot")),
             total_steps=np.int64(common["total_steps"]),
             support_size=np.int64(SUPPORT_SIZE),
             spec=np.asarray(spec),
@@ -521,24 +565,174 @@ def _single_registered_group(cfg):
         raise ValueError(f"expected one condA/w100 group, got {sorted(groups)}")
     gkey, grouped_runs = next(iter(groups.items()))
     if gkey != ("A", 100, 1, "none"):
-        raise ValueError(f"registered pilot requires ('A',100,1,'none'), got {gkey}")
+        raise ValueError(f"registered direct run requires ('A',100,1,'none'), got {gkey}")
     periods = {int(run["period"]) for run in grouped_runs}
     encodings = {run["enc"] for run in grouped_runs}
     if periods != {10000} or encodings != {"std"}:
-        raise ValueError("registered pilot requires T=10000 and std encoding")
+        raise ValueError("registered direct run requires T=10000 and std encoding")
     return gkey, grouped_runs
 
 
+def direct_mode(cfg: dict[str, Any]) -> str:
+    """Return the explicit run role while preserving old pilot configs."""
+    mode = cfg.get("function_blind_direct", {}).get("mode", "pilot")
+    if mode not in DIRECT_MODES:
+        raise ValueError(f"function_blind_direct.mode must be one of "
+                         f"{DIRECT_MODES}, got {mode!r}")
+    return str(mode)
+
+
+def _reference_identity(value: str | None) -> str | None:
+    if value is None:
+        return None
+    path = value if os.path.isabs(value) else os.path.join(ROOT, value)
+    return os.path.realpath(path)
+
+
+def validate_registered_requirements(cfg: dict[str, Any], *, s2_steps: int,
+                                     reference_logs: str | None,
+                                     smoke: bool) -> str:
+    """Reject weakened scientific runs; only ``--smoke`` may shrink them."""
+    mode = direct_mode(cfg)
+    direct_cfg = cfg["function_blind_direct"]
+
+    if bool(direct_cfg.get("require_s2", False)) and int(s2_steps) <= 0:
+        raise ValueError("registered run requires a positive s2_steps")
+    if bool(direct_cfg.get("require_reference", False)) and not reference_logs:
+        raise ValueError("registered run requires reference_logs")
+    if smoke:
+        return mode
+
+    # Both registered scientific modes use the same full landmark grid and
+    # exact-probe tolerances.  CLI overrides may not silently weaken them.
+    expected_direct = {
+        "boundary_start": 200000,
+        "boundary_stop": 800000,
+        "boundary_every": 10000,
+        "require_s2": True,
+        "brute_force_examples": 20,
+        "brute_force_atol": 1.0e-12,
+        "geometry_rtol": 1.0e-10,
+    }
+    for key, expected in expected_direct.items():
+        actual = direct_cfg.get(key)
+        if actual != expected or type(actual) is not type(expected):
+            raise ValueError(f"non-smoke {mode} requires "
+                             f"function_blind_direct.{key}={expected!r}, "
+                             f"got {actual!r}")
+
+    common = cfg.get("common", {})
+    if common.get("total_steps") != 810000:
+        raise ValueError(f"non-smoke {mode} requires total_steps=810000")
+    if common.get("device") != "cpu":
+        raise ValueError(f"non-smoke {mode} requires common.device='cpu'")
+
+    # Lock every setting that changes the registered condA trajectory.  It is
+    # not enough to validate only the group key: m/f can change while retaining
+    # a 32-point support, and duplicate ``none`` methods silently duplicate the
+    # vectorized R axis.
+    expected_common = {"lr_main": 0.01}
+    expected_cond_a = {
+        "m": 20,
+        "f": 15,
+        "target_hidden": 100,
+        "beta": 0.7,
+        "T_values": [10000],
+        "widths": [100],
+        "encodings": ["std"],
+        "center_alpha": 0.01,
+        "batch_values": [1],
+        "lr_grid": [],
+    }
+    for section_name, section, expected_values in (
+        ("common", common, expected_common),
+        ("condA", cfg.get("condA", {}), expected_cond_a),
+    ):
+        for key, expected in expected_values.items():
+            actual = section.get(key)
+            if actual != expected or type(actual) is not type(expected):
+                raise ValueError(
+                    f"non-smoke {mode} requires {section_name}.{key}="
+                    f"{expected!r}, got {actual!r}"
+                )
+    cond_a = cfg["condA"]
+    if bool(cond_a.get("freeze_bias", False)):
+        raise ValueError(f"non-smoke {mode} requires condA.freeze_bias=false")
+    if float(cond_a.get("target_noise_sd", 0.0) or 0.0) != 0.0:
+        raise ValueError(f"non-smoke {mode} requires condA.target_noise_sd=0")
+    if float(cond_a.get("target_out_scale", 1.0) or 1.0) != 1.0:
+        raise ValueError(f"non-smoke {mode} requires condA.target_out_scale=1")
+    if cfg.get("methods", [{"name": "none"}]) != [{"name": "none"}]:
+        raise ValueError(f"non-smoke {mode} requires methods=[{{name: none}}]")
+
+    configured_s2 = direct_cfg.get("s2_steps")
+    if type(configured_s2) is not int or configured_s2 != 100000:
+        raise ValueError(f"non-smoke {mode} requires configured s2_steps=100000")
+    if type(s2_steps) is not int or s2_steps != configured_s2:
+        raise ValueError(f"non-smoke {mode} requires runtime s2_steps="
+                         f"{configured_s2}, got {s2_steps!r}")
+
+    if mode == "confirmation":
+        expected_seeds = list(range(20))
+        if common.get("seeds") != expected_seeds:
+            raise ValueError("confirmation requires seed labels 0..19 exactly")
+        if common.get("generator_offset") != 20260830:
+            raise ValueError("confirmation requires generator_offset=20260830")
+        if direct_cfg.get("require_reference") is not False:
+            raise ValueError("confirmation requires require_reference=false")
+        if direct_cfg.get("reference_logs") is not None or reference_logs is not None:
+            raise ValueError("confirmation must not compare pilot reference logs")
+    else:
+        if common.get("seeds") != list(range(10)):
+            raise ValueError("pilot requires seed labels 0..9 exactly")
+        if int(common.get("generator_offset", 0)) != 0:
+            raise ValueError("pilot requires generator_offset=0")
+        if direct_cfg.get("require_reference") is not True:
+            raise ValueError("pilot requires require_reference=true")
+        configured_reference = direct_cfg.get("reference_logs")
+        if not configured_reference:
+            raise ValueError("pilot requires configured reference_logs")
+        if (_reference_identity(reference_logs) !=
+                _reference_identity(str(configured_reference))):
+            raise ValueError("pilot runtime reference_logs must match the config")
+
+    expected_seeds = list(range(20 if mode == "confirmation" else 10))
+    registered_runs = build_runs(cfg)
+    if len(registered_runs) != len(expected_seeds):
+        raise ValueError(
+            f"non-smoke {mode} requires exactly {len(expected_seeds)} runs, "
+            f"got {len(registered_runs)}"
+        )
+    for index, (run, expected_seed) in enumerate(zip(registered_runs, expected_seeds)):
+        expected_run = {
+            "exp": "A", "width": 100, "period": 10000, "enc": "std",
+            "batch": 1, "lr": 0.01, "seed": expected_seed,
+            "method": "none",
+        }
+        mismatches = {
+            key: (run.get(key), expected)
+            for key, expected in expected_run.items()
+            if run.get(key) != expected
+        }
+        if mismatches:
+            raise ValueError(
+                f"non-smoke {mode} run[{index}] differs from registration: "
+                f"{mismatches}"
+            )
+    return mode
+
+
 def run(cfg, device: str, outdir: str, *, s2_steps: int = 0,
-        reference_logs: str | None = None) -> dict[str, Any]:
+        reference_logs: str | None = None,
+        smoke: bool = False) -> dict[str, Any]:
     """Execute instrumentation and write per-seed float64 NPZ files."""
     if os.environ.get("OMP_NUM_THREADS") != "1" or torch.get_num_threads() != 1:
-        raise RuntimeError("OMP_NUM_THREADS=1 is required by the registered pilot")
+        raise RuntimeError("OMP_NUM_THREADS=1 is required by the registered direct run")
     pilot_cfg = cfg["function_blind_direct"]
-    if bool(pilot_cfg.get("require_s2", False)) and int(s2_steps) <= 0:
-        raise ValueError("registered run requires a positive s2_steps")
-    if bool(pilot_cfg.get("require_reference", False)) and not reference_logs:
-        raise ValueError("registered run requires reference_logs")
+    mode = validate_registered_requirements(
+        cfg, s2_steps=s2_steps, reference_logs=reference_logs, smoke=smoke)
+    if not smoke and device != "cpu":
+        raise ValueError(f"non-smoke {mode} requires runtime device='cpu'")
     gkey, runs = _single_registered_group(cfg)
     steps, landmark, phase = landmark_grid(cfg["common"]["total_steps"], pilot_cfg)
     recorder = DirectRecorder(
@@ -559,6 +753,8 @@ def run(cfg, device: str, outdir: str, *, s2_steps: int = 0,
     recorder.check_complete()
     instrumentation_sanity = recorder.sanity(pilot_cfg)
     zero_offset = check_default_zero_offset(cfg, gkey, runs, device)
+    offset_independence = check_actual_offset_vs_zero(
+        cfg, gkey, runs, device, mode=mode)
     s2 = run_s2(cfg, gkey, runs, device, outdir, int(s2_steps), pilot_cfg)
     reference = (compare_reference_logs(recorder, runs, reference_logs, pilot_cfg)
                  if reference_logs else None)
@@ -572,6 +768,7 @@ def run(cfg, device: str, outdir: str, *, s2_steps: int = 0,
         instrumentation_sanity["finite_pass"],
         instrumentation_sanity["support_size_pass"],
         zero_offset["pass_"],
+        offset_independence["pass_"],
     ]
     if s2 is not None:
         required.append(s2["pass_"])
@@ -580,7 +777,8 @@ def run(cfg, device: str, outdir: str, *, s2_steps: int = 0,
     all_pass = bool(all(required))
     meta = dict(
         spec=cfg.get("spec"), implementation_git=git_hash(),
-        pilot_only=True, device=device,
+        mode=mode, pilot_only=bool(mode == "pilot"), smoke=bool(smoke),
+        device=device,
         total_steps=int(cfg["common"]["total_steps"]),
         seeds=[int(run["seed"]) for run in runs], R=len(runs), width=int(gkey[1]),
         generator_offset=int(cfg["common"].get("generator_offset", 0)),
@@ -589,7 +787,8 @@ def run(cfg, device: str, outdir: str, *, s2_steps: int = 0,
         elapsed_seconds=round(time.time() - started, 3),
         final_state_hashes=complete_state_hashes(state),
         sanity=dict(instrumentation=instrumentation_sanity,
-                    default_zero_offset=zero_offset, S2=s2,
+                    default_zero_offset=zero_offset,
+                    actual_offset_vs_zero=offset_independence, S2=s2,
                     reference_ratchet_log=reference,
                     all_required_pass=all_pass),
     )
@@ -653,7 +852,7 @@ def main():
     with open(os.path.join(outdir, "config_used.yaml"), "w") as handle:
         yaml.safe_dump(cfg, handle, allow_unicode=True, sort_keys=False)
     run(cfg, device, outdir, s2_steps=s2_steps,
-        reference_logs=reference_logs)
+        reference_logs=reference_logs, smoke=args.smoke)
 
 
 if __name__ == "__main__":
