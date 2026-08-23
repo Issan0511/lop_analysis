@@ -22,6 +22,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import subprocess
 import time
 from typing import Any, Iterable
 
@@ -40,6 +41,15 @@ UNIT_KEYS = (
 )
 RUN_KEYS = ("eval_nmse", "y_var")
 SUPPORT_SIZE = 32
+
+
+def git_hash() -> str:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, text=True
+        ).strip()
+    except Exception:
+        return "unknown"
 
 
 # ---------------------------------------------------------------------------
@@ -569,7 +579,8 @@ def run(cfg, device: str, outdir: str, *, s2_steps: int = 0,
         required.append(reference["pass_"])
     all_pass = bool(all(required))
     meta = dict(
-        spec=cfg.get("spec"), pilot_only=True, device=device,
+        spec=cfg.get("spec"), implementation_git=git_hash(),
+        pilot_only=True, device=device,
         total_steps=int(cfg["common"]["total_steps"]),
         seeds=[int(run["seed"]) for run in runs], R=len(runs), width=int(gkey[1]),
         generator_offset=int(cfg["common"].get("generator_offset", 0)),
