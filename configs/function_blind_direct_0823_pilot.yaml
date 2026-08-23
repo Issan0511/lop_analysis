@@ -1,0 +1,59 @@
+# proj_004: function_blind_direct_0823_pilot
+# 仕様: specs/spec_function_blind_direct_0823_pilot.md
+#
+# condA・w100 の各タスク切替直後 (B+1) と同タスク末尾
+# (B+10000) で、32入力の厳密列挙による unit 別除去損失 ΔL を記録する。
+# generator_offset=0 は ratchet_log_0819 と同一乱数系列のパイロットであり、
+# confirmation の独立走ではない。
+
+spec: specs/spec_function_blind_direct_0823_pilot.md
+
+common:
+  total_steps: 810000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  generator_offset: 0
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 1000
+  checkpoints: []
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+function_blind_direct:
+  boundary_start: 200000
+  boundary_stop: 800000
+  boundary_every: 10000
+  brute_force_examples: 20
+  brute_force_atol: 1.0e-12
+  geometry_rtol: 1.0e-10
+  reference_atol: 5.0e-6
+  reference_rtol: 5.0e-6
+
+methods:
+  - {name: none}
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: [100]
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [1]
+  lr_grid: []
+
+condB:
+  d: 21
+  K_values: []
+  c_values: []
+  widths: []
+  batch_values: [1]

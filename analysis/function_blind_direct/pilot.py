@@ -362,7 +362,7 @@ def run(logdir: Path, outdir: Path, bootstrap_n: int = BOOT_N) -> None:
     diagnostics.to_csv(outdir / "pilot_diagnostics.csv", index=False)
     pd.DataFrame(san["rows"]).to_csv(outdir / "pilot_sanity.csv", index=False)
 
-    runner_meta_path = outdir / "runner_meta.json"
+    runner_meta_path = outdir / "instrumentation_meta.json"
     runner_meta = json.loads(runner_meta_path.read_text()) if runner_meta_path.exists() else None
     meta = dict(
         git=git_hash(), spec="specs/spec_function_blind_direct_0823_pilot.md",

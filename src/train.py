@@ -32,7 +32,10 @@ def make_gens(exp, width, device, offset=0):
 def setup_group(gkey, runs, cfg, device):
     exp, width, batch = gkey[0], gkey[1], gkey[2]
     R = len(runs)
-    gens = make_gens(exp, width, device)   # batch/method を含めない -> 条件間で init/教師が一致
+    # generator_offset は独立確認走の乱数系列を seed 表示軸と分離して
+    # 切り替えるためのオフセット [function_blind_direct_0823] 。未指定=0 は
+    # 従来の make_gens(exp, width, device) と乱数消費も含めて同一。
+    gens = make_gens(exp, width, device, offset=int(cfg["common"].get("generator_offset", 0)))
     A, B = cfg["condA"], cfg["condB"]
 
     period = torch.tensor([r["period"] for r in runs], dtype=torch.long)  # CPU
