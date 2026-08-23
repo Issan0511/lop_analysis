@@ -356,7 +356,9 @@ def run_endpoint(logs: list[dict], outdir: Path):
                       and risk_counts.shape[0] == 10 * len(ENDPOINT_T0S)),
         n_t0=int(df.t0.nunique()), n_exposure=int(df.shape[0]),
         repeat_exposure_distribution=repeat.to_dict(orient="records"),
-        risk_counts=risk_counts.to_dict(orient="records"))
+        n_zero_risk_cells=int((risk_counts.n_at_risk == 0).sum()),
+        n_at_risk_min=int(risk_counts.n_at_risk.min()),
+        n_at_risk_max=int(risk_counts.n_at_risk.max()))
     if not sanity["pass_all"]:
         raise SystemExit("[H-end] sanity failed")
 
@@ -770,7 +772,12 @@ def make_summary(outdir, h_rates, h_verdict, h_cells, h_sanity,
               "- r は入力応答重みの大きさの代理で、教師への因果的寄与そのものではない。",
               "- O は W と v を固定したオラクル容量診断。動的再開を含まず、学習手法ではない。",
               "- 本結果から dead unit 単体の有用性、修復効果の持続、condB・他幅への一般化を主張しない。",
-              "- 既知の事後概数との一致・不一致にかかわらず、この出力をそのまま正本とする。", ""]
+              "- 既知の事後概数との一致・不一致にかかわらず、この出力をそのまま正本とする。", "",
+              "## 6. 逸脱・再現状況", "",
+              "- H-any は仕様どおりだが天井効果となり、旧チャットの 0.837 / 0.839 / 0.850 を再現しなかった。追補specを初回結果の後に固定し、H-endを別枠で追加した。",
+              "- H-end は点推定が平坦でもseedブロックCIが等価幅に収まらず、主・副とも INCONCLUSIVE。旧チャットの『統制後も勾配なし』を確定結果として昇格しない。",
+              "- O の平均NMSE 0.143 → 0.009 は再現。3破壊対照の旧値は操作定義を回収できず未再現で、本specの新しい対照結果としてのみ扱う。",
+              "- 同一commitでの再実行によるCSV byte一致は `determinism_check.md` に記録する。", ""]
     (outdir / "summary.md").write_text("\n".join(lines), encoding="utf-8")
 
 
