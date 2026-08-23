@@ -345,7 +345,10 @@ def run_endpoint(logs: list[dict], outdir: Path):
     df.to_csv(outdir / "endpoint_exposures.csv", index=False)
     repeat = (df.groupby(["seed", "unit"]).size().value_counts().sort_index()
               .rename_axis("n_exposure").reset_index(name="n_unit"))
-    risk_counts = df.groupby(["seed", "t0"]).size().reset_index(name="n_at_risk")
+    full_grid = pd.MultiIndex.from_product(
+        [range(10), ENDPOINT_T0S], names=["seed", "t0"])
+    risk_counts = (df.groupby(["seed", "t0"]).size().reindex(full_grid, fill_value=0)
+                   .rename("n_at_risk").reset_index())
     sanity = dict(
         pass_all=bool(df.t0.nunique() == len(ENDPOINT_T0S)
                       and int(df.t0.min()) == ENDPOINT_T0S[0]
