@@ -1,0 +1,92 @@
+spec: specs/spec_mu_titration_0823.md
+addenda:
+- specs/spec_mu_titration_0823_addendum.md
+- specs/spec_mu_titration_0823_addendum2.md
+common:
+  total_steps: 1000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: []
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+ratchet:
+  boundary_window: 100
+  bulk_every: 1000
+  p_hat_tau: 0.05
+  death_recover_periods: 1
+  bootstrap_B: 10000
+  bootstrap_seed: 20260823
+  perm_null_n: 1000
+  unit_keys:
+  - cos_u_mu
+  - p_hat
+  - w_norm
+  - b
+  - M
+  - s
+  - b_plus_M
+  - cos_crit
+  - delta_b_field
+  - delta_wmu_field
+  run_vector_keys:
+  - flip_state
+  run_scalar_keys:
+  - mu_norm
+  - eval_loss_exact
+mu_titration:
+  center_alphas:
+  - 0.0
+  - 1.0e-06
+  - 3.0e-06
+  - 1.0e-05
+  - 3.0e-05
+  - 0.0001
+  - 0.0003
+  - 0.01
+  s2_steps: 100000
+  result_subdir: arms
+  endpoint_references:
+    '0': results/ratchet_log_0819
+    '0.01': results/ratchet_centered_0822
+  active_alpha: 3.0e-05
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  widths:
+  - 100
+  encodings:
+  - centered
+  center_alpha: 3.0e-05
+  batch_values:
+  - 1
+  lr_grid: []
+condB:
+  d: 21
+  K_values: []
+  c_values: []
+  widths: []
+  batch_values:
+  - 1

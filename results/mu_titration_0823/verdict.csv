@@ -1,0 +1,7 @@
+id,question,status,estimate,ci_lo,ci_hi,bootstrap_finite,detail
+C0,dose and theta identifiable,PASS,41.349530133589923,NA,NA,0,dose_ratio=41.3495; distinct_dose=8; finite_theta=6
+C1,theta moves with measured mu_norm,PASS,-0.2764222418267438,-0.35153565676805154,-0.23587582731541698,10000,median seed Spearman=0.974679; order violations=0/15 (0); nonmonotonic=False
+W1,exact wall is coherent,PASS,-0.86125769505725713,-0.87290546023222371,-0.84979425589740187,10000,low-dose NA arms=2; exact-censored=True; q slope=0.138742; denominator=-1
+C2,bias escape returns,PASS,0.81072118527755033,0.76439023869780476,0.85557474586941318,10000,median seed Spearman=1
+P1,phenotype direction,REPORT_ONLY,0.22897760881487736,0.20738054209207499,0.25111948389454858,10000,final strict_dead vs measured bulk mu_norm; does not override C1/C2
+OVERALL,pre-registered combined verdict,FULL_PASS,NA,NA,NA,0,C0=PASS; C1=PASS; W1=PASS; C2=PASS
