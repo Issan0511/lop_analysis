@@ -41,12 +41,17 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG = ROOT / "configs" / "mu_titration_0823.yaml"
 DEFAULT_RESULTS = ROOT / "results" / "mu_titration_0823"
 SPEC = ROOT / "specs" / "spec_mu_titration_0823.md"
-PREREG_COMMIT_PREFIX = "39986e2"
+ADDENDA_REL = (
+    "specs/spec_mu_titration_0823_addendum.md",
+    "specs/spec_mu_titration_0823_addendum2.md",
+)
+ADDENDA = tuple(ROOT / rel for rel in ADDENDA_REL)
 ANALYSIS_RELEVANT_PATHS = (
     "analysis/mu_titration/__init__.py",
     "analysis/mu_titration/mu_titration.py",
     "configs/mu_titration_0823.yaml",
     "specs/spec_mu_titration_0823.md",
+    *ADDENDA_REL,
 )
 
 COS_LO, COS_HI, BIN_WIDTH = -1.0, 1.0, 0.05
@@ -176,6 +181,21 @@ def analysis_git_provenance(allow_dirty: bool = False) -> dict:
     }
 
 
+def require_git_ancestor(ancestor: str, descendant: str) -> None:
+    """Require ``ancestor`` to be reachable from ``descendant`` in this repo."""
+    ancestry = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", ancestor, descendant],
+        cwd=ROOT, text=True, capture_output=True, check=False,
+    )
+    if ancestry.returncode == 1:
+        raise AnalysisError(
+            f"sweep_commit {ancestor} is not an ancestor of analysis commit {descendant}"
+        )
+    if ancestry.returncode != 0:
+        detail = ancestry.stderr.strip() or ancestry.stdout.strip()
+        raise AnalysisError(f"git ancestry check failed ({ancestry.returncode}): {detail}")
+
+
 def json_clean(value):
     """Convert numpy values and non-finite floats to deterministic JSON values."""
     if isinstance(value, dict):
@@ -224,6 +244,8 @@ def expected_record_steps(total: int, period: int, half_window: int,
 
 def validate_canonical_config(cfg: dict) -> None:
     """Reject silent departures from the fixed design in spec sections 2 and 8."""
+    if cfg.get("addenda") != list(ADDENDA_REL):
+        raise AnalysisError("canonical config.addenda pointers/order mismatch")
     required = {
         ("common", "total_steps"): 1_000_000,
         ("common", "seeds"): list(range(10)),
@@ -328,8 +350,8 @@ def require_source_meta(arm_dir: Path, alpha: float,
         raise AnalysisError(f"{arm_dir}: config_used active center_alpha mismatch")
     required_provenance = {
         "git_head", "git_clean", "git_source_clean", "git_status_porcelain",
-        "config_sha256", "spec_sha256", "source_sha256", "sweep_commit",
-        "sweep_fingerprint", "all_arm_alpha_tags",
+        "config_sha256", "spec_sha256", "addenda",
+        "source_sha256", "sweep_commit", "sweep_fingerprint", "all_arm_alpha_tags",
     }
     missing = sorted(required_provenance - set(provenance))
     if missing:
@@ -338,6 +360,8 @@ def require_source_meta(arm_dir: Path, alpha: float,
         raise AnalysisError(f"{arm_dir}: run provenance is not source-clean")
     if provenance.get("git_status_porcelain") != "":
         raise AnalysisError(f"{arm_dir}: run provenance has relevant dirty status")
+    if provenance.get("git_head") != provenance.get("sweep_commit"):
+        raise AnalysisError(f"{arm_dir}: git_head and sweep_commit differ")
     if arm_meta.get("git_clean") is not True or arm_meta.get("git_source_clean") is not True:
         raise AnalysisError(f"{arm_dir}: arm_meta does not certify clean source")
     if arm_meta.get("git_status_porcelain") != "":
@@ -346,8 +370,9 @@ def require_source_meta(arm_dir: Path, alpha: float,
         raise AnalysisError(f"{arm_dir}: all-arm same-commit requirement is absent")
     if arm_meta.get("provenance_file") != "provenance.json":
         raise AnalysisError(f"{arm_dir}: provenance file pointer mismatch")
-    for key in ("git_head", "config_sha256", "spec_sha256", "source_sha256",
-                "sweep_commit", "sweep_fingerprint", "all_arm_alpha_tags"):
+    for key in ("git_head", "config_sha256", "spec_sha256", "addenda",
+                "source_sha256", "sweep_commit",
+                "sweep_fingerprint", "all_arm_alpha_tags"):
         if arm_meta.get(key) != provenance.get(key):
             raise AnalysisError(f"{arm_dir}: arm_meta/provenance mismatch for {key}")
     expected_tags = [f"alpha_{alpha_token(x)}"
@@ -777,7 +802,7 @@ def validate_sweep_provenance(arms: Sequence[dict], config_path: Path) -> dict:
     if not arms:
         raise AnalysisError("no arms for provenance validation")
     fields = ("sweep_commit", "sweep_fingerprint", "source_sha256",
-              "config_sha256", "spec_sha256")
+              "config_sha256", "spec_sha256", "addenda")
     baseline = arms[0]["provenance"]
     for arm in arms:
         prov = arm["provenance"]
@@ -790,10 +815,11 @@ def validate_sweep_provenance(arms: Sequence[dict], config_path: Path) -> dict:
     fingerprint = str(baseline.get("sweep_fingerprint", ""))
     if len(commit) != 40 or any(c not in "0123456789abcdef" for c in commit.lower()):
         raise AnalysisError(f"invalid sweep_commit: {commit!r}")
-    if not commit.startswith(PREREG_COMMIT_PREFIX):
-        raise AnalysisError(
-            f"sweep_commit {commit} is not the preregistered {PREREG_COMMIT_PREFIX} lineage"
-        )
+    analysis_commit = git_commit()
+    if len(analysis_commit) != 40 or any(
+            c not in "0123456789abcdef" for c in analysis_commit.lower()):
+        raise AnalysisError(f"invalid analysis git commit: {analysis_commit!r}")
+    require_git_ancestor(commit, analysis_commit)
     if len(fingerprint) != 64 or any(c not in "0123456789abcdef" for c in fingerprint.lower()):
         raise AnalysisError("invalid sweep_fingerprint")
     source_sha = baseline.get("source_sha256")
@@ -811,14 +837,25 @@ def validate_sweep_provenance(arms: Sequence[dict], config_path: Path) -> dict:
         raise AnalysisError("run config SHA does not match the analysis config")
     if baseline.get("spec_sha256") != sha256_file(SPEC):
         raise AnalysisError("run spec SHA does not match the governing spec")
+    expected_addenda = [
+        {"path": rel, "sha256": sha256_file(path)}
+        for rel, path in zip(ADDENDA_REL, ADDENDA)
+    ]
+    if baseline.get("addenda") != expected_addenda:
+        raise AnalysisError(
+            "run addenda paths/order/SHAs do not match the governing addenda"
+        )
     return {
         "all_arms_match": True,
         "git_clean": True,
         "git_source_clean": True,
         "sweep_commit": commit,
+        "analysis_commit": analysis_commit,
+        "sweep_is_ancestor_of_analysis": True,
         "sweep_fingerprint": fingerprint,
         "config_sha256": baseline["config_sha256"],
         "spec_sha256": baseline["spec_sha256"],
+        "addenda": expected_addenda,
         "source_sha256": source_sha,
         "arm_provenance_sha256": {
             arm["arm"]: sha256_file(arm["arm_dir"] / "provenance.json") for arm in arms
@@ -1446,6 +1483,13 @@ def arm_manifest(arms: Sequence[dict], s6: dict, sweep_provenance: dict) -> pd.D
             "sweep_fingerprint": sweep_provenance["sweep_fingerprint"],
             "config_sha256": sweep_provenance["config_sha256"],
             "spec_sha256": sweep_provenance["spec_sha256"],
+            "addenda_json": json.dumps(
+                sweep_provenance["addenda"], sort_keys=True,
+                separators=(",", ":"),
+            ),
+            "sweep_is_ancestor_of_analysis": sweep_provenance[
+                "sweep_is_ancestor_of_analysis"
+            ],
             "source_sha256_json": json.dumps(
                 sweep_provenance["source_sha256"], sort_keys=True,
                 separators=(",", ":"),
@@ -1564,7 +1608,10 @@ def make_summary(outdir: Path, results: dict, cfg_path: Path, s6: dict) -> None:
         "- Source S1--S5 and S7 passed for all eight arms; a failed arm is never silently dropped.",
         "- S6a passed: step-0 reproducibility hashes, logged step-0 statistics, and complete flip trajectories agree across arms.",
         "- S6b passed: alpha=0 and alpha=.01 common columns are bit-equal to the preregistered endpoint references.",
-        f"- Specification: `{repo_path(SPEC)}`; config: `{repo_path(cfg_path)}`.",
+        f"- Specification: `{repo_path(SPEC)}`; post-hoc S3 addenda (in governing order): "
+        + ", ".join(f"`{repo_path(path)}`" for path in ADDENDA)
+        + f"; config: `{repo_path(cfg_path)}`.",
+        "- All arms carry the same ordered addenda path/SHA list, and the sweep commit is a Git ancestor of the clean analysis commit.",
         "- All bootstrap estimates use one shared set of seed-bundle weights (B=10,000, RNG seed 20260823).", "",
         "## Verdicts", "",
         "| ID | status | estimate | 95% CI | detail |", "|---|---|---:|---:|---|",
@@ -1668,6 +1715,10 @@ def self_test() -> None:
     a = make_bootstrap_weights(100, 10, 20260823)
     b = make_bootstrap_weights(100, 10, 20260823)
     assert np.array_equal(a, b) and np.all(a.sum(axis=1) == 10)
+    head = git_commit()
+    require_git_ancestor(head, head)
+    assert [repo_path(path) for path in ADDENDA] == list(ADDENDA_REL)
+    assert all(sha256_file(path) for path in ADDENDA)
     print("mu_titration synthetic self-test: PASS", flush=True)
 
 
@@ -1675,8 +1726,9 @@ def run_analysis(config_path: Path, arms_dir: Path, outdir: Path,
                  allow_dirty_analysis: bool = False) -> None:
     if os.environ.get("OMP_NUM_THREADS") != "1":
         raise AnalysisError("OMP_NUM_THREADS=1 is required for the canonical analysis")
-    if not config_path.is_file() or not SPEC.is_file():
-        raise AnalysisError("canonical config/spec is missing")
+    if (not config_path.is_file() or not SPEC.is_file()
+            or not all(path.is_file() for path in ADDENDA)):
+        raise AnalysisError("canonical config/spec/addenda is missing")
     if allow_dirty_analysis and config_path.resolve() == DEFAULT_CONFIG.resolve():
         raise AnalysisError("--allow-dirty-analysis is forbidden for the canonical config")
     analysis_provenance = analysis_git_provenance(allow_dirty_analysis)
@@ -1725,6 +1777,10 @@ def run_analysis(config_path: Path, arms_dir: Path, outdir: Path,
         "analysis_provenance": analysis_provenance,
         "run_sweep_provenance": sweep_provenance,
         "spec": repo_path(SPEC), "spec_sha256": sha256_file(SPEC),
+        "addenda": [
+            {"path": rel, "sha256": sha256_file(path)}
+            for rel, path in zip(ADDENDA_REL, ADDENDA)
+        ],
         "config": repo_path(config_path), "config_sha256": sha256_file(config_path),
         "analysis_file": repo_path(Path(__file__)),
         "analysis_file_sha256": sha256_file(Path(__file__)),

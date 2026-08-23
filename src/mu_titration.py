@@ -21,6 +21,7 @@ import math
 import os
 import subprocess
 import time
+from types import SimpleNamespace
 
 import numpy as np
 import torch
@@ -33,6 +34,10 @@ from .train import setup_group
 
 DEFAULT_CONFIG = "configs/mu_titration_0823.yaml"
 CANONICAL_S2_STEPS = 100000
+CANONICAL_ADDENDA = (
+    "specs/spec_mu_titration_0823_addendum.md",
+    "specs/spec_mu_titration_0823_addendum2.md",
+)
 PROVENANCE_SOURCE_FILES = (
     "src/mu_titration.py", "src/ratchet_log.py", "src/train.py",
     "src/common.py", "src/envs.py", "src/nets.py",
@@ -69,6 +74,34 @@ def canonical_device(cfg, cli_value=None):
     if cli_value is not None and cli_value != "cpu":
         raise ValueError(f"--device は cpu だけを許可: {cli_value!r}")
     return "cpu"
+
+
+def canonical_addenda(cfg):
+    """第1・第2追補を所定順序で指す canonical list だけを許可する。"""
+    raw = cfg.get("addenda")
+    expected = list(CANONICAL_ADDENDA)
+    if type(raw) is not list or raw != expected:
+        raise ValueError(f"config.addenda は順序つき固定値 {expected!r}: {raw!r}")
+    return list(raw)
+
+
+def _validate_provenance_addenda(value):
+    """arm作成前にpath順序とSHA256形式を検査する。"""
+    if not isinstance(value, list) or len(value) != len(CANONICAL_ADDENDA):
+        raise RuntimeError("provenance.addenda が不完全")
+    paths = []
+    for index, item in enumerate(value):
+        if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+            raise RuntimeError(f"provenance.addenda[{index}] のschemaが不正")
+        path, digest = item["path"], item["sha256"]
+        if not isinstance(path, str) or not isinstance(digest, str):
+            raise RuntimeError(f"provenance.addenda[{index}] の型が不正")
+        if len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+            raise RuntimeError(f"provenance.addenda[{index}].sha256 が不正")
+        paths.append(path)
+    if paths != list(CANONICAL_ADDENDA):
+        raise RuntimeError(f"provenance.addenda のpath/順序が不正: {paths!r}")
+    return copy.deepcopy(value)
 
 
 def _sha256_file(path):
@@ -117,6 +150,10 @@ def collect_run_provenance(config_path, cfg, allowed_output_root=None):
         raise ValueError("config.spec が必要")
     spec_path = spec_value if os.path.isabs(spec_value) else os.path.join(ROOT, spec_value)
     spec_abs, spec_rel = _tracked_repo_path(spec_path, "spec")
+    addendum_paths = []
+    for index, value in enumerate(canonical_addenda(cfg)):
+        path = value if os.path.isabs(value) else os.path.join(ROOT, value)
+        addendum_paths.append(_tracked_repo_path(path, f"addenda[{index}]"))
 
     source_paths = {}
     for rel in PROVENANCE_SOURCE_FILES:
@@ -155,9 +192,12 @@ def collect_run_provenance(config_path, cfg, allowed_output_root=None):
 
     config_sha = _sha256_file(config_abs)
     spec_sha = _sha256_file(spec_abs)
+    addenda = [dict(path=rel, sha256=_sha256_file(absolute))
+               for absolute, rel in addendum_paths]
     source_sha = {rel: _sha256_file(path) for rel, path in source_paths.items()}
     material = dict(
         git_head=head, config_sha256=config_sha, spec_sha256=spec_sha,
+        addenda=addenda,
         source_sha256=source_sha,
         center_alphas=[float(x) for x in cfg["mu_titration"]["center_alphas"]],
         s2_steps=canonical_s2_steps(cfg), device=canonical_device(cfg),
@@ -171,6 +211,7 @@ def collect_run_provenance(config_path, cfg, allowed_output_root=None):
         ignored_untracked_output_status=ignored_output,
         config_path=config_rel, config_sha256=config_sha,
         spec_path=spec_rel, spec_sha256=spec_sha,
+        addenda=addenda,
         source_sha256=source_sha,
         sweep_commit=head, sweep_fingerprint=fingerprint,
         all_arm_alpha_tags=[f"alpha_{alpha_token(x)}" for x in material["center_alphas"]],
@@ -245,6 +286,92 @@ def arm_config(base_cfg, alpha):
     return cfg
 
 
+def _s3_regression_selfcheck(base_records):
+    """addendum2 の各必須conjunctと「zは診断のみ」を合成負例で固定する。"""
+    def evaluate(records):
+        return ratchet_log.check_s3(SimpleNamespace(s3=records))
+
+    failures = {}
+    records = copy.deepcopy(base_records)
+    records[0]["p_exact"][0, 0] += 1e-6
+    failures["exact_uniform_identity"] = not evaluate(records)["s3_pass"]
+
+    records = copy.deepcopy(base_records)
+    records[0]["p_reweighted"][0, 0] += 1e-6
+    failures["empirical_reweighted_identity"] = not evaluate(records)["s3_pass"]
+
+    records = copy.deepcopy(base_records)
+    records[0]["n_bad_row_support_matches"] = 1
+    records[0]["row_support_match_min"] = 0
+    failures["unique_support_match"] = not evaluate(records)["s3_pass"]
+
+    records = copy.deepcopy(base_records)
+    records[0]["pattern_counts"][0] += 1
+    failures["pattern_count_sum"] = not evaluate(records)["s3_pass"]
+
+    records = copy.deepcopy(base_records)
+    records[0]["N"] = ratchet_log.S3_EXPECTED_EVAL_N - 1
+    failures["canonical_dimensions"] = not evaluate(records)["s3_pass"]
+
+    records = copy.deepcopy(base_records)
+    records[0]["p_reweighted"] = records[0]["p_reweighted"][:, :-1]
+    failures["shape"] = not evaluate(records)["s3_pass"]
+
+    records = copy.deepcopy(base_records)
+    records.pop(2)
+    failures["three_points"] = not evaluate(records)["s3_pass"]
+
+    records = copy.deepcopy(base_records)
+    records[0]["p_empirical"][0, 0] = np.nan
+    failures["finite"] = not evaluate(records)["s3_pass"]
+
+    records = copy.deepcopy(base_records)
+    degenerate = ((records[0]["p_uniform"] == 0.0) |
+                  (records[0]["p_uniform"] == 1.0))
+    indices = np.argwhere(degenerate)
+    if indices.size:
+        i, j = (int(x) for x in indices[0])
+        records[0]["p_empirical"][i, j] += 1e-3
+        records[0]["p_reweighted"][i, j] += 1e-3
+        failures["degenerate_exact"] = not evaluate(records)["s3_pass"]
+    else:
+        failures["degenerate_exact"] = False
+
+    # eval 2000行を同じsupport patternへ集中させる有効な合成頻度でzを極端化する。
+    # direct経験率とsupport再重み付けは一致したままなので、旧family閾値によらずPASSする。
+    records = copy.deepcopy(base_records)
+    for item in records.values():
+        match = np.zeros_like(item["support_match"])
+        match[:, 0] = 1
+        counts = np.zeros_like(item["pattern_counts"])
+        counts[0] = item["N"]
+        concentrated_rate = item["gate_support"][0].astype(np.float64)
+        item["support_match"] = match
+        item["pattern_counts"] = counts
+        item["pattern_count_sum"] = item["N"]
+        item["n_bad_row_support_matches"] = 0
+        item["row_support_match_min"] = 1
+        item["row_support_match_max"] = 1
+        item["p_empirical"] = concentrated_rate.copy()
+        item["p_reweighted"] = concentrated_rate.copy()
+    z_only = evaluate(records)
+    z_diagnostic_only = bool(
+        z_only["s3_pass"] and z_only["s3_median_abs_z"] > 1.0 and
+        z_only["s3_frac_gt3"] > 0.01
+    )
+    return dict(
+        all_required_negative_cases_fail=bool(all(failures.values())),
+        required_negative_cases=failures,
+        z_diagnostic_only=z_diagnostic_only,
+        z_diagnostic_example=dict(
+            s3_pass=z_only["s3_pass"],
+            median_abs_z=z_only["s3_median_abs_z"],
+            frac_gt3=z_only["s3_frac_gt3"],
+            binom_tail_p=z_only["s3_binom_tail_p"],
+        ),
+    )
+
+
 def selfcheck(base_cfg, alpha, device):
     """学習をせず初期状態1点で新旧 exact_record 契約と恒等式を検査する。"""
     cfg = arm_config(base_cfg, alpha)
@@ -259,6 +386,13 @@ def selfcheck(base_cfg, alpha, device):
     teacher_before = {k: v.clone() for k, v in st["teacher"].state_dict().items()}
     public = ratchet_log.exact_record(st)       # 従来の dict / float32 契約
     rec, field = ratchet_log.exact_record(st, as_f64=True, _with_sanity=True)
+    # 同一初期状態を3つの仮想記録点として各回独立再列挙し、S3集約判定もPhase 0で通す。
+    s3_records = {
+        step: ratchet_log._s3_support_record(st, public["p_hat"])
+        for step in (0, 1, 2)
+    }
+    s3 = ratchet_log.check_s3(SimpleNamespace(s3=s3_records))
+    s3_regression = _s3_regression_selfcheck(s3_records)
     after = ratchet_log.state_hash(st)
     teacher_same = all(torch.equal(teacher_before[k], v)
                        for k, v in st["teacher"].state_dict().items())
@@ -293,6 +427,11 @@ def selfcheck(base_cfg, alpha, device):
         "b_plus_M_closure": closure_bM <= ratchet_log.FIELD_IDENTITY_ATOL,
         "delta_wmu_closure": field_wmu <= ratchet_log.FIELD_IDENTITY_ATOL,
         "cos_crit_closure": crit_err <= ratchet_log.FIELD_IDENTITY_ATOL,
+        "s3_deterministic_support_reweighting": bool(s3["s3_pass"]),
+        "s3_required_conjunct_regressions": bool(
+            s3_regression["all_required_negative_cases_fail"]),
+        "s3_z_statistics_are_diagnostic_only": bool(
+            s3_regression["z_diagnostic_only"]),
     }
     result = dict(
         selfcheck_pass=bool(all(checks.values())), alpha=float(alpha),
@@ -302,6 +441,8 @@ def selfcheck(base_cfg, alpha, device):
         b_plus_M_max_abs_err=closure_bM,
         delta_wmu_vs_Fgate_mu_norm_max_abs_err=field_wmu,
         cos_crit_max_abs_err=crit_err, field_identity=field,
+        s3_deterministic=s3,
+        s3_regression=s3_regression,
     )
     print(json.dumps(result, indent=2, ensure_ascii=False))
     if not result["selfcheck_pass"]:
@@ -320,15 +461,17 @@ def run_arm(base_cfg, config_path, alpha, device, base_outdir, s2_steps=None,
     """directory を排他的に確保して1 armを実行する。既存 path は必ず abort。"""
     device = canonical_device(base_cfg, device)
     s2_steps = canonical_s2_steps(base_cfg, s2_steps)
+    canonical_addenda(base_cfg)
     if provenance is None:
         provenance = collect_run_provenance(
             config_path, base_cfg, allowed_output_root=base_outdir)
     required_provenance = {"git_head", "git_clean", "git_status_porcelain",
-                           "config_sha256", "spec_sha256", "source_sha256",
+                           "config_sha256", "spec_sha256", "addenda", "source_sha256",
                            "sweep_commit", "sweep_fingerprint"}
     missing = sorted(required_provenance - set(provenance))
     if missing or not provenance.get("git_clean"):
         raise RuntimeError(f"不完全/dirty provenance: missing={missing}")
+    provenance_addenda = _validate_provenance_addenda(provenance["addenda"])
 
     cfg = arm_config(base_cfg, alpha)
     tag = f"alpha_{alpha_token(alpha)}"
@@ -350,6 +493,7 @@ def run_arm(base_cfg, config_path, alpha, device, base_outdir, s2_steps=None,
         git_source_clean=provenance.get("git_source_clean", provenance["git_clean"]),
         config_sha256=provenance["config_sha256"],
         spec_sha256=provenance["spec_sha256"],
+        addenda=provenance_addenda,
         source_sha256=provenance["source_sha256"],
         sweep_commit=provenance["sweep_commit"],
         sweep_fingerprint=provenance["sweep_fingerprint"],

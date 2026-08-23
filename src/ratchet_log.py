@@ -45,6 +45,9 @@ RUN_SCA_KEYS = ["E_delta", "mu_norm", "ratio_mu_cov", "cos_G_mu", "G_dot_mu",
 # `max(pre) = s + M` は float64 の有限和どうしの比較だが、加算順による丸めを許容する。
 # mu titration spec S5a--c の固定閾値。
 FIELD_IDENTITY_ATOL = 1e-12
+S3_IDENTITY_ATOL = 1e-12
+S3_EXPECTED_EVAL_N = 2000
+S3_EXPECTED_SUPPORT = 32
 
 
 # ---------------------------------------------------------------- 読み取り専用の厳密列挙
@@ -256,9 +259,9 @@ class Recorder:
     """probe(st, step) として train_group に渡す読み取り専用アキュムレータ。
 
     記録点は事前に確定しているので配列を先に確保する (np.stack の一時 2 倍を避ける)。
-    s3_steps に指定した記録点では S3 用に eval バッチの経験 p̂ も控える (§7)。
-    eval_batch は generator を消費せず env.t も進めないので probe から呼んでよい
-    (train_group の docstring 参照)。"""
+    s3_steps に指定した記録点では S3 用に32 supportを独立再列挙し、固定evalの
+    pattern頻度で再重み付けした決定論的照合結果も控える (addendum2)。この計算は
+    generator を消費せず env.t も進めない。"""
 
     def __init__(self, steps, R, h, m, f, s3_steps=(), unit_keys=None,
                  run_vector_keys=None, run_scalar_keys=None):
@@ -296,7 +299,7 @@ class Recorder:
         self.n_calls = 0
         self.step0_repro_hash = None
         self.s3_steps = set(int(s) for s in s3_steps)
-        self.s3 = {}                        # step -> (p_exact [R,h], p_emp [R,h], N)
+        self.s3 = {}                        # step -> deterministic support/eval record
 
     def __call__(self, st, step):
         i = self.index.get(int(step))
@@ -324,7 +327,7 @@ class Recorder:
         self.filled[i] = True
         self.n_calls += 1
         if int(step) in self.s3_steps:
-            self.s3[int(step)] = (rec["p_hat"], *_empirical_p_hat(st))
+            self.s3[int(step)] = _s3_support_record(st, rec["p_hat"])
 
     def check_complete(self):
         miss = np.flatnonzero(~self.filled)
@@ -382,14 +385,22 @@ def reproducibility_hash(st):
 
 
 def _binom_tail_ge(n, k, p):
-    """P(X >= k), X ~ Binomial(n, p)。k は小さい前提で下側から補数を取る。"""
-    from math import comb
+    """P(X >= k), X ~ Binomial(n, p)。PMF漸化式で巨大な ``comb`` を避ける。"""
     if k <= 0:
         return 1.0
     if k > n:
         return 0.0
-    lower = sum(comb(n, j) * p ** j * (1 - p) ** (n - j) for j in range(k))
-    return max(0.0, 1.0 - lower)
+    if p <= 0.0:
+        return 0.0
+    if p >= 1.0:
+        return 1.0
+    term = (1.0 - p) ** n             # P(X=0)
+    lower = 0.0
+    odds = p / (1.0 - p)
+    for j in range(k):
+        lower += term
+        term *= (n - j) / (j + 1) * odds
+    return max(0.0, 1.0 - min(1.0, lower))
 
 
 def _empirical_p_hat(st):
@@ -404,55 +415,295 @@ def _empirical_p_hat(st):
         return (pre > 0).float().mean(dim=0).cpu().numpy(), int(x_ev.shape[0])
 
 
+def _s3_support_record(st, p_exact):
+    """addendum2 S3: support再列挙とfixed eval再重み付けをfloat64で独立計算。
+
+    `exact_record` の ``full_support_ro`` / preactivation は再利用せず、5-bit supportを
+    ここで作り直す。direct evalも ``net.forward_batch`` を通さず同じfloat64パラメータの
+    手書きeinsumで評価し、実現pattern頻度によるsupport再重み付けと照合する。"""
+    if st.get("exp") != "A":
+        raise ValueError("S3 support再重み付けは condA 専用")
+    env, net = st["env"], st["net"]
+    q = int(env.m - env.f)
+    P = 2 ** q
+    with torch.no_grad():
+        device = st["device"]
+        code = torch.arange(P, device=device, dtype=torch.long)[:, None]
+        bit = torch.arange(q, device=device, dtype=torch.long)[None, :]
+        support_rnd = ((code >> bit) & 1).double()                 # [P,q]
+
+        flip_support = env.flip_state.double()[None].expand(P, -1, -1)
+        rnd_support = support_rnd[:, None, :].expand(-1, st["R"], -1)
+        x_support = torch.cat([flip_support, rnd_support], dim=2)  # [P,R,m]
+        cmask = st["centered"][:, None].double()
+        running_mean = st["running_mean"].double()
+        x_support_in = x_support - cmask[None] * running_mean[None]
+
+        W, b = net.W.double(), net.b.double()
+        pre_support = torch.einsum("rhd,prd->prh", W, x_support_in) + b
+        gate_support = (pre_support > 0).double()                  # [P,R,h]
+        p_uniform = gate_support.mean(dim=0)                       # [R,h]
+
+        eval_rnd = st["eval_fixed"].double()                      # [N,q]
+        N = int(eval_rnd.shape[0])
+        support_match = (eval_rnd[:, None, :] == support_rnd[None]).all(dim=2)
+        row_match_count = support_match.sum(dim=1)                 # [N]
+        pattern_counts = support_match.sum(dim=0)                  # [P]
+
+        flip_eval = env.flip_state.double()[None].expand(N, -1, -1)
+        rnd_eval = eval_rnd[:, None, :].expand(-1, st["R"], -1)
+        x_eval = torch.cat([flip_eval, rnd_eval], dim=2)
+        x_eval_in = x_eval - cmask[None] * running_mean[None]
+        pre_eval = torch.einsum("rhd,nrd->nrh", W, x_eval_in) + b
+        gate_eval = (pre_eval > 0).double()
+        p_empirical = gate_eval.mean(dim=0)                        # [R,h]
+        weights = pattern_counts.double() / max(N, 1)
+        p_reweighted = (gate_support * weights[:, None, None]).sum(dim=0)
+
+        p_exact_np = np.asarray(p_exact, dtype=np.float64)
+        p_uniform_np = p_uniform.cpu().numpy()
+        shape_ok = bool(p_exact_np.shape == p_uniform_np.shape ==
+                        tuple(p_empirical.shape) == tuple(p_reweighted.shape))
+        exact_uniform_err = (float(np.abs(p_exact_np - p_uniform_np).max())
+                             if shape_ok else float("inf"))
+        empirical_reweighted_err = float(
+            (p_empirical - p_reweighted).abs().max().item())
+        degenerate = (p_uniform == 0) | (p_uniform == 1)
+        degenerate_err = (float((p_empirical[degenerate] - p_uniform[degenerate])
+                                .abs().max().item())
+                          if bool(degenerate.any()) else 0.0)
+
+        return dict(
+            p_exact=p_exact_np,
+            p_uniform=p_uniform_np,
+            p_empirical=p_empirical.cpu().numpy(),
+            p_reweighted=p_reweighted.cpu().numpy(),
+            gate_support=gate_support.cpu().numpy().astype(np.uint8),
+            support_match=support_match.cpu().numpy().astype(np.uint8),
+            exact_uniform_max_abs_err=exact_uniform_err,
+            empirical_reweighted_max_abs_err=empirical_reweighted_err,
+            shape_ok=shape_ok,
+            N=N, q=q, P=P,
+            pattern_counts=pattern_counts.cpu().numpy().astype(np.int64),
+            pattern_count_sum=int(pattern_counts.sum().item()),
+            n_bad_row_support_matches=int((row_match_count != 1).sum().item()),
+            row_support_match_min=int(row_match_count.min().item()) if N else 0,
+            row_support_match_max=int(row_match_count.max().item()) if N else 0,
+            n_degenerate=int(degenerate.sum().item()),
+            max_degenerate_err=degenerate_err,
+        )
+
+
 def check_s3(rec):
-    """S3: 厳密 p̂ と eval_batch=2000 経験値の突き合わせ、記録点 3 箇所 [§7]。
+    """S3: 3記録点でexact supportと固定evalを決定論的に照合する (addendum2)。
 
-    eval バッチのランダムビット部は iid uniform bits なので、各サンプルは 32 パターンの
-    一様抽選そのもの。よって経験値は厳密に Binomial(N, p_exact)/N であり、
-    z = (p̂_emp − p_exact)/√(p(1−p)/N) は N(0,1) に従う。
+    各点で32 supportをfloat64で独立再列挙した ``p_uniform`` をlogger本体の
+    ``p_exact`` と照合する。さらに固定eval 2000行の5-bit pattern実現数でsupport gateを
+    再重み付けし、直接float64 forwardした ``p_empirical`` と照合する。各eval行がsupportの
+    ちょうど1点に対応すること、count総和、退化unitの厳密一致も必須である。
 
-    **判定統計量の逸脱 (記録)**: 仕様 §7 の字義は「±3σ 内」だが、これを全ユニットの
-    max に適用すると R·h·3 ≈ 3000 検定になり、真に無擾乱でも P(max|z|>3) ≈ 1−0.9973³⁰⁰⁰
-    ≈ 99.98% で必ず落ちる (実際スモークで max|z|=3.15)。bias_margin_0814 の教訓
-    (「相対一致でなく二項ゆらぎ基準の z 検定に置き換えるのが正しい」) に倣い、
-    **median|z| ≤ 1.0 かつ |z|>3 の割合 ≤ 1%** を PASS とする。参考として max|z| も出す。
-    N(0,1) なら median|z| = 0.674、|z|>3 の割合 = 0.27%。
+    従来の z / median / exceedance / binomial tail は互換診断として記録するだけで、
+    相関したunit familyに閾値を置かないためPASS/FAILには一切使用しない。"""
+    per, zs = [], []
+    max_exact_err = 0.0
+    max_reweight_err = 0.0
+    max_uniform_reconstruction_err = 0.0
+    max_reweight_reconstruction_err = 0.0
+    max_degen_err = 0.0
+    n_deg = 0
+    n_bad_rows = 0
+    all_shapes = True
+    all_finite = True
+    all_discrete = True
+    all_dimensions = True
+    all_unique_rows = True
+    all_count_sums = True
+    all_counts_match_rows = True
+    eval_sizes, support_sizes, free_bits = [], [], []
 
-    p_exact ∈ {0,1} のユニットは σ=0 (eval の全サンプルが 32 パターン内にあるので
-    経験値も決定的に 0/1) なので、z ではなく厳密一致を要求する。"""
-    per, zs, degen_err, n_deg, N = [], [], 0.0, 0, 0
     for step in sorted(rec.s3):
-        p_ex, p_emp, N = rec.s3[step]
-        sd = np.sqrt(np.maximum(p_ex * (1 - p_ex), 0) / N)
-        degen = sd == 0
-        z = np.where(degen, 0.0, (p_emp - p_ex) / np.maximum(sd, 1e-12))[~degen]
-        e = float(np.abs(p_emp[degen] - p_ex[degen]).max()) if degen.any() else 0.0
+        item = rec.s3[step]
+        p_ex = np.asarray(item["p_exact"], dtype=np.float64)
+        p_uniform = np.asarray(item["p_uniform"], dtype=np.float64)
+        p_emp = np.asarray(item["p_empirical"], dtype=np.float64)
+        p_reweighted = np.asarray(item["p_reweighted"], dtype=np.float64)
+        N, q, P = int(item["N"]), int(item["q"]), int(item["P"])
+        counts_raw = np.asarray(item["pattern_counts"])
+        gate_support_raw = np.asarray(item["gate_support"])
+        support_match_raw = np.asarray(item["support_match"])
+        counts = counts_raw.astype(np.int64, copy=False)
+        gate_support = gate_support_raw.astype(np.float64, copy=False)
+        support_match = support_match_raw.astype(np.int64, copy=False)
+
+        p_shape_ok = bool(p_ex.ndim == 2 and
+                          p_ex.shape == p_uniform.shape == p_emp.shape ==
+                          p_reweighted.shape)
+        gate_shape_ok = bool(p_ex.ndim == 2 and
+                             gate_support.shape == (P, *p_ex.shape))
+        match_shape_ok = bool(support_match.shape == (N, P))
+        shape_ok = bool(item.get("shape_ok", False) and p_shape_ok and
+                        gate_shape_ok and match_shape_ok and counts.shape == (P,))
+        finite_ok = bool(p_shape_ok and all(np.isfinite(x).all()
+                                           for x in (p_ex, p_uniform, p_emp,
+                                                     p_reweighted, gate_support)))
+        integral = lambda a: (np.issubdtype(a.dtype, np.integer) or
+                              np.issubdtype(a.dtype, np.bool_))
+        discrete_ok = bool(
+            integral(counts_raw) and integral(gate_support_raw) and
+            integral(support_match_raw) and (counts >= 0).all() and
+            ((gate_support == 0) | (gate_support == 1)).all() and
+            ((support_match == 0) | (support_match == 1)).all()
+        )
+        derive_ok = bool(p_shape_ok and gate_shape_ok and counts.shape == (P,) and
+                         finite_ok and discrete_ok and N > 0)
+        if derive_ok:
+            p_uniform_from_gates = gate_support.mean(axis=0)
+            p_reweighted_from_gates = (
+                gate_support * (counts.astype(np.float64) / N)[:, None, None]
+            ).sum(axis=0)
+            exact_err = float(np.abs(p_ex - p_uniform_from_gates).max())
+            reweight_err = float(np.abs(p_emp - p_reweighted_from_gates).max())
+            uniform_reconstruction_err = float(
+                np.abs(p_uniform - p_uniform_from_gates).max())
+            reweight_reconstruction_err = float(
+                np.abs(p_reweighted - p_reweighted_from_gates).max())
+            degen = ((p_uniform_from_gates == 0.0) |
+                     (p_uniform_from_gates == 1.0))
+            degen_err = (float(np.abs(
+                p_emp[degen] - p_uniform_from_gates[degen]).max())
+                if degen.any() else 0.0)
+        else:
+            exact_err = reweight_err = float("inf")
+            uniform_reconstruction_err = reweight_reconstruction_err = float("inf")
+            degen = np.zeros_like(p_ex, dtype=bool)
+            degen_err = float("inf")
+
+        match_valid = bool(match_shape_ok and discrete_ok)
+        if match_valid:
+            row_match_counts = support_match.sum(axis=1)
+            counts_from_rows = support_match.sum(axis=0)
+            bad_rows = int((row_match_counts != 1).sum())
+            row_min = int(row_match_counts.min()) if N else 0
+            row_max = int(row_match_counts.max()) if N else 0
+        else:
+            counts_from_rows = np.zeros(P, dtype=np.int64)
+            bad_rows, row_min, row_max = N, 0, 0
+        recorded_bad_rows = int(item["n_bad_row_support_matches"])
+        recorded_row_min = int(item["row_support_match_min"])
+        recorded_row_max = int(item["row_support_match_max"])
+        counts_match_rows = bool(match_valid and counts.shape == (P,) and
+                                 np.array_equal(counts, counts_from_rows))
+        count_sum = int(counts.sum())
+        recorded_count_sum = int(item["pattern_count_sum"])
+        dimensions_ok = bool(N == S3_EXPECTED_EVAL_N and q == 5 and
+                             P == S3_EXPECTED_SUPPORT and counts.shape == (P,))
+        unique_rows_ok = bool(
+            match_valid and bad_rows == recorded_bad_rows == 0 and
+            row_min == recorded_row_min == 1 and row_max == recorded_row_max == 1
+        )
+        count_sum_ok = bool(discrete_ok and count_sum == recorded_count_sum == N)
+
+        # 過去との比較用z診断。ここでのpはlogger exact、経験率は直接eval forward。
+        sd = np.sqrt(np.maximum(p_ex * (1.0 - p_ex), 0.0) / max(N, 1))
+        if finite_ok:
+            z_degen = sd == 0
+            z = np.where(z_degen, 0.0,
+                         (p_emp - p_ex) / np.maximum(sd, 1e-12))[~z_degen]
+        else:
+            z = np.zeros(0, dtype=np.float64)
         zs.append(z)
-        degen_err, n_deg = max(degen_err, e), n_deg + int(degen.sum())
-        per.append(dict(step=int(step), n_z=int(z.size),
-                        median_abs_z=round(float(np.median(np.abs(z))), 4)
-                        if z.size else None,
-                        max_abs_z=round(float(np.abs(z).max()), 4) if z.size else None,
-                        frac_gt3=round(float((np.abs(z) > 3).mean()), 5) if z.size else None,
-                        n_degenerate=int(degen.sum()), max_degenerate_err=e))
-    z = np.concatenate(zs) if zs else np.zeros(0)
+
+        max_exact_err = max(max_exact_err, exact_err)
+        max_reweight_err = max(max_reweight_err, reweight_err)
+        max_uniform_reconstruction_err = max(
+            max_uniform_reconstruction_err, uniform_reconstruction_err)
+        max_reweight_reconstruction_err = max(
+            max_reweight_reconstruction_err, reweight_reconstruction_err)
+        max_degen_err = max(max_degen_err, degen_err)
+        n_deg += int(degen.sum()) if shape_ok else 0
+        n_bad_rows += bad_rows
+        all_shapes = all_shapes and shape_ok
+        all_finite = all_finite and finite_ok
+        all_discrete = all_discrete and discrete_ok
+        all_dimensions = all_dimensions and dimensions_ok
+        all_unique_rows = all_unique_rows and unique_rows_ok
+        all_count_sums = all_count_sums and count_sum_ok
+        all_counts_match_rows = all_counts_match_rows and counts_match_rows
+        eval_sizes.append(N)
+        support_sizes.append(P)
+        free_bits.append(q)
+        per.append(dict(
+            step=int(step), N=N, q=q, P=P, shape_ok=shape_ok, finite_ok=finite_ok,
+            discrete_arrays_ok=discrete_ok,
+            exact_uniform_max_abs_err=exact_err,
+            empirical_reweighted_max_abs_err=reweight_err,
+            p_uniform_reconstruction_max_abs_err=uniform_reconstruction_err,
+            p_reweighted_reconstruction_max_abs_err=reweight_reconstruction_err,
+            pattern_counts=counts.tolist(), pattern_count_sum=count_sum,
+            recorded_pattern_count_sum=recorded_count_sum,
+            pattern_counts_match_support_rows=counts_match_rows,
+            n_bad_row_support_matches=bad_rows,
+            recorded_n_bad_row_support_matches=recorded_bad_rows,
+            row_support_match_min=row_min, row_support_match_max=row_max,
+            recorded_row_support_match_min=recorded_row_min,
+            recorded_row_support_match_max=recorded_row_max,
+            n_z=int(z.size),
+            median_abs_z=(round(float(np.median(np.abs(z))), 4) if z.size else None),
+            max_abs_z=(round(float(np.abs(z).max()), 4) if z.size else None),
+            frac_gt3=(round(float((np.abs(z) > 3).mean()), 5) if z.size else None),
+            n_degenerate=int(degen.sum()) if shape_ok else 0,
+            max_degenerate_err=degen_err,
+        ))
+
+    z = np.concatenate(zs) if zs else np.zeros(0, dtype=np.float64)
     med = float(np.median(np.abs(z))) if z.size else 0.0
     n, k = int(z.size), int((np.abs(z) > 3).sum())
-    tail = _binom_tail_ge(n, k, 0.0026998)          # P(X>=k), X~Bin(n, P(|Z|>3))
-    ok = bool(med <= 1.0 and tail >= 0.001 and degen_err == 0.0)
-    return dict(s3_pass=ok, s3_median_abs_z=round(med, 4),
-                s3_n_gt3=k, s3_expected_gt3=round(0.0026998 * n, 3),
-                s3_binom_tail_p=round(tail, 5),
-                s3_max_abs_z=round(float(np.abs(z).max()), 4) if z.size else None,
-                s3_n_z=n, s3_n_degenerate=n_deg,
-                s3_max_degenerate_err=degen_err, s3_eval_N=int(N),
-                s3_criterion="median|z|<=1.0 かつ |z|>3 の個数の二項上側 p>=0.001 かつ "
-                             "退化ユニット厳密一致 (§7 字義の max ±3σ からの逸脱)",
-                s3_note="eval バッチは固定なので、ゲート集合が安定なユニットの z は "
-                        "記録点をまたいで同値になる (独立でない)。二項検定は n を "
-                        "水増しする向き = PASS しやすい向きに保守的でないが、"
-                        "median|z| 側が主判定なので許容する。",
-                s3_per_step=per)
+    frac_gt3 = float(k / n) if n else 0.0
+    tail = _binom_tail_ge(n, k, 0.0026998)
+    n_points = len(rec.s3)
+    ok = bool(
+        n_points == 3 and all_shapes and all_finite and all_discrete and
+        all_dimensions and all_unique_rows and all_count_sums and all_counts_match_rows and
+        max_exact_err <= S3_IDENTITY_ATOL and max_reweight_err <= S3_IDENTITY_ATOL and
+        max_uniform_reconstruction_err <= S3_IDENTITY_ATOL and
+        max_reweight_reconstruction_err <= S3_IDENTITY_ATOL and max_degen_err == 0.0
+    )
+    return dict(
+        s3_pass=ok,
+        s3_n_points=n_points,
+        s3_identity_atol=S3_IDENTITY_ATOL,
+        s3_max_exact_uniform_abs_err=max_exact_err,
+        s3_max_empirical_reweighted_abs_err=max_reweight_err,
+        s3_max_p_uniform_reconstruction_abs_err=max_uniform_reconstruction_err,
+        s3_max_p_reweighted_reconstruction_abs_err=max_reweight_reconstruction_err,
+        s3_shape_pass=bool(all_shapes),
+        s3_all_values_finite=bool(all_finite),
+        s3_discrete_arrays_pass=bool(all_discrete),
+        s3_dimensions_pass=bool(all_dimensions),
+        s3_eval_rows_all_match_one_support=bool(all_unique_rows),
+        s3_n_bad_eval_row_support_matches=int(n_bad_rows),
+        s3_pattern_count_sum_all_match_N=bool(all_count_sums),
+        s3_pattern_counts_match_support_rows=bool(all_counts_match_rows),
+        s3_eval_N=(eval_sizes[0] if len(set(eval_sizes)) == 1 and eval_sizes else None),
+        s3_support_P=(support_sizes[0]
+                      if len(set(support_sizes)) == 1 and support_sizes else None),
+        s3_free_bits_q=(free_bits[0] if len(set(free_bits)) == 1 and free_bits else None),
+        s3_n_degenerate=n_deg,
+        s3_max_degenerate_err=max_degen_err,
+        s3_median_abs_z=round(med, 4),
+        s3_n_gt3=k,
+        s3_expected_gt3=round(0.0026998 * n, 3),
+        s3_frac_gt3=frac_gt3,
+        s3_binom_tail_p=round(tail, 5),
+        s3_max_abs_z=round(float(np.abs(z).max()), 4) if z.size else None,
+        s3_n_z=n,
+        s3_criterion=("3 points; q=5, P=32, N=2000; each eval row matches exactly one "
+                      "support; sum counts=N; max exact-vs-uniform and empirical-vs-"
+                      "reweighted error<=1e-12; degenerate error=0 (addendum2)"),
+        s3_note=("median|max|frac(|z|>3) と独立二項tailは互換診断のみ。"
+                 "いずれもPASS/FAILには使用しない。"),
+        s3_per_step=per,
+    )
 
 
 def check_s4(rec, period):
@@ -623,7 +874,9 @@ def run(cfg, device, outdir, s2_steps=0):
         json.dump(meta, fh, indent=1, default=str, ensure_ascii=False)
     print(f"  logs {size_mb:.0f} MB -> {outdir}/logs/", flush=True)
     print(f"  S3: {'PASS' if sanity['S3']['s3_pass'] else 'FAIL'} "
-          f"(max|z|={sanity['S3']['s3_max_abs_z']:.2f})", flush=True)
+          f"(exact err={sanity['S3']['s3_max_exact_uniform_abs_err']:.2e}, "
+          f"reweight err={sanity['S3']['s3_max_empirical_reweighted_abs_err']:.2e}, "
+          f"max|z| diagnostic={sanity['S3']['s3_max_abs_z']:.2f})", flush=True)
     print(f"  S4: {'PASS' if sanity['S4']['s4_pass'] else 'FAIL'} "
           f"(flip 遷移 {sanity['S4']['s4_n_flip_transitions']})", flush=True)
     print(f"  S5: {'PASS' if sanity['S5']['s5_pass'] else 'FAIL'} "
