@@ -202,7 +202,11 @@ def adjusted_arrays(df: pd.DataFrame, outcome: str) -> tuple[np.ndarray, np.ndar
     d = d[d.utility_cell_group.isin(["low", "high"])]
     seeds = sorted(d.seed.unique())
     seed_map = {s: i for i, s in enumerate(seeds)}
-    keys = list(zip(d.t0.astype(int), d.p_bin.astype(str), d.margin_bin.astype(str)))
+    keys = pd.MultiIndex.from_arrays(
+        [d.t0.astype(int).to_numpy(), d.p_bin.astype(str).to_numpy(),
+         d.margin_bin.astype(str).to_numpy()],
+        names=["t0", "p_bin", "margin_bin"],
+    )
     cell_codes, uniques = pd.factorize(keys, sort=True)
     n = np.zeros((len(seeds), len(uniques), 2), dtype=np.float64)
     e = np.zeros_like(n)
@@ -279,7 +283,14 @@ def write_summary(outdir: Path, df: pd.DataFrame, san: dict,
     ]
     if runner_meta:
         rs = runner_meta.get("sanity", {})
-        lines += [f"- runner sanity: `{json.dumps(rs, ensure_ascii=False)}`"]
+        ins = rs.get("instrumentation", {})
+        lines += [
+            f"- runner全必須検査: **{'PASS' if rs.get('all_required_pass') else 'FAIL'}**",
+            f"- ΔL逐一消音照合: n={ins.get('delta_formula_n')}、最大誤差="
+            f"{ins.get('delta_formula_max_abs_error')}",
+            f"- 100k probe無擾乱比較: **{'PASS' if (rs.get('S2') or {}).get('pass_') else 'FAIL'}**",
+            f"- 旧ratchetログ一致: **{'PASS' if (rs.get('reference_ratchet_log') or {}).get('pass_') else 'FAIL'}**",
+        ]
     lines += [
         "", "## 2. リスク集合と転帰", "",
         f"- 曝露: {len(df):,}（seed={df.seed.nunique()}, task={df.t0.nunique()}）",
@@ -302,6 +313,7 @@ def write_summary(outdir: Path, df: pd.DataFrame, san: dict,
         "", "この節を見てconfirmation specを固定する。好都合な候補だけを主解析にしない。",
         "", "## 5. 限界", "",
         "- pilotはgenerator_offset=0で旧軌道を再計装したもので、独立確認ではない。",
+        "- S2の100kという長さはpilot specで数値固定していなかった。confirmationでは実行前に固定する。",
         "- ΔLは現在タスク上の単独消音効果。冗長性、相互作用、将来タスク価値を表さない。",
         "- 同一unitの反復曝露がある。unit独立のSEを使わない。",
     ]

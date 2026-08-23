@@ -525,6 +525,10 @@ def run(cfg, device: str, outdir: str, *, s2_steps: int = 0,
     if os.environ.get("OMP_NUM_THREADS") != "1" or torch.get_num_threads() != 1:
         raise RuntimeError("OMP_NUM_THREADS=1 is required by the registered pilot")
     pilot_cfg = cfg["function_blind_direct"]
+    if bool(pilot_cfg.get("require_s2", False)) and int(s2_steps) <= 0:
+        raise ValueError("registered run requires a positive s2_steps")
+    if bool(pilot_cfg.get("require_reference", False)) and not reference_logs:
+        raise ValueError("registered run requires reference_logs")
     gkey, runs = _single_registered_group(cfg)
     steps, landmark, phase = landmark_grid(cfg["common"]["total_steps"], pilot_cfg)
     recorder = DirectRecorder(
@@ -593,7 +597,10 @@ def apply_smoke(cfg):
     cfg = copy.deepcopy(cfg)
     cfg["common"].update(total_steps=10000, seeds=[0], checkpoints=[])
     cfg["function_blind_direct"].update(boundary_start=0, boundary_stop=0,
-                                          boundary_every=10000)
+                                          boundary_every=10000,
+                                          require_s2=True, s2_steps=500,
+                                          require_reference=False,
+                                          reference_logs=None)
     return cfg
 
 
@@ -604,7 +611,7 @@ def main():
     parser.add_argument("--total-steps", type=int, default=None)
     parser.add_argument("--seeds", nargs="+", type=int, default=None)
     parser.add_argument("--generator-offset", type=int, default=None)
-    parser.add_argument("--s2-steps", type=int, default=0,
+    parser.add_argument("--s2-steps", type=int, default=None,
                         help="probe/no-probe complete-state comparison length")
     parser.add_argument("--reference-logs", default=None,
                         help="ratchet_log_0819 logs directory, NPZ, or glob")
@@ -624,13 +631,18 @@ def main():
         cfg["common"]["generator_offset"] = int(args.generator_offset)
     if args.device is not None:
         cfg["common"]["device"] = args.device
+    direct_cfg = cfg["function_blind_direct"]
+    s2_steps = (int(args.s2_steps) if args.s2_steps is not None
+                else int(direct_cfg.get("s2_steps", 0)))
+    reference_logs = (args.reference_logs if args.reference_logs is not None
+                      else direct_cfg.get("reference_logs"))
     device = pick_device(cfg)
     outdir = resolve_outdir(args.config, smoke=args.smoke, outdir=args.outdir)
     os.makedirs(outdir, exist_ok=True)
     with open(os.path.join(outdir, "config_used.yaml"), "w") as handle:
         yaml.safe_dump(cfg, handle, allow_unicode=True, sort_keys=False)
-    run(cfg, device, outdir, s2_steps=args.s2_steps,
-        reference_logs=args.reference_logs)
+    run(cfg, device, outdir, s2_steps=s2_steps,
+        reference_logs=reference_logs)
 
 
 if __name__ == "__main__":

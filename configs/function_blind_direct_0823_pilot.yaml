@@ -30,6 +30,12 @@ function_blind_direct:
   boundary_start: 200000
   boundary_stop: 800000
   boundary_every: 10000
+  # 以下3項目はpilot実行後のreviewで「sanity省略でもPASS表示できる」穴を塞ぐため追加。
+  # 初回pilotはCLIで同じ100000/referenceを明示して実行済み。
+  require_s2: true
+  s2_steps: 100000
+  require_reference: true
+  reference_logs: results/ratchet_log_0819/logs
   brute_force_examples: 20
   brute_force_atol: 1.0e-12
   geometry_rtol: 1.0e-10
