@@ -264,7 +264,8 @@ def build_lop_steps(cfg, total, period_val):
 
 def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
                 start_step=0, resume_state=None, gname=None, snapshot_steps=(),
-                probe=None, probe_steps=()):
+                probe=None, probe_steps=(), pre_update_probe=None,
+                pre_update_probe_steps=()):
     """start_step / resume_state / gname / snapshot_steps は warm-start 用
     [rank_int_0814 §3]。resume_state は save_snapshot が書いた dict (介入アームでは
     呼び出し側が net["W"] を差し替えてから渡す)。gname はログファイル名の上書き
@@ -320,6 +321,11 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
     snap_set = set(snapshot_steps)
     # probe=None なら空集合 -> 判定は毎ステップ False で既存挙動と完全一致 [posreset_0819 §5]
     probe_set = set(probe_steps) if probe is not None else set()
+    # タスク境界の flip 後・当該サンプルでの更新前を読むための opt-in hook
+    # [dynrepair_0826 §3.3, §8]。既定は完全な no-op。
+    pre_update_probe_set = (
+        set(pre_update_probe_steps) if pre_update_probe is not None else set()
+    )
 
     if start_step > 0:
         # resume 直後 (介入後・タスク切替前) の状態を step=start_step として記録。
@@ -354,6 +360,8 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
             if noise_sd > 0:                                 # 学習信号のみ汚す (eval は clean)
                 y = y + noise_sd * torch.randn(y.shape, generator=st["gens"]["noise"],
                                                device=device)
+            if (t + 1) in pre_update_probe_set:
+                pre_update_probe(st, t + 1)
 
             x_in = x_raw - cmask * st["running_mean"]
             st["running_mean"].mul_(1 - alpha).add_(alpha * x_raw)
@@ -376,6 +384,8 @@ def train_group(gkey, runs, cfg, device, outdir, total_steps=None, ckpts=None,
             if noise_sd > 0:
                 y = y + noise_sd * torch.randn(y.shape, generator=st["gens"]["noise"],
                                                device=device)
+            if (t + 1) in pre_update_probe_set:
+                pre_update_probe(st, t + 1)
 
             x_in = x_raw - cmask[None] * st["running_mean"][None]
             st["running_mean"].mul_(1 - alpha).add_(alpha * x_raw.mean(dim=0))
