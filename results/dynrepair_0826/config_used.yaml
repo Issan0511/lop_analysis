@@ -1,0 +1,93 @@
+spec: specs/spec_dynrepair_0826.md
+common:
+  total_steps: 700000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  generator_offset: 0
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: []
+  run_freeze: false
+  b_metrics: false
+  w_dir_metrics: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+dynrepair:
+  source_snapshot: results/posreset_0819/snapshots/A_w100_cont_step500000.pt
+  source_meta: results/posreset_0819/meta.json
+  source_lop: results/posreset_0819/lop_metrics_A_w100_none.csv
+  t_int: 500000
+  post_steps: 200000
+  period: 10000
+  arms:
+  - A0
+  - A1
+  - A2
+  - A3
+  - A1_lo
+  - A1_hi
+  kick_by_arm:
+    A1_lo: 0.25
+    A1: 0.5
+    A1_hi: 1.0
+  p_hat_tau: 0.05
+  fine_window: 10000
+  fine_every: 100
+  coarse_every: 1000
+  placebo_seed: 20260826
+  bootstrap_n: 10000
+  bootstrap_seed: 20260826
+  delta: 0.0134
+  f1_margin: 0.05
+  f1_valid_retention_min: 0.4
+  practical_revival_min: 0.5
+  ci_halfwidth_max: 0.1
+  ch_refreeze_rate_min: 0.8
+  ch_median_tau_max: 50000
+  ch_dead_equiv_margin: 0.05
+  placebo_death_guard: 0.5
+  oracle_mean_nmse: 0.009148272885137731
+  oracle_atol: 1.0e-12
+  geometry_rtol: 1.0e-10
+  delta_rtol: 1.0e-10
+  determinism_full: true
+methods:
+- name: none
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  widths:
+  - 100
+  encodings:
+  - std
+  center_alpha: 0.01
+  batch_values:
+  - 1
+  lr_grid: []
+condB:
+  d: 21
+  K_values: []
+  c_values: []
+  widths: []
+  batch_values:
+  - 1

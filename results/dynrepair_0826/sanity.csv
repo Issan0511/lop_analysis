@@ -1,0 +1,24 @@
+check,status,value,threshold,detail
+S2-source,PASS,0,0,saved posreset S2=PASS; hash mismatches=[]
+S1,PASS,0.0091482728851377329,9.9999999999999998e-13,float64 oracle mean; abs_error=1.7347234759768071e-18; max_kick_error=3.61e-16; float32 resume mean=0.0091482729587758459
+S2-probe-replay,PASS,0,0,A0 probe/no-probe final hash differences=[]
+S2-source-log,PASS,0,0,overlap_steps=201; rows=2010; common_columns=17; differing=[]; keys_ok=True
+S3,PASS,4.3885394644231556e-16,1e-10,"max relative error in x^2+r^2=w_norm^2; by_arm={'A0': 4.315692663517959e-16, 'A1': 4.2566261420650875e-16, 'A2': 4.3885394644231556e-16, 'A3': 4.369936175316336e-16, 'A1_lo': 4.270023792663645e-16, 'A1_hi': 4.278474638029714e-16}"
+S4,PASS,0,0,"strict_dead iff pre_max<=0 mismatches over finite records; by_arm={'A0': 0, 'A1': 0, 'A2': 0, 'A3': 0, 'A1_lo': 0, 'A1_hi': 0}; non_finite_records_skipped=30900"
+finite,REPORT,216609,,"raw non-finite values across all arms; by_arm={'A1_hi': {'pre_max': {'n': 30900, 'first_step': 500100}, 'x': {'n': 30900, 'first_step': 500100}, 'r': {'n': 30900, 'first_step': 500100}, 'w_norm': {'n': 30900, 'first_step': 500100}, 'b': {'n': 30900, 'first_step': 500100}, 'v': {'n': 30900, 'first_step': 500100}, 'utility_nmse': {'n': 30900, 'first_step': 500100}, 'eval_nmse': {'n': 309, 'first_step': 500100}}}; descriptive-only arms (A1_lo/A1_hi) are reported, not gated; note p_hat=mean(pre>0) stays finite (=0) where pre is NaN, so pre_max is the divergence indicator, not p_hat"
+finite-judgment,PASS,0,0,"non-finite values in the judgment arms ['A0', 'A1', 'A2', 'A3']"
+S5,PASS,1,1,"post-kick p_hat>0 rate (tautology check); n_target=915; after oracle optimisation p_hat>0 rate=0.906011; practical (p_hat>=0.05) rate=0.390164; post-oracle by_seed={0: 0.9647058823529412, 1: 0.8877551020408163, 2: 0.9690721649484536, 3: 0.8854166666666666, 4: 0.7938144329896907, 5: 0.9021739130434783, 6: 0.9012345679012346, 7: 0.9578947368421052, 8: 0.9473684210526315, 9: 0.8673469387755102}"
+S7,REPORT,0.255,,A2 immediate dead_frac; mean U=0.23407525378257379; cbp_harm_0815 anchors are not on a verified identical setup
+S2-arm-stream,PASS,0,0,compared 15 shared state keys against A0; mismatches={}; arms with an advanced method generator (A2 only is expected)=['A2']
+S6,PASS,5.6460497866923129e-15,1e-10,"direct silencing comparison, n=20"
+S8-A0,PASS,0,0,raw_array_differences=[]; final_state_differences=[]; elapsed_main=71.2s
+S8-A1,PASS,0,0,raw_array_differences=[]; final_state_differences=[]; elapsed_main=71.4s
+S8-A2,PASS,0,0,raw_array_differences=[]; final_state_differences=[]; elapsed_main=71.7s
+S8-A3,PASS,0,0,raw_array_differences=[]; final_state_differences=[]; elapsed_main=71.5s
+S8-A1_lo,PASS,0,0,raw_array_differences=[]; final_state_differences=[]; elapsed_main=71.6s
+S8-A1_hi,PASS,0,0,raw_array_differences=[]; final_state_differences=[]; elapsed_main=71.0s
+G1,CLEAR,0.66386554621848737,0.40000000000000002,F-1 valid-cell retained fraction
+G2,TRIGGERED,2,0.10000000000000001,number of imprecise CIs
+G3,TRIGGERED,0.39016393442622949,0.5,A1 practical revival rate
+G4,TRIGGERED,0.75,0.5,maximum seed-level A3-induced death rate
+analysis-finite,REPORT,216609,,"non-finite values carried into traj/utility as NaN; by_arm={'A1_hi': {'pre_max': 30900, 'x': 30900, 'r': 30900, 'w_norm': 30900, 'b': 30900, 'v': 30900, 'utility_nmse': 30900, 'eval_nmse': 309}}"
