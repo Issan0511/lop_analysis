@@ -83,13 +83,34 @@ def _git_hash() -> str:
 
 
 def _git_dirty() -> bool:
-    """True when the working tree differs from the pinned commit."""
+    """True when a tracked file differs from the pinned commit.
+
+    Untracked output directories under ``results/`` are routine and say nothing
+    about whether the pinned commit reproduces the code that ran, so they are
+    excluded here and surfaced separately by :func:`_git_untracked_sources`.
+    """
     try:
         return bool(subprocess.check_output(
-            ["git", "status", "--porcelain"], cwd=ROOT, text=True
+            ["git", "status", "--porcelain", "--untracked-files=no"],
+            cwd=ROOT, text=True,
         ).strip())
     except Exception:
         return True
+
+
+def _git_untracked_sources() -> list[str]:
+    """Untracked paths outside results/ -- code the pinned commit would not carry."""
+    try:
+        lines = subprocess.check_output(
+            ["git", "status", "--porcelain", "--untracked-files=all"],
+            cwd=ROOT, text=True,
+        ).splitlines()
+    except Exception:
+        return ["<git unavailable>"]
+    return sorted(
+        line[3:] for line in lines
+        if line.startswith("?? ") and not line[3:].startswith("results/")
+    )
 
 
 def _file_sha(path: Path) -> str:
@@ -1008,6 +1029,7 @@ def run(config_path: str, *, outdir_arg: str | None, smoke: bool, device_arg: st
         dict(
             git_hash=_git_hash(),
             git_dirty=str(_git_dirty()),
+            git_untracked_sources=",".join(_git_untracked_sources()),
             config_sha256=_file_sha(Path(config_path)),
             spec_sha256=_file_sha(_resolve(cfg["spec"])),
             source_snapshot_sha256=_file_sha(source_path),
@@ -1025,6 +1047,7 @@ def run(config_path: str, *, outdir_arg: str | None, smoke: bool, device_arg: st
     runner_meta = dict(
         git_hash=_git_hash(),
         git_dirty=_git_dirty(),
+        git_untracked_sources=_git_untracked_sources(),
         config=str(Path(config_path)),
         config_sha256=_file_sha(Path(config_path)),
         spec=str(cfg.get("spec", "")),
