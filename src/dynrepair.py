@@ -803,6 +803,7 @@ def _run_one(
 
 
 _ELAPSED_RE = re.compile(r"elapsed_main=[0-9.]+s")
+_UNTRACKED_RE = re.compile(r"^(provenance,+git_untracked_sources,).*$", re.MULTILINE)
 
 
 def _normalise_scientific_csv(path: Path) -> bytes:
@@ -810,11 +811,15 @@ def _normalise_scientific_csv(path: Path) -> bytes:
 
     §9 S8 compares the scientific CSVs of two runs of the same command from the
     same commit, "excluding provenance columns that contain time, elapsed and
-    absolute paths".  Only wall-clock elapsed and the repository path appear in
-    those files, so both are blanked before the byte comparison.
+    absolute paths".  Three such fields reach these files: wall-clock elapsed,
+    the repository path, and ``git_untracked_sources`` -- the second run sees
+    the first run's own stdout log, so the list grows between executions even
+    though nothing about the code changed.  ``git_hash`` and ``git_dirty`` are
+    deliberately left in: those must match for the comparison to mean anything.
     """
     text = path.read_text(encoding="utf-8")
     text = _ELAPSED_RE.sub("elapsed_main=<elapsed>", text)
+    text = _UNTRACKED_RE.sub(r"\1<untracked>", text)
     return text.replace(str(ROOT), "<ROOT>").encode("utf-8")
 
 
