@@ -205,19 +205,25 @@ def summarize(values: np.ndarray) -> dict[str, float | int]:
 def distribution_tables(joined: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     group_rows: list[dict[str, Any]] = []
     seed_rows: list[dict[str, Any]] = []
-    for group in GROUPS:
-        part = joined[joined.utility_nmse_group == group]
-        for metric in METRICS:
-            group_rows.append(dict(
-                group=group, metric=metric, n_seed=int(part.seed.nunique()),
-                **summarize(part[metric].to_numpy(float)),
-            ))
-        for seed, seed_part in part.groupby("seed", sort=True):
+    scopes = (
+        ("all_labeled", joined),
+        ("primary_valid", joined[joined.primary_cell_valid]),
+    )
+    for scope, scoped in scopes:
+        for group in GROUPS:
+            part = scoped[scoped.utility_nmse_group == group]
             for metric in METRICS:
-                seed_rows.append(dict(
-                    seed=int(seed), group=group, metric=metric,
-                    **summarize(seed_part[metric].to_numpy(float)),
+                group_rows.append(dict(
+                    scope=scope, group=group, metric=metric,
+                    n_seed=int(part.seed.nunique()),
+                    **summarize(part[metric].to_numpy(float)),
                 ))
+            for seed, seed_part in part.groupby("seed", sort=True):
+                for metric in METRICS:
+                    seed_rows.append(dict(
+                        scope=scope, seed=int(seed), group=group, metric=metric,
+                        **summarize(seed_part[metric].to_numpy(float)),
+                    ))
     return pd.DataFrame(group_rows), pd.DataFrame(seed_rows)
 
 
