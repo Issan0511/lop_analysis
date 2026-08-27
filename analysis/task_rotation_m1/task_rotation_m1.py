@@ -136,10 +136,21 @@ def sanity_table(boundaries: pd.DataFrame, paths: list[Path], event_match: bool)
         ("S7_rate_bounds", bool(((boundaries.n_death_005 >= 0)
                                   & (boundaries.n_death_005 <= boundaries.n_risk_005)
                                   & (boundaries.n_risk_005 <= 100)
-                                  & boundaries.r005.between(0, 1)).all()), "r005 and counts"),
+                                  & (boundaries.n_death_strict >= 0)
+                                  & (boundaries.n_death_strict <= boundaries.n_risk_strict)
+                                  & (boundaries.n_risk_strict <= 100)).all()
+                                 and boundaries.loc[boundaries.n_risk_005 > 0,
+                                                    "r005"].between(0, 1).all()
+                                 and boundaries.loc[boundaries.n_risk_strict > 0,
+                                                    "r_strict"].between(0, 1).all()),
+         "counts bounded; rates bounded where denominator > 0"),
         ("S8_finite_source", bool(np.isfinite(boundaries[
-            ["c_formula", "c_direct", "r005", "r_strict"]].to_numpy()).all()),
-         "c and rates"),
+            ["c_formula", "c_direct"]].to_numpy()).all()
+            and np.isfinite(boundaries.loc[boundaries.n_risk_005 > 0, "r005"]).all()
+            and np.isfinite(boundaries.loc[boundaries.n_risk_strict > 0, "r_strict"]).all()
+            and boundaries.loc[boundaries.n_risk_005 == 0, "r005"].isna().all()
+            and boundaries.loc[boundaries.n_risk_strict == 0, "r_strict"].isna().all()),
+         "c finite; rate finite iff its denominator is positive"),
     ]
     return pd.DataFrame([{"id": i, "pass": bool(ok), "note": note}
                          for i, ok, note in checks])
