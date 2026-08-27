@@ -1,0 +1,9 @@
+check,name,value,criterion,status,note
+S1,cell_id 等の再構成一致,"{""cell_id"": true, ""margin5_bin"": true, ""primary_cell_valid"": true, ""utility_nmse_group"": true}",4 列すべて完全一致,PASS,"生列 (t0, p_count, pre_max, utility_nmse) から assign_cells で再構成"
+S2,作業6 主解析の再現,"{""ci_hi"": -0.23246969586791047, ""ci_lo"": -0.2812202127315548, ""max_abs_diff"": 0.0, ""n_high"": 4431, ""n_low"": 5023, ""rd"": -0.23527554781786336, ""verdict"": ""PROTECTIVE""}",登録値 rd/ci_lo/ci_hi と float 完全一致 (bootstrap_seed=20260831),PASS,不一致なら spec §9 により中止
+S3,x^2 + r^2 = ||w||^2 の最大相対誤差,1.132657e-15,< 1e-10,PASS,
+S4,p_hat==0 <=> pre_max<=0 の不一致件数,0,= 0,PASS,"n_p_hat_zero=0, n_pre_max_nonpos=0。リスク集合が p_hat>=0.05 なので両辺とも 0 件になる **空虚に真の検査**であり、成立しても情報量は無い"
+S5,r_half の少数側シェア,"{""frac_cells_below_quarter"": 0.5269910029990004, ""mean_minority_share"": 0.2148199674396645, ""median_minority_share"": 0.0, ""n_cell"": 6002, ""n_cell_below_quarter"": 3163}",報告のみ (spec §9 S5: 各セルで少数側 >= 1/4 を報告),REPORT,n=1 のセルは定義上 minority_share=0 になる
+S5,u_half の少数側シェア,"{""frac_cells_below_quarter"": 0.5269910029990004, ""mean_minority_share"": 0.2148199674396645, ""median_minority_share"": 0.0, ""n_cell"": 6002, ""n_cell_below_quarter"": 3163}",報告のみ (spec §9 S5: 各セルで少数側 >= 1/4 を報告),REPORT,n=1 のセルは定義上 minority_share=0 になる
+S0,入力列の非有限値,"{""p_hat"": 0, ""pre_max"": 0, ""r"": 0, ""utility_nmse"": 0, ""w_norm"": 0, ""x"": 0}",報告 (spec §6: 除外しない),PASS,
+S6,同一 commit・同一入力での二重集計 byte 一致,PASS,全 CSV が byte 一致,PASS,in-process の独立再構築どうしを比較
