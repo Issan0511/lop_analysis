@@ -269,6 +269,27 @@ def a1_seed(d):
 
 # ------------------------------------------------------------------ A4
 
+def hazard_levels(haz):
+    """A4 のハザードを 2 つの集約粒度で出す。
+
+    親 spec A4-a の「レンジ 0.099–0.186」は `q3_boundary_race.hazard_table` が返す
+    **ブロック単位** (境界 11 本ずつ・`range(1, 100, 11)`) の `hazard_state` のレンジ
+    である。境界ごと (99 点) のレンジは 1 境界あたりの分母が ~1000 本しかないぶん
+    はるかに広くなるので、判定にはブロック版を使う。
+    """
+    h = haz.groupby("b_index", as_index=False).agg(
+        n_alive=("n_alive", "sum"), n_freeze_win=("n_freeze_win", "sum"))
+    h["hazard_state"] = h.n_freeze_win / h.n_alive.replace(0, np.nan)
+    rows = []
+    for lo in range(1, 100, 11):
+        hi = min(lo + 10, 99)
+        m = (h.b_index >= lo) & (h.b_index <= hi)
+        nl, kf = int(h.n_alive[m].sum()), int(h.n_freeze_win[m].sum())
+        rows.append(dict(block=f"{lo}-{hi}", n_alive=nl, n_freeze_win=kf,
+                         hazard_state=kf / nl if nl else np.nan))
+    return h, pd.DataFrame(rows)
+
+
 def a4_seed(d):
     """A4: 境界 1 回あたりのハザード。
 
@@ -555,18 +576,22 @@ def judge(df, tot, haz, a3, rng, population, loss_col):
              f"> 0 なので「復活は境界でのみ起きる」")
 
     # ---------------- A4
-    hb = haz.groupby("b_index", as_index=False).agg(
-        n_alive=("n_alive", "sum"), n_freeze_win=("n_freeze_win", "sum"))
-    hb["hazard_state"] = hb.n_freeze_win / hb.n_alive.replace(0, np.nan)
-    lo, hi = float(hb.hazard_state.min()), float(hb.hazard_state.max())
-    ok4 = (abs(lo - T_A4_LO) < 5e-4) and (abs(hi - T_A4_HI) < 5e-4)
-    add("A4-a", "repro", "境界あたりハザードのレンジ (min)", lo,
-        criterion=f"{T_A4_LO}–{T_A4_HI} が再現 (両端 ±0.0005)",
-        verdict="PASS" if ok4 else "FAIL",
-        note=f"max = {hi:.4f}。境界 index ごとに 10 seed を合算した hazard_state")
-    add("A4-a", "repro", "境界あたりハザードのレンジ (max)", hi,
-        criterion=f"{T_A4_LO}–{T_A4_HI} が再現 (両端 ±0.0005)",
-        verdict="PASS" if ok4 else "FAIL", note=f"min = {lo:.4f}")
+    hb, blocks = hazard_levels(haz)
+    lo, hi = float(blocks.hazard_state.min()), float(blocks.hazard_state.max())
+    ok4 = (abs(lo - T_A4_LO) < T_A4_TOL) and (abs(hi - T_A4_HI) < T_A4_TOL)
+    bnote = ("集約粒度は `q3_boundary_race.hazard_table` と同じ**ブロック単位** "
+             "(境界 11 本ずつ・`range(1, 100, 11)`)。10 seed を合算した hazard_state")
+    add("A4-a", "repro", "境界あたりハザードのレンジ (min・ブロック)", lo,
+        criterion=f"{T_A4_LO}–{T_A4_HI} が再現 (両端 ±{T_A4_TOL})",
+        verdict="PASS" if ok4 else "FAIL", note=f"max = {hi:.4f}。{bnote}")
+    add("A4-a", "repro", "境界あたりハザードのレンジ (max・ブロック)", hi,
+        criterion=f"{T_A4_LO}–{T_A4_HI} が再現 (両端 ±{T_A4_TOL})",
+        verdict="PASS" if ok4 else "FAIL", note=f"min = {lo:.4f}。{bnote}")
+    plo, phi = float(hb.hazard_state.min()), float(hb.hazard_state.max())
+    add("A4-a'", "report", "同・境界ごと (99 点) のレンジ", phi - plo,
+        criterion="(判定なし。集約粒度の違いを可視化する)",
+        note=f"{plo:.4f} – {phi:.4f}。ブロック集約より広いのは 1 境界あたりの "
+             f"alive が ~1000 本しかないため。**判定に使うのはブロック版**")
     hs = haz.groupby("seed", as_index=False).agg(
         n_alive=("n_alive", "sum"), n_freeze_win=("n_freeze_win", "sum"))
     m4 = boot_mean(rng, (hs.n_freeze_win / hs.n_alive).values)
@@ -646,9 +671,15 @@ def judge(df, tot, haz, a3, rng, population, loss_col):
                           ("死亡", "dead", None), ("全体", "all", None)):
         ea = boot_mean(rng, a3[f"a3_effrank_a_{key}"].values)
         ew = boot_mean(rng, a3[f"a3_effrank_w_{key}"].values)
+        anote = ("旧値 %.2f" % old) if old else ""
+        if key == "dead":
+            anote = ("**定義上 NaN**。dead は p̂=0 = 32 パターンすべてでゲートが閉じて"
+                     "いるので、活性行列が恒等的にゼロで特異値が定義できない")
+        elif key == "all":
+            anote = ("生存と一致するのは定義どおり — dead の列が全ゼロなので"
+                     "特異値に寄与しない")
         add("A3-c", "report", f"eff_rank 活性側 [{lab}]", ea[0], ea[1:],
-            criterion="(判定なし)",
-            note=("旧値 %.2f" % old) if old else "")
+            criterion="(判定なし)", note=anote)
         add("A3-c", "report", f"eff_rank 重み側 [{lab}]", ew[0], ew[1:],
             criterion="(判定なし)",
             note=("旧値 %.2f" % OLD["a3_eff_rank_w"]) if key == "alive" else "")
@@ -723,11 +754,13 @@ def make_figures(outdir, df, win, pairs, haz):
     plt.close(fig)
 
     # 4) 境界 index あたりのハザード (A4)
-    hb = haz.groupby("b_index", as_index=False).agg(
-        n_alive=("n_alive", "sum"), n_freeze_win=("n_freeze_win", "sum"))
-    hb["hazard_state"] = hb.n_freeze_win / hb.n_alive.replace(0, np.nan)
+    hb, blocks = hazard_levels(haz)
     fig, ax = plt.subplots(figsize=(6.4, 4.0))
-    ax.plot(hb.b_index, hb.hazard_state, "o-", ms=3, lw=1, color="tab:purple")
+    ax.plot(hb.b_index, hb.hazard_state, "o-", ms=3, lw=1, color="tab:purple",
+            alpha=.45, label="境界ごと (99 点・判定に使わない)")
+    bx = [int(s.split("-")[0]) + 5 for s in blocks.block]
+    ax.plot(bx, blocks.hazard_state, "s-", ms=6, lw=2, color="tab:red",
+            label="ブロック (11 境界ずつ・判定に使う)")
     ax.axhline(T_A4_LO, color="tab:gray", ls="--", lw=1, label=f"旧レンジ {T_A4_LO}")
     ax.axhline(T_A4_HI, color="tab:gray", ls=":", lw=1, label=f"旧レンジ {T_A4_HI}")
     ax.set_xlabel("境界 index")
@@ -829,6 +862,12 @@ def write_summary(outdir, V, df, s0, s2, s3, s6, s6_tot, meta, args):
          "`hazard_state` を再計算している (分母 = 境界 B で alive、分子 = 窓 [B+1, B+100] に"
          "同一規則の消灯イベント)。レンジの許容幅は親 spec に無いため両端 ±0.0005 "
          "(3 桁表示の丸め半幅) を凍結した。スクリプト自体の 2 回実行と byte 一致確認は別手順。",
+         "4b. **A4-a の集約粒度を初回実行後に訂正した (逸脱)。** 初回は境界ごと (99 点) の"
+         "レンジを取り 0.0323–0.2647 で FAIL したが、これは実装の読み違いだった。"
+         "親 spec の 0.099–0.186 は `q3_boundary_race.hazard_table` が返す**ブロック単位** "
+         "(境界 11 本ずつ・`range(1, 100, 11)`) のレンジであり、元コードに合わせて"
+         "取り直した。**訂正したのは統計量の集約粒度であって判定基準ではない** "
+         "(許容幅 ±0.0005 は据え置き)。境界ごとのレンジは A4-a' に report tier で残した。",
          "5. **A1-d を prereg から repro に格下げした。** [[命題リスト]] Q3 に旧値 "
          f"({T_A1D_PAIRS} 件中 {T_A1D_REVIVE} 件 = 11.54%) があり、親 spec 執筆時に "
          "[[xr分解と生存機構_0822]] §14 を読んで 11.54% が文脈に入っていた。"
