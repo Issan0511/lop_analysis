@@ -601,6 +601,17 @@ def write_summary(outdir: Path, diagnostics: dict[str, Any],
         f"[{diagnostics['s2']['ci_lo']:+.17g}, {diagnostics['s2']['ci_hi']:+.17g}]",
         "- S4 は本フレームでは**空虚に真**（リスク集合が `p_hat >= 0.05` なので "
         "`p_hat == 0` の曝露が 0 件）。成立しても情報量は無い旨を sanity.csv に明記した",
+        "- **S5 も構造的に空虚**（実行後に判明）。同値を上位側へ送る中央値分割では、"
+        "上位側サイズが常に `ceil(n/2)` になるので、少数側シェアは "
+        "**セルの大きさ n だけで決まり、どの変数で切っても同一**になる。"
+        f"実測でも `r_half` と `u_half` の分布は全 "
+        f"{diagnostics['half_stats']['r_half']['n_cell']:,} セルで完全一致した。"
+        "少数側 < 1/4 の "
+        f"{diagnostics['half_stats']['r_half']['n_cell_below_quarter']:,} セルは"
+        "すべて n=1 のセル（作業6 でも無効セルとして除外済み）。"
+        "**S5 は分割の質を何も検査していない**（ratchet_log_0819 P4 / "
+        "cell4_0821 P1 と同型のトートロジー）。判定には用いていないので"
+        "結論には影響しない",
         "- 詳細は `sanity.csv`",
         "",
         "## 出所と再現",
