@@ -579,7 +579,9 @@ def run(replay_dir: Path, reference_dir: Path, outdir: Path) -> None:
             for path in sorted((replay_dir / "logs").glob("seed*.npz"))
         },
         csv_sha256=hashes, diagnostics=details,
-        verdict=first["verdict.csv"].to_dict(orient="records"),
+        # pandas' JSON encoder maps the intentionally blank combined-row
+        # estimates to null; the strict stdlib encoder rightly rejects NaN.
+        verdict=json.loads(first["verdict.csv"].to_json(orient="records")),
         restrictions=[
             "same-trajectory re-instrumentation, not independent replication",
             "observational within frozen geometry cells, not causal",
