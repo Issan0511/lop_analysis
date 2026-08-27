@@ -268,14 +268,23 @@ def main() -> None:
     boot.to_csv(out / "bootstrap.csv", index=False)
     pd.DataFrame([{**verdict, "bootstrap_B": BOOT_N,
                    "bootstrap_seed": BOOT_SEED}]).to_csv(out / "verdict.csv", index=False)
+    if np.isfinite(verdict["ci_lo"]) and np.isfinite(verdict["ci_hi"]):
+        ci_line = (f"- 95% seed-cluster bootstrap CI: "
+                   f"[{verdict['ci_lo']:+.6f}, {verdict['ci_hi']:+.6f}]")
+    else:
+        ci_line = "- 95% seed-cluster bootstrap CI: **未算出（登録ガード未通過）**"
+    point_label = ("seed 等重み Spearman 平均" if verdict["M1"] != "INCONCLUSIVE_GUARD"
+                   else (f"有効{verdict['n_valid_seed']} seed 内の記述的 Spearman 平均"
+                         "（主判定に使用しない）"))
     summary = f"""# task_rotation_m1_0828
 
 ## 主判定
 
 - **{verdict['M1']}**
-- seed 等重み Spearman 平均: {verdict['rho_mean']:+.6f}
-- 95% seed-cluster bootstrap CI: [{verdict['ci_lo']:+.6f}, {verdict['ci_hi']:+.6f}]
+- {point_label}: {verdict['rho_mean']:+.6f}
+{ci_line}
 - 有効 seed: {verdict['n_valid_seed']}/10
+- ガード: seed 内有効境界50本以上、かつ有効 seed 8/10以上
 
 ## 構造確認
 
