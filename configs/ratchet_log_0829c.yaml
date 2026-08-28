@@ -1,0 +1,61 @@
+# proj_004: ratchet_log_0829c — 天井T0b 腕C（事前登録）の新規 seed 群
+# 仕様: 可塑性喪失/spec/天井T0b_spec_0828.md §8.2（vault b44078c / 改訂は §12）
+#
+# ratchet_log_0819.yaml との差分は 2 行だけ:
+#   (1) seeds [0..9] -> [10..19]   … 表示軸のラベル
+#   (2) generator_offset: 20260831 … 乱数系列そのもの
+#
+# **seed 値だけを変えても新しい seed 群にはならない。** src/train.py の make_gens は
+# 乱数を SEED_BASE[exp] + width + generator_offset からのみ作り、config の seed 値は
+# run_id と保存列にしか入らない。0829 に --seeds 10..19 のみで生成した走は seed 0..9 と
+# cos_u_mu / w_norm / p_hat / F_gate まで bit 一致し、
+# results/ratchet_log_0829c_invalid_seedcollision_b7f6963/ へ退避した。
+# 独立系列のノブは generator_offset である（先例: function_blind_direct_0823_confirm の
+# generator_offset: 20260830）。20260831 は未使用の値で、解析側の bootstrap_seed=20260829
+# とは別物である。
+
+common:
+  total_steps: 1000000
+  seeds: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  generator_offset: 20260831   # 独立乱数系列 [T0b spec §8.2 改訂]
+  lr_main: 0.01
+  device: cpu                   # batch=1 はカーネル起動律速で CPU が速い [memory 0812]
+  eval_batch: 2000              # S3 の経験 p̂ 比較用 (判定には使わない)
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 1000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+ratchet:
+  boundary_window: 100          # 境界の [-w, +w] を毎 step 記録 [§3.3]
+  bulk_every: 1000              # それ以外の粒度 [§3.3]
+  p_hat_tau: 0.05               # 凍結 / 死亡の閾値 [§3.5]。lop_metrics の 1-dead_tau と一致
+  death_recover_periods: 1      # 死亡判定: 下方クロス後この周期数だけ回復しないこと [§3.5]
+  bootstrap_B: 10000            # paired bootstrap の resample 数 [§5]
+  bootstrap_seed: 20260819      # 事前登録の抽選列 [§5]
+  perm_null_n: 1000             # P3 の符号置換 null の反復数 [§6]
+
+condA:                          # Slowly-Changing Regression [D], T=1e4 標準のみ
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: [100]
+  encodings: [std]
+  center_alpha: 0.01
+  batch_values: [1]
+  lr_grid: []
+
+condB:                          # 本実験では未使用 (condB への外挿は禁止 [§9])
+  d: 21
+  K_values: []
+  c_values: []
+  widths: []
+  batch_values: [1]

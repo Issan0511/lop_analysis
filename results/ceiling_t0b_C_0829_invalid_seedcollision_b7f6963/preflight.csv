@@ -1,0 +1,8 @@
+id,stage,check,statistic,threshold,value,pass,gating,note
+P1,pre_data,planted recovery,|M(40)/h*-1|,0.1,0.0,True,True,"h*=0.0001, M(40)=0.0001, CI=[9.0937e-05, 0.000106652], ci_covers_h*=True"
+P2,pre_data,sign-randomised null,reject rate,0.07,0.035,True,True,"reps=200, ci_method=studentized, nominal=0.05"
+P2_alt,pre_data,sign-randomised null under percentile CI,reject rate,0.07,0.085,False,False,"diagnostic only, not a gate; reps=200. spec §12 の CI 差し替えは この対比に基づく"
+P3,pre_data,single-band blip robustness,|dM|/|M|,0.15,0.0813930739063291,True,True,"band 6 forced to -0.0003; M_base=0.0001, M_blip=9.186069261e-05"
+P4,pre_data,leave-one-seed-out sign stability,signs agree,all equal,1.0,True,True,"full=0.0001, loo=[9.92173e-05, 0.000101119, 9.90521e-05, 0.000100572, 0.000102296, 9.94934e-05, 9.81913e-05, 9.98772e-05, 9.96297e-05, 0.000100553]"
+P4_real,post_data,leave-one-seed-out sign stability on the analysed logs,signs agree,all equal,1.0,True,False,"spec §6 P4 が記述格下げの判断に使う実データ版。loo=[8.41042e-05, 9.27632e-05, 0.000102812, 0.000104653, 7.30429e-05, 0.000105361, 0.000113518, 0.000101506, 0.000106772, 0.000101591]"
+P5,post_data,predecessor band table consistency,max relative window-mean difference,1e-09,,,False,SKIP: この腕には前身 curves.csv が存在しない

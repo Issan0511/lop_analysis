@@ -5,8 +5,12 @@ structure table was read by a human; this one fails in CI instead.
 
 Run against a different arm with::
 
-    T0B_INPUT=results/ratchet_log_0829c python -m unittest \
-        analysis.ceiling_t0b.test_assertions -v
+    T0B_INPUT=results/ratchet_log_0829c \
+    T0B_REFERENCE=results/ratchet_log_0819 \
+        python -m unittest analysis.ceiling_t0b.test_assertions -v
+
+``T0B_REFERENCE`` is the arm whose random stream the analysed logs must *not*
+reproduce; leave it unset when the analysed logs are themselves the reference.
 """
 
 import os
@@ -20,11 +24,13 @@ from analysis.ceiling_t0b.ceiling_t0b import (
     pairs_from_npz,
     seed_evidence,
     seed_summary,
+    stream_fingerprint,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
 INPUT = os.environ.get("T0B_INPUT", "results/ratchet_log_0819")
 CENTERED = os.environ.get("T0B_CENTERED", "results/ratchet_centered_0822")
+REFERENCE = os.environ.get("T0B_REFERENCE") or None
 
 
 def _logs(spec: str) -> list[Path]:
@@ -50,7 +56,10 @@ class StructuralAssertions(unittest.TestCase):
             evidence.append(seed_evidence(d, checks))
             del sp, d
         centered = [mu_norm_stats(p) for p in _logs(CENTERED)]
-        cls.frame = assertion_frame(evidence, centered, ROOT).set_index("id")
+        reference = ([stream_fingerprint(q) for q in _logs(REFERENCE)]
+                     if REFERENCE else None)
+        cls.frame = assertion_frame(evidence, centered, ROOT,
+                                    reference).set_index("id")
 
     def _row(self, key: str) -> None:
         row = self.frame.loc[key]
@@ -80,7 +89,7 @@ class StructuralAssertions(unittest.TestCase):
     def test_B8_centered_is_out_of_scope(self) -> None:
         self._row("B8")
 
-    def test_B9_arm_c_generator_exists(self) -> None:
+    def test_B9_generator_and_independent_stream(self) -> None:
         self._row("B9")
 
     def test_B10_h_matches_disp_minus_f0(self) -> None:

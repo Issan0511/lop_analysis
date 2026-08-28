@@ -16,6 +16,7 @@ imported from it rather than re-typed.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import platform
@@ -38,7 +39,9 @@ from analysis.ceiling_t0.ceiling_t0 import (
 )
 
 SPEC_VAULT_COMMIT = "b44078c"          # pre-registration freeze (judgement criteria)
-SPEC_VAULT_AMENDMENT = "7f6b7d7"        # §4 CI: percentile -> studentized (spec §12)
+SPEC_VAULT_AMENDMENT_CI = "7f6b7d7"     # §4 CI: percentile -> studentized (spec §12)
+SPEC_VAULT_AMENDMENT_ARMC = "83b4a16"   # §8.2 arm C generator + B9 (spec §12)
+SPEC_VAULT_AMENDMENTS = (SPEC_VAULT_AMENDMENT_CI, SPEC_VAULT_AMENDMENT_ARMC)
 CI_METHOD = "studentized"
 KS = (1, 2, 5, 10, 20, 40)
 K_MAIN = 40
@@ -569,18 +572,57 @@ def seed_evidence(d: dict[str, np.ndarray], checks: dict) -> dict:
         "h_finite": checks["h_finite"],
         "band_window_agrees": checks["band_window_agrees"],
         "n_pair_window": checks["n_pair_window"],
+        "stream_fingerprint": stream_fingerprint_of(d),
     }
 
 
+STREAM_COLUMNS = ("cos_u_mu", "w_norm", "p_hat", "F_gate", "F_self", "F_rest",
+                 "flip_state", "mu_norm")
+
+
+def stream_fingerprint(path: Path) -> str:
+    """Hash of the trajectory payload only, excluding the seed label and run_id.
+
+    Two runs that differ only in their ``seed`` numbers hash identically, which is
+    exactly the collision B9 has to catch: ``src/train.py`` seeds its generators
+    from ``SEED_BASE[exp] + width + generator_offset`` and never from the config
+    seed values, so relabelling seeds does not produce a new seed group.
+    """
+    with np.load(path, allow_pickle=False) as z:
+        return stream_fingerprint_of({n: np.asarray(z[n]) for n in STREAM_COLUMNS})
+
+
+def stream_fingerprint_of(d: dict[str, np.ndarray]) -> str:
+    h = hashlib.sha256()
+    for name in STREAM_COLUMNS:
+        h.update(name.encode())
+        h.update(np.ascontiguousarray(d[name]).tobytes())
+    return h.hexdigest()
+
+
 def runner_supports_arm_c(root: Path) -> tuple[bool, str]:
-    """B9: the arm-C generator exposes --seeds and --outdir."""
+    """B9a: the arm-C generator exposes --seeds and --outdir."""
     src = (root / "src" / "ratchet_log.py").read_text()
     have = {flag: (f'"{flag}"' in src) for flag in ("--seeds", "--outdir")}
     return all(have.values()), json.dumps(have)
 
 
-def assertion_frame(evidence: list[dict], centered: list[dict],
-                    root: Path) -> pd.DataFrame:
+def stream_disjoint(fingerprints: list[str],
+                    reference: list[str] | None) -> tuple[bool, str]:
+    """B9b: the analysed logs are a genuinely new random stream.
+
+    ``reference`` is the arm-E fingerprint list; ``None`` means the analysed logs
+    *are* the reference arm and there is nothing to be disjoint from.
+    """
+    if reference is None:
+        return True, "reference arm: no stream to be disjoint from"
+    shared = sorted(set(fingerprints) & set(reference))
+    return not shared, (f"n={len(fingerprints)}, n_ref={len(reference)}, "
+                        f"n_shared={len(shared)}")
+
+
+def assertion_frame(evidence: list[dict], centered: list[dict], root: Path,
+                    reference: list[str] | None = None) -> pd.DataFrame:
     rows: list[dict] = []
 
     def add(i: str, ok: bool, what: str, note: str) -> None:
@@ -622,8 +664,13 @@ def assertion_frame(evidence: list[dict], centered: list[dict],
         f"median={[round(c['median'], 4) for c in centered]}, "
         f"q05={[round(c['q05'], 4) for c in centered]}, "
         f"frac<0.5={[round(c['frac_below_half'], 4) for c in centered]}")
-    ok9, note9 = runner_supports_arm_c(root)
-    add("B9", ok9, "src/ratchet_log.py exposes --seeds and --outdir", note9)
+    ok9a, note9a = runner_supports_arm_c(root)
+    ok9b, note9b = stream_disjoint([e["stream_fingerprint"] for e in evidence],
+                                   reference)
+    add("B9", ok9a and ok9b,
+        "the arm generator exists and produces a random stream that is not "
+        "bit-identical to the reference arm",
+        f"flags={note9a}; stream_disjoint={ok9b} ({note9b})")
     add("B10", bool(evidence) and all(e["h_identity_max"] == 0.0 and e["h_finite"]
                                       for e in evidence),
         "implemented per-pair H equals disp - f0 and is finite",
@@ -816,11 +863,13 @@ ARMS = {
           "outdir": "results/ceiling_t0b_E_0828",
           "prefix": "EXPLORATORY_",
           "legacy": "results/ceiling_t0_0828/curves.csv",
+          "reference": None,
           "kind": "exploratory (existing std seeds)"},
     "C": {"input": "results/ratchet_log_0829c",
           "outdir": "results/ceiling_t0b_C_0829",
           "prefix": "",
           "legacy": None,
+          "reference": "results/ratchet_log_0819",
           "kind": "pre-registered (new seeds)"},
 }
 
@@ -908,7 +957,13 @@ def main() -> None:
     centered = [mu_norm_stats(p) for p in
                 sorted((centered_dir / "logs").glob("seed*.npz"),
                        key=lambda p: int(p.stem.removeprefix("seed")))]
-    assertions = assertion_frame(evidence, centered, root)
+    reference = None
+    if cfg["reference"]:
+        ref_dir = resolve(root, cfg["reference"])
+        reference = [stream_fingerprint(q) for q in
+                     sorted((ref_dir / "logs").glob("seed*.npz"),
+                            key=lambda q: int(q.stem.removeprefix("seed")))]
+    assertions = assertion_frame(evidence, centered, root, reference)
     assertions.to_csv(out / "assertions.csv", index=False)
     if not bool(assertions["pass"].all()):
         failed = assertions[~assertions["pass"]].id.tolist()
@@ -993,7 +1048,7 @@ def main() -> None:
 
     write_json(out / "config.json", {
         "analysis": out.name, "arm": args.arm, "spec_vault_commit": SPEC_VAULT_COMMIT,
-        "spec_vault_amendment_commit": SPEC_VAULT_AMENDMENT,
+        "spec_vault_amendment_commits": list(SPEC_VAULT_AMENDMENTS),
         "input": str(inp.relative_to(root)), "k": list(KS), "k_main": K_MAIN,
         "window": [WINDOW_LO, WINDOW_HI], "band_width": BAND_W,
         "guard": {"n_seed": MIN_MAIN_SEED, "n_pair": MIN_PAIRS},
@@ -1004,10 +1059,12 @@ def main() -> None:
     })
     write_json(out / "provenance.json", {
         "spec_vault_commit": SPEC_VAULT_COMMIT,
-        "spec_vault_amendment_commit": SPEC_VAULT_AMENDMENT,
+        "spec_vault_amendment_commits": list(SPEC_VAULT_AMENDMENTS),
         "spec_path": "可塑性喪失/spec/天井T0b_spec_0828.md",
         "git": git_state, "arm": args.arm, "seeds": seed_ids,
         "input": str(inp.relative_to(root)), "sources": sources,
+        "stream_reference": cfg["reference"],
+        "stream_fingerprints": [e["stream_fingerprint"] for e in evidence],
         "centered_reference": [c["path"] for c in centered],
         "python": sys.version, "platform": platform.platform(),
         "numpy": np.__version__, "pandas": pd.__version__,
@@ -1041,7 +1098,7 @@ def main() -> None:
         f"- ブリップ寄与（帯 [0.6,0.7) 除外 − 窓全体）: {fmt(no_blip.delta_vs_main)}"
         f"（相対 {no_blip.rel_delta_vs_main:+.4f}）",
         f"- 窓内 strict off: k 別 {strict_off}",
-        f"- CI: {args.ci_method}（spec §4 改訂 vault `{SPEC_VAULT_AMENDMENT}`）。"
+        f"- CI: {args.ci_method}（spec §4 改訂 vault `{SPEC_VAULT_AMENDMENT_CI}`）。"
         "§5-7 の等調零点のみ percentile（位置量・判定外）",
         f"- 等調零点 k=40（**記述であり判定していない**）: "
         f"`z̃_F` = {fmt(iso40.z_tilde_F, 6)}, `z̃_D` = {fmt(iso40.z_tilde_D, 6)}, "
