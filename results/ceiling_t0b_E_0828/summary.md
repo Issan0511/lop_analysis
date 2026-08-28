@@ -18,7 +18,7 @@
 - CI: studentized（spec §4 改訂 vault `7f6b7d7`）。§5-7 の等調零点のみ percentile（位置量・判定外）
 - 等調零点 k=40（**記述であり判定していない**）: `z̃_F` = nan, `z̃_D` = nan, `g̃` = nan [nan, nan]、同時存在率 0.0515
   - 交点座標は準 max 型であり、`F` のゼロ近傍を横切る脆さは isotonic では消えない。`g̃` の CI が 0 を外しても「分離が示された」とは書かない（spec §5-7）。
-  - no descending crossing inside the window: the smoothed F is all_negative and the smoothed D is all_negative on the guarded window bands。すなわち上側窓の内側には下降零点が無い。前身の `z_F` = 0.6630 を支配していた帯 [0.6,0.7) の孤立した正は isotonic で吸収された（spec §5-7 が予告した挙動）。
+  - no descending crossing inside the window: the smoothed F is all_negative and the smoothed D is all_negative on the guarded window bands。すなわち上側窓の内側で `g̃` は定義されない。前身 ceiling_t0_0828 で `z_F` = 0.6630 を支配していた帯 [0.6,0.7) の孤立した正は isotonic で吸収された（spec §5-7 が予告した挙動）。
 - k プロファイル・感度は `window_curve.csv` / `sensitivity.csv`。
 
 ## 適用範囲（spec §10）

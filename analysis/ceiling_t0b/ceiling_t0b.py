@@ -1070,6 +1070,13 @@ def main() -> None:
         "numpy": np.__version__, "pandas": pd.__version__,
     })
 
+    if str(iso40_note := isotonic[isotonic.k == K_MAIN].iloc[0].note):
+        iso_line = ("  - " + iso40_note + "。すなわち上側窓の内側で `g̃` は定義されない。"
+                    + ("前身 ceiling_t0_0828 で `z_F` = 0.6630 を支配していた帯 "
+                       "[0.6,0.7) の孤立した正は isotonic で吸収された"
+                       "（spec §5-7 が予告した挙動）。" if cfg["legacy"] else ""))
+    else:
+        iso_line = "  - 窓内に両方の下降零点が存在する。"
     d40 = decomposition[decomposition.k == K_MAIN].iloc[0]
     no_blip = sensitivity[(sensitivity.variant == "no_blip")
                           & (sensitivity.k == K_MAIN)].iloc[0]
@@ -1107,10 +1114,7 @@ def main() -> None:
         f"同時存在率 {iso40.exist_rate:.4f}",
         "  - 交点座標は準 max 型であり、`F` のゼロ近傍を横切る脆さは isotonic では"
         "消えない。`g̃` の CI が 0 を外しても「分離が示された」とは書かない（spec §5-7）。",
-        ("  - " + str(iso40.note) + "。すなわち上側窓の内側には下降零点が無い。"
-         "前身の `z_F` = 0.6630 を支配していた帯 [0.6,0.7) の孤立した正は "
-         "isotonic で吸収された（spec §5-7 が予告した挙動）。"
-         if str(iso40.note) else "  - 窓内に下降零点が存在する。"),
+        iso_line,
         f"- k プロファイル・感度は `window_curve.csv` / `sensitivity.csv`。", "",
         "## 適用範囲（spec §10）", "",
         "condA・w100・T=10,000・batch=1・std の境界前窓、上側窓 `[+0.1,+0.9)`、"
