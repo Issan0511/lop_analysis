@@ -386,10 +386,14 @@ def isotonic_table(seed_band: pd.DataFrame, seed_ids: list[int],
         w = n_pair[keep]
         crossing = {}
         boot = {}
+        sign = {}
         for metric, column in (("F", "mean_F0"), ("D", "mean_D")):
             seed_vals = band_matrix(seed_band, seed_ids, k, bands, column)
             point = np.array([np.nanmean(seed_vals[:, j]) for j in range(len(bands))])
-            crossing[metric] = descending_crossing(centers, pava_decreasing(point, w))
+            fit = pava_decreasing(point, w)
+            crossing[metric] = descending_crossing(centers, fit)
+            sign[metric] = ("all_negative" if (fit < 0).all() else
+                            "all_positive" if (fit > 0).all() else "mixed")
             curves = bootstrap_curve(seed_vals, weights)
             boot[metric] = np.array([
                 descending_crossing(centers, pava_decreasing(row, w))
@@ -400,6 +404,11 @@ def isotonic_table(seed_band: pd.DataFrame, seed_ids: list[int],
         row = {"k": k, "bands_used": ",".join(map(str, bands)), "n_band": len(bands),
                "z_tilde_F": crossing["F"], "z_tilde_D": crossing["D"],
                "g_tilde": g, "exist_rate": rate,
+               "F_window_sign": sign["F"], "D_window_sign": sign["D"],
+               "note": ("" if np.isfinite(g) else
+                        "no descending crossing inside the window: the smoothed F is "
+                        f"{sign['F']} and the smoothed D is {sign['D']} "
+                        "on the guarded window bands"),
                "role": "descriptive_not_used_in_verdict",
                "ci_method": "percentile"}
         for name, arr in (("z_tilde_F", boot["F"]), ("z_tilde_D", boot["D"]),
@@ -1041,6 +1050,10 @@ def main() -> None:
         f"同時存在率 {iso40.exist_rate:.4f}",
         "  - 交点座標は準 max 型であり、`F` のゼロ近傍を横切る脆さは isotonic では"
         "消えない。`g̃` の CI が 0 を外しても「分離が示された」とは書かない（spec §5-7）。",
+        ("  - " + str(iso40.note) + "。すなわち上側窓の内側には下降零点が無い。"
+         "前身の `z_F` = 0.6630 を支配していた帯 [0.6,0.7) の孤立した正は "
+         "isotonic で吸収された（spec §5-7 が予告した挙動）。"
+         if str(iso40.note) else "  - 窓内に下降零点が存在する。"),
         f"- k プロファイル・感度は `window_curve.csv` / `sensitivity.csv`。", "",
         "## 適用範囲（spec §10）", "",
         "condA・w100・T=10,000・batch=1・std の境界前窓、上側窓 `[+0.1,+0.9)`、"
