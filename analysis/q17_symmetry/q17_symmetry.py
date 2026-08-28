@@ -1,11 +1,9 @@
 """Q17: camp symmetry of the gate-included ``F_rest`` drive.
 
-The preregistration draft is committed in obsidian-research commit ``e9564d3`` at
-``可塑性喪失/spec/Q17駆動対称性_spec_0828.md``.  Revision 2 deliberately
-leaves the magnitude equivalence margin unresolved.  Consequently the CLI
-refuses to read the real npz files unless both ``--epsilon-m`` and
-``--confirm-frozen-margin`` are supplied.  Unit tests use synthetic arrays and
-therefore cannot reveal Q17 outcomes before that margin is frozen.
+The frozen preregistration is obsidian-research commit ``de2fff2`` at
+``可塑性喪失/spec/Q17駆動対称性_spec_0828.md``.  Revision 3 fixes the
+magnitude equivalence margin at ``epsilon_M=0.05`` before any Q17 statistic is
+computed.  This is a drive-symmetry margin, not a wall-reachability claim.
 """
 
 from __future__ import annotations
@@ -24,13 +22,14 @@ import numpy as np
 import pandas as pd
 
 
-SPEC_VAULT_COMMIT = "e9564d3"
+SPEC_VAULT_COMMIT = "de2fff2"
 PERIOD = 10_000
 WIDTH = 100
 SEEDS = tuple(range(10))
 BOOT_N = 10_000
 BOOT_SEED = 20260828
 PROB_MARGIN = 0.05
+EPSILON_M = 0.05
 MIN_VALID_SEED = 8
 MIN_ROWS = 300
 F32_RTOL = 8 * np.finfo(np.float32).eps
@@ -510,8 +509,7 @@ def make_summary(verdict: pd.DataFrame, sanity: pd.DataFrame,
     return "\n".join(lines)
 
 
-def run(input_dir: Path, out: Path, epsilon_m: float,
-        n_boot: int = BOOT_N) -> None:
+def run(input_dir: Path, out: Path, n_boot: int = BOOT_N) -> None:
     root = Path(__file__).resolve().parents[2]
     paths = sorted((input_dir / "logs").glob("seed*.npz"),
                    key=lambda path: int(path.stem.removeprefix("seed")))
@@ -544,7 +542,7 @@ def run(input_dir: Path, out: Path, epsilon_m: float,
         "analysis": "q17_symmetry_0828", "spec_vault_commit": SPEC_VAULT_COMMIT,
         "regions": REGIONS, "probability_margin": PROB_MARGIN,
         "magnitude_criterion": "h-space coherence ratio M=-camp*N",
-        "epsilon_M": epsilon_m, "bootstrap_B": n_boot,
+        "epsilon_M": EPSILON_M, "bootstrap_B": n_boot,
         "bootstrap_seed": BOOT_SEED, "min_valid_seed": MIN_VALID_SEED,
         "min_rows": MIN_ROWS, "omp_num_threads": os.environ.get("OMP_NUM_THREADS"),
     }
@@ -582,12 +580,12 @@ def run(input_dir: Path, out: Path, epsilon_m: float,
 
     long = pd.DataFrame(long_rows).sort_values(["seed", "region", "camp"])
     wide = pd.DataFrame(wide_rows).sort_values(["seed", "region"])
-    verdict = verdict_table(wide, epsilon_m=epsilon_m, n_boot=n_boot)
+    verdict = verdict_table(wide, epsilon_m=EPSILON_M, n_boot=n_boot)
     long.to_csv(out / "per_seed_metrics.csv", index=False)
     wide.to_csv(out / "per_seed_wide.csv", index=False)
     verdict.to_csv(out / "verdict.csv", index=False)
     (out / "summary.md").write_text(
-        make_summary(verdict, sanity, epsilon_m), encoding="utf-8")
+        make_summary(verdict, sanity, EPSILON_M), encoding="utf-8")
     make_figures(verdict, wide, out)
 
 
@@ -595,13 +593,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("input", nargs="?", default="results/ratchet_log_0819")
     parser.add_argument("--outdir", default="results/q17_symmetry_0828")
-    parser.add_argument("--epsilon-m", type=float)
-    parser.add_argument("--confirm-frozen-margin", action="store_true")
     args = parser.parse_args()
-    if args.epsilon_m is None or not args.confirm_frozen_margin:
-        raise SystemExit(
-            "DESIGN_BLOCKED_NET_MARGIN: freeze epsilon_M in the spec, then pass "
-            "--epsilon-m VALUE --confirm-frozen-margin. No npz file was read.")
     if os.environ.get("OMP_NUM_THREADS") != "1":
         raise SystemExit("OMP_NUM_THREADS must be exactly 1")
     root = Path(__file__).resolve().parents[2]
@@ -611,7 +603,7 @@ def main() -> None:
         input_dir = (root / input_dir).resolve()
     if not out.is_absolute():
         out = (root / out).resolve()
-    run(input_dir, out, args.epsilon_m, n_boot=BOOT_N)
+    run(input_dir, out, n_boot=BOOT_N)
 
 
 if __name__ == "__main__":
