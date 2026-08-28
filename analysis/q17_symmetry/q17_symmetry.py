@@ -509,7 +509,8 @@ def make_summary(verdict: pd.DataFrame, sanity: pd.DataFrame,
     return "\n".join(lines)
 
 
-def run(input_dir: Path, out: Path, n_boot: int = BOOT_N) -> None:
+def run(input_dir: Path, out: Path, n_boot: int = BOOT_N,
+        sanity_only: bool = False) -> None:
     root = Path(__file__).resolve().parents[2]
     paths = sorted((input_dir / "logs").glob("seed*.npz"),
                    key=lambda path: int(path.stem.removeprefix("seed")))
@@ -559,6 +560,9 @@ def run(input_dir: Path, out: Path, n_boot: int = BOOT_N) -> None:
                        "status": "INCONCLUSIVE_GUARD"}]).to_csv(
                            out / "verdict.csv", index=False)
         raise SystemExit("Q17 structural sanity failed; verdict suppressed")
+    if sanity_only:
+        print(f"Q17 structural sanity PASS -> {out}")
+        return
 
     # Pass 2 forms the registered estimands only after the structural gate.
     long_rows: list[dict[str, Any]] = []
@@ -593,6 +597,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("input", nargs="?", default="results/ratchet_log_0819")
     parser.add_argument("--outdir", default="results/q17_symmetry_0828")
+    parser.add_argument("--sanity-only", action="store_true")
     args = parser.parse_args()
     if os.environ.get("OMP_NUM_THREADS") != "1":
         raise SystemExit("OMP_NUM_THREADS must be exactly 1")
@@ -603,7 +608,7 @@ def main() -> None:
         input_dir = (root / input_dir).resolve()
     if not out.is_absolute():
         out = (root / out).resolve()
-    run(input_dir, out, n_boot=BOOT_N)
+    run(input_dir, out, n_boot=BOOT_N, sanity_only=args.sanity_only)
 
 
 if __name__ == "__main__":
