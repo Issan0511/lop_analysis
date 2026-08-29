@@ -70,6 +70,7 @@ from .ratchet_log import full_support_ro, teacher_f64
 ARM_ORDER = ("L2_none", "L2_A1", "L2_A2", "L2_Aall", "L1w100_A1")
 BASELINE_ARM = "L2_none"
 SMOKE_STEPS = 30_000
+NUMERIC_DIVERGENCE = "NUMERIC_DIVERGENCE"
 P1_ALIGNMENT_KEYS = ("wcos_mean", "stable_rank_W", "top1_frac",
                      "sign_match_mean", "sign_clone_frac")
 P1_LOG_LAYER_KEYS = LOG_LAYER_KEYS + P1_ALIGNMENT_KEYS
@@ -161,6 +162,18 @@ def validate_config(cfg: dict, *, stage: str) -> None:
         raise ValueError("unfit_floor must be the positive power of ten produced by S6")
     if float(P["censor_frac_max"]) != 0.20:
         raise ValueError("Phase 1 registers the 20% floor-censoring threshold")
+    divergence = P.get("numeric_divergence")
+    expected_divergence = dict(
+        status=NUMERIC_DIVERGENCE,
+        detection="nonfinite_training_state_at_probe",
+        probe_every=int(C["lop_every"]),
+        action="mark_arm_failed_and_continue",
+        contrast_policy="any_involved_arm_is_numeric_divergence",
+        exclude_partial_logs_from_analysis=True,
+        rescue="none",
+    )
+    if divergence != expected_divergence:
+        raise ValueError("numeric-divergence policy differs from spec section 5.7")
     if list(P["late_tasks"]) != [451, 500] or list(P["early_tasks"]) != [2, 11]:
         raise ValueError("Phase 1 registers early 2..11 and late 451..500")
     if list(P["trend_range_tasks"]) != [2, 500]:
@@ -333,6 +346,50 @@ def _alignment_metrics(W: torch.Tensor, sign_match_tau: float) -> dict:
                 sign_clone_frac=sign_clone_frac)
 
 
+class NumericDivergenceError(RuntimeError):
+    """A registered arm has entered a non-finite training state."""
+
+    def __init__(self, event: dict):
+        self.event = event
+        seeds = ",".join(str(v) for v in event.get("bad_seeds", []))
+        super().__init__(
+            f"{event.get('arm')} {NUMERIC_DIVERGENCE} at step "
+            f"{event.get('detected_step')} (seeds={seeds})")
+
+
+def _numeric_divergence_event(st: dict, step: int) -> dict | None:
+    """Return the §5.7 event when any per-run training tensor is non-finite."""
+    tensors: list[tuple[str, torch.Tensor]] = []
+    tensors.extend((f"net.Ws.{li}", value)
+                   for li, value in enumerate(st["net"].Ws, start=1))
+    tensors.extend((f"net.bs.{li}", value)
+                   for li, value in enumerate(st["net"].bs, start=1))
+    tensors.extend((("net.v", st["net"].v), ("net.c", st["net"].c)))
+    tensors.extend((f"running_mean.layer{li}", value)
+                   for li, value in enumerate(st["layer_means"], start=1)
+                   if value is not None)
+
+    by_seed: dict[int, list[str]] = {}
+    for name, value in tensors:
+        finite = torch.isfinite(value).reshape(st["R"], -1).all(dim=1)
+        for ri in torch.nonzero(~finite, as_tuple=False).flatten().tolist():
+            seed = int(st["runs"][ri]["seed"])
+            by_seed.setdefault(seed, []).append(name)
+    if not by_seed:
+        return None
+    period = int(st["runs"][0]["period"])
+    return dict(
+        status=NUMERIC_DIVERGENCE,
+        arm=str(st["arm"]),
+        detected_step=int(step),
+        detected_task=int((step + period - 1) // period) if step else 0,
+        probe_every=None,
+        bad_seeds=sorted(by_seed),
+        nonfinite_tensors={str(seed): names for seed, names in sorted(by_seed.items())},
+        action="arm_stopped_no_rescue",
+    )
+
+
 def exact_layer_record_p1(st: dict, sigma_tol: float, *,
                           mean_source: str = "ema") -> tuple[dict, dict]:
     """``mlp2_phase0.exact_layer_record`` with the layer offsets applied.
@@ -477,6 +534,9 @@ class PhaseRecorderP1(PhaseRecorder):
             return
         if self.filled[i]:
             raise RuntimeError(f"duplicate phase1 probe at step {step}")
+        divergence = _numeric_divergence_event(st, int(step))
+        if divergence is not None:
+            raise NumericDivergenceError(divergence)
         rec, sanity = exact_layer_record_p1(st, self.sigma_tol)
         for key, value in rec["run"].items():
             self.run[key][i] = value.detach().cpu().numpy()
@@ -668,6 +728,30 @@ def _s5_selftest(cfg: dict) -> dict:
                 paired=paired, unpaired=unpaired)
 
 
+def _s7_numeric_divergence_selftest(cfg: dict, device: str) -> dict:
+    """Inject one NaN and verify that §5.7 catches it before exact SVD."""
+    c = _base_cfg(cfg)
+    c["common"]["seeds"] = [0, 1]
+    st = setup_arm_p1(c, _arm(cfg, "L2_A2"), device)
+    st["net"].Ws[1][1, 0, 0] = float("nan")
+    rec = PhaseRecorderP1([0], st, float(cfg["phase1"]["sigma_degenerate_tol"]),
+                          float(cfg["sanity"]["s1_identity_tol"]))
+    event = None
+    try:
+        rec(st, 0)
+    except NumericDivergenceError as exc:
+        event = exc.event
+    passed = bool(
+        event
+        and event.get("status") == NUMERIC_DIVERGENCE
+        and event.get("bad_seeds") == [1]
+        and "net.Ws.2" in event.get("nonfinite_tensors", {}).get("1", [])
+        and not rec.filled.any()
+    )
+    return dict(pass_=passed, injected_arm="L2_A2", injected_seed=1,
+                detected_event=event, exact_record_skipped=bool(not rec.filled.any()))
+
+
 def _ordered_mean(values: torch.Tensor, *, reverse: bool) -> torch.Tensor:
     order = range(values.shape[0] - 1, -1, -1) if reverse else range(values.shape[0])
     total = torch.zeros_like(values[0])
@@ -770,13 +854,15 @@ def preflight(cfg_path: Path, cfg: dict, device: str, outdir: Path) -> dict:
           f"[S-taut] {'PASS' if pair['staut']['pass_'] else 'FAIL'}", flush=True)
     s5 = _s5_selftest(cfg)
     print(f"[S5] {'PASS' if s5['pass_'] else 'FAIL'}", flush=True)
+    s7 = _s7_numeric_divergence_selftest(cfg, device)
+    print(f"[S7-divergence] {'PASS' if s7['pass_'] else 'FAIL'}", flush=True)
     print("[S6] L2_none 200k x 20-point two-order floor calibration", flush=True)
     s6 = _s6_floor_calibration(cfg_path, cfg, device, outdir)
     print(f"[S6] {'PASS' if s6['pass_'] else 'FAIL'} ({s6['elapsed_sec']:.1f}s)", flush=True)
     result = dict(pass_=bool(omp["pass_"] and scopy["pass_"] and pair["pass_"]
-                             and s5["pass_"] and s6["pass_"]),
+                             and s5["pass_"] and s7["pass_"] and s6["pass_"]),
                   S3=omp, S_copy=scopy, S_pair=pair["spair"], S_taut=pair["staut"],
-                  S5=s5, S6=s6)
+                  S5=s5, S6=s6, S7_numeric_divergence=s7)
     (outdir / "preflight.json").write_text(
         json.dumps(result, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
     if not result["pass_"]:
@@ -871,6 +957,38 @@ def s0prime(cfg: dict, device: str, outdir: Path) -> dict:
 # --------------------------------------------------------------------------
 # full run
 # --------------------------------------------------------------------------
+def _arm_status_path(outdir: Path, arm: str) -> Path:
+    return outdir / "arm_status" / f"{arm}.json"
+
+
+def _write_divergence_status(outdir: Path, event: dict) -> Path:
+    path = _arm_status_path(outdir, str(event["arm"]))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(event, indent=2, ensure_ascii=False), encoding="utf-8")
+    return path
+
+
+def _load_divergence_status(outdir: Path, arm: str, seeds: list[int],
+                            total: int, probe_every: int) -> dict | None:
+    """Load only a status file belonging to this exact registered run."""
+    path = _arm_status_path(outdir, arm)
+    if not path.exists():
+        return None
+    try:
+        event = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    valid = (
+        event.get("status") == NUMERIC_DIVERGENCE
+        and event.get("arm") == arm
+        and event.get("registered_seeds") == seeds
+        and int(event.get("registered_total_steps", -1)) == total
+        and int(event.get("probe_every", -1)) == probe_every
+        and event.get("rescue") == "none"
+    )
+    return event if valid else None
+
+
 def _run_arm(cfg: dict, arm: str, device: str, outdir: Path, seeds: list[int],
              total: int) -> dict:
     C, P = cfg["common"], cfg["phase1"]
@@ -889,19 +1007,44 @@ def _run_arm(cfg: dict, arm: str, device: str, outdir: Path, seeds: list[int],
     rec = PhaseRecorderP1(probe_steps, st, float(P["sigma_degenerate_tol"]),
                           float(cfg["sanity"]["s1_identity_tol"]))
     checkpoints = [int(v) for v in C.get("checkpoints", []) if int(v) <= total]
-    elapsed = train_arm_p1(st, rec, probe_steps, total, outdir, checkpoints)
+    started = time.time()
+    try:
+        elapsed = train_arm_p1(st, rec, probe_steps, total, outdir, checkpoints)
+    except NumericDivergenceError as exc:
+        elapsed = time.time() - started
+        event = dict(exc.event)
+        event.update(
+            probe_every=int(C["lop_every"]),
+            registered_total_steps=int(total),
+            registered_seeds=[int(v) for v in seeds],
+            elapsed_sec=float(elapsed),
+            detection="nonfinite_training_state_at_probe",
+            contrast_policy="any_involved_arm_is_numeric_divergence",
+            partial_logs_excluded=True,
+            rescue="none",
+        )
+        status_path = _write_divergence_status(outdir, event)
+        print(f"[{arm}] {NUMERIC_DIVERGENCE} at step "
+              f"{event['detected_step']:,}; seeds={event['bad_seeds']} -> {status_path}",
+              flush=True)
+        result = dict(status=NUMERIC_DIVERGENCE, elapsed_sec=elapsed,
+                      sanity=dict(pass_=False, numeric_divergence=True, event=event),
+                      divergence=event, final_env=_env_hashes(st))
+        del rec, st
+        return result
     sanity = rec.sanity()
     if not sanity["pass_"]:
         raise RuntimeError(f"{arm} S1/S2 failed: {sanity}")
     write_arm_logs_p1(outdir, arm, st, rec)
     print(f"[{arm}] complete in {elapsed:.1f}s", flush=True)
-    result = dict(elapsed_sec=elapsed, sanity=sanity,
+    result = dict(status="COMPLETE", elapsed_sec=elapsed, sanity=sanity,
                   final_env=_env_hashes(st))
     del rec, st
     return result
 
 
-def _pair_check_final(cfg: dict, outdir: Path, seeds: list[int]) -> dict:
+def _pair_check_final(cfg: dict, outdir: Path, seeds: list[int],
+                      divergences: dict[str, dict] | None = None) -> dict:
     """After the run, the paired arms must still share the environment.
 
     ``state_hash_final`` carries ``env.flip_state``/``env.t`` per seed, so this
@@ -912,16 +1055,26 @@ def _pair_check_final(cfg: dict, outdir: Path, seeds: list[int]) -> dict:
             state = json.loads(str(z["state_hash_final"]))
         return {k: state[k] for k in ("env.flip_state", "env.t", "running_mean")}
 
+    divergences = divergences or {}
     l2 = [str(a) for a in cfg["pairing"]["paired_groups"][0]]
+    completed = [arm for arm in l2 if arm not in divergences]
+    if BASELINE_ARM not in completed:
+        return dict(pass_=False, paired_pass=False, paired_arms=completed,
+                    not_tested_divergent=sorted(divergences),
+                    differences=[dict(arm=BASELINE_ARM, where="baseline_diverged")])
     differences = []
     for seed in seeds:
         reference = env_of(outdir / "logs", BASELINE_ARM, seed)
-        for arm in l2[1:]:
+        for arm in completed:
+            if arm == BASELINE_ARM:
+                continue
             if env_of(outdir / "logs", arm, seed) != reference:
                 differences.append(dict(seed=seed, arm=arm, where="env"))
     l2_ok = not differences
 
-    return dict(pass_=l2_ok, paired_pass=l2_ok, paired_arms=l2,
+    return dict(pass_=l2_ok, paired_pass=l2_ok, paired_arms=completed,
+                not_tested_divergent=sorted(set(l2) & set(divergences)),
+                partial_due_to_numeric_divergence=bool(set(l2) & set(divergences)),
                 differences=differences)
 
 
@@ -1152,10 +1305,11 @@ def _contrast(cfg: dict, arm: str, arm_data: dict, base_label: str,
                 floor_early_arm=fea, floor_early_base=feb)
 
 
-def _task_rows_from_logs(cfg: dict, outdir: Path, seeds: list[int]) -> list[dict]:
+def _task_rows_from_logs(cfg: dict, outdir: Path, seeds: list[int],
+                         arms: list[str] | None = None) -> list[dict]:
     period = int(cfg["phase1"]["task_period"])
     rows = []
-    for arm in ARM_ORDER:
+    for arm in (arms if arms is not None else list(ARM_ORDER)):
         arm_cfg = _arm(cfg, arm)
         hidden = [int(v) for v in arm_cfg["hidden"]]
         flags = _centered_flags(arm_cfg, len(hidden))
@@ -1189,8 +1343,10 @@ def analyze(cfg: dict, outdir: Path, sanity: dict, elapsed: dict) -> dict:
     unpaired_base_draws = rng.integers(0, len(seeds), size=(B, len(seeds)))
     logdir = outdir / "logs"
 
+    divergences: dict[str, dict] = sanity.get("numeric_divergence") or {}
+    completed_arms = [arm for arm in ARM_ORDER if arm not in divergences]
     data = {arm: _arm_arrays(logdir, arm, seeds, len(_arm(cfg, arm)["hidden"]), period)
-            for arm in ARM_ORDER}
+            for arm in completed_arms}
 
     pair_final = sanity.get("S_pair_final") or {}
     pair_ok = bool((sanity.get("S_pair") or {}).get("pass_")
@@ -1204,9 +1360,47 @@ def analyze(cfg: dict, outdir: Path, sanity: dict, elapsed: dict) -> dict:
     ]
 
     verdict_rows: list[dict] = []
-    details: dict = {"contrasts": [], "levels": [], "wall": [], "dose": []}
+    details: dict = {"contrasts": [], "levels": [], "wall": [], "dose": [],
+                     "numeric_divergence": divergences,
+                     "completed_arms": completed_arms}
 
     for arm, label, paired, contrast_type in contrast_specs:
+        involved_divergence = {name: divergences[name] for name in (arm, label)
+                               if name in divergences}
+        if involved_divergence:
+            detected = min(int(v["detected_step"])
+                           for v in involved_divergence.values())
+            divergent_arms = sorted(involved_divergence)
+            res = dict(
+                arm=arm, baseline=label, contrast_type=contrast_type,
+                pairing="paired" if paired else "unpaired",
+                verdict=NUMERIC_DIVERGENCE, split_side="",
+                status=NUMERIC_DIVERGENCE,
+                divergent_arms=divergent_arms,
+                divergence_events=involved_divergence,
+                decision_basis="numeric_divergence",
+                lop_signature=NUMERIC_DIVERGENCE,
+            )
+            details["contrasts"].append(res)
+            common = dict(
+                arm=arm, baseline=label, contrast_type=contrast_type,
+                pairing=res["pairing"], main_verdict=NUMERIC_DIVERGENCE,
+                verdict=NUMERIC_DIVERGENCE, split_side="", pair_ok="",
+                censored="", lop_signature=NUMERIC_DIVERGENCE,
+                numeric_divergence=1,
+                divergent_arms=json.dumps(divergent_arms),
+                divergence_detected_step=detected,
+                divergence_events=json.dumps(involved_divergence, sort_keys=True),
+                decision_basis="numeric_divergence", improved="",
+            )
+            for metric, layer in (
+                    ("P1_unfit_late", ""),
+                    ("P2_eff_rank_late", len(_arm(cfg, arm)["hidden"])),
+                    ("P1_unfit_early", ""),
+                    ("P1_late_minus_early", ""),
+                    ("P1_unfit_trend_spearman", "")):
+                verdict_rows.append(dict(metric=metric, layer=layer, **common))
+            continue
         res = _contrast(
             cfg, arm, data[arm], label, data[label], paired_draws,
             (unpaired_arm_draws, unpaired_base_draws), paired=paired,
@@ -1259,7 +1453,7 @@ def analyze(cfg: dict, outdir: Path, sanity: dict, elapsed: dict) -> dict:
             **common, **res["trend"]))
 
     # ---- REPORT_ONLY: levels, wall coordinates, dose ----
-    for arm in ARM_ORDER:
+    for arm in completed_arms:
         arm_cfg = _arm(cfg, arm)
         hidden = [int(v) for v in arm_cfg["hidden"]]
         flags = _centered_flags(arm_cfg, len(hidden))
@@ -1324,7 +1518,8 @@ def analyze(cfg: dict, outdir: Path, sanity: dict, elapsed: dict) -> dict:
                 fields.append(key)
     write_csv(outdir / "verdict.csv",
               [{key: row.get(key, "") for key in fields} for row in verdict_rows])
-    write_csv(outdir / "layer_stats.csv", _task_rows_from_logs(cfg, outdir, seeds))
+    write_csv(outdir / "layer_stats.csv",
+              _task_rows_from_logs(cfg, outdir, seeds, completed_arms))
     _write_summary(cfg, outdir, details, sanity)
     details["elapsed_sec"] = elapsed
     return details
@@ -1351,6 +1546,13 @@ def _write_summary(cfg: dict, outdir: Path, details: dict, sanity: dict) -> None
         return (f"[{ci[prefix + '_ci_lo']:.6g}, {ci[prefix + '_ci_hi']:.6g}]")
 
     for c in details["contrasts"]:
+        if c.get("status") == NUMERIC_DIVERGENCE:
+            lines.append(
+                f"| {c['arm']} | {c['baseline']} | {c['pairing']} | — "
+                f"(numeric divergence) | no (not computed) | — "
+                f"(numeric divergence) | no (not computed) | "
+                f"**{NUMERIC_DIVERGENCE}** |")
+            continue
         p1, p2 = c["p1"], c["p2"]
         lines.append(
             f"| {c['arm']} | {c['baseline']} | {c['pairing']} | {p1['point']:.6g} "
@@ -1359,6 +1561,19 @@ def _write_summary(cfg: dict, outdir: Path, details: dict, sanity: dict) -> None
             f"{p2['point']:.6g} {interval(p2, c['p2_basis'])} | "
             f"{'yes' if c['p2_improved'] else 'no'} ({c['p2_basis']}) | "
             f"**{c['verdict']}**{(' (' + c['split_side'] + ')') if c['split_side'] else ''} |")
+    divergences = details.get("numeric_divergence") or {}
+    if divergences:
+        lines += ["", "## 数値発散（§5.7 実行追補）", "",
+                  "| arm | detected step | task | seeds | 扱い |",
+                  "|---|---:|---:|---|---|"]
+        for arm, event in divergences.items():
+            seeds = ", ".join(str(v) for v in event.get("bad_seeds", []))
+            lines.append(f"| {arm} | {event.get('detected_step', '')} | "
+                         f"{event.get('detected_task', '')} | {seeds} | "
+                         f"**{NUMERIC_DIVERGENCE}**（停止・救済なし） |")
+        lines += ["", "発散腕を含む対比は endpoint、CI、床割合を計算していない。"
+                  "発散腕を含まない対比だけを元の規則で集計した。"]
+
     lines += ["", "paired 対比の判定基底は censored -> sign_test、CI 退化 -> percentile、"
               "それ以外 -> studentized。unpaired 対比が検閲された場合は未登録の検定を足さない。",
               "表の区間は**その行の判定に使った基底**のもの。studentized・percentile の両方と",
@@ -1367,6 +1582,10 @@ def _write_summary(cfg: dict, outdir: Path, details: dict, sanity: dict) -> None
               "| arm | baseline | Δearly | Δlate−early | trend ΔSpearman | signature |",
               "|---|---|---:|---:|---:|---|"]
     for c in details["contrasts"]:
+        if c.get("status") == NUMERIC_DIVERGENCE:
+            lines.append(f"| {c['arm']} | {c['baseline']} | — | — | — | "
+                         f"**{NUMERIC_DIVERGENCE}** |")
+            continue
         lines.append(
             f"| {c['arm']} | {c['baseline']} | {c['p1_early']['point']:.6g} | "
             f"{c['p1_change']['point']:.6g} | {c['trend']['point']:.6g} | "
@@ -1377,6 +1596,9 @@ def _write_summary(cfg: dict, outdir: Path, details: dict, sanity: dict) -> None
               "| arm | 床割合(末尾窓) | baseline 床割合 | CENSORED | P1 CI退化 | P2 CI退化 | 符号検定 p (P1) |",
               "|---|---:|---:|---:|---:|---:|---:|"]
     for c in details["contrasts"]:
+        if c.get("status") == NUMERIC_DIVERGENCE:
+            lines.append(f"| {c['arm']} | — | — | — | — | — | — |")
+            continue
         lines.append(f"| {c['arm']} | {c['floor_arm']['floor_frac_late']:.4g} | "
                      f"{c['floor_base']['floor_frac_late']:.4g} | {c['censored']} | "
                      f"{c['p1']['ci_degenerate']} | {c['p2']['ci_degenerate']} | "
@@ -1391,7 +1613,7 @@ def _write_summary(cfg: dict, outdir: Path, details: dict, sanity: dict) -> None
               "|---|---:|---:|---:|---:|---:|---:|"]
     keyed = {(r["arm"], r.get("layer"), r["metric"]): r for r in details["levels"]
              if r["metric"] != "unfit"}
-    for arm in ARM_ORDER:
+    for arm in details.get("completed_arms", ARM_ORDER):
         for li in range(1, len(_arm(cfg, arm)["hidden"]) + 1):
             def med(metric: str) -> str:
                 row = keyed.get((arm, li, metric))
@@ -1402,7 +1624,7 @@ def _write_summary(cfg: dict, outdir: Path, details: dict, sanity: dict) -> None
     lines += ["", "## 整列（§5.2c・REPORT_ONLY）", "",
               "| arm | layer | wcos_mean | eff_rank_W | stable_rank_W | top1_frac | sign_match_mean | sign_clone_frac |",
               "|---|---:|---:|---:|---:|---:|---:|---:|"]
-    for arm in ARM_ORDER:
+    for arm in details.get("completed_arms", ARM_ORDER):
         for li in range(1, len(_arm(cfg, arm)["hidden"]) + 1):
             def alignment_med(metric: str) -> str:
                 row = keyed.get((arm, li, metric))
@@ -1440,11 +1662,13 @@ def _write_summary(cfg: dict, outdir: Path, details: dict, sanity: dict) -> None
               f"- S-pair-final（5M 後の env 一致）: {mark(sanity.get('S_pair_final'))}",
               f"- S-taut（A を入れた層の µ 項）: {mark(sanity.get('S_taut'))}",
               f"- S-copy（厳密記録の fork 検査）: {mark(sanity.get('S_copy'))}",
-              f"- S1/S2（32 パターン厳密恒等式）: "
-              f"{'**PASS**' if sanity.get('S1_S2_all_pass') else '**FAIL**'}",
+              f"- S1/S2（完走腕の32パターン厳密恒等式）: "
+              f"{'**PASS**' if sanity.get('S1_S2_completed_arms_pass') else '**FAIL**'}",
               f"- S3（OMP_NUM_THREADS=1）: {mark(sanity.get('S3'))}",
               f"- S5（退化ガード自己検査）: {mark(sanity.get('S5'))}",
+              f"- S7（数値発散検出器）: {mark(sanity.get('S7_numeric_divergence'))}",
               f"- S6（床較正）: {mark(sanity.get('S6'))}",
+              f"- NUMERIC_DIVERGENCE 腕: {', '.join(sorted(divergences)) if divergences else 'なし'}",
               f"- calibrated floor: {(sanity.get('S6') or {}).get('calibrated_floor', '')}", ""]
     (outdir / "summary.md").write_text("\n".join(lines), encoding="utf-8")
 
@@ -1457,6 +1681,7 @@ def _provenance(cfg_path: Path, cfg: dict, outdir: Path, sanity: dict,
     files = [outdir / name for name in ("verdict.csv", "summary.md", "layer_stats.csv",
                                         "floor_calibration.csv", "config_used.yaml",
                                         "s0prime.json")]
+    files.extend(sorted((outdir / "arm_status").glob("*.json")))
     reference = Path(ROOT) / cfg["sanity"]["s0_prime_baseline_ref"]
     reference_files = {}
     for name in ("verdict.csv", "summary.md", "layer_stats.csv", "provenance.json"):
@@ -1521,8 +1746,18 @@ def run_full(cfg_path: Path, cfg: dict, device: str, outdir: Path, *,
     with (outdir / "config_used.yaml").open("w") as fh:
         yaml.safe_dump(cfg, fh, allow_unicode=True, sort_keys=False)
 
-    elapsed, identity = {}, {}
+    elapsed, identity, divergences = {}, {}, {}
     for arm in ARM_ORDER:
+        saved_divergence = _load_divergence_status(
+            outdir, arm, seeds, total, int(C["lop_every"]))
+        if saved_divergence is not None:
+            elapsed[arm] = 0.0
+            divergences[arm] = saved_divergence
+            identity[arm] = dict(pass_=False, numeric_divergence=True,
+                                 resumed_from_status=True, event=saved_divergence)
+            print(f"[{arm}] saved {NUMERIC_DIVERGENCE} found; resuming after arm",
+                  flush=True)
+            continue
         if _complete_arm_logs(outdir, arm, seeds, total, int(C["lop_every"])):
             elapsed[arm] = 0.0
             identity[arm] = {"pass_": True, "resumed_from_complete_logs": True}
@@ -1531,12 +1766,20 @@ def run_full(cfg_path: Path, cfg: dict, device: str, outdir: Path, *,
         result = _run_arm(cfg, arm, device, outdir, seeds, total)
         elapsed[arm] = result["elapsed_sec"]
         identity[arm] = result["sanity"]
+        if result.get("status") == NUMERIC_DIVERGENCE:
+            divergences[arm] = result["divergence"]
 
     sanity = dict(S0prime=s0, S3=gates.get("S3"), S5=gates.get("S5"),
                   S6=gates.get("S6"), S_copy=gates.get("S_copy"),
                   S_pair=gates.get("S_pair"), S_taut=gates.get("S_taut"),
+                  S7_numeric_divergence=gates.get("S7_numeric_divergence"),
                   S1_S2=identity,
-                  S1_S2_all_pass=bool(all(v["pass_"] for v in identity.values())))
+                  S1_S2_completed_arms_pass=bool(all(
+                      v["pass_"] for arm, v in identity.items()
+                      if arm not in divergences)),
+                  S1_S2_all_pass=bool(not divergences and all(
+                      v["pass_"] for v in identity.values())),
+                  numeric_divergence=divergences)
     if smoke:
         (outdir / "smoke_sanity.json").write_text(
             json.dumps(dict(pass_=sanity["S1_S2_all_pass"], sanity=sanity,
@@ -1545,7 +1788,7 @@ def run_full(cfg_path: Path, cfg: dict, device: str, outdir: Path, *,
         print(f"SMOKE DONE -> {outdir}", flush=True)
         return dict(sanity=sanity, analysis=dict(smoke=True, elapsed_sec=elapsed))
 
-    sanity["S_pair_final"] = _pair_check_final(cfg, outdir, seeds)
+    sanity["S_pair_final"] = _pair_check_final(cfg, outdir, seeds, divergences)
     print(f"[S-pair-final] {'PASS' if sanity['S_pair_final']['pass_'] else 'FAIL'}",
           flush=True)
     result = analyze(cfg, outdir, sanity, elapsed)
@@ -1587,13 +1830,25 @@ def main() -> None:
         preflight_result = json.loads(
             (Path(ROOT) / "results/_preflight_mlp2_phase1_0829/preflight.json")
             .read_text(encoding="utf-8"))
+        seeds = [int(v) for v in cfg["common"]["seeds"]]
+        total = int(cfg["common"]["total_steps"])
+        divergences = {
+            arm: event for arm in ARM_ORDER
+            if (event := _load_divergence_status(
+                outdir, arm, seeds, total, int(cfg["common"]["lop_every"])))
+            is not None
+        }
         sanity = dict(S0prime=json.loads((outdir / "s0prime.json").read_text()),
                       S3=preflight_result["S3"], S5=preflight_result["S5"],
                       S6=preflight_result["S6"], S_copy=preflight_result["S_copy"],
                       S_pair=preflight_result["S_pair"], S_taut=preflight_result["S_taut"],
-                      S1_S2={}, S1_S2_all_pass=True)
+                      S7_numeric_divergence=preflight_result.get(
+                          "S7_numeric_divergence"),
+                      S1_S2={}, S1_S2_completed_arms_pass=True,
+                      S1_S2_all_pass=not divergences,
+                      numeric_divergence=divergences)
         sanity["S_pair_final"] = _pair_check_final(
-            cfg, outdir, [int(v) for v in cfg["common"]["seeds"]])
+            cfg, outdir, seeds, divergences)
         analyze(cfg, outdir, sanity, {})
     else:
         run_full(cfg_path, cfg, device, outdir, smoke=args.smoke)

@@ -121,6 +121,16 @@ phase1:
   degenerate_width_ratio_max: 100.0
   degenerate_fallback: [percentile, sign_test]
 
+  # 2026-08-29 実行追補（spec §5.7）: 発散を救済せず介入失敗として続行する。
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    contrast_policy: any_involved_arm_is_numeric_divergence
+    exclude_partial_logs_from_analysis: true
+    rescue: none
+
 # 前段チェック（spec §4）
 sanity:
   s0_prime_baseline_ref: results/mlp2_phase0b_0829   # L2_none が L2 を bit 再現

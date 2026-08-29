@@ -11,6 +11,11 @@ Obsidian 側の正本: `可塑性喪失/spec/多層Phase1_spec_0829.md`（vault 
 > **命名**: 走・spec・config・結果ディレクトリはすべて `0829`（作成日）で揃える。`20260830` は本プロジェクトで既に `generator_offset` として使われている値なので日付として流用しない。解析側 bootstrap seed は Phase 0/0b と同じ `20260829`。
 >
 > **本 spec で初めて介入が入る。** 候補 B（発火率ホメオスタシス）は別 spec。
+>
+> **実行追補（2026-08-29）:** 最初の本走で、endpoint を集計する前に
+> `L2_A2` の seed 7 が非有限化した。登録済み endpoint の数値は確認せず、
+> 実行継続規則だけを §5.7 に追記した。この追補は元の事前登録とは区別し、
+> 数値発散を救済せず `NUMERIC_DIVERGENCE`（介入失敗）に固定する。
 
 ---
 
@@ -165,9 +170,27 @@ Phase 0b §5.5 を継承（SE < 1e-15 の resample が 1% 超、または CI 幅
 
 `D^(l) = -median_i M_i^(l)`、32 パターン厳密計算、退化ガード 1e-8、位相揃え（タスク末尾のみ）を継承。**A を入れた層では µ 項が定義上ゼロになるので M も D も verdict に使わない**（S-taut）。介入していない層の D は REPORT_ONLY として意味がある。
 
+### 5.7 数値発散の実行追補（2026-08-29）
+
+`lop_every = 1000` の各 probe で、ネットワークの重み・bias・readout、または
+層ごとの running mean に NaN / ±Inf が 1 個でもあれば、その腕を
+**`NUMERIC_DIVERGENCE` = 介入失敗**とする。厳密 eval や SVD より先に検出し、
+最初に検出した step・task・seed・tensor を `arm_status/<arm>.json` に保存する。
+
+- 発散した腕はその時点で停止し、seed の除外、再初期化、checkpoint からの救済、
+  LR 低下、gradient clipping、float64 学習への変更をしない
+- その腕を含む対比は P1 / P2 / CI / 床割合を計算せず、主 verdict を
+  `NUMERIC_DIVERGENCE` に固定する。部分時系列も `layer_stats.csv` に混ぜない
+- 発散腕を含まない腕と対比は、元の事前登録どおり実行・集計する
+- 残りの腕は順次続行する。別の腕も発散した場合は同じ規則を独立に適用する
+- S-pair-final は完走した同深さ腕だけで検査し、発散腕は `not_tested` と明記する
+
+この追補は、最初の本走が `L2_A2` の非有限化で停止した後に追加した
+**実行・欠測処理規則**であり、元の §8 の予測を変更しない。
+
 ## 6. 出力
 
-`results/mlp2_phase1_0829/` に `verdict.csv`（腕・対比・Delta・CI・床割合・`CENSORED`・`CI_DEGENERATE` を列に持つ）、`summary.md`、`layer_stats.csv`（タスク末尾行のみ）、`floor_calibration.csv`、`provenance.json`、`logs/`。
+`results/mlp2_phase1_0829/` に `verdict.csv`（腕・対比・Delta・CI・床割合・`CENSORED`・`CI_DEGENERATE`・`NUMERIC_DIVERGENCE` を列に持つ）、`summary.md`、`layer_stats.csv`（完走腕のタスク末尾行のみ）、`floor_calibration.csv`、`provenance.json`、`logs/`、`arm_status/`。
 
 **数値は `verdict.csv` と `summary.md` からのみ転記する。**
 
