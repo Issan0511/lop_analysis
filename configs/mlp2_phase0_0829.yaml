@@ -1,0 +1,53 @@
+# proj_004: mlp2_phase0_0829 — 多層 Phase 0（自己生成 µ の実測・介入なし）
+# 仕様: specs/spec_mlp2_phase0_0829.md（実行前に事前登録コミット）
+
+spec: specs/spec_mlp2_phase0_0829.md
+
+common:
+  total_steps: 1000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 1000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  encodings: [std]
+
+arms:
+  - name: L1
+    hidden: [100]
+  - name: L2
+    hidden: [100, 100]
+
+phase0:
+  bootstrap_B: 10000
+  bootstrap_seed: 20260829
+  ci_method: studentized
+  task_period: 10000
+  early_tasks: [2, 11]
+  late_tasks: [91, 100]
+  unfit_threshold: 0.05
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-8
+  trend_at_task_end_only: true
+  trend_statistic: spearman
+
+sanity:
+  s0_bit_equality_ref: results/ratchet_log_0819/logs/seed0.npz
+  s1_identity_tol: 1.0e-10
+  omp_num_threads: 1
