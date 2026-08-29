@@ -1,0 +1,108 @@
+spec: specs/spec_mlp2_phase0b_0829.md
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints:
+  - 0
+  - 5000000
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+arms:
+- name: L1w100
+  hidden:
+  - 100
+- name: L1wide
+  hidden:
+  - 600
+- name: L2
+  hidden:
+  - 100
+  - 100
+calibration:
+  widths:
+  - 150
+  - 200
+  - 300
+  - 450
+  - 600
+  seeds:
+  - 0
+  - 1
+  - 2
+  steps: 200000
+  window_tasks:
+  - 2
+  - 11
+  target_log10_tolerance: 2.0
+  fallback_width: 600
+  observe_only:
+  - unfit
+  record_runtime: true
+phase0b:
+  task_period: 10000
+  early_tasks:
+  - 2
+  - 11
+  late_tasks:
+  - 491
+  - 500
+  regime_threshold: 0.01
+  onset_threshold: 0.05
+  unfit_floor: 1.0e-12
+  onset_present_min: 5
+  report_all_seed_values: true
+  delta_on_log10: true
+  wall_depth_sign: negate_M
+  trend_statistic: spearman
+  trend_at_task_end_only: true
+  arm_effect_primary_x: eff_rank
+  arm_effect_secondary_x: alive
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-08
+  bootstrap_B: 10000
+  bootstrap_seed: 20260829
+  ci_method: studentized
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+  degenerate_fallback:
+  - percentile
+  - sign_test
+sanity:
+  s0_bit_equality_ref: results/ratchet_log_0819/logs/seed0.npz
+  s1_identity_tol: 1.0e-10
+  omp_num_threads: 1
+  s5_degeneracy_guard_selftest: true
+  s6_floor_check_steps: 200000
+output:
+  dir: results/mlp2_phase0b_0829
+  layer_stats_task_end_only: true
