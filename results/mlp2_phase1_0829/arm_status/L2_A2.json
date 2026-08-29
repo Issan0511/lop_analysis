@@ -1,0 +1,40 @@
+{
+  "status": "NUMERIC_DIVERGENCE",
+  "arm": "L2_A2",
+  "detected_step": 141000,
+  "detected_task": 15,
+  "probe_every": 1000,
+  "bad_seeds": [
+    7
+  ],
+  "nonfinite_tensors": {
+    "7": [
+      "net.Ws.1",
+      "net.Ws.2",
+      "net.bs.1",
+      "net.bs.2",
+      "net.v",
+      "net.c",
+      "running_mean.layer2"
+    ]
+  },
+  "action": "arm_stopped_no_rescue",
+  "registered_total_steps": 5000000,
+  "registered_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "elapsed_sec": 102.91282820701599,
+  "detection": "nonfinite_training_state_at_probe",
+  "contrast_policy": "any_involved_arm_is_numeric_divergence",
+  "partial_logs_excluded": true,
+  "rescue": "none"
+}
