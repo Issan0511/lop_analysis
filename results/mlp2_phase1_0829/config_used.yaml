@@ -1,0 +1,149 @@
+spec: specs/spec_mlp2_phase1_0829.md
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints:
+  - 0
+  - 5000000
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+intervention:
+  name: A_layer_input_centering
+  center_alpha: 0.01
+  stop_gradient_on_running_mean: true
+  consumes_rng: false
+arms:
+- name: L2_none
+  hidden:
+  - 100
+  - 100
+  centered_layers: []
+- name: L2_A1
+  hidden:
+  - 100
+  - 100
+  centered_layers:
+  - 1
+- name: L2_A2
+  hidden:
+  - 100
+  - 100
+  centered_layers:
+  - 2
+- name: L2_Aall
+  hidden:
+  - 100
+  - 100
+  centered_layers:
+  - 1
+  - 2
+- name: L1w100_A1
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+pairing:
+  paired_groups:
+  - - L2_none
+    - L2_A1
+    - L2_A2
+    - L2_Aall
+  unpaired:
+  - L1w100_A1
+  baseline: L2_none
+phase1:
+  task_period: 10000
+  early_tasks:
+  - 2
+  - 11
+  late_tasks:
+  - 451
+  - 500
+  unfit_floor: 1.0e-23
+  floor_calibration:
+    steps: 200000
+    arm: L2_none
+    n_checkpoints: 20
+    method: two_summation_orders
+    percentile: 99
+    safety_factor: 10
+    round_to: power_of_10
+  primary_p1: unfit
+  primary_p2: eff_rank
+  split_verdict: INCONCLUSIVE_SPLIT
+  window_contrast:
+  - early
+  - late
+  trend_statistic: spearman
+  trend_range_tasks:
+  - 2
+  - 500
+  alignment_metrics:
+  - wcos_mean
+  - eff_rank_W
+  - stable_rank_W
+  - top1_frac
+  - sign_match_mean
+  - sign_clone_frac
+  censor_frac_max: 0.2
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-08
+  wall_depth_sign: negate_M
+  trend_at_task_end_only: true
+  bootstrap_B: 10000
+  bootstrap_seed: 20260829
+  ci_method: studentized_paired
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+  degenerate_fallback:
+  - percentile
+  - sign_test
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    contrast_policy: any_involved_arm_is_numeric_divergence
+    exclude_partial_logs_from_analysis: true
+    rescue: none
+sanity:
+  s0_prime_baseline_ref: results/mlp2_phase0b_0829
+  s_pair_steps: 30000
+  s_tautology_check: true
+  s1_identity_tol: 1.0e-10
+  omp_num_threads: 1
+  s5_degeneracy_guard_selftest: true
+  s6_floor_calibration: true
+output:
+  dir: results/mlp2_phase1_0829
+  layer_stats_task_end_only: true

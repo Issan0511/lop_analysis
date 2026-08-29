@@ -1,0 +1,146 @@
+# proj_004: mlp2_phase1_0829 — 多層 Phase 1（候補 A の介入）
+# 仕様: specs/spec_mlp2_phase1_0829.md（実行前に事前登録コミット）
+#
+# 前段 mlp2_phase0b_0829 は 3 腕とも LOP_PRESENT。
+# 深さ2・幅100 は 5M で第1層 dead 0.855 / 第2層 dead 0.900 まで壊れる。
+# 本走で初めて介入（候補 A = 層入力の走行平均センタリング）を入れる。
+#
+# 候補 B（発火率ホメオスタシス）は別 spec。
+#
+# 命名: 走・spec・config・結果ディレクトリはすべて 0829（作成日）で揃える。
+# 20260830 は本プロジェクトで既に generator_offset として使われている値なので
+# 日付として流用しない。解析側 bootstrap seed は Phase 0/0b と同じ 20260829。
+
+spec: specs/spec_mlp2_phase1_0829.md
+
+common:
+  total_steps: 5000000          # = 500 タスク
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 5000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  encodings: [std]              # A は enc とは別の層内機構
+
+# 候補 A: 層入力を走行平均で中心化する。勾配は流さない。乱数を消費しない。
+# centered_layers は 1-origin。空リスト = 介入なし。
+# 第1層に入れた場合は src/train.py の enc=centered と同じ演算。
+intervention:
+  name: A_layer_input_centering
+  center_alpha: 0.01            # 既存 centered 腕と同値
+  stop_gradient_on_running_mean: true
+  consumes_rng: false           # spec §3.2 の対応づけの前提
+
+arms:
+  - name: L2_none
+    hidden: [100, 100]
+    centered_layers: []
+  - name: L2_A1
+    hidden: [100, 100]
+    centered_layers: [1]
+  - name: L2_A2
+    hidden: [100, 100]
+    centered_layers: [2]
+  - name: L2_Aall
+    hidden: [100, 100]
+    centered_layers: [1, 2]
+  - name: L1w100_A1
+    hidden: [100]
+    centered_layers: [1]
+
+# 対応づけ（spec §3.2）
+pairing:
+  # L2_* の 4 腕は init/教師/入力列/flip 軌道が bit 一致するので paired
+  paired_groups:
+    - [L2_none, L2_A1, L2_A2, L2_Aall]
+  # 深さをまたぐ paired 比較は禁止
+  unpaired: [L1w100_A1]
+  baseline: L2_none
+
+phase1:
+  task_period: 10000
+  early_tasks: [2, 11]
+  late_tasks: [451, 500]        # spec §5.1: 平坦域(task 400~)に完全に収める
+
+  # 床は決め打ちにせず S6 で実測して書き戻す（spec §5.1b）
+  unfit_floor: 1.0e-23
+  floor_calibration:
+    steps: 200000
+    arm: L2_none
+    n_checkpoints: 20
+    method: two_summation_orders
+    percentile: 99
+    safety_factor: 10
+    round_to: power_of_10
+
+  # co-primary（spec §5.2）
+  primary_p1: unfit             # paired log10 差。改善 = CI が 0 を下に外す
+  primary_p2: eff_rank          # 読み出し直前の層。改善 = CI が 0 を上に外す
+  split_verdict: INCONCLUSIVE_SPLIT
+
+  # LoP防止 vs 単一タスク性能の判別（spec §5.2b）
+  window_contrast: [early, late]
+  trend_statistic: spearman
+  trend_range_tasks: [2, 500]
+
+  # 整列(Σ経路)の追跡（spec §5.2c・REPORT_ONLY）
+  alignment_metrics: [wcos_mean, eff_rank_W, stable_rank_W, top1_frac,
+                      sign_match_mean, sign_clone_frac]
+
+  # 検閲（spec §5.3）
+  censor_frac_max: 0.20         # 超えたら CENSORED、符号検定へ fallback
+
+  # 壁座標（spec §5.6）
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-8
+  wall_depth_sign: negate_M
+  trend_at_task_end_only: true
+
+  # CI（spec §5.5・Phase 0b から継承）
+  bootstrap_B: 10000
+  bootstrap_seed: 20260829
+  ci_method: studentized_paired
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+  degenerate_fallback: [percentile, sign_test]
+
+  # 2026-08-29 実行追補（spec §5.7）: 発散を救済せず介入失敗として続行する。
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    contrast_policy: any_involved_arm_is_numeric_divergence
+    exclude_partial_logs_from_analysis: true
+    rescue: none
+
+# 前段チェック（spec §4）
+sanity:
+  s0_prime_baseline_ref: results/mlp2_phase0b_0829   # L2_none が L2 を bit 再現
+  s_pair_steps: 30000                                # 腕間の step0 bit 一致
+  s_tautology_check: true                            # A 層の M が定義上 0
+  s1_identity_tol: 1.0e-10
+  omp_num_threads: 1
+  s5_degeneracy_guard_selftest: true
+  s6_floor_calibration: true
+
+output:
+  dir: results/mlp2_phase1_0829
+  layer_stats_task_end_only: true

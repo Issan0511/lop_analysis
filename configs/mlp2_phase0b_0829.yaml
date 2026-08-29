@@ -1,0 +1,114 @@
+# proj_004: mlp2_phase0b_0829 — 多層 Phase 0b（ホライズン延長 ＋ 深さと容量の分離）
+# 仕様: specs/spec_mlp2_phase0b_0829.md（実行前に事前登録コミット）
+#
+# 前身 mlp2_phase0_0829 は G0=LOP_ABSENT だったが、
+#   (i) 判定の脚が「late 未フィット率 < 0.05」1 本だけ（CI は退化）
+#   (ii) 深さ2 が補間点に入りスコープ外
+#   (iii) 1M step では死が 0.65 までしか進まなかった
+# の合成。本走はホライズンを 5M に伸ばし、幅整合の深さ1 腕で
+# 「深さか容量か」を分離し、判定を分布ベースに書き換える。
+#
+# 介入は含まない（候補 A・B は入れない）。
+
+spec: specs/spec_mlp2_phase0b_0829.md
+
+common:
+  total_steps: 5000000          # = 500 タスク
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 5000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  encodings: [std]
+
+# 腕の間はペアにならない（幅・深さで generator の消費が変わる）。
+# spec §3.1 のとおり腕間の paired bootstrap は禁止。
+arms:
+  - name: L1w100
+    hidden: [100]
+  - name: L1wide
+    hidden: [600]        # §3.2 の較正で W* を決めてから確定値に置換する
+  - name: L2
+    hidden: [100, 100]
+
+# L1wide の幅較正（本走前・結果を見る前に凍結） — spec §3.2
+calibration:
+  widths: [150, 200, 300, 450, 600]
+  seeds: [0, 1, 2]
+  steps: 200000
+  window_tasks: [2, 11]
+  # L2 の early 未フィット率に対し log10 差 2 以内に入る最小の W を採用
+  target_log10_tolerance: 2.0
+  fallback_width: 600           # どれも入らなければ 600 を採用し、未達を verdict に記録
+  # 較正走では未フィット率以外を見ない（dead / M / eff_rank は本走まで開けない）
+  observe_only: [unfit]
+  record_runtime: true          # 5M への外挿を calibration.csv に残す（spec §7）
+
+phase0b:
+  task_period: 10000
+  early_tasks: [2, 11]
+  late_tasks: [491, 500]
+
+  # G-pre: regime ラベル（spec §5.1）
+  regime_threshold: 0.01        # U_early >= 0.01 -> IN_SCOPE / 未満 -> INTERPOLATING
+
+  # G0: 発症 seed 数（spec §5.2）
+  onset_threshold: 0.05         # Phase 0 から引き継ぎ、変更しない
+  unfit_floor: 1.0e-12
+  onset_present_min: 5          # n_onset >= 5 -> LOP_PRESENT
+                                # n_onset == 0 -> LOP_ABSENT
+                                # 1..4        -> LOP_PARTIAL
+  report_all_seed_values: true  # U_k 全 10 値を verdict.csv に残す
+
+  # 副 endpoint / トレンド（spec §5.3, §5.6）
+  delta_on_log10: true
+  wall_depth_sign: negate_M     # D := -median_i M_i（壁深さ。大きいほど強い）
+  trend_statistic: spearman
+  trend_at_task_end_only: true
+
+  # alive/eff_rank 条件付けの腕効果（spec §5.4）
+  arm_effect_primary_x: eff_rank
+  arm_effect_secondary_x: alive
+
+  # 壁座標（spec §5.6・Phase 0 から継承）
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-8
+
+  # CI（spec §5.5）
+  bootstrap_B: 10000
+  bootstrap_seed: 20260829
+  ci_method: studentized
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01     # SE 潰れ resample が 1% 超 -> CI_DEGENERATE
+  degenerate_width_ratio_max: 100.0
+  degenerate_fallback: [percentile, sign_test]
+
+# 事前チェック（spec §4）
+sanity:
+  s0_bit_equality_ref: results/ratchet_log_0819/logs/seed0.npz
+  s1_identity_tol: 1.0e-10
+  omp_num_threads: 1
+  s5_degeneracy_guard_selftest: true
+  s6_floor_check_steps: 200000
+
+output:
+  dir: results/mlp2_phase0b_0829
+  # layer_stats.csv はタスク末尾行のみ（500 行/seed/層）。
+  # バルク記録点は logs/ の npz に置く（spec §7 の出力サイズ注意）。
+  layer_stats_task_end_only: true
