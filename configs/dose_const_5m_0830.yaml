@@ -1,0 +1,121 @@
+# proj_004: 柱3 定用量 5 点 × 5M（作成日 0830）
+# 仕様: specs/spec_dose_const_5m_0830.md
+# 20260830 は generator_offset として既用。bootstrap seed は 20260829。
+
+spec: specs/spec_dose_const_5m_0830.md
+
+common:
+  total_steps: 5000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 1000000, 5000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  encodings: [std]
+
+# k（現タスクの flip bit の 1 の個数）を使うオラクル制御。
+# 平均を引く場合だけでなく、gamma < 0 では平均を足す。学習手法ではない。
+intervention:
+  name: oracle_fixed_mu_offset
+  oracle: true
+  consumes_rng: false
+  center_alpha_compat: 0.01  # Phase 1 宿主の非介入腕を bit 再現するためだけの値
+
+arms:
+  - name: dose_off
+    hidden: [100]
+    centered_layers: []
+    target_mu_norm: null
+    target_dose: null
+  - name: dose933
+    hidden: [100]
+    centered_layers: [1]
+    target_mu_norm: 2.333
+    target_dose: 9.33
+  - name: dose1004
+    hidden: [100]
+    centered_layers: [1]
+    target_mu_norm: 2.510
+    target_dose: 10.04
+  - name: dose1075
+    hidden: [100]
+    centered_layers: [1]
+    target_mu_norm: 2.687
+    target_dose: 10.75
+  - name: dose1146
+    hidden: [100]
+    centered_layers: [1]
+    target_mu_norm: 2.864
+    target_dose: 11.46
+  - name: dose1216
+    hidden: [100]
+    centered_layers: [1]
+    target_mu_norm: 3.041
+    target_dose: 12.16
+
+pairing:
+  paired_groups:
+    - [dose_off, dose933, dose1004, dose1075, dose1146, dose1216]
+  baseline: dose_off
+
+# Phase 1 の exact-support recorder / floor / bootstrap 宿主が読む節名を維持する。
+phase1:
+  task_period: 10000
+  early_tasks: [2, 11]
+  one_m_tasks: [91, 100]
+  five_m_tasks: [491, 500]
+  onset_threshold: 0.05
+  onset_present_min: 5
+  state_hash_step: 1000000
+
+  unfit_floor: 1.0e-16
+  floor_calibration:
+    steps: 200000
+    seeds: [0, 1, 2]
+    arm: dose_off
+    n_checkpoints: 20
+    method: two_summation_orders
+    percentile: 99
+    safety_factor: 10
+    round_to: power_of_10
+
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-8
+  dose_relative_tolerance: 1.0e-10
+
+  bootstrap_B: 10000
+  bootstrap_seed: 20260829
+  ci_method: percentile_paired_primary
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+  degenerate_fallback: [percentile, sign_test]
+
+sanity:
+  # main clone lacks ignored raw logs; the sibling experiment worktree retains them.
+  s0_prime_baseline_ref: ../mlp2_phase0b_worktree/results/mlp2_phase0b_0829
+  s_pair_steps: 30000
+  s_tautology_check: true
+  s1_identity_tol: 1.0e-10
+  omp_num_threads: 1
+  s_degeneracy_guard_selftest: true
+  s6_floor_calibration: true
+
+output:
+  dir: results/dose_const_5m_0830
