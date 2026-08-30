@@ -1,0 +1,262 @@
+spec: specs/spec_gate_dose_0830.md
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+activation:
+  relu:
+    name: relu
+  elu:
+    name: elu
+    alpha: 1.0
+    forward: where(z>0, z, alpha*expm1(z))
+    derivative_form: alpha_exp
+  leaky:
+    name: leaky_relu
+    slope: 0.1
+    forward: where(z>0, z, slope*z)
+    derivative: where(z>0, 1, slope)
+  autograd: false
+  consumes_rng: false
+intervention:
+  name: oracle_fixed_mu_offset
+  oracle: true
+  consumes_rng: false
+  center_alpha_compat: 0.01
+arms:
+- name: R_off
+  activation: relu
+  hidden:
+  - 100
+  centered_layers: []
+  target_mu_norm: null
+  target_dose: null
+- name: R_933
+  activation: relu
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 2.333
+  target_dose: 9.33
+- name: R_1216
+  activation: relu
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: E_off
+  activation: elu
+  hidden:
+  - 100
+  centered_layers: []
+  target_mu_norm: null
+  target_dose: null
+- name: E_933
+  activation: elu
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 2.333
+  target_dose: 9.33
+- name: E_1216
+  activation: elu
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: LR_off
+  activation: leaky
+  hidden:
+  - 100
+  centered_layers: []
+  target_mu_norm: null
+  target_dose: null
+- name: LR_933
+  activation: leaky
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 2.333
+  target_dose: 9.33
+- name: LR_1216
+  activation: leaky
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+pairing:
+  paired_groups:
+  - - R_off
+    - R_933
+    - R_1216
+    - E_off
+    - E_933
+    - E_1216
+    - LR_off
+    - LR_933
+    - LR_1216
+  pairing_caveat: activations_diverge_after_step1
+  baseline_by_dose:
+    false: R_off
+    '933': R_933
+    '1216': R_1216
+phase1:
+  task_period: 10000
+  early_tasks:
+  - 2
+  - 11
+  late_tasks_5m:
+  - 491
+  - 500
+  window_1m_tasks:
+  - 91
+  - 100
+  onset_threshold: 0.05
+  onset_present_min: 5
+  unfit_floor: 1.0e-16
+  recalibrate_floor: false
+  bootstrap_B: 10000
+  bootstrap_seed: 20260829
+  ci_method: percentile_primary_studentized_secondary
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+gate_dose:
+  verdict_arms_elu:
+  - E_933
+  - E_1216
+  verdict_arms_leaky:
+  - LR_933
+  - LR_1216
+  relu_expected_onset_5m: 10
+  p3_contrasts:
+  - - E_off
+    - R_off
+  - - E_933
+    - R_933
+  - - E_1216
+    - R_1216
+  - - LR_off
+    - R_off
+  - - LR_933
+    - R_933
+  - - LR_1216
+    - R_1216
+  p4_contrasts:
+  - - E_1216
+    - E_933
+  - - LR_1216
+    - LR_933
+  report_jump_J: true
+  submerged_near_zero_threshold: 0.05
+  submerged_frac_in_verdict: false
+  strict_dead_in_verdict: false
+  q2_layer: 1
+  q2_arms:
+  - E_off
+  - E_933
+  - E_1216
+  - LR_off
+  - LR_933
+  - LR_1216
+  q2_increment_scope: within_task_adjacent_records
+  q2_increment_interval_steps: 1000
+  q2_condition_on: interval_start
+  q2_submerged_def: max_over_support(z) <= 0
+  q2_depth_variable: zbar
+  q2_bins: 12
+  q2_bin_method: equal_count_quantile
+  q2_bin_min_count: 20
+  q2_log_base: natural
+  q2_pool_reduction: median_over_bins
+  q2_window_tasks:
+  - 491
+  - 500
+  q2_scaling_expected_slope_elu: 1.0
+  q2_scaling_expected_slope_leaky: 0.0
+  q2_drift_ratio_drift_dominated: 0.3
+  q2_drift_ratio_noise_dominated: 0.1
+  q2_min_submerged_units_per_seed: 3
+  log_layer1_zbar: true
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    rescue: none
+    inconclusive_if_cell_missing:
+    - E_1216
+    - LR_1216
+sanity:
+  s0_prime_baseline_ref: results/dose_const_5m_0830
+  s0_prime_arm_map:
+    R_off: dose_off
+    R_933: dose933
+    R_1216: dose1216
+  s0_prime_state_hash_steps:
+  - 1000000
+  - 5000000
+  s_pair_steps: 30000
+  s_dose_rel_tol: 1.0e-10
+  s_grad_finite_difference_tol: 1.0e-06
+  s_grad_probe_points:
+  - -30.0
+  - -1.0
+  - -1.0e-06
+  - 0.0
+  - 1.0e-06
+  - 1.0
+  - 30.0
+  s_leaky_limit_slope_to_zero: true
+  s_elu_limit_alpha_to_zero: true
+  s_submerge_matches_strict_dead_on_relu: true
+  s_tautology_check: true
+  omp_num_threads: 1
+  s6_floor_calibration: false
+output:
+  dir: results/gate_dose_0830
+  dose_response_csv: true
+  increments_csv: true
