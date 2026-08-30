@@ -1,0 +1,154 @@
+{
+  "source": "results/center_selfcov_0814 (post-hoc; no training)",
+  "candidate6": {
+    "verdict": "boundary-concentration signature supported; absorbing-crossing mechanism not identified",
+    "resolution": "1,000 steps; first post-switch bin is (0, 1,000] updates",
+    "aggregate": {
+      "w5": {
+        "post_positive_change_rate": 0.01696969696969697,
+        "interior_positive_change_rate": 0.003277216610549944,
+        "post_positive_event_rate": 0.07878787878787878,
+        "interior_positive_event_rate": 0.01638608305274972,
+        "post_net_change_rate": 0.006868686868686868,
+        "interior_net_change_rate": 4.4893378226711796e-05,
+        "all_seed_concentration_folds": [
+          4.736842105263158,
+          6.42857142857143,
+          5.0625,
+          6.1578947368421035,
+          3.7499999999999996
+        ]
+      },
+      "w100": {
+        "post_positive_change_rate": 0.009757575757575758,
+        "interior_positive_change_rate": 0.004320987654320987,
+        "post_positive_event_rate": 0.45252525252525255,
+        "interior_positive_event_rate": 0.31021324354657687,
+        "post_net_change_rate": 0.0023636363636363633,
+        "interior_net_change_rate": 6.734006734006732e-05,
+        "all_seed_concentration_folds": [
+          1.8580645161290323,
+          2.1976744186046506,
+          3.0081521739130435,
+          2.075242718446602,
+          2.133333333333333
+        ]
+      }
+    },
+    "bootstrap": {
+      "bootstrap_unit": "seed cluster (all intervals retained)",
+      "bootstrap_B": 20000,
+      "w5_concentration_fold": 5.178082191780822,
+      "w5_ci95": [
+        4.423728813559322,
+        5.955882352941175
+      ],
+      "w100_concentration_fold": 2.2581818181818183,
+      "w100_ci95": [
+        2.0026939655172415,
+        2.6315519013360733
+      ],
+      "fold_ratio_w5_over_w100": 2.2930315664085765,
+      "fold_ratio_ci95": [
+        1.836666666666667,
+        2.7882709251101314
+      ]
+    }
+  },
+  "candidate7": {
+    "verdict": "initial-feature redundancy supported; directional-nearest-neighbor interpretation not isolated",
+    "literal_t0": {
+      "w5": {
+        "nmse_v_only_by_seed": [
+          0.40555503464273934,
+          0.926262131145445,
+          1.0148883903188637,
+          0.9084660400560709,
+          1.0249379676471186
+        ],
+        "median_nmse_v_only": 0.926262131145445,
+        "rank_by_seed": [
+          3,
+          5,
+          4,
+          5,
+          3
+        ]
+      },
+      "w100": {
+        "nmse_v_only_by_seed": [
+          5.836254833906177e-29,
+          2.4961709159313857e-29,
+          3.1805293976700755e-28,
+          1.975260345418316e-29,
+          3.767939959078994e-29
+        ],
+        "median_nmse_v_only": 3.767939959078994e-29,
+        "rank_by_seed": [
+          32,
+          32,
+          32,
+          32,
+          32
+        ]
+      },
+      "w100_full_rank_all_seeds": true,
+      "w100_numerical_interpolation_all_seeds": true
+    },
+    "ideal_task_centered": {
+      "w5": {
+        "median_nmse_v_only": 0.9888318632764213,
+        "q25_q75_nmse_v_only": [
+          0.7896264440163506,
+          1.3211183501112593
+        ],
+        "median_nmse_v_plus_c": 0.7054802096230137,
+        "median_rank_v_only": 5.0
+      },
+      "w100": {
+        "median_nmse_v_only": 0.18647591072375336,
+        "q25_q75_nmse_v_only": [
+          0.12175838077166348,
+          0.2768384434916269
+        ],
+        "median_nmse_v_plus_c": 0.1864759107237534,
+        "median_rank_v_only": 21.0
+      }
+    },
+    "bootstrap": {
+      "bootstrap_unit": "seed cluster (100 task trajectory retained)",
+      "bootstrap_B": 20000,
+      "ideal_centered_median_nmse_w5": 0.9888318632764213,
+      "ideal_centered_median_nmse_w100": 0.18647591072375336,
+      "w5_over_w100_fold": 5.3027324518140215,
+      "w5_over_w100_ci95": [
+        4.680850930924698,
+        6.46329861363777
+      ],
+      "ideal_centered_median_nmse_w100_random5": 0.865293893863482,
+      "random5_over_full100_fold": 4.640244900829759,
+      "random5_over_full100_ci95": [
+        4.330711653333378,
+        5.301725258534202
+      ],
+      "w5_over_w100_random5_fold": 1.1427699539879452,
+      "w5_over_w100_random5_ci95": [
+        0.9465164019878111,
+        1.303760636579782
+      ]
+    },
+    "random5_subset_draws": 100
+  },
+  "sanity": {
+    "w5": {
+      "step0_reconstruction_exact": true,
+      "final_env_t": 1000000,
+      "final_flip_state_exact": true
+    },
+    "w100": {
+      "step0_reconstruction_exact": true,
+      "final_env_t": 1000000,
+      "final_flip_state_exact": true
+    }
+  }
+}
