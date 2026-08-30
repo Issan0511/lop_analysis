@@ -103,12 +103,14 @@ class VecMLPL:
     expressions the frozen modules inline.  ``"elu"`` adds Clevert et al. 2015
     with ``phi(z) = alpha*(e^z - 1)`` on ``z <= 0``; the derivative reuses the
     forward activation (``phi(z) + alpha = alpha*e^z``) so ``exp`` is evaluated
-    once and forward/backward cannot disagree numerically.  The choice consumes
-    no randomness, so arms differing only in ``act`` share init, teacher, input
-    stream and flip trajectory bit for bit.
+    once and forward/backward cannot disagree numerically.  ``"leaky_relu"``
+    keeps the ReLU kink while replacing the negative-side zero derivative with
+    the constant ``act_alpha`` slope.  The choice consumes no randomness, so
+    arms differing only in ``act`` share init, teacher, input stream and flip
+    trajectory bit for bit.
     """
 
-    ACTIVATIONS = ("relu", "elu")
+    ACTIVATIONS = ("relu", "elu", "leaky_relu")
 
     def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
                  act_grad_form="alpha_exp"):
@@ -165,6 +167,8 @@ class VecMLPL:
             raise ValueError(f"unknown activation {act!r}")
         if act == "elu" and not float(act_alpha) >= 0.0:
             raise ValueError("ELU alpha must be non-negative")
+        if act == "leaky_relu" and not 0.0 <= float(act_alpha) <= 1.0:
+            raise ValueError("leaky ReLU slope must be in [0, 1]")
         if act_grad_form is not None:
             if act_grad_form not in self.GRAD_FORMS:
                 raise ValueError(f"unknown ELU derivative form {act_grad_form!r}")
@@ -177,6 +181,8 @@ class VecMLPL:
         """phi(pre).  The ReLU branch is literally ``torch.relu``."""
         if self.act == "relu":
             return torch.relu(pre)
+        if self.act == "leaky_relu":
+            return torch.where(pre > 0, pre, self.act_alpha * pre)
         # expm1 keeps the small-|z| negative branch accurate; the positive
         # branch of `where` is selected before any overflow of expm1 matters.
         return torch.where(pre > 0, pre, self.act_alpha * torch.expm1(pre))
@@ -199,6 +205,9 @@ class VecMLPL:
         """
         if self.act == "relu":
             return (pre > 0).to(pre.dtype)
+        if self.act == "leaky_relu":
+            return torch.where(pre > 0, torch.ones_like(pre),
+                               torch.full_like(pre, self.act_alpha))
         if self.act_grad_form == "activation_plus_alpha":
             return torch.where(pre > 0, torch.ones_like(a), a + self.act_alpha)
         return torch.where(pre > 0, torch.ones_like(pre),
