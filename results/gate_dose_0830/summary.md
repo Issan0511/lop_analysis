@@ -23,6 +23,7 @@
 
 All six non-ReLU arms submerged < 0.05: **False**.
 Submergence and strict-dead counts are REPORT_ONLY and were not used in the verdict.
+strict-dead (`p_hat == 0`) is identical to submergence (`max_x z <= 0`) by definition, so it marks death only for ReLU; for ELU / leaky a submerged unit still has gradient. The `median_strict_dead_frac_5m` column of `verdict.csv` is therefore reported for the ReLU arms only (post-hoc presentation fix, 2026-08-30; no verdict, endpoint or contrast is affected). In `dose_response.csv` the `median_strict_dead` / `median_alive` columns are still emitted for every arm and carry the same caveat.
 
 ## P3/P4 paired level contrasts at 5M
 

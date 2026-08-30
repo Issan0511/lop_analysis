@@ -1109,7 +1109,12 @@ def analyze(cfg: dict, outdir: Path, sanity: dict, elapsed: dict,
                 U_5m_seed_values=json.dumps(ws["5M"]["u"].tolist()),
                 median_log10_U_5m=float(np.median(ws["5M"]["log_u"])),
                 median_submerged_frac_5m=float(np.median(submerged_seed)),
-                median_strict_dead_frac_5m=float(np.median(strict_seed)),
+                # 非 ReLU 腕では p_hat==0 <=> max_x z<=0 なので strict_dead は
+                # submerged と恒等的に同値になり、「死」を意味しない
+                # （沈んでも勾配は残る）。誤読を避けるため ReLU 腕でのみ報告する。
+                # verdict には元から未使用（config: strict_dead_in_verdict=false）。
+                median_strict_dead_frac_5m=(float(np.median(strict_seed))
+                                            if label == "relu" else ""),
                 submerged_near_zero=int(np.median(submerged_seed)
                                         < float(G["submerged_near_zero_threshold"])),
                 NUMERIC_DIVERGENCE=0, main_verdict=main_verdict,
@@ -1204,6 +1209,10 @@ def _write_summary(cfg: dict, outdir: Path, verdict: str, rows: list[dict],
                          f"{row['median_submerged_frac_5m']:.6g} |")
     lines += ["", f"All six non-ReLU arms submerged < 0.05: **{all_near_zero}**.",
               "Submergence and strict-dead counts are REPORT_ONLY and were not used in the verdict.",
+              "strict-dead (p_hat==0) is identical to submergence (max_x z<=0) by definition, "
+              "so it marks death only for ReLU; the verdict column is reported for ReLU arms "
+              "only. In dose_response.csv the median_strict_dead / median_alive columns are "
+              "still emitted for every arm and carry the same caveat.",
               "", "## P3/P4 paired level contrasts at 5M", "",
               "| endpoint | contrast | median delta log10 U | percentile 95% CI | studentized 95% CI | degenerate |",
               "|---|---|---:|---:|---:|---:|"]
