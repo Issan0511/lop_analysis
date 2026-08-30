@@ -85,7 +85,7 @@ class VecMLP:
 
 
 class VecMLPL:
-    """Vectorized depth-``L`` ReLU MLP with closed-form gradients.
+    """Vectorized depth-``L`` MLP with closed-form gradients.
 
     ``hidden`` is the width of each hidden layer.  The class deliberately keeps
     the ``L=1`` execution path and state-dict schema identical to :class:`VecMLP`:
@@ -96,9 +96,24 @@ class VecMLPL:
     For ``L>1``, ``forward_layers`` returns all preactivations and activations;
     ``grads_layers`` backpropagates the squared-error derivative
     ``dL/dyhat = 2 * delta`` without autograd.
+
+    ``act`` selects the hidden nonlinearity [elu_swamp_0830 §4.3].  ``"relu"``
+    is the default and its execution path is untouched: :meth:`act_fn` returns
+    ``torch.relu(pre)`` and :meth:`act_grad` returns ``(pre > 0)``, the exact
+    expressions the frozen modules inline.  ``"elu"`` adds Clevert et al. 2015
+    with ``phi(z) = alpha*(e^z - 1)`` on ``z <= 0``; the derivative reuses the
+    forward activation (``phi(z) + alpha = alpha*e^z``) so ``exp`` is evaluated
+    once and forward/backward cannot disagree numerically.  The choice consumes
+    no randomness, so arms differing only in ``act`` share init, teacher, input
+    stream and flip trajectory bit for bit.
     """
 
-    def __init__(self, R, hidden, d, gen, device):
+    ACTIVATIONS = ("relu", "elu")
+
+    def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
+                 act_grad_form="alpha_exp"):
+        self.act_grad_form = "alpha_exp"
+        self.set_activation(act, act_alpha, act_grad_form)
         if isinstance(hidden, int):
             hidden = [hidden]
         hidden = [int(h) for h in hidden]
@@ -138,6 +153,57 @@ class VecMLPL:
         self.b = self.bs[0]
         self.h = self.hidden[0]
 
+    def set_activation(self, act, act_alpha=1.0, act_grad_form=None):
+        """Switch the nonlinearity after construction.
+
+        ``__init__`` never consults the activation, so this yields exactly the
+        tensors a net constructed with ``act=`` would hold.  It is the hook
+        ``elu_swamp_0830`` uses to vary phi while arm setup stays on the frozen
+        ``mlp2_phase0.setup_arm`` path.
+        """
+        if act not in self.ACTIVATIONS:
+            raise ValueError(f"unknown activation {act!r}")
+        if act == "elu" and not float(act_alpha) >= 0.0:
+            raise ValueError("ELU alpha must be non-negative")
+        if act_grad_form is not None:
+            if act_grad_form not in self.GRAD_FORMS:
+                raise ValueError(f"unknown ELU derivative form {act_grad_form!r}")
+            self.act_grad_form = str(act_grad_form)
+        self.act = str(act)
+        self.act_alpha = float(act_alpha)
+        return self
+
+    def act_fn(self, pre):
+        """phi(pre).  The ReLU branch is literally ``torch.relu``."""
+        if self.act == "relu":
+            return torch.relu(pre)
+        # expm1 keeps the small-|z| negative branch accurate; the positive
+        # branch of `where` is selected before any overflow of expm1 matters.
+        return torch.where(pre > 0, pre, self.act_alpha * torch.expm1(pre))
+
+    GRAD_FORMS = ("alpha_exp", "activation_plus_alpha")
+
+    def act_grad(self, pre, a):
+        """phi'(pre).  ReLU: ``1[pre > 0]``.  ELU: ``alpha*e^z`` on ``z <= 0``.
+
+        The two ELU forms are algebraically identical (``phi(z) + alpha =
+        alpha*e^z``) but not numerically.  ``activation_plus_alpha`` reuses the
+        forward activation and so calls ``exp`` once, but it cancels
+        catastrophically as ``|phi| -> alpha``: in the float32 training dtype it
+        is 4e-4 wrong at ``z=-10``, 6% wrong at ``z=-16`` and **exactly zero
+        below z ~ -17.3**, which would silently turn ELU into an absorbing
+        activation in the deep tail.  ``alpha_exp`` is accurate to ~1e-8
+        relative at every depth and is what ``elu_swamp_0830`` §6 requires
+        (1e-6 at ``z=-30``); it is the default.  The rejected form stays
+        reachable so S-grad can put both numbers on the record.
+        """
+        if self.act == "relu":
+            return (pre > 0).to(pre.dtype)
+        if self.act_grad_form == "activation_plus_alpha":
+            return torch.where(pre > 0, torch.ones_like(a), a + self.act_alpha)
+        return torch.where(pre > 0, torch.ones_like(pre),
+                           self.act_alpha * torch.exp(pre))
+
     def params(self):
         if self.L == 1:
             return {"W": self.Ws[0], "b": self.bs[0], "v": self.v, "c": self.c}
@@ -165,7 +231,7 @@ class VecMLPL:
         cur = x
         for W, b in zip(self.Ws, self.bs):
             pre = torch.einsum("rhd,rd->rh", W, cur) + b
-            cur = torch.relu(pre)
+            cur = self.act_fn(pre)
             pres.append(pre)
             acts.append(cur)
         yhat = (acts[-1] * self.v).sum(dim=1) + self.c
@@ -177,7 +243,7 @@ class VecMLPL:
         cur = x
         for W, b in zip(self.Ws, self.bs):
             pre = torch.einsum("rhd,nrd->nrh", W, cur) + b
-            cur = torch.relu(pre)
+            cur = self.act_fn(pre)
             pres.append(pre)
             acts.append(cur)
         yhat = (acts[-1] * self.v).sum(dim=-1) + self.c
@@ -200,7 +266,7 @@ class VecMLPL:
         d2 = 2.0 * delta
         gv = d2[:, None] * acts[-1]
         gc = d2
-        dz = d2[:, None] * self.v * (pres[-1] > 0).float()
+        dz = d2[:, None] * self.v * self.act_grad(pres[-1], acts[-1])
         gWs = [None] * self.L
         gbs = [None] * self.L
         for layer in range(self.L - 1, -1, -1):
@@ -209,7 +275,7 @@ class VecMLPL:
             gWs[layer] = dz[:, :, None] * inp[:, None, :]
             if layer:
                 dz = (torch.einsum("rhi,rh->ri", self.Ws[layer], dz)
-                      * (pres[layer - 1] > 0).float())
+                      * self.act_grad(pres[layer - 1], acts[layer - 1]))
         return gWs, gbs, gv, gc
 
     def grads_layers_batch(self, x, pres, acts, delta):
@@ -217,7 +283,7 @@ class VecMLPL:
         d2 = 2.0 * delta
         gv = d2[..., None] * acts[-1]
         gc = d2
-        dz = d2[..., None] * self.v * (pres[-1] > 0).float()
+        dz = d2[..., None] * self.v * self.act_grad(pres[-1], acts[-1])
         gWs = [None] * self.L
         gbs = [None] * self.L
         for layer in range(self.L - 1, -1, -1):
@@ -226,7 +292,7 @@ class VecMLPL:
             gWs[layer] = dz[..., None] * inp[:, :, None, :]
             if layer:
                 dz = (torch.einsum("rhi,nrh->nri", self.Ws[layer], dz)
-                      * (pres[layer - 1] > 0).float())
+                      * self.act_grad(pres[layer - 1], acts[layer - 1]))
         return gWs, gbs, gv, gc
 
     def grads(self, x, pre, a, delta):

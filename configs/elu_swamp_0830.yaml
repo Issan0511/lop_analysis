@@ -1,0 +1,231 @@
+# proj_004: elu_swamp_0830 — ELU の沼（第2層 µ の再生 / 沈下は駆動か拡散か）
+# 仕様: specs/spec_elu_swamp_0830.md（実行前に事前登録コミット）
+# Obsidian 側の正本: 可塑性喪失/spec/ELU沼_spec_0830.md
+#
+# 前段 mlp2_phase1_0829: L2_A1（第1層のみ中心化）で第2層の壁が露出した。
+# 第2層 dose は early 8.108 → late 7.183 でほぼ平坦、strict_dead 90.68。
+# 本走はその第1層の活性化関数を ELU に替えて 2 点を測る。
+#   Q1: 第2層の入力 µ は抑えられるのか（Clevert）再生されるのか（沈下レバー）
+#   Q2: 沈下は µ 方向の駆動か、無方向の拡散＋可動度勾配か
+#
+# 命名: spec・config・結果ディレクトリはすべて 0830（作成日）。
+# 20260830 は generator_offset として既用なので日付として流用しない。
+# 解析側 bootstrap seed は Phase 0/0b/1 と同じ 20260829。
+#
+# 【重要】spec §8.1 の Issa 事前予測が未記入のあいだ、本 config を回してはいけない。
+# 【重要】spec §10-2（G0b 沈下率閾値 0.30 の確認）が未了のあいだ、本走を回してはいけない。
+#         validate_config は full/analyze 段階で g0b_threshold_confirmed を要求する。
+
+spec: specs/spec_elu_swamp_0830.md
+
+common:
+  total_steps: 5000000          # = 500 タスク
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 5000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  encodings: [std]
+
+# 活性化（spec §4.3）。ReLU 経路は 1 行も触らない（S0' が守る）。
+activation:
+  relu:
+    name: relu
+  elu:
+    name: elu
+    alpha: 1.0                  # 単一値。掃かない（spec §2.4）
+    forward: where(z>0, z, alpha*expm1(z))     # expm1 で桁落ちを避ける
+    # spec §4.3 は phi'(z) = phi(z)+alpha（前向きの a を再利用）と書いているが、
+    # phi(z)+alpha は |phi| -> alpha で破滅的に桁落ちする。学習で使う float32 では
+    # z=-10 で相対 4e-4、z=-16 で 6%、**z <~ -17.3 で厳密に 0** になり、ELU が深い
+    # 沈下域で吸収的になってしまう（= 本走が測ろうとしている当のもの）。
+    # phi(z)+alpha == alpha*e^z は代数的に恒等なので、spec §6 が要求する
+    # 「z=-30 で相対誤差 1e-6 以内」を満たす alpha*exp(z) を登録形とする。
+    # 却下した形も S-grad が両方測って記録に残す。
+    derivative: where(z>0, 1, alpha*exp(z))
+    derivative_form: alpha_exp
+    derivative_form_rejected: activation_plus_alpha
+    derivative_form_rejected_reason: float32_cancellation_zeroes_the_deep_tail
+    autograd: false             # 閉形式のまま。切り替えると S0' が不可能になる
+    consumes_rng: false
+
+# 候補 A: 層入力を走行平均で中心化する。勾配は流さない。乱数を消費しない。
+intervention:
+  name: A_layer_input_centering
+  center_alpha: 0.01
+  stop_gradient_on_running_mean: true
+  consumes_rng: false
+
+arms:
+  - name: R_none                # mlp2_phase1_0829 の L2_none を bit 再現（S0'）
+    activation: relu
+    hidden: [100, 100]
+    centered_layers: []
+  - name: R_A1                  # 同 L2_A1 を bit 再現（S0'）。Q1 の対照の基準
+    activation: relu
+    hidden: [100, 100]
+    centered_layers: [1]
+  - name: E_none
+    activation: elu
+    hidden: [100, 100]
+    centered_layers: []
+  - name: E_A1                  # 本命。観測正規化＋ELU に対応する配置
+    activation: elu
+    hidden: [100, 100]
+    centered_layers: [1]
+  - name: E_Aall                # Q2 の判別腕（µ 駆動 vs 拡散を介入で分ける）
+    activation: elu
+    hidden: [100, 100]
+    centered_layers: [1, 2]
+
+# 対応づけ（spec §4.2）
+pairing:
+  # 活性化の変更も中心化も乱数を消費しないので、5 腕は init/教師/入力列/flip が bit 一致
+  paired_groups:
+    - [R_none, R_A1, E_none, E_A1, E_Aall]
+  # ただし ReLU 腕と ELU 腕は step 1 以降で軌道が分岐する。
+  # ペアリングが落とすのは init・教師・入力実現の分散だけで、同一個体の追跡ではない。
+  pairing_caveat: relu_elu_trajectories_diverge_after_step1
+  baseline_relu: R_A1
+  baseline_elu: E_none
+
+elu_swamp:
+  task_period: 10000
+  early_tasks: [2, 11]
+  late_tasks: [451, 500]
+
+  # 床は Phase 1 で実測較正済み。本走では再較正しない（割合だけ報告）
+  unfit_floor: 1.0e-23
+  recalibrate_floor: false
+
+  # G0（spec §5.0）
+  gate_unfit_threshold: 0.05
+  # spec §10-2: Issa が 2026-08-30 に「0.30 のまま」で確認・確定（実行前）。
+  # 参照点は ReLU 第2層 strict_dead: L2_A1 = 0.9068 / L2_Aall = 0.5366。
+  g0b_submerged_threshold: 0.30
+  g0b_threshold_confirmed: true
+  g0_arm: E_A1
+  g0_layer: 2
+  g0_relu_reference: R_A1
+
+  # Q1（spec §5.1）
+  q1_metric: dose               # ||mu^(2)|| / sqrt(tr Sigma^(2) / d_2)
+  q1_layer: 2
+  q1_level_suppressed_below: 2.00    # 10*g(s) with s<=1（spec §2.1）
+  q1_level_regenerated_above: 9.33   # 柱3 遷移帯の下端（dose 単位）
+  q1_trend_statistic: spearman
+  q1_trend_at_task_end_only: true
+  # spec §5.1b「タスク末尾 dose 系列（500 点）」= タスク 1..500。
+  q1_trend_range_tasks: [1, 500]
+  # レバーの分離（spec §5.1c）
+  q1_closed_form_reference: 10*g_elu(sd_layer1_preactivation)
+  q1_record_layer1_preact_sd: true
+  q1_lever_source_layer: 1           # s と沈下率は第1層から取る（spec §2.2）
+  # 「実測 ≈ 10*g(s)」/「実測 >> 10*g(s)」の作業定義。REPORT_ONLY（spec §5.1c の格）。
+  q1_lever_ratio_close_lo: 0.80
+  q1_lever_ratio_close_hi: 1.25
+
+  # Q2（spec §5.2）
+  q2_increment_scope: within_task_adjacent_records   # 境界を跨がない
+  q2_increment_interval_steps: 1000
+  # 区間始点 s は s>0 かつ s % task_period != 0 のみ（= 1 タスクあたり 9 区間）
+  q2_condition_on: interval_start                    # 終点で条件付けない
+  q2_submerged_def: max_over_support(z) <= 0
+  q2_depth_variable: zbar                            # 生の E_support[z]。正規化量で力学を書かない
+  q2_layer: 2
+  # ユニット単位の zbar / dzbar を残す層。第1層の zbar を読む登録 endpoint は無い
+  # （§5.1c が第1層から取るのは sd(z) 中央値と沈下率で、どちらも層スカラ）。
+  # dzbar は float64 の zbar 同士の差を取ってから float32 に落とす（深い沈下域の
+  # 増分は 1e-9 級で、float32 の zbar を引き算すると丸めに沈む）。
+  record_zbar_layers: [2]
+  # v_i は §5.3（末尾窓・タスク末尾記録点）だけが読むので task_end のみ残す。
+  record_readout_at_task_end_only: true
+  q2_window_tasks: [451, 500]        # 主。early/all は REPORT_ONLY で併記
+  q2_report_windows: [late, early, all]
+  q2_bins: 12
+  q2_bin_method: equal_count_quantile   # seed ごとに沈下ユニットの zbar で等頻度分割
+  q2_bin_min_count: 20                  # 件数がこれ未満のビンは回帰から落とし件数を報告
+  q2_log_base: natural                  # phi' = alpha*e^z なので自然対数
+  q2_scaling_expected_slope: 1.0        # phi'(z) = alpha*e^z
+  q2_pool_reduction: median_over_bins   # 「ビンをプール」= 適格ビンの rho の中央値
+  q2_drift_ratio_drift_dominated: 0.30
+  q2_drift_ratio_noise_dominated: 0.10
+  q2_intervention_contrast: [E_A1, E_Aall]           # µ 駆動 vs 拡散の判別
+
+  # 副次（spec §5.3・すべて REPORT_ONLY）
+  report_only:
+    - spearman_zbar_vs_log_v2                        # 平衡深さ z* = log(f/sigma^2), f ∝ v_i^2
+    - w_norm                                         # 主要共変量。事後に足さない
+    - eff_rank
+    - eff_rank_W
+    - stable_rank_W
+    - wcos_mean
+    - top1_frac
+    - strict_dead                                    # ReLU 腕のみ
+    - submerged_frac                                 # ELU 腕のみ。列を混ぜない
+  submerged_frac_in_verdict: false                   # 沈下は死ではない（spec §4.4）
+  strict_dead_in_verdict: false                      # cbp_harm 裁定
+  lop_signature_table: false                         # Phase 1 で欠陥が判明。生の Δ と傾きのみ
+
+  # 退化・検閲（spec §5.4）
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-8
+  na_frac_max: 0.20             # 超えたら DEGENERATE、dose と壁座標を判定に使わない
+  censor_frac_max: 0.20         # 超えたら CENSORED、符号検定へ fallback
+
+  # CI（spec §5・Phase 0b/1 から継承）
+  bootstrap_B: 10000
+  bootstrap_seed: 20260829
+  ci_method: studentized_paired
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+  degenerate_fallback: [percentile, sign_test]
+
+  # 数値発散（spec §5.4・Phase 1 §5.7 を逐語継承）
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    contrast_policy: any_involved_arm_is_numeric_divergence
+    exclude_partial_logs_from_analysis: true
+    rescue: none
+
+# 前段チェック（spec §6）
+sanity:
+  s0_prime_baseline_ref: results/mlp2_phase1_0829    # R_none/R_A1 が L2_none/L2_A1 を bit 再現
+  s0_prime_arm_map:
+    R_none: L2_none
+    R_A1: L2_A1
+  s_pair_steps: 30000
+  s_grad_finite_difference_tol: 1.0e-6               # ELU 閉形式勾配の照合
+  s_grad_probe_points: [-30.0, -1.0, -1.0e-6, 0.0, 1.0e-6, 1.0, 30.0]
+  s_grad_finite_difference_h: 1.0e-6                 # 中心差分の刻み（float64 で評価）
+  s_elu_limit_alpha_to_zero: true                    # alpha->0 で ReLU に一致（教訓⑩）
+  s_submerge_matches_strict_dead_on_relu: true
+  s_tautology_check: true
+  s1_identity_tol: 1.0e-10
+  omp_num_threads: 1
+  s5_degeneracy_guard_selftest: true
+
+output:
+  dir: results/elu_swamp_0830
+  layer_stats_task_end_only: true
+  increments_csv: true
