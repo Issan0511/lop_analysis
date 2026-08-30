@@ -1,0 +1,158 @@
+# proj_004: gate_dose_0830 — ゲート条件付き用量（ReLU / ELU / leaky ReLU × 3 用量 × 5M）
+# 仕様: specs/spec_gate_dose_0830.md（実装より先に単独 commit すること）
+# Obsidian 側の正本: 可塑性喪失/spec/ゲート条件付き用量_spec_0830.md
+#
+# 前段: dose_const_5m_0830（用量固定・ReLU・6 腕）と elu_swamp_0830（ELU・2 層）。
+# 本走は用量固定をそのまま使い、隠れ 1 層で活性化関数だけを振る。
+#   主問い: 用量反応はゲートの片道性に条件付けられているか
+#   主予測（Issa・Claude 一致）: ELU も leaky も全用量で発症せず、沈下率 0 近傍 = GATE_LOAD_BEARING
+#
+# 命名: 作成日 0830。20260830 は generator_offset として既用。bootstrap seed は 20260829。
+# 床 1e-16 は dose_const_5m_0830 で較正済み。再較正しない。
+
+spec: specs/spec_gate_dose_0830.md
+
+common:
+  total_steps: 5000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 1000000, 5000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  encodings: [std]
+
+# 活性化（spec §4.3）。ReLU 経路は 1 行も触らない（S0' が守る）。
+activation:
+  relu:
+    name: relu
+  elu:
+    name: elu
+    alpha: 1.0
+    forward: where(z>0, z, alpha*expm1(z))
+    derivative_form: alpha_exp              # elu_swamp_0830 §11.9（phi+alpha は float32 で深い負側が 0）
+  leaky:
+    name: leaky_relu
+    slope: 0.1                              # 単一値。掃かない（spec §2.1）
+    forward: where(z>0, z, slope*z)
+    derivative: where(z>0, 1, slope)
+  autograd: false
+  consumes_rng: false
+
+# dose_const_5m_0830 のオラクル固定をそのまま使う。入力側の変換なので活性化に依存しない。
+intervention:
+  name: oracle_fixed_mu_offset
+  oracle: true
+  consumes_rng: false
+  center_alpha_compat: 0.01
+
+arms:
+  - { name: R_off,   activation: relu,  hidden: [100], centered_layers: [],  target_mu_norm: null,  target_dose: null }
+  - { name: R_933,   activation: relu,  hidden: [100], centered_layers: [1], target_mu_norm: 2.333, target_dose: 9.33 }
+  - { name: R_1216,  activation: relu,  hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: E_off,   activation: elu,   hidden: [100], centered_layers: [],  target_mu_norm: null,  target_dose: null }
+  - { name: E_933,   activation: elu,   hidden: [100], centered_layers: [1], target_mu_norm: 2.333, target_dose: 9.33 }
+  - { name: E_1216,  activation: elu,   hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: LR_off,  activation: leaky, hidden: [100], centered_layers: [],  target_mu_norm: null,  target_dose: null }
+  - { name: LR_933,  activation: leaky, hidden: [100], centered_layers: [1], target_mu_norm: 2.333, target_dose: 9.33 }
+  - { name: LR_1216, activation: leaky, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+
+pairing:
+  paired_groups:
+    - [R_off, R_933, R_1216, E_off, E_933, E_1216, LR_off, LR_933, LR_1216]
+  pairing_caveat: activations_diverge_after_step1     # ペアリングは init・教師・入力実現まで
+  baseline_by_dose: { off: R_off, "933": R_933, "1216": R_1216 }
+
+# 窓・床・CI は dose_const_5m_0830 を逐語継承（spec §5）
+phase1:
+  task_period: 10000
+  early_tasks: [2, 11]
+  late_tasks_5m: [491, 500]
+  window_1m_tasks: [91, 100]
+  onset_threshold: 0.05
+  onset_present_min: 5
+  unfit_floor: 1.0e-16
+  recalibrate_floor: false
+  bootstrap_B: 10000
+  bootstrap_seed: 20260829
+  ci_method: percentile_primary_studentized_secondary
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+
+gate_dose:
+  # §5.1 主 verdict（帯内 2 腕 *_933 / *_1216 で判定。*_off は参考）
+  verdict_arms_elu: [E_933, E_1216]
+  verdict_arms_leaky: [LR_933, LR_1216]
+  relu_expected_onset_5m: 10                          # S0' で既知。10/10 でなければ結果を読まない
+  # §5.2 水準
+  p3_contrasts: [[E_off, R_off], [E_933, R_933], [E_1216, R_1216], [LR_off, R_off], [LR_933, R_933], [LR_1216, R_1216]]
+  p4_contrasts: [[E_1216, E_933], [LR_1216, LR_933]]  # ゲート無しでの用量の効果
+  report_jump_J: true
+  # §5.3 予測の照合（verdict に使わない）
+  submerged_near_zero_threshold: 0.05
+  submerged_frac_in_verdict: false
+  strict_dead_in_verdict: false
+  # §5.4 汚染なしの Q2（REPORT_ONLY・elu_swamp_0830 §5.2/§11 を逐語継承）
+  q2_layer: 1
+  q2_arms: [E_off, E_933, E_1216, LR_off, LR_933, LR_1216]
+  q2_increment_scope: within_task_adjacent_records
+  q2_increment_interval_steps: 1000
+  q2_condition_on: interval_start
+  q2_submerged_def: max_over_support(z) <= 0
+  q2_depth_variable: zbar
+  q2_bins: 12
+  q2_bin_method: equal_count_quantile
+  q2_bin_min_count: 20
+  q2_log_base: natural
+  q2_pool_reduction: median_over_bins
+  q2_window_tasks: [491, 500]
+  q2_scaling_expected_slope_elu: 1.0
+  q2_scaling_expected_slope_leaky: 0.0
+  q2_drift_ratio_drift_dominated: 0.30
+  q2_drift_ratio_noise_dominated: 0.10
+  q2_min_submerged_units_per_seed: 3                  # 未満は INSUFFICIENT_DATA
+  log_layer1_zbar: true
+  # §5.6 数値発散（Phase 1 §5.7 を逐語継承）
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    rescue: none
+    inconclusive_if_cell_missing: [E_1216, LR_1216]   # 帯上端セルが空なら INCONCLUSIVE_DIVERGENCE
+
+sanity:
+  s0_prime_baseline_ref: results/dose_const_5m_0830
+  s0_prime_arm_map: { R_off: dose_off, R_933: dose933, R_1216: dose1216 }
+  s0_prime_state_hash_steps: [1000000, 5000000]
+  s_pair_steps: 30000
+  s_dose_rel_tol: 1.0e-10
+  s_grad_finite_difference_tol: 1.0e-6
+  s_grad_probe_points: [-30.0, -1.0, -1.0e-6, 0.0, 1.0e-6, 1.0, 30.0]
+  s_leaky_limit_slope_to_zero: true
+  s_elu_limit_alpha_to_zero: true
+  s_submerge_matches_strict_dead_on_relu: true
+  s_tautology_check: true
+  omp_num_threads: 1
+  s6_floor_calibration: false                          # 継承のみ
+
+output:
+  dir: results/gate_dose_0830
+  dose_response_csv: true
+  increments_csv: true
