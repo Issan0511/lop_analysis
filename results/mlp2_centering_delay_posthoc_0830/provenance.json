@@ -1,0 +1,83 @@
+{
+  "analysis": "mlp2_centering_delay_posthoc_0830",
+  "status": "POST_HOC_REANALYSIS",
+  "source": "results/mlp2_phase1_0829",
+  "spec": "specs/spec_mlp2_centering_delay_posthoc_0830.md",
+  "spec_commit": "9c60fe1d6d3e6c2becd783999b9f8dbb517306f7",
+  "implementation": "analysis/mlp2_centering_delay_posthoc/analyze.py",
+  "implementation_commit": "8c66ce1ef79b63bb471c3864de8d99f28b758faf",
+  "implementation_sha256": "5f979c68d3f92ac1a26d77b12cc9ae42a5453fc990bd58bebdce782c2aa55148",
+  "git_head": "8c66ce1ef79b63bb471c3864de8d99f28b758faf",
+  "git_status": [
+    "M analysis/q17_symmetry/__init__.py",
+    " M analysis/q17_symmetry/q17_symmetry.py",
+    " M analysis/q17_symmetry/test_q17_symmetry.py",
+    "?? results/_preflight_dose_const_5m_0830/",
+    "?? results/_preflight_gate_dose_0830/",
+    "?? results/_smoke_dose_const_5m_0830/",
+    "?? results/_smoke_gate_dose_0830/",
+    "?? results/dynrepair_0826_s8replay/",
+    "?? results/mlp2_centering_delay_posthoc_0830/",
+    "?? results/mu_titration_0823_aborted_s2coverage_647316c/",
+    "?? results/mu_titration_0823_invalid_s3_39986e2/"
+  ],
+  "inputs": {
+    "layer_stats.csv": "a32b4650e9339e6163d23ff2316761e4a87358d3a4de32c365f2915befe462e2",
+    "provenance.json": "c4d7646590d02b0c5a86c108895a134f8980d528aec6754b88bfaabbb0da552e",
+    "config_used.yaml": "49111424cd40a54414c887c8c09a0eee762f3e1cb2100e2469b7e76bbb52cc28",
+    "summary.md": "d50efb11d3be30facfd15e55f3e7a7d1b74e783291b76cb615a5a9ab97491990"
+  },
+  "outputs": {
+    "block_levels.csv": "3e6472516aaf095c4c848e82ad71c923d6538fa3f962e09bf5907bd5cffc47f3",
+    "paired_gaps.csv": "b3c656e556a5c2bda918bbf41a9913d6cd8173c125f6da43c4f107e2ffab5537",
+    "verdict.csv": "63dfab50a3d17719a862fa608a7d8e44cc93acfc9946972e59b6da121d7174c4",
+    "summary.md": "0efd335518649ab36a103c3db5b3631d30c6132a4931fefea0a0a16326f2df08",
+    "centering_delay_layers.png": "7ec07e936602eb1f53b501f7533fa7c334e51d32ece603280c6a420d68a2804f",
+    "centering_delay_layers.pdf": "0a43d5bf77671dace44d33dbe22d19112d3004063baa388cb65738092c102884"
+  },
+  "bootstrap": {
+    "method": "paired seed-cluster percentile",
+    "B": 20000,
+    "seed": 20260829,
+    "statistic": "median paired gap"
+  },
+  "constants": {
+    "epsilon_D": 0.05,
+    "epsilon_U": 0.1,
+    "unfit_floor": 1e-23,
+    "tasks_per_block": 50
+  },
+  "sanity": {
+    "target_rows_30000": true,
+    "unique_arm_seed_task_layer": true,
+    "complete_registered_grid": true,
+    "config_registered": true,
+    "all_task_end": true,
+    "step_matches_task": true,
+    "strict_dead_plus_alive_100": true,
+    "strict_dead_fraction_identity": true,
+    "strict_dead_fraction_max_error": 0.0,
+    "centered_flags": true,
+    "decision_columns_finite": true,
+    "strict_dead_fraction_in_unit_interval": true,
+    "unfit_positive": true,
+    "layer_run_metrics_bit_equal": true,
+    "S_pair": true,
+    "S_pair_final": true
+  },
+  "verdicts": {
+    "P1": "NO_EARLY_MORPHOLOGICAL_ADVANTAGE",
+    "catchup_time": "CATCHUP_BY_5M_SINGLE_BLOCK",
+    "P2": "INCONCLUSIVE_FUNCTIONAL_KINETICS",
+    "P3": "AALL_RELATIVE_ONLY",
+    "P4": "INCONCLUSIVE_LAYER_LOCALIZATION",
+    "P3F_relative": "INCONCLUSIVE_AALL_FUNCTION",
+    "P3F_stability": "AALL_FUNCTION_DETERIORATED_BY_5M"
+  },
+  "environment": {
+    "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+    "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+    "numpy": "2.5.1",
+    "pandas": "3.0.5"
+  }
+}
