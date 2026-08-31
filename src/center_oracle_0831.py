@@ -111,6 +111,9 @@ def train_exact(
     net, env, teacher = st["net"], st["env"], st["teacher"]
     started = time.time()
     for t in range(total):
+        if total >= 1_000_000 and t > 0 and t % 500_000 == 0:
+            print(f"[L1w100_Aexact] {t:,}/{total:,} steps "
+                  f"({time.time() - started:.1f}s)", flush=True)
         if recorder is not None and t in probe_set:
             set_support_mean(st)
             recorder(st, t)
