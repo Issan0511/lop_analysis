@@ -1,0 +1,30 @@
+spec: specs/spec_center_oracle_0831.md
+amendment: specs/spec_center_oracle_0831_amendment.md
+base_config: configs/mlp2_phase1_0829.yaml
+source_result: results/mlp2_phase1_0829
+source_checkpoint: results/mlp2_phase1_0829/ckpts/L1w100_A1_step0.pt
+output_dir: results/center_oracle_0831
+
+arm:
+  name: L1w100_Aexact
+  reference: L1w100_A1
+  hidden: [100]
+  centering: exact_support_mean
+  consumes_rng: false
+
+run:
+  total_steps: 5000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  probe_every: 1000
+  task_period: 10000
+  preflight_steps: 30000
+  device: cpu
+  omp_num_threads: 1
+
+analysis:
+  bootstrap_B: 10000
+  bootstrap_seed: 20260829
+  ratio_ema_upper: 0.2
+  ratio_shock_lower: 0.8
+  core_records: 1000
+  alpha_sweep: false
