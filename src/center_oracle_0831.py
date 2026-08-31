@@ -309,9 +309,15 @@ def analyze(
         p1 = "BOTH_CONTRIBUTE"
 
     levels = units.groupby(["arm", "seed"]).agg(
-        strict_dead_frac=("strict_dead_final", "mean"),
-        core_dead_frac=("continuous_dead_last1000", "mean"),
+        n_unit=("unit", "count"),
+        n_final_dead=("strict_dead_final", "sum"),
+        n_core_dead=("continuous_dead_last1000", "sum"),
     ).reset_index()
+    levels["strict_dead_frac"] = levels["n_final_dead"] / levels["n_unit"]
+    levels["core_dead_frac"] = np.where(
+        levels["n_final_dead"] > 0,
+        levels["n_core_dead"] / levels["n_final_dead"], np.nan,
+    )
     wide_dead = levels.pivot(index="seed", columns="arm", values="strict_dead_frac")
     wide_core = levels.pivot(index="seed", columns="arm", values="core_dead_frac")
     dead_gap = estimate((wide_dead["L1w100_Aexact"]
@@ -361,6 +367,27 @@ def analyze(
     (outdir / "summary.md").write_text(summary, encoding="utf-8")
     return {"P1": p1, "P2": p2, "ratio": ratio_est,
             "exact_boundary": exact_bnd_est, "dead_gap": dead_gap}
+
+
+def reanalyze_saved(config_path: Path = CONFIG) -> dict[str, Any]:
+    oracle, _ = load_oracle_config(config_path)
+    outdir = ROOT / oracle["output_dir"]
+    provenance_path = outdir / "provenance.json"
+    if not provenance_path.exists():
+        raise FileNotFoundError(provenance_path)
+    provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+    source = ROOT / oracle["source_result"]
+    result = analyze(
+        oracle, outdir, source, provenance["sanity"],
+        float(provenance["elapsed_sec"]),
+    )
+    provenance["analysis"] = result
+    provenance["analysis_implementation_commit"] = git("rev-parse", "HEAD")
+    provenance_path.write_text(
+        json.dumps(provenance, indent=2, ensure_ascii=False, default=str) + "\n",
+        encoding="utf-8",
+    )
+    return provenance
 
 
 def run(config_path: Path = CONFIG) -> dict[str, Any]:
@@ -467,10 +494,18 @@ def run(config_path: Path = CONFIG) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, default=CONFIG)
+    parser.add_argument("--analyze-only", action="store_true")
     args = parser.parse_args()
-    result = run(args.config.resolve())
+    result = (reanalyze_saved(args.config.resolve()) if args.analyze_only
+              else run(args.config.resolve()))
+    def status(value: Any) -> Any:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, dict):
+            return value.get("pass_", "RECORDED")
+        return "RECORDED"
     print(json.dumps({"analysis": result["analysis"], "sanity": {
-        key: value if isinstance(value, bool) else value.get("pass_", "RECORDED")
+        key: status(value)
         for key, value in result["sanity"].items()
     }}, indent=2, ensure_ascii=False))
 
