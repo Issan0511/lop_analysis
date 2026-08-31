@@ -1,0 +1,116 @@
+{
+  "experiment": "boundary_zoom_0831_stage1",
+  "created": "2026-08-31 15:22:57 +0900",
+  "elapsed_sec": 37.02474522590637,
+  "wall_elapsed_sec": 37.1003520488739,
+  "git_hash": "1b5f8e38cc34c5b692b6ee1ede75848924d85a65",
+  "spec_commit": "7864ac07c710dd10195b530bdb7654196776810b",
+  "config": "/home/issan/Projects/claude/proj_004_drift/configs/boundary_zoom_0831.yaml",
+  "config_sha256": "6d4f22bed3d5e27ca869982f16ee9495d32492ded813ef85bbff6ff81ddebdd6",
+  "base_config": "configs/mlp2_phase1_0829.yaml",
+  "base_config_sha256": "db815d72c1f1d8cf64cf7f024fb4903dca216ed9567f90188087d39c8ca68c4d",
+  "reference_log": "results/mlp2_phase1_0829/logs/L1w100_A1_seed0.npz",
+  "reference_log_sha256": "5f8aac6a3b57254fcf85f971b94093d0febc4b8171cfa02f1e6b9efd9235fb93",
+  "implementation": "src/boundary_zoom_0831.py",
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+  "torch": "2.13.0+cu130",
+  "numpy": "2.5.1",
+  "analyzed_seed": 0,
+  "rng_padding_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "n_probe": 771,
+  "sanity": {
+    "S0prime": {
+      "pass_": true,
+      "differences": [],
+      "missing": [],
+      "n_common_steps": 201,
+      "reference": "/home/issan/Projects/claude/proj_004_drift/results/mlp2_phase1_0829/logs/L1w100_A1_seed0.npz"
+    },
+    "S1_S2": {
+      "pass_": true,
+      "layers": [
+        {
+          "layer": 1,
+          "pass_": true,
+          "mean": 5.468733836179825e-16,
+          "sd": 5.100700286637982e-16,
+          "wall": 1.3607964358789668e-15,
+          "cos_mu": 4.638633220498273e-16,
+          "n_degenerate_max": 0
+        }
+      ],
+      "required_nonfinite": 0,
+      "n_record_steps": 771
+    },
+    "S2_duplicate": {
+      "pass_": true,
+      "count": 0
+    },
+    "S3_omp": true,
+    "S8": {
+      "pass_": true,
+      "count": 19,
+      "preceding_steps": [
+        10000,
+        20000,
+        30000,
+        40000,
+        50000,
+        60000,
+        70000,
+        80000,
+        90000,
+        100000,
+        110000,
+        120000,
+        130000,
+        140000,
+        150000,
+        160000,
+        170000,
+        180000,
+        190000
+      ],
+      "following_steps": [
+        10020,
+        20020,
+        30020,
+        40020,
+        50020,
+        60020,
+        70020,
+        80020,
+        90020,
+        100020,
+        110020,
+        120020,
+        130020,
+        140020,
+        150020,
+        160020,
+        170020,
+        180020,
+        190020
+      ]
+    }
+  },
+  "gate": {
+    "label": "TIMESCALES_NOT_SEPARABLE",
+    "tau_fit_median": 230.0,
+    "basis": "median uncensored tau_fit compared with [30,330]",
+    "n_task": 19,
+    "n_uncensored": 16
+  }
+}
