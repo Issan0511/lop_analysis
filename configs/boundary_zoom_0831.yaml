@@ -1,0 +1,23 @@
+spec: specs/spec_boundary_zoom_0831.md
+base_config: configs/mlp2_phase1_0829.yaml
+source_result: results/mlp2_phase1_0829
+output_dir: results/boundary_zoom_0831
+
+stage1:
+  analyzed_seed: 0
+  vectorized_padding_seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  total_steps: 200000
+  fine_offset_min: -300
+  fine_offset_max: 300
+  fine_every: 20
+  fit_metric: residual_var
+  baseline_offsets: [-300, 0]
+  recovery_fraction: 0.36787944117144233
+  separable_exclusion_interval: [30, 330]
+
+common:
+  task_period: 10000
+  coarse_every: 1000
+  omp_num_threads: 1
+  bootstrap_B: 10000
+  bootstrap_seed: 20260829
