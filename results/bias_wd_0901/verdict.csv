@@ -1,0 +1,11 @@
+pred,scope,verdict,dead_only_flag,cond_a,cond_b,cond_c,evidence,n_seeds_below_dead_threshold,cp95_lo,cp95_hi,ci_basis,ci_degenerate
+P-main,tasks 451-500 (block 10) W1_main lambda=0.001,BIAS_WD_PROTECTS,0,1,1,1,"(a) dead 0.463940 -> 0.010480 (threshold 0.232; ratio 0.0226; paired -0.453460 CI [-0.502681, -0.401400]); (b) mean(log10 unfit) -2.5172 -> -2.7557, paired -0.2385 CI [-0.2691, -0.2082] vs margin +0.10; (c) B10-B02 drift diff -0.1323 CI [-0.1811, -0.0844]",10,0.6915028921812392,1.0,percentile,0
+P-dose,block 10 W1_sub1 lambda=0.0001,REPORT_ONLY,0,,,,dead 0.089680; mean(log10 unfit) -2.6743; B10-B02 drift diff vs none -0.1324,,,,,
+P-dose,block 10 W1_sub2 lambda=0.01,REPORT_ONLY,0,,,,dead 0.000360; mean(log10 unfit) -2.7360; B10-B02 drift diff vs none -0.1436,,,,,
+P-dose,block 10 W1_sub3 lambda=0.1,REPORT_ONLY,0,,,,dead 0.000120; mean(log10 unfit) -2.3410; B10-B02 drift diff vs none -0.1872,,,,,
+W2,block 10 layer-1 activation eff_rank (W2_Aall_main),SATURATION_PREVENTED,0,,,,"none B02 10.9413 -> none B10 3.1370; lambda arm B10 15.8712; keep>= 0.70x B02 = 7.6589; paired +12.6238 CI [+12.0217, +13.1798]",,,,percentile,0
+W3,"W1_main layer-1 alive median margin (kappa*sigma - |b|), B02->B10",FLAT,0,,,,"+0.62179 -> +0.60540; paired -0.01639 CI [-0.03832, +0.00762]; W1_none same contrast +0.33599 CI [+0.28342, +0.39230]",,,,percentile,0
+W4,block 10 layer-1 alive p_hat>=30/32 (W2_Aall_none),REPORT_ONLY,0,,,,sat_frac B02 0.1926 -> B10 0.6775; alive median b B10 +3.3681,,,,,
+W4,block 10 layer-1 alive p_hat>=30/32 (W2_Aall_main),REPORT_ONLY,0,,,,sat_frac B02 0.0384 -> B10 0.0314; alive median b B10 +0.0957,,,,,
+W4,block 10 layer-1 alive p_hat>=30/32 (W2_Aall_sub),REPORT_ONLY,0,,,,sat_frac B02 0.0000 -> B10 0.0000; alive median b B10 +0.0002,,,,,
+S5,"tautology guard (W1_sub3, strongest W1 lambda)",REPORT_ONLY,0,,,,"alive median b B10 -0.00100; dead 0.000120; geometric-mean unfit (10^mean_log10_unfit, averaged over seeds) 0.00458251; frozen 参照 dead 0 / unfit 0.228112 は代数的帰結であり証拠ではない",,,,,

@@ -204,7 +204,8 @@ class TaskEndRecorder:
         self.unit: dict[int, dict[str, np.ndarray]] = {}
         self.seen: set[int] = set()
         self.max_err = dict(mean=0.0, sd=0.0, wall=0.0, cos_mu=0.0,
-                            beta=0.0, sigma=0.0, unfit=0.0, kappa_closed=0.0)
+                            beta=0.0, sigma=0.0, unfit=0.0, kappa_closed=0.0,
+                            beta_elementwise_rel=0.0, beta_scale=0.0)
         self.n_quantization_violations = 0
         self.n_wall_identity_violations = 0
         self.n_nonfinite_required = 0
@@ -253,9 +254,19 @@ class TaskEndRecorder:
             if valid.any():
                 self.max_err["sigma"] = max(self.max_err["sigma"], _relerr(
                     a["sigma"][valid], b["denom"][valid]))
+                # beta は符号を変えながら 0 を通過する量なので、要素ごとの
+                # 相対誤差は分母ゼロで発散する。実装一致の判定には
+                # 「量のスケールで割った誤差」を使い、要素ごとの相対誤差は
+                # 診断として併記だけする [bias_wd_0901 S3 追補]。
                 beta_theirs = (b["M"] + b["B"])[valid]
-                self.max_err["beta"] = max(self.max_err["beta"], _relerr(
+                self.max_err["beta"] = max(self.max_err["beta"], _scaled_err(
                     a["beta"][valid], beta_theirs))
+                self.max_err["beta_elementwise_rel"] = max(
+                    self.max_err["beta_elementwise_rel"],
+                    _relerr(a["beta"][valid], beta_theirs))
+                self.max_err["beta_scale"] = max(
+                    self.max_err["beta_scale"],
+                    float(beta_theirs.abs().max().item()))
             if not torch.equal(a["p_hat"], b["p_hat"]):
                 self.max_err["wall"] = float("inf")
             # p_hat は 1/32 格子
@@ -348,6 +359,22 @@ class TaskEndRecorder:
                        and self.n_wall_identity_violations == 0
                        and self.n_nonfinite_required == 0),
         )
+
+
+def _scaled_err(a: torch.Tensor, b: torch.Tensor) -> float:
+    """max |a-b| / max|b|。0 を通過する量の実装一致に使う正しい尺度。
+
+    要素ごとの相対誤差は分母が 0 に近づくと発散するので、beta のように符号を
+    変えながら 0 を横切る量には使えない。ベクトルとしてのスケールで割る。
+    """
+    a = a.reshape(-1).double()
+    b = b.reshape(-1).double()
+    scale = float(b.abs().max().item())
+    if not np.isfinite(scale) or scale <= 0.0:
+        scale = 1.0
+    err = (a - b).abs()
+    err = err[torch.isfinite(err)]
+    return float(err.max().item()) / scale if err.numel() else 0.0
 
 
 def _relerr(a: torch.Tensor, b: torch.Tensor) -> float:

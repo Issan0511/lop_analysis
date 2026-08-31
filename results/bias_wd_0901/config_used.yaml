@@ -1,0 +1,151 @@
+spec: specs/spec_bias_wd_0901.md
+baseline_dir: results/mlp2_phase1_0829
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 10000
+  checkpoints:
+  - 0
+  - 5000000
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+intervention:
+  name: A_layer_input_centering
+  center_alpha: 0.01
+  stop_gradient_on_running_mean: true
+  consumes_rng: false
+arms:
+- name: W1_none
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  wd_b: 0.0
+- name: W1_main
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  wd_b: 0.001
+- name: W1_sub1
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  wd_b: 0.0001
+- name: W1_sub2
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  wd_b: 0.01
+- name: W1_sub3
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  wd_b: 0.1
+- name: W2_Aall_none
+  hidden:
+  - 100
+  - 100
+  centered_layers:
+  - 1
+  - 2
+  wd_b: 0.0
+- name: W2_Aall_main
+  hidden:
+  - 100
+  - 100
+  centered_layers:
+  - 1
+  - 2
+  wd_b: 0.001
+- name: W2_Aall_sub
+  hidden:
+  - 100
+  - 100
+  centered_layers:
+  - 1
+  - 2
+  wd_b: 0.1
+pairing:
+  paired_groups:
+  - - W1_none
+    - W1_main
+    - W1_sub1
+    - W1_sub2
+    - W1_sub3
+  - - W2_Aall_none
+    - W2_Aall_main
+    - W2_Aall_sub
+  baselines:
+    W1: W1_none
+    W2: W2_Aall_none
+phase1:
+  task_period: 10000
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-08
+sanity:
+  s1_identity_tol: 1.0e-10
+  omp_num_threads: 1
+bias_wd:
+  output_dir: results/bias_wd_0901
+  omp_num_threads: 1
+  guard_every: 1000
+  s0_replay_steps: 30000
+  baseline_arm_L1: L1w100_A1
+  baseline_arm_L2: L2_Aall
+  s2_probe_lambda: 0.001
+  block_tasks: 50
+  early_block_tasks:
+  - 51
+  - 100
+  late_block_tasks:
+  - 451
+  - 500
+  dead_threshold: 0.232
+  equivalence_margin: 0.1
+  eff_rank_keep_frac: 0.7
+  unfit_floor_L1: 1.0e-16
+  unfit_floor_L2: 1.0e-23
+  bootstrap_B: 20000
+  bootstrap_seed: 20260902
+  ci_method: percentile_paired
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    action: mark_arm_failed_and_continue
+    exclude_partial_logs_from_analysis: true
+    rescue: none

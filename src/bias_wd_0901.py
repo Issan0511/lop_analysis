@@ -488,8 +488,9 @@ def analyze(cfg: dict, outdir: Path) -> dict:
         evidence=(f"alive median b B10 "
                   f"{float(np.median(series(strongest, b10, 'L1_b_median_alive'))):+.5f}; "
                   f"dead {float(series(strongest, b10, 'L1_strict_dead_frac').mean()):.6f}; "
-                  f"unfit(mean over seeds of block mean) "
-                  f"{float(np.mean(10 ** series(strongest, b10, 'mean_log10_unfit'))):.6g}"),
+                  f"geometric-mean unfit (10^mean_log10_unfit, averaged over seeds) "
+                  f"{float(np.mean(10 ** series(strongest, b10, 'mean_log10_unfit'))):.6g}; "
+                  f"frozen 参照 dead 0 / unfit 0.228112 は代数的帰結であり証拠ではない"),
         n_seeds_below_dead_threshold="", cp95_lo="", cp95_hi="",
         ci_basis="", ci_degenerate=""))
 
@@ -566,6 +567,18 @@ def _summary(cfg: dict, outdir: Path, verdict: pd.DataFrame,
              levels: pd.DataFrame, result: dict) -> None:
     P = cfg["bias_wd"]
     b02, b10 = result["blocks"]["B02"], result["blocks"]["B10"]
+    lvl = float(result["details"]["main"]["level"]["point"])
+    row = verdict[verdict.pred == "P-main"].iloc[0]
+    n_below = int(row["n_seeds_below_dead_threshold"])
+    late_all = levels[levels.block == b10]
+
+    def mean_of(arm, col):
+        return float(late_all[late_all.arm == arm][col].mean())
+
+    a_none, a_main = (mean_of("W1_none", "L1_strict_dead_frac"),
+                      mean_of("W1_main", "L1_strict_dead_frac"))
+    s5_unfit = float(np.mean(10 ** late_all[late_all.arm == "W1_sub3"]
+                             ["mean_log10_unfit"].to_numpy()))
     late = levels[levels.block == b10]
     table = (late.groupby("arm")[["L1_strict_dead_frac", "mean_log10_unfit",
                                   "log10_mean_unfit", "L1_b_median_alive",
@@ -583,6 +596,30 @@ def _summary(cfg: dict, outdir: Path, verdict: pd.DataFrame,
         f"## 終盤窓（task {P['late_block_tasks'][0]}–{P['late_block_tasks'][1]}"
         f" = block {b10}）の腕別水準（seed 平均）", "",
         markdown_table(table), "",
+        "## 読み方", "",
+        f"- 主判定は **{result['main_verdict']}**（(a) 死 {a_none:.5f} → {a_main:.5f} = "
+        f"{a_none / max(a_main, 1e-12):.0f} 分の 1、10 seed 中 {n_below} 本がしきい 0.232 を下回る / "
+        f"(b) `mean(log10 unfit)` は同値マージン内どころか **{-lvl:.3f} dex 改善**"
+        f"（{10 ** (-lvl):.2f} 倍）/ (c) 劣化も有意に小さい）。"
+        f"**死の抑制と静的水準の保持がトレードオフになっていない**",
+        "- 用量反応は**上に凸**。死は $\\lambda$ とともに単調に減るが、"
+        "`mean(log10 unfit)` は 1e-4 → 1e-3 → 1e-2 で改善したあと **1e-1 で対照より"
+        "悪化する**（−2.517 / −2.674 / −2.756 / −2.736 / −2.341）。"
+        "静的コストが現れるのは最強水準だけで、主 $\\lambda$=1e-3 はその手前にある",
+        "- **W3 の `FLAT` を「保護が働いていない」と読んではいけない。** 対照 "
+        "`W1_none` 側のマージンが広がる（+0.336）のは、壁に達したユニットが dead 側へ"
+        "抜けて alive 母集団から外れるためで、**生存者バイアスを含む**。"
+        "$\\lambda$=1e-3 では死ぬのが 1% なので alive 母集団はほぼ層全体であり、"
+        "両者は同じ母集団を見ていない。W3 は 2 腕の直接比較には使えない",
+        f"- **frozen の静的コストは払っていない。** 最強水準 $\\lambda$=1e-1 でも "
+        f"幾何平均 `unfit` は {s5_unfit:.5f} で、`centered_freeze_0901` の frozen 腕 "
+        f"0.228112 の 1/{0.228112 / max(s5_unfit, 1e-12):.0f} である。"
+        "$b$ を 0 に固定するのと、$b$ に有限の復元力を与えるのは別物である",
+        "- **W2（上方暴走）側も止まっている。** 対照の第1層は alive 中央 $b$ が +3.27、"
+        "常時発火率 0.68、活性 `eff_rank` 10.94 → 3.14 まで潰れるのに対し、"
+        "$\\lambda$=1e-3 では $b$ +0.096、常時発火率 0.031、`eff_rank` 15.9 で "
+        "**B02 水準を上回る**。同じ 1 つの knob が下向きと上向きの 2 病理を同時に"
+        "止めている", "",
         "## 集計の約束", "",
         f"- 主判定に使うのは **`mean(log10 unfit)`**（seed 内でブロック内 task 末の "
         f"log10 を平均）。`log10(mean unfit)` も上表に併記するが判定には使わない",
@@ -598,6 +635,37 @@ def _summary(cfg: dict, outdir: Path, verdict: pd.DataFrame,
         f"`ci_degenerate` を出すが、**主は percentile**（この repo では Phase 0b 以降"
         f"ほぼ全行で studentized が退化する）",
         "- 二値割合の CI は Clopper–Pearson", "",
+        "## サニティ", "",
+        f"- **S0**: `W1_none` は committed `L1w100_A1`、`W2_Aall_none` は "
+        f"`L2_Aall` と 30k・1k 格子で `unfit`・`eval_loss_exact` の差ちょうど 0、"
+        f"各層 `strict_dead_frac` も完全一致",
+        "- **S1/S2**: $\\lambda=0$ 経路は無 WD 実装と bitwise 一致。$W$・$v$・$c$ は "
+        "$\\lambda$ を変えても bitwise 一致で、$b$ の差は $-\\eta\\lambda b$ と"
+        "float32 の丸め内で一致。`nets.py` を AST で読み、`wd_b` を参照する更新行が "
+        "`self.b` / `self.bs[i]` の 1 本ずつだけであることも確認",
+        "- **S3**: 全 8 腕・501 記録点で壁恒等式違反 0、$\\hat p$ の 1/32 量子化違反 0、"
+        "凍結済み `exact_layer_record_p1` との独立実装一致は最大 3.2e-14（許容 1e-10）。"
+        "**ただし $\\beta$ の一致尺度は事前登録から変更している**（下記）",
+        "- **S4**: 非有限は 1 腕も出ていない（`probe_every=1000`）",
+        "- **S5**: 恒真ガードは `verdict.csv` の S5 行に REPORT_ONLY で出す。"
+        "高 $\\lambda$ 端の収束は予測の確認であって証拠ではない",
+        "",
+        "### ★ 事前登録からの逸脱（S3 の一致尺度）", "",
+        "- spec §6 S3 は「独立実装一致（許容 1e-10）」とだけ書いており、第1回の走では"
+        "**要素ごとの相対誤差**で測っていた。$\\beta$ は符号を変えながら 0 を通過する量"
+        "なので、この尺度は分母ゼロで発散する（$\\lambda$ が大きく $b\\to0$ の腕ほど"
+        "顕著）",
+        "- step 5M のチェックポイントで直接確かめたところ、全 8 腕・全層で絶対誤差は "
+        "4e-16〜1.2e-12、$\\beta$ のスケールで割ると 2.5e-16〜7.3e-15（float64 の数 ULP）。"
+        "相対誤差が大きく出るのは $|\\beta|$ が 1e-4〜1e-2 のユニットだけだった",
+        "- 分母が 0 に近づかない量はすべて ULP 一致している: `unfit` は全記録点で誤差"
+        "ちょうど 0、`p_hat` は `torch.equal` で完全一致、$\\sigma$ 3.5e-15、"
+        "$\\kappa$ の閉形式 9.9e-14",
+        "- 対処: $\\beta$ の一致尺度を `max|a-b| / max|b_ref|` に変え、要素ごとの"
+        "相対誤差は `beta_elementwise_rel` として診断だけ残した。指標だけを直して"
+        "**全 8 腕を同一 config で再走**しており、shard CSV は第1回と sha256 が完全一致する"
+        "（この走が決定的であることの確認も兼ねる）。**結果の数値は 1 つも動いていない**",
+        "",
         "## 引いてはいけない線（HANDOFF §7）", "",
         "1. 高 $\\lambda$ 端で dead が 0 になることを証拠にしない。$b\\equiv0$ かつ "
         "centered なら task 末に消灯できないのは恒等式の帰結であって観測ではない",
@@ -716,10 +784,16 @@ def main() -> None:
                           "n_probes": v["n_probes"]} for a, v in s0["arms"].items()},
         "S1_wd0_bit_identical_to_no_wd_path": bool(all(
             r["S1_bit_identity"] for r in s1s2["rows"])),
+        # b の差は -lr*lambda*b。float32 の 2 回の減算の丸めが残るので、
+        # 厳密 0 ではなく b のスケールの数 ULP (S2_bias_delta_ok) で判定する。
         "S2_W_v_c_untouched_by_wd": bool(all(
-            r["S2_W_v_c_untouched"] and r["S2_bias_delta_max_abs_err"] == 0.0
+            r["S2_W_v_c_untouched"] and r["S2_bias_delta_ok"]
             for r in s1s2["rows"])
             and s1s2["s2_source_only_bias_update_uses_wd_b"]),
+        "S2_detail": {f"depth{r['depth']}": {
+            k: r[k] for k in ("S2_bias_delta_max_abs_err", "S2_bias_delta_tol_ulp",
+                              "S2_bias_delta_signal", "S2_bias_delta_ok")}
+            for r in s1s2["rows"]},
         "S3_exact_support_identities": {
             a: dict(max_relerr=meta[a]["sanity"]["max_relerr"],
                     n_quantization_violations=meta[a]["sanity"]["n_quantization_violations"],
@@ -727,6 +801,26 @@ def main() -> None:
                     pass_=meta[a]["sanity"]["pass_"])
             for a in meta},
         "S3_pass": bool(all(meta[a]["sanity"]["pass_"] for a in meta)),
+        "S3_metric_amendment": {
+            "what": "beta の実装一致を、要素ごとの相対誤差から「量のスケールで"
+                    "割った誤差」 max|a-b|/max|b_ref| に変えた",
+            "why": "beta は符号を変えながら 0 を通過するので、要素ごとの相対誤差は"
+                   "分母ゼロで発散する。step 5M のチェックポイントで直接確かめた"
+                   "ところ、全 8 腕・全層で絶対誤差は 4e-16〜1.2e-12、スケールで"
+                   "割ると 2.5e-16〜7.3e-15 (float64 の数 ULP) で一致しており、"
+                   "相対誤差が大きく出るのは |beta| が 1e-4〜1e-2 のユニットだけ"
+                   "だった",
+            "corroboration": "unfit は全記録点で誤差ちょうど 0、p_hat は "
+                             "torch.equal で完全一致、壁恒等式違反 0、"
+                             "1/32 量子化違反 0。分母が 0 に近づかない量は"
+                             "すべて ULP 一致している",
+            "when": "第1回の全腕走 (2026-09-01) の後。指標だけを直し、全 8 腕を"
+                    "同一 config で再走した。shard CSV は第1回と sha256 が"
+                    "完全一致 (決定的な走であることの確認も兼ねる)",
+            "elementwise_rel_reported_as": "max_relerr.beta_elementwise_rel "
+                                           "(診断のみ・判定に使わない)",
+            "affects_verdict": False,
+        },
         "S4_numeric_divergence": {a: meta[a]["status"] for a in meta},
         "S4_probe_every": guard,
         "S5_tautology_guard": "reported in verdict.csv (REPORT_ONLY)",
