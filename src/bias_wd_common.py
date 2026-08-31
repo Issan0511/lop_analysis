@@ -308,6 +308,10 @@ class TaskEndRecorder:
             pre + "b_median_all": _q(b, 0.5),
             pre + "b_maxabs": float(np.abs(b).max()),
             pre + "wall_frac": _q(wall_frac[alive], 0.5),
+            # B = b/sigma。HANDOFF §2.5 の「alive 中央 b 項」はこの量である
+            # (committed logs で median_B が -0.75 -> -0.91 / +0.17 -> +12.85 /
+            #  -0.75 -> -1.18 を再現することを確認済み)。
+            pre + "B_median_alive": _q((b / np.where(sigma > 0, sigma, np.nan))[alive], 0.5),
             pre + "beta_median_alive": _q(beta[alive], 0.5),
             pre + "kappa_median_alive": _q(kappa[alive], 0.5),
             pre + "sigma_median_alive": _q(sigma[alive], 0.5),

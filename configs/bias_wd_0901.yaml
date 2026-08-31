@@ -1,0 +1,116 @@
+# proj_004: bias_wd_0901 — condA・centered × bias 専用 weight decay（本走）
+#
+# 仕様: specs/spec_bias_wd_0901.md（commit fff543a で単独に事前登録済み）
+# 段階 B: docs/lit_bias_wd_0901.md（96599e4）
+# 段階 A: results/bias_wd_pilot_0901/（274d888）
+#
+# lambda グリッドは段階 A の grid_selection.json をそのまま写したもの。
+# ここで選び直さない（spec §7-7）。
+#
+# 日付の使い回し禁止（HANDOFF §1-6）: 20260830 = generator_offset で既用、
+# 20260901 = centered_freeze_0901 の bootstrap seed で既用。本走は 20260902。
+
+spec: specs/spec_bias_wd_0901.md
+baseline_dir: results/mlp2_phase1_0829
+
+common:
+  total_steps: 5000000          # = task 500
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 10000
+  checkpoints: [0, 5000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  encodings: [std]              # 中心化は intervention 側の層内機構で入れる
+
+intervention:
+  name: A_layer_input_centering
+  center_alpha: 0.01
+  stop_gradient_on_running_mean: true
+  consumes_rng: false
+
+# spec §2.2。wd_b 以外は L1w100_A1 / L2_Aall と同一設定。
+# 更新式は b -= lr*(gb + wd_b*b)（decoupled ではなく素の L2 勾配）。
+# 掛けるのは隠れ層 bias のみ。W・v・出力バイアス c には掛けない。
+arms:
+  - {name: W1_none,      hidden: [100],      centered_layers: [1],    wd_b: 0.0}
+  - {name: W1_main,      hidden: [100],      centered_layers: [1],    wd_b: 1.0e-3}
+  - {name: W1_sub1,      hidden: [100],      centered_layers: [1],    wd_b: 1.0e-4}
+  - {name: W1_sub2,      hidden: [100],      centered_layers: [1],    wd_b: 1.0e-2}
+  - {name: W1_sub3,      hidden: [100],      centered_layers: [1],    wd_b: 1.0e-1}
+  - {name: W2_Aall_none, hidden: [100, 100], centered_layers: [1, 2], wd_b: 0.0}
+  - {name: W2_Aall_main, hidden: [100, 100], centered_layers: [1, 2], wd_b: 1.0e-3}
+  - {name: W2_Aall_sub,  hidden: [100, 100], centered_layers: [1, 2], wd_b: 1.0e-1}
+
+pairing:
+  # 同じ depth の腕は init・教師・入力列・flip 軌道が bit 一致するので paired。
+  # depth をまたぐ paired 比較は禁止。
+  paired_groups:
+    - [W1_none, W1_main, W1_sub1, W1_sub2, W1_sub3]
+    - [W2_Aall_none, W2_Aall_main, W2_Aall_sub]
+  baselines: {W1: W1_none, W2: W2_Aall_none}
+
+phase1:
+  task_period: 10000
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-8
+
+sanity:
+  s1_identity_tol: 1.0e-10      # mlp2_phase1_0829 から継承
+  omp_num_threads: 1
+
+bias_wd:
+  output_dir: results/bias_wd_0901
+  omp_num_threads: 1
+  guard_every: 1000             # S4 非有限ガードの格子（spec §6）
+  s0_replay_steps: 30000
+  baseline_arm_L1: L1w100_A1    # W1_none の bit 一致参照
+  baseline_arm_L2: L2_Aall      # W2_Aall_none の bit 一致参照
+  s2_probe_lambda: 1.0e-3       # S2 の 1 step 代数チェックに使う lambda
+
+  # ---- 窓とブロック（spec §4）
+  block_tasks: 50
+  early_block_tasks: [51, 100]   # B02
+  late_block_tasks: [451, 500]   # B10
+
+  # ---- 主判定のしきい（spec §5.1）。lambda に依存しない
+  dead_threshold: 0.232          # = W1_none の 0.46394 の半分
+  equivalence_margin: 0.10       # mean(log10 unfit) の同値マージン Delta
+
+  # ---- 副判定 W2（spec §5.4）
+  eff_rank_keep_frac: 0.70       # B02 水準の 70% 以上を保つ
+
+  # ---- 床（spec §5.5）。継承のみ・再較正しない
+  unfit_floor_L1: 1.0e-16        # dose_const_5m_0830 の S6 較正を継承
+  unfit_floor_L2: 1.0e-23        # mlp2_phase1_0829 の S6 較正を継承
+
+  # ---- CI（spec §5.5）
+  bootstrap_B: 20000
+  bootstrap_seed: 20260902
+  ci_method: percentile_paired   # studentized は退化するので併算のみ
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+
+  # ---- 発散（spec §6 S4）
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    action: mark_arm_failed_and_continue
+    exclude_partial_logs_from_analysis: true
+    rescue: none
