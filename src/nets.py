@@ -13,12 +13,35 @@ import torch
 from .envs import kaiming_mlp_params
 
 
+def _check_wd_b(wd_b, freeze_bias):
+    """bias 専用 weight decay 係数の検証 [bias_wd_0901 §6]。
+
+    負値と非有限値を弾き、`freeze_bias` との同時指定をエラーにする (b を固定する
+    介入と b を減衰させる介入は同時に意味を持たない)。既定 0.0 は恒等で、
+    `gb + 0.0*b` は有限な b に対し `gb` と bit 一致する (S1 で実測確認する)。"""
+    wd_b = float(wd_b)
+    if not math.isfinite(wd_b) or wd_b < 0.0:
+        raise ValueError(f"wd_b must be a finite non-negative float, got {wd_b!r}")
+    if freeze_bias and wd_b > 0.0:
+        raise ValueError("freeze_bias=True and wd_b>0 cannot be combined")
+    return wd_b
+
+
 class VecMLP:
-    def __init__(self, R, h, d, gen, device, act_alpha=0.0, freeze_bias=False):
+    def __init__(self, R, h, d, gen, device, act_alpha=0.0, freeze_bias=False,
+                 wd_b=0.0):
         self.R, self.h, self.d = R, h, d
         self.act_alpha = act_alpha        # Leaky ReLU 負側勾配 (0.0 = ReLU, 既存互換)
         self.freeze_bias = freeze_bias    # True で b を初期値 0 に固定 [bias_margin_0814]
+        # 隠れ層 bias だけに掛ける素の L2 勾配係数 (decoupled ではない)
+        # [bias_wd_0901 §6]。W・v・出力 bias c には掛けない。
+        self.wd_b = _check_wd_b(wd_b, freeze_bias)
         self.W, self.b, self.v, self.c = kaiming_mlp_params(R, h, d, gen, device)
+
+    def set_weight_decay_b(self, wd_b):
+        """構築後に wd_b を差し替える。乱数も状態も消費しない [bias_wd_0901 §6]。"""
+        self.wd_b = _check_wd_b(wd_b, self.freeze_bias)
+        return self
 
     def _act(self, pre):
         if self.act_alpha == 0.0:
@@ -76,10 +99,14 @@ class VecMLP:
 
     def sgd_step(self, lr, gW, gb, gv, gc):
         """lr: [R]。freeze_bias が真なら b の更新のみ止める (勾配計算・乱数消費は不変、
-        b は初期値 0 のまま) [bias_margin_0814 §2.2]。"""
+        b は初期値 0 のまま) [bias_margin_0814 §2.2]。
+
+        wd_b > 0 のとき b の更新式だけが `b -= lr*(gb + wd_b*b)` になる
+        [bias_wd_0901 §6]。分岐を置かないのは、wd_b=0 の腕が WD コード経路を
+        通したうえで無 WD 実装と bit 一致することを S1 で検査可能にするため。"""
         self.W -= lr[:, None, None] * gW
         if not self.freeze_bias:
-            self.b -= lr[:, None] * gb
+            self.b -= lr[:, None] * (gb + self.wd_b * self.b)
         self.v -= lr[:, None] * gv
         self.c -= lr * gc
 
@@ -113,8 +140,12 @@ class VecMLPL:
     ACTIVATIONS = ("relu", "elu", "leaky_relu")
 
     def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
-                 act_grad_form="alpha_exp"):
+                 act_grad_form="alpha_exp", wd_b=0.0):
         self.act_grad_form = "alpha_exp"
+        # 全隠れ層の bias に掛ける素の L2 勾配係数 [bias_wd_0901 §6]。出力 bias c は
+        # 対象外。既定 0.0 は恒等 (乱数消費も算術も無 WD 実装と bit 一致)。
+        self.freeze_bias = False
+        self.wd_b = _check_wd_b(wd_b, False)
         self.set_activation(act, act_alpha, act_grad_form)
         if isinstance(hidden, int):
             hidden = [hidden]
@@ -316,10 +347,19 @@ class VecMLPL:
         gWs, gbs, gv, gc = self.grads_layers_batch(x, [pre], [a], delta)
         return gWs[0], gbs[0], gv, gc
 
+    def set_weight_decay_b(self, wd_b):
+        """構築後に wd_b を差し替える。乱数も状態も消費しないので、arm 設定は
+        凍結済みの ``mlp2_phase0.setup_arm`` 経路のままでよい [bias_wd_0901 §6]
+        (``set_activation`` と同じ hook 方式)。"""
+        self.wd_b = _check_wd_b(wd_b, self.freeze_bias)
+        return self
+
     def sgd_step_layers(self, lr, gWs, gbs, gv, gc):
+        """wd_b > 0 のとき**全隠れ層の** bias だけが `b -= lr*(gb + wd_b*b)` になる
+        [bias_wd_0901 §6]。Ws・v・出力 bias c の更新式は wd_b に依らない。"""
         for i in range(self.L):
             self.Ws[i] -= lr[:, None, None] * gWs[i]
-            self.bs[i] -= lr[:, None] * gbs[i]
+            self.bs[i] -= lr[:, None] * (gbs[i] + self.wd_b * self.bs[i])
         self.v -= lr[:, None] * gv
         self.c -= lr * gc
 

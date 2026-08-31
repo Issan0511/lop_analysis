@@ -75,8 +75,11 @@ def setup_group(gkey, runs, cfg, device):
     act_alpha = float(mcfg.get("alpha", 0.0)) if mcfg["name"] == "leaky" else 0.0
 
     cond = A if exp == "A" else B
+    # wd_b は隠れ層 bias 専用の weight decay [bias_wd_0901 §6]。freeze_bias と
+    # 同じ配線 (cond 側から渡す) に乗せる。未指定 = 0.0 で既存 config は bit 一致。
     net = VecMLP(R, width, d, gens["init"], device, act_alpha=act_alpha,
-                 freeze_bias=bool(cond.get("freeze_bias", False)))
+                 freeze_bias=bool(cond.get("freeze_bias", False)),
+                 wd_b=float(cond.get("wd_b", 0.0) or 0.0))
     running_mean = torch.zeros(R, d, device=device)
 
     cbp = None

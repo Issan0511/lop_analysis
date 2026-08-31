@@ -1,0 +1,101 @@
+# proj_004: bias_wd_pilot_0901 — bias 専用 weight decay の**グリッド決定専用**パイロット
+#
+# 親: HANDOFF「bias 専用 weight decay（B → A → 本走）」§4（段階 A）
+#
+# ★ このパイロットは判定を出さない。verdict.csv を書かない。ここの数値を結果として
+#   引用してはならない（HANDOFF §4「制約」/ §7-6）。目的は本走 bias_wd_0901 の
+#   lambda グリッドを決めることだけである。
+#
+# 日付の使い回し禁止（HANDOFF §1-6）:
+#   20260830 = generator_offset で既用 / 20260901 = centered_freeze_0901 の
+#   bootstrap seed で既用。本パイロットは bootstrap を使わない（CI を出さない）。
+#
+# 走の宿主は mlp2_phase1_0829 の腕実行経路（setup_arm_p1 / train_arm_p1 /
+# exact_layer_record_p1）をそのまま使い、wd_b だけを構築後に差し込む。
+# したがって wd_b=0 の腕は既存 L1w100_A1 と bit 一致するはずで、それを S0 で検査する。
+
+spec: null                      # パイロットに spec は無い（本走 spec は段階 A の後に書く）
+baseline_dir: results/mlp2_phase1_0829
+
+common:
+  total_steps: 500000           # = task 50（HANDOFF §4）
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 10000              # task 末
+  loss_bin: 10000
+  checkpoints: []
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  encodings: [std]              # 中心化は intervention 側の層内機構で入れる
+
+intervention:
+  name: A_layer_input_centering
+  center_alpha: 0.01
+  stop_gradient_on_running_mean: true
+  consumes_rng: false
+
+# 全腕とも L1w100_A1 と同一設定（condA・1 隠れ層・幅100・ReLU・T=1e4・batch=1・
+# plain SGD・lr=0.01・enc=centered）で、differ は wd_b だけ。
+arms:
+  - {name: P_none, hidden: [100], centered_layers: [1], wd_b: 0.0}
+  - {name: P_1em5, hidden: [100], centered_layers: [1], wd_b: 1.0e-5}
+  - {name: P_1em4, hidden: [100], centered_layers: [1], wd_b: 1.0e-4}
+  - {name: P_1em3, hidden: [100], centered_layers: [1], wd_b: 1.0e-3}
+  - {name: P_1em2, hidden: [100], centered_layers: [1], wd_b: 1.0e-2}
+  - {name: P_1em1, hidden: [100], centered_layers: [1], wd_b: 1.0e-1}
+
+phase1:
+  task_period: 10000
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-8
+
+sanity:
+  s1_identity_tol: 1.0e-10      # mlp2_phase1_0829 から継承
+  omp_num_threads: 1
+
+pilot:
+  output_dir: results/bias_wd_pilot_0901
+  baseline_arm: L1w100_A1       # wd_b=0 腕の bit 一致参照（S0）
+  guard_every: 1000             # 非有限ガード（HANDOFF §5.4 S4 と同じ格子）
+  s0_replay_steps: 30000        # S0: wd_b=0 腕が L1w100_A1 と一致する step 数
+  omp_num_threads: 1
+  emit_verdict: false           # ★ 判定を出さない（コード側でも assert する）
+
+  # -------------------------------------------------------------------
+  # グリッド選択規則（HANDOFF §4「グリッド選択規則」を凍結したもの）
+  # ★ この節は走る前に commit する。実行後の裁量で選ばない。
+  # -------------------------------------------------------------------
+  grid_rule:
+    read_at_step: 500000
+    metric: L1_wall_frac        # 第1層 alive の |beta|/kappa の中央値
+    seed_statistic: median      # 10 seed の中央値
+    targets:
+      main: 0.50
+      sub: [0.90, 0.30, 0.15]
+    # 割り当ては main(0.50) -> 0.90 -> 0.30 -> 0.15 の順に、まだ取られていない
+    # 水準のうち目標に最も近いものを取る greedy。同点は小さい lambda を採る。
+    assignment: greedy_in_target_order
+    tie_break: smaller_lambda
+    # lambda=0 は対照腕 W1_none であって介入水準ではないので、主・副いずれの
+    # 選択対象からも外す（HANDOFF §5.1 の腕構成から導かれる必然の補完）。
+    exclude_lambda: [0.0]
+    # 6 水準の wall_frac が [0.15, 0.90] を跨がなければ、対数方向に 1 桁ずらして
+    # パイロットを 1 回だけ再実行してよい（別 commit・理由を summary に明記）。
+    span_required: [0.15, 0.90]
+    max_decade_shifts: 1
+    decade_shift_direction: from_data   # 実測が高すぎれば上へ、低すぎれば下へ
+
