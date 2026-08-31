@@ -1,0 +1,14 @@
+pred,scope,verdict,evidence,ci_basis,ci_degenerate
+P-main,"mean(log10 unfit), B10-B02, S_main/S_none",NUMERIC_DIVERGENCE,S_main stopped by registered S4 at step 3381000 (seeds=[7]); partial trajectory excluded; completed S_none drift +9.101652 dex,not computed,
+P-dose,"mean(log10 unfit), B10-B02, S_sub/S_none",NUMERIC_DIVERGENCE,S_sub stopped by registered S4 at step 1591000 (seeds=[2]); partial trajectory excluded,not computed,
+dead,B10 strict_dead_frac (S_none),REPORT_ONLY,L1 0.780020; L2 0.890900,,
+dead,B10 strict_dead_frac (S_main),NUMERIC_DIVERGENCE,B10 unavailable,not computed,
+dead,B10 strict_dead_frac (S_sub),NUMERIC_DIVERGENCE,B10 unavailable,not computed,
+ledger,"alive median channels B02->B10 (S_none, L1)",REPORT_ONLY,"M -0.655741->-0.920601, delta -0.264859 CI [-0.344456, -0.189274]; B -0.241193->-0.211662, delta +0.029532 CI [-0.039776, +0.096417]",paired percentile bootstrap,0
+ledger,"alive median channels B02->B10 (S_none, L2)",REPORT_ONLY,"M -0.801581->-0.883125, delta -0.081544 CI [-0.190999, +0.038819]; B -0.211491->-0.192821, delta +0.018669 CI [-0.090172, +0.091221]",paired percentile bootstrap,0
+ledger,"alive median channels B02->B10 (S_main, L1)",NUMERIC_DIVERGENCE,B10 unavailable,not computed,
+ledger,"alive median channels B02->B10 (S_main, L2)",NUMERIC_DIVERGENCE,B10 unavailable,not computed,
+ledger,"alive median channels B02->B10 (S_sub, L1)",NUMERIC_DIVERGENCE,B10 unavailable,not computed,
+ledger,"alive median channels B02->B10 (S_sub, L2)",NUMERIC_DIVERGENCE,B10 unavailable,not computed,
+static,"B10 mean(log10 unfit), S_main-S_none",NUMERIC_DIVERGENCE,B10 unavailable,not computed,
+static,"B10 mean(log10 unfit), S_sub-S_none",NUMERIC_DIVERGENCE,B10 unavailable,not computed,

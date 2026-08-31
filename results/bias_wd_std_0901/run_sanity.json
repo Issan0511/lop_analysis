@@ -1,0 +1,87 @@
+{
+  "S0_S_none_matches_mlp2_phase1_0829_L2_none": true,
+  "S0_detail": {
+    "baseline": "L2_none",
+    "max_abs": {
+      "unfit": 0.0,
+      "eval_loss_exact": 0.0
+    },
+    "n_probes": 31
+  },
+  "S1_wd0_bit_identical_to_no_wd_path": true,
+  "S2_only_hidden_bias_touched": true,
+  "S3_exact_support_identities": {
+    "S_none": {
+      "max_relerr": {
+        "mean": 5.960001279347303e-16,
+        "sd": 8.156777585035031e-16,
+        "wall": 0.0,
+        "cos_mu": 4.396690809268503e-16,
+        "beta": 3.2221382983445614e-15,
+        "sigma": 3.4977534226231643e-15,
+        "unfit": 0.0,
+        "kappa_closed": 2.2063863075088966e-15,
+        "beta_elementwise_rel": 1.2986677948591122e-10,
+        "beta_scale": 94.66087069464997
+      },
+      "n_quantization_violations": 0,
+      "n_wall_identity_violations": 0,
+      "pass_": true,
+      "note": "complete arm"
+    },
+    "S_main": {
+      "max_relerr": {
+        "mean": 5.069892266227003e-16,
+        "sd": 8.156777585035031e-16,
+        "wall": 0.0,
+        "cos_mu": 4.2731680076165595e-16,
+        "beta": 3.2221382983445614e-15,
+        "sigma": 3.4977534226231643e-15,
+        "unfit": 0.0,
+        "kappa_closed": 4.218855331316926e-15,
+        "beta_elementwise_rel": 3.4836735818328223e-12,
+        "beta_scale": 27.71968061630056
+      },
+      "n_quantization_violations": 0,
+      "n_wall_identity_violations": 0,
+      "pass_": null,
+      "note": "stopped by S4; identities passed before divergence"
+    },
+    "S_sub": {
+      "max_relerr": {
+        "mean": 5.238142832399462e-16,
+        "sd": 8.156777585035031e-16,
+        "wall": 0.0,
+        "cos_mu": 3.9265019445660943e-16,
+        "beta": 3.2221382983445614e-15,
+        "sigma": 3.4977534226231643e-15,
+        "unfit": 0.0,
+        "kappa_closed": 2.4137299786596353e-15,
+        "beta_elementwise_rel": 1.0408178043280558e-11,
+        "beta_scale": 19.132384746399264
+      },
+      "n_quantization_violations": 0,
+      "n_wall_identity_violations": 0,
+      "pass_": null,
+      "note": "stopped by S4; identities passed before divergence"
+    }
+  },
+  "S3_pass": true,
+  "S3_beta_metric": "max|a-b|/max|b_ref| (bias_wd_0901 corrected scale-normalized metric)",
+  "S4_numeric_divergence": {
+    "S_none": "COMPLETE",
+    "S_main": "NUMERIC_DIVERGENCE",
+    "S_sub": "NUMERIC_DIVERGENCE"
+  },
+  "S4_probe_every": 1000,
+  "training_elapsed_sec": {
+    "S_none": 882.6535193920135,
+    "S_main": 597.5757229328156,
+    "S_sub": 300.67484736442566
+  },
+  "post_registration_implementation_correction": {
+    "what": "exclude every S4-stopped arm from aggregate analysis and emit NUMERIC_DIVERGENCE rows",
+    "when": "after S_sub and S_main diverged during the registered full run",
+    "affects_registered_numeric_rule": false
+  }
+}

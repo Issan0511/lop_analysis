@@ -1,0 +1,136 @@
+{
+  "experiment": "bias_wd_std_0901",
+  "created": "2026-09-01 08:25:49 +0900",
+  "command": [
+    "/home/issan/Projects/claude/bias_wd_std_0901/src/bias_wd_std_0901.py",
+    "--analyze-only"
+  ],
+  "elapsed_sec": 0.638,
+  "cwd": "/home/issan/Projects/claude/bias_wd_std_0901",
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+  "torch": "2.13.0+cu130",
+  "numpy": "2.5.1",
+  "pandas": "3.0.5",
+  "device": "cpu",
+  "omp_num_threads": "1",
+  "git_hash": "12780b1113aec115fe1cf33096216c33c8a352c7",
+  "git_dirty": [
+    " M src/bias_wd_std_0901.py",
+    "?? results/_gate_bias_wd_std_0901/",
+    "?? results/bias_wd_std_0901/"
+  ],
+  "config": "/home/issan/Projects/claude/bias_wd_std_0901/configs/bias_wd_std_0901.yaml",
+  "config_sha256": "68a12be06a9bbd1414d5688c3369b24935c54c8b21ae0ff43cabc0ef6d88d42e",
+  "spec": "specs/spec_bias_wd_std_0901.md",
+  "spec_sha256": "1e21d913fa68072bb592d994dfa79a3bd3950519257b0d09b850dd139dd62c1f",
+  "output_sha256": {
+    "verdict.csv": "3e293f5f5b5e881bfdb61f5ed0321ba9cdce3d73ed324684ef276ebf253f3f57",
+    "summary.md": "4ce7a6821764dfe9f86ac4d998ce9ec9ecf98eeda07a28c40b2632a26e3307b7",
+    "paired_endpoints.csv": "048134422abf1681cf9f5ada089b8c08c3570662e887994e95af8292b9f7380a",
+    "task_end_metrics.csv": "e790096797ad4ea73c044c1f66adffd50744d7729adbffe7cd4c43686a214916",
+    "block_levels.csv": "cadc7b1e5c3ded5e1af54ee7eb50242121271d02411c401a17c71128c1c4da69",
+    "run_sanity.json": "adb8c1a8f53bdd0fca52ddc7d088cb7ed0aec9e52dbb034ae6b62603e2fe241f",
+    "config_used.yaml": "51f0b1ccd9af3c7ae759ca0e8272239da46a29cd3f959075609b9521025d9218",
+    "fig_bias_wd_std.png": "74b63e773566bf9f3f33c008b30826a0795d0a24f2dc141262c74b1b93db5f53"
+  },
+  "analysis": {
+    "main_verdict": "NUMERIC_DIVERGENCE",
+    "blocks": {
+      "B02": 2,
+      "B10": 10
+    },
+    "ratio_main": null,
+    "diff_main": null,
+    "control_drift": 9.101652461520317,
+    "small_denominator_seeds": []
+  },
+  "run_sanity": {
+    "S0_S_none_matches_mlp2_phase1_0829_L2_none": true,
+    "S0_detail": {
+      "baseline": "L2_none",
+      "max_abs": {
+        "unfit": 0.0,
+        "eval_loss_exact": 0.0
+      },
+      "n_probes": 31
+    },
+    "S1_wd0_bit_identical_to_no_wd_path": true,
+    "S2_only_hidden_bias_touched": true,
+    "S3_exact_support_identities": {
+      "S_none": {
+        "max_relerr": {
+          "mean": 5.960001279347303e-16,
+          "sd": 8.156777585035031e-16,
+          "wall": 0.0,
+          "cos_mu": 4.396690809268503e-16,
+          "beta": 3.2221382983445614e-15,
+          "sigma": 3.4977534226231643e-15,
+          "unfit": 0.0,
+          "kappa_closed": 2.2063863075088966e-15,
+          "beta_elementwise_rel": 1.2986677948591122e-10,
+          "beta_scale": 94.66087069464997
+        },
+        "n_quantization_violations": 0,
+        "n_wall_identity_violations": 0,
+        "pass_": true,
+        "note": "complete arm"
+      },
+      "S_main": {
+        "max_relerr": {
+          "mean": 5.069892266227003e-16,
+          "sd": 8.156777585035031e-16,
+          "wall": 0.0,
+          "cos_mu": 4.2731680076165595e-16,
+          "beta": 3.2221382983445614e-15,
+          "sigma": 3.4977534226231643e-15,
+          "unfit": 0.0,
+          "kappa_closed": 4.218855331316926e-15,
+          "beta_elementwise_rel": 3.4836735818328223e-12,
+          "beta_scale": 27.71968061630056
+        },
+        "n_quantization_violations": 0,
+        "n_wall_identity_violations": 0,
+        "pass_": null,
+        "note": "stopped by S4; identities passed before divergence"
+      },
+      "S_sub": {
+        "max_relerr": {
+          "mean": 5.238142832399462e-16,
+          "sd": 8.156777585035031e-16,
+          "wall": 0.0,
+          "cos_mu": 3.9265019445660943e-16,
+          "beta": 3.2221382983445614e-15,
+          "sigma": 3.4977534226231643e-15,
+          "unfit": 0.0,
+          "kappa_closed": 2.4137299786596353e-15,
+          "beta_elementwise_rel": 1.0408178043280558e-11,
+          "beta_scale": 19.132384746399264
+        },
+        "n_quantization_violations": 0,
+        "n_wall_identity_violations": 0,
+        "pass_": null,
+        "note": "stopped by S4; identities passed before divergence"
+      }
+    },
+    "S3_pass": true,
+    "S3_beta_metric": "max|a-b|/max|b_ref| (bias_wd_0901 corrected scale-normalized metric)",
+    "S4_numeric_divergence": {
+      "S_none": "COMPLETE",
+      "S_main": "NUMERIC_DIVERGENCE",
+      "S_sub": "NUMERIC_DIVERGENCE"
+    },
+    "S4_probe_every": 1000,
+    "training_elapsed_sec": {
+      "S_none": 882.6535193920135,
+      "S_main": 597.5757229328156,
+      "S_sub": 300.67484736442566
+    },
+    "post_registration_implementation_correction": {
+      "what": "exclude every S4-stopped arm from aggregate analysis and emit NUMERIC_DIVERGENCE rows",
+      "when": "after S_sub and S_main diverged during the registered full run",
+      "affects_registered_numeric_rule": false
+    }
+  },
+  "predecessor": "bias_wd_0901@da22465"
+}

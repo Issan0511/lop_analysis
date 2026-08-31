@@ -215,47 +215,88 @@ def analyze(cfg: dict, outdir: Path) -> dict:
     def series(arm: str, block: int, column: str) -> np.ndarray:
         return _series(levels, arm, block, column, seeds)
 
+    complete_arms = set(frame.arm.unique())
+    if "S_none" not in complete_arms:
+        raise RuntimeError("control arm S_none did not complete; no registered analysis is possible")
+
+    def divergence_text(arm: str) -> str:
+        path = outdir / "arm_status" / f"{arm}.json"
+        if not path.exists():
+            return f"{arm} stopped by registered S4; partial trajectory excluded"
+        event = json.loads(path.read_text(encoding="utf-8"))
+        return (f"{arm} stopped by registered S4 at step {event['detected_step']} "
+                f"(seeds={event['bad_seeds']}); partial trajectory excluded")
+
     drift = {
         arm: series(arm, b10, "mean_log10_unfit")
              - series(arm, b02, "mean_log10_unfit")
-        for arm in ("S_none", "S_main", "S_sub")
+        for arm in complete_arms
     }
-    ratio_main, ratio_main_ci, small = _ratio_result(
-        cfg, drift["S_main"], drift["S_none"], draws)
-    diff_main_ci = paired_ci(cfg, drift["S_main"] - drift["S_none"], draws)
-    main_verdict = _verdict(cfg, ratio_main_ci)
-    rows = [dict(
-        pred="P-main", scope="mean(log10 unfit), B10-B02, S_main/S_none",
-        verdict=main_verdict,
-        evidence=(f"none drift {drift['S_none'].mean():+.6f} dex; main drift "
-                  f"{drift['S_main'].mean():+.6f} dex; paired seed-ratio mean "
-                  f"{ratio_main_ci['point']:.6f} CI [{ratio_main_ci['ci_lo']:.6f}, "
-                  f"{ratio_main_ci['ci_hi']:.6f}]; drift difference "
-                  f"{diff_main_ci['point']:+.6f} CI [{diff_main_ci['ci_lo']:+.6f}, "
-                  f"{diff_main_ci['ci_hi']:+.6f}]; |none drift|<"
-                  f"{float(P['small_denominator_dex']):g} dex: {int(small.sum())}/10"),
-        ci_basis="paired percentile bootstrap", ci_degenerate=int(
-            ratio_main_ci["ci_degenerate"] or diff_main_ci["ci_degenerate"]),
-    )]
+    ratio_main = ratio_main_ci = diff_main_ci = None
+    small = np.zeros(len(seeds), dtype=bool)
+    if "S_main" in complete_arms:
+        ratio_main, ratio_main_ci, small = _ratio_result(
+            cfg, drift["S_main"], drift["S_none"], draws)
+        diff_main_ci = paired_ci(cfg, drift["S_main"] - drift["S_none"], draws)
+        main_verdict = _verdict(cfg, ratio_main_ci)
+        rows = [dict(
+            pred="P-main", scope="mean(log10 unfit), B10-B02, S_main/S_none",
+            verdict=main_verdict,
+            evidence=(f"none drift {drift['S_none'].mean():+.6f} dex; main drift "
+                      f"{drift['S_main'].mean():+.6f} dex; paired seed-ratio mean "
+                      f"{ratio_main_ci['point']:.6f} CI [{ratio_main_ci['ci_lo']:.6f}, "
+                      f"{ratio_main_ci['ci_hi']:.6f}]; drift difference "
+                      f"{diff_main_ci['point']:+.6f} CI [{diff_main_ci['ci_lo']:+.6f}, "
+                      f"{diff_main_ci['ci_hi']:+.6f}]; |none drift|<"
+                      f"{float(P['small_denominator_dex']):g} dex: {int(small.sum())}/10"),
+            ci_basis="paired percentile bootstrap", ci_degenerate=int(
+                ratio_main_ci["ci_degenerate"] or diff_main_ci["ci_degenerate"]),
+        )]
+    else:
+        main_verdict = "NUMERIC_DIVERGENCE"
+        rows = [dict(
+            pred="P-main", scope="mean(log10 unfit), B10-B02, S_main/S_none",
+            verdict=main_verdict,
+            evidence=(f"{divergence_text('S_main')}; completed S_none drift "
+                      f"{drift['S_none'].mean():+.6f} dex"),
+            ci_basis="not computed", ci_degenerate="",
+        )]
 
-    ratio_sub, ratio_sub_ci, small_sub = _ratio_result(
-        cfg, drift["S_sub"], drift["S_none"], draws)
-    diff_sub_ci = paired_ci(cfg, drift["S_sub"] - drift["S_none"], draws)
-    rows.append(dict(
-        pred="P-dose", scope="mean(log10 unfit), B10-B02, S_sub/S_none",
-        verdict="REPORT_ONLY",
-        evidence=(f"none drift {drift['S_none'].mean():+.6f} dex; sub drift "
-                  f"{drift['S_sub'].mean():+.6f} dex; paired seed-ratio mean "
-                  f"{ratio_sub_ci['point']:.6f} CI [{ratio_sub_ci['ci_lo']:.6f}, "
-                  f"{ratio_sub_ci['ci_hi']:.6f}]; drift difference "
-                  f"{diff_sub_ci['point']:+.6f} CI [{diff_sub_ci['ci_lo']:+.6f}, "
-                  f"{diff_sub_ci['ci_hi']:+.6f}]; small denominators "
-                  f"{int(small_sub.sum())}/10"),
-        ci_basis="paired percentile bootstrap",
-        ci_degenerate=int(ratio_sub_ci["ci_degenerate"] or diff_sub_ci["ci_degenerate"]),
-    ))
+    ratio_sub = None
+    if "S_sub" in complete_arms:
+        ratio_sub, ratio_sub_ci, small_sub = _ratio_result(
+            cfg, drift["S_sub"], drift["S_none"], draws)
+        diff_sub_ci = paired_ci(cfg, drift["S_sub"] - drift["S_none"], draws)
+        rows.append(dict(
+            pred="P-dose", scope="mean(log10 unfit), B10-B02, S_sub/S_none",
+            verdict="REPORT_ONLY",
+            evidence=(f"none drift {drift['S_none'].mean():+.6f} dex; sub drift "
+                      f"{drift['S_sub'].mean():+.6f} dex; paired seed-ratio mean "
+                      f"{ratio_sub_ci['point']:.6f} CI [{ratio_sub_ci['ci_lo']:.6f}, "
+                      f"{ratio_sub_ci['ci_hi']:.6f}]; drift difference "
+                      f"{diff_sub_ci['point']:+.6f} CI [{diff_sub_ci['ci_lo']:+.6f}, "
+                      f"{diff_sub_ci['ci_hi']:+.6f}]; small denominators "
+                      f"{int(small_sub.sum())}/10"),
+            ci_basis="paired percentile bootstrap",
+            ci_degenerate=int(
+                ratio_sub_ci["ci_degenerate"] or diff_sub_ci["ci_degenerate"]),
+        ))
+    else:
+        rows.append(dict(
+            pred="P-dose", scope="mean(log10 unfit), B10-B02, S_sub/S_none",
+            verdict="NUMERIC_DIVERGENCE",
+            evidence=divergence_text("S_sub"),
+            ci_basis="not computed", ci_degenerate="",
+        ))
 
     for arm in ("S_none", "S_main", "S_sub"):
+        if arm not in complete_arms:
+            rows.append(dict(
+                pred="dead", scope=f"B10 strict_dead_frac ({arm})",
+                verdict="NUMERIC_DIVERGENCE", evidence="B10 unavailable",
+                ci_basis="not computed", ci_degenerate="",
+            ))
+            continue
         rows.append(dict(
             pred="dead", scope=f"B10 strict_dead_frac ({arm})", verdict="REPORT_ONLY",
             evidence=(f"L1 {series(arm, b10, 'L1_strict_dead_frac').mean():.6f}; "
@@ -266,6 +307,14 @@ def analyze(cfg: dict, outdir: Path) -> dict:
     ledger_rows = []
     for arm in ("S_none", "S_main", "S_sub"):
         for layer in (1, 2):
+            if arm not in complete_arms:
+                rows.append(dict(
+                    pred="ledger",
+                    scope=f"alive median channels B02->B10 ({arm}, L{layer})",
+                    verdict="NUMERIC_DIVERGENCE", evidence="B10 unavailable",
+                    ci_basis="not computed", ci_degenerate="",
+                ))
+                continue
             m02 = series(arm, b02, f"L{layer}_M_median_alive")
             m10 = series(arm, b10, f"L{layer}_M_median_alive")
             b02v = series(arm, b02, f"L{layer}_B_median_alive")
@@ -292,6 +341,13 @@ def analyze(cfg: dict, outdir: Path) -> dict:
             ))
 
     for arm in ("S_main", "S_sub"):
+        if arm not in complete_arms:
+            rows.append(dict(
+                pred="static", scope=f"B10 mean(log10 unfit), {arm}-S_none",
+                verdict="NUMERIC_DIVERGENCE", evidence="B10 unavailable",
+                ci_basis="not computed", ci_degenerate="",
+            ))
+            continue
         delta = series(arm, b10, "mean_log10_unfit") - series(
             "S_none", b10, "mean_log10_unfit")
         ci = paired_ci(cfg, delta, draws)
@@ -307,6 +363,8 @@ def analyze(cfg: dict, outdir: Path) -> dict:
 
     endpoints = pd.DataFrame({"seed": seeds})
     for arm in ("S_none", "S_main", "S_sub"):
+        if arm not in complete_arms:
+            continue
         endpoints[f"{arm}_drift_B10minusB02"] = drift[arm]
         for block, tag in ((b02, "B02"), (b10, "B10")):
             endpoints[f"{arm}_{tag}_meanlog10unfit"] = series(
@@ -315,8 +373,10 @@ def analyze(cfg: dict, outdir: Path) -> dict:
                 for metric in ("strict_dead_frac", "M_median_alive", "B_median_alive"):
                     endpoints[f"{arm}_{tag}_L{layer}_{metric}"] = series(
                         arm, block, f"L{layer}_{metric}")
-    endpoints["S_main_over_S_none_drift_ratio"] = ratio_main
-    endpoints["S_sub_over_S_none_drift_ratio"] = ratio_sub
+    if ratio_main is not None:
+        endpoints["S_main_over_S_none_drift_ratio"] = ratio_main
+    if ratio_sub is not None:
+        endpoints["S_sub_over_S_none_drift_ratio"] = ratio_sub
     endpoints.to_csv(outdir / "paired_endpoints.csv", index=False)
 
     ledger = pd.DataFrame(ledger_rows)
@@ -324,6 +384,7 @@ def analyze(cfg: dict, outdir: Path) -> dict:
     result = dict(
         main_verdict=main_verdict, blocks=dict(B02=b02, B10=b10),
         ratio_main=ratio_main_ci, diff_main=diff_main_ci,
+        control_drift=float(drift["S_none"].mean()),
         small_denominator_seeds=[int(seeds[i]) for i in np.flatnonzero(small)],
     )
     _summary(cfg, outdir, verdict, levels, ledger, result)
@@ -344,6 +405,8 @@ def _figure(cfg: dict, frame: pd.DataFrame, outdir: Path) -> None:
     for (key, label, logy), ax in zip(panels, axes.flat):
         for arm in ("S_none", "S_main", "S_sub"):
             group = frame[frame.arm == arm].groupby("task")[key].median()
+            if group.empty:
+                continue
             ax.plot(group.index, group.values, lw=1.2, color=colors[arm],
                     label=f"{arm} ($\\lambda$={arm_lambda(cfg, arm):g})")
         ax.set_xlabel("task")
@@ -361,6 +424,16 @@ def _figure(cfg: dict, frame: pd.DataFrame, outdir: Path) -> None:
 def _summary(cfg: dict, outdir: Path, verdict: pd.DataFrame,
              levels: pd.DataFrame, ledger: pd.DataFrame, result: dict) -> None:
     P = cfg["bias_wd"]
+    sanity = json.loads((outdir / "run_sanity.json").read_text(encoding="utf-8"))
+    s4_parts = []
+    for arm, status in sanity["S4_numeric_divergence"].items():
+        if status == "COMPLETE":
+            s4_parts.append(f"{arm} PASS")
+        else:
+            event = json.loads((outdir / "arm_status" / f"{arm}.json").read_text(
+                encoding="utf-8"))
+            s4_parts.append(
+                f"{arm} FAIL (step {event['detected_step']}, seeds={event['bad_seeds']})")
     b10 = result["blocks"]["B10"]
     arms = [a["name"] for a in cfg["arms"]]
     late = levels[levels.block == b10]
@@ -373,6 +446,22 @@ def _summary(cfg: dict, outdir: Path, verdict: pd.DataFrame,
     ratio = result["ratio_main"]
     diff = result["diff_main"]
     small = result["small_denominator_seeds"]
+    if ratio is None:
+        primary_lines = [
+            "- `S_main` が S4 で停止したため、登録 endpoint の劣化比・対応劣化差は"
+            "算出不能（部分軌道は除外）",
+            f"- 完走した `S_none` の B10−B02 劣化は平均 "
+            f"{result['control_drift']:+.6f} dex",
+        ]
+    else:
+        primary_lines = [
+            f"- `S_main/S_none` の劣化比: {ratio['point']:.6f} "
+            f"(paired percentile 95% CI [{ratio['ci_lo']:.6f}, {ratio['ci_hi']:.6f}])",
+            f"- 対応劣化差: {diff['point']:+.6f} dex "
+            f"(95% CI [{diff['ci_lo']:+.6f}, {diff['ci_hi']:+.6f}])",
+            f"- `abs(S_none drift)<{float(P['small_denominator_dex']):g}` dex の seed: "
+            f"{small if small else 'なし'}",
+        ]
     lines = [
         "# bias_wd_std_0901 — 本走の結果", "",
         f"事前登録: [`{cfg['spec']}`](../../{cfg['spec']})。encoding は std、"
@@ -381,13 +470,8 @@ def _summary(cfg: dict, outdir: Path, verdict: pd.DataFrame,
         f"主判定は **{result['main_verdict']}**。B02 = task "
         f"{P['early_block_tasks'][0]}–{P['early_block_tasks'][1]}、B10 = task "
         f"{P['late_block_tasks'][0]}–{P['late_block_tasks'][1]} の "
-        "`mean(log10 unfit)` 劣化比を seed 対応で評価した。", "",
-        f"- `S_main/S_none` の劣化比: {ratio['point']:.6f} "
-        f"(paired percentile 95% CI [{ratio['ci_lo']:.6f}, {ratio['ci_hi']:.6f}])",
-        f"- 対応劣化差: {diff['point']:+.6f} dex "
-        f"(95% CI [{diff['ci_lo']:+.6f}, {diff['ci_hi']:+.6f}])",
-        f"- `abs(S_none drift)<{float(P['small_denominator_dex']):g}` dex の seed: "
-        f"{small if small else 'なし'}", "",
+        "`mean(log10 unfit)` 劣化比を seed 対応で評価する設計。", "",
+        *primary_lines, "",
         f"## 終盤窓（task {P['late_block_tasks'][0]}–{P['late_block_tasks'][1]} = "
         f"block {b10}）の腕別水準（seed 平均）", "", markdown_table(table), "",
         "## 台帳移動（alive 中央、B02→B10）", "", markdown_table(ledger), "",
@@ -398,12 +482,19 @@ def _summary(cfg: dict, outdir: Path, verdict: pd.DataFrame,
         f"bootstrap_seed={int(P['bootstrap_seed'])}。studentized は退化診断のみ",
         "- `log10(mean unfit)`、dead、M/B 台帳、`S_sub`、B10静的差は REPORT_ONLY", "",
         "## サニティ", "",
-        "- **S0**: `S_none` と committed `mlp2_phase1_0829/L2_none` を "
+        f"- **S0: {'PASS' if sanity['S0_S_none_matches_mlp2_phase1_0829_L2_none'] else 'FAIL'}**。"
+        "`S_none` と committed `mlp2_phase1_0829/L2_none` を "
         "30k・1k格子で replay",
-        "- **S1/S2**: lambda=0 の bit identity と、WD が隠れ層 bias だけを触る代数検査",
-        "- **S3**: 壁恒等式・1/32量子化・第1層 kappa 閉形式・独立実装一致。"
+        f"- **S1/S2: {'PASS' if sanity['S1_wd0_bit_identical_to_no_wd_path'] and sanity['S2_only_hidden_bias_touched'] else 'FAIL'}**。"
+        "lambda=0 の bit identity と、WD が隠れ層 bias だけを触る代数検査",
+        f"- **S3: {'PASS' if sanity['S3_pass'] else 'FAIL'}**（完走腕。停止腕も S4 検出前の"
+        "記録点では壁恒等式・1/32量子化・第1層 kappa 閉形式・独立実装一致に違反なし）。"
         "beta は前件で修正済みのスケール正規化尺度",
-        "- **S4**: probe_every=1000 の非有限ガード", "",
+        f"- **S4 数値安定性**（probe_every=1000）: {'; '.join(s4_parts)}", "",
+        "## 事前登録後の実装補正", "",
+        "- S4 で停止した腕の部分ログを除外し、該当 endpoint に "
+        "`NUMERIC_DIVERGENCE` を出す処理を本走開始後に追加した。判定式・窓・しきい・"
+        "完走腕の数値には触れていない", "",
         "## 引いてはいけない線", "",
         "- `LOP_PERSISTS` でも b-WD が無意味とは書かない。centered では効いている",
         "- `LOP_REMOVED` でも mu 駆動説の棄却まで飛ばず、裁定を Issa に返す",
@@ -503,9 +594,10 @@ def main() -> None:
         path = _shard(outdir) / f"{arm['name']}.csv"
         if not path.exists():
             raise FileNotFoundError(path)
-        shards.append(pd.read_csv(path))
         meta[arm["name"]] = json.loads(
             (_shard(outdir) / f"{arm['name']}.json").read_text(encoding="utf-8"))
+        if meta[arm["name"]]["status"] == "COMPLETE":
+            shards.append(pd.read_csv(path))
     frame = pd.concat(shards, ignore_index=True)
     frame.to_csv(outdir / "task_end_metrics.csv", index=False)
 
@@ -524,14 +616,23 @@ def main() -> None:
                 max_relerr=meta[arm]["sanity"]["max_relerr"],
                 n_quantization_violations=meta[arm]["sanity"]["n_quantization_violations"],
                 n_wall_identity_violations=meta[arm]["sanity"]["n_wall_identity_violations"],
-                pass_=meta[arm]["sanity"]["pass_"],
+                pass_=(meta[arm]["sanity"]["pass_"]
+                       if meta[arm]["status"] == "COMPLETE" else None),
+                note=("complete arm" if meta[arm]["status"] == "COMPLETE"
+                      else "stopped by S4; identities passed before divergence"),
             ) for arm in meta
         },
-        "S3_pass": bool(all(meta[arm]["sanity"]["pass_"] for arm in meta)),
+        "S3_pass": bool(all(meta[arm]["sanity"]["pass_"] for arm in meta
+                            if meta[arm]["status"] == "COMPLETE")),
         "S3_beta_metric": "max|a-b|/max|b_ref| (bias_wd_0901 corrected scale-normalized metric)",
         "S4_numeric_divergence": {arm: meta[arm]["status"] for arm in meta},
         "S4_probe_every": guard,
         "training_elapsed_sec": {arm: meta[arm]["elapsed_sec"] for arm in meta},
+        "post_registration_implementation_correction": {
+            "what": "exclude every S4-stopped arm from aggregate analysis and emit NUMERIC_DIVERGENCE rows",
+            "when": "after S_sub and S_main diverged during the registered full run",
+            "affects_registered_numeric_rule": False,
+        },
     }
     (outdir / "run_sanity.json").write_text(
         json.dumps(run_sanity, indent=2, ensure_ascii=False), encoding="utf-8")

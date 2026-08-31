@@ -1,0 +1,64 @@
+{
+  "rows": [
+    {
+      "depth": 1,
+      "lam": 0.001,
+      "S1_bit_identity": true,
+      "S2_W_v_c_untouched": true,
+      "S2_bias_delta_max_abs_err": 1.7553975339978933e-07,
+      "S2_bias_delta_tol_ulp": 1.4598979305446846e-06,
+      "S2_bias_delta_signal": 3.0616280128015205e-05,
+      "S2_bias_delta_ok": true
+    },
+    {
+      "depth": 2,
+      "lam": 0.001,
+      "S1_bit_identity": true,
+      "S2_W_v_c_untouched": true,
+      "S2_bias_delta_max_abs_err": 2.2195490601006895e-07,
+      "S2_bias_delta_tol_ulp": 1.4598979305446846e-06,
+      "S2_bias_delta_signal": 3.0616280128015205e-05,
+      "S2_bias_delta_ok": true
+    }
+  ],
+  "s2_source_only_bias_update_uses_wd_b": true,
+  "s2_source_updates": {
+    "sgd_step": [
+      {
+        "target": "self.W",
+        "uses_wd_b": false
+      },
+      {
+        "target": "self.v",
+        "uses_wd_b": false
+      },
+      {
+        "target": "self.c",
+        "uses_wd_b": false
+      },
+      {
+        "target": "self.b",
+        "uses_wd_b": true
+      }
+    ],
+    "sgd_step_layers": [
+      {
+        "target": "self.v",
+        "uses_wd_b": false
+      },
+      {
+        "target": "self.c",
+        "uses_wd_b": false
+      },
+      {
+        "target": "self.Ws[i]",
+        "uses_wd_b": false
+      },
+      {
+        "target": "self.bs[i]",
+        "uses_wd_b": true
+      }
+    ]
+  },
+  "pass_": true
+}
