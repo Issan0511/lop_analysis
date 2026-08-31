@@ -1,9 +1,14 @@
 endpoint,metric,point,ci_lo,ci_hi,n_seed,label,basis
-P1,R_abs_boundary_ratio,0.48971995804194834,0.4571819797056253,0.5518386409570528,10,BOTH_CONTRIBUTE,seed-level abs(median exact boundary)/abs(median A1 boundary)
-P1,Aexact_delta_beta_bnd,-2.115254422882572,-2.16090370346501,-2.0885815682122484,10,BOTH_CONTRIBUTE,seed median unit decomposition
-P1_REPORT_ONLY,A1_delta_beta_bnd,-4.297449349637645,-4.589783966810501,-3.904943481147808,10,REFERENCE,committed mlp2_phase1_0829 log
-P1_REPORT_ONLY,Aexact_delta_beta_int,-0.011977107962593436,-0.0573133435100317,0.027309437704388984,10,REPORT_ONLY,seed median unit decomposition
-P1_REPORT_ONLY,A1_delta_beta_int,1.9332211306907539,1.7900930500891263,2.190324021357924,10,REFERENCE,committed mlp2_phase1_0829 log
+P1,R_abs_boundary_ratio_499,0.5167472940078084,0.4858408196300701,0.5804704045885424,10,BOTH_CONTRIBUTE,operative true-switch mask; paired seed ratio of unit medians
+P1,Aexact_dbeta_boundary_499,-2.061764059471898,-2.1584096510196105,-2.011736635118723,10,BOTH_CONTRIBUTE,operative true-switch mask; seed median unit decomposition
+P1_REFERENCE,A1_dbeta_boundary_499,-4.199368157675053,-4.2711067527807245,-3.447241404937813,10,REFERENCE,operative true-switch mask; committed mlp2_phase1_0829 log
+P1_REPORT_ONLY,R_abs_boundary_ratio_500,0.48971995804194834,0.4571819797056253,0.5518386409570528,10,BOTH_CONTRIBUTE,legacy registered mask including startup; not used for P1
+P1_REPORT_ONLY,Aexact_dbeta_boundary_500,-2.115254422882572,-2.16090370346501,-2.0885815682122484,10,REPORT_ONLY,legacy registered mask including startup
+P1_REPORT_ONLY,A1_dbeta_boundary_500,-4.297449349637645,-4.589783966810501,-3.904943481147808,10,REFERENCE,legacy registered mask including startup
+P1_REPORT_ONLY,Aexact_dbeta_internal_4500,-0.011977107962593436,-0.0573133435100317,0.027309437704388984,10,REPORT_ONLY,seed median unit decomposition
+P1_REPORT_ONLY,A1_dbeta_internal_4500,1.9332211306907539,1.7900930500891263,2.190324021357924,10,REFERENCE,committed mlp2_phase1_0829 log
+P1_REPORT_ONLY,Aexact_dbeta_startup_0to1000,-0.028143292758613825,-0.05752978939563036,-0.013248405186459422,10,REPORT_ONLY,startup transition excluded from boundary and internal
+P1_REPORT_ONLY,A1_dbeta_startup_0to1000,-0.27869328699307516,-0.49358106032013893,0.16647353931330144,10,REFERENCE,startup transition excluded from boundary and internal
 P2,strict_dead_frac_Aexact_minus_A1,0.5,0.45999999999999996,0.595,10,ORACLE_INCREASES_DEATH,paired seed difference at 5M
 P2_LEVEL,strict_dead_frac_Aexact,1.0,1.0,1.0,10,REPORT_ONLY,5M seed level
 P2_LEVEL,strict_dead_frac_A1,0.5,0.405,0.54,10,REFERENCE,5M seed level

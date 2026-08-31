@@ -3,11 +3,14 @@
 - P1: **BOTH_CONTRIBUTE**
 - P2: **ORACLE_INCREASES_DEATH**
 
-R = 0.4897 [0.4572, 0.5518]
-Aexact Δβ_boundary = -2.115 [-2.161, -2.089]
-A1 Δβ_boundary = -4.297 [-4.59, -3.905]
-Aexact Δβ_internal = -0.01198 [-0.05731, 0.02731]
-A1 Δβ_internal = 1.933 [1.79, 2.19]
+追補1の真の切替499点版を主解析とし、初期過渡を含む500点版はREPORT_ONLY。
+R_499 = 0.5167 [0.4858, 0.5805]
+Aexact Δβ_boundary_499 = -2.062 [-2.158, -2.012]
+A1 Δβ_boundary_499 = -4.199 [-4.271, -3.447]
+R_500 (REPORT_ONLY) = 0.4897 [0.4572, 0.5518] → BOTH_CONTRIBUTE
+Aexact Δβ_internal_4500 = -0.01198 [-0.05731, 0.02731]
+A1 Δβ_internal_4500 = 1.933 [1.79, 2.19]
+startup 0→1000: Aexact -0.02814 / A1 -0.2787
 strict_dead_frac: Aexact 1 / A1 0.5; gap 0.5 [0.46, 0.595]
 continuous-dead fraction among final dead: Aexact 1 / A1 0.6248
 

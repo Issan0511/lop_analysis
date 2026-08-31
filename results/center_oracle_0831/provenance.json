@@ -22,7 +22,8 @@
     "results/mlp2_phase1_0829/logs/L1w100_A1_seed6.npz": "54e1a535bae743f386da7db7d59f067e97a1941e1a32330478a7c55b04147c74",
     "results/mlp2_phase1_0829/logs/L1w100_A1_seed7.npz": "d7d213c5a4ae51dc9a2c6559c636ea2438006eee572ba3787248de6a1f085729",
     "results/mlp2_phase1_0829/logs/L1w100_A1_seed8.npz": "f0634d357946d19a217692adcd1b2a4f2d760384cfa0dd8df927e95ee229a71c",
-    "results/mlp2_phase1_0829/logs/L1w100_A1_seed9.npz": "261d39937425745cf7808b78ad505ef2c9f2692d81d5813871b75776c97c5c7d"
+    "results/mlp2_phase1_0829/logs/L1w100_A1_seed9.npz": "261d39937425745cf7808b78ad505ef2c9f2692d81d5813871b75776c97c5c7d",
+    "specs/spec_center_oracle_0831_followup1.md": "ec233a9276513262cb26e7a8cbcc94f29e0c180e32009a6ca82d80dd1a9940f5"
   },
   "sanity": {
     "S0_preflight": {
@@ -110,21 +111,55 @@
     "S8": {
       "pass_": true,
       "count": 499
+    },
+    "S9": {
+      "pass_": true,
+      "Aexact": {
+        "pass_": true,
+        "n_seed_arm": 10,
+        "expected_per_seed": {
+          "flip_changed": 499,
+          "boundary_499": 499,
+          "boundary_500_report_only": 500,
+          "internal_4500": 4500,
+          "startup_0to1000": 1
+        },
+        "failed": []
+      },
+      "A1": {
+        "pass_": true,
+        "n_seed_arm": 10,
+        "expected_per_seed": {
+          "flip_changed": 499,
+          "boundary_499": 499,
+          "boundary_500_report_only": 500,
+          "internal_4500": 4500,
+          "startup_0to1000": 1
+        },
+        "failed": []
+      }
     }
   },
   "analysis": {
     "P1": "BOTH_CONTRIBUTE",
+    "P1_legacy_500_report_only": "BOTH_CONTRIBUTE",
     "P2": "ORACLE_INCREASES_DEATH",
-    "ratio": {
+    "ratio_499": {
+      "point": 0.5167472940078084,
+      "ci_lo": 0.4858408196300701,
+      "ci_hi": 0.5804704045885424,
+      "n_seed": 10
+    },
+    "ratio_500_report_only": {
       "point": 0.48971995804194834,
       "ci_lo": 0.4571819797056253,
       "ci_hi": 0.5518386409570528,
       "n_seed": 10
     },
-    "exact_boundary": {
-      "point": -2.115254422882572,
-      "ci_lo": -2.16090370346501,
-      "ci_hi": -2.0885815682122484,
+    "exact_boundary_499": {
+      "point": -2.061764059471898,
+      "ci_lo": -2.1584096510196105,
+      "ci_hi": -2.011736635118723,
       "n_seed": 10
     },
     "dead_gap": {
@@ -139,5 +174,6 @@
   "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
   "torch": "2.13.0+cu130",
   "numpy": "2.5.1",
-  "analysis_implementation_commit": "fa4339dd9dd36ac40582124e60c67c5cdaee2baa"
+  "analysis_implementation_commit": "94889e20eb5e184b819ba87e789b7aa0e7565263",
+  "followup_commit": "0edba567c0528a5f235ac79411430893ad8fe6a2"
 }
