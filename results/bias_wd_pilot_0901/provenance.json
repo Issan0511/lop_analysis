@@ -1,0 +1,391 @@
+{
+  "experiment": "bias_wd_pilot_0901",
+  "created": "2026-09-01 02:36:56 +0900",
+  "command": [
+    "/home/issan/Projects/claude/proj_004_drift/src/bias_wd_pilot_0901.py",
+    "--analyze-only"
+  ],
+  "elapsed_sec": 0.391,
+  "cwd": "/home/issan/Projects/claude/proj_004_drift",
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+  "torch": "2.13.0+cu130",
+  "numpy": "2.5.1",
+  "pandas": "3.0.5",
+  "device": "cpu",
+  "omp_num_threads": "1",
+  "git_hash": "2955bd3e6be486ec055ce376f4bde2819f8eac09",
+  "git_dirty": [
+    " M analysis/q17_symmetry/__init__.py",
+    " M analysis/q17_symmetry/q17_symmetry.py",
+    " M analysis/q17_symmetry/test_q17_symmetry.py",
+    " M configs/bias_wd_pilot_0901.yaml",
+    " M src/bias_wd_pilot_0901.py",
+    "?? results/_preflight_centered_freeze_0901/free_replay/",
+    "?? results/_preflight_dose_const_5m_0830/",
+    "?? results/_preflight_gate_dose_0830/",
+    "?? results/_s0_bias_wd_pilot_0901/",
+    "?? results/_smoke_centered_freeze_0901/",
+    "?? results/_smoke_dose_const_5m_0830/",
+    "?? results/_smoke_gate_dose_0830/",
+    "?? results/bias_wd_pilot_0901/",
+    "?? results/dynrepair_0826_s8replay/",
+    "?? results/mu_titration_0823_aborted_s2coverage_647316c/",
+    "?? results/mu_titration_0823_invalid_s3_39986e2/",
+    "?? src/bias_wd_0901.py"
+  ],
+  "config": "/home/issan/Projects/claude/proj_004_drift/configs/bias_wd_pilot_0901.yaml",
+  "config_sha256": "de60b0a829d86239eedfdd53e093d7d21ad99c1b931ecacdc4f61e5cf52b3a16",
+  "spec": null,
+  "spec_sha256": null,
+  "output_sha256": {
+    "task_end_metrics.csv": "575b22a695d773bc07d5f2a9f3226fa2089cfa9ab92873b88047f5d7d712c7b1",
+    "grid_table.csv": "21e82875a24e0a7398e1a605ac9927f331b2c4d634ba8ad9da1b13884b08d752",
+    "trend_by_task.csv": "b037f869206c508713241972e0804698b0cc02dbe134c863b61d8e71776725ce",
+    "grid_selection.json": "abc38fffec39f4c0546163e1513d2e8f5ff87bf28ee71b204328079afb18dae3",
+    "summary.md": "105cc8032ba5117da73dac28f385c9812ce6dd4b4271b3be69c9744ff9c9a2b4",
+    "run_sanity.json": "21c35fca8c2cd22a463aa09b5477259caaa35b8083c89584867f2924c4ddb4be",
+    "config_used.yaml": "1e5cdef993cad5f2f6f572d7cf5fca6ef6b96305d7c6828ee46cb7d5a717b86d",
+    "s0_replay.json": "5b4134482920b6d754e082a1e9ba9cbb3a0e88543a095ffece33255558724720",
+    "fig_bias_wd_pilot.png": "2de1a71fe8b0c728a05c7de0afa1dacc41721588973dd1bb92ce23660e794eae"
+  },
+  "grid_selection": {
+    "applied": {
+      "picks": {
+        "main": {
+          "wd_b": 0.001,
+          "metric": 0.463738317779375,
+          "target": 0.5
+        },
+        "sub1": {
+          "wd_b": 0.0001,
+          "metric": 0.8993171508153044,
+          "target": 0.9
+        },
+        "sub2": {
+          "wd_b": 0.01,
+          "metric": 0.21708748653441876,
+          "target": 0.3
+        },
+        "sub3": {
+          "wd_b": 0.1,
+          "metric": 0.12304950836686579,
+          "target": 0.15
+        }
+      },
+      "spans_required_range": true,
+      "observed_range": [
+        0.12304950836686579,
+        0.9432244558436139
+      ],
+      "required_range": [
+        0.15,
+        0.9
+      ],
+      "pool": [
+        {
+          "wd_b": 1e-05,
+          "metric": 0.9432244558436139
+        },
+        {
+          "wd_b": 0.0001,
+          "metric": 0.8993171508153044
+        },
+        {
+          "wd_b": 0.001,
+          "metric": 0.463738317779375
+        },
+        {
+          "wd_b": 0.01,
+          "metric": 0.21708748653441876
+        },
+        {
+          "wd_b": 0.1,
+          "metric": 0.12304950836686579
+        }
+      ],
+      "rule": {
+        "added_after_first_pilot_run": true,
+        "trigger": "absolute_targets_above_control_ceiling",
+        "metric": "L1_wall_frac_rel_to_lambda0",
+        "targets": {
+          "main": 0.5,
+          "sub": [
+            0.9,
+            0.3,
+            0.15
+          ]
+        },
+        "assignment": "greedy_in_target_order",
+        "tie_break": "smaller_lambda",
+        "exclude_lambda": [
+          0.0
+        ],
+        "span_required": [
+          0.15,
+          0.9
+        ]
+      },
+      "read_at_step": 500000,
+      "metric": "L1_wall_frac_rel_to_lambda0",
+      "seed_statistic": "median",
+      "label": "fallback: relative to the lambda=0 control"
+    },
+    "literal_rule": {
+      "picks": {
+        "main": {
+          "wd_b": 1e-05,
+          "metric": 0.35334871262634715,
+          "target": 0.5
+        },
+        "sub1": {
+          "wd_b": 0.0001,
+          "metric": 0.3369002526542514,
+          "target": 0.9
+        },
+        "sub2": {
+          "wd_b": 0.001,
+          "metric": 0.17372464906700655,
+          "target": 0.3
+        },
+        "sub3": {
+          "wd_b": 0.01,
+          "metric": 0.0813248462961232,
+          "target": 0.15
+        }
+      },
+      "spans_required_range": false,
+      "observed_range": [
+        0.04609654160403345,
+        0.35334871262634715
+      ],
+      "required_range": [
+        0.15,
+        0.9
+      ],
+      "pool": [
+        {
+          "wd_b": 1e-05,
+          "metric": 0.35334871262634715
+        },
+        {
+          "wd_b": 0.0001,
+          "metric": 0.3369002526542514
+        },
+        {
+          "wd_b": 0.001,
+          "metric": 0.17372464906700655
+        },
+        {
+          "wd_b": 0.01,
+          "metric": 0.0813248462961232
+        },
+        {
+          "wd_b": 0.1,
+          "metric": 0.04609654160403345
+        }
+      ],
+      "rule": {
+        "read_at_step": 500000,
+        "metric": "L1_wall_frac",
+        "seed_statistic": "median",
+        "targets": {
+          "main": 0.5,
+          "sub": [
+            0.9,
+            0.3,
+            0.15
+          ]
+        },
+        "assignment": "greedy_in_target_order",
+        "tie_break": "smaller_lambda",
+        "exclude_lambda": [
+          0.0
+        ],
+        "span_required": [
+          0.15,
+          0.9
+        ],
+        "max_decade_shifts": 1,
+        "decade_shift_direction": "from_data"
+      },
+      "read_at_step": 500000,
+      "metric": "L1_wall_frac",
+      "seed_statistic": "median",
+      "label": "pre-registered absolute rule"
+    },
+    "deviation": {
+      "trigger": "absolute_targets_above_control_ceiling",
+      "control_ceiling": 0.37461784460445774,
+      "absolute_targets": [
+        0.5,
+        0.9,
+        0.3,
+        0.15
+      ],
+      "reason": "wall_frac は lambda について単調減少で上限が lambda=0 の 0.374618。絶対目標 0.50 / 0.90 はどの lambda でも到達できない。これはグリッドの位置ではなく対照腕の水準の問題なので、1 桁ずらす再実行では原理的に解消しない",
+      "decade_shift_would_help": false,
+      "applies_to": "grid selection only; the registered decision thresholds ((a) 0.232, (b) 0.10, (c) CI<0) are untouched",
+      "recorded_by": "HANDOFF §8-5 (事前登録から外れた事実と理由を記録する)"
+    },
+    "control_ceiling": 0.37461784460445774
+  },
+  "run_sanity": {
+    "S0_wd0_matches_L1w100_A1": true,
+    "S0_max_abs": {
+      "unfit": 0.0,
+      "eval_loss_exact": 0.0
+    },
+    "arms": {
+      "P_none": {
+        "arm": "P_none",
+        "wd_b": 0.0,
+        "n_record_steps": 51,
+        "n_recorded": 51,
+        "missing_steps": [],
+        "n_missing": 0,
+        "max_relerr": {
+          "mean": 5.016670144423645e-16,
+          "sd": 5.324019221705349e-16,
+          "wall": 0.0,
+          "cos_mu": 4.0522685278103205e-16,
+          "beta": 8.404690003221899e-12,
+          "sigma": 1.2093882423485841e-15,
+          "unfit": 0.0,
+          "kappa_closed": 1.4201583911997441e-15
+        },
+        "identity_tol": 1e-10,
+        "n_quantization_violations": 0,
+        "n_wall_identity_violations": 0,
+        "n_nonfinite_required": 0,
+        "pass_": true
+      },
+      "P_1em5": {
+        "arm": "P_1em5",
+        "wd_b": 1e-05,
+        "n_record_steps": 51,
+        "n_recorded": 51,
+        "missing_steps": [],
+        "n_missing": 0,
+        "max_relerr": {
+          "mean": 4.992535671536086e-16,
+          "sd": 5.100700286637982e-16,
+          "wall": 0.0,
+          "cos_mu": 3.0287376153696664e-16,
+          "beta": 1.071236880834456e-11,
+          "sigma": 1.2093882423485841e-15,
+          "unfit": 0.0,
+          "kappa_closed": 1.1988333150292137e-15
+        },
+        "identity_tol": 1e-10,
+        "n_quantization_violations": 0,
+        "n_wall_identity_violations": 0,
+        "n_nonfinite_required": 0,
+        "pass_": true
+      },
+      "P_1em4": {
+        "arm": "P_1em4",
+        "wd_b": 0.0001,
+        "n_record_steps": 51,
+        "n_recorded": 51,
+        "missing_steps": [],
+        "n_missing": 0,
+        "max_relerr": {
+          "mean": 4.48017578743204e-16,
+          "sd": 5.100700286637982e-16,
+          "wall": 0.0,
+          "cos_mu": 2.6648735437146556e-16,
+          "beta": 7.81446550395629e-12,
+          "sigma": 1.2093882423485841e-15,
+          "unfit": 0.0,
+          "kappa_closed": 1.1218913507140277e-15
+        },
+        "identity_tol": 1e-10,
+        "n_quantization_violations": 0,
+        "n_wall_identity_violations": 0,
+        "n_nonfinite_required": 0,
+        "pass_": true
+      },
+      "P_1em3": {
+        "arm": "P_1em3",
+        "wd_b": 0.001,
+        "n_record_steps": 51,
+        "n_recorded": 51,
+        "missing_steps": [],
+        "n_missing": 0,
+        "max_relerr": {
+          "mean": 5.73326867711206e-16,
+          "sd": 5.100700286637982e-16,
+          "wall": 0.0,
+          "cos_mu": 3.3880535065526443e-16,
+          "beta": 4.425095658800823e-12,
+          "sigma": 1.2093882423485841e-15,
+          "unfit": 0.0,
+          "kappa_closed": 1.1218913507140277e-15
+        },
+        "identity_tol": 1e-10,
+        "n_quantization_violations": 0,
+        "n_wall_identity_violations": 0,
+        "n_nonfinite_required": 0,
+        "pass_": true
+      },
+      "P_1em2": {
+        "arm": "P_1em2",
+        "wd_b": 0.01,
+        "n_record_steps": 51,
+        "n_recorded": 51,
+        "missing_steps": [],
+        "n_missing": 0,
+        "max_relerr": {
+          "mean": 5.780263489355466e-16,
+          "sd": 5.100700286637982e-16,
+          "wall": 0.0,
+          "cos_mu": 2.5930535094244386e-16,
+          "beta": 8.823755748941737e-12,
+          "sigma": 1.2093882423485841e-15,
+          "unfit": 0.0,
+          "kappa_closed": 2.139955500386064e-15
+        },
+        "identity_tol": 1e-10,
+        "n_quantization_violations": 0,
+        "n_wall_identity_violations": 0,
+        "n_nonfinite_required": 0,
+        "pass_": true
+      },
+      "P_1em1": {
+        "arm": "P_1em1",
+        "wd_b": 0.1,
+        "n_record_steps": 51,
+        "n_recorded": 51,
+        "missing_steps": [],
+        "n_missing": 0,
+        "max_relerr": {
+          "mean": 9.639112820181504e-16,
+          "sd": 5.100700286637982e-16,
+          "wall": 0.0,
+          "cos_mu": 2.8624056455892863e-16,
+          "beta": 2.277391214896234e-11,
+          "sigma": 1.2093882423485841e-15,
+          "unfit": 0.0,
+          "kappa_closed": 1.260472109334488e-15
+        },
+        "identity_tol": 1e-10,
+        "n_quantization_violations": 0,
+        "n_wall_identity_violations": 0,
+        "n_nonfinite_required": 0,
+        "pass_": true
+      }
+    },
+    "all_arms_complete": true,
+    "all_arms_sanity_pass": true,
+    "training_elapsed_sec": {
+      "P_none": 111.67271614074707,
+      "P_1em5": 111.51597857475281,
+      "P_1em4": 112.96147227287292,
+      "P_1em3": 115.11112594604492,
+      "P_1em2": 118.79942202568054,
+      "P_1em1": 120.07900404930115
+    }
+  },
+  "stage": "A_pilot_no_verdict"
+}

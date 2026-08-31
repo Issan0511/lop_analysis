@@ -1,0 +1,181 @@
+{
+  "applied": {
+    "picks": {
+      "main": {
+        "wd_b": 0.001,
+        "metric": 0.463738317779375,
+        "target": 0.5
+      },
+      "sub1": {
+        "wd_b": 0.0001,
+        "metric": 0.8993171508153044,
+        "target": 0.9
+      },
+      "sub2": {
+        "wd_b": 0.01,
+        "metric": 0.21708748653441876,
+        "target": 0.3
+      },
+      "sub3": {
+        "wd_b": 0.1,
+        "metric": 0.12304950836686579,
+        "target": 0.15
+      }
+    },
+    "spans_required_range": true,
+    "observed_range": [
+      0.12304950836686579,
+      0.9432244558436139
+    ],
+    "required_range": [
+      0.15,
+      0.9
+    ],
+    "pool": [
+      {
+        "wd_b": 1e-05,
+        "metric": 0.9432244558436139
+      },
+      {
+        "wd_b": 0.0001,
+        "metric": 0.8993171508153044
+      },
+      {
+        "wd_b": 0.001,
+        "metric": 0.463738317779375
+      },
+      {
+        "wd_b": 0.01,
+        "metric": 0.21708748653441876
+      },
+      {
+        "wd_b": 0.1,
+        "metric": 0.12304950836686579
+      }
+    ],
+    "rule": {
+      "added_after_first_pilot_run": true,
+      "trigger": "absolute_targets_above_control_ceiling",
+      "metric": "L1_wall_frac_rel_to_lambda0",
+      "targets": {
+        "main": 0.5,
+        "sub": [
+          0.9,
+          0.3,
+          0.15
+        ]
+      },
+      "assignment": "greedy_in_target_order",
+      "tie_break": "smaller_lambda",
+      "exclude_lambda": [
+        0.0
+      ],
+      "span_required": [
+        0.15,
+        0.9
+      ]
+    },
+    "read_at_step": 500000,
+    "metric": "L1_wall_frac_rel_to_lambda0",
+    "seed_statistic": "median",
+    "label": "fallback: relative to the lambda=0 control"
+  },
+  "literal_rule": {
+    "picks": {
+      "main": {
+        "wd_b": 1e-05,
+        "metric": 0.35334871262634715,
+        "target": 0.5
+      },
+      "sub1": {
+        "wd_b": 0.0001,
+        "metric": 0.3369002526542514,
+        "target": 0.9
+      },
+      "sub2": {
+        "wd_b": 0.001,
+        "metric": 0.17372464906700655,
+        "target": 0.3
+      },
+      "sub3": {
+        "wd_b": 0.01,
+        "metric": 0.0813248462961232,
+        "target": 0.15
+      }
+    },
+    "spans_required_range": false,
+    "observed_range": [
+      0.04609654160403345,
+      0.35334871262634715
+    ],
+    "required_range": [
+      0.15,
+      0.9
+    ],
+    "pool": [
+      {
+        "wd_b": 1e-05,
+        "metric": 0.35334871262634715
+      },
+      {
+        "wd_b": 0.0001,
+        "metric": 0.3369002526542514
+      },
+      {
+        "wd_b": 0.001,
+        "metric": 0.17372464906700655
+      },
+      {
+        "wd_b": 0.01,
+        "metric": 0.0813248462961232
+      },
+      {
+        "wd_b": 0.1,
+        "metric": 0.04609654160403345
+      }
+    ],
+    "rule": {
+      "read_at_step": 500000,
+      "metric": "L1_wall_frac",
+      "seed_statistic": "median",
+      "targets": {
+        "main": 0.5,
+        "sub": [
+          0.9,
+          0.3,
+          0.15
+        ]
+      },
+      "assignment": "greedy_in_target_order",
+      "tie_break": "smaller_lambda",
+      "exclude_lambda": [
+        0.0
+      ],
+      "span_required": [
+        0.15,
+        0.9
+      ],
+      "max_decade_shifts": 1,
+      "decade_shift_direction": "from_data"
+    },
+    "read_at_step": 500000,
+    "metric": "L1_wall_frac",
+    "seed_statistic": "median",
+    "label": "pre-registered absolute rule"
+  },
+  "deviation": {
+    "trigger": "absolute_targets_above_control_ceiling",
+    "control_ceiling": 0.37461784460445774,
+    "absolute_targets": [
+      0.5,
+      0.9,
+      0.3,
+      0.15
+    ],
+    "reason": "wall_frac は lambda について単調減少で上限が lambda=0 の 0.374618。絶対目標 0.50 / 0.90 はどの lambda でも到達できない。これはグリッドの位置ではなく対照腕の水準の問題なので、1 桁ずらす再実行では原理的に解消しない",
+    "decade_shift_would_help": false,
+    "applies_to": "grid selection only; the registered decision thresholds ((a) 0.232, (b) 0.10, (c) CI<0) are untouched",
+    "recorded_by": "HANDOFF §8-5 (事前登録から外れた事実と理由を記録する)"
+  },
+  "control_ceiling": 0.37461784460445774
+}

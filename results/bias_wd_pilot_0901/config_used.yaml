@@ -1,0 +1,129 @@
+spec: null
+baseline_dir: results/mlp2_phase1_0829
+common:
+  total_steps: 500000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 10000
+  checkpoints: []
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+intervention:
+  name: A_layer_input_centering
+  center_alpha: 0.01
+  stop_gradient_on_running_mean: true
+  consumes_rng: false
+arms:
+- name: P_none
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  wd_b: 0.0
+- name: P_1em5
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  wd_b: 1.0e-05
+- name: P_1em4
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  wd_b: 0.0001
+- name: P_1em3
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  wd_b: 0.001
+- name: P_1em2
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  wd_b: 0.01
+- name: P_1em1
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  wd_b: 0.1
+phase1:
+  task_period: 10000
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-08
+sanity:
+  s1_identity_tol: 1.0e-10
+  omp_num_threads: 1
+pilot:
+  output_dir: results/bias_wd_pilot_0901
+  baseline_arm: L1w100_A1
+  guard_every: 1000
+  s0_replay_steps: 30000
+  omp_num_threads: 1
+  emit_verdict: false
+  grid_rule:
+    read_at_step: 500000
+    metric: L1_wall_frac
+    seed_statistic: median
+    targets:
+      main: 0.5
+      sub:
+      - 0.9
+      - 0.3
+      - 0.15
+    assignment: greedy_in_target_order
+    tie_break: smaller_lambda
+    exclude_lambda:
+    - 0.0
+    span_required:
+    - 0.15
+    - 0.9
+    max_decade_shifts: 1
+    decade_shift_direction: from_data
+  grid_rule_fallback:
+    added_after_first_pilot_run: true
+    trigger: absolute_targets_above_control_ceiling
+    metric: L1_wall_frac_rel_to_lambda0
+    targets:
+      main: 0.5
+      sub:
+      - 0.9
+      - 0.3
+      - 0.15
+    assignment: greedy_in_target_order
+    tie_break: smaller_lambda
+    exclude_lambda:
+    - 0.0
+    span_required:
+    - 0.15
+    - 0.9

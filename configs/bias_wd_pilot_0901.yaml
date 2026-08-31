@@ -99,3 +99,32 @@ pilot:
     max_decade_shifts: 1
     decade_shift_direction: from_data   # 実測が高すぎれば上へ、低すぎれば下へ
 
+  # -------------------------------------------------------------------
+  # ★ 事前登録からの逸脱（第1回パイロットの実測を見た後に追加した節）
+  #
+  # 実測: wall_frac は lambda について単調減少で、上限は lambda=0（対照腕）の
+  # 0.374618 である。したがって絶対目標 0.50 / 0.90 はどの lambda でも到達できず、
+  # これは**グリッドの位置の問題ではなく対照腕の水準の問題**なので、
+  # HANDOFF §4 が許す「対数方向に 1 桁ずらして再実行」では原理的に解消しない
+  # （下へずらして lambda=1e-6 を足しても 0.3746 を超えられない）。
+  #
+  # そこで目標値 0.50 / 0.90 / 0.30 / 0.15 を **lambda=0 に対する相対値**
+  #   wall_frac_rel(lambda) := wall_frac(lambda) / wall_frac(0)
+  # で読み替える。HANDOFF の数値そのものは動かさず、「壁深さに対して何割まで
+  # 来ているか」を「無介入のときの何割まで来ているか」に読み替えるだけである。
+  # 相対では lambda=0 が定義上 1.0 なので目標範囲 [0.15, 0.90] は到達可能。
+  #
+  # この逸脱はグリッド決定にのみ効き、本走の判定しきい（(a) 0.232 / (b) 0.10 /
+  # (c) CI<0）には触れない。判定しきいは lambda に依存せず spec で凍結する。
+  # -------------------------------------------------------------------
+  grid_rule_fallback:
+    added_after_first_pilot_run: true
+    trigger: absolute_targets_above_control_ceiling
+    metric: L1_wall_frac_rel_to_lambda0
+    targets:
+      main: 0.50
+      sub: [0.90, 0.30, 0.15]
+    assignment: greedy_in_target_order
+    tie_break: smaller_lambda
+    exclude_lambda: [0.0]
+    span_required: [0.15, 0.90]

@@ -202,13 +202,44 @@ def analyze(cfg: dict, outdir: Path) -> dict:
         float(np.mean(np.log10(np.maximum(
             at_end[at_end.arm == arm]["unfit"].to_numpy(), 1e-16))))
         for arm in table["arm"]]
+    ceiling0 = float(table.loc[table.wd_b == 0.0, metric].iloc[0])
+    table.insert(3, "L1_wall_frac_rel", table[metric] / ceiling0)
     table.to_csv(outdir / "grid_table.csv", index=False)
 
-    selection = select_grid(table.rename(columns={metric: "metric"})
-                            [["wd_b", "metric"]], rule)
-    selection["read_at_step"] = read_at
-    selection["metric"] = metric
-    selection["seed_statistic"] = str(rule["seed_statistic"])
+    literal = select_grid(table.rename(columns={metric: "metric"})
+                          [["wd_b", "metric"]], rule)
+    literal.update(read_at_step=read_at, metric=metric,
+                   seed_statistic=str(rule["seed_statistic"]),
+                   label="pre-registered absolute rule")
+
+    # ★ 事前登録からの逸脱（config の grid_rule_fallback を参照）。
+    # 絶対目標が対照腕の天井を超えていて到達不能なときだけ発動する。
+    fb = cfg["pilot"].get("grid_rule_fallback")
+    ceiling = ceiling0
+    applied, deviation = literal, None
+    if fb and not literal["spans_required_range"]:
+        rel = table[["wd_b"]].copy()
+        rel["metric"] = table[metric] / ceiling
+        applied = select_grid(rel, fb)
+        applied.update(read_at_step=read_at, metric=fb["metric"],
+                       seed_statistic=str(rule["seed_statistic"]),
+                       label="fallback: relative to the lambda=0 control")
+        deviation = dict(
+            trigger=str(fb["trigger"]),
+            control_ceiling=ceiling,
+            absolute_targets=[float(rule["targets"]["main"])]
+            + [float(v) for v in rule["targets"]["sub"]],
+            reason=("wall_frac は lambda について単調減少で上限が lambda=0 の "
+                    f"{ceiling:.6f}。絶対目標 0.50 / 0.90 はどの lambda でも到達"
+                    "できない。これはグリッドの位置ではなく対照腕の水準の問題"
+                    "なので、1 桁ずらす再実行では原理的に解消しない"),
+            decade_shift_would_help=False,
+            applies_to="grid selection only; the registered decision thresholds "
+                       "((a) 0.232, (b) 0.10, (c) CI<0) are untouched",
+            recorded_by="HANDOFF §8-5 (事前登録から外れた事実と理由を記録する)")
+
+    selection = dict(applied=applied, literal_rule=literal,
+                     deviation=deviation, control_ceiling=ceiling)
     (outdir / "grid_selection.json").write_text(
         json.dumps(selection, indent=2, ensure_ascii=False), encoding="utf-8")
 
@@ -250,29 +281,100 @@ def _figure(frame: pd.DataFrame, cfg: dict, outdir: Path) -> None:
 def _summary(cfg: dict, outdir: Path, table: pd.DataFrame, selection: dict,
              frame: pd.DataFrame) -> None:
     rule = cfg["pilot"]["grid_rule"]
-    picks = selection["picks"]
-    chosen = pd.DataFrame([
-        dict(role=name, target=p["target"] if p else float("nan"),
-             wd_b=p["wd_b"] if p else float("nan"),
-             observed_wall_frac=p["metric"] if p else float("nan"))
-        for name, p in picks.items()])
+    applied, literal = selection["applied"], selection["literal_rule"]
+    deviation = selection.get("deviation")
+
+    def picks_table(sel: dict) -> pd.DataFrame:
+        return pd.DataFrame([
+            dict(role=name,
+                 target=p["target"] if p else float("nan"),
+                 wd_b=p["wd_b"] if p else float("nan"),
+                 observed=p["metric"] if p else float("nan"))
+            for name, p in sel["picks"].items()])
+
     lines = [
         "# bias_wd_pilot_0901 — 段階 A（グリッド決定専用パイロット）", "",
         BANNER, "",
         "## 設計", "",
-        f"- 腕: `L1w100_A1` と同一設定で `wd_b` だけを振った {len(cfg['arms'])} 水準",
+        f"- 腕: `L1w100_A1` と同一設定（condA・1 隠れ層・幅100・ReLU・T=10,000・"
+        f"batch=1・plain SGD・lr=0.01・enc=centered・center_alpha=0.01）で "
+        f"`wd_b` だけを振った {len(cfg['arms'])} 水準",
         "- $\\lambda$ = " + ", ".join(f"{lam:g}" for _, lam in arm_lambdas(cfg)),
-        f"- seed 0–9、{int(cfg['common']['total_steps']):,} step、CPU、"
-        f"`OMP_NUM_THREADS=1`", "",
-        f"## step {int(rule['read_at_step']):,} の水準別要約（seed 中央値）", "",
+        f"- seed 0–9、{int(cfg['common']['total_steps']):,} step（= task "
+        f"{int(cfg['common']['total_steps']) // int(cfg['phase1']['task_period'])}）、CPU、"
+        f"`OMP_NUM_THREADS=1`",
+        "- 記録は task 末（10,000 step ごと）の 32 パターン厳密列挙。"
+        f"非有限ガードは {int(cfg['pilot']['guard_every']):,} step ごと",
+        "- 全腕とも init・教師・入力列・flip 軌道は bit 一致（`wd_b` は乱数を消費しない）。"
+        "`wd_b=0` 腕が committed `L1w100_A1` と 30k・1k 格子で一致することは "
+        "`s0_replay.json` で確認済み（max|Δunfit| = 0）",
+        "", f"## step {int(rule['read_at_step']):,} の水準別要約（seed 中央値）", "",
         markdown_table(table), "",
-        "## 凍結済み規則による選択", "", markdown_table(chosen), "",
-        f"- 実測範囲 {selection['observed_range']}（要求 "
-        f"{selection['required_range']}）、跨いだか "
-        f"**{selection['spans_required_range']}**", "",
+    ]
+
+    if deviation:
+        lines += [
+            "## ★ 事前登録からの逸脱（HANDOFF §8-5 の記録）", "",
+            "**事前登録の絶対目標に到達できる $\\lambda$ が存在しなかった。**", "",
+            f"- `wall_frac` は $\\lambda$ について単調減少で、上限は対照腕 "
+            f"$\\lambda=0$ の **{deviation['control_ceiling']:.6f}**",
+            f"- 事前登録の目標 {deviation['absolute_targets']} のうち 0.50 と 0.90 は"
+            f"この天井より上にあり、**どの $\\lambda$ でも到達できない**",
+            "- これはグリッドの位置ではなく**対照腕の水準**の問題なので、"
+            "HANDOFF §4 が許す「対数方向に 1 桁ずらして 1 回だけ再実行」では"
+            "原理的に解消しない（下へずらして $\\lambda=10^{-6}$ を足しても "
+            f"{deviation['control_ceiling']:.4f} を超えられない）。"
+            "**したがって再実行はしていない**",
+            "- 対処: 目標値 0.50 / 0.90 / 0.30 / 0.15 を**そのまま**使い、"
+            "指標だけを $\\lambda=0$ に対する相対値 "
+            "`wall_frac_rel = wall_frac(λ) / wall_frac(0)` に読み替えた"
+            "（「壁深さに対して何割まで来ているか」→「無介入のときの何割まで"
+            "来ているか」）。相対では $\\lambda=0$ が定義上 1.0 なので目標範囲 "
+            "[0.15, 0.90] は到達可能",
+            f"- **この逸脱はグリッド決定にしか効かない。**本走の判定しきい"
+            f"（(a) 0.232 / (b) Δ=0.10 / (c) paired CI 上端 < 0）は $\\lambda$ に"
+            f"依存せず、spec で凍結する", "",
+            "### 事前登録どおり（絶対）に読んだ場合の選択（参考・不採用）", "",
+            markdown_table(picks_table(literal)),
+            "",
+            f"- 実測範囲 {literal['observed_range']}、要求 "
+            f"{literal['required_range']}、跨いだか **{literal['spans_required_range']}**",
+            "- 絶対で読むと主 $\\lambda$ が最弱水準（グリッドの端）になる。"
+            "規則の意図（用量反応の中央を主に取る）と逆向きなので採らない", "",
+        ]
+
+    lines += [
+        "## 採用した選択", "",
+        f"- 指標: `{applied['metric']}`、seed 統計: {applied['seed_statistic']}、"
+        f"読み取り step: {applied['read_at_step']:,}",
+        f"- 割り当て: main → " + " → ".join(str(v) for v in
+                                            [rule["targets"]["main"]] + list(rule["targets"]["sub"]))
+        + " の順に、まだ取られていない水準のうち目標に最も近いものを取る"
+          "（同点は小さい $\\lambda$）。$\\lambda=0$ は対照腕なので選択対象外", "",
+        markdown_table(picks_table(applied)), "",
+        f"- 実測範囲 {applied['observed_range']}、要求 {applied['required_range']}、"
+        f"跨いだか **{applied['spans_required_range']}**", "",
+        "## 本走 `bias_wd_0901` へ渡すもの", "",
+        "```yaml",
+        yaml.safe_dump({
+            "main_lambda": (applied["picks"]["main"] or {}).get("wd_b"),
+            "sub_lambdas": [applied["picks"][k]["wd_b"]
+                            for k in ("sub1", "sub2", "sub3")
+                            if applied["picks"].get(k)],
+        }, sort_keys=False).strip(),
+        "```", "",
         "## 注意", "",
         "- **判定は含まない。** `verdict.csv` は書いていない",
-        "- ここの数値を結果として引用してはならない",
+        "- この表の `strict_dead_frac` や `unfit` は task 50 時点の値であり、"
+        "本走の判定窓（task 451–500）とは別物である。結果として引用してはならない",
+        "- `wall_frac` は第1層 alive ユニットの $|\\beta|/\\kappa$ の中央値。"
+        "$\\beta=(\\bar z)/\\sigma$、$\\kappa=(\\max_p z-\\bar z)/\\sigma$ で、"
+        "第1層では $\\kappa=\\lVert w_{\\rm free}\\rVert_1/"
+        "\\lVert w_{\\rm free}\\rVert_2$ に一致する（毎記録点で検査済み・"
+        "`run_sanity.json` の `max_relerr.kappa_closed`）",
+        "- alive 母集団は選択効果を含む。$\\lambda=0$ でも `wall_frac` 中央値が "
+        "0.37 程度に留まるのは、壁に達した個体が dead 側へ抜けて alive から"
+        "外れるためである",
     ]
     (outdir / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -392,7 +494,9 @@ def main() -> None:
              stage="A_pilot_no_verdict"),
         started, sys.argv, OUTPUTS), indent=2, ensure_ascii=False),
         encoding="utf-8")
-    print(json.dumps(selection["picks"], indent=2), flush=True)
+    print(json.dumps(selection["applied"]["picks"], indent=2), flush=True)
+    if selection.get("deviation"):
+        print("DEVIATION: " + selection["deviation"]["trigger"], flush=True)
     print(f"PILOT DONE -> {outdir}", flush=True)
 
 
