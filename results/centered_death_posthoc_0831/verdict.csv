@@ -1,0 +1,412 @@
+endpoint,arm,baseline,layer,seed,metric,point,ci_lo,ci_hi,label,basis,n_seed,n_unit,note
+E1,L1w100_A1,L2_A1,1,,onset_beta_contrast,-0.02588281175121665,-0.053173677530139685,-0.0006511383689939976,WITHIN_EQUIVALENCE_BAND,"unpaired seed clusters; CI must fit in [-0.15,+0.15]",10.0,,
+E1,L1w100_A1,L2_none,1,,onset_beta_contrast,-0.03485803818330169,-0.0667445226572454,0.014009823556989431,WITHIN_EQUIVALENCE_BAND,"unpaired seed clusters; CI must fit in [-0.15,+0.15]",10.0,,
+E1,L1w100_A1,,1,,onset_beta_level,-2.2621464035473764,-2.280700699891895,-2.2473828927613795,REPORT_ONLY,seed median of final-run onset beta; percentile seed bootstrap,10.0,,
+E1,L2_A1,L2_none,1,,onset_beta_contrast,-0.013467908836901188,-0.04486425966024399,0.035840731812641025,WITHIN_EQUIVALENCE_BAND,"paired seeds; CI must fit in [-0.15,+0.15]",10.0,,
+E1,L2_A1,,1,,onset_beta_level,-2.2362635917961597,-2.2552112536504865,-2.2184198971372098,REPORT_ONLY,seed median of final-run onset beta; percentile seed bootstrap,10.0,,
+E1,L2_none,,1,,onset_beta_level,-2.2272883653640747,-2.275806501507759,-2.2044892981648445,REPORT_ONLY,seed median of final-run onset beta; percentile seed bootstrap,10.0,,
+E1_VERDICT,,,1,,all_pairwise_onset_beta,,,,WALL_INVARIANT,"all three pairwise 95% CIs within [-0.15,+0.15]",,,
+E2,L1w100_A1,,1,,rho_M,0.6321316965108414,0.5592898047556574,0.7396148117150815,MU_CHANNEL_ALIVE,"abs(sum delta M)/abs(delta beta), literal registered sum from step 0",10.0,,step 0 precedes EMA convergence; S5's construction-near-zero statement has this startup exception
+E2,L2_A1,,1,,rho_M,0.7189845889843025,0.6618122795434748,0.8048026022987158,MU_CHANNEL_ALIVE,"abs(sum delta M)/abs(delta beta), literal registered sum from step 0",10.0,,step 0 precedes EMA convergence; S5's construction-near-zero statement has this startup exception
+E2_REPORT_ONLY,L1w100_A1,,1,,abs_b_multiplier,10.494635220302449,9.693464593980561,20.367029436979152,REPORT_ONLY,median unitwise final/step10000 multiplier; |b_raw| for bias,10.0,,
+E2_REPORT_ONLY,L1w100_A1,,1,,sigma_multiplier,1.8791162294252701,1.7933282972451665,1.9417711088773664,REPORT_ONLY,median unitwise final/step10000 multiplier; |b_raw| for bias,10.0,,
+E2_REPORT_ONLY,L2_A1,,1,,abs_b_multiplier,18.64877356716636,15.16838012206917,25.344190236653716,REPORT_ONLY,median unitwise final/step10000 multiplier; |b_raw| for bias,10.0,,
+E2_REPORT_ONLY,L2_A1,,1,,sigma_multiplier,1.5986960266078352,1.5189059354396384,1.6233627519527027,REPORT_ONLY,median unitwise final/step10000 multiplier; |b_raw| for bias,10.0,,
+E2_SENSITIVITY_REPORT_ONLY,L1w100_A1,,1,,rho_M_from_step10000,0.04048716548812372,0.03089998297879881,0.047384504500472095,BIAS_CHANNEL_DOMINANT,unregistered sensitivity excluding EMA startup; does not replace E2,10.0,,shown because step 0 is initialization and sigma multiplier already uses step 10000
+E2_SENSITIVITY_REPORT_ONLY,L2_A1,,1,,rho_M_from_step10000,0.04528425249483713,0.036326886768640196,0.05904618135306123,BIAS_CHANNEL_DOMINANT,unregistered sensitivity excluding EMA startup; does not replace E2,10.0,,shown because step 0 is initialization and sigma multiplier already uses step 10000
+E3,L1w100_A1,,1,,delta_b_raw_bnd,-2.0317902905987584,-2.271051656250415,-1.87813630508366,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L1w100_A1,,1,,delta_b_raw_int,0.7564767631249294,0.6713885074283465,1.0186492840219872,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L1w100_A1,,1,,delta_beta_bnd,-4.297449349637645,-4.589783966810501,-3.904943481147808,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L1w100_A1,,1,,delta_beta_bnd_per_transition,-0.00859489869927529,-0.009179567933621001,-0.007809886962295617,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L1w100_A1,,1,,delta_beta_int,1.9332211306907539,1.7900930500891263,2.190324021357924,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L1w100_A1,,1,,delta_beta_int_per_transition,0.00042960469570905643,0.0003977984555753614,0.000486738671412872,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L1w100_A1,,1,,delta_log_sigma_bnd,-1.245651792211187,-1.3586174200995809,-1.1405261400366777,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L1w100_A1,,1,,delta_log_sigma_int,1.9869648581753578,1.9106925869178455,2.069698506404263,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_A1,,1,,delta_b_raw_bnd,-0.9404111052192674,-1.012613962300726,-0.7848561381714919,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_A1,,1,,delta_b_raw_int,0.07622286182455555,0.013154283537559402,0.11584734292301452,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_A1,,1,,delta_beta_bnd,-2.1898309386363053,-2.4926016496231114,-1.9117733299281099,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_A1,,1,,delta_beta_bnd_per_transition,-0.00437966187727261,-0.004985203299246222,-0.0038235466598562197,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_A1,,1,,delta_beta_int,0.5394573975295316,0.1231501839347402,0.7964435851044982,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_A1,,1,,delta_beta_int_per_transition,0.00011987942167322925,2.7366707541053377e-05,0.00017698746335655514,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_A1,,1,,delta_log_sigma_bnd,-0.4060241956363287,-0.5058555749730347,-0.37864651051794457,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_A1,,1,,delta_log_sigma_int,0.8506998796855662,0.7930094376932091,0.9552826264163883,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_Aall,,1,,delta_b_raw_bnd,4.128717697939946,3.1213912833174136,4.570920440097153,REPORT_ONLY,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_Aall,,1,,delta_b_raw_int,-0.24879323897131544,-0.5018852555590896,-0.17271852618609254,REPORT_ONLY,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_Aall,,1,,delta_beta_bnd,28.707969639126873,11.935898961286853,40.39307957216897,REPORT_ONLY,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_Aall,,1,,delta_beta_bnd_per_transition,0.057415939278253746,0.023871797922573705,0.08078615914433794,REPORT_ONLY,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_Aall,,1,,delta_beta_int,-12.347012751520197,-19.13369241241415,-5.083378021878161,REPORT_ONLY,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_Aall,,1,,delta_beta_int_per_transition,-0.0027437806114489326,-0.004251931647203144,-0.0011296395604173692,REPORT_ONLY,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_Aall,,1,,delta_log_sigma_bnd,-2.572625286865434,-2.7980483573246224,-1.5634586932833718,REPORT_ONLY,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_Aall,,1,,delta_log_sigma_int,2.322355837691375,1.9330932398599794,2.670818346357688,REPORT_ONLY,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_none,,1,,delta_b_raw_bnd,-0.6529903977165756,-0.7262040232488883,-0.590007122963417,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_none,,1,,delta_b_raw_int,0.08228228249140734,0.04780805090752557,0.09159190532223391,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_none,,1,,delta_beta_bnd,-4.6656430656439625,-4.990403880030499,-4.285658226466694,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_none,,1,,delta_beta_bnd_per_transition,-0.009331286131287926,-0.009980807760060998,-0.008571316452933388,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_none,,1,,delta_beta_int,1.1137775279566995,0.9024340447504073,1.286327046544102,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_none,,1,,delta_beta_int_per_transition,0.000247506117323711,0.00020054089883342384,0.0002858504547875782,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_none,,1,,delta_log_sigma_bnd,0.7550082021523832,0.6894282868527829,0.7780140053313586,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3,L2_none,,1,,delta_log_sigma_int,0.5274056493735002,0.4176786679568911,0.6374727167485501,COMPONENT,seed median of unitwise additive decomposition; percentile seed bootstrap,10.0,,
+E3_REPORT_ONLY,L1w100_A1,,1,,onset_boundary_fraction,0.41801075268817206,0.38095238095238093,0.45042622461170834,REPORT_ONLY,fraction of eligible final-dead onsets at step % 10000 == 1000,10.0,,
+E3_REPORT_ONLY,L2_A1,,1,,onset_boundary_fraction,0.38114453411592075,0.3403519798868636,0.41025641025641024,REPORT_ONLY,fraction of eligible final-dead onsets at step % 10000 == 1000,10.0,,
+E3_REPORT_ONLY,L2_Aall,,1,,onset_boundary_fraction,0.16666666666666666,0.0,0.5,REPORT_ONLY,fraction of eligible final-dead onsets at step % 10000 == 1000,8.0,,
+E3_REPORT_ONLY,L2_none,,1,,onset_boundary_fraction,0.872093023255814,0.8655336911150864,0.9222222222222223,REPORT_ONLY,fraction of eligible final-dead onsets at step % 10000 == 1000,10.0,,
+E3_VERDICT,L1w100_A1,,1,,L1w100_A1_localization,,,,BOUNDARY_CARRIES_DESCENT,boundary CI upper<0 and internal CI lower>0; registered fallback hierarchy,,,
+E4,L2_A1,L2_none,1,,delta_b_raw_bnd_A1_minus_none,-0.16974167124982048,-0.2616502526443735,-0.08679350053087115,BIAS_DESCENT_WORSENED_BY_CENTERING,S_pair and S_pair_final PASS; seed+unit paired,10.0,,
+E4,L2_A1,L2_none,1,,delta_beta_bnd_A1_minus_none,2.4418404218754404,1.8241249081397655,2.831144986034815,CENTERING_REDUCES_BUT_NOT_REMOVES,S_pair and S_pair_final PASS; seed+unit paired,10.0,,
+E5_COUNT,L1w100_A1,,1,,within_task_revival_count,25723.0,,,REPORT_ONLY,dead->alive where flip_state is unchanged and transition starts after step 0,10.0,,"seed_counts=[2817, 2697, 2464, 2742, 2505, 2392, 2512, 2580, 2272, 2742]; initial_0_to_1000_excluded=222"
+E5_COUNT,L2_A1,,1,,within_task_revival_count,28094.0,,,REPORT_ONLY,dead->alive where flip_state is unchanged and transition starts after step 0,10.0,,"seed_counts=[2928, 2893, 2304, 2548, 3404, 2370, 2548, 3034, 2730, 3335]; initial_0_to_1000_excluded=222"
+E5_COUNT,L2_A1,,2,,within_task_revival_count,19786.0,,,REPORT_ONLY,dead->alive where flip_state is unchanged and transition starts after step 0,10.0,,"seed_counts=[2176, 2212, 1761, 1510, 1901, 2201, 1933, 1824, 2128, 2140]; initial_0_to_1000_excluded=233"
+E5_COUNT,L2_Aall,,1,,within_task_revival_count,3185.0,,,REPORT_ONLY,dead->alive where flip_state is unchanged and transition starts after step 0,10.0,,"seed_counts=[253, 408, 280, 302, 510, 266, 173, 271, 391, 331]; initial_0_to_1000_excluded=222"
+E5_COUNT,L2_Aall,,2,,within_task_revival_count,44044.0,,,REPORT_ONLY,dead->alive where flip_state is unchanged and transition starts after step 0,10.0,,"seed_counts=[3518, 4449, 4147, 3503, 5195, 4033, 4083, 5474, 4576, 5066]; initial_0_to_1000_excluded=254"
+E5_COUNT,L2_none,,1,,within_task_revival_count,0.0,,,REPORT_ONLY,dead->alive where flip_state is unchanged and transition starts after step 0,10.0,,"seed_counts=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; initial_0_to_1000_excluded=0"
+E5_COUNT,L2_none,,2,,within_task_revival_count,9570.0,,,REPORT_ONLY,dead->alive where flip_state is unchanged and transition starts after step 0,10.0,,"seed_counts=[1036, 927, 1105, 872, 1151, 819, 899, 1169, 830, 762]; initial_0_to_1000_excluded=105"
+E5_VERDICT,,,1,,within_task_absorption,,,,ABSORPTION_BROKEN_BY_EMA,none L1 all-zero and both centered L1 all-seed positive,,,L2_none layer2 is the required moving-input control
+E6_REPORT_ONLY,L1w100_A1,,1,,churn_ratio_revival_over_death,0.992834140822188,,,REPORT_ONLY,descriptive count or ratio,10.0,,revival transitions / death transitions
+E6_REPORT_ONLY,L1w100_A1,,1,,continuous_dead_last_1000_fraction,0.6332622601279317,,,REPORT_ONLY,descriptive count or ratio,10.0,,core=297; final_dead=469
+E6_REPORT_ONLY,L1w100_A1,,1,,death_transition_count,34469.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+E6_REPORT_ONLY,L1w100_A1,,1,,revival_transition_count,34222.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+E6_REPORT_ONLY,L2_A1,,1,,churn_ratio_revival_over_death,0.9949181416568014,,,REPORT_ONLY,descriptive count or ratio,10.0,,revival transitions / death transitions
+E6_REPORT_ONLY,L2_A1,,1,,continuous_dead_last_1000_fraction,0.5402010050251256,,,REPORT_ONLY,descriptive count or ratio,10.0,,core=215; final_dead=398
+E6_REPORT_ONLY,L2_A1,,1,,death_transition_count,34633.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+E6_REPORT_ONLY,L2_A1,,1,,revival_transition_count,34457.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+E6_REPORT_ONLY,L2_A1,,2,,churn_ratio_revival_over_death,0.981404958677686,,,REPORT_ONLY,descriptive count or ratio,10.0,,revival transitions / death transitions
+E6_REPORT_ONLY,L2_A1,,2,,continuous_dead_last_1000_fraction,0.4607104413347686,,,REPORT_ONLY,descriptive count or ratio,10.0,,core=428; final_dead=929
+E6_REPORT_ONLY,L2_A1,,2,,death_transition_count,36300.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+E6_REPORT_ONLY,L2_A1,,2,,revival_transition_count,35625.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+E6_REPORT_ONLY,L2_Aall,,1,,churn_ratio_revival_over_death,1.0534491837809374,,,REPORT_ONLY,descriptive count or ratio,10.0,,revival transitions / death transitions
+E6_REPORT_ONLY,L2_Aall,,1,,continuous_dead_last_1000_fraction,0.7894736842105263,,,REPORT_ONLY,descriptive count or ratio,10.0,,core=15; final_dead=19
+E6_REPORT_ONLY,L2_Aall,,1,,death_transition_count,3798.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+E6_REPORT_ONLY,L2_Aall,,1,,revival_transition_count,4001.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+E6_REPORT_ONLY,L2_Aall,,2,,churn_ratio_revival_over_death,0.9948299090602897,,,REPORT_ONLY,descriptive count or ratio,10.0,,revival transitions / death transitions
+E6_REPORT_ONLY,L2_Aall,,2,,continuous_dead_last_1000_fraction,0.25846702317290554,,,REPORT_ONLY,descriptive count or ratio,10.0,,core=145; final_dead=561
+E6_REPORT_ONLY,L2_Aall,,2,,death_transition_count,59380.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+E6_REPORT_ONLY,L2_Aall,,2,,revival_transition_count,59073.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+E6_REPORT_ONLY,L2_none,,1,,churn_ratio_revival_over_death,0.975413612565445,,,REPORT_ONLY,descriptive count or ratio,10.0,,revival transitions / death transitions
+E6_REPORT_ONLY,L2_none,,1,,continuous_dead_last_1000_fraction,0.2200247218788628,,,REPORT_ONLY,descriptive count or ratio,10.0,,core=178; final_dead=809
+E6_REPORT_ONLY,L2_none,,1,,death_transition_count,23875.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+E6_REPORT_ONLY,L2_none,,1,,revival_transition_count,23288.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+E6_REPORT_ONLY,L2_none,,2,,churn_ratio_revival_over_death,0.9828439458924447,,,REPORT_ONLY,descriptive count or ratio,10.0,,revival transitions / death transitions
+E6_REPORT_ONLY,L2_none,,2,,continuous_dead_last_1000_fraction,0.4020501138952164,,,REPORT_ONLY,descriptive count or ratio,10.0,,core=353; final_dead=878
+E6_REPORT_ONLY,L2_none,,2,,death_transition_count,36372.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+E6_REPORT_ONLY,L2_none,,2,,revival_transition_count,35748.0,,,REPORT_ONLY,descriptive count or ratio,10.0,,"all transitions, all seeds"
+S1,L1w100_A1,,1,0,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L1w100_A1,,1,1,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L1w100_A1,,1,2,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L1w100_A1,,1,3,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L1w100_A1,,1,4,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L1w100_A1,,1,5,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L1w100_A1,,1,6,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L1w100_A1,,1,7,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L1w100_A1,,1,8,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L1w100_A1,,1,9,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_A1,,1,0,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_A1,,1,1,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_A1,,1,2,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_A1,,1,3,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_A1,,1,4,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_A1,,1,5,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_A1,,1,6,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_A1,,1,7,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_A1,,1,8,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_A1,,1,9,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_A1,,2,0,absorption_inequality_violations,5444.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=5444
+S1,L2_A1,,2,1,absorption_inequality_violations,5927.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=5927
+S1,L2_A1,,2,2,absorption_inequality_violations,2910.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=2910
+S1,L2_A1,,2,3,absorption_inequality_violations,2915.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=2915
+S1,L2_A1,,2,4,absorption_inequality_violations,3892.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=3892
+S1,L2_A1,,2,5,absorption_inequality_violations,3290.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=3290
+S1,L2_A1,,2,6,absorption_inequality_violations,4222.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=4222
+S1,L2_A1,,2,7,absorption_inequality_violations,2664.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=2664
+S1,L2_A1,,2,8,absorption_inequality_violations,4582.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=4582
+S1,L2_A1,,2,9,absorption_inequality_violations,3302.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=13; right=3289
+S1,L2_Aall,,1,0,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_Aall,,1,1,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_Aall,,1,2,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_Aall,,1,3,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_Aall,,1,4,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_Aall,,1,5,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_Aall,,1,6,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_Aall,,1,7,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_Aall,,1,8,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_Aall,,1,9,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_Aall,,2,0,absorption_inequality_violations,2469.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=2469
+S1,L2_Aall,,2,1,absorption_inequality_violations,2640.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=2640
+S1,L2_Aall,,2,2,absorption_inequality_violations,912.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=10; right=902
+S1,L2_Aall,,2,3,absorption_inequality_violations,1773.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=1773
+S1,L2_Aall,,2,4,absorption_inequality_violations,2193.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=2193
+S1,L2_Aall,,2,5,absorption_inequality_violations,1829.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=1829
+S1,L2_Aall,,2,6,absorption_inequality_violations,2845.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=2845
+S1,L2_Aall,,2,7,absorption_inequality_violations,2196.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=1; right=2195
+S1,L2_Aall,,2,8,absorption_inequality_violations,2256.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=2256
+S1,L2_Aall,,2,9,absorption_inequality_violations,2927.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=3; right=2924
+S1,L2_none,,1,0,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_none,,1,1,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_none,,1,2,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_none,,1,3,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_none,,1,4,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_none,,1,5,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_none,,1,6,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_none,,1,7,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_none,,1,8,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_none,,1,9,absorption_inequality_violations,0.0,,,PASS,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=0; right=0
+S1,L2_none,,2,0,absorption_inequality_violations,2504.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=575; right=1929
+S1,L2_none,,2,1,absorption_inequality_violations,2580.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=687; right=1893
+S1,L2_none,,2,2,absorption_inequality_violations,4050.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=992; right=3058
+S1,L2_none,,2,3,absorption_inequality_violations,3542.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=1204; right=2338
+S1,L2_none,,2,4,absorption_inequality_violations,2997.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=934; right=2063
+S1,L2_none,,2,5,absorption_inequality_violations,1944.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=467; right=1477
+S1,L2_none,,2,6,absorption_inequality_violations,3559.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=2322; right=1237
+S1,L2_none,,2,7,absorption_inequality_violations,4135.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=2385; right=1750
+S1,L2_none,,2,8,absorption_inequality_violations,2366.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=526; right=1840
+S1,L2_none,,2,9,absorption_inequality_violations,2123.0,,,FAIL,p_hat=0 => beta<=-1 and beta<=-sqrt(5) => p_hat=0,1.0,100.0,left=393; right=1730
+S2,L1w100_A1,,1,0,task_end_reconciliation_max_relerr,8.840766799357515e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L1w100_A1,,1,1,task_end_reconciliation_max_relerr,5.424632553700387e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L1w100_A1,,1,2,task_end_reconciliation_max_relerr,5.654434733277941e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L1w100_A1,,1,3,task_end_reconciliation_max_relerr,6.562776839344799e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L1w100_A1,,1,4,task_end_reconciliation_max_relerr,7.593269924021759e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L1w100_A1,,1,5,task_end_reconciliation_max_relerr,5.24998838569437e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L1w100_A1,,1,6,task_end_reconciliation_max_relerr,8.731008029400404e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L1w100_A1,,1,7,task_end_reconciliation_max_relerr,5.525255431280439e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L1w100_A1,,1,8,task_end_reconciliation_max_relerr,2.703908259643731e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L1w100_A1,,1,9,task_end_reconciliation_max_relerr,7.994029177958319e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,1,0,task_end_reconciliation_max_relerr,4.526969945059568e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,1,1,task_end_reconciliation_max_relerr,4.700712837687689e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,1,2,task_end_reconciliation_max_relerr,3.86980632599736e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,1,3,task_end_reconciliation_max_relerr,8.394710217194583e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,1,4,task_end_reconciliation_max_relerr,3.5628651566849625e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,1,5,task_end_reconciliation_max_relerr,7.03701873275301e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,1,6,task_end_reconciliation_max_relerr,6.247285257239289e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,1,7,task_end_reconciliation_max_relerr,6.863013059738589e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,1,8,task_end_reconciliation_max_relerr,3.871385891748286e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,1,9,task_end_reconciliation_max_relerr,5.005959529149962e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,2,0,task_end_reconciliation_max_relerr,4.06275634443543e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,2,1,task_end_reconciliation_max_relerr,4.210921555392102e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,2,2,task_end_reconciliation_max_relerr,4.978488032660153e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,2,3,task_end_reconciliation_max_relerr,1.0763004703806268e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,2,4,task_end_reconciliation_max_relerr,2.0779137115868643e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,2,5,task_end_reconciliation_max_relerr,5.4515459274291125e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,2,6,task_end_reconciliation_max_relerr,4.003947772821375e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,2,7,task_end_reconciliation_max_relerr,1.3958606373210665e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,2,8,task_end_reconciliation_max_relerr,1.1623409126496811e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_A1,,2,9,task_end_reconciliation_max_relerr,4.045737013715051e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,1,0,task_end_reconciliation_max_relerr,4.743656459944194e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,1,1,task_end_reconciliation_max_relerr,6.707824214978958e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,1,2,task_end_reconciliation_max_relerr,3.6671307624969196e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,1,3,task_end_reconciliation_max_relerr,5.08564748996828e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,1,4,task_end_reconciliation_max_relerr,3.73649037945392e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,1,5,task_end_reconciliation_max_relerr,7.369296995006048e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,1,6,task_end_reconciliation_max_relerr,7.199013472550125e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,1,7,task_end_reconciliation_max_relerr,5.343554821543818e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,1,8,task_end_reconciliation_max_relerr,4.3950429485452114e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,1,9,task_end_reconciliation_max_relerr,7.721594647220595e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,2,0,task_end_reconciliation_max_relerr,4.549956388703335e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,2,1,task_end_reconciliation_max_relerr,3.819724119975229e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,2,2,task_end_reconciliation_max_relerr,1.8052980370984643e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,2,3,task_end_reconciliation_max_relerr,2.0855684296133738e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,2,4,task_end_reconciliation_max_relerr,3.791297597789973e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,2,5,task_end_reconciliation_max_relerr,6.652431538053683e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,2,6,task_end_reconciliation_max_relerr,2.1497538390676942e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,2,7,task_end_reconciliation_max_relerr,7.222571376698509e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,2,8,task_end_reconciliation_max_relerr,4.386085701523041e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_Aall,,2,9,task_end_reconciliation_max_relerr,1.3984366042790472e-13,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,1,0,task_end_reconciliation_max_relerr,7.091298239665746e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,1,1,task_end_reconciliation_max_relerr,1.104434315007988e-14,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,1,2,task_end_reconciliation_max_relerr,1.985961270950902e-14,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,1,3,task_end_reconciliation_max_relerr,4.1209262169427226e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,1,4,task_end_reconciliation_max_relerr,3.680901570851156e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,1,5,task_end_reconciliation_max_relerr,2.4795401355456614e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,1,6,task_end_reconciliation_max_relerr,2.2552930283266586e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,1,7,task_end_reconciliation_max_relerr,8.964172956792697e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,1,8,task_end_reconciliation_max_relerr,1.9209168611520783e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,1,9,task_end_reconciliation_max_relerr,7.818509230727958e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,2,0,task_end_reconciliation_max_relerr,3.564189177753286e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,2,1,task_end_reconciliation_max_relerr,5.865322486394614e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,2,2,task_end_reconciliation_max_relerr,1.4913215641829774e-14,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,2,3,task_end_reconciliation_max_relerr,3.614070712053015e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,2,4,task_end_reconciliation_max_relerr,3.624519121820026e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,2,5,task_end_reconciliation_max_relerr,1.20316689632104e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,2,6,task_end_reconciliation_max_relerr,1.2226275039735505e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,2,7,task_end_reconciliation_max_relerr,3.17490703362047e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,2,8,task_end_reconciliation_max_relerr,9.13100333993433e-16,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S2,L2_none,,2,9,task_end_reconciliation_max_relerr,3.4419974884129692e-15,,,PASS,median_M/B relative error <1e-9 and strict_dead exact,1.0,100.0,strict_dead_exact=True
+S3,L1w100_A1,,all,0,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L1w100_A1,,all,1,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L1w100_A1,,all,2,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L1w100_A1,,all,3,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L1w100_A1,,all,4,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L1w100_A1,,all,5,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L1w100_A1,,all,6,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L1w100_A1,,all,7,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L1w100_A1,,all,8,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L1w100_A1,,all,9,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_A1,,all,0,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_A1,,all,1,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_A1,,all,2,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_A1,,all,3,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_A1,,all,4,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_A1,,all,5,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_A1,,all,6,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_A1,,all,7,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_A1,,all,8,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_A1,,all,9,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_Aall,,all,0,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_Aall,,all,1,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_Aall,,all,2,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_Aall,,all,3,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_Aall,,all,4,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_Aall,,all,5,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_Aall,,all,6,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_Aall,,all,7,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_Aall,,all,8,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_Aall,,all,9,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_none,,all,0,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_none,,all,1,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_none,,all,2,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_none,,all,3,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_none,,all,4,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_none,,all,5,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_none,,all,6,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_none,,all,7,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_none,,all,8,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S3,L2_none,,all,9,flip_change_count,499.0,,,PASS,499 changes; preceding step % 10000 == 0; next step % 10000 == 1000,1.0,,boundary mask contains 500 transitions
+S4,L1w100_A1,,1,0,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L1w100_A1,,1,1,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L1w100_A1,,1,2,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L1w100_A1,,1,3,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L1w100_A1,,1,4,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L1w100_A1,,1,5,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L1w100_A1,,1,6,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L1w100_A1,,1,7,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L1w100_A1,,1,8,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L1w100_A1,,1,9,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,1,0,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,1,1,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,1,2,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,1,3,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,1,4,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,1,5,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,1,6,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,1,7,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,1,8,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,1,9,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,2,0,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,2,1,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,2,2,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,2,3,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,2,4,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,2,5,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,2,6,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,2,7,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,2,8,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_A1,,2,9,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,1,0,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,1,1,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,1,2,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,1,3,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,1,4,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,1,5,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,1,6,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,1,7,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,1,8,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,1,9,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,2,0,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,2,1,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,2,2,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,2,3,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,2,4,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,2,5,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,2,6,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,2,7,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,2,8,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_Aall,,2,9,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,1,0,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,1,1,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,1,2,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,1,3,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,1,4,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,1,5,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,1,6,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,1,7,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,1,8,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,1,9,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,2,0,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,2,1,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,2,2,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,2,3,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,2,4,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,2,5,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,2,6,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,2,7,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,2,8,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S4,L2_none,,2,9,strict_dead_identity_mismatches,0.0,,,PASS,layer strict_dead == count(p_hat == 0),1.0,100.0,
+S5,centered_layer1,,1,,construction_tautology_note_present,1.0,,,PASS,rho_M is construction-favored after EMA startup; verdict carries the caveat,10.0,2000.0,step 0 is the explicit startup exception; small post-start rho_M is not an independent discovery
+S6,L1w100_A1,,1,0,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L1w100_A1,,1,1,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L1w100_A1,,1,2,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L1w100_A1,,1,3,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L1w100_A1,,1,4,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L1w100_A1,,1,5,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L1w100_A1,,1,6,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L1w100_A1,,1,7,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L1w100_A1,,1,8,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L1w100_A1,,1,9,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,1,0,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,1,1,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,1,2,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,1,3,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,1,4,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,1,5,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,1,6,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,1,7,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,1,8,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,1,9,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,2,0,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,2,1,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,2,2,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,2,3,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,2,4,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,2,5,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,2,6,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,2,7,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,2,8,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_A1,,2,9,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,1,0,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,1,1,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,1,2,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,1,3,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,1,4,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,1,5,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,1,6,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,1,7,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,1,8,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,1,9,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,2,0,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,2,1,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,2,2,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,2,3,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,2,4,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,2,5,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,2,6,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,2,7,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,2,8,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_Aall,,2,9,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,1,0,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,1,1,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,1,2,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,1,3,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,1,4,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,1,5,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,1,6,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,1,7,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,1,8,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,1,9,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,2,0,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,2,1,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,2,2,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,2,3,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,2,4,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,2,5,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,2,6,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,2,7,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,2,8,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
+S6,L2_none,,2,9,excluded_unit_fraction,0.0,,,PASS,unit NaN fraction >1%; excluded units <5%,1.0,100.0,excluded=0
