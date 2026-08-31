@@ -304,11 +304,16 @@ def inspect_run(
         death_transitions = (~dead[:-1]) & dead[1:]
         revival_transitions = dead[:-1] & (~dead[1:])
         same_flip = ~flip_changed
-        within_revival_by_seed = int(revival_transitions[same_flip].sum())
         per_layer[layer] = dict(
             death_count=int(death_transitions.sum()),
             revival_count=int(revival_transitions.sum()),
-            within_revival=within_revival_by_seed,
+            # The registered task-internal count starts after the initialized
+            # state.  The 0->1000 transition is retained separately because it
+            # contains the EMA start-up transient that also matters for E2.
+            within_revival=int(revival_transitions[
+                same_flip & (run.step[:-1] > 0)
+            ].sum()),
+            initial_revival=int(revival_transitions[0].sum()),
             final_dead=int(dead[-1].sum()),
             core_dead=int(np.sum(dead[-1] & np.all(dead[-1000:], axis=0))),
         )
@@ -336,6 +341,17 @@ def inspect_run(
                 delta_beta_int=float(np.nansum(d_beta[~bmask, unit])) if valid else np.nan,
                 delta_M_total=delta_M_total, delta_B_total=delta_B_total,
                 rho_M=rho,
+                delta_beta_from_step10000=(
+                    float(beta[-1, unit] - beta[10, unit]) if valid else np.nan
+                ),
+                delta_M_from_step10000=(
+                    float(M[-1, unit] - M[10, unit]) if valid else np.nan
+                ),
+                rho_M_from_step10000=(
+                    abs(float(M[-1, unit] - M[10, unit]))
+                    / abs(float(beta[-1, unit] - beta[10, unit]))
+                    if valid and beta[-1, unit] != beta[10, unit] else np.nan
+                ),
                 delta_b_raw_total=float(np.nansum(d_raw_b[:, unit])) if valid else np.nan,
                 delta_b_raw_bnd=float(np.nansum(d_raw_b[bmask, unit])) if valid else np.nan,
                 delta_b_raw_int=float(np.nansum(d_raw_b[~bmask, unit])) if valid else np.nan,
@@ -435,8 +451,18 @@ def build_endpoints(
         details[f"E2_{arm}"] = label
         rows.append(_row(
             "E2", "rho_M", est, arm=arm, layer=1, label=label,
-            basis="abs(sum delta M)/abs(delta beta); centered M is construction-near-zero",
-            note="S5: small rho_M is on the construction-favored side, not an independent discovery",
+            basis="abs(sum delta M)/abs(delta beta), literal registered sum from step 0",
+            note="step 0 precedes EMA convergence; S5's construction-near-zero statement has this startup exception",
+        ))
+        sensitivity = _seed_medians(units, arm, 1, "rho_M_from_step10000")
+        sensitivity_est = estimate(sensitivity, draws)
+        rows.append(_row(
+            "E2_SENSITIVITY_REPORT_ONLY", "rho_M_from_step10000",
+            sensitivity_est, arm=arm, layer=1,
+            label=classify_e2(float(sensitivity_est["ci_lo"]),
+                              float(sensitivity_est["ci_hi"])),
+            basis="unregistered sensitivity excluding EMA startup; does not replace E2",
+            note="shown because step 0 is initialization and sigma multiplier already uses step 10000",
         ))
         frame = units[(units.arm == arm) & (units.layer == 1)
                       & (units.excluded_nan_gt_1pct == 0)].copy()
@@ -550,8 +576,11 @@ def build_endpoints(
                 "E5_COUNT", "within_task_revival_count",
                 dict(point=int(sum(values)), ci_lo=np.nan, ci_hi=np.nan, n_seed=10),
                 arm=arm, layer=layer,
-                basis="dead->alive where flip_state is unchanged; total across seeds",
-                note="seed_counts=" + json.dumps(values),
+                basis="dead->alive where flip_state is unchanged and transition starts after step 0",
+                note=("seed_counts=" + json.dumps(values)
+                      + "; initial_0_to_1000_excluded="
+                      + str(sum(event_stats[(arm, seed, layer)]["initial_revival"]
+                                for seed in SEEDS))),
             ))
     none_zero = all(value == 0 for value in e5_seed[("L2_none", 1)])
     centered_positive = all(
@@ -615,6 +644,8 @@ def _fmt(value: Any, digits: int = 4) -> str:
         return "—"
     if isinstance(value, (int, np.integer)):
         return f"{int(value)}"
+    if isinstance(value, (float, np.floating)) and float(value).is_integer():
+        return f"{int(value)}"
     return f"{float(value):.{digits}g}"
 
 
@@ -647,7 +678,11 @@ def render_summary(verdict: pd.DataFrame, details: dict[str, Any]) -> str:
     for arm in CENTERED_ARMS:
         row = find("E2", "rho_M", arm)
         lines.append(f"| `{arm}` | {_fmt(row.point)} | [{_fmt(row.ci_lo)}, {_fmt(row.ci_hi)}] | `{row.label}` |")
-    lines += ["", "`M≈0` は centered 層の構成上ほぼ恒真であり、小さい ρ_M 自体を独立な発見とは扱わない。", ""]
+    lines += [
+        "",
+        "登録式は step 0 からの総和なので、EMA 初期化前の大きな M を含む。`M≈0` は centered 層の構成上ほぼ恒真だが、step 0 は例外である。step 10,000 起点の未登録感度分析は `verdict.csv` の `E2_SENSITIVITY_REPORT_ONLY` に併記し、E2 判定を差し替えない。",
+        "",
+    ]
 
     lines += ["## E3 降下の局在", "", "| arm | Δβ boundary | 95% CI | Δβ internal | 95% CI |", "|---|---:|---:|---:|---:|"]
     for arm in (*MAIN_ARMS, "L2_Aall"):
@@ -668,7 +703,9 @@ def render_summary(verdict: pd.DataFrame, details: dict[str, Any]) -> str:
     lines += ["## E5 タスク内復活", "", "| arm | layer | total | seed counts |", "|---|---:|---:|---|"]
     counts = verdict[verdict.endpoint == "E5_COUNT"]
     for row in counts.itertuples():
-        lines.append(f"| `{row.arm}` | {row.layer} | {_fmt(row.point)} | `{row.note.removeprefix('seed_counts=')}` |")
+        seed_counts = row.note.removeprefix("seed_counts=").split(";", 1)[0]
+        lines.append(f"| `{row.arm}` | {row.layer} | {_fmt(row.point)} | `{seed_counts}` |")
+    lines += ["", "件数は初期化遷移 step 0→1,000 を除く。その除外件数は `verdict.csv` の note に保存した。"]
     lines += ["", "centered 腕で `strict_dead` を『吸収した』とは書かない。EMA により入力がタスク内でも動き、復活が観測される。", ""]
 
     sanity = verdict[verdict.endpoint.str.startswith("S")]
@@ -714,6 +751,15 @@ def run_analysis(source: Path = SOURCE, outdir: Path = DEFAULT_OUT) -> dict[str,
             unit_rows.extend(urows)
             for layer, values in events.items():
                 event_stats[(arm, seed, layer)] = values
+
+    sanity_rows.append(dict(
+        endpoint="S5", arm="centered_layer1", layer=1, seed="",
+        metric="construction_tautology_note_present", point=1,
+        ci_lo=np.nan, ci_hi=np.nan, label="PASS",
+        basis="rho_M is construction-favored after EMA startup; verdict carries the caveat",
+        n_seed=10, n_unit=2000,
+        note="step 0 is the explicit startup exception; small post-start rho_M is not an independent discovery",
+    ))
 
     units = pd.DataFrame(unit_rows).sort_values(
         ["arm", "seed", "layer", "unit"], kind="mergesort"
