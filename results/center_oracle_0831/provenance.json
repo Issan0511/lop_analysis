@@ -1,0 +1,143 @@
+{
+  "experiment": "center_oracle_0831",
+  "created": "2026-08-31 15:36:13 +0900",
+  "elapsed_sec": 378.5730621814728,
+  "git_hash": "4ae75ccb0e1de77ff573fc1377331b4b4da0965d",
+  "spec_commit": "dc08a0206b1987cded4aadcf35d884d3fc4aa11a",
+  "amendment_commit": "15325f411c6c15479a7cf6e36e098c28ea75bc3d",
+  "source_result_commit": "17e91fd2c3bae6885ca42a7909db160f243b7463",
+  "config": "/home/issan/Projects/claude/proj_004_drift/configs/center_oracle_0831.yaml",
+  "config_sha256": "d44c8e2dad41305491d3cd0938a61080c8071557a2b199d5fd75814b949e4ad8",
+  "input_sha256": {
+    "specs/spec_center_oracle_0831.md": "8042dc1f253848c6256f4531ed3359fd4436436e4e1eba6186aa89672b4c220b",
+    "specs/spec_center_oracle_0831_amendment.md": "8241478b5d831aa2f3d1670c8f96993c5f989ebb315635d50274ca0242345245",
+    "configs/mlp2_phase1_0829.yaml": "db815d72c1f1d8cf64cf7f024fb4903dca216ed9567f90188087d39c8ca68c4d",
+    "results/mlp2_phase1_0829/ckpts/L1w100_A1_step0.pt": "58aab02c38c9883af6109b30dfa7c1e7cb936549c3099f17872f18e43c16ec5c",
+    "results/mlp2_phase1_0829/logs/L1w100_A1_seed0.npz": "5f8aac6a3b57254fcf85f971b94093d0febc4b8171cfa02f1e6b9efd9235fb93",
+    "results/mlp2_phase1_0829/logs/L1w100_A1_seed1.npz": "70c1e00acdd3367939c8ff271ac0af435199ecc761dcb84421e1d723d0a51f14",
+    "results/mlp2_phase1_0829/logs/L1w100_A1_seed2.npz": "2d60c146f6d1a9104e003920a412763414926d30739e78eb8c684b5635394cea",
+    "results/mlp2_phase1_0829/logs/L1w100_A1_seed3.npz": "625788083e0e0cc0389a38892d102b45487fda221fed4929217713733d0455f9",
+    "results/mlp2_phase1_0829/logs/L1w100_A1_seed4.npz": "c0cf3af5ae82e8283fe4fe9391c2c23a5f6e09405af803fd9292f5333b020c47",
+    "results/mlp2_phase1_0829/logs/L1w100_A1_seed5.npz": "0796f300481e4b1e0671e68231c2ce1ec8fd63c2b72f86d5da39a686145ca9bf",
+    "results/mlp2_phase1_0829/logs/L1w100_A1_seed6.npz": "54e1a535bae743f386da7db7d59f067e97a1941e1a32330478a7c55b04147c74",
+    "results/mlp2_phase1_0829/logs/L1w100_A1_seed7.npz": "d7d213c5a4ae51dc9a2c6559c636ea2438006eee572ba3787248de6a1f085729",
+    "results/mlp2_phase1_0829/logs/L1w100_A1_seed8.npz": "f0634d357946d19a217692adcd1b2a4f2d760384cfa0dd8df927e95ee229a71c",
+    "results/mlp2_phase1_0829/logs/L1w100_A1_seed9.npz": "261d39937425745cf7808b78ad505ef2c9f2692d81d5813871b75776c97c5c7d"
+  },
+  "sanity": {
+    "S0_preflight": {
+      "pass_": true,
+      "S0_state_checkpoint_differences": [],
+      "S0_initial_pair_differences": [],
+      "S0_stream_differences": [],
+      "S0_final_env_differences": [],
+      "steps": 30000,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "a1_stream": {
+        "x": "d2d7b75f0038107ed84b40ea367a70c02dd27b85649400df577e43db813237c9",
+        "y": "c0d32fcef3babe14f02df43c56bbc437b403bc7ff68a3fbbfc6d1836c53d7552",
+        "n": 30000
+      },
+      "aexact_stream": {
+        "x": "d2d7b75f0038107ed84b40ea367a70c02dd27b85649400df577e43db813237c9",
+        "y": "c0d32fcef3babe14f02df43c56bbc437b403bc7ff68a3fbbfc6d1836c53d7552",
+        "n": 30000
+      },
+      "checkpoint": "/home/issan/Projects/claude/proj_004_drift/results/mlp2_phase1_0829/ckpts/L1w100_A1_step0.pt",
+      "checkpoint_sha256": "58aab02c38c9883af6109b30dfa7c1e7cb936549c3099f17872f18e43c16ec5c"
+    },
+    "S0_final_env": {
+      "pass_": true,
+      "differences": {}
+    },
+    "S0_step0_record_differences_expected": [
+      "eval_loss_exact",
+      "layer1_M",
+      "layer1_alive",
+      "layer1_dose",
+      "layer1_eff_rank",
+      "layer1_eff_rank_per_alive",
+      "layer1_median_M",
+      "layer1_mu_norm",
+      "layer1_p_hat",
+      "layer1_q25_M",
+      "layer1_q75_M",
+      "layer1_strict_dead",
+      "residual_var",
+      "unfit"
+    ],
+    "S_taut": {
+      "pass_": true,
+      "max_abs_M": 0.0
+    },
+    "S1": {
+      "pass_": true,
+      "left_violations_all_seeds": 0,
+      "right_violations_all_seeds": 0
+    },
+    "S1_S2_recorder": {
+      "pass_": true,
+      "layers": [
+        {
+          "layer": 1,
+          "pass_": true,
+          "mean": 0.0,
+          "sd": 6.625039612125019e-16,
+          "wall": 8.083144566994462e-16,
+          "cos_mu": 0.0,
+          "n_degenerate_max": 0
+        }
+      ],
+      "required_nonfinite": 0,
+      "n_record_steps": 5001
+    },
+    "S3_omp": true,
+    "S7": {
+      "pass_": true,
+      "injected": "net.W1[seed1,unit0,input0]=NaN"
+    },
+    "S8": {
+      "pass_": true,
+      "count": 499
+    }
+  },
+  "analysis": {
+    "P1": "BOTH_CONTRIBUTE",
+    "P2": "ORACLE_INCREASES_DEATH",
+    "ratio": {
+      "point": 0.48971995804194834,
+      "ci_lo": 0.4571819797056253,
+      "ci_hi": 0.5518386409570528,
+      "n_seed": 10
+    },
+    "exact_boundary": {
+      "point": -2.115254422882572,
+      "ci_lo": -2.16090370346501,
+      "ci_hi": -2.0885815682122484,
+      "n_seed": 10
+    },
+    "dead_gap": {
+      "point": 0.5,
+      "ci_lo": 0.45999999999999996,
+      "ci_hi": 0.595,
+      "n_seed": 10
+    }
+  },
+  "alpha_sweep": false,
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+  "torch": "2.13.0+cu130",
+  "numpy": "2.5.1",
+  "analysis_implementation_commit": "fa4339dd9dd36ac40582124e60c67c5cdaee2baa"
+}

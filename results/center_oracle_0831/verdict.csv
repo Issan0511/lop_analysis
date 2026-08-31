@@ -1,0 +1,12 @@
+endpoint,metric,point,ci_lo,ci_hi,n_seed,label,basis
+P1,R_abs_boundary_ratio,0.48971995804194834,0.4571819797056253,0.5518386409570528,10,BOTH_CONTRIBUTE,seed-level abs(median exact boundary)/abs(median A1 boundary)
+P1,Aexact_delta_beta_bnd,-2.115254422882572,-2.16090370346501,-2.0885815682122484,10,BOTH_CONTRIBUTE,seed median unit decomposition
+P1_REPORT_ONLY,A1_delta_beta_bnd,-4.297449349637645,-4.589783966810501,-3.904943481147808,10,REFERENCE,committed mlp2_phase1_0829 log
+P1_REPORT_ONLY,Aexact_delta_beta_int,-0.011977107962593436,-0.0573133435100317,0.027309437704388984,10,REPORT_ONLY,seed median unit decomposition
+P1_REPORT_ONLY,A1_delta_beta_int,1.9332211306907539,1.7900930500891263,2.190324021357924,10,REFERENCE,committed mlp2_phase1_0829 log
+P2,strict_dead_frac_Aexact_minus_A1,0.5,0.45999999999999996,0.595,10,ORACLE_INCREASES_DEATH,paired seed difference at 5M
+P2_LEVEL,strict_dead_frac_Aexact,1.0,1.0,1.0,10,REPORT_ONLY,5M seed level
+P2_LEVEL,strict_dead_frac_A1,0.5,0.405,0.54,10,REFERENCE,5M seed level
+P2_REPORT_ONLY,core_dead_frac_Aexact_minus_A1,0.37066137566137564,0.32727272727272727,0.4122222222222222,10,REPORT_ONLY,paired seed difference; continuous dead over final 1000 records
+P2_REPORT_ONLY,core_dead_frac_Aexact,1.0,1.0,1.0,10,REPORT_ONLY,continuous dead among final-dead units over final 1000 records
+P2_REPORT_ONLY,core_dead_frac_A1,0.6248148148148148,0.5873015873015873,0.6727272727272727,10,REFERENCE,continuous dead among final-dead units over final 1000 records
