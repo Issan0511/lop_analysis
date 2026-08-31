@@ -293,12 +293,15 @@ def analyze(
     units.to_csv(outdir / "unit_decomposition.csv", index=False)
 
     seed_bnd = units.groupby(["arm", "seed"])["delta_beta_bnd"].median().unstack("arm")
+    seed_int = units.groupby(["arm", "seed"])["delta_beta_int"].median().unstack("arm")
     ratio = (seed_bnd["L1w100_Aexact"].abs() / seed_bnd["L1w100_A1"].abs()).to_numpy()
     B = int(oracle["analysis"]["bootstrap_B"])
     draws = shared_draws(B, int(oracle["analysis"]["bootstrap_seed"]))
     ratio_est = estimate(ratio, draws)
     exact_bnd_est = estimate(seed_bnd["L1w100_Aexact"].to_numpy(), draws)
     a1_bnd_est = estimate(seed_bnd["L1w100_A1"].to_numpy(), draws)
+    exact_int_est = estimate(seed_int["L1w100_Aexact"].to_numpy(), draws)
+    a1_int_est = estimate(seed_int["L1w100_A1"].to_numpy(), draws)
     if exact_bnd_est["ci_lo"] <= 0 <= exact_bnd_est["ci_hi"]:
         p1 = "BOUNDARY_DESCENT_ELIMINATED"
     elif ratio_est["ci_hi"] < float(oracle["analysis"]["ratio_ema_upper"]):
@@ -324,6 +327,10 @@ def analyze(
                          - wide_dead["L1w100_A1"]).to_numpy(), draws)
     core_gap = estimate((wide_core["L1w100_Aexact"]
                          - wide_core["L1w100_A1"]).to_numpy(), draws)
+    exact_dead_level = estimate(wide_dead["L1w100_Aexact"].to_numpy(), draws)
+    a1_dead_level = estimate(wide_dead["L1w100_A1"].to_numpy(), draws)
+    exact_core_level = estimate(wide_core["L1w100_Aexact"].to_numpy(), draws)
+    a1_core_level = estimate(wide_core["L1w100_A1"].to_numpy(), draws)
     if dead_gap["ci_hi"] < 0:
         p2 = "ORACLE_REDUCES_DEATH"
     elif dead_gap["ci_lo"] <= 0 <= dead_gap["ci_hi"]:
@@ -341,11 +348,27 @@ def analyze(
         {"endpoint": "P1_REPORT_ONLY", "metric": "A1_delta_beta_bnd",
          **a1_bnd_est, "label": "REFERENCE",
          "basis": "committed mlp2_phase1_0829 log"},
+        {"endpoint": "P1_REPORT_ONLY", "metric": "Aexact_delta_beta_int",
+         **exact_int_est, "label": "REPORT_ONLY",
+         "basis": "seed median unit decomposition"},
+        {"endpoint": "P1_REPORT_ONLY", "metric": "A1_delta_beta_int",
+         **a1_int_est, "label": "REFERENCE",
+         "basis": "committed mlp2_phase1_0829 log"},
         {"endpoint": "P2", "metric": "strict_dead_frac_Aexact_minus_A1",
          **dead_gap, "label": p2, "basis": "paired seed difference at 5M"},
+        {"endpoint": "P2_LEVEL", "metric": "strict_dead_frac_Aexact",
+         **exact_dead_level, "label": "REPORT_ONLY", "basis": "5M seed level"},
+        {"endpoint": "P2_LEVEL", "metric": "strict_dead_frac_A1",
+         **a1_dead_level, "label": "REFERENCE", "basis": "5M seed level"},
         {"endpoint": "P2_REPORT_ONLY", "metric": "core_dead_frac_Aexact_minus_A1",
          **core_gap, "label": "REPORT_ONLY",
          "basis": "paired seed difference; continuous dead over final 1000 records"},
+        {"endpoint": "P2_REPORT_ONLY", "metric": "core_dead_frac_Aexact",
+         **exact_core_level, "label": "REPORT_ONLY",
+         "basis": "continuous dead among final-dead units over final 1000 records"},
+        {"endpoint": "P2_REPORT_ONLY", "metric": "core_dead_frac_A1",
+         **a1_core_level, "label": "REFERENCE",
+         "basis": "continuous dead among final-dead units over final 1000 records"},
     ]
     verdict = pd.DataFrame(rows)
     verdict.to_csv(outdir / "verdict.csv", index=False)
@@ -357,7 +380,10 @@ def analyze(
         f"R = {ratio_est['point']:.4g} [{ratio_est['ci_lo']:.4g}, {ratio_est['ci_hi']:.4g}]",
         f"Aexact Δβ_boundary = {exact_bnd_est['point']:.4g} [{exact_bnd_est['ci_lo']:.4g}, {exact_bnd_est['ci_hi']:.4g}]",
         f"A1 Δβ_boundary = {a1_bnd_est['point']:.4g} [{a1_bnd_est['ci_lo']:.4g}, {a1_bnd_est['ci_hi']:.4g}]",
-        f"strict_dead_frac gap = {dead_gap['point']:.4g} [{dead_gap['ci_lo']:.4g}, {dead_gap['ci_hi']:.4g}]", "",
+        f"Aexact Δβ_internal = {exact_int_est['point']:.4g} [{exact_int_est['ci_lo']:.4g}, {exact_int_est['ci_hi']:.4g}]",
+        f"A1 Δβ_internal = {a1_int_est['point']:.4g} [{a1_int_est['ci_lo']:.4g}, {a1_int_est['ci_hi']:.4g}]",
+        f"strict_dead_frac: Aexact {exact_dead_level['point']:.4g} / A1 {a1_dead_level['point']:.4g}; gap {dead_gap['point']:.4g} [{dead_gap['ci_lo']:.4g}, {dead_gap['ci_hi']:.4g}]",
+        f"continuous-dead fraction among final dead: Aexact {exact_core_level['point']:.4g} / A1 {a1_core_level['point']:.4g}", "",
         "## 必須の交絡", "",
         "**オラクル中心化は µ を消すと同時に、タスク可識別性を完全に消す。** Aexact−A1 の差には「EMA遅れの差」と「可識別性の差」が同居する。書いてよいのは境界降下がEMA遅れ窓に起因する／しないという範囲であり、「µの効果を測った」「centeringを改善すればLoPを防げる」とは書かない。", "",
         "## S0 amendment", "",
