@@ -233,6 +233,72 @@ def estimate(values: Iterable[float], draws: np.ndarray) -> dict[str, Any]:
             "ci_hi": float(hi), "n_seed": int(array.size)}
 
 
+def transition_masks(step: np.ndarray, flip_state: np.ndarray) -> dict[str, np.ndarray]:
+    """Return the preregistered 499/4500/startup transition partition."""
+    step = np.asarray(step, dtype=int)
+    flip_state = np.asarray(flip_state)
+    if step.ndim != 1 or flip_state.shape[0] != step.size or step.size < 2:
+        raise OracleSanityError("step and flip_state do not define aligned transitions")
+    changed = np.any(flip_state[1:] != flip_state[:-1], axis=1)
+    legacy_boundary_500 = step[1:] % 10_000 == 1_000
+    boundary_499 = legacy_boundary_500 & changed
+    internal_4500 = ~legacy_boundary_500
+    startup_0to1000 = (
+        (step[:-1] == 0) & (step[1:] == 1_000) & ~changed
+    )
+    return {
+        "changed": changed,
+        "boundary_499": boundary_499,
+        "boundary_500_report_only": legacy_boundary_500,
+        "internal_4500": internal_4500,
+        "startup_0to1000": startup_0to1000,
+    }
+
+
+def boundary_mask_sanity(
+    logdir: Path, arm: str, seeds: list[int],
+) -> tuple[dict[str, Any], pd.DataFrame]:
+    rows: list[dict[str, Any]] = []
+    for seed in seeds:
+        with np.load(logdir / f"{arm}_seed{seed}.npz", allow_pickle=False) as z:
+            masks = transition_masks(z["step"], z["flip_state"])
+        row = {
+            "arm": arm,
+            "seed": seed,
+            "n_flip_changed": int(masks["changed"].sum()),
+            "n_boundary_499": int(masks["boundary_499"].sum()),
+            "n_boundary_500_report_only": int(
+                masks["boundary_500_report_only"].sum()
+            ),
+            "n_internal_4500": int(masks["internal_4500"].sum()),
+            "n_startup_0to1000": int(masks["startup_0to1000"].sum()),
+            "all_flips_are_boundary": bool(np.array_equal(
+                masks["changed"], masks["boundary_499"]
+            )),
+        }
+        row["pass_"] = bool(
+            row["n_flip_changed"] == 499
+            and row["n_boundary_499"] == 499
+            and row["n_boundary_500_report_only"] == 500
+            and row["n_internal_4500"] == 4500
+            and row["n_startup_0to1000"] == 1
+            and row["all_flips_are_boundary"]
+        )
+        rows.append(row)
+    frame = pd.DataFrame(rows)
+    result = {
+        "pass_": bool(frame["pass_"].all()),
+        "n_seed_arm": int(len(frame)),
+        "expected_per_seed": {
+            "flip_changed": 499, "boundary_499": 499,
+            "boundary_500_report_only": 500,
+            "internal_4500": 4500, "startup_0to1000": 1,
+        },
+        "failed": frame.loc[~frame["pass_"], ["arm", "seed"]].to_dict("records"),
+    }
+    return result, frame
+
+
 def unit_decomposition(logdir: Path, arm: str, seeds: list[int]) -> pd.DataFrame:
     rows: list[dict[str, Any]] = []
     for seed in seeds:
@@ -242,14 +308,24 @@ def unit_decomposition(logdir: Path, arm: str, seeds: list[int]) -> pd.DataFrame
             B = z["layer1_B"].astype(float)
             beta = M + B
             p_hat = z["layer1_p_hat"]
-            bmask = step[1:] % 10_000 == 1_000
+            masks = transition_masks(step, z["flip_state"])
             dbeta = np.diff(beta, axis=0)
             dead = p_hat == 0
             for unit in range(beta.shape[1]):
                 rows.append({
                     "arm": arm, "seed": seed, "unit": unit,
-                    "delta_beta_bnd": float(np.nansum(dbeta[bmask, unit])),
-                    "delta_beta_int": float(np.nansum(dbeta[~bmask, unit])),
+                    "dbeta_boundary_499": float(np.nansum(
+                        dbeta[masks["boundary_499"], unit]
+                    )),
+                    "dbeta_boundary_500_report_only": float(np.nansum(
+                        dbeta[masks["boundary_500_report_only"], unit]
+                    )),
+                    "dbeta_internal_4500": float(np.nansum(
+                        dbeta[masks["internal_4500"], unit]
+                    )),
+                    "dbeta_startup_0to1000": float(np.nansum(
+                        dbeta[masks["startup_0to1000"], unit]
+                    )),
                     "strict_dead_final": int(dead[-1, unit]),
                     "continuous_dead_last1000": int(
                         dead[-1, unit] and np.all(dead[-1000:, unit])
@@ -287,21 +363,46 @@ def analyze(
     sanity: dict[str, Any], elapsed: float,
 ) -> dict[str, Any]:
     seeds = [int(v) for v in oracle["run"]["seeds"]]
+    s9_exact, s9_exact_rows = boundary_mask_sanity(
+        outdir / "logs", "L1w100_Aexact", seeds
+    )
+    s9_a1, s9_a1_rows = boundary_mask_sanity(
+        source / "logs", "L1w100_A1", seeds
+    )
+    s9_rows = pd.concat([s9_exact_rows, s9_a1_rows], ignore_index=True)
+    s9_rows.to_csv(outdir / "boundary_mask_counts.csv", index=False)
+    sanity["S9"] = {
+        "pass_": bool(s9_exact["pass_"] and s9_a1["pass_"]),
+        "Aexact": s9_exact, "A1": s9_a1,
+    }
+    if not sanity["S9"]["pass_"]:
+        raise OracleSanityError(f"S9 boundary mask failed: {sanity['S9']}")
+
     exact_units = unit_decomposition(outdir / "logs", "L1w100_Aexact", seeds)
     a1_units = unit_decomposition(source / "logs", "L1w100_A1", seeds)
     units = pd.concat([exact_units, a1_units], ignore_index=True)
     units.to_csv(outdir / "unit_decomposition.csv", index=False)
 
-    seed_bnd = units.groupby(["arm", "seed"])["delta_beta_bnd"].median().unstack("arm")
-    seed_int = units.groupby(["arm", "seed"])["delta_beta_int"].median().unstack("arm")
+    grouped = units.groupby(["arm", "seed"])
+    seed_bnd = grouped["dbeta_boundary_499"].median().unstack("arm")
+    seed_bnd_500 = grouped["dbeta_boundary_500_report_only"].median().unstack("arm")
+    seed_int = grouped["dbeta_internal_4500"].median().unstack("arm")
+    seed_startup = grouped["dbeta_startup_0to1000"].median().unstack("arm")
     ratio = (seed_bnd["L1w100_Aexact"].abs() / seed_bnd["L1w100_A1"].abs()).to_numpy()
+    ratio_500 = (seed_bnd_500["L1w100_Aexact"].abs()
+                 / seed_bnd_500["L1w100_A1"].abs()).to_numpy()
     B = int(oracle["analysis"]["bootstrap_B"])
     draws = shared_draws(B, int(oracle["analysis"]["bootstrap_seed"]))
     ratio_est = estimate(ratio, draws)
+    ratio_500_est = estimate(ratio_500, draws)
     exact_bnd_est = estimate(seed_bnd["L1w100_Aexact"].to_numpy(), draws)
     a1_bnd_est = estimate(seed_bnd["L1w100_A1"].to_numpy(), draws)
+    exact_bnd_500_est = estimate(seed_bnd_500["L1w100_Aexact"].to_numpy(), draws)
+    a1_bnd_500_est = estimate(seed_bnd_500["L1w100_A1"].to_numpy(), draws)
     exact_int_est = estimate(seed_int["L1w100_Aexact"].to_numpy(), draws)
     a1_int_est = estimate(seed_int["L1w100_A1"].to_numpy(), draws)
+    exact_startup_est = estimate(seed_startup["L1w100_Aexact"].to_numpy(), draws)
+    a1_startup_est = estimate(seed_startup["L1w100_A1"].to_numpy(), draws)
     if exact_bnd_est["ci_lo"] <= 0 <= exact_bnd_est["ci_hi"]:
         p1 = "BOUNDARY_DESCENT_ELIMINATED"
     elif ratio_est["ci_hi"] < float(oracle["analysis"]["ratio_ema_upper"]):
@@ -310,6 +411,15 @@ def analyze(
         p1 = "SWITCH_SHOCK_IS_THE_CAUSE"
     else:
         p1 = "BOTH_CONTRIBUTE"
+
+    if exact_bnd_500_est["ci_lo"] <= 0 <= exact_bnd_500_est["ci_hi"]:
+        p1_500 = "BOUNDARY_DESCENT_ELIMINATED"
+    elif ratio_500_est["ci_hi"] < float(oracle["analysis"]["ratio_ema_upper"]):
+        p1_500 = "EMA_LAG_IS_THE_CAUSE"
+    elif ratio_500_est["ci_lo"] > float(oracle["analysis"]["ratio_shock_lower"]):
+        p1_500 = "SWITCH_SHOCK_IS_THE_CAUSE"
+    else:
+        p1_500 = "BOTH_CONTRIBUTE"
 
     levels = units.groupby(["arm", "seed"]).agg(
         n_unit=("unit", "count"),
@@ -339,21 +449,36 @@ def analyze(
         p2 = "ORACLE_INCREASES_DEATH"
 
     rows = [
-        {"endpoint": "P1", "metric": "R_abs_boundary_ratio",
+        {"endpoint": "P1", "metric": "R_abs_boundary_ratio_499",
          **ratio_est, "label": p1,
-         "basis": "seed-level abs(median exact boundary)/abs(median A1 boundary)"},
-        {"endpoint": "P1", "metric": "Aexact_delta_beta_bnd",
+         "basis": "operative true-switch mask; paired seed ratio of unit medians"},
+        {"endpoint": "P1", "metric": "Aexact_dbeta_boundary_499",
          **exact_bnd_est, "label": p1,
-         "basis": "seed median unit decomposition"},
-        {"endpoint": "P1_REPORT_ONLY", "metric": "A1_delta_beta_bnd",
+         "basis": "operative true-switch mask; seed median unit decomposition"},
+        {"endpoint": "P1_REFERENCE", "metric": "A1_dbeta_boundary_499",
          **a1_bnd_est, "label": "REFERENCE",
-         "basis": "committed mlp2_phase1_0829 log"},
-        {"endpoint": "P1_REPORT_ONLY", "metric": "Aexact_delta_beta_int",
+         "basis": "operative true-switch mask; committed mlp2_phase1_0829 log"},
+        {"endpoint": "P1_REPORT_ONLY", "metric": "R_abs_boundary_ratio_500",
+         **ratio_500_est, "label": p1_500,
+         "basis": "legacy registered mask including startup; not used for P1"},
+        {"endpoint": "P1_REPORT_ONLY", "metric": "Aexact_dbeta_boundary_500",
+         **exact_bnd_500_est, "label": "REPORT_ONLY",
+         "basis": "legacy registered mask including startup"},
+        {"endpoint": "P1_REPORT_ONLY", "metric": "A1_dbeta_boundary_500",
+         **a1_bnd_500_est, "label": "REFERENCE",
+         "basis": "legacy registered mask including startup"},
+        {"endpoint": "P1_REPORT_ONLY", "metric": "Aexact_dbeta_internal_4500",
          **exact_int_est, "label": "REPORT_ONLY",
          "basis": "seed median unit decomposition"},
-        {"endpoint": "P1_REPORT_ONLY", "metric": "A1_delta_beta_int",
+        {"endpoint": "P1_REPORT_ONLY", "metric": "A1_dbeta_internal_4500",
          **a1_int_est, "label": "REFERENCE",
          "basis": "committed mlp2_phase1_0829 log"},
+        {"endpoint": "P1_REPORT_ONLY", "metric": "Aexact_dbeta_startup_0to1000",
+         **exact_startup_est, "label": "REPORT_ONLY",
+         "basis": "startup transition excluded from boundary and internal"},
+        {"endpoint": "P1_REPORT_ONLY", "metric": "A1_dbeta_startup_0to1000",
+         **a1_startup_est, "label": "REFERENCE",
+         "basis": "startup transition excluded from boundary and internal"},
         {"endpoint": "P2", "metric": "strict_dead_frac_Aexact_minus_A1",
          **dead_gap, "label": p2, "basis": "paired seed difference at 5M"},
         {"endpoint": "P2_LEVEL", "metric": "strict_dead_frac_Aexact",
@@ -377,11 +502,14 @@ def analyze(
     summary = "\n".join([
         "# center_oracle_0831", "",
         f"- P1: **{p1}**", f"- P2: **{p2}**", "",
-        f"R = {ratio_est['point']:.4g} [{ratio_est['ci_lo']:.4g}, {ratio_est['ci_hi']:.4g}]",
-        f"Aexact Δβ_boundary = {exact_bnd_est['point']:.4g} [{exact_bnd_est['ci_lo']:.4g}, {exact_bnd_est['ci_hi']:.4g}]",
-        f"A1 Δβ_boundary = {a1_bnd_est['point']:.4g} [{a1_bnd_est['ci_lo']:.4g}, {a1_bnd_est['ci_hi']:.4g}]",
-        f"Aexact Δβ_internal = {exact_int_est['point']:.4g} [{exact_int_est['ci_lo']:.4g}, {exact_int_est['ci_hi']:.4g}]",
-        f"A1 Δβ_internal = {a1_int_est['point']:.4g} [{a1_int_est['ci_lo']:.4g}, {a1_int_est['ci_hi']:.4g}]",
+        "追補1の真の切替499点版を主解析とし、初期過渡を含む500点版はREPORT_ONLY。",
+        f"R_499 = {ratio_est['point']:.4g} [{ratio_est['ci_lo']:.4g}, {ratio_est['ci_hi']:.4g}]",
+        f"Aexact Δβ_boundary_499 = {exact_bnd_est['point']:.4g} [{exact_bnd_est['ci_lo']:.4g}, {exact_bnd_est['ci_hi']:.4g}]",
+        f"A1 Δβ_boundary_499 = {a1_bnd_est['point']:.4g} [{a1_bnd_est['ci_lo']:.4g}, {a1_bnd_est['ci_hi']:.4g}]",
+        f"R_500 (REPORT_ONLY) = {ratio_500_est['point']:.4g} [{ratio_500_est['ci_lo']:.4g}, {ratio_500_est['ci_hi']:.4g}] → {p1_500}",
+        f"Aexact Δβ_internal_4500 = {exact_int_est['point']:.4g} [{exact_int_est['ci_lo']:.4g}, {exact_int_est['ci_hi']:.4g}]",
+        f"A1 Δβ_internal_4500 = {a1_int_est['point']:.4g} [{a1_int_est['ci_lo']:.4g}, {a1_int_est['ci_hi']:.4g}]",
+        f"startup 0→1000: Aexact {exact_startup_est['point']:.4g} / A1 {a1_startup_est['point']:.4g}",
         f"strict_dead_frac: Aexact {exact_dead_level['point']:.4g} / A1 {a1_dead_level['point']:.4g}; gap {dead_gap['point']:.4g} [{dead_gap['ci_lo']:.4g}, {dead_gap['ci_hi']:.4g}]",
         f"continuous-dead fraction among final dead: Aexact {exact_core_level['point']:.4g} / A1 {a1_core_level['point']:.4g}", "",
         "## 必須の交絡", "",
@@ -391,8 +519,9 @@ def analyze(
         f"実行時間: {elapsed:.1f} sec。alpha sweepは未実施。", "",
     ])
     (outdir / "summary.md").write_text(summary, encoding="utf-8")
-    return {"P1": p1, "P2": p2, "ratio": ratio_est,
-            "exact_boundary": exact_bnd_est, "dead_gap": dead_gap}
+    return {"P1": p1, "P1_legacy_500_report_only": p1_500, "P2": p2,
+            "ratio_499": ratio_est, "ratio_500_report_only": ratio_500_est,
+            "exact_boundary_499": exact_bnd_est, "dead_gap": dead_gap}
 
 
 def reanalyze_saved(config_path: Path = CONFIG) -> dict[str, Any]:
@@ -409,6 +538,11 @@ def reanalyze_saved(config_path: Path = CONFIG) -> dict[str, Any]:
     )
     provenance["analysis"] = result
     provenance["analysis_implementation_commit"] = git("rev-parse", "HEAD")
+    followup = ROOT / oracle["followup"]
+    provenance.setdefault("input_sha256", {})[oracle["followup"]] = sha256(followup)
+    provenance["followup_commit"] = git(
+        "log", "-1", "--format=%H", "--", oracle["followup"]
+    )
     provenance_path.write_text(
         json.dumps(provenance, indent=2, ensure_ascii=False, default=str) + "\n",
         encoding="utf-8",
@@ -493,6 +627,7 @@ def run(config_path: Path = CONFIG) -> dict[str, Any]:
     inputs = {
         oracle["spec"]: sha256(ROOT / oracle["spec"]),
         oracle["amendment"]: sha256(ROOT / oracle["amendment"]),
+        oracle["followup"]: sha256(ROOT / oracle["followup"]),
         oracle["base_config"]: sha256(ROOT / oracle["base_config"]),
         oracle["source_checkpoint"]: sha256(ROOT / oracle["source_checkpoint"]),
     }
@@ -504,6 +639,7 @@ def run(config_path: Path = CONFIG) -> dict[str, Any]:
         "elapsed_sec": elapsed, "git_hash": git("rev-parse", "HEAD"),
         "spec_commit": git("log", "-1", "--format=%H", "--", oracle["spec"]),
         "amendment_commit": git("log", "-1", "--format=%H", "--", oracle["amendment"]),
+        "followup_commit": git("log", "-1", "--format=%H", "--", oracle["followup"]),
         "source_result_commit": git("log", "-1", "--format=%H", "--", oracle["source_result"]),
         "config": str(config_path), "config_sha256": sha256(config_path),
         "input_sha256": inputs, "sanity": sanity, "analysis": result,
