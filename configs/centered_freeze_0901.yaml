@@ -1,0 +1,57 @@
+spec: specs/spec_centered_freeze_0901.md
+baseline_dir: results/mlp2_phase1_0829
+
+common:
+  total_steps: 5000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 10000
+  checkpoints: [0, 5000000]
+  run_freeze: false
+  b_metrics: false
+  w_dir_metrics: false
+  freeze_min_periods: 50
+  freeze_M_cap: 500000
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  widths: [100]
+  encodings: [centered]
+  center_alpha: 0.01
+  batch_values: [1]
+  lr_grid: []
+  freeze_bias: true
+
+condB:
+  d: 21
+  K_values: []
+  c_values: []
+  widths: []
+  batch_values: []
+
+centered_freeze:
+  output_dir: results/centered_freeze_0901
+  baseline_arm: L1w100_A1
+  probe_every: 10000
+  preflight_steps: 30000
+  preflight_probe_every: 1000
+  late_tasks: [451, 500]
+  near_zero_max: 0.05
+  decisive_reduction_min: 0.80
+  bootstrap_B: 10000
+  bootstrap_seed: 20260901
+  omp_num_threads: 1
+
