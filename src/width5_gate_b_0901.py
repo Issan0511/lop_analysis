@@ -663,6 +663,57 @@ def _provenance(cfg_path: Path, cfg: dict, outdir: Path, sanity: dict,
         sanity=sanity, analysis=analysis_result, output_sha256=hashes)
 
 
+def _reanalysis_stamp(cfg_path: Path, cfg: dict, outdir: Path,
+                      analysis_result: dict, sanity: dict) -> dict:
+    """Record an --analyze-only pass that post-dates provenance.json.
+
+    ``provenance.json`` is written once, by the full run.  When the analysis
+    code is corrected afterwards the derived CSVs change while the training
+    logs do not, so the recorded ``output_sha256`` stops matching the files on
+    disk.  Rather than rewrite the run's own record, stamp the re-analysis
+    beside it and re-verify every log hash so an auditor can see that only the
+    derived outputs moved.
+    """
+    base = json.loads(
+        (outdir / "provenance.json").read_text(encoding="utf-8"))
+    try:
+        git_hash = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+        dirty = subprocess.check_output(
+            ["git", "status", "--short"], cwd=ROOT, text=True).splitlines()
+    except (OSError, subprocess.CalledProcessError):
+        git_hash, dirty = None, []
+    names = ("verdict.csv", "crossing.csv", "levels.csv", "mechanism.csv",
+             "summary.md", "config_used.yaml")
+    hashes = {name: _sha_file(outdir / name) for name in names
+              if (outdir / name).exists()}
+    recorded = base.get("output_sha256", {})
+    logs_ok, logs_bad = 0, []
+    for name, want in recorded.items():
+        if not name.startswith("logs/"):
+            continue
+        got = _sha_file(outdir / name)
+        if got == want:
+            logs_ok += 1
+        else:
+            logs_bad.append(dict(name=name, recorded=want, actual=got))
+    changed = {name: dict(recorded=recorded.get(name), actual=value)
+               for name, value in hashes.items()
+               if recorded.get(name) != value}
+    return dict(
+        experiment=EXPERIMENT, stage="analyze-only",
+        created=time.strftime("%Y-%m-%d %H:%M:%S %z"), command=sys.argv,
+        base_provenance=dict(
+            created=base.get("created"), git_hash=base.get("git_hash")),
+        git_hash=git_hash, git_dirty=dirty,
+        cwd=os.getcwd(), python=sys.version, platform=platform.platform(),
+        config=str(cfg_path), config_sha256=_sha_file(cfg_path),
+        training_logs_unchanged=bool(logs_ok and not logs_bad),
+        training_logs_verified=logs_ok, training_logs_mismatched=logs_bad,
+        derived_outputs_changed=changed, output_sha256=hashes,
+        sanity=sanity, analysis=analysis_result)
+
+
 def run_full(cfg_path: Path, cfg: dict, device: str, outdir: Path, *,
              smoke: bool) -> dict:
     started = time.time()
@@ -758,7 +809,14 @@ def main() -> None:
         sanity = dict(
             preflight=preflight_result,
             final_pairing=_pair_check_final(cfg, outdir, complete))
-        analyze(cfg, outdir, sanity, {}, divergences)
+        result = analyze(cfg, outdir, sanity, {}, divergences)
+        if (outdir / "provenance.json").exists():
+            stamp = _reanalysis_stamp(cfg_path, cfg, outdir, result, sanity)
+            (outdir / "reanalysis.json").write_text(
+                json.dumps(stamp, indent=2, ensure_ascii=False, default=str),
+                encoding="utf-8")
+            print(f"REANALYSIS STAMPED -> {outdir / 'reanalysis.json'}",
+                  flush=True)
     else:
         run_full(cfg_path, cfg, device, outdir, smoke=args.smoke)
 
