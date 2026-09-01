@@ -127,6 +127,7 @@ EXTINCTION_PERSISTS = "EXTINCTION_PERSISTS"
 PARTIAL_RESCUE = "PARTIAL_RESCUE"
 R_EXT_INVALID_TOO_FEW_PAIRED = "R_EXT_INVALID_TOO_FEW_PAIRED"
 # フラグ
+I_CELLS_INVALID_S_OP = "I_CELLS_INVALID_S_OP"
 ONSET_NEVER_BELOW = "ONSET_NEVER_BELOW"
 LADDER_INVERTS = "LADDER_INVERTS"
 CEILING_CONTAMINATED = "CEILING_CONTAMINATED"
@@ -1367,6 +1368,28 @@ def run_gates(cfg: dict, gate_dir: Path) -> dict:
     return out
 
 
+def _gates_for_run(gate_dir: Path) -> tuple[dict, bool]:
+    """本走の起動可否。**S-op だけは失敗しても走を止めない。**
+
+    spec §7 の失敗欄は、S-op 以外のすべての行が「本走禁止」であるのに対し、
+    S-op だけ「**I+ セルを無効と宣言し主判定を出さない**」と書かれている。
+    より特定的なこの行が、表の直後の一般文（「PASS でなければ本走は起動しない」）
+    に優先すると読む。したがって S-op の FAIL は I+ セルを落とすだけで、
+    I− 側の登録済み対比（M 主効果 (i)）と R-ext は残る。
+    """
+    reports, failed = {}, []
+    for name in GATE_FILES:
+        path = Path(gate_dir) / name
+        if not path.exists():
+            raise RuntimeError(f"missing gate: {path}")
+        reports[name] = json.loads(path.read_text(encoding="utf-8"))
+        if not reports[name].get("pass_"):
+            failed.append(name)
+    if failed and failed != ["s_op.json"]:
+        raise RuntimeError(f"failed gates: {failed}")
+    return reports, bool(failed)
+
+
 def _require_gates(gate_dir: Path, names=GATE_FILES) -> dict:
     reports = {}
     for name in names:
@@ -1645,8 +1668,39 @@ def _r_ext(cfg: dict, frame: pd.DataFrame, onsets: pd.DataFrame,
                     f"alive==0 rule disagreements={len(disagreements)}"))
 
 
-def analyze(cfg: dict, outdir: Path, meta: dict[str, dict]) -> dict:
+def active_cells(cfg: dict, *, i_cells_invalid: bool) -> list[str]:
+    """S-op が落ちたら I+ セルは無効（spec §7 の S-op 行の失敗時帰結）。
+
+    S-op 行の失敗欄だけが他の行の「本走禁止」と違い、**「I+ セルを無効と宣言し
+    主判定を出さない」**である。したがって S-op の FAIL は走そのものを止めず、
+    I− 側の登録済み対比（M 主効果 (i) `iM − im`）と R-ext を残す。
+    """
+    if not i_cells_invalid:
+        return list(CELL_ORDER)
+    return [name for name in CELL_ORDER if not bool(_arm_cfg(cfg, name)["I"])]
+
+
+def _single_contrast_verdict(cfg: dict, values: dict[str, np.ndarray],
+                             draws: np.ndarray, *, margin: float) -> dict:
+    """I+ セルが無効なときに残る、登録済みの M 主効果 (i) `iM − im` 1 本。
+
+    新しい判定語彙は作らない。登録済みの帯（$\\pm\\Delta$）に対する位置
+    （`IN` / `OUT_POS` / `OUT_NEG` / `STRADDLE`）をそのまま出すだけで、
+    2×2 の決定木は回さない（主判定は出さない）。
+    """
+    ci = _ci(cfg, values["iM"] - values["im"], draws)
+    band = band_of(ci, margin)
+    return dict(cis={"M_i": ci}, interaction=None, bands={"M_i": band},
+                interaction_band="not computed (I+ cells invalid)",
+                verdict=band, margin=margin,
+                interaction_margin="not applicable")
+
+
+def analyze(cfg: dict, outdir: Path, meta: dict[str, dict], *,
+            i_cells_invalid: bool = False) -> dict:
     P, iso = _P(cfg), _P(cfg)["seed_isolation"]
+    cells = active_cells(cfg, i_cells_invalid=i_cells_invalid)
+    arms_present = [arm for arm in ARM_ORDER if arm in meta]
     frame = pd.read_csv(outdir / "task_end_metrics.csv")
     levels = block_levels(cfg, frame)
     levels.to_csv(outdir / "block_levels.csv", index=False)
@@ -1654,11 +1708,11 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict]) -> dict:
     onsets.to_csv(outdir / "onset.csv", index=False)
     b02 = int(P["early_block_tasks"][1]) // int(P["block_tasks"])
     b10 = int(P["late_block_tasks"][1]) // int(P["block_tasks"])
-    valid = {arm: meta[arm]["status"] in VALID_ARM_STATUSES for arm in ARM_ORDER}
+    valid = {arm: meta[arm]["status"] in VALID_ARM_STATUSES for arm in arms_present}
     included = {arm: set(int(s) for s in meta[arm]["included_seeds"]) if valid[arm]
-                else set() for arm in ARM_ORDER}
-    paired = sorted(set.intersection(*(included[arm] for arm in CELL_ORDER))
-                    if all(valid[arm] for arm in CELL_ORDER) else set())
+                else set() for arm in arms_present}
+    paired = sorted(set.intersection(*(included[arm] for arm in cells))
+                    if all(valid.get(arm) for arm in cells) else set())
     rows: list[dict] = []
 
     def add(pred: str, scope: str, verdict: str, evidence: str,
@@ -1680,10 +1734,10 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict]) -> dict:
         return group.loc[paired, "tau"].to_numpy(dtype=np.float64)
 
     details: dict = {}
-    if not all(valid[arm] for arm in CELL_ORDER):
+    if not all(valid.get(arm) for arm in cells):
         main = ARM_INVALID_EXCLUSION_LIMIT
         add("P-main", "2x2", main,
-            "; ".join(f"{arm}={meta[arm]['status']}" for arm in ARM_ORDER))
+            "; ".join(f"{arm}={meta[arm]['status']}" for arm in arms_present))
     elif len(paired) < int(iso["min_paired_seeds"]):
         main = CONTRAST_INVALID_TOO_FEW_PAIRED
         add("P-main", "2x2", main,
@@ -1693,52 +1747,68 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict]) -> dict:
         draws = _draws(cfg, len(paired))
         margin = float(P["equivalence_margin"])
         interaction_margin = float(P["interaction_margin"])
-        level02 = {arm: series(arm, b02, "mean_log10_unfit") for arm in CELL_ORDER}
-        level10 = {arm: series(arm, b10, "mean_log10_unfit") for arm in CELL_ORDER}
-        drift_values = {arm: level10[arm] - level02[arm] for arm in CELL_ORDER}
-        drift_result = _endpoint_verdict(cfg, drift_values, draws, margin=margin,
-                                         interaction_margin=interaction_margin)
-        level_result = _endpoint_verdict(cfg, level10, draws, margin=margin,
-                                         interaction_margin=interaction_margin)
+        level02 = {arm: series(arm, b02, "mean_log10_unfit") for arm in cells}
+        level10 = {arm: series(arm, b10, "mean_log10_unfit") for arm in cells}
+        drift_values = {arm: level10[arm] - level02[arm] for arm in cells}
+        if i_cells_invalid:
+            drift_result = _single_contrast_verdict(
+                cfg, drift_values, draws, margin=margin)
+            level_result = _single_contrast_verdict(
+                cfg, level10, draws, margin=margin)
+        else:
+            drift_result = _endpoint_verdict(cfg, drift_values, draws, margin=margin,
+                                             interaction_margin=interaction_margin)
+            level_result = _endpoint_verdict(cfg, level10, draws, margin=margin,
+                                             interaction_margin=interaction_margin)
 
         floor_values = {(arm, block): float(series(arm, block, "floor_frac").max())
-                        for arm in CELL_ORDER for block in (b02, b10)}
+                        for arm in cells for block in (b02, b10)}
         for arm in ANCHOR_ARMS:
-            if valid[arm]:
+            if valid.get(arm):
                 for block in (b02, b10):
                     group = levels[(levels.arm == arm) & (levels.block == block)]
                     floor_values[(arm, block)] = float(group.floor_frac.max())
         floor_pass = all(value == 0.0 for value in floor_values.values())
-        b02_means = {arm: float(level02[arm].mean()) for arm in CELL_ORDER}
+        b02_means = {arm: float(level02[arm].mean()) for arm in cells}
         b02_range = max(b02_means.values()) - min(b02_means.values())
         ceiling_flag = b02_range > float(P["ceiling_flag_dex"])
         ladder = drift_result["verdict"] != level_result["verdict"]
 
-        main = (E_DRIFT_INVALID_FLOOR if not floor_pass else
-                LADDER_INVERTS if ladder else drift_result["verdict"])
-        add("P-main", "E-drift (primary) + E-level", main,
-            f"common complete seeds={paired}; n={len(paired)}; "
-            f"E-drift={drift_result['verdict']}; E-level={level_result['verdict']}; "
-            f"S-floor={'PASS' if floor_pass else 'FAIL'}; "
-            f"b-WD lambda={float(cfg['bias_weight_decay']['lam']):g} on all four cells",
-            "paired percentile")
+        if i_cells_invalid:
+            # spec §7 の S-op 行の失敗時帰結。主判定は出さない。
+            main = I_CELLS_INVALID_S_OP
+            add("P-main", "2x2 main verdict", main,
+                "S-op FAILED → I+ セル（IM・Im）を無効と宣言し、要因計画の主判定は"
+                "出さない（spec §7 の S-op 行）。以下は I− 側の登録済み対比と R-ext "
+                f"のみ。共通完走 seed={paired}; n={len(paired)}")
+        else:
+            main = (E_DRIFT_INVALID_FLOOR if not floor_pass else
+                    LADDER_INVERTS if ladder else drift_result["verdict"])
+            add("P-main", "E-drift (primary) + E-level", main,
+                f"common complete seeds={paired}; n={len(paired)}; "
+                f"E-drift={drift_result['verdict']}; E-level={level_result['verdict']}; "
+                f"S-floor={'PASS' if floor_pass else 'FAIL'}; "
+                f"b-WD lambda={float(cfg['bias_weight_decay']['lam']):g} on all four cells",
+                "paired percentile")
         for label, result in (("E-drift", drift_result), ("E-level", level_result)):
-            for name, (a, b) in FACTOR_CONTRASTS.items():
-                ci = result["cis"][name]
+            for name, ci in result["cis"].items():
+                a, b = FACTOR_CONTRASTS[name]
                 add(label, f"{name}: {a} - {b} [dex]", result["bands"][name],
                     _fmt_ci(ci), "paired percentile", int(ci["ci_degenerate"]))
-            add(label, "interaction (IM-iM)-(Im-im)", result["interaction_band"],
-                _fmt_ci(result["interaction"]), "paired percentile",
-                int(result["interaction"]["ci_degenerate"]))
-            add(label, "decision tree", result["verdict"],
+            if not i_cells_invalid:
+                add(label, "interaction (IM-iM)-(Im-im)", result["interaction_band"],
+                    _fmt_ci(result["interaction"]), "paired percentile",
+                    int(result["interaction"]["ci_degenerate"]))
+            add(label, "decision tree" if not i_cells_invalid
+                else "M main effect band (I+ cells invalid)", result["verdict"],
                 f"bands={result['bands']}; interaction={result['interaction_band']}; "
                 f"margin={result['margin']} dex; "
                 f"interaction_margin={result['interaction_margin']} dex")
-        add("S-floor", "B02/B10 floor_frac, all six arms",
+        add("S-floor", "B02/B10 floor_frac, all running arms",
             "PASS" if floor_pass else "FAIL",
             "; ".join(f"{arm}/B{block:02d}={value:.6g}"
                       for (arm, block), value in sorted(floor_values.items())))
-        add("S-ceiling", "B02 four-cell level range",
+        add("S-ceiling", f"B02 level range over {len(cells)} cell(s)",
             CEILING_CONTAMINATED if ceiling_flag else "PASS",
             f"range={b02_range:.6f} dex; threshold={float(P['ceiling_flag_dex']):.1f}; "
             f"levels={b02_means}")
@@ -1754,7 +1824,7 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict]) -> dict:
         primary_threshold = float(P["onset"]["threshold"])
         never_below = {arm: int(onsets[(onsets.arm == arm)
                                        & (onsets.threshold == primary_threshold)
-                                       ].never_below.sum()) for arm in ARM_ORDER}
+                                       ].never_below.sum()) for arm in arms_present}
         ceiling_arm = str(P["ceiling_count_arm"])
         ceiling_seeds = 0
         if valid[ceiling_arm]:
@@ -1768,10 +1838,10 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict]) -> dict:
             add("C", "never below threshold", ONSET_NEVER_BELOW,
                 f"counts={never_below}（一度も閾値を下回らない seed。E-onset の"
                 f"『上抜け』が定義できない。E-onset は REPORT_ONLY なので主判定には効かない）")
-        for arm in ARM_ORDER:
+        for arm in arms_present:
             if not valid[arm]:
                 continue
-            seeds = paired if arm in CELL_ORDER else sorted(included[arm])
+            seeds = paired if arm in cells else sorted(included[arm])
             group = levels[(levels.arm == arm) & (levels.block == b10)
                            & levels.seed.isin(seeds)]
             early = levels[(levels.arm == arm) & (levels.block == b02)
@@ -1809,7 +1879,7 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict]) -> dict:
             floor_pass=bool(floor_pass), ladder_inverts=bool(ladder),
             ceiling_contaminated=bool(ceiling_flag))
 
-    for arm in ARM_ORDER:
+    for arm in arms_present:
         add("exclusion", arm, "ARM_VALID" if valid[arm] else meta[arm]["status"],
             f"status={meta[arm]['status']}; excluded={meta[arm]['excluded_seeds']}; "
             f"included={meta[arm]['included_seeds']}")
@@ -1822,7 +1892,7 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict]) -> dict:
     endpoints = pd.DataFrame({"seed": paired})
     if paired:
         extinct = extinction.set_index(["arm", "seed"])
-        for arm in ARM_ORDER:
+        for arm in arms_present:
             if not valid[arm] or not set(paired) <= included[arm]:
                 continue
             endpoints[f"{arm}_tau"] = tau_series(
@@ -1840,7 +1910,7 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict]) -> dict:
     endpoints.to_csv(outdir / "paired_endpoints.csv", index=False)
 
     exclusion_rows = []
-    for arm in ARM_ORDER:
+    for arm in arms_present:
         events = {int(e["seed"]): e for e in meta[arm]["exclusion_events"]}
         for seed in cfg["common"]["seeds"]:
             event = events.get(int(seed))
@@ -1854,7 +1924,8 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict]) -> dict:
     pd.DataFrame(exclusion_rows).to_csv(outdir / "exclusions.csv", index=False)
 
     result = dict(main_verdict=main, common_complete_seeds=paired,
-                  n_paired=len(paired), details=details,
+                  n_paired=len(paired), details=details, arms=arms_present,
+                  cells=cells, i_cells_invalid=bool(i_cells_invalid),
                   blocks=dict(B02=b02, B10=b10))
     _figure(frame, outdir)
     _summary(cfg, outdir, verdict, levels, onsets, result)
@@ -1864,16 +1935,19 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict]) -> dict:
 def _plain(result: dict) -> dict:
     """JSON に落とせる形へ（CI dict から必要な数値だけ抜く）。"""
     keep = ("point", "ci_lo", "ci_hi", "ci_degenerate")
+
+    def flat(ci) -> dict | None:
+        if ci is None:
+            return None
+        return {k: bool(ci[k]) if k == "ci_degenerate" else float(ci[k])
+                for k in keep}
+
     return dict(verdict=result["verdict"], bands=result["bands"],
                 interaction_band=result["interaction_band"],
                 margin=result["margin"],
                 interaction_margin=result["interaction_margin"],
-                cis={name: {k: float(ci[k]) if k != "ci_degenerate"
-                            else bool(ci[k]) for k in keep}
-                     for name, ci in result["cis"].items()},
-                interaction={k: float(result["interaction"][k])
-                             if k != "ci_degenerate"
-                             else bool(result["interaction"][k]) for k in keep})
+                cis={name: flat(ci) for name, ci in result["cis"].items()},
+                interaction=flat(result["interaction"]))
 
 
 def _figure(frame: pd.DataFrame, outdir: Path) -> None:
@@ -1886,10 +1960,11 @@ def _figure(frame: pd.DataFrame, outdir: Path) -> None:
               ("L1_B_median_alive", "alive median B = b/sigma", False),
               ("mu_norm_visible", "||mu|| of the visible input", False),
               ("bypass_share", "bypass power share", False)]
+    present = [arm for arm in ARM_ORDER if arm in set(frame.arm)]
     for (metric, label, logy), axis in zip(panels, axes.flat):
         if metric not in frame.columns:
             continue
-        for arm in ARM_ORDER:
+        for arm in present:
             group = frame[frame.arm == arm].groupby("task")[metric].median()
             if group.empty:
                 continue
@@ -1914,7 +1989,7 @@ def _summary(cfg: dict, outdir: Path, verdict: pd.DataFrame, levels: pd.DataFram
     b02, b10 = result["blocks"]["B02"], result["blocks"]["B10"]
     details = result.get("details", {})
     table_rows = []
-    for arm in ARM_ORDER:
+    for arm in result.get("arms", ARM_ORDER):
         tau = onsets[(onsets.arm == arm) & onsets.primary]
         for block, tag in ((b02, "B02"), (b10, "B10")):
             group = levels[(levels.arm == arm) & (levels.block == block)]
@@ -2074,13 +2149,19 @@ def main() -> None:
         return
 
     outdir.mkdir(parents=True, exist_ok=True)
-    gates = _require_gates(gate_dir)
+    gates, i_cells_invalid = _gates_for_run(gate_dir)
+    run_arms = [arm for arm in ARM_ORDER
+                if arm not in CELL_ORDER
+                or arm in active_cells(cfg, i_cells_invalid=i_cells_invalid)]
+    if i_cells_invalid:
+        print("S-op FAILED -> I+ cells (IM, Im) are invalid; running "
+              f"{run_arms} and reporting no 2x2 main verdict", flush=True)
     total = int(cfg["common"]["total_steps"])
     period = int(cfg["phase1"]["task_period"])
     guard = int(_P(cfg)["guard_every"])
-    if args.arm and args.arm not in ARM_ORDER:
-        raise SystemExit(f"unknown arm {args.arm}")
-    todo = [args.arm] if args.arm else list(ARM_ORDER)
+    if args.arm and args.arm not in run_arms:
+        raise SystemExit(f"unknown or invalidated arm {args.arm}")
+    todo = [args.arm] if args.arm else list(run_arms)
     if not args.analyze_only:
         for arm in todo:
             result = run_arm_ident(cfg, arm, outdir, total_steps=total,
@@ -2096,7 +2177,7 @@ def main() -> None:
             return
 
     frames, post_frames, meta = [], [], {}
-    for arm in ARM_ORDER:
+    for arm in run_arms:
         meta[arm] = json.loads((_shard(outdir) / f"{arm}.json").read_text(
             encoding="utf-8"))
         if meta[arm]["status"] in VALID_ARM_STATUSES:
@@ -2110,21 +2191,22 @@ def main() -> None:
     frame.to_csv(outdir / "task_end_metrics.csv", index=False)
     _write_boundary_snapshots(outdir, frame, post_frames, total, period)
 
-    result = analyze(cfg, outdir, meta)
+    result = analyze(cfg, outdir, meta, i_cells_invalid=i_cells_invalid)
     run_sanity = dict(
         gates={name: report["pass_"] for name, report in gates.items()},
+        i_cells_invalid=bool(i_cells_invalid), arms_run=run_arms,
         S3={arm: dict(pass_=meta[arm]["sanity"]["pass_"],
                       max_relerr=meta[arm]["sanity"]["max_relerr"],
                       n_visible_violations=meta[arm]["sanity"]["n_visible_violations"],
                       quantization_violations=meta[arm]["sanity"]["n_quantization_violations"],
                       wall_violations=meta[arm]["sanity"]["n_wall_identity_violations"])
-            for arm in ARM_ORDER},
+            for arm in run_arms},
         seed_isolation={arm: dict(status=meta[arm]["status"],
                                   excluded_seeds=meta[arm]["excluded_seeds"],
                                   events=meta[arm]["exclusion_events"])
-                        for arm in ARM_ORDER},
+                        for arm in run_arms},
         details=result["details"],
-        training_elapsed_sec={arm: meta[arm]["elapsed_sec"] for arm in ARM_ORDER})
+        training_elapsed_sec={arm: meta[arm]["elapsed_sec"] for arm in run_arms})
     (outdir / "run_sanity.json").write_text(
         json.dumps(run_sanity, indent=2, ensure_ascii=False), encoding="utf-8")
     with (outdir / "config_used.yaml").open("w") as stream:

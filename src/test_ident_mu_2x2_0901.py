@@ -36,7 +36,9 @@ from src.ident_mu_2x2_0901 import (
     block_levels,
     classify_2x2,
     classify_r_ext,
+    I_CELLS_INVALID_S_OP,
     _s_op_identification,
+    active_cells,
     extinction_table,
     forward_ident,
     grads_ident,
@@ -420,12 +422,14 @@ class AnalysisTests(unittest.TestCase):
         cls.cfg["ident_mu_2x2"]["bootstrap_B"] = 2_000
         cls.frame = _synthetic_frame()
 
-    def _analyze(self, frame: pd.DataFrame, meta: dict) -> tuple[dict, Path]:
+    def _analyze(self, frame: pd.DataFrame, meta: dict,
+                 i_cells_invalid: bool = False) -> tuple[dict, Path]:
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         outdir = Path(tmp.name)
         frame.to_csv(outdir / "task_end_metrics.csv", index=False)
-        return analyze(self.cfg, outdir, meta), outdir
+        return analyze(self.cfg, outdir, meta,
+                       i_cells_invalid=i_cells_invalid), outdir
 
     def test_block_levels_enforce_fifty_task_ends(self) -> None:
         levels = block_levels(self.cfg, self.frame)
@@ -523,6 +527,31 @@ class AnalysisTests(unittest.TestCase):
                              & (self.frame.seed > 6))].copy()
         result, _ = self._analyze(frame, meta)
         self.assertEqual(result["main_verdict"], "CONTRAST_INVALID_TOO_FEW_PAIRED")
+
+    def test_s_op_failure_drops_the_I_cells_but_keeps_M_and_R_ext(self) -> None:
+        """spec §7 の S-op 行の失敗時帰結。走は止まらず主判定だけ出ない。"""
+        self.assertEqual(active_cells(self.cfg, i_cells_invalid=False),
+                         ["IM", "iM", "Im", "im"])
+        self.assertEqual(active_cells(self.cfg, i_cells_invalid=True),
+                         ["iM", "im"])
+        meta = {arm: row for arm, row in _all_complete().items()
+                if arm not in ("IM", "Im")}
+        frame = self.frame[~self.frame.arm.isin(["IM", "Im"])].copy()
+        result, outdir = self._analyze(frame, meta, i_cells_invalid=True)
+        self.assertEqual(result["main_verdict"], I_CELLS_INVALID_S_OP)
+        self.assertEqual(result["cells"], ["iM", "im"])
+        # 登録済みの M 主効果 (i) は帯に対する位置だけを出す（新語彙は作らない）。
+        drift = result["details"]["drift"]
+        self.assertEqual(list(drift["bands"]), ["M_i"])
+        self.assertIn(drift["verdict"], ("IN", "OUT_POS", "OUT_NEG", "STRADDLE"))
+        self.assertIsNone(drift["interaction"])
+        # R-ext は I ダイヤルと無関係なので無傷。
+        self.assertEqual(result["details"]["r_ext"]["verdict"],
+                         BWD_PREVENTS_EXTINCTION)
+        verdict = pd.read_csv(outdir / "verdict.csv")
+        self.assertNotIn("IM", set(verdict.scope))
+        self.assertTrue((verdict[verdict.pred == "R-ext"].verdict
+                         == BWD_PREVENTS_EXTINCTION).all())
 
     def test_arm_invalid_stops_the_main_verdict(self) -> None:
         meta = _all_complete()
