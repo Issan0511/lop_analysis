@@ -311,6 +311,8 @@ class TaskEndRecorder:
         pre = f"L{li}_"
         return {
             pre + "strict_dead_frac": float((p == 0).mean()),
+            pre + "submerged_frac": float(
+                (ours["pre_max"][ri].detach().cpu().numpy() <= 0).mean()),
             pre + "alive": int(alive.sum()),
             pre + "n_invalid": int((~valid).sum()),
             pre + "b_median_alive": _q(b[alive], 0.5),

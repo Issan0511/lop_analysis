@@ -130,7 +130,10 @@ def setup_arm(cfg: dict, arm_cfg: dict, device: str) -> dict:
     hidden = [int(v) for v in arm_cfg["hidden"]]
     # The legacy base uses the learner width (100).  Keeping this exact is part
     # of S0; the streams themselves remain separated as in train.make_gens.
-    gens = make_gens("A", hidden[0], device)
+    # generator_offset は表示上の seed 集合を変えずに独立な乱数系列へ切り替える。
+    # 未指定=0 は凍結済み Phase 0/1 と乱数消費を含めて同一。
+    gens = make_gens("A", hidden[0], device,
+                     offset=int(C.get("generator_offset", 0)))
     period = torch.tensor([r["period"] for r in runs], dtype=torch.long)
     env = SCREnv(R, m, f, period, gens["input"], device)
     teacher = LTUTarget(R, m, int(A["target_hidden"]), float(A["beta"]),
