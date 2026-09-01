@@ -1,0 +1,122 @@
+{
+  "experiment": "width5_gate_b_0901_posthoc_1m",
+  "analysis_grade": "registered_posthoc_not_preregistered",
+  "grade_note": "values computed in chat 2026-09-01 before the spec was frozen; see spec §0 and vault 原典条件照合_0901 §5",
+  "created": "2026-09-02 01:30:54 +0900",
+  "command": [
+    "/home/issan/Projects/claude/proj_004_drift/src/width5_gate_b_posthoc_1m_0901.py"
+  ],
+  "elapsed_sec": 0.011,
+  "cwd": "/home/issan/Projects/claude/proj_004_drift",
+  "python": "3.12.3 (main, Jul 15 2026, 23:46:41) [GCC 13.3.0]",
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+  "git_hash": "481163325f9b5517443e907bb4ad33a9ef87a050",
+  "git_dirty": [
+    "?? results/_preflight_centered_freeze_0901/free_replay/",
+    "?? results/_preflight_dose_const_5m_0830/",
+    "?? results/_preflight_gate_dose_0830/",
+    "?? results/_s0_bias_wd_pilot_0901/",
+    "?? results/_smoke_centered_freeze_0901/",
+    "?? results/_smoke_dose_const_5m_0830/",
+    "?? results/_smoke_gate_dose_0830/",
+    "?? results/_smoke_ident_mu_2x2_0901/",
+    "?? results/dynrepair_0826_s8replay/",
+    "?? results/mu_titration_0823_aborted_s2coverage_647316c/",
+    "?? results/mu_titration_0823_invalid_s3_39986e2/",
+    "?? results/width5_gate_b_0901/posthoc_1m/"
+  ],
+  "spec": "/home/issan/Projects/claude/proj_004_drift/specs/spec_width5_gate_b_0901_posthoc_1m.md",
+  "spec_sha256": "40be64c970c0eebb98d3b9fbce4d9de8edf89cdaf05f9a816afe83b11b067ed4",
+  "source": "/home/issan/Projects/claude/proj_004_drift/results/width5_gate_b_0901",
+  "input_sha256": {
+    "verdict.csv": "a9a89b32e4cf6dd2c46a8d65c282d31b61363957f99f873453463f1e9e0a09d3",
+    "provenance.json": "e9c845e66b619b7246544ee49e1776f4349e1b9ab0b784e5b8195d8e345c8bc0"
+  },
+  "parent_recorded_5m": {
+    "R5": {
+      "k": "13",
+      "status": "R5_INCONCLUSIVE_WIDE"
+    },
+    "LR5": {
+      "k": "0",
+      "status": "LR5_BELOW_LINEAR"
+    },
+    "E5": {
+      "k": "1",
+      "status": "E5_BELOW_LINEAR"
+    }
+  },
+  "sanity": {
+    "S_input": {
+      "name": "S_input",
+      "pass_": true,
+      "gating": true,
+      "sha256": {
+        "verdict.csv": "a9a89b32e4cf6dd2c46a8d65c282d31b61363957f99f873453463f1e9e0a09d3",
+        "provenance.json": "e9c845e66b619b7246544ee49e1776f4349e1b9ab0b784e5b8195d8e345c8bc0"
+      }
+    },
+    "S_reproduce": {
+      "name": "S_reproduce",
+      "pass_": true,
+      "gating": true,
+      "rows": [
+        {
+          "arm": "R5",
+          "recorded_k": "13",
+          "recomputed_k": 13,
+          "recorded_status": "R5_INCONCLUSIVE_WIDE",
+          "recomputed_status": "R5_INCONCLUSIVE_WIDE",
+          "match": true
+        },
+        {
+          "arm": "LR5",
+          "recorded_k": "0",
+          "recomputed_k": 0,
+          "recorded_status": "LR5_BELOW_LINEAR",
+          "recomputed_status": "LR5_BELOW_LINEAR",
+          "match": true
+        },
+        {
+          "arm": "E5",
+          "recorded_k": "1",
+          "recomputed_k": 1,
+          "recorded_status": "E5_BELOW_LINEAR",
+          "recomputed_status": "E5_BELOW_LINEAR",
+          "match": true
+        }
+      ]
+    },
+    "S_known": {
+      "name": "S_known",
+      "pass_": true,
+      "gating": false,
+      "note": "cross-check only; not a gate",
+      "rows": [
+        {
+          "arm": "R5",
+          "handoff_k": 9,
+          "recomputed_k": 9,
+          "match": true
+        },
+        {
+          "arm": "LR5",
+          "handoff_k": 0,
+          "recomputed_k": 0,
+          "match": true
+        },
+        {
+          "arm": "E5",
+          "handoff_k": 0,
+          "recomputed_k": 0,
+          "match": true
+        }
+      ]
+    }
+  },
+  "output_sha256": {
+    "verdict.csv": "ed2627eca4cf5139528e25cbe2ee37bd26a0ab8cfbfd23d184f8bd9ecb246493",
+    "bimodality.csv": "826f3187ba2ac93e0c427c63fc33d1f342c77d2bf0542570f946edbe37938d0d",
+    "summary.md": "1b5ad69d96a3e5926c4d8f3fbd3222bc0e3d8837ade46a67b8e541b6208360b8"
+  }
+}
