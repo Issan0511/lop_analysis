@@ -1,0 +1,133 @@
+spec: specs/spec_lin0_base_0902.md
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+  - 16
+  - 17
+  - 18
+  - 19
+  generator_offset: 202609011921
+  lr_main: 0.01
+  device: cpu
+  lop_every: 1000
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+arms:
+- name: LIN0
+  lr: 0.01
+  generator_width_basis: 5
+  registered: true
+- name: LIN0_lr03
+  lr: 0.03
+  generator_width_basis: 5
+  registered: false
+phase1:
+  task_period: 10000
+  late_tasks_5m:
+  - 491
+  - 500
+  window_1m_tasks:
+  - 91
+  - 100
+  exact_support: 32
+  unfit_floor: 1.0e-16
+lin0:
+  comparison_arms:
+  - R5
+  - LR5
+  - E5
+  baseline_arm: LIN0
+  legacy_baseline_arm: LIN5
+  cp_alpha: 0.05
+  tight_band:
+  - 0.2
+  - 0.8
+  collapse_threshold: 0.999
+  legacy_labels:
+    5m:
+      R5: R5_INCONCLUSIVE_WIDE
+      LR5: LR5_BELOW_LINEAR
+      E5: E5_BELOW_LINEAR
+    1m:
+      R5: R5_NOT_SEPARATED_TIGHT
+      LR5: LR5_BELOW_LINEAR
+      E5: E5_BELOW_LINEAR
+parent:
+  dir: results/width5_gate_b_0901
+  verdict_sha256: a9a89b32e4cf6dd2c46a8d65c282d31b61363957f99f873453463f1e9e0a09d3
+  provenance_sha256: e9c845e66b619b7246544ee49e1776f4349e1b9ab0b784e5b8195d8e345c8bc0
+sanity:
+  omp_num_threads: 1
+  s_share_arm: LIN5
+  s_share_tol: 0.0
+  s_init_bound_formula: sqrt(3/d)
+  s_init_quantiles:
+  - 0.1
+  - 0.25
+  - 0.5
+  - 0.75
+  - 0.9
+  s_init_quantile_tol: 0.05
+  s_lin0_tol: 1.0e-12
+  s_floor_expected: 1.0e-16
+  s0_prime_steps: 30000
+  s0_prime_w5_arms:
+  - R5
+  - LR5
+  - E5
+  - LIN5
+  s0_prime_w5_metrics:
+  - unfit
+  - eval_loss_exact
+  - layer1_p_hat
+  s0_prime_w100_arms:
+  - R100
+  - E100
+  - LR100
+  s0_prime_w100_seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  s0_prime_w100_generator_offset: 0
+  s0_prime_w100_reference: results/gate_dose_0830
+  s0_prime_w100_arm_map:
+    R100: R_off
+    E100: E_off
+    LR100: LR_off
+output:
+  dir: results/lin0_base_0902
+preregistration:
+  frozen: true
+  repo_spec_committed: df2166a
+  predictions_confirmed: true
+  prediction_B1: BASELINE_CONSTRUCTION_IMMATERIAL
+  prediction_grade: conditional_not_blind_LIN5_result_was_known
+  execution_authorized: true
