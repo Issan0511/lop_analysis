@@ -1,0 +1,277 @@
+# proj_004: ident_mu_2x2_0901 — µ ダイヤル × タスク可識別性ダイヤルの 2×2（純化版・実装のみ）
+#
+# 事前登録: `specs/spec_ident_mu_2x2_0901.md`（**単独 commit `0d7a746`＝成立点**。
+# vault `可塑性喪失/spec/可識別性2x2_spec_0901.md` の `c2edf5d` を逐語コピー）。
+# v2 改稿（vault `ee831d6`・D8）: `Aexact` の死が全数 b 自走と判明したため、
+# 要因 4 セル全部に b 限定 WD λ=1e-3 を敷いて現象2 を床に押さえる。アンカーは
+# `im_nowd`（λ=0 の Aexact 双子・登録副判定 R-ext を担う）と `std_anchor` の 2 本。
+# 主 endpoint は E-drift ＋ E-level の共主に戻り、E-onset は REPORT_ONLY に降格。
+# S-op は 9/1 改2 で切替プローブ・本走 regime（T=10^4・150 境界・後半 50）。
+#
+# 日付の使い回し禁止（HANDOFF §1-6 / 9月運用_0901 §3-1）:
+#   generator_offset 既用: 0 / 20260830 / 20260831 / 20260905 / 202609011921
+#   bootstrap_seed  既用: 20260829 / 20260902 / 20260903 / 20260904 / 20260906
+#                         / 202609011921
+# 本走は generator_offset=20260910、bootstrap_seed=20260911。
+# 乱数系列の実体は make_gens の base = SEED_BASE + width + offset なので、
+# 幅違いの走と (offset + width) が衝突しないことを validate_config が検査する。
+
+spec: specs/spec_ident_mu_2x2_0901.md
+
+common:
+  total_steps: 5000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  generator_offset: 20260910
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 10000
+  checkpoints: [0, 5000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  encodings: [std]
+
+# Option B（spec §2）: µ を EMA でもオラクルでもなく「可視入力の構成」で置く。
+# 実装は第1層入力から**構成された定数 offset** を引くだけで、追随（EMA）は持たない。
+# center_alpha=0 は凍結済み forward_centered の EMA 更新を恒等にするための値であり、
+# 「alpha を小さくした中心化」ではない（トラッカーは存在しない）。
+intervention:
+  name: B_visible_input_construction
+  tracker: none
+  center_alpha: 0.0
+  stop_gradient_on_running_mean: true
+  consumes_rng: false
+  offset_refresh: task_boundary_only
+  bypass: additive_output_side_linear_readout_of_code
+
+# 純化（spec §3.5・D8）: 要因 4 セル全部に b 限定 WD を敷いて現象2 を床に押さえる。
+# 更新式は素の L2 勾配 b <- b - eta*(g_b + lambda*b)（decoupled ではない）。
+# 掛けるのは隠れ層 bias のみで、W・v・出力 bias c・バイパス u には掛けない。
+# lambda=0 の腕も分岐せず WD 経路を通す（S1 が無 WD 実装との bit 一致を検査する）。
+bias_weight_decay:
+  lam: 1.0e-3
+  decoupled: false
+  targets: hidden_bias_only
+  excluded: [W, v, c, u]
+  branchless: true
+  lam_provenance: transported_from_bias_wd_pilot_0901_centered_hidden_100_100
+
+# 腕（spec §3.2・6 本）。I ダイヤル = code が flip_t か 0 か、M ダイヤル = 可視 flip
+# ブロックが flip_0 か零＋rnd 中心化か。要因 4 セルは実装レベルで完全直交する。
+# im_nowd は λ=0 の `Aexact` 双子で、アンカー兼 登録副判定 R-ext（spec §6.4）を担う。
+# std_anchor は 2 因子が縮退した外部アンカーであって要因計画のセルではない（§9-8）。
+arms:
+  - {name: IM,         hidden: [100], centered_layers: [1], visible: flip0,         code: flip_t, wd_b: 1.0e-3, cell: true,  I: true,  M: true}
+  - {name: iM,         hidden: [100], centered_layers: [1], visible: flip0,         code: zero,   wd_b: 1.0e-3, cell: true,  I: false, M: true}
+  - {name: Im,         hidden: [100], centered_layers: [1], visible: zero_centered, code: flip_t, wd_b: 1.0e-3, cell: true,  I: true,  M: false}
+  - {name: im,         hidden: [100], centered_layers: [1], visible: zero_centered, code: zero,   wd_b: 1.0e-3, cell: true,  I: false, M: false}
+  - {name: im_nowd,    hidden: [100], centered_layers: [1], visible: zero_centered, code: zero,   wd_b: 0.0,    cell: false, I: false, M: false}
+  - {name: std_anchor, hidden: [100], centered_layers: [1], visible: raw,           code: zero,   wd_b: 0.0,    cell: false, I: null,  M: null}
+
+pairing:
+  paired_groups:
+    - [IM, iM, Im, im]
+  anchor_arms: [im_nowd, std_anchor]
+  r_ext_group: [im, im_nowd]
+  baseline: im
+  pairing_scope: init_teacher_input_realization_all_six_arms
+
+phase1:
+  task_period: 10000
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-8
+
+sanity:
+  s1_identity_tol: 1.0e-10
+  omp_num_threads: 1
+  used_generator_offsets: [0, 20260830, 20260831, 20260905, 202609011921]
+  used_widths: [5, 100]
+  used_bootstrap_seeds: [20260829, 20260902, 20260903, 20260904, 20260906, 202609011921]
+
+ident_mu_2x2:
+  output_dir: results/ident_mu_2x2_0901
+  gate_dir: results/_gate_ident_mu_2x2_0901
+  omp_num_threads: 1
+  guard_every: 1000
+
+  # ---- 窓（spec §5）
+  block_tasks: 50
+  early_block_tasks: [51, 100]
+  late_block_tasks: [451, 500]
+  n_blocks: 10
+
+  # ---- 共主 endpoint（spec §6.1・D4 で v1 の E-onset 主から標準形に復帰）
+  primary_endpoint: drift
+  drift:
+    statistic: mean_log10_unfit
+    windows: [B02, B10]            # B10 - B02（劣化量）
+  level:
+    block: B10
+    statistic: mean_log10_unfit
+  # E-onset は REPORT_ONLY。onset.csv に 6 腕ぶん出し、R-ext の記述に使う。
+  onset:
+    role: report_only
+    metric: log10_unfit
+    smoother: moving_median
+    window_tasks: 10
+    window_alignment: trailing
+    min_periods: 1
+    threshold: -1.0
+    sensitivity_thresholds: [-0.5, -1.5]
+    censor_task: 501
+    censor_flag_min_seeds: 3
+    # ★ spec §6.1 に無い実装決定: 学習初期は unfit が閾値より上から始まるので
+    # 「初めて閾値以上になる task」は素直に読むと全 seed で tau=1 になる。
+    # 到達時刻は「一度閾値を下回ったあとの最初の上抜け」と定義する。
+    # 一度も下回らない seed は ONSET_NEVER_BELOW で数える。
+    require_prior_below: true
+
+  # ---- 等価限界（spec §6.3・D5 は Claude 暫定）
+  equivalence_margin: 0.15         # E-drift / E-level 共通 [dex]
+  interaction_margin: 0.50         # [dex]
+  margin_provenance: inherited_from_channel_2x2_0901_D4_transported_across_sample_and_endpoint
+
+  # ---- 登録副判定 R-ext（spec §6.4）: b-WD は Aexact 型の全滅を止めるか
+  r_ext:
+    arms: [im, im_nowd]
+    endpoint: extinction_reached_by_5M
+    extinction_rule: L1_strict_dead_frac == 1.0
+    cross_check_rule: L1_alive == 0
+    prevents_threshold: 8          # im_nowd 到達 >= 8/10
+    persists_threshold: 8          # im  到達 >= 8/10
+    residual_threshold: 1          # im  到達 <= 1/10
+    ci_method: clopper_pearson
+    reference: {arm: L1w100_Aexact, reached: 10, of: 10, task_range: [154, 454]}
+    scope_note: death_claim_only_do_not_read_as_LOP_CURED
+
+  # ---- 集計規約（spec §6.5）
+  unfit_floor: 1.0e-16
+  recalibrate_floor: false
+  floor_inherited_from: one_layer_series_9gatsu_unyou_0901_section_3-1
+  level_statistic: mean_log10_unfit
+  bootstrap_B: 20000
+  bootstrap_seed: 20260911
+  ci_method: percentile_paired
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+  s2_probe_lambda: 1.0e-3
+  # S-ceiling（spec §6.1・§7）: 要因 4 セルの B02 水準の最大差が 3 dex 超なら
+  # CEILING_CONTAMINATED。天井そのものの到達 seed 数は im_nowd で数える。
+  ceiling_flag_dex: 3.0
+  ceiling_level_dex: -0.05
+  ceiling_count_arm: im_nowd
+
+  # ---- seed 単位隔離（spec §3.5、spec_bias_wd_std_seediso_0901 §2 の継承）
+  seed_isolation:
+    max_exclusions_per_arm: 2
+    min_complete_seeds_per_arm: 8
+    min_paired_seeds: 8
+    quarantine: zero_training_state_and_set_lr_zero
+    guarded_tensors: [W, b, v, c, u]
+    keep_rng_rows: 10
+    exclude_entire_seed_trajectory: true
+    stop_arm_on_limit_exceeded: true
+
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    action: quarantine_seed_and_continue
+    exclude_entire_seed_trajectory: true
+    rescue: none
+
+  # ---- ゲート（spec §7）
+  gates:
+    s_pair_steps: 30000
+    s_pair_grid: 1000
+    # S0: im_nowd を center_oracle_0831 の Aexact に対して replay する。
+    # Aexact の厳密支持平均 [flip_t, 0.5] の減算は M− の可視入力構成と
+    # 構成的に同一なので、系列（generator_offset=0）を揃えれば bit 一致する。
+    # **本走（新系列）の腕の正しさは保証しない**（実装同値性だけを示す）。
+    s0_arm: im_nowd
+    s0_reference_dir: results/center_oracle_0831
+    s0_reference_arm: L1w100_Aexact
+    s0_reference_checkpoint: results/mlp2_phase1_0829/ckpts/L1w100_A1_step0.pt
+    s0_generator_offset: 0
+    s0_steps: 30000
+    s0_grid: 1000
+    s0_metrics: [unfit, eval_loss_exact, strict_dead_frac]
+    s0_tol: 1.0e-12
+    s_bypass_steps: 30000
+    s_freeze_steps: 30000
+    # S-op（9/1 改・切替プローブ）。旧定義（定常単一タスク・unfit 比較）は
+    # 二重に成立不能だった: バイパスはタスク内定数で c と冗長、かつ unfit は
+    # DC 盲。改定版は切替を入れて境界直後 100 step 窓の eval_loss_exact
+    # （DC 感応）で見る。
+    #
+    # ★ regime を本走に合わせる（9/1 Issa 裁定）。spec 改定版の初稿は
+    # T=1000・30 境界・後半 20 だったが、(i) タスク内で u が DC を合わせる時間が
+    # 本走（T=10^4）の 1/10 しかなく、(ii) 30 境界では 15 bit あたり事前反転が
+    # 平均 1.36 回（採点境界の 28% が初見 bit）で u_k が同定されない。u_k は
+    # 現タスクの DC の分け前を映すだけで教師 DC の**変化**の符号は映さないので、
+    # 同定前の境界では跳ね ±u_k は符号が当てにならず、バイパスの能力を測れない。
+    # T を本走と一致させ、境界数を 150（bit あたり ~10 回）に増やす。
+    s_op_mode: switching_probe
+    s_op_arm: Im
+    s_op_control: im
+    s_op_task_period: 10000          # = phase1.task_period（本走と同一 regime）
+    s_op_n_boundaries: 150
+    s_op_steps: 1510000
+    s_op_window_steps: 100
+    s_op_score_boundaries: 50        # 最後の 50 境界だけで採点する
+    s_op_metric: eval_loss_exact
+    s_op_statistic: mean_over_window_then_mean_over_scored_boundaries
+    s_op_rule: paired_ci_hi_below_zero
+    s_op_bootstrap_seed: 20260912
+    s_count_tasks: 500
+    bypass_dc_tol: 1.0e-8
+
+# 事前登録の状態。ここが全部 true になるまで本走・解析は起動しない。
+# **commit の順（spec §10）**: specs/spec_ident_mu_2x2_0901.md を単独で先に
+# commit し、その後で config＋実装、最後に結果。この config を spec より先に
+# 出してはいけない。
+preregistration:
+  implementation_before_predictions_authorized: true   # 2026-09-01 Issa「実装だけで」
+  spec_version: v2                   # vault 3142500（純化 2×2・D8 ＋ S-op 改定）
+  # D2 / D5–D7 は「Claude 暫定・上書き可」のまま Issa が上書きせず凍結した
+  # （vault 状態行「凍結可」・[[現在地]]「残るのは repo 側 spec 単独 commit のみ」）。
+  decisions_complete: true
+  decided: [D0, D1, D3, D4, D8]
+  claude_provisional_accepted_at_freeze: [D2, D5, D6, D7]
+  predictions_confirmed: true        # vault 3a6d6b5 で Issa が §8 を記入・凍結
+  frozen: true                       # 成立点 = repo commit 0d7a746（spec 単独）
+  repo_spec_committed: true
+  execution_authorized: true         # 2026-09-01 Issa「実行して」
+  repo_spec_commit: 0d7a746effb0b222b831cc9481e12d0f030ad4b1
+  repo_spec_sha256: 33c05c7a308a3914707ca11c510b6a7fc88cd0fa77c7fcd27f991892e2375242
+  vault_spec_commit: c2edf5d
+  # spec §8（vault 3a6d6b5、S-op の改定記録は 3142500）。字句のまま記録する。
+  predictions:
+    main_verdict: MU_DOMINANT
+    e_drift_rank: mu_strong_type_M_plus_cells_degrade_more_than_M_minus_cells
+    r_ext: BWD_PREVENTS_EXTINCTION
+    s_op_passes: true
+    rewrite_target_if_wrong: unknown
+    provenance: answered_against_the_old_S_op_definition_and_re_pointed_at_the_revised_one
+  # 実装が spec の字義から離れて残っている点（凍結前に Issa の裁定が要る）
+  implementation_notes:
+    - onset_requires_prior_below_threshold
+  # 9/1 に spec 側が実装へ寄せた点（vault 3142500）。もう乖離ではない。
+  reconciled_in_spec_v2_revision:
+    - bypass_share_is_a_power_share_not_a_variance_share
+    - unfit_is_dc_blind_so_the_I_dial_moves_the_primary_endpoint_only_dynamically
+    - s_op_became_a_switching_probe_on_eval_loss_exact
+    - r_ext_extinction_rule_is_strict_dead_frac_1.0_with_alive_zero_cross_check
