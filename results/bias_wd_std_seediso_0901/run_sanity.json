@@ -1,0 +1,132 @@
+{
+  "S0_pass": true,
+  "S1_S2_pass": true,
+  "S_iso_S_cap_pass": true,
+  "isolation_gate": {
+    "pass_": true,
+    "isolated_seed": 1,
+    "unaffected_state_bitwise_equal": true,
+    "input_stream_bitwise_equal": true,
+    "env_state_equal": true,
+    "exclusion_cap_gate": true
+  },
+  "S3": {
+    "S_none": {
+      "pass_": true,
+      "max_relerr": {
+        "mean": 5.960001279347303e-16,
+        "sd": 8.156777585035031e-16,
+        "wall": 0.0,
+        "cos_mu": 4.396690809268503e-16,
+        "beta": 3.2221382983445614e-15,
+        "sigma": 3.4977534226231643e-15,
+        "unfit": 0.0,
+        "kappa_closed": 2.2063863075088966e-15,
+        "beta_elementwise_rel": 1.2986677948591122e-10,
+        "beta_scale": 94.66087069464997
+      },
+      "quantization_violations": 0,
+      "wall_violations": 0
+    },
+    "S_main": {
+      "pass_": true,
+      "max_relerr": {
+        "mean": 5.302434342558425e-16,
+        "sd": 8.156777585035031e-16,
+        "wall": 0.0,
+        "cos_mu": 4.2731680076165595e-16,
+        "beta": 3.2221382983445614e-15,
+        "sigma": 3.4977534226231643e-15,
+        "unfit": 0.0,
+        "kappa_closed": 4.218855331316926e-15,
+        "beta_elementwise_rel": 3.4836735818328223e-12,
+        "beta_scale": 27.71968061630056
+      },
+      "quantization_violations": 0,
+      "wall_violations": 0
+    },
+    "S_sub": {
+      "pass_": true,
+      "max_relerr": {
+        "mean": 5.410668606352615e-16,
+        "sd": 1.166503320373513e-15,
+        "wall": 0.0,
+        "cos_mu": 4.2545211947551977e-16,
+        "beta": 4.18264138024134e-15,
+        "sigma": 4.1485043405258155e-15,
+        "unfit": 0.0,
+        "kappa_closed": 4.012923876303472e-15,
+        "beta_elementwise_rel": 1.0408178043280558e-11,
+        "beta_scale": 23.98798122241386
+      },
+      "quantization_violations": 0,
+      "wall_violations": 0
+    }
+  },
+  "S4_seed_isolation": {
+    "S_none": {
+      "status": "COMPLETE",
+      "excluded_seeds": [],
+      "events": []
+    },
+    "S_main": {
+      "status": "COMPLETE_WITH_EXCLUSIONS",
+      "excluded_seeds": [
+        7
+      ],
+      "events": [
+        {
+          "status": "NUMERIC_DIVERGENCE",
+          "arm": "S_main",
+          "seed": 7,
+          "detected_step": 3381000,
+          "detected_task": 339,
+          "probe_every": 1000,
+          "nonfinite_tensors": [
+            "net.Ws.1",
+            "net.Ws.2",
+            "net.bs.1",
+            "net.bs.2",
+            "net.v",
+            "net.c"
+          ],
+          "action": "quarantine_seed_and_continue",
+          "exclude_entire_seed_trajectory": true,
+          "rescue": "none"
+        }
+      ]
+    },
+    "S_sub": {
+      "status": "COMPLETE_WITH_EXCLUSIONS",
+      "excluded_seeds": [
+        2
+      ],
+      "events": [
+        {
+          "status": "NUMERIC_DIVERGENCE",
+          "arm": "S_sub",
+          "seed": 2,
+          "detected_step": 1591000,
+          "detected_task": 160,
+          "probe_every": 1000,
+          "nonfinite_tensors": [
+            "net.Ws.1",
+            "net.Ws.2",
+            "net.bs.1",
+            "net.bs.2",
+            "net.v",
+            "net.c"
+          ],
+          "action": "quarantine_seed_and_continue",
+          "exclude_entire_seed_trajectory": true,
+          "rescue": "none"
+        }
+      ]
+    }
+  },
+  "training_elapsed_sec": {
+    "S_none": 876.3624560832977,
+    "S_main": 898.6994571685791,
+    "S_sub": 969.1179347038269
+  }
+}

@@ -1,0 +1,115 @@
+spec: specs/spec_bias_wd_std_seediso_0901.md
+baseline_dir: results/mlp2_phase1_0829
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 10000
+  checkpoints:
+  - 0
+  - 5000000
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+intervention:
+  name: A_layer_input_centering
+  center_alpha: 0.01
+  stop_gradient_on_running_mean: true
+  consumes_rng: false
+arms:
+- name: S_none
+  hidden:
+  - 100
+  - 100
+  centered_layers: []
+  wd_b: 0.0
+- name: S_main
+  hidden:
+  - 100
+  - 100
+  centered_layers: []
+  wd_b: 0.001
+- name: S_sub
+  hidden:
+  - 100
+  - 100
+  centered_layers: []
+  wd_b: 0.1
+pairing:
+  paired_groups:
+  - - S_none
+    - S_main
+    - S_sub
+  baseline: S_none
+phase1:
+  task_period: 10000
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-08
+sanity:
+  s1_identity_tol: 1.0e-10
+  omp_num_threads: 1
+bias_wd:
+  output_dir: results/bias_wd_std_seediso_0901
+  omp_num_threads: 1
+  guard_every: 1000
+  s0_replay_steps: 30000
+  baseline_arm: L2_none
+  s2_probe_lambda: 0.001
+  seed_isolation:
+    max_exclusions_per_arm: 2
+    min_complete_seeds_per_arm: 8
+    min_paired_seeds: 8
+    quarantine: zero_training_state_and_set_lr_zero
+    keep_rng_rows: 10
+    exclude_entire_seed_trajectory: true
+    stop_arm_on_limit_exceeded: true
+  block_tasks: 50
+  early_block_tasks:
+  - 51
+  - 100
+  late_block_tasks:
+  - 451
+  - 500
+  unfit_floor_L1: 1.0e-16
+  unfit_floor_L2: 1.0e-23
+  persist_ratio: 0.5
+  removed_ratio: 0.1
+  small_denominator_dex: 1.0
+  bootstrap_B: 20000
+  bootstrap_seed: 20260904
+  ci_method: percentile_paired
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    action: quarantine_seed_and_continue
+    exclude_entire_seed_trajectory: true
+    rescue: none

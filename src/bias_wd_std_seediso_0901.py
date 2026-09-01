@@ -459,6 +459,23 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict]) -> dict:
             m10 = _series(levels, arm, b10, f"L{layer}_M_median_alive", seeds)
             bb02 = _series(levels, arm, b02, f"L{layer}_B_median_alive", seeds)
             bb10 = _series(levels, arm, b10, f"L{layer}_B_median_alive", seeds)
+            finite = (np.isfinite(m02) & np.isfinite(m10)
+                      & np.isfinite(bb02) & np.isfinite(bb10))
+            undefined = [seed for seed, ok in zip(seeds, finite) if not ok]
+            if undefined:
+                ev = (f"seeds={seeds}; undefined alive-median endpoint for seeds="
+                      f"{undefined} (no alive units in at least one block/channel); "
+                      "paired delta and CI not computed")
+                rows.append(dict(pred="ledger", scope=f"B02->B10 {arm} L{layer}",
+                                 verdict="REPORT_ONLY", evidence=ev,
+                                 ci_basis="not computed: undefined alive median"))
+                ledger_rows.append(dict(
+                    arm=arm, layer=layer, n=len(seeds), n_defined=int(finite.sum()),
+                    undefined_seeds=undefined, M_B02=None, M_B10=None, M_delta=None,
+                    M_ci_lo=None, M_ci_hi=None, B_B02=None, B_B10=None, B_delta=None,
+                    B_ci_lo=None, B_ci_hi=None,
+                ))
+                continue
             mci, bci = paired_ci(cfg, m10 - m02, draws), paired_ci(cfg, bb10 - bb02, draws)
             ev = (f"seeds={seeds}; M {m02.mean():+.6f}->{m10.mean():+.6f}, delta "
                   f"{mci['point']:+.6f} CI [{mci['ci_lo']:+.6f}, {mci['ci_hi']:+.6f}]; "
@@ -468,11 +485,37 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict]) -> dict:
                              verdict="REPORT_ONLY", evidence=ev,
                              ci_basis="paired percentile"))
             ledger_rows.append(dict(
-                arm=arm, layer=layer, n=len(seeds), M_B02=m02.mean(), M_B10=m10.mean(),
+                arm=arm, layer=layer, n=len(seeds), n_defined=len(seeds),
+                undefined_seeds=[], M_B02=m02.mean(), M_B10=m10.mean(),
                 M_delta=mci["point"], M_ci_lo=mci["ci_lo"], M_ci_hi=mci["ci_hi"],
                 B_B02=bb02.mean(), B_B10=bb10.mean(), B_delta=bci["point"],
                 B_ci_lo=bci["ci_lo"], B_ci_hi=bci["ci_hi"],
             ))
+
+    for arm in ("S_main", "S_sub"):
+        static_paired = sorted(set(included["S_none"]) & set(included[arm]))
+        if not valid["S_none"] or not valid[arm]:
+            static_verdict = ARM_INVALID_EXCLUSION_LIMIT
+            static_evidence = (f"arm status: S_none={meta['S_none']['status']}, "
+                               f"{arm}={meta[arm]['status']}")
+            static_basis = "not computed"
+        elif len(static_paired) < int(I["min_paired_seeds"]):
+            static_verdict = CONTRAST_INVALID_TOO_FEW_PAIRED
+            static_evidence = f"paired complete seeds={static_paired}"
+            static_basis = "not computed"
+        else:
+            draws = _draws(cfg, len(static_paired))
+            delta = (_series(levels, arm, b10, "mean_log10_unfit", static_paired)
+                     - _series(levels, "S_none", b10, "mean_log10_unfit",
+                               static_paired))
+            ci = paired_ci(cfg, delta, draws)
+            static_verdict = "REPORT_ONLY"
+            static_evidence = (f"paired seeds={static_paired}; {ci['point']:+.6f} dex CI "
+                               f"[{ci['ci_lo']:+.6f}, {ci['ci_hi']:+.6f}]")
+            static_basis = "paired percentile"
+        rows.append(dict(pred="static", scope=f"B10 level {arm}-S_none",
+                         verdict=static_verdict, evidence=static_evidence,
+                         ci_basis=static_basis))
 
     verdict = pd.DataFrame(rows)
     verdict.to_csv(outdir / "verdict.csv", index=False)
