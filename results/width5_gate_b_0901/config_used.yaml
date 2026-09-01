@@ -1,0 +1,321 @@
+spec: specs/spec_width5_gate_b_0901.md
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+  - 16
+  - 17
+  - 18
+  - 19
+  generator_offset: 202609011921
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+activation:
+  relu:
+    name: relu
+  leaky:
+    name: leaky_relu
+    slope: 0.1
+  elu:
+    name: elu
+    alpha: 1.0
+    derivative_form: alpha_exp
+  linear:
+    name: leaky_relu
+    slope: 1.0
+    implementation: identity_via_leaky_relu
+  autograd: false
+  consumes_rng: false
+intervention:
+  name: none
+  oracle: false
+  consumes_rng: false
+  center_alpha_compat: 0.01
+arms:
+- name: R5
+  activation: relu
+  hidden:
+  - 5
+  centered_layers: []
+  target_mu_norm: null
+  target_dose: null
+- name: LR5
+  activation: leaky
+  hidden:
+  - 5
+  centered_layers: []
+  target_mu_norm: null
+  target_dose: null
+- name: E5
+  activation: elu
+  hidden:
+  - 5
+  centered_layers: []
+  target_mu_norm: null
+  target_dose: null
+- name: LIN5
+  activation: linear
+  hidden:
+  - 5
+  centered_layers: []
+  target_mu_norm: null
+  target_dose: null
+- name: R100
+  activation: relu
+  hidden:
+  - 100
+  centered_layers: []
+  target_mu_norm: null
+  target_dose: null
+- name: LR100
+  activation: leaky
+  hidden:
+  - 100
+  centered_layers: []
+  target_mu_norm: null
+  target_dose: null
+- name: E100
+  activation: elu
+  hidden:
+  - 100
+  centered_layers: []
+  target_mu_norm: null
+  target_dose: null
+- name: LIN100
+  activation: linear
+  hidden:
+  - 100
+  centered_layers: []
+  target_mu_norm: null
+  target_dose: null
+pairing:
+  paired_groups:
+  - - R5
+    - LR5
+    - E5
+    - LIN5
+  - - R100
+    - LR100
+    - E100
+    - LIN100
+  width_contrasts_unpaired: true
+  pairing_scope: init_teacher_input_realization_within_width
+  trajectory_caveat: activations_diverge_after_step1
+phase1:
+  task_period: 10000
+  early_tasks:
+  - 2
+  - 11
+  late_tasks_5m:
+  - 491
+  - 500
+  window_1m_tasks:
+  - 91
+  - 100
+  exact_support: 32
+  onset_threshold: 0.05
+  onset_present_min: 5
+  unfit_floor: 1.0e-16
+  recalibrate_floor: false
+  bootstrap_B: 10000
+  bootstrap_seed: 202609011921
+  ci_method: percentile_primary_studentized_secondary
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+width5_gate:
+  primary_verdict: G0_only
+  phenomenon_arms:
+  - LR5
+  - E5
+  saturation_arms:
+  - R5
+  - LR5
+  - E5
+  - LIN5
+  reproduced_min_onset: 5
+  level_baseline: LIN5
+  level_contrasts:
+  - - LR5
+    - LIN5
+  - - E5
+    - LIN5
+  level_equivalence_resolution_dex: 0.5
+  level_verdict_registered: false
+  width_contrasts_registered: false
+  mechanism_metrics_registered: false
+  report_windows:
+  - early
+  - 1M
+  - 5M
+  report_unit_sum_and_rate: true
+  mobility_floor_tolerance: 1.0e-12
+  mobility_pair_cos_definition: weighted_abs_cosine_of_input_weight_rows
+  mobility_pair_weights: product_of_unit_mobilities
+  mobility_tilde_pair_cos_reported_separately: true
+  linear_tilde_mobility_policy: undefined_nan
+  submerged_in_verdict: false
+  strict_dead_in_verdict: false
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    rescue: none
+    primary_inconclusive_if_missing:
+    - R5
+    - LR5
+    - E5
+    - LIN5
+width5_gate_b:
+  primary_verdict: G0_seed_sign_vs_LIN5
+  comparison_arms:
+  - R5
+  - LR5
+  - E5
+  phenomenon_arms:
+  - LR5
+  - E5
+  linear_baseline: LIN5
+  comparison_operator: strict_greater
+  ties_policy: count_as_not_above_keep_in_n
+  cp_alpha: 0.05
+  null_probability: 0.5
+  tight_band:
+  - 0.2
+  - 0.8
+  crossing_registered_secondary: true
+  crossing_early_better_min_count: 15
+  crossing_early_operator: strict_less
+  crossing_late_operator: strict_greater
+  level_report_only: true
+  width_report_only: true
+  mechanism_report_only: true
+preregistration:
+  decisions_complete: true
+  carry_over_confirmed: true
+  new_predictions_confirmed: true
+  frozen: true
+  repo_spec_committed: true
+  execution_authorized: true
+  implementation_before_predictions_authorized: true
+  repo_spec_sha256: e56f0c95530fd79dd21d7261b6d0f633a6a856cc52fe7357087c9b68d6c4e78a
+  prediction_provenance: draft_candidates_proposed_first_then_approved_by_Issa
+  carry_over_predictions:
+    LR5_vs_LIN5_log10U_position: above
+    LR5_submerged_fraction_5m: same_as_w100_0.63_to_0.67
+    E5_submerged_fraction_5m: same_as_w100_0.36_to_0.45
+    Rc_LR5_vs_LIN5: lower
+    failure_cause_if_prediction_misses: unknown
+  new_predictions:
+    R5_k_above_LIN5_5m: at_least_15_of_20
+    LR5_k_above_LIN5_5m: at_least_15_of_20
+    E5_k_above_LIN5_5m: 5_to_15_of_20
+  level_equivalence_resolution_confirmed: true
+  generator_offset_confirmed: true
+  bootstrap_seed_confirmed: true
+sanity:
+  omp_num_threads: 1
+  sigma_degenerate_tol: 1.0e-08
+  identity_tol: 1.0e-10
+  s0_prime_reference: results/gate_dose_0830
+  s0_prime_arm_map:
+    R100: R_off
+    E100: E_off
+    LR100: LR_off
+  s0_prime_steps: 30000
+  s0_prime_every: 1000
+  s0_prime_seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  s0_prime_metrics:
+  - layer1_p_hat
+  - eval_loss_exact
+  - unfit
+  s0_prime_generator_offset: 0
+  s_linear_tolerance: 1.0e-12
+  s_mobility_tolerance: 1.0e-12
+  s_rank_tolerance: 1.0e-10
+  s_cap_arms:
+  - R5
+  - LIN5
+  s_cap_tasks:
+  - 2
+  - 11
+  s_cap_rule: max_seed_min_early_unfit_below_onset_threshold
+  s_cap_note: predecessor_only_not_used_as_gate
+  s_floor_char_arms:
+  - R5
+  - LIN5
+  s_floor_char_tasks:
+  - 2
+  - 11
+  s_floor_char_rule: report_per_seed_early_window_minima_no_gate
+  s_lin_ref_preflight_tasks:
+  - 2
+  - 11
+  s_lin_ref_full_windows:
+  - early
+  - 5M
+  floor_inherited_from: results/dose_const_5m_0830/floor_calibration.csv
+  used_generator_offsets:
+  - 0
+  - 20260830
+  - 20260831
+  - 20260905
+  forbidden_offset_differences:
+  - 95
+output:
+  dir: results/width5_gate_b_0901
+  logs_npz: true
+  verdict_csv: true
+  crossing_csv: true
+  levels_csv: true
+  mechanism_csv: true
+  summary_md: true
