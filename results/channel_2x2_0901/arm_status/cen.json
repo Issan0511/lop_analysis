@@ -1,0 +1,69 @@
+{
+  "arm": "cen",
+  "wd_b": 0.0,
+  "status": "COMPLETE_WITH_EXCLUSIONS",
+  "elapsed_sec": 2351.78666472435,
+  "excluded_seeds": [
+    7
+  ],
+  "included_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9
+  ],
+  "exclusion_events": [
+    {
+      "status": "NUMERIC_DIVERGENCE",
+      "arm": "cen",
+      "seed": 7,
+      "detected_step": 3271000,
+      "detected_task": 328,
+      "probe_every": 1000,
+      "nonfinite_tensors": [
+        "net.Ws.1",
+        "net.Ws.2",
+        "net.bs.1",
+        "net.bs.2",
+        "net.v",
+        "net.c",
+        "running_mean.layer2"
+      ],
+      "action": "quarantine_seed_and_continue",
+      "exclude_entire_seed_trajectory": true,
+      "rescue": "none"
+    }
+  ],
+  "exclusion_cap": 2,
+  "limit_event": null,
+  "sanity": {
+    "arm": "cen",
+    "wd_b": 0.0,
+    "n_record_steps": 501,
+    "n_recorded": 501,
+    "missing_steps": [],
+    "n_missing": 0,
+    "max_relerr": {
+      "mean": 7.121528860056128e-16,
+      "sd": 8.116031162184168e-16,
+      "wall": 0.0,
+      "cos_mu": 4.058703072828063e-16,
+      "beta": 3.200798854629941e-14,
+      "sigma": 3.167951251873993e-14,
+      "unfit": 0.0,
+      "kappa_closed": 5.3428980277531124e-14,
+      "beta_elementwise_rel": 6.716024379381001e-12,
+      "beta_scale": 333.5067580747919
+    },
+    "identity_tol": 1e-10,
+    "n_quantization_violations": 0,
+    "n_wall_identity_violations": 0,
+    "n_nonfinite_required": 0,
+    "pass_": true
+  }
+}

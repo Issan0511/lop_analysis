@@ -832,6 +832,17 @@ def _summary(cfg: dict, outdir: Path, verdict: pd.DataFrame, levels: pd.DataFram
         warning.append("`LADDER_INVERTS`: E-drift と E-level の順位が異なるため、どちらも単独では引かない。")
     if not result["floor_pass"]:
         warning.append("`S-floor FAIL`: E-drift は無効で、E-level のみ報告する。")
+    interaction_note = []
+    interaction_result = result.get("details", {}).get("interaction", {}).get("E-drift")
+    if actual_interaction == "SUBADDITIVE":
+        interaction_note.append(
+            "- `SUBADDITIVE` は既存の事後配置と同方向の再現であり、独立に立てた予言ではない。")
+    elif interaction_result is not None:
+        interaction_note.extend([
+            f"- 交互作用は事前登録の字義どおり `(bwd-none)-(both-cen)` で計算し、"
+            f"{interaction_result['point']:+.6f} dex の `{actual_interaction}` だった。",
+            "- spec §2.1 の旧配置 `+5.889` と §8.1 の `SUBADDITIVE` 予測は、§6.3 に固定した式とは符号規約が逆である。結果後に符号を反転せず、字義どおりの式とラベルを維持した。",
+        ])
     lines = [
         "# channel_2x2_0901 — チャネル遮断 2×2 本走", "",
         f"事前登録: [`{cfg['spec']}`](../../{cfg['spec']})（repo commit `31f3792`）。", "",
@@ -850,7 +861,7 @@ def _summary(cfg: dict, outdir: Path, verdict: pd.DataFrame, levels: pd.DataFram
         lines.append("- S-floor / S-ceiling / ladder の追加フラグなし。")
     lines.extend([
         "", "## 解釈上の制限", "",
-        "- `SUBADDITIVE` は既存の事後配置と同方向の再現であり、独立に立てた予言ではない。",
+        *interaction_note,
         "- centered セルは B02 水準が低く、落ちる余地の差だけでも劣加法が生じる。本走はこれを分離しない。",
         "- EMA 中心化は µ とタスク可識別性を同時に消すため、『µ を消した』とは書かない。",
         "- `strict_dead` は REPORT_ONLY で、主判定には使っていない。",
