@@ -1,0 +1,321 @@
+spec: specs/spec_ident_mu_2x2_0901.md
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  generator_offset: 20260910
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 10000
+  loss_bin: 10000
+  checkpoints:
+  - 0
+  - 5000000
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+intervention:
+  name: B_visible_input_construction
+  tracker: none
+  center_alpha: 0.0
+  stop_gradient_on_running_mean: true
+  consumes_rng: false
+  offset_refresh: task_boundary_only
+  bypass: additive_output_side_linear_readout_of_code
+bias_weight_decay:
+  lam: 0.001
+  decoupled: false
+  targets: hidden_bias_only
+  excluded:
+  - W
+  - v
+  - c
+  - u
+  branchless: true
+  lam_provenance: transported_from_bias_wd_pilot_0901_centered_hidden_100_100
+arms:
+- name: IM
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  visible: flip0
+  code: flip_t
+  wd_b: 0.001
+  cell: true
+  I: true
+  M: true
+- name: iM
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  visible: flip0
+  code: zero
+  wd_b: 0.001
+  cell: true
+  I: false
+  M: true
+- name: Im
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  visible: zero_centered
+  code: flip_t
+  wd_b: 0.001
+  cell: true
+  I: true
+  M: false
+- name: im
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  visible: zero_centered
+  code: zero
+  wd_b: 0.001
+  cell: true
+  I: false
+  M: false
+- name: im_nowd
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  visible: zero_centered
+  code: zero
+  wd_b: 0.0
+  cell: false
+  I: false
+  M: false
+- name: std_anchor
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  visible: raw
+  code: zero
+  wd_b: 0.0
+  cell: false
+  I: null
+  M: null
+pairing:
+  paired_groups:
+  - - IM
+    - iM
+    - Im
+    - im
+  anchor_arms:
+  - im_nowd
+  - std_anchor
+  r_ext_group:
+  - im
+  - im_nowd
+  baseline: im
+  pairing_scope: init_teacher_input_realization_all_six_arms
+phase1:
+  task_period: 10000
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-08
+sanity:
+  s1_identity_tol: 1.0e-10
+  omp_num_threads: 1
+  used_generator_offsets:
+  - 0
+  - 20260830
+  - 20260831
+  - 20260905
+  - 202609011921
+  used_widths:
+  - 5
+  - 100
+  used_bootstrap_seeds:
+  - 20260829
+  - 20260902
+  - 20260903
+  - 20260904
+  - 20260906
+  - 202609011921
+ident_mu_2x2:
+  output_dir: results/ident_mu_2x2_0901
+  gate_dir: results/_gate_ident_mu_2x2_0901
+  omp_num_threads: 1
+  guard_every: 1000
+  block_tasks: 50
+  early_block_tasks:
+  - 51
+  - 100
+  late_block_tasks:
+  - 451
+  - 500
+  n_blocks: 10
+  primary_endpoint: drift
+  drift:
+    statistic: mean_log10_unfit
+    windows:
+    - B02
+    - B10
+  level:
+    block: B10
+    statistic: mean_log10_unfit
+  onset:
+    role: report_only
+    metric: log10_unfit
+    smoother: moving_median
+    window_tasks: 10
+    window_alignment: trailing
+    min_periods: 1
+    threshold: -1.0
+    sensitivity_thresholds:
+    - -0.5
+    - -1.5
+    censor_task: 501
+    censor_flag_min_seeds: 3
+    require_prior_below: true
+  equivalence_margin: 0.15
+  interaction_margin: 0.5
+  margin_provenance: inherited_from_channel_2x2_0901_D4_transported_across_sample_and_endpoint
+  r_ext:
+    arms:
+    - im
+    - im_nowd
+    endpoint: extinction_reached_by_5M
+    extinction_rule: L1_strict_dead_frac == 1.0
+    cross_check_rule: L1_alive == 0
+    prevents_threshold: 8
+    persists_threshold: 8
+    residual_threshold: 1
+    ci_method: clopper_pearson
+    reference:
+      arm: L1w100_Aexact
+      reached: 10
+      of: 10
+      task_range:
+      - 154
+      - 454
+    scope_note: death_claim_only_do_not_read_as_LOP_CURED
+  unfit_floor: 1.0e-16
+  recalibrate_floor: false
+  floor_inherited_from: one_layer_series_9gatsu_unyou_0901_section_3-1
+  level_statistic: mean_log10_unfit
+  bootstrap_B: 20000
+  bootstrap_seed: 20260911
+  ci_method: percentile_paired
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+  s2_probe_lambda: 0.001
+  ceiling_flag_dex: 3.0
+  ceiling_level_dex: -0.05
+  ceiling_count_arm: im_nowd
+  seed_isolation:
+    max_exclusions_per_arm: 2
+    min_complete_seeds_per_arm: 8
+    min_paired_seeds: 8
+    quarantine: zero_training_state_and_set_lr_zero
+    guarded_tensors:
+    - W
+    - b
+    - v
+    - c
+    - u
+    keep_rng_rows: 10
+    exclude_entire_seed_trajectory: true
+    stop_arm_on_limit_exceeded: true
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    action: quarantine_seed_and_continue
+    exclude_entire_seed_trajectory: true
+    rescue: none
+  gates:
+    s_pair_steps: 30000
+    s_pair_grid: 1000
+    s0_arm: im_nowd
+    s0_reference_dir: results/center_oracle_0831
+    s0_reference_arm: L1w100_Aexact
+    s0_reference_checkpoint: results/mlp2_phase1_0829/ckpts/L1w100_A1_step0.pt
+    s0_generator_offset: 0
+    s0_steps: 30000
+    s0_grid: 1000
+    s0_metrics:
+    - unfit
+    - eval_loss_exact
+    - strict_dead_frac
+    s0_tol: 1.0e-12
+    s_bypass_steps: 30000
+    s_freeze_steps: 30000
+    s_op_mode: switching_probe
+    s_op_arm: Im
+    s_op_control: im
+    s_op_task_period: 10000
+    s_op_n_boundaries: 150
+    s_op_steps: 1510000
+    s_op_window_steps: 100
+    s_op_score_boundaries: 50
+    s_op_metric: eval_loss_exact
+    s_op_statistic: mean_over_window_then_mean_over_scored_boundaries
+    s_op_rule: paired_ci_hi_below_zero
+    s_op_bootstrap_seed: 20260912
+    s_count_tasks: 500
+    bypass_dc_tol: 1.0e-08
+preregistration:
+  implementation_before_predictions_authorized: true
+  spec_version: v2
+  decisions_complete: true
+  decided:
+  - D0
+  - D1
+  - D3
+  - D4
+  - D8
+  claude_provisional_accepted_at_freeze:
+  - D2
+  - D5
+  - D6
+  - D7
+  predictions_confirmed: true
+  frozen: true
+  repo_spec_committed: true
+  execution_authorized: true
+  repo_spec_commit: 0d7a746effb0b222b831cc9481e12d0f030ad4b1
+  repo_spec_sha256: 33c05c7a308a3914707ca11c510b6a7fc88cd0fa77c7fcd27f991892e2375242
+  vault_spec_commit: c2edf5d
+  predictions:
+    main_verdict: MU_DOMINANT
+    e_drift_rank: mu_strong_type_M_plus_cells_degrade_more_than_M_minus_cells
+    r_ext: BWD_PREVENTS_EXTINCTION
+    s_op_passes: true
+    rewrite_target_if_wrong: unknown
+    provenance: answered_against_the_old_S_op_definition_and_re_pointed_at_the_revised_one
+  implementation_notes:
+  - onset_requires_prior_below_threshold
+  reconciled_in_spec_v2_revision:
+  - bypass_share_is_a_power_share_not_a_variance_share
+  - unfit_is_dc_blind_so_the_I_dial_moves_the_primary_endpoint_only_dynamically
+  - s_op_became_a_switching_probe_on_eval_loss_exact
+  - r_ext_extinction_rule_is_strict_dead_frac_1.0_with_alive_zero_cross_check

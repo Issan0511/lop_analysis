@@ -1,0 +1,256 @@
+{
+  "gates": {
+    "s_pair.json": true,
+    "s_seq.json": true,
+    "s0_replay.json": true,
+    "s1_s2_algebra.json": true,
+    "s1_s2.json": true,
+    "s_mu.json": true,
+    "s3.json": true,
+    "s_bypass.json": true,
+    "s_freeze.json": true,
+    "s_iso.json": true,
+    "s_cap.json": true,
+    "s_count.json": true,
+    "s_op.json": false
+  },
+  "i_cells_invalid": true,
+  "arms_run": [
+    "iM",
+    "im",
+    "im_nowd",
+    "std_anchor"
+  ],
+  "S3": {
+    "iM": {
+      "pass_": true,
+      "max_relerr": {
+        "mean": 3.835858553668283e-16,
+        "sd": 6.041102640712587e-16,
+        "wall": 0.0,
+        "cos_mu": 2.679696890292759e-16,
+        "beta": 5.148463300614297e-16,
+        "sigma": 8.802248534309929e-16,
+        "unfit": 0.0,
+        "kappa_closed": 1.0214527761402935e-15,
+        "beta_elementwise_rel": 5.0332003248263814e-14,
+        "beta_scale": 27.60212880124136,
+        "unfit_bypass": 0.0
+      },
+      "n_visible_violations": 0,
+      "quantization_violations": 0,
+      "wall_violations": 0
+    },
+    "im": {
+      "pass_": true,
+      "max_relerr": {
+        "mean": 0.0,
+        "sd": 4.297810900773817e-16,
+        "wall": 0.0,
+        "cos_mu": 0.0,
+        "beta": 6.331014558132214e-16,
+        "sigma": 6.763449746955596e-16,
+        "unfit": 0.0,
+        "kappa_closed": 6.528025533185911e-16,
+        "beta_elementwise_rel": 8.225871532413671e-16,
+        "beta_scale": 3.0615769791400598,
+        "unfit_bypass": 0.0
+      },
+      "n_visible_violations": 0,
+      "quantization_violations": 0,
+      "wall_violations": 0
+    },
+    "im_nowd": {
+      "pass_": true,
+      "max_relerr": {
+        "mean": 0.0,
+        "sd": 4.479000246312124e-16,
+        "wall": 0.0,
+        "cos_mu": 0.0,
+        "beta": 5.472716755558714e-16,
+        "sigma": 6.119115951285625e-16,
+        "unfit": 0.0,
+        "kappa_closed": 6.286230085828191e-16,
+        "beta_elementwise_rel": 7.179137337885698e-16,
+        "beta_scale": 4.375147583863345,
+        "unfit_bypass": 0.0
+      },
+      "n_visible_violations": 0,
+      "quantization_violations": 0,
+      "wall_violations": 0
+    },
+    "std_anchor": {
+      "pass_": true,
+      "max_relerr": {
+        "mean": 0.0,
+        "sd": 6.421456582203864e-16,
+        "wall": 0.0,
+        "cos_mu": 4.4408039301478236e-16,
+        "beta": 1.5371653848389749e-15,
+        "sigma": 1.6158069416084374e-15,
+        "unfit": 0.0,
+        "kappa_closed": 1.7704310070709161e-15,
+        "beta_elementwise_rel": 6.763768143367882e-14,
+        "beta_scale": 27.60212880124136,
+        "unfit_bypass": 0.0
+      },
+      "n_visible_violations": 0,
+      "quantization_violations": 0,
+      "wall_violations": 0
+    }
+  },
+  "seed_isolation": {
+    "iM": {
+      "status": "COMPLETE",
+      "excluded_seeds": [],
+      "events": []
+    },
+    "im": {
+      "status": "COMPLETE",
+      "excluded_seeds": [],
+      "events": []
+    },
+    "im_nowd": {
+      "status": "COMPLETE",
+      "excluded_seeds": [],
+      "events": []
+    },
+    "std_anchor": {
+      "status": "COMPLETE",
+      "excluded_seeds": [],
+      "events": []
+    }
+  },
+  "details": {
+    "drift": {
+      "verdict": "OUT_POS",
+      "bands": {
+        "M_i": "OUT_POS"
+      },
+      "interaction_band": "not computed (I+ cells invalid)",
+      "margin": 0.15,
+      "interaction_margin": "not applicable",
+      "cis": {
+        "M_i": {
+          "point": 0.2805773582606586,
+          "ci_lo": 0.21393136971191748,
+          "ci_hi": 0.3312135517671801,
+          "ci_degenerate": false
+        }
+      },
+      "interaction": null
+    },
+    "level": {
+      "verdict": "OUT_POS",
+      "bands": {
+        "M_i": "OUT_POS"
+      },
+      "interaction_band": "not computed (I+ cells invalid)",
+      "margin": 0.15,
+      "interaction_margin": "not applicable",
+      "cis": {
+        "M_i": {
+          "point": 5.687868225113517,
+          "ci_lo": 5.66185499908486,
+          "ci_hi": 5.715768976923277,
+          "ci_degenerate": false
+        }
+      },
+      "interaction": null
+    },
+    "r_ext": {
+      "verdict": "BWD_PREVENTS_EXTINCTION",
+      "ci_basis": "Clopper-Pearson",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "n": 10,
+      "counts": {
+        "im": 0,
+        "im_nowd": 10
+      },
+      "ci": {
+        "im": [
+          0.0,
+          0.3084971078187607
+        ],
+        "im_nowd": [
+          0.6915028921812392,
+          1.0
+        ]
+      },
+      "extinction_task_range": {
+        "im": null,
+        "im_nowd": [
+          112,
+          249
+        ]
+      },
+      "level_B10": {
+        "im": -5.687868225113517,
+        "im_nowd": 6.0752630392857005e-18
+      },
+      "dead_B10": {
+        "im": 0.00018,
+        "im_nowd": 1.0
+      },
+      "median_tau": {
+        "im": 501.0,
+        "im_nowd": 99.5
+      },
+      "n_rule_disagreements": 0,
+      "reference": {
+        "arm": "L1w100_Aexact",
+        "reached": 10,
+        "of": 10,
+        "task_range": [
+          154,
+          454
+        ]
+      },
+      "evidence": "n=10; im_nowd extinct=10/10 CI=0.692-1.000 tasks=[112, 249]; im extinct=0/10 CI=0.000-0.308 tasks=None; reference Aexact=10/10 tasks=[154, 454]; E-level im=-5.6879 / im_nowd=0.0000 (diff=-5.6879 dex, REPORT); strict_dead B10 im=0.0002 / im_nowd=1.0000; median tau im=501.0 / im_nowd=99.5; alive==0 rule disagreements=0"
+    },
+    "never_below": {
+      "iM": 0,
+      "im": 0,
+      "im_nowd": 0,
+      "std_anchor": 0
+    },
+    "b02_means": {
+      "iM": -0.31815396009326213,
+      "im": -5.72544482694612
+    },
+    "b02_range": 5.407290866852858,
+    "ceiling_seeds_on_anchor": {
+      "im_nowd": 10
+    },
+    "floor_values": {
+      "iM_B02": 0.0,
+      "iM_B10": 0.0,
+      "im_B02": 0.0,
+      "im_B10": 0.0,
+      "im_nowd_B02": 0.0,
+      "im_nowd_B10": 0.0,
+      "std_anchor_B02": 0.0,
+      "std_anchor_B10": 0.0
+    },
+    "floor_pass": true,
+    "ladder_inverts": false,
+    "ceiling_contaminated": true
+  },
+  "training_elapsed_sec": {
+    "iM": 461.16579604148865,
+    "im": 444.07869243621826,
+    "im_nowd": 441.66736245155334,
+    "std_anchor": 444.3433938026428
+  }
+}

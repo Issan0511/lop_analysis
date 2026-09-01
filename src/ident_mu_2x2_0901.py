@@ -2017,11 +2017,18 @@ def _summary(cfg: dict, outdir: Path, verdict: pd.DataFrame, levels: pd.DataFram
                        "どちらも単独では引かない。")
     if details.get("floor_pass") is False:
         warning.append("`S-floor FAIL`: E-drift は無効で、E-level のみ報告する。")
+    cells = result.get("cells", list(CELL_ORDER))
+    invalid = bool(result.get("i_cells_invalid"))
     lines = [
         "# ident_mu_2x2_0901 — 可識別性 × µ の 2×2（純化版）", "",
-        f"事前登録: `{cfg['spec']}`（v2・純化 2×2）。主判定は "
-        f"**{result['main_verdict']}**。要因 4 セル共通の完走 seed = {paired} "
-        f"(n={result['n_paired']})。", "",
+        f"事前登録: `{cfg['spec']}`"
+        + ("＋`specs/spec_ident_mu_2x2_0901_addendum1.md`（追補1）" if invalid else "")
+        + f"。主判定は **{result['main_verdict']}**。"
+        + (f"S-op が FAIL したため I+ セル（IM・Im）は無効で、走ったのは "
+           f"{', '.join(f'`{a}`' for a in result.get('arms', []))} の "
+           f"{len(result.get('arms', []))} 腕。" if invalid else "")
+        + f"対比に使った共通完走 seed（{' / '.join(cells)}）= {paired} "
+          f"(n={result['n_paired']})。", "",
         f"要因 4 セルはすべて b 限定 WD λ="
         f"{float(cfg['bias_weight_decay']['lam']):g} の下にある（spec D8・§3.5）。"
         f"**主判定の読みは「b 拘束下」限定であり、拘束なしの世界の I/M 主効果は"
@@ -2029,7 +2036,9 @@ def _summary(cfg: dict, outdir: Path, verdict: pd.DataFrame, levels: pd.DataFram
         f"窓は B02 = task {P['early_block_tasks'][0]}–{P['early_block_tasks'][1]}、"
         f"B10 = task {P['late_block_tasks'][0]}–{P['late_block_tasks'][1]}。"
         f"共主 endpoint は E-drift（`mean(log10 unfit)` の B10−B02）と "
-        f"E-level（同 B10）で、主判定は E-drift。等価限界は "
+        + ("E-level（同 B10）。**要因計画の主判定は出さない**（追補1 §3）。"
+           if invalid else "E-level（同 B10）で、主判定は E-drift。")
+        + f"等価限界は "
         f"Δ={float(P['equivalence_margin'])} dex・"
         f"Δ_int={float(P['interaction_margin'])} dex、床は {P['unfit_floor']:.0e}。", "",
         "## 判定", "", markdown_table(verdict), "",
