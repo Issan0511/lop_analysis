@@ -1,0 +1,170 @@
+spec: specs/spec_lr_a1_0901.md
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  generator_offset: 0
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints:
+  - 0
+  - 5000000
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+activation:
+  leaky:
+    name: leaky_relu
+    negative_slope: 0.1
+    forward: where(z>0, z, negative_slope*z)
+    derivative: where(z>0, 1, negative_slope)
+    positive_homogeneous: true
+    consumes_rng: false
+  autograd: false
+intervention:
+  name: A_layer_input_centering
+  center_alpha: 0.01
+  stop_gradient_on_running_mean: true
+  consumes_rng: false
+arms:
+- name: LR_A1
+  activation: leaky
+  hidden:
+  - 100
+  - 100
+  centered_layers:
+  - 1
+references:
+  relu:
+    dir: results/mlp2_phase1_0829
+    arm: L2_A1
+    activation: relu
+  elu:
+    dir: results/elu_swamp_0830
+    arm: E_A1
+    activation: elu
+pairing:
+  paired_arms:
+  - LR_A1
+  - L2_A1
+  - E_A1
+  pairing_scope: init_teacher_input_realization
+  trajectory_caveat: activations_diverge_after_step1
+  require_same_generator_offset: true
+lr_a1:
+  task_period: 10000
+  late_tasks:
+  - 451
+  - 500
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-08
+  unfit_floor: 1.0e-23
+  floor_inherited_from:
+  - mlp2_phase1_0829
+  - elu_swamp_0830
+  recalibrate_floor: false
+  bootstrap_B: 10000
+  bootstrap_seed: 202609011252
+  ci_method: percentile_primary_studentized_fallback
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+  p1_metric: layer2_dose
+  p1_reference_arm: L2_A1
+  p1_closed_form_center: 5.85
+  p1_closed_form_band:
+  - 5.35
+  - 6.35
+  p1_lambda_corrected_center_report_only: 6.15
+  p1_lambda_corrected_band_report_only:
+  - 5.65
+  - 6.65
+  p1_relu_raw_delta_in_verdict: false
+  p2_metric: log10_mean_unfit
+  p2_reference_arm: L2_A1
+  p2_elu_reference_arm: E_A1
+  p2_elu_registered_delta_interval:
+  - -1.098
+  - -0.696
+  p2_rule: ci_upper_negative_then_point_at_or_below_registered_E_A1_upper
+  p3_report_only:
+  - submerged_count
+  - submerged_frac
+  - mobility
+  - s_i
+  report_count_and_fraction: true
+  strict_dead_applicable_to_leaky: false
+  strict_dead_in_verdict: false
+  submerged_frac_in_verdict: false
+  boundary_snapshot: task_end
+  layer_stats_task_end_only: true
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: stop_arm_no_rescue
+    rescue: none
+preregistration:
+  conditions_complete: true
+  frozen: true
+  execution_authorized: true
+  repo_spec_committed: true
+  predictions_confirmed: true
+  bootstrap_seed_confirmed: true
+  prediction_provenance: draft_values_proposed_first_then_approved_by_Issa
+  predicted_layer2_dose_late_t451_500: 5.9
+  predicted_layer2_submerged_frac_step5m: 0.6
+  predicted_unfit_max_late_t451_500: 0.005
+  predicted_failure_cause: 全然わからない
+  dose_equivalence_margin: 0.5
+sanity:
+  s0_prime_steps: 30000
+  s0_prime_every: 1000
+  s0_prime_reference: results/mlp2_phase1_0829
+  s0_prime_reference_arm: L2_A1
+  s0_prime_metrics:
+  - layer1_p_hat
+  - layer2_p_hat
+  - eval_loss_exact
+  - unfit
+  require_bit_equality: true
+  require_reference_checkpoint_step0: true
+  require_seed_grid_match: true
+  require_rng_neutral_exact_support: true
+  finite_primary_metrics:
+  - layer2_dose
+  - unfit
+  - eval_loss_exact
+  s_grad_finite_difference_tol: 1.0e-06
+  s1_identity_tol: 1.0e-10
+  omp_num_threads: 1
+output:
+  dir: results/lr_a1_0901
+  layer_stats_csv: true
+  s_distribution_csv: true
+  logs_npz: true
