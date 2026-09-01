@@ -116,11 +116,13 @@ class Width5GateBTests(unittest.TestCase):
         n = 20
         windows = {
             "R5": {
-                "early": {"raw_u": np.full(n, 0.1)},
+                "early": {"raw_u": np.full(n, 0.4),
+                          "raw_min": np.full(n, 0.1)},
                 "5M": {"raw_u": np.full(n, 0.5)},
             },
             "LIN5": {
-                "early": {"raw_u": np.full(n, 0.3)},
+                "early": {"raw_u": np.full(n, 0.3),
+                          "raw_min": np.full(n, 0.2)},
                 "5M": {"raw_u": np.full(n, 0.2)},
             },
         }

@@ -52,10 +52,18 @@ SMOKE_SEEDS = base.SMOKE_SEEDS
 _arm = base._arm
 _run_arm = base._run_arm
 _load_arm = base._load_arm
-_window = base._window
+_base_window = base._window
 _pair_check_final = base._pair_check_final
 _collect_divergences = base._collect_divergences
 _ci = base._ci
+
+
+def _window(data: dict, cfg: dict, tasks: list[int]) -> dict:
+    """Extend P2's window record with the registered early-floor minimum."""
+    result = _base_window(data, cfg, tasks)
+    raw = np.asarray(data["unfit"], dtype=np.float64)[result["index"]]
+    result["raw_min"] = np.min(raw, axis=0)
+    return result
 
 _BASE_PREREGISTRATION = {
     "decisions_complete": True,
@@ -307,9 +315,12 @@ def classify_phenomenon(signs: dict[str, dict]) -> str:
 def _paired_endpoint(cfg: dict, arm: str, windows: dict) -> tuple[dict, dict]:
     """Build G0 sign and registered G0b crossing records."""
     B = cfg["width5_gate_b"]
-    early_a = np.asarray(windows[arm]["early"]["raw_u"], dtype=np.float64)
+    # The frozen spec pins the predecessor's early characterization at
+    # R5-better 19/20 and median difference -0.158. Those values are the
+    # per-seed window minima, not window means; use the same quantity for G0b.
+    early_a = np.asarray(windows[arm]["early"]["raw_min"], dtype=np.float64)
     late_a = np.asarray(windows[arm]["5M"]["raw_u"], dtype=np.float64)
-    early_l = np.asarray(windows["LIN5"]["early"]["raw_u"], dtype=np.float64)
+    early_l = np.asarray(windows["LIN5"]["early"]["raw_min"], dtype=np.float64)
     late_l = np.asarray(windows["LIN5"]["5M"]["raw_u"], dtype=np.float64)
 
     valid_late = np.isfinite(late_a) & np.isfinite(late_l)
@@ -553,7 +564,8 @@ def _write_summary(cfg: dict, outdir: Path, verdict: str,
             f"| {arm} | {row['k']} | {row['n']} | {interval} | "
             f"**{row['status']}** |")
     lines += [
-        "", "## G0b crossing (early task 2–11 → terminal task 491–500)", "",
+        "", "## G0b crossing (early window minimum, task 2–11 → terminal "
+        "window mean, task 491–500)", "",
         "| arm | early better than LIN5 | crossings | valid n | CP95 | status |",
         "|---|---:|---:|---:|---|---|",
     ]
