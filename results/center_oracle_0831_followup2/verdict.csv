@@ -1,0 +1,19 @@
+endpoint,registered,metric,arm,window,window_boundaries,point,ci_lo,ci_hi,n_seed,label,basis
+P1prime_a,0,R_rate_ratio_all_499,,all_499,499,2.335876643972467,2.123603241092391,2.548017892711316,10,LAG_IS_PROTECTIVE,paired seed ratio of |median unit rate|; alive-before-transition boundaries only
+P1prime_a,0,rate_per_surviving_boundary_all_499,L1w100_Aexact,all_499,499,-0.05087237832257025,-0.060887349668949375,-0.046413293398728364,10,LAG_IS_PROTECTIVE,seed median over units with >= 10 surviving boundaries; excluded 0.090
+P1prime_a,0,rate_per_surviving_boundary_all_499,L1w100_A1,all_499,499,-0.021133484179704294,-0.026300404424022136,-0.019473144626972833,10,REPORT_ONLY,seed median over units with >= 10 surviving boundaries; excluded 0.004
+P1prime_REPORT_ONLY,0,R_rate_ratio_first150,,first150,150,2.2240017444680316,1.8578025762176165,2.5660619096915127,10,REPORT_ONLY,paired seed ratio of |median unit rate|; alive-before-transition boundaries only
+P1prime_REPORT_ONLY,0,rate_per_surviving_boundary_first150,L1w100_Aexact,first150,150,-0.05087237832257025,-0.060887349668949375,-0.046413293398728364,10,REPORT_ONLY,seed median over units with >= 10 surviving boundaries; excluded 0.090
+P1prime_REPORT_ONLY,0,rate_per_surviving_boundary_first150,L1w100_A1,first150,150,-0.023405235649394944,-0.030465118430498962,-0.019864641190539073,10,REPORT_ONLY,seed median over units with >= 10 surviving boundaries; excluded 0.008
+P1prime_b,0,R_rate_ratio_first_K,,first_K,36,1.603444493989914,1.3905640454407537,1.7590799442539546,10,LAG_IS_PROTECTIVE,paired seed ratio of |median unit rate|; alive-before-transition boundaries only
+P1prime_b,0,rate_per_surviving_boundary_first_K,L1w100_Aexact,first_K,36,-0.04886361248620266,-0.05564798919173578,-0.0351272058545123,10,LAG_IS_PROTECTIVE,seed median over units with >= 10 surviving boundaries; excluded 0.090
+P1prime_b,0,rate_per_surviving_boundary_first_K,L1w100_A1,first_K,36,-0.027893940392992464,-0.035412490173863866,-0.02258382066146522,10,REPORT_ONLY,seed median over units with >= 10 surviving boundaries; excluded 0.018
+P1prime_c,0,revival_total,L1w100_Aexact,all_499,499,0,,,10,ABSORPTION_EXACT_UNDER_ORACLE,"dead -> alive record transitions, summed over seeds"
+P1prime_c,0,revival_within_task,L1w100_Aexact,all_499,499,0,,,10,ABSORPTION_EXACT_UNDER_ORACLE,"dead -> alive record transitions, summed over seeds"
+P1prime_c,0,revival_at_boundary,L1w100_Aexact,all_499,499,0,,,10,ABSORPTION_EXACT_UNDER_ORACLE,"dead -> alive record transitions, summed over seeds"
+P1prime_c,0,revival_total,L1w100_A1,all_499,499,34222,,,10,REFERENCE,"dead -> alive record transitions, summed over seeds"
+P1prime_c,0,revival_within_task,L1w100_A1,all_499,499,25723,,,10,REFERENCE,"dead -> alive record transitions, summed over seeds"
+P1prime_c,0,revival_at_boundary,L1w100_A1,all_499,499,8277,,,10,REFERENCE,"dead -> alive record transitions, summed over seeds"
+P1prime_d,0,extinction_task_median,L1w100_Aexact,all_499,499,224.0,154.0,454.0,10,REPORT_ONLY,"first task index with every unit strictly dead; ci columns carry the min/max, not a bootstrap"
+P1prime_d,0,unfit_final_median,L1w100_Aexact,all_499,499,1.0,,,10,REPORT_ONLY,seed median of the final record
+P1prime_d,0,unfit_final_median,L1w100_A1,all_499,499,0.004054861106985017,,,10,REPORT_ONLY,seed median of the final record
