@@ -173,10 +173,16 @@ class VecMLPL:
     """
 
     ACTIVATIONS = ("relu", "elu", "leaky_relu", "bwd_leaky", "fwd_leaky",
-                   "silu", "gelu")
+                   "silu", "gelu", "silu_clamp", "gelu_clamp")
     SURROGATE_ACTIVATIONS = ("bwd_leaky", "fwd_leaky")
     # phi' の零点を負側に持つ族（谷）。act_alpha は傾きではなく鋭さ beta。
-    STEEPNESS_ACTIVATIONS = ("silu", "gelu")
+    STEEPNESS_ACTIVATIONS = ("silu", "gelu", "silu_clamp", "gelu_clamp")
+    # 谷の向こうを谷底の値で埋めた版 [valley_clamp_0902]。谷底 z_c = -u*/beta より
+    # 深い側では phi は定数 phi(z_c)、phi' は 0。谷の手前は silu / gelu と**同一の式を
+    # 同一の入力に**当てるので bit 一致する。u* は phi' の負側で最初の零点（beta=1）。
+    # 逃走（谷の向こうで phi' < 0）だけを消し、浅い硬い床を残す介入。
+    VALLEY_ZERO = {"silu_clamp": 1.2784645427610739,
+                   "gelu_clamp": 0.7517915246935645}
 
     def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
                  act_grad_form="alpha_exp", wd_b=0.0):
@@ -270,6 +276,14 @@ class VecMLPL:
             return pre * torch.sigmoid(self.act_alpha * pre)
         if self.act == "gelu":
             return pre * _std_normal_cdf(self.act_alpha * pre)
+        if self.act == "silu_clamp":
+            zc = -self.VALLEY_ZERO["silu_clamp"] / self.act_alpha
+            zz = torch.clamp(pre, min=zc)      # 谷底より深い側は谷底の値
+            return zz * torch.sigmoid(self.act_alpha * zz)
+        if self.act == "gelu_clamp":
+            zc = -self.VALLEY_ZERO["gelu_clamp"] / self.act_alpha
+            zz = torch.clamp(pre, min=zc)
+            return zz * _std_normal_cdf(self.act_alpha * zz)
         # expm1 keeps the small-|z| negative branch accurate; the positive
         # branch of `where` is selected before any overflow of expm1 matters.
         return torch.where(pre > 0, pre, self.act_alpha * torch.expm1(pre))
@@ -309,6 +323,16 @@ class VecMLPL:
         if self.act == "gelu":
             t = self.act_alpha * pre
             return _std_normal_cdf(t) + t * _std_normal_pdf(t)
+        if self.act == "silu_clamp":
+            zc = -self.VALLEY_ZERO["silu_clamp"] / self.act_alpha
+            s = torch.sigmoid(self.act_alpha * pre)
+            g = s * (1.0 + self.act_alpha * pre * (1.0 - s))
+            return torch.where(pre > zc, g, torch.zeros_like(g))
+        if self.act == "gelu_clamp":
+            zc = -self.VALLEY_ZERO["gelu_clamp"] / self.act_alpha
+            t = self.act_alpha * pre
+            g = _std_normal_cdf(t) + t * _std_normal_pdf(t)
+            return torch.where(pre > zc, g, torch.zeros_like(g))
         if self.act_grad_form == "activation_plus_alpha":
             return torch.where(pre > 0, torch.ones_like(a), a + self.act_alpha)
         return torch.where(pre > 0, torch.ones_like(pre),
