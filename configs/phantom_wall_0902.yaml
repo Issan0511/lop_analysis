@@ -1,0 +1,331 @@
+# proj_004: phantom_wall_0902 — 幻の壁 3 型 × w-WD
+#   (forward ReLU のまま backward の負側を「反転」「反転・深さ比例」「µ 射影抜き」にする)
+# 仕様: specs/spec_phantom_wall_0902.md（実装より先に config と一緒に単独 commit すること）
+# Obsidian 側の正本: 可塑性喪失/spec/幻の壁3型_spec_0902.md（2026-09-02）
+#
+# 親: bwd_leak_0902（BL 4 腕が全発散）。宿主は gate_dose_0830 を継承。
+# 用量は 12.16 の 1 点で確定（9/2 Issa 裁定）。新規 7 腕・対照 3 本は committed。
+#   Issa 予測: BLR NEEDS_SPRING / BLQ RESCUES / BLP NEEDS_SPRING / RWw >=5
+#   Claude 予測: BLR DEAF / BLQ DEAF / BLP NEEDS_SPRING / RWw >=5
+#   → BLR と BLQ で割れている（spec §7.1 の注記）
+#
+# 命名: 作成日 0902。bootstrap seed は 20260906（20260829/0902/0904/0905 は既用）。
+# generator_offset は明示的に 0（親走と同一系列を共有するのが S-pair の土台）。
+# 床 1e-16 は dose_const_5m_0830 で較正済み。再較正しない。
+
+spec: specs/spec_phantom_wall_0902.md
+
+# ---------------------------------------------------------------------------
+# gate_dose_0830 §3 の逐語継承
+# ---------------------------------------------------------------------------
+common:
+  total_steps: 5000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  generator_offset: 0
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 1000000, 5000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  encodings: [std]
+
+# ---------------------------------------------------------------------------
+# 幻の 3 型（spec §4.3）。既存の relu / leaky / bwd_leaky / fwd_leaky の経路は触らない。
+# どれも forward は厳密 ReLU で、backward だけが自分の forward の勾配でない。
+# ---------------------------------------------------------------------------
+activation:
+  relu:
+    name: relu
+  bwd_reflect:                              # BLR: 負側ゲート -a
+    name: bwd_reflect
+    slope: 0.1                              # 記憶する値は +a。符号は act_grad の中で付ける
+    effective_negative_gate: -slope
+    forward: relu
+    derivative: where(z>0, 1, -slope)
+    is_true_gradient: false
+  bwd_quad:                                 # BLQ: 負側ゲート a_Q*z（深さ比例）
+    name: bwd_quad
+    slope: 0.01                             # a_Q。**傾きではなく 1/z の次元**
+    slope_is_not_a_slope: true
+    forward: relu
+    derivative: where(z>0, 1, slope*z)
+    is_true_gradient: false
+    # |gamma_BLQ| = |gamma_BLR| となる深さ。これより深いと BLQ の方が強い。
+    crossover_depth_z: -10.0                # a/a_Q = 0.1/0.01
+    gate_reaches_unity_at_z: -100.0
+  bwd_leaky_proj:                           # BLP: 負側ゲート +a のあと µ 射影を抜く
+    name: bwd_leaky_proj
+    slope: 0.1
+    forward: relu
+    derivative: where(z>0, 1, slope)        # act_grad は bwd_leaky と同一
+    # 射影は act_grad では書けない。勾配を作ったあとで沈下ユニット分だけ加工する
+    post_gradient_projection: true
+    projection_applies_to: submerged_units_only
+    w_rule: g_minus_mu_projection
+    b_rule: zero
+    v_rule: untouched
+    is_true_gradient: false
+  autograd: false
+  consumes_rng: false
+
+# ---------------------------------------------------------------------------
+# w 限定 weight decay（spec §4.3）。隠れ層の W のみ。v・b・出力 bias c には掛けない。
+# 更新式 W -= lr*(gW + wd_w*W)（set_weight_decay_b と同じ差し込み位置・素の L2 勾配）。
+# λ_w = 1e-4 は 9/2 Issa 裁定。b-WD の 1e-3 と揃えていないのは、対照 RWw が
+# 「効かない」側にいてくれないと Xw の 0/10 を幻に帰属できないため（spec §4.1）。
+# ---------------------------------------------------------------------------
+weight_decay_w:
+  lambda_w: 1.0e-4
+  applies_to: hidden_W_only
+  form: plain_l2_gradient
+  decoupled: false
+  calibrated_for_this_system: false
+
+# dose_const_5m_0830 のオラクル固定。µ は env.flip_state だけの関数で、
+# µ = [flip, 0.5*1_5] - 0.5*gamma*1 （厳密支持の列挙は不要）。
+intervention:
+  name: oracle_fixed_mu_offset
+  oracle: true
+  consumes_rng: false
+  center_alpha_compat: 0.01
+  is_ema_centering: false
+  mu_is_function_of_flip_state_only: true   # BLP の射影が毎ステップ安価に取れる理由
+
+# ---------------------------------------------------------------------------
+# 腕（spec §4.1）。新規 7 本・用量 12.16 の 1 点。
+# ---------------------------------------------------------------------------
+arms:
+  - { name: BLR_1216,  activation: bwd_reflect,    wd_w: 0.0,    hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: BLQ_1216,  activation: bwd_quad,       wd_w: 0.0,    hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: BLP_1216,  activation: bwd_leaky_proj, wd_w: 0.0,    hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: BLRw_1216, activation: bwd_reflect,    wd_w: 1.0e-4, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: BLQw_1216, activation: bwd_quad,       wd_w: 1.0e-4, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: BLPw_1216, activation: bwd_leaky_proj, wd_w: 1.0e-4, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: RWw_1216,  activation: relu,           wd_w: 1.0e-4, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+
+# 型 → (単独腕, w-WD 腕) の対応。判定はこの単位で行う。
+phantom_types:
+  BLR: { plain: BLR_1216, spring: BLRw_1216, surrogate_constant: 0.1,  surrogate_form: "-a" }
+  BLQ: { plain: BLQ_1216, spring: BLQw_1216, surrogate_constant: 0.01, surrogate_form: "a_Q*z" }
+  BLP: { plain: BLP_1216, spring: BLPw_1216, surrogate_constant: 0.1,  surrogate_form: "+a, mu-projected" }
+spring_control: RWw_1216
+# BLR と BLQ は係数が違う（0.1 対 0.01）。両者の対比は登録していない（spec §8）。
+blr_blq_contrast_registered: false
+
+# ---------------------------------------------------------------------------
+# 対照（spec §4.1・§8）。再走せず committed 出力から読む。同一走の腕ではない。
+# ---------------------------------------------------------------------------
+controls:
+  arms:
+    R_1216:  { source_run: results/gate_dose_0830, activation: relu,       expected_onset_5m: 10 }
+    LR_1216: { source_run: results/gate_dose_0830, activation: leaky_relu, expected_onset_5m: 0 }
+    RW_1216: { source_run: results/bwd_leak_0902,  activation: relu,       expected_onset_5m: 10, note: b-WD 1e-3 }
+  endpoint_source: verdict.csv
+  endpoint_columns: [U_1m_seed_values, U_5m_seed_values, n_onset_1m, n_onset_5m]
+  # P7・§5.3 の対照だけ logs/*.npz を読む（bwd_leak spec §6.2 追補 4 の carve-out を継承）
+  unit_arrays: [layer1_M, layer1_B, layer1_denom, layer1_p_hat, layer1_zbar, layer1_w_norm]
+  # CP95 は gate_dose_0830 側にしかない（bwd_leak の COMMITTED_OTHER_RUN 行は空欄）
+  cp95_source: results/gate_dose_0830/verdict.csv
+  verify_reference_hashes: true
+
+# ---------------------------------------------------------------------------
+# 窓・床・発症定義・CI（spec §5。gate_dose §5 を逐語継承・bootstrap seed のみ更新）
+# ---------------------------------------------------------------------------
+phase1:
+  task_period: 10000
+  early_tasks: [2, 11]
+  late_tasks_5m: [491, 500]
+  window_1m_tasks: [91, 100]
+  window_points_are_task_ends_only: true
+  onset_threshold: 0.05
+  onset_present_min: 5
+  unfit_floor: 1.0e-16
+  recalibrate_floor: false
+  bootstrap_B: 10000
+  bootstrap_seed: 20260906
+  ci_method: percentile_primary_studentized_secondary
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+
+phantom_wall:
+  # --- §5.1 型の判定 ---
+  # 腕の状態は 4 値: zero (n_onset==0) / mid (1..4) / present (>=5) / diverged
+  onset_states: [zero, mid, present, diverged]
+  onset_zero_max: 0
+  onset_present_min: 5
+  # spec §5.1 の順序つき表を、そのまま「書かれた順」で実装する。
+  # ワイルドカードのまま順序で解くと mid/diverged セルが上の行に吸われるので、
+  # 実装は 4x4x4 = 64 セルを列挙して凍結し、解析コードは順序を再実装しない
+  # （追補 5。列挙は _phantom_label_from_spec_table が独立に検算する）。
+  decision_table_rows:
+    - { row: 1, X: diverged, Xw: any,     RWw: any,     verdict: PHANTOM_DIVERGES }
+    - { row: 2, X: zero,     Xw: any,     RWw: present, verdict: PHANTOM_RESCUES }
+    - { row: 3, X: present,  Xw: zero,    RWw: present, verdict: PHANTOM_NEEDS_SPRING }
+    - { row: 4, X: any,      Xw: any,     RWw: zero,    verdict: WD_W_SUFFICIENT_ALONE }
+    - { row: 5, X: present,  Xw: present, RWw: present, verdict: PHANTOM_DEAF }
+    - { row: 6, X: any,      Xw: any,     RWw: any,     verdict: PARTIAL }
+  emit_co_satisfied_labels: true
+  emit_raw_state_triple: true
+  control_expected_onset_5m: { R_1216: 10, LR_1216: 0, RW_1216: 10 }
+  # 追補 6: 対照 RWw が present でないと 3 型とも同じラベルに潰れる。そのときは
+  # §5.2 の水準を主読みへ繰り上げる（bwd_leak §5.1 の飽和ガードに相当）。
+  saturation_guard:
+    trigger_when_spring_control_not: present
+    action: promote_levels_to_coequal
+    also_flag: [P8, P3prime]
+
+  # --- §5.2 水準（主判定と同格） ---
+  p3prime_contrasts:
+    - [BLR_1216, R_1216]
+    - [BLQ_1216, R_1216]
+    - [BLP_1216, R_1216]
+    - [BLRw_1216, R_1216]
+    - [BLQw_1216, R_1216]
+    - [BLPw_1216, R_1216]
+    - [RWw_1216, R_1216]
+  p5_contrasts:
+    - [BLR_1216, LR_1216]
+    - [BLQ_1216, LR_1216]
+    - [BLP_1216, LR_1216]
+    - [BLRw_1216, LR_1216]
+    - [BLQw_1216, LR_1216]
+    - [BLPw_1216, LR_1216]
+  p5_equivalence_margin: 0.15
+  p5_margin_recalibrated_for_this_system: false   # bwd_leak §6.2 追補 1 の事情を継承
+  p5_labels: { equivalent: EQUIV_LR, short_of_lr: SHORT_OF_LR, inconclusive: INCONCLUSIVE_WIDE,
+               order: [equivalent, short_of_lr, inconclusive] }
+  p5_emit_ci_below_zero_flag: true
+  p5_sign_test_report_only: true
+  # P8（w-WD の交互作用・ラベルなし）: (Xw - X) - (RWw - R)
+  p8_contrasts:
+    - { type: BLR, a: [BLRw_1216, BLR_1216], b: [RWw_1216, R_1216] }
+    - { type: BLQ, a: [BLQw_1216, BLQ_1216], b: [RWw_1216, R_1216] }
+    - { type: BLP, a: [BLPw_1216, BLP_1216], b: [RWw_1216, R_1216] }
+  p8_emit_label: false
+  p8_in_verdict: false
+  # 追補 7: P8 は 3 型で第 2 項が同一なので、P8 どうしを引くと BLR-BLQ の対比に
+  # なってしまう。summary では P8 を型ごとに独立の行として出し、差は出さない。
+  p8_cross_type_difference_registered: false
+  ceiling_baseline_spread_flag_dex: 3.0
+
+  # --- §5.3 副次（REPORT_ONLY） ---
+  phat_histogram:
+    arms: [BLR_1216, BLQ_1216, BLP_1216, BLRw_1216, BLQw_1216, BLPw_1216, RWw_1216,
+           R_1216, LR_1216, RW_1216]
+    window: late_tasks_5m
+    bin_width: 0.03125                      # 1/32。厳密支持が 32 点なので p_hat は k/32
+    n_bins: 33
+    blr_predicted_peak: 0.0909              # a/(1+a)。**予言であって判定ではない**
+  submerged_frac: { arms: all, window: late_tasks_5m }
+  w_growth_exponent:
+    units: submerged_at_tail                # 末尾窓で p_hat==0 のユニット
+    metric: seed_median_of_unit_w_norm
+    fit: log_log_least_squares
+    range_steps: [1000000, 5000000]
+    min_record_points: 10
+    emit: [slope, r_squared, n_points]
+    # 追補 8: 発散した腕は 5M に届かないので回帰が張れない。また §5.3 は
+    # BLR の沈下ユニットが居ないとも予言しており、その場合も母集団が空になる。
+    insufficient_data_label: INSUFFICIENT_DATA
+    min_submerged_units_per_seed: 3
+  blp_mu_invariance:
+    arms: [BLP_1216, BLPw_1216]
+    # 追補 2: 不変量は **生の zbar = w·µ + b** であって s ではない。
+    # s = zbar/denom の denom は w 全体に依存し、BLP は直交成分を伸ばす設計なので
+    # 分子が厳密に凍っていても s は動く（親走実測で denom は 1M→5M 窓で ×1.25〜1.27）。
+    primary_quantity: zbar
+    primary_tolerance: 1.0e-6
+    also_report: [delta_s, denom_growth_ratio]
+    exclude_records_where_unit_fired: true
+    window: late_tasks_5m
+  revival: { definition: p_hat_zero_to_positive, primary_condition: same_task_and_flip_state_unchanged,
+             also_report: across_task_boundary, in_verdict: false }
+  freeze_rates: { definition: delta_v_zero_between_adjacent_records, window: late_tasks_5m,
+                  cross_check_against: strict_dead, in_verdict: false }
+  timeseries_report_only:
+    [strict_dead, submerged_frac, alive, eff_rank, w_norm, b_median,
+     median_M, median_B, preact_sd_median, eval_loss_exact]
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    rescue: none
+    inconclusive_label: INCONCLUSIVE_DIVERGENCE
+
+  # --- P7（ユニット別 s_i・bwd_leak §5.4 の集約順をそのまま継承） ---
+  s_distribution:
+    log_branch: A
+    window: late_tasks_5m
+    aggregation_order:
+      [unit, seed_internal_median_per_record, mean_over_window_records, median_over_seeds]
+    unit_sets: [all, p_hat_positive]
+    min_units_per_seed_for_subset: 3
+    nan_aware_median: true
+    emit_both_median_s_and_median_M_plus_median_B: true
+    emit_denom_median: true
+    emit_raw_series: [zbar, wmu, b_raw, denom]
+    recompute_all_arms_from_unit_arrays: true
+    p7_contrasts:                           # w-WD が b-WD の鏡像か（median_M が動き median_B は動かない）
+      - [RWw_1216, R_1216]
+      - [BLR_1216, R_1216]
+      - [BLQ_1216, R_1216]
+      - [BLP_1216, R_1216]
+    channels: [median_M, median_B]
+    label_channels: false
+    in_verdict: false
+
+# ---------------------------------------------------------------------------
+# 前段チェック（spec §6）
+# ---------------------------------------------------------------------------
+sanity:
+  s_pair_reference: results/gate_dose_0830
+  s_pair_reference_arm: R_1216
+  s_pair_steps: 30000
+  s_pair_match_by: seed_init_hash
+  s_limit_steps: 30000
+  s_dose_rel_tol: 1.0e-10
+  s_cross_grid: [-30.0, 30.0, 4001]
+  # 追補 3（符号付きゼロ）: 反転ゲートを full_like(pre, -act_alpha) と書くと a=0 で
+  # -0.0 になり、torch.equal は符号盲なので S-limit がバイトの違いを見逃す。
+  # 0.0 - act_alpha と書いて a=0 で真の +0.0 を出し、signbit も検査する。
+  s_limit_check_signbit: true
+  s_bwd_closed_form_tol: 0.0                # 勾配の水準では bit 一致を要求する
+  # S-proj: 追補 1。射影残差は float32 では eps*|g| ~ 1e-7 が下限で、登録の
+  # 1e-12 は原理的に到達不能。**float64 の解析経路で gate し、float32 の実現値を
+  # 併記する**（lin0_base_0902 の S_lin0 と同じ扱い。許容値は緩めていない）。
+  s_proj_tol: 1.0e-12
+  s_proj_gate_precision: float64
+  s_proj_report_float32: true
+  s_proj_mu_rel_tol: 1.0e-10                # µ̂ が実際に加えた用量ベクトルと一致
+  s_wd_w_ulp_factor: 4.0
+  s_refl_steps: 30000                       # 沈下ユニットの zbar が BL と逆向きに動く
+  s_taut_check: true
+  s_ref_hash_check: true
+  s_ref_remote_check: true
+  omp_num_threads: 1
+  s6_floor_calibration: false
+
+output:
+  dir: results/phantom_wall_0902
+  verdict_csv: true
+  layer_stats_csv: true
+  s_distribution_csv: true
+  phat_hist_csv: true
+  revival_csv: true
