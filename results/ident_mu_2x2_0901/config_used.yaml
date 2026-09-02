@@ -112,6 +112,17 @@ arms:
   cell: false
   I: false
   M: false
+- name: iM_nowd
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  visible: flip0
+  code: zero
+  wd_b: 0.0
+  cell: false
+  I: false
+  M: true
 - name: std_anchor
   hidden:
   - 100
@@ -136,7 +147,10 @@ pairing:
   - im
   - im_nowd
   baseline: im
-  pairing_scope: init_teacher_input_realization_all_six_arms
+  r_ext_mplus_group:
+  - iM
+  - iM_nowd
+  pairing_scope: init_teacher_input_realization_all_seven_arms
 phase1:
   task_period: 10000
   exact_support: 32
@@ -218,6 +232,24 @@ ident_mu_2x2:
       - 154
       - 454
     scope_note: death_claim_only_do_not_read_as_LOP_CURED
+  r_ext_mplus:
+    arms:
+    - iM
+    - iM_nowd
+    primary: extinction_task
+    extinction_rule: L1_strict_dead_frac == 1.0
+    censor_task: 501
+    censor_flag_min_seeds: 3
+    rule: paired_ci_sign_only
+    equivalence_margin: null
+    null_is_not_tight: true
+    companions_report_only:
+    - binary_extinction_clopper_pearson
+    - E_level_B10
+    - E_drift
+    - b_median_all_B10
+    ci_method: percentile_paired
+    bootstrap_seed: 20260913
   unfit_floor: 1.0e-16
   recalibrate_floor: false
   floor_inherited_from: one_layer_series_9gatsu_unyou_0901_section_3-1

@@ -19,6 +19,7 @@
     "iM",
     "im",
     "im_nowd",
+    "iM_nowd",
     "std_anchor"
   ],
   "S3": {
@@ -79,6 +80,25 @@
       "quantization_violations": 0,
       "wall_violations": 0
     },
+    "iM_nowd": {
+      "pass_": true,
+      "max_relerr": {
+        "mean": 0.0,
+        "sd": 6.041102640712587e-16,
+        "wall": 0.0,
+        "cos_mu": 2.679696890292759e-16,
+        "beta": 5.148463300614297e-16,
+        "sigma": 8.802248534309929e-16,
+        "unfit": 0.0,
+        "kappa_closed": 8.545108316981178e-16,
+        "beta_elementwise_rel": 2.0007925622899153e-13,
+        "beta_scale": 27.60212880124136,
+        "unfit_bypass": 0.0
+      },
+      "n_visible_violations": 0,
+      "quantization_violations": 0,
+      "wall_violations": 0
+    },
     "std_anchor": {
       "pass_": true,
       "max_relerr": {
@@ -111,6 +131,11 @@
       "events": []
     },
     "im_nowd": {
+      "status": "COMPLETE",
+      "excluded_seeds": [],
+      "events": []
+    },
+    "iM_nowd": {
       "status": "COMPLETE",
       "excluded_seeds": [],
       "events": []
@@ -219,10 +244,75 @@
       },
       "evidence": "n=10; im_nowd extinct=10/10 CI=0.692-1.000 tasks=[112, 249]; im extinct=0/10 CI=0.000-0.308 tasks=None; reference Aexact=10/10 tasks=[154, 454]; E-level im=-5.6879 / im_nowd=0.0000 (diff=-5.6879 dex, REPORT); strict_dead B10 im=0.0002 / im_nowd=1.0000; median tau im=501.0 / im_nowd=99.5; alive==0 rule disagreements=0"
     },
+    "r_ext_mplus": {
+      "verdict": "BWD_DELAYS_EXTINCTION_UNDER_MU",
+      "ci_basis": "paired percentile",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "n": 10,
+      "delta_extinction_task": {
+        "point": 37.5,
+        "ci_lo": 15.697500000000002,
+        "ci_hi": 60.6
+      },
+      "ci_degenerate": 0,
+      "per_seed_delta": [
+        4.0,
+        15.0,
+        10.0,
+        58.0,
+        96.0,
+        42.0,
+        65.0,
+        91.0,
+        -6.0,
+        0.0
+      ],
+      "arms": {
+        "iM": {
+          "extinct": 10,
+          "censored": 0,
+          "clopper_pearson": [
+            0.6915028921812392,
+            1.0
+          ],
+          "median_extinction_task": 105.5,
+          "E_level_B10": 6.0752630392857005e-18,
+          "E_drift": 0.31815396009326213,
+          "b_median_all_B10": -2.2118062155354174e-21
+        },
+        "iM_nowd": {
+          "extinct": 10,
+          "censored": 0,
+          "clopper_pearson": [
+            0.6915028921812392,
+            1.0
+          ],
+          "median_extinction_task": 50.5,
+          "E_level_B10": 6.0752630392857005e-18,
+          "E_drift": 0.10621268316131878,
+          "b_median_all_B10": -0.13730477988719939
+        }
+      },
+      "censored_flag": [],
+      "null_is_not_tight": true,
+      "evidence": "n=10; iM - iM_nowd on the extinction task = +37.5000 CI [+15.6975, +60.6000]; ci_degenerate=False; median task iM=105.5 / iM_nowd=50.5; extinct iM=10/10 / iM_nowd=10/10 (REPORT); E-level B10 iM=0.0000 / iM_nowd=0.0000; b(all units) B10 iM=-0.0000 / iM_nowd=-0.1373; censored={'iM': 0, 'iM_nowd': 0}"
+    },
     "never_below": {
       "iM": 0,
       "im": 0,
       "im_nowd": 0,
+      "iM_nowd": 0,
       "std_anchor": 0
     },
     "b02_means": {
@@ -240,6 +330,8 @@
       "im_B10": 0.0,
       "im_nowd_B02": 0.0,
       "im_nowd_B10": 0.0,
+      "iM_nowd_B02": 0.0,
+      "iM_nowd_B10": 0.0,
       "std_anchor_B02": 0.0,
       "std_anchor_B10": 0.0
     },
@@ -251,6 +343,7 @@
     "iM": 461.16579604148865,
     "im": 444.07869243621826,
     "im_nowd": 441.66736245155334,
+    "iM_nowd": 472.2307960987091,
     "std_anchor": 444.3433938026428
   }
 }

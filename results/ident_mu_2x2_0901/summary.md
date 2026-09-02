@@ -1,6 +1,6 @@
 # ident_mu_2x2_0901 — 可識別性 × µ の 2×2（純化版）
 
-事前登録: `specs/spec_ident_mu_2x2_0901.md`＋`specs/spec_ident_mu_2x2_0901_addendum1.md`（追補1）。主判定は **I_CELLS_INVALID_S_OP**。S-op が FAIL したため I+ セル（IM・Im）は無効で、走ったのは `iM`, `im`, `im_nowd`, `std_anchor` の 4 腕。対比に使った共通完走 seed（iM / im）= [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] (n=10)。
+事前登録: `specs/spec_ident_mu_2x2_0901.md`＋`specs/spec_ident_mu_2x2_0901_addendum1.md`（追補1）。主判定は **I_CELLS_INVALID_S_OP**。S-op が FAIL したため I+ セル（IM・Im）は無効で、走ったのは `iM`, `im`, `im_nowd`, `iM_nowd`, `std_anchor` の 5 腕。対比に使った共通完走 seed（iM / im）= [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] (n=10)。
 
 要因 4 セルはすべて b 限定 WD λ=0.001 の下にある（spec D8・§3.5）。**主判定の読みは「b 拘束下」限定であり、拘束なしの世界の I/M 主効果は測っていない**（橋は `im_nowd` と committed `Aexact` まで）。
 
@@ -15,10 +15,11 @@
 | E-drift | M main effect band (I+ cells invalid) | OUT_POS | bands={'M_i': 'OUT_POS'}; interaction=not computed (I+ cells invalid); margin=0.15 dex; interaction_margin=not applicable dex |  |  |
 | E-level | M_i: iM - im [dex] | OUT_POS | +5.6879 CI [+5.6619, +5.7158]; ci_degenerate=False | paired percentile | 0 |
 | E-level | M main effect band (I+ cells invalid) | OUT_POS | bands={'M_i': 'OUT_POS'}; interaction=not computed (I+ cells invalid); margin=0.15 dex; interaction_margin=not applicable dex |  |  |
-| S-floor | B02/B10 floor_frac, all running arms | PASS | iM/B02=0; iM/B10=0; im/B02=0; im/B10=0; im_nowd/B02=0; im_nowd/B10=0; std_anchor/B02=0; std_anchor/B10=0 |  |  |
+| S-floor | B02/B10 floor_frac, all running arms | PASS | iM/B02=0; iM/B10=0; iM_nowd/B02=0; iM_nowd/B10=0; im/B02=0; im/B10=0; im_nowd/B02=0; im_nowd/B10=0; std_anchor/B02=0; std_anchor/B10=0 |  |  |
 | S-ceiling | B02 level range over 2 cell(s) | CEILING_CONTAMINATED | range=5.407291 dex; threshold=3.0; levels={'iM': -0.31815396009326213, 'im': -5.72544482694612} |  |  |
 | L | E-drift vs E-level ladder | CONSISTENT | E-drift=OUT_POS; E-level=OUT_POS |  |  |
 | R-ext | extinction by 5M: im vs im_nowd | BWD_PREVENTS_EXTINCTION | n=10; im_nowd extinct=10/10 CI=0.692-1.000 tasks=[112, 249]; im extinct=0/10 CI=0.000-0.308 tasks=None; reference Aexact=10/10 tasks=[154, 454]; E-level im=-5.6879 / im_nowd=0.0000 (diff=-5.6879 dex, REPORT); strict_dead B10 im=0.0002 / im_nowd=1.0000; median tau im=501.0 / im_nowd=99.5; alive==0 rule disagreements=0 | Clopper-Pearson |  |
+| R-ext-M+ | extinction task: iM vs iM_nowd | BWD_DELAYS_EXTINCTION_UNDER_MU | n=10; iM - iM_nowd on the extinction task = +37.5000 CI [+15.6975, +60.6000]; ci_degenerate=False; median task iM=105.5 / iM_nowd=50.5; extinct iM=10/10 / iM_nowd=10/10 (REPORT); E-level B10 iM=0.0000 / iM_nowd=0.0000; b(all units) B10 iM=-0.0000 / iM_nowd=-0.1373; censored={'iM': 0, 'iM_nowd': 0} | paired percentile |  |
 | S-ceiling | im_nowd seeds at the ceiling (B10 >= -0.05 dex) | REPORT_ONLY | 10 seeds |  |  |
 | D | iM L1 strict_dead_frac B02->B10 | REPORT_ONLY | 0.984900->1.000000 |  |  |
 | R | iM L1 eff_rank B10 | REPORT_ONLY | 1.000000 |  |  |
@@ -35,6 +36,11 @@
 | U | im_nowd u_norm / bypass_share B10 | REPORT_ONLY | u_norm=0; bypass_share=0; \|bypass\|=0 |  |  |
 | ledger | im_nowd B / M / b(all units) B02->B10 | REPORT_ONLY | B=-0.702676->+nan; M=+0.000000->+nan; b_all=-0.856006->-0.968836 |  |  |
 | A | im_nowd E-level B10 / E-drift / E-onset | REPORT_ONLY | E-level=0.000000; E-drift=+3.744021; median tau=99.5; censored=0 |  |  |
+| D | iM_nowd L1 strict_dead_frac B02->B10 | REPORT_ONLY | 0.996720->1.000000 |  |  |
+| R | iM_nowd L1 eff_rank B10 | REPORT_ONLY | 1.000000 |  |  |
+| U | iM_nowd u_norm / bypass_share B10 | REPORT_ONLY | u_norm=0; bypass_share=0; \|bypass\|=0 |  |  |
+| ledger | iM_nowd B / M / b(all units) B02->B10 | REPORT_ONLY | B=-0.004604->+nan; M=+0.570866->+nan; b_all=-0.136605->-0.137305 |  |  |
+| A | iM_nowd E-level B10 / E-drift / E-onset | REPORT_ONLY | E-level=0.000000; E-drift=+0.106213; median tau=15.5; censored=0 |  |  |
 | D | std_anchor L1 strict_dead_frac B02->B10 | REPORT_ONLY | 0.875420->0.980440 |  |  |
 | R | std_anchor L1 eff_rank B10 | REPORT_ONLY | 1.555217 |  |  |
 | U | std_anchor u_norm / bypass_share B10 | REPORT_ONLY | u_norm=0; bypass_share=0; \|bypass\|=0 |  |  |
@@ -43,6 +49,7 @@
 | exclusion | iM | ARM_VALID | status=COMPLETE; excluded=[]; included=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] |  |  |
 | exclusion | im | ARM_VALID | status=COMPLETE; excluded=[]; included=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] |  |  |
 | exclusion | im_nowd | ARM_VALID | status=COMPLETE; excluded=[]; included=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] |  |  |
+| exclusion | iM_nowd | ARM_VALID | status=COMPLETE; excluded=[]; included=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] |  |  |
 | exclusion | std_anchor | ARM_VALID | status=COMPLETE; excluded=[]; included=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] |  |  |
 
 ## 水準・死・バイパス
@@ -55,6 +62,8 @@
 | im | 0.001 | B10 | -5.68787 | 0.00018 | 19.344 | -0.0776153 | 0 | 0 | 501 | 10 | 0 |
 | im_nowd | 0 | B02 | -3.74402 | 0.82958 | 9.991 | -0.856006 | 0 | 0 | 99.5 | 0 | 0 |
 | im_nowd | 0 | B10 | 6.07526e-18 | 1 | 1 | -0.968836 | 0 | 0 | 99.5 | 0 | 0 |
+| iM_nowd | 0 | B02 | -0.106213 | 0.99672 | 1 | -0.136605 | 0 | 0 | 15.5 | 0 | 0 |
+| iM_nowd | 0 | B10 | 6.07526e-18 | 1 | 1 | -0.137305 | 0 | 0 | 15.5 | 0 | 0 |
 | std_anchor | 0 | B02 | -1.63782 | 0.87542 | 6.61907 | -0.514983 | 0 | 0 | 64 | 0 | 0 |
 | std_anchor | 0 | B10 | -0.314743 | 0.98044 | 1.55522 | -0.94805 | 0 | 0 | 64 | 0 | 0 |
 
