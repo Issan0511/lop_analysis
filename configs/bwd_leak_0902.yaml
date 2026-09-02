@@ -1,0 +1,375 @@
+# proj_004: bwd_leak_0902 — 順逆分離 × b-WD
+#   (forward と backward の片道性を別々に外す: 1 層・帯内 2 用量・5M)
+# 仕様: specs/spec_bwd_leak_0902.md（実装より先に config と一緒に単独 commit すること）
+# Obsidian 側の正本: 可塑性喪失/spec/逆伝播漏れ2x2_spec_0902.md（v2・2026-09-02）
+#
+# 宿主は gate_dose_0830（1 層・オラクル用量固定・5M）。新規 8 腕を段 1 / 段 2 に分けて回し、
+# 対照 R_933 / R_1216 / LR_933 / LR_1216 は再走せず committed 出力から読む。
+#   V1（担い手・★穴 1）: BL(勾配のみ) と FL(出力のみ) の発症数
+#   V2（折衷）: BL が発症したときだけ BLW / RW で読む
+#   Issa 予測: V1 GRADIENT_CARRIES / V2 NOT_APPLICABLE / P5 BL INCONCLUSIVE_WIDE・FL FL_SHORT_OF_LR
+#   Claude 予測: V1 GRADIENT_CARRIES / V2 NOT_APPLICABLE / P5 BL_SHORT_OF_LR・FL_SHORT_OF_LR
+#
+# 命名: 作成日 0902。bootstrap seed は 20260905（20260829/20260902/20260904 は既用）。
+# generator_offset は **明示的に 0**。gate_dose_0830 と bit 一致の S-pair を取ることが
+# 設計の土台なので、ここで系列を切ってはいけない（9月運用_0901 §3-1 の「新 seed 群は
+# generator_offset で作る」は新規 seed 群を作る走への規則。本走は親走と同一 seed 集合・
+# 同一系列を意図的に共有する。seed ラベルは乱数系列に入らないので、seed を [10..19] に
+# しても同じ 10 実現が別ラベルで出るだけで、対応づけだけが壊れる）。
+# 床 1e-16 は dose_const_5m_0830 で較正済み。再較正しない。
+
+spec: specs/spec_bwd_leak_0902.md
+
+# ---------------------------------------------------------------------------
+# gate_dose_0830 §3 の逐語継承
+# ---------------------------------------------------------------------------
+common:
+  total_steps: 5000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  generator_offset: 0                       # 明示。親走と同一系列（上のコメント参照）
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 1000000, 5000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  encodings: [std]
+
+# ---------------------------------------------------------------------------
+# 活性化（spec §4.3）。ReLU 経路・leaky 経路は 1 行も触らない。
+# bwd_leaky / fwd_leaky は既存の relu / leaky_relu の式を**組み合わせるだけ**で、
+# 新しい算術を書かない（S-cross がこれを bit 一致で検査する）。
+# どちらも自分の forward の勾配ではない（代替勾配 / 勾配の切断）ので、有限差分
+# 照合は成立しない。S-bwd が代わりに置かれる。
+# ---------------------------------------------------------------------------
+activation:
+  relu:
+    name: relu
+  leaky:
+    name: leaky_relu
+    slope: 0.1                              # gate_dose_0830 の LR と同値（掃かない）
+    forward: where(z>0, z, slope*z)
+    derivative: where(z>0, 1, slope)
+  bwd_leaky:                                # BL: 出力 0・勾配 a
+    name: bwd_leaky
+    slope: 0.1
+    forward: relu                           # relu の forward と bit 一致
+    derivative: leaky                       # leaky の derivative と bit 一致
+    is_true_gradient: false
+  fwd_leaky:                                # FL: 出力 a*z・勾配 0
+    name: fwd_leaky
+    slope: 0.1
+    forward: leaky                          # leaky の forward と bit 一致
+    derivative: relu                        # relu の derivative と bit 一致
+    is_true_gradient: false
+  autograd: false
+  consumes_rng: false
+
+# ---------------------------------------------------------------------------
+# b 限定 weight decay（spec §4.3）。bias_wd_0901 の差し込み規約をそのまま使う。
+# 更新式 b -= lr*(gb + wd_b*b)（decoupled ではなく素の L2 勾配）。W・v・出力 bias c
+# には掛けない。lambda=1e-3 は bias_wd_0901 の C4 値の継承で、1 層・std 系での
+# 較正はしない（外れたときの疑い先は spec §7.3 (ii)）。
+# ---------------------------------------------------------------------------
+bias_wd:
+  wd_b_lambda: 1.0e-3
+  applies_to: hidden_bias_only
+  form: plain_l2_gradient
+  decoupled: false
+  calibrated_for_this_system: false
+  inherited_from: results/bias_wd_0901
+
+# dose_const_5m_0830 のオラクル固定。入力側の変換なので活性化・WD に依存しない。
+# ‖µ‖ は用量に固定されるが**向きはタスク境界ごとに回る**（mu_cos_off が 1 でない）。
+# したがって M_i は凍結したユニットでも動く。P7 の読みで注意（spec §5.4）。
+intervention:
+  name: oracle_fixed_mu_offset
+  oracle: true
+  consumes_rng: false
+  center_alpha_compat: 0.01
+  is_ema_centering: false                   # 縮退(i) が非該当な理由はこれ（中心化腕の不在ではない）
+
+# ---------------------------------------------------------------------------
+# 腕（spec §4.1）。新規 8 本。段で分けて回す（--stage / --doses）。
+# ---------------------------------------------------------------------------
+arms:
+  - { name: BL_933,   stage: 1, activation: bwd_leaky, wd_b: 0.0,    hidden: [100], centered_layers: [1], target_mu_norm: 2.333, target_dose: 9.33 }
+  - { name: BL_1216,  stage: 1, activation: bwd_leaky, wd_b: 0.0,    hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: FL_933,   stage: 1, activation: fwd_leaky, wd_b: 0.0,    hidden: [100], centered_layers: [1], target_mu_norm: 2.333, target_dose: 9.33 }
+  - { name: FL_1216,  stage: 1, activation: fwd_leaky, wd_b: 0.0,    hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: RW_933,   stage: 2, activation: relu,      wd_b: 1.0e-3, hidden: [100], centered_layers: [1], target_mu_norm: 2.333, target_dose: 9.33 }
+  - { name: RW_1216,  stage: 2, activation: relu,      wd_b: 1.0e-3, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: BLW_933,  stage: 2, activation: bwd_leaky, wd_b: 1.0e-3, hidden: [100], centered_layers: [1], target_mu_norm: 2.333, target_dose: 9.33 }
+  - { name: BLW_1216, stage: 2, activation: bwd_leaky, wd_b: 1.0e-3, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+
+# 段と用量の切り方（spec §4.1・§9 #0）。回した段と用量は provenance.json に記録する。
+staging:
+  stage1_arms: [BL_933, BL_1216, FL_933, FL_1216]
+  stage2_arms: [RW_933, RW_1216, BLW_933, BLW_1216]
+  minimal_stage1_arms: [BL_1216, FL_1216]   # 15 分級（9月運用_0901 §0-2 の枠）
+  preferred_single_dose: "1216"             # 1 点なら 12.16（1M 窓でも読めるため）
+  outdir_per_stage: true                    # results/bwd_leak_0902/stage{1,2}/
+  single_dose_requires_dose_in_citation: true
+
+# ---------------------------------------------------------------------------
+# 対照（spec §4.2・§8）。再走せず committed 出力から読む。同一走の腕ではない。
+# ---------------------------------------------------------------------------
+controls:
+  reference_run: results/gate_dose_0830
+  same_run_as_new_arms: false
+  caveat: controls_are_committed_values_from_a_separate_run
+  arms:
+    R_933:   { activation: relu,       wd_b: 0.0, target_dose: 9.33,  expected_onset_5m: 10 }
+    R_1216:  { activation: relu,       wd_b: 0.0, target_dose: 12.16, expected_onset_5m: 10 }
+    LR_933:  { activation: leaky_relu, wd_b: 0.0, target_dose: 9.33,  expected_onset_5m: 0 }
+    LR_1216: { activation: leaky_relu, wd_b: 0.0, target_dose: 12.16, expected_onset_5m: 0 }
+  # 主 endpoint（U_k）は verdict.csv から**転記**する。logs から再計算しない
+  # （窓の定義がタスク終端 10 点であって記録点 100 点ではないため。spec §6.3 の追補 3）
+  endpoint_source: verdict.csv
+  endpoint_columns: [U_1m_seed_values, U_5m_seed_values, n_onset_1m, n_onset_5m]
+  # P7b/P7c・§5.3 の対照だけは logs/*.npz を読む。§6 の「2 ファイルのみ」への
+  # 明示の carve-out（spec §6.3 の追補 4）。読む配列と記録点を必ず添えて引用する。
+  unit_source: results/gate_dose_0830/logs/{arm}_seed{seed}.npz
+  unit_arrays: [layer1_M, layer1_B, layer1_denom, layer1_p_hat, layer1_zbar, layer1_w_norm]
+  verify_reference_hashes: true             # S-ref: 親 provenance.json の output_sha256 と全数照合
+
+# ---------------------------------------------------------------------------
+# 窓・床・発症定義・CI（spec §5。gate_dose §5 を逐語継承・bootstrap seed のみ更新）
+# 窓 = タスク終端の記録点だけ（5M 窓なら 10 点。step%10000==0 かつ 4.9e6 < step <= 5e6）。
+# ---------------------------------------------------------------------------
+phase1:
+  task_period: 10000
+  early_tasks: [2, 11]
+  late_tasks_5m: [491, 500]
+  window_1m_tasks: [91, 100]
+  window_points_are_task_ends_only: true
+  onset_threshold: 0.05
+  onset_present_min: 5
+  unfit_floor: 1.0e-16
+  recalibrate_floor: false
+  bootstrap_B: 10000
+  bootstrap_seed: 20260905
+  ci_method: percentile_primary_studentized_secondary
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+
+bwd_leak:
+  # --- §5.1 主 endpoint ---
+  # 腕の onset 状態は 3 値に潰す: zero(回した用量すべてで 0) / present(いずれかで >=5)
+  # / mid(どちらでもない)。3 値 x 腕 の全セルを列挙して config で凍結する。
+  onset_states: [zero, mid, present]
+  onset_zero_max: 0
+  onset_present_min: 5
+  verdict_arms_bl:  [BL_933, BL_1216]
+  verdict_arms_fl:  [FL_933, FL_1216]
+  verdict_arms_blw: [BLW_933, BLW_1216]
+  verdict_arms_rw:  [RW_933, RW_1216]
+  # V1（担い手・★穴 1）: BL x FL の全 9 セル（3x3）を明示。ワイルドカードを使わない
+  v1_map:
+    zero_present:   GRADIENT_CARRIES
+    present_zero:   OUTPUT_CARRIES
+    zero_zero:      EITHER_SUFFICES
+    present_present: BOTH_REQUIRED
+    zero_mid:       PARTIAL
+    mid_zero:       PARTIAL
+    mid_mid:        PARTIAL
+    mid_present:    PARTIAL
+    present_mid:    PARTIAL
+  # V2（折衷）: BL が zero なら NOT_APPLICABLE。それ以外は BLW x RW の 9 セルを明示
+  v2_not_applicable_when_bl: zero
+  v2_map:
+    zero_present:    RESTORING_FORCE_REQUIRED
+    zero_zero:       WD_B_SUFFICIENT_ALONE
+    mid_zero:        WD_B_SUFFICIENT_ALONE
+    present_zero:    WD_B_SUFFICIENT_ALONE
+    present_present: COMPROMISE_FAILS
+    present_mid:     COMPROMISE_FAILS
+    zero_mid:        PARTIAL
+    mid_mid:         PARTIAL
+    mid_present:     PARTIAL
+  # 前提。committed 値がこれと違えば結果を読まない（spec §5.1）
+  control_expected_onset_5m: { R_933: 10, R_1216: 10, LR_933: 0, LR_1216: 0 }
+  # 飽和ガード: 二値が 0 に揃った場合は §5.2 の水準を同格で報告する
+  saturation_guard: report_levels_as_coequal_when_binary_saturates
+  # 追補: 「最初に当たった行」以外に**当たっていた行**も verdict.csv に残す。
+  # 生の onset 三つ組（腕 x 用量）も summary.md に逐語で出し、ラベルを再導出可能にする
+  emit_co_satisfied_labels: true
+  emit_raw_onset_triple: true
+
+  # --- §5.2 水準（主判定と同格） ---
+  p3prime_contrasts:
+    - [BL_933, R_933]
+    - [BL_1216, R_1216]
+    - [FL_933, R_933]
+    - [FL_1216, R_1216]
+    - [BLW_933, R_933]
+    - [BLW_1216, R_1216]
+    - [RW_933, R_933]
+    - [RW_1216, R_1216]
+  # 追補: §7.1 の Issa の水準側予測「BLW-BL の CI が 0 を下に外す」を照合するには
+  # 新規腕どうしの差の paired CI が要る（P3' の 2 本の CI からは作れない）
+  p3prime_delta_contrasts:
+    - [BLW_933, BL_933]
+    - [BLW_1216, BL_1216]
+  p5_contrasts:
+    - [BL_933, LR_933]
+    - [BL_1216, LR_1216]
+    - [FL_933, LR_933]
+    - [FL_1216, LR_1216]
+  p5_equivalence_margin: 0.15               # dex。チャネル遮断2x2_spec_0901 D4 の継承
+  p5_margin_recalibrated_for_this_system: false   # 継承のみ。spec §6.3 の追補 1 を参照
+  p5_labels:
+    equivalent: EQUIV_FWD                   # CI が [-0.15, +0.15] に収まる
+    short_of_lr: SHORT_OF_LR                # CI が 0 を上に外す（ci_lo > 0）
+    inconclusive: INCONCLUSIVE_WIDE         # どちらでもない
+    order: [equivalent, short_of_lr, inconclusive]   # 書かれた順に判定する
+  # 追補: CI が丸ごと 0 の下（= その経路だけの方が LR より良い）は登録ラベルが無く
+  # INCONCLUSIVE_WIDE に落ちる。情報を落とさないためフラグ列として別に出す
+  p5_emit_ci_below_zero_flag: true
+  # 追補: n=10 での等価判定の検出力が足りない可能性が高い（spec §6.3 の追補 1）。
+  # 較正定数の要らない seed 別符号検定を REPORT_ONLY の併記として登録する
+  p5_sign_test_report_only: true
+  p6_contrasts:                             # (BLW-BL) - (RW-R)。用量ごと
+    - { dose: "933",  a: [BLW_933, BL_933],   b: [RW_933, R_933] }
+    - { dose: "1216", a: [BLW_1216, BL_1216], b: [RW_1216, R_1216] }
+  p6_orientation: standard_interaction      # channel_2x2 とは向きが逆。語彙を持ち込まない
+  p6_emit_label: false                      # 閾値が無いので CI のみ。REPORT_ONLY
+  p6_in_verdict: false
+  # 追補（S-ceiling 相当）: 腕間のベースライン水準差が大きいと P6 は天井汚染を受ける。
+  # 早期窓の腕間 log10 U の広がりを測り、閾値超えなら「P6 を単独で読むな」を出す
+  ceiling_baseline_spread_flag_dex: 3.0
+  ceiling_baseline_window: early_tasks
+
+  # --- §5.3 副次（REPORT_ONLY） ---
+  revival:
+    arms: [BL_933, BL_1216, BLW_933, BLW_1216, FL_933, FL_1216]
+    definition: p_hat_zero_to_positive_between_adjacent_records
+    # 追補（重要）: 記録点だけで数えると ReLU 腕も「復活」する。タスク境界で 32 パターンの
+    # 支持が引き直されるので、凍結した dead ユニットが動かないまま p_hat > 0 になるため。
+    # 実測（committed logs・診断値。転記対象ではない）: R_933 は within-task 0 /
+    # 境界越え 14801、R_1216 は 0 / 6584。したがって「ReLU 腕は 0 が既知」が成り立つのは
+    # **within-task** の定義のみ。主は within-task、境界越えは併記する
+    primary_condition: same_task_and_flip_state_unchanged
+    also_report: across_task_boundary
+    report: [events_total, units_distinct, rate_per_unit_record]   # 教訓(17) 総和と率の両方
+    controls: [R_933, R_1216]
+    expect_fl_zero: true                    # FL は backward が片道。0 でなければ実装を疑う
+    in_verdict: false
+  freeze_rates:
+    bl_arms: [BL_933, BL_1216, BLW_933, BLW_1216]
+    bl_definition: delta_v_i_equals_zero_between_adjacent_records
+    fl_arms: [FL_933, FL_1216]
+    fl_definition: delta_b_i_equals_zero_between_adjacent_records   # gW = gb (x) x なので gb=0 <=> gW=0
+    window: late_tasks_5m
+    cross_check_against: strict_dead
+    in_verdict: false
+  fl_fixed_feature:                         # OUTPUT_CARRIES が出たときの傍証
+    arms: [FL_933, FL_1216]
+    metric: median_abs_v_of_submerged_units
+    compare_to: [R_933, R_1216]
+    window: late_tasks_5m
+    in_verdict: false
+  timeseries_report_only:
+    [strict_dead, submerged_frac, alive, eff_rank, w_norm, b_median,
+     median_M, median_B, preact_sd_median, eval_loss_exact]
+  primary_covariate: w_norm
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    rescue: none
+    # 追補: gate_dose の平坦な「セルが空なら INCONCLUSIVE」は継承できない。
+    # V1 は BL/FL の両方、V2 は BLW/RW の両方を要求する。判定ごとに必要セルを書く
+    v1_required_arms: [BL, FL]
+    v2_required_arms: [BLW, RW]
+    inconclusive_label: INCONCLUSIVE_DIVERGENCE
+
+  # --- §5.4 副次 P7（登録・verdict 不使用） ---
+  s_distribution:
+    log_branch: A                           # S-log の結論。実測で確認する
+    definition: { s: M_plus_B, M: w_dot_mu_over_denom, B: b_over_denom,
+                  denom: sqrt_w_Sigma_w }
+    # 追補: spec の集約順には時間軸が無い。窓と時間縮約を明示して凍結する
+    window: late_tasks_5m
+    aggregation_order:
+      [unit, seed_internal_median_per_record, mean_over_window_records, median_over_seeds]
+    unit_sets: [all, p_hat_positive]        # 「alive」は LR/FL では死を意味しないのでこう呼ぶ
+    min_units_per_seed_for_subset: 3        # 未満は INSUFFICIENT_DATA（q2 の先例に倣う）
+    nan_aware_median: true                  # M/B は denom < 1e-8 で NaN。n_na を併記
+    emit_both_median_s_and_median_M_plus_median_B: true   # 引用禁止 縮退(ii)
+    emit_denom_median: true                                # 引用禁止 縮退(iii)
+    emit_raw_series: [zbar, wmu, b_raw, denom]             # 現象3指標再定義 D-5・引用禁止 C
+    recompute_all_arms_from_unit_arrays: true              # committed の median_M 列は使わない
+    p7a_arms: [BL_933, BL_1216, FL_933, FL_1216, RW_933, RW_1216, BLW_933, BLW_1216,
+               R_933, R_1216, LR_933, LR_1216]
+    p7b_contrasts: [[BL_933, R_933], [BL_1216, R_1216]]
+    p7c_contrasts: [[RW_933, R_933], [RW_1216, R_1216],
+                    [BLW_933, BL_933], [BLW_1216, BL_1216]]
+    p7d_contrasts: [[BLW_933, BL_933], [BLW_1216, BL_1216],
+                    [BLW_933, RW_933], [BLW_1216, RW_1216],
+                    [FL_933, BL_933], [FL_1216, BL_1216]]
+    # 追補: spec §5.4 は P7c に「等価限界 0.15 内」と書くが、median_M は log 量ではない。
+    # 0.15 dex とは別物なので、s の単位の限界として別名で登録し「dex」とは書かない。
+    # 値は較正せず継承（P5 の 0.15 とは無関係の数であることを summary.md に書く）
+    p7c_equivalence_margin_s_units: 0.15
+    p7c_margin_is_not_dex: true
+    p7c_margin_recalibrated: false
+    channels: [median_M, median_B]
+    label_channels: false
+    in_verdict: false
+
+# ---------------------------------------------------------------------------
+# 前段チェック（spec §6）
+# ---------------------------------------------------------------------------
+sanity:
+  s_pair_reference: results/gate_dose_0830
+  # 新規腕は同じ用量の R 腕と init/教師/入力列/flip が bit 一致するはず。
+  # 対応は **seed ごとの init ハッシュ**で取る（位置合わせではない）
+  s_pair_arm_map: { BL_933: R_933, BL_1216: R_1216, FL_933: R_933, FL_1216: R_1216,
+                    RW_933: R_933, RW_1216: R_1216, BLW_933: R_933, BLW_1216: R_1216 }
+  s_pair_steps: 30000
+  s_pair_match_by: seed_init_hash
+  s_limit_steps: 30000
+  s_dose_rel_tol: 1.0e-10
+  s_cross_grid: [-30.0, 30.0, 4001]         # bwd_leaky/fwd_leaky が既存 2 経路の組合せであること
+  # S-bwd: 代替勾配は損失の勾配ではないので有限差分照合は不可（spec §6）。
+  # 手置きの負側ユニット 1 個で §2 の表どおりを検査する。
+  #   BL: delta_v_i == 0 厳密 / delta_b_i, delta_w_i が閉形式 -lr*2*delta*v_i*a*(1, x)
+  #       / 負側更新が a に厳密比例
+  #   FL: delta_w_i == delta_b_i == 0 厳密 / delta_v_i == -lr*2*delta*a*z
+  # spec §6 の字義「a*(leaky 腕の負側更新) と一致」は成立しない（leaky は forward も
+  # 変わるので同一状態でも delta = yhat-y が違う）。比の基準を「同じ BL 経路の a=1」に
+  # 取り直す。spec §6.3 の追補 2 に記録する
+  s_bwd_closed_form_tol: 0.0                # bit 一致を要求する
+  s_bwd_slope_probe: [0.0, 0.1, 0.2, 1.0]
+  s_wd_lambda: 1.0e-3
+  s_wd_ulp_factor: 4.0
+  s_taut_check: true
+  s_log_b_steps: 30000                      # 追加ロガー有無の 2 走が bit 一致
+  s_ref_hash_check: true                    # 親 provenance.json の output_sha256 と全数照合
+  s_ref_remote_check: true                  # 親 commit がリモートに在ることの確認（運用ルール §2）
+  omp_num_threads: 1
+  s6_floor_calibration: false               # 継承のみ
+
+output:
+  dir: results/bwd_leak_0902
+  verdict_csv: true
+  layer_stats_csv: true
+  s_distribution_csv: true
+  revival_csv: true
