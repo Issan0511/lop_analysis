@@ -1,0 +1,530 @@
+spec: specs/spec_bwd_leak_0902.md
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  generator_offset: 0
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+activation:
+  relu:
+    name: relu
+  leaky:
+    name: leaky_relu
+    slope: 0.1
+    forward: where(z>0, z, slope*z)
+    derivative: where(z>0, 1, slope)
+  bwd_leaky:
+    name: bwd_leaky
+    slope: 0.1
+    forward: relu
+    derivative: leaky
+    is_true_gradient: false
+  fwd_leaky:
+    name: fwd_leaky
+    slope: 0.1
+    forward: leaky
+    derivative: relu
+    is_true_gradient: false
+  autograd: false
+  consumes_rng: false
+bias_wd:
+  wd_b_lambda: 0.001
+  applies_to: hidden_bias_only
+  form: plain_l2_gradient
+  decoupled: false
+  calibrated_for_this_system: false
+  inherited_from: results/bias_wd_0901
+intervention:
+  name: oracle_fixed_mu_offset
+  oracle: true
+  consumes_rng: false
+  center_alpha_compat: 0.01
+  is_ema_centering: false
+arms:
+- name: BL_933
+  stage: 1
+  activation: bwd_leaky
+  wd_b: 0.0
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 2.333
+  target_dose: 9.33
+- name: BL_1216
+  stage: 1
+  activation: bwd_leaky
+  wd_b: 0.0
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: FL_933
+  stage: 1
+  activation: fwd_leaky
+  wd_b: 0.0
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 2.333
+  target_dose: 9.33
+- name: FL_1216
+  stage: 1
+  activation: fwd_leaky
+  wd_b: 0.0
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: RW_933
+  stage: 2
+  activation: relu
+  wd_b: 0.001
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 2.333
+  target_dose: 9.33
+- name: RW_1216
+  stage: 2
+  activation: relu
+  wd_b: 0.001
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: BLW_933
+  stage: 2
+  activation: bwd_leaky
+  wd_b: 0.001
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 2.333
+  target_dose: 9.33
+- name: BLW_1216
+  stage: 2
+  activation: bwd_leaky
+  wd_b: 0.001
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+staging:
+  stage1_arms:
+  - BL_933
+  - BL_1216
+  - FL_933
+  - FL_1216
+  stage2_arms:
+  - RW_933
+  - RW_1216
+  - BLW_933
+  - BLW_1216
+  minimal_stage1_arms:
+  - BL_1216
+  - FL_1216
+  preferred_single_dose: '1216'
+  outdir_per_stage: true
+  single_dose_requires_dose_in_citation: true
+controls:
+  reference_run: results/gate_dose_0830
+  same_run_as_new_arms: false
+  caveat: controls_are_committed_values_from_a_separate_run
+  arms:
+    R_933:
+      activation: relu
+      wd_b: 0.0
+      target_dose: 9.33
+      expected_onset_5m: 10
+    R_1216:
+      activation: relu
+      wd_b: 0.0
+      target_dose: 12.16
+      expected_onset_5m: 10
+    LR_933:
+      activation: leaky_relu
+      wd_b: 0.0
+      target_dose: 9.33
+      expected_onset_5m: 0
+    LR_1216:
+      activation: leaky_relu
+      wd_b: 0.0
+      target_dose: 12.16
+      expected_onset_5m: 0
+  endpoint_source: verdict.csv
+  endpoint_columns:
+  - U_1m_seed_values
+  - U_5m_seed_values
+  - n_onset_1m
+  - n_onset_5m
+  unit_source: results/gate_dose_0830/logs/{arm}_seed{seed}.npz
+  unit_arrays:
+  - layer1_M
+  - layer1_B
+  - layer1_denom
+  - layer1_p_hat
+  - layer1_zbar
+  - layer1_w_norm
+  verify_reference_hashes: true
+phase1:
+  task_period: 10000
+  early_tasks:
+  - 2
+  - 11
+  late_tasks_5m:
+  - 491
+  - 500
+  window_1m_tasks:
+  - 91
+  - 100
+  window_points_are_task_ends_only: true
+  onset_threshold: 0.05
+  onset_present_min: 5
+  unfit_floor: 1.0e-16
+  recalibrate_floor: false
+  bootstrap_B: 10000
+  bootstrap_seed: 20260905
+  ci_method: percentile_primary_studentized_secondary
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+bwd_leak:
+  onset_states:
+  - zero
+  - mid
+  - present
+  onset_zero_max: 0
+  onset_present_min: 5
+  verdict_arms_bl:
+  - BL_933
+  - BL_1216
+  verdict_arms_fl:
+  - FL_933
+  - FL_1216
+  verdict_arms_blw:
+  - BLW_933
+  - BLW_1216
+  verdict_arms_rw:
+  - RW_933
+  - RW_1216
+  v1_map:
+    zero_present: GRADIENT_CARRIES
+    present_zero: OUTPUT_CARRIES
+    zero_zero: EITHER_SUFFICES
+    present_present: BOTH_REQUIRED
+    zero_mid: PARTIAL
+    mid_zero: PARTIAL
+    mid_mid: PARTIAL
+    mid_present: PARTIAL
+    present_mid: PARTIAL
+  v2_not_applicable_when_bl: zero
+  v2_map:
+    zero_present: RESTORING_FORCE_REQUIRED
+    zero_zero: WD_B_SUFFICIENT_ALONE
+    mid_zero: WD_B_SUFFICIENT_ALONE
+    present_zero: WD_B_SUFFICIENT_ALONE
+    present_present: COMPROMISE_FAILS
+    present_mid: COMPROMISE_FAILS
+    zero_mid: PARTIAL
+    mid_mid: PARTIAL
+    mid_present: PARTIAL
+  control_expected_onset_5m:
+    R_933: 10
+    R_1216: 10
+    LR_933: 0
+    LR_1216: 0
+  saturation_guard: report_levels_as_coequal_when_binary_saturates
+  emit_co_satisfied_labels: true
+  emit_raw_onset_triple: true
+  p3prime_contrasts:
+  - - BL_933
+    - R_933
+  - - BL_1216
+    - R_1216
+  - - FL_933
+    - R_933
+  - - FL_1216
+    - R_1216
+  - - BLW_933
+    - R_933
+  - - BLW_1216
+    - R_1216
+  - - RW_933
+    - R_933
+  - - RW_1216
+    - R_1216
+  p3prime_delta_contrasts:
+  - - BLW_933
+    - BL_933
+  - - BLW_1216
+    - BL_1216
+  p5_contrasts:
+  - - BL_933
+    - LR_933
+  - - BL_1216
+    - LR_1216
+  - - FL_933
+    - LR_933
+  - - FL_1216
+    - LR_1216
+  p5_equivalence_margin: 0.15
+  p5_margin_recalibrated_for_this_system: false
+  p5_labels:
+    equivalent: EQUIV_FWD
+    short_of_lr: SHORT_OF_LR
+    inconclusive: INCONCLUSIVE_WIDE
+    order:
+    - equivalent
+    - short_of_lr
+    - inconclusive
+  p5_emit_ci_below_zero_flag: true
+  p5_sign_test_report_only: true
+  p6_contrasts:
+  - dose: '933'
+    a:
+    - BLW_933
+    - BL_933
+    b:
+    - RW_933
+    - R_933
+  - dose: '1216'
+    a:
+    - BLW_1216
+    - BL_1216
+    b:
+    - RW_1216
+    - R_1216
+  p6_orientation: standard_interaction
+  p6_emit_label: false
+  p6_in_verdict: false
+  ceiling_baseline_spread_flag_dex: 3.0
+  ceiling_baseline_window:
+  - early_tasks
+  - window_1m_tasks
+  revival:
+    arms:
+    - BL_933
+    - BL_1216
+    - BLW_933
+    - BLW_1216
+    - FL_933
+    - FL_1216
+    definition: p_hat_zero_to_positive_between_adjacent_records
+    primary_condition: same_task_and_flip_state_unchanged
+    also_report: across_task_boundary
+    report:
+    - events_total
+    - units_distinct
+    - rate_per_unit_record
+    controls:
+    - R_933
+    - R_1216
+    expect_fl_zero: true
+    in_verdict: false
+  freeze_rates:
+    bl_arms:
+    - BL_933
+    - BL_1216
+    - BLW_933
+    - BLW_1216
+    bl_definition: delta_v_i_equals_zero_between_adjacent_records
+    fl_arms:
+    - FL_933
+    - FL_1216
+    fl_definition: delta_b_i_equals_zero_between_adjacent_records
+    window: late_tasks_5m
+    cross_check_against: strict_dead
+    in_verdict: false
+  fl_fixed_feature:
+    arms:
+    - FL_933
+    - FL_1216
+    metric: median_abs_v_of_submerged_units
+    compare_to:
+    - R_933
+    - R_1216
+    window: late_tasks_5m
+    in_verdict: false
+  timeseries_report_only:
+  - strict_dead
+  - submerged_frac
+  - alive
+  - eff_rank
+  - w_norm
+  - b_median
+  - median_M
+  - median_B
+  - preact_sd_median
+  - eval_loss_exact
+  primary_covariate: w_norm
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    rescue: none
+    v1_required_arms:
+    - BL
+    - FL
+    v2_required_arms:
+    - BLW
+    - RW
+    inconclusive_label: INCONCLUSIVE_DIVERGENCE
+  s_distribution:
+    log_branch: A
+    definition:
+      s: M_plus_B
+      M: w_dot_mu_over_denom
+      B: b_over_denom
+      denom: sqrt_w_Sigma_w
+    window: late_tasks_5m
+    aggregation_order:
+    - unit
+    - seed_internal_median_per_record
+    - mean_over_window_records
+    - median_over_seeds
+    unit_sets:
+    - all
+    - p_hat_positive
+    min_units_per_seed_for_subset: 3
+    nan_aware_median: true
+    emit_both_median_s_and_median_M_plus_median_B: true
+    emit_denom_median: true
+    emit_raw_series:
+    - zbar
+    - wmu
+    - b_raw
+    - denom
+    recompute_all_arms_from_unit_arrays: true
+    p7a_arms:
+    - BL_933
+    - BL_1216
+    - FL_933
+    - FL_1216
+    - RW_933
+    - RW_1216
+    - BLW_933
+    - BLW_1216
+    - R_933
+    - R_1216
+    - LR_933
+    - LR_1216
+    p7b_contrasts:
+    - - BL_933
+      - R_933
+    - - BL_1216
+      - R_1216
+    p7c_contrasts:
+    - - RW_933
+      - R_933
+    - - RW_1216
+      - R_1216
+    - - BLW_933
+      - BL_933
+    - - BLW_1216
+      - BL_1216
+    p7d_contrasts:
+    - - BLW_933
+      - BL_933
+    - - BLW_1216
+      - BL_1216
+    - - BLW_933
+      - RW_933
+    - - BLW_1216
+      - RW_1216
+    - - FL_933
+      - BL_933
+    - - FL_1216
+      - BL_1216
+    p7c_equivalence_margin_s_units: 0.15
+    p7c_margin_is_not_dex: true
+    p7c_margin_recalibrated: false
+    channels:
+    - median_M
+    - median_B
+    label_channels: false
+    in_verdict: false
+sanity:
+  s_pair_reference: results/gate_dose_0830
+  s_pair_arm_map:
+    BL_933: R_933
+    BL_1216: R_1216
+    FL_933: R_933
+    FL_1216: R_1216
+    RW_933: R_933
+    RW_1216: R_1216
+    BLW_933: R_933
+    BLW_1216: R_1216
+  s_pair_steps: 30000
+  s_pair_match_by: seed_init_hash
+  s_limit_steps: 30000
+  s_dose_rel_tol: 1.0e-10
+  s_cross_grid:
+  - -30.0
+  - 30.0
+  - 4001
+  s_bwd_closed_form_tol: 0.0
+  s_bwd_slope_probe:
+  - 0.0
+  - 0.1
+  - 0.2
+  - 1.0
+  s_wd_lambda: 0.001
+  s_wd_ulp_factor: 4.0
+  s_taut_check: true
+  s_log_b_steps: 30000
+  s_ref_hash_check: true
+  s_ref_remote_check: true
+  omp_num_threads: 1
+  s6_floor_calibration: false
+output:
+  dir: results/bwd_leak_0902
+  verdict_csv: true
+  layer_stats_csv: true
+  s_distribution_csv: true
+  revival_csv: true
