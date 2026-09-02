@@ -1,6 +1,7 @@
 """p3_analyze_0902: p3_extend_0902（延長 15M）と valley_clamp_0902（谷埋め）の集計。
 
-事前登録: vault `可塑性喪失/論点/現象3_非ReLU戻り道の対応づけ_0902.md` §7（commit 00c5026）。
+事前登録: vault `可塑性喪失/論点/現象3_非ReLU戻り道の対応づけ_0902.md` §7.1／§7.2（commit 00c5026）、
+§7.3 床ゼロ谷埋め valley_clamp0_0902（commit dec4ebc・§7.2 直下の「7.3 費用と並列」とは別節）。
 窓・U・発症の定義は宿主 gate_dial_0902 / gate_dose_0830 を逐語で使う:
   U^(10)_k = タスク k-9..k の**タスク終端記録**（step % 10000 == 0）の unfit 平均、床 1e-16、
   発症 = U >= 0.05。凍結 = |E_x phi'| < 1e-6（layer1_mob）。沈下 = p_hat == 0。
@@ -245,7 +246,11 @@ def _contrast(a: list, b: list, rng) -> dict:
 
 
 def analyze_clamp0(outdir: Path) -> dict:
-    """床ゼロの谷埋め（vault 論点ノート §7.3・事前登録）。対照は元腕・clamp 腕・ReLU。"""
+    """床ゼロの谷埋め（vault 論点ノート dec4ebc §7.3・事前登録）。対照は元腕・clamp 腕・ReLU。
+
+    登録表の行 3（clamp0 − 元 > −0.15 → FLOOR_CARRIES_RESCUE）は paired 中央値で評価する
+    （§7.2 の level 判定と同じ約束）。行 1 は CI、行 2 は中央値と登録文どおり。
+    """
     cfg = _cfg()
     floor, thr = float(cfg["phase1"]["unfit_floor"]), float(cfg["phase1"]["onset_threshold"])
     rng = np.random.default_rng(BOOT_SEED)
@@ -310,6 +315,23 @@ def selftest_clamp() -> None:
               f"{'OK' if abs(med - table[ref]) < 1e-9 else 'MISMATCH'}")
 
 
+def _reference_paths(exp: str) -> list[Path]:
+    """判定が読む対照ログ（git 管理外）。provenance に sha256 を残す。"""
+    paths: list[Path] = []
+    if exp == "clamp":
+        for ref in CLAMP_REF.values():
+            paths += [DIAL_LOGS / f"{ref}_seed{s}.npz" for s in range(10)]
+    elif exp == "clamp0":
+        for orig, clamp in CLAMP0_REF.values():
+            paths += [DIAL_LOGS / f"{orig}_seed{s}.npz" for s in range(10)]
+            paths += [CLAMP_LOGS / f"{clamp}_seed{s}.npz" for s in range(10)]
+        paths += [DOSE_LOGS / f"R_1216_seed{s}.npz" for s in range(10)]
+    elif exp == "extend":
+        for arm, d in EXPS["extend"]["reference"].items():
+            paths += [Path(ROOT) / d / f"{arm}_seed{s}.npz" for s in range(10)]
+    return paths
+
+
 def write_outputs(exp: str, outdir: Path, res: dict) -> None:
     _write_csv(outdir / "verdict.csv", [dict(verdict=res["verdict"], **r) for r in res["arms"]])
     _write_csv(outdir / "seed_values.csv", res["seeds"])
@@ -318,6 +340,7 @@ def write_outputs(exp: str, outdir: Path, res: dict) -> None:
     prov = dict(exp=exp, git_head=_git_head(), verdict=res["verdict"],
                 config_sha256=_sha(CONFIG), window_definition="task-end records, U^(10)",
                 logs={p.name: _sha(p) for p in sorted((outdir / "logs").glob("*.npz"))},
+                reference_logs={str(p.relative_to(ROOT)): _sha(p) for p in _reference_paths(exp) if p.exists()},
                 arm_status={p.name: json.loads(p.read_text()) for p in sorted((outdir / "arm_status").glob("*_done.json"))},
                 sanity=res.get("sanity"))
     (outdir / "provenance.json").write_text(json.dumps(prov, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -333,8 +356,12 @@ def write_outputs(exp: str, outdir: Path, res: dict) -> None:
         lines += ["", "## 事前登録の予測（vault 00c5026 §7.1）", "", "| arm | item | value | hit |", "|---|---|---|---|"]
         for p in res["preds"]:
             lines.append(f"| {p['arm']} | {p['item']} | {p['value']:.4g} | {'✓' if p['hit'] else '✗'} |")
-    lines += ["", "引用上の注意: 用量 12.16・1 層・幅 100・seed 0–9。0/10 は片側 95% 上限 0.2589 の強さ。"
-              "延長走の対照 2 腕は gate_dose_0830 と同一の init・入力列（S-ext で bit 一致を検査）。"]
+    lines += ["", "引用上の注意: 用量 12.16・1 層・幅 100・seed 0–9。0/10 は片側 95% 上限 0.2589 の強さ。"]
+    if exp == "extend":
+        lines.append("延長走の対照 2 腕は gate_dose_0830 と同一の init・入力列（S-ext で bit 一致を検査）。")
+    else:
+        lines.append("対照は別走の committed ログ（init・教師・入力列・flip は同一、軌道は step 1 以降で分岐）。"
+                     "対照ログの sha256 は provenance.json の reference_logs。")
     (outdir / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
 

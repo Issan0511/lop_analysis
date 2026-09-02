@@ -111,10 +111,17 @@ def run_arm(exp: str, arm: str, steps: int | None, outdir: Path | None) -> dict:
         print(f"[{arm}] done marker found; nothing to do", flush=True)
         return json.loads(done.read_text())
     t0 = time.time()
+    head_launch = _git_head()
+    try:
+        dirty = subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no", "--", "src"],
+                                        cwd=ROOT, text=True).strip()
+    except (OSError, subprocess.CalledProcessError):
+        dirty = "unknown"
     res = _run_arm(cfg, arm, "cpu", out, seeds, total)
     status = dict(exp=exp, arm=arm, total_steps=total, seeds=seeds,
                   status=res.get("status"), elapsed_sec=res.get("elapsed_sec"),
                   wall_sec=time.time() - t0, git_head=_git_head(),
+                  git_head_at_launch=head_launch, src_dirty_at_launch=dirty,
                   arm_block=next(a for a in cfg["arms"] if a["name"] == arm))
     done.parent.mkdir(parents=True, exist_ok=True)
     done.write_text(json.dumps(status, indent=2, ensure_ascii=False), encoding="utf-8")
