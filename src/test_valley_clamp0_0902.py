@@ -41,3 +41,30 @@ def test_readout_gradient_vanishes_for_floored_units():
     z = torch.tensor([-5.0, -2.0, -0.9], dtype=torch.float64)
     assert (_net("gelu_clamp0", 1.0).act_fn(z) == 0).all()
     assert (_net("gelu_clamp", 1.0).act_fn(z) != 0).all()
+
+
+@pytest.mark.parametrize("base", ["silu", "gelu"])
+def test_training_path_readout_gradient_is_exactly_zero_for_floored_units(base):
+    # 監査の指摘: 訓練経路（grads_centered_elu）で v の勾配 2*delta*a が床ユニットで厳密 0 になることを検査する。
+    from .elu_swamp import grads_centered_elu
+    R, H, D = 3, 6, 4
+    gen = torch.Generator().manual_seed(1)
+    for act, expect_zero in ((base + "_clamp0", True), (base + "_clamp", False)):
+        net = VecMLPL(R, [H], D, torch.Generator().manual_seed(0), "cpu").set_activation(act, 1.0, "alpha_exp")
+        net.bs[0][:, :3] = -20.0                      # 3 ユニットを床（全パターン z <= z_c）へ
+        x = torch.rand(R, D, generator=gen)
+        pre = torch.einsum("rhd,rd->rh", net.Ws[0], x) + net.bs[0]
+        a = net.act_fn(pre)
+        delta = torch.tensor([0.7, -1.3, 2.1])
+        gWs, gbs, gv, gc = grads_centered_elu(net, [x], [pre], [a], delta)
+        floored = pre <= -VecMLPL.VALLEY_ZERO[act] / 1.0
+        assert floored[:, :3].all()
+        assert torch.equal(gv, 2.0 * delta[:, None] * a)
+        assert (gbs[0][floored] == 0).all() and (gWs[0][floored] == 0).all()   # w, b も止まる
+        if expect_zero:
+            assert (gv[floored] == 0).all()
+            v0 = net.v.clone()
+            net.v -= 0.01 * gv
+            assert torch.equal(net.v[floored], v0[floored])                     # v は bit 不変
+        else:
+            assert (gv[floored] != 0).all()                                     # clamp 版は床で v が動く
