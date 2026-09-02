@@ -1,0 +1,476 @@
+spec: specs/spec_phantom_wall_0902.md
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  generator_offset: 0
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+activation:
+  relu:
+    name: relu
+  bwd_reflect:
+    name: bwd_reflect
+    slope: 0.1
+    effective_negative_gate: -slope
+    forward: relu
+    derivative: where(z>0, 1, -slope)
+    is_true_gradient: false
+  bwd_quad:
+    name: bwd_quad
+    slope: 0.01
+    slope_is_not_a_slope: true
+    forward: relu
+    derivative: where(z>0, 1, slope*z)
+    is_true_gradient: false
+    crossover_depth_z: -10.0
+    gate_reaches_unity_at_z: -100.0
+  bwd_leaky_proj:
+    name: bwd_leaky_proj
+    slope: 0.1
+    forward: relu
+    derivative: where(z>0, 1, slope)
+    post_gradient_projection: true
+    projection_applies_to: submerged_units_only
+    w_rule: g_minus_mu_projection
+    b_rule: zero
+    v_rule: untouched
+    is_true_gradient: false
+  autograd: false
+  consumes_rng: false
+weight_decay_w:
+  lambda_w: 0.0001
+  applies_to: hidden_W_only
+  form: plain_l2_gradient
+  decoupled: false
+  calibrated_for_this_system: false
+intervention:
+  name: oracle_fixed_mu_offset
+  oracle: true
+  consumes_rng: false
+  center_alpha_compat: 0.01
+  is_ema_centering: false
+  mu_is_function_of_flip_state_only: true
+arms:
+- name: BLR_1216
+  activation: bwd_reflect
+  wd_w: 0.0
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: BLQ_1216
+  activation: bwd_quad
+  wd_w: 0.0
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: BLP_1216
+  activation: bwd_leaky_proj
+  wd_w: 0.0
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: BLRw_1216
+  activation: bwd_reflect
+  wd_w: 0.0001
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: BLQw_1216
+  activation: bwd_quad
+  wd_w: 0.0001
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: BLPw_1216
+  activation: bwd_leaky_proj
+  wd_w: 0.0001
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: RWw_1216
+  activation: relu
+  wd_w: 0.0001
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+phantom_types:
+  BLR:
+    plain: BLR_1216
+    spring: BLRw_1216
+    surrogate_constant: 0.1
+    surrogate_form: -a
+  BLQ:
+    plain: BLQ_1216
+    spring: BLQw_1216
+    surrogate_constant: 0.01
+    surrogate_form: a_Q*z
+  BLP:
+    plain: BLP_1216
+    spring: BLPw_1216
+    surrogate_constant: 0.1
+    surrogate_form: +a, mu-projected
+spring_control: RWw_1216
+blr_blq_contrast_registered: false
+controls:
+  arms:
+    R_1216:
+      source_run: results/gate_dose_0830
+      activation: relu
+      expected_onset_5m: 10
+    LR_1216:
+      source_run: results/gate_dose_0830
+      activation: leaky_relu
+      expected_onset_5m: 0
+    RW_1216:
+      source_run: results/bwd_leak_0902
+      activation: relu
+      expected_onset_5m: 10
+      note: b-WD 1e-3
+  endpoint_source: verdict.csv
+  endpoint_columns:
+  - U_1m_seed_values
+  - U_5m_seed_values
+  - n_onset_1m
+  - n_onset_5m
+  unit_arrays:
+  - layer1_M
+  - layer1_B
+  - layer1_denom
+  - layer1_p_hat
+  - layer1_zbar
+  - layer1_w_norm
+  cp95_source: results/gate_dose_0830/verdict.csv
+  verify_reference_hashes: true
+phase1:
+  task_period: 10000
+  early_tasks:
+  - 2
+  - 11
+  late_tasks_5m:
+  - 491
+  - 500
+  window_1m_tasks:
+  - 91
+  - 100
+  window_points_are_task_ends_only: true
+  onset_threshold: 0.05
+  onset_present_min: 5
+  unfit_floor: 1.0e-16
+  recalibrate_floor: false
+  bootstrap_B: 10000
+  bootstrap_seed: 20260906
+  ci_method: percentile_primary_studentized_secondary
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+phantom_wall:
+  onset_states:
+  - zero
+  - mid
+  - present
+  - diverged
+  onset_zero_max: 0
+  onset_present_min: 5
+  decision_table_rows:
+  - row: 1
+    X: diverged
+    Xw: any
+    RWw: any
+    verdict: PHANTOM_DIVERGES
+  - row: 2
+    X: zero
+    Xw: any
+    RWw: present
+    verdict: PHANTOM_RESCUES
+  - row: 3
+    X: present
+    Xw: zero
+    RWw: present
+    verdict: PHANTOM_NEEDS_SPRING
+  - row: 4
+    X: any
+    Xw: any
+    RWw: zero
+    verdict: WD_W_SUFFICIENT_ALONE
+  - row: 5
+    X: present
+    Xw: present
+    RWw: present
+    verdict: PHANTOM_DEAF
+  - row: 6
+    X: any
+    Xw: any
+    RWw: any
+    verdict: PARTIAL
+  emit_co_satisfied_labels: true
+  emit_raw_state_triple: true
+  control_expected_onset_5m:
+    R_1216: 10
+    LR_1216: 0
+    RW_1216: 10
+  saturation_guard:
+    trigger_when_spring_control_not: present
+    action: promote_levels_to_coequal
+    also_flag:
+    - P8
+    - P3prime
+  p3prime_contrasts:
+  - - BLR_1216
+    - R_1216
+  - - BLQ_1216
+    - R_1216
+  - - BLP_1216
+    - R_1216
+  - - BLRw_1216
+    - R_1216
+  - - BLQw_1216
+    - R_1216
+  - - BLPw_1216
+    - R_1216
+  - - RWw_1216
+    - R_1216
+  p5_contrasts:
+  - - BLR_1216
+    - LR_1216
+  - - BLQ_1216
+    - LR_1216
+  - - BLP_1216
+    - LR_1216
+  - - BLRw_1216
+    - LR_1216
+  - - BLQw_1216
+    - LR_1216
+  - - BLPw_1216
+    - LR_1216
+  p5_equivalence_margin: 0.15
+  p5_margin_recalibrated_for_this_system: false
+  p5_labels:
+    equivalent: EQUIV_LR
+    short_of_lr: SHORT_OF_LR
+    inconclusive: INCONCLUSIVE_WIDE
+    order:
+    - equivalent
+    - short_of_lr
+    - inconclusive
+  p5_emit_ci_below_zero_flag: true
+  p5_sign_test_report_only: true
+  p8_contrasts:
+  - type: BLR
+    a:
+    - BLRw_1216
+    - BLR_1216
+    b:
+    - RWw_1216
+    - R_1216
+  - type: BLQ
+    a:
+    - BLQw_1216
+    - BLQ_1216
+    b:
+    - RWw_1216
+    - R_1216
+  - type: BLP
+    a:
+    - BLPw_1216
+    - BLP_1216
+    b:
+    - RWw_1216
+    - R_1216
+  p8_emit_label: false
+  p8_in_verdict: false
+  p8_cross_type_difference_registered: false
+  ceiling_baseline_spread_flag_dex: 3.0
+  phat_histogram:
+    arms:
+    - BLR_1216
+    - BLQ_1216
+    - BLP_1216
+    - BLRw_1216
+    - BLQw_1216
+    - BLPw_1216
+    - RWw_1216
+    - R_1216
+    - LR_1216
+    - RW_1216
+    window: late_tasks_5m
+    bin_width: 0.03125
+    n_bins: 33
+    blr_predicted_peak: 0.0909
+  submerged_frac:
+    arms: all
+    window: late_tasks_5m
+  w_growth_exponent:
+    units: submerged_at_tail
+    metric: seed_median_of_unit_w_norm
+    fit: log_log_least_squares
+    range_steps:
+    - 1000000
+    - 5000000
+    min_record_points: 10
+    emit:
+    - slope
+    - r_squared
+    - n_points
+    insufficient_data_label: INSUFFICIENT_DATA
+    min_submerged_units_per_seed: 3
+  blp_mu_invariance:
+    arms:
+    - BLP_1216
+    - BLPw_1216
+    primary_quantity: zbar
+    primary_tolerance: 1.0e-06
+    also_report:
+    - delta_s
+    - denom_growth_ratio
+    exclude_records_where_unit_fired: true
+    window: late_tasks_5m
+  revival:
+    definition: p_hat_zero_to_positive
+    primary_condition: same_task_and_flip_state_unchanged
+    also_report: across_task_boundary
+    in_verdict: false
+  freeze_rates:
+    definition: delta_v_zero_between_adjacent_records
+    window: late_tasks_5m
+    cross_check_against: strict_dead
+    in_verdict: false
+  timeseries_report_only:
+  - strict_dead
+  - submerged_frac
+  - alive
+  - eff_rank
+  - w_norm
+  - b_median
+  - median_M
+  - median_B
+  - preact_sd_median
+  - eval_loss_exact
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    rescue: none
+    inconclusive_label: INCONCLUSIVE_DIVERGENCE
+  s_distribution:
+    log_branch: A
+    window: late_tasks_5m
+    aggregation_order:
+    - unit
+    - seed_internal_median_per_record
+    - mean_over_window_records
+    - median_over_seeds
+    unit_sets:
+    - all
+    - p_hat_positive
+    min_units_per_seed_for_subset: 3
+    nan_aware_median: true
+    emit_both_median_s_and_median_M_plus_median_B: true
+    emit_denom_median: true
+    emit_raw_series:
+    - zbar
+    - wmu
+    - b_raw
+    - denom
+    recompute_all_arms_from_unit_arrays: true
+    p7_contrasts:
+    - - RWw_1216
+      - R_1216
+    - - BLR_1216
+      - R_1216
+    - - BLQ_1216
+      - R_1216
+    - - BLP_1216
+      - R_1216
+    channels:
+    - median_M
+    - median_B
+    label_channels: false
+    in_verdict: false
+sanity:
+  s_pair_reference: results/gate_dose_0830
+  s_pair_reference_arm: R_1216
+  s_pair_steps: 30000
+  s_pair_match_by: seed_init_hash
+  s_limit_steps: 30000
+  s_dose_rel_tol: 1.0e-10
+  s_cross_grid:
+  - -30.0
+  - 30.0
+  - 4001
+  s_limit_check_signbit: true
+  s_bwd_closed_form_tol: 0.0
+  s_proj_tol: 1.0e-12
+  s_proj_gate_precision: float64
+  s_proj_report_float32: true
+  s_proj_mu_rel_tol: 1.0e-10
+  s_wd_w_ulp_factor: 4.0
+  s_refl_steps: 30000
+  s_refl_report_only: true
+  s_refl_is_required_gate: false
+  s_taut_check: true
+  s_ref_hash_check: true
+  s_ref_remote_check: true
+  omp_num_threads: 1
+  s6_floor_calibration: false
+output:
+  dir: results/phantom_wall_0902
+  verdict_csv: true
+  layer_stats_csv: true
+  s_distribution_csv: true
+  phat_hist_csv: true
+  revival_csv: true

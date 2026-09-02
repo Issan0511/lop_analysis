@@ -1,0 +1,39 @@
+{
+  "status": "NUMERIC_DIVERGENCE",
+  "arm": "BLP_1216",
+  "detected_step": 1090000,
+  "detected_task": 109,
+  "probe_every": 1000,
+  "bad_seeds": [
+    9
+  ],
+  "nonfinite_tensors": {
+    "9": [
+      "net.Ws.1",
+      "net.bs.1",
+      "net.v",
+      "net.c"
+    ]
+  },
+  "action": "arm_stopped_no_rescue",
+  "registered_total_steps": 5000000,
+  "registered_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "activation": "bwd_leaky_proj",
+  "act_alpha": 0.1,
+  "wd_w": 0.0,
+  "elapsed_sec": 226.8392412662506,
+  "detection": "nonfinite_training_state_at_probe",
+  "partial_logs_excluded": true,
+  "rescue": "none"
+}

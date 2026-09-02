@@ -1344,12 +1344,18 @@ def analyze(cfg: dict, outdir: Path, sanity: dict, elapsed: dict,
             per_seed=per_seed)
 
     # --- P7 ---
+    # spec §5.3 は「bwd_leak §5.4 の集約順そのまま」と登録している。関数を複製すると
+    # 集約順が分岐しうるので、**凍結済みの _p7_seed_values をそのまま呼ぶ**。
+    # あちらは設定を cfg["bwd_leak"]["s_distribution"] から引くので、本走の
+    # phantom_wall セクションを同名で見せるだけのエイリアスを渡す。
+    p7_cfg = dict(cfg)
+    p7_cfg["bwd_leak"] = cfg["phantom_wall"]
     p7 = {}
     for arm in list(complete) + list(CONTROL_ORDER):
         src = outdir / "logs" if arm in complete else ref_logs[arm]
         if not all((src / f"{arm}_seed{s}.npz").exists() for s in seeds):
             continue
-        per_seed = [_p7_seed_values(src / f"{arm}_seed{s}.npz", cfg) for s in seeds]
+        per_seed = [_p7_seed_values(src / f"{arm}_seed{s}.npz", p7_cfg) for s in seeds]
         p7[arm] = {k: np.asarray([r[k] for r in per_seed], dtype=np.float64)
                    for k in per_seed[0] if k.startswith("median")}
     p7_contrasts = {}
