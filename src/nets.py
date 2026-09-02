@@ -13,6 +13,20 @@ import torch
 from .envs import kaiming_mlp_params
 
 
+_INV_SQRT2 = 1.0 / math.sqrt(2.0)
+_INV_SQRT2PI = 1.0 / math.sqrt(2.0 * math.pi)
+
+
+def _std_normal_cdf(t):
+    """``Phi(t)``。GELU は exact(erf) で書く。tanh 近似は使わない。"""
+    return 0.5 * (1.0 + torch.erf(t * _INV_SQRT2))
+
+
+def _std_normal_pdf(t):
+    """``phi(t)``。float32 では ``|t| > ~13.2`` で厳密 0 になる（S-num が測る）。"""
+    return torch.exp(-0.5 * t * t) * _INV_SQRT2PI
+
+
 def _check_wd_b(wd_b, freeze_bias):
     """bias 専用 weight decay 係数の検証 [bias_wd_0901 §6]。
 
@@ -136,6 +150,17 @@ class VecMLPL:
     arms differing only in ``act`` share init, teacher, input stream and flip
     trajectory bit for bit.
 
+    ``"silu"`` and ``"gelu"`` are the two smooth families that converge to ReLU
+    as their steepness ``act_alpha`` (= beta) grows [gate_dial_0902 §4.3].  Both
+    are written in closed form like every other branch (no autograd) and both
+    are genuine derivatives of their own forward map, so ``S-fd`` can check them
+    against a float64 central difference.  ``silu`` is ``z*sigmoid(beta*z)``
+    with derivative ``sigmoid(b z)*(1 + b z*(1 - sigmoid(b z)))``; ``gelu`` is
+    the **exact** (erf) form ``z*Phi(beta*z)`` with derivative
+    ``Phi(b z) + (b z)*phi(b z)``.  The tanh approximation is not used.  Unlike
+    ReLU/leaky/ELU both have a negative-side zero of the derivative (the
+    "valley"), which is why they are in the dial experiment at all.
+
     ``"bwd_leaky"`` and ``"fwd_leaky"`` split the ReLU kink's two directions
     [bwd_leak_0902 §4.3].  ``bwd_leaky`` is forward-strict-ReLU with a leaky
     *surrogate* backward slope (output 0, gradient ``a``); ``fwd_leaky`` is the
@@ -147,8 +172,11 @@ class VecMLPL:
     are made of.
     """
 
-    ACTIVATIONS = ("relu", "elu", "leaky_relu", "bwd_leaky", "fwd_leaky")
+    ACTIVATIONS = ("relu", "elu", "leaky_relu", "bwd_leaky", "fwd_leaky",
+                   "silu", "gelu")
     SURROGATE_ACTIVATIONS = ("bwd_leaky", "fwd_leaky")
+    # phi' の零点を負側に持つ族（谷）。act_alpha は傾きではなく鋭さ beta。
+    STEEPNESS_ACTIVATIONS = ("silu", "gelu")
 
     def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
                  act_grad_form="alpha_exp", wd_b=0.0):
@@ -213,6 +241,10 @@ class VecMLPL:
             raise ValueError("leaky ReLU slope must be in [0, 1]")
         if act in self.SURROGATE_ACTIVATIONS and not 0.0 <= float(act_alpha) <= 1.0:
             raise ValueError(f"{act} slope must be in [0, 1]")
+        if act in self.STEEPNESS_ACTIVATIONS:
+            beta = float(act_alpha)
+            if not (math.isfinite(beta) and beta > 0.0):
+                raise ValueError(f"{act} beta must be a finite positive float")
         if act_grad_form is not None:
             if act_grad_form not in self.GRAD_FORMS:
                 raise ValueError(f"unknown ELU derivative form {act_grad_form!r}")
@@ -233,6 +265,11 @@ class VecMLPL:
         if self.act == "fwd_leaky":
             # forward は leaky。上の "leaky_relu" 分岐と同一の式を書く（S-cross）。
             return torch.where(pre > 0, pre, self.act_alpha * pre)
+        if self.act == "silu":
+            # torch.sigmoid は両裾で安定。exp(-beta*z) を裸で書かない（S-num）。
+            return pre * torch.sigmoid(self.act_alpha * pre)
+        if self.act == "gelu":
+            return pre * _std_normal_cdf(self.act_alpha * pre)
         # expm1 keeps the small-|z| negative branch accurate; the positive
         # branch of `where` is selected before any overflow of expm1 matters.
         return torch.where(pre > 0, pre, self.act_alpha * torch.expm1(pre))
@@ -266,6 +303,12 @@ class VecMLPL:
         if self.act == "fwd_leaky":
             # backward は厳密 ReLU。上の "relu" 分岐と同一の式（S-cross）。
             return (pre > 0).to(pre.dtype)
+        if self.act == "silu":
+            s = torch.sigmoid(self.act_alpha * pre)
+            return s * (1.0 + self.act_alpha * pre * (1.0 - s))
+        if self.act == "gelu":
+            t = self.act_alpha * pre
+            return _std_normal_cdf(t) + t * _std_normal_pdf(t)
         if self.act_grad_form == "activation_plus_alpha":
             return torch.where(pre > 0, torch.ones_like(a), a + self.act_alpha)
         return torch.where(pre > 0, torch.ones_like(pre),
