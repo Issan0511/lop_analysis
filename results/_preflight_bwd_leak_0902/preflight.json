@@ -1,0 +1,2275 @@
+{
+  "pass_": true,
+  "S1_omp": {
+    "expected": "1",
+    "env": "1",
+    "torch_num_threads": 1,
+    "pass_": true
+  },
+  "S_cross": {
+    "pass_": true,
+    "grid_points": 4001,
+    "slope": 0.1,
+    "rows": [
+      {
+        "pair": "bwd_leaky.forward == relu.forward",
+        "equal": true
+      },
+      {
+        "pair": "bwd_leaky.backward == leaky.backward",
+        "equal": true
+      },
+      {
+        "pair": "fwd_leaky.forward == leaky.forward",
+        "equal": true
+      },
+      {
+        "pair": "fwd_leaky.backward == relu.backward",
+        "equal": true
+      },
+      {
+        "pair": "bwd_leaky.forward != leaky.forward",
+        "equal": true
+      },
+      {
+        "pair": "fwd_leaky.backward != leaky.backward",
+        "equal": true
+      }
+    ]
+  },
+  "S_bwd": {
+    "pass_": true,
+    "tolerance": 0.0,
+    "comparison": "bit identity at the gradient level and on the post-step parameter values, not on differences",
+    "slope": 0.1,
+    "rows": [
+      {
+        "arm": "BL",
+        "negative_units": [
+          0,
+          2
+        ],
+        "positive_units": [
+          1
+        ],
+        "gv_zero_on_negative": true,
+        "gb_gW_closed_form": true,
+        "slope_proportional": true,
+        "applied_step_bit_exact": true,
+        "v_unchanged_on_negative": true,
+        "by_slope": [
+          {
+            "slope": 0.0,
+            "delta_slope_independent": true,
+            "negative_gb_proportional": true,
+            "positive_gb_unchanged": true,
+            "gb_negative": [
+              -0.0,
+              -0.0
+            ]
+          },
+          {
+            "slope": 0.1,
+            "delta_slope_independent": true,
+            "negative_gb_proportional": true,
+            "positive_gb_unchanged": true,
+            "gb_negative": [
+              -0.024229492992162704,
+              -0.008653390221297741
+            ]
+          },
+          {
+            "slope": 0.2,
+            "delta_slope_independent": true,
+            "negative_gb_proportional": true,
+            "positive_gb_unchanged": true,
+            "gb_negative": [
+              -0.04845898598432541,
+              -0.017306780442595482
+            ]
+          },
+          {
+            "slope": 1.0,
+            "delta_slope_independent": true,
+            "negative_gb_proportional": true,
+            "positive_gb_unchanged": true,
+            "gb_negative": [
+              -0.24229492247104645,
+              -0.08653390407562256
+            ]
+          }
+        ]
+      },
+      {
+        "arm": "FL",
+        "negative_units": [
+          0,
+          2
+        ],
+        "gb_gW_zero_on_negative": true,
+        "gv_closed_form": true,
+        "forward_is_leaky": true,
+        "gv_nonzero_on_negative": true,
+        "w_b_unchanged_on_negative": true
+      }
+    ],
+    "failures": []
+  },
+  "S_wd": {
+    "pass_": true,
+    "lam": 0.001,
+    "W_v_c_untouched": true,
+    "bias_delta_max_abs_err": 2.3607572074979544e-07,
+    "bias_delta_tol_ulp": 1.412074311701872e-06,
+    "bias_delta_signal": 2.961334575957153e-05
+  },
+  "S_log": {
+    "pass_": true,
+    "branch": "A",
+    "registered_branch": "A",
+    "reason": "per-unit layer1_M/B/denom/p_hat/zbar/w_norm are already stored at every record point in the committed parent logs; no re-run and no logger change is needed for P7a-P7d",
+    "sigma_tol": 1e-08,
+    "rows": [
+      {
+        "arm": "R_933",
+        "seed": 0,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.14787620306015015
+      },
+      {
+        "arm": "R_933",
+        "seed": 1,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.11553526669740677
+      },
+      {
+        "arm": "R_933",
+        "seed": 2,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.08487983793020248
+      },
+      {
+        "arm": "R_933",
+        "seed": 3,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.13683320581912994
+      },
+      {
+        "arm": "R_933",
+        "seed": 4,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.09790249913930893
+      },
+      {
+        "arm": "R_933",
+        "seed": 5,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.10797238349914551
+      },
+      {
+        "arm": "R_933",
+        "seed": 6,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.15611723065376282
+      },
+      {
+        "arm": "R_933",
+        "seed": 7,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.15258319675922394
+      },
+      {
+        "arm": "R_933",
+        "seed": 8,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.1308308094739914
+      },
+      {
+        "arm": "R_933",
+        "seed": 9,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.1684536337852478
+      },
+      {
+        "arm": "R_1216",
+        "seed": 0,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.14787620306015015
+      },
+      {
+        "arm": "R_1216",
+        "seed": 1,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.13326501846313477
+      },
+      {
+        "arm": "R_1216",
+        "seed": 2,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.11474885046482086
+      },
+      {
+        "arm": "R_1216",
+        "seed": 3,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.12535810470581055
+      },
+      {
+        "arm": "R_1216",
+        "seed": 4,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.10647028684616089
+      },
+      {
+        "arm": "R_1216",
+        "seed": 5,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.14064103364944458
+      },
+      {
+        "arm": "R_1216",
+        "seed": 6,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.1624634712934494
+      },
+      {
+        "arm": "R_1216",
+        "seed": 7,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.15312278270721436
+      },
+      {
+        "arm": "R_1216",
+        "seed": 8,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.13238608837127686
+      },
+      {
+        "arm": "R_1216",
+        "seed": 9,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.17792102694511414
+      },
+      {
+        "arm": "LR_933",
+        "seed": 0,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.14491631090641022
+      },
+      {
+        "arm": "LR_933",
+        "seed": 1,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.11133593320846558
+      },
+      {
+        "arm": "LR_933",
+        "seed": 2,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.10106596350669861
+      },
+      {
+        "arm": "LR_933",
+        "seed": 3,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.13683320581912994
+      },
+      {
+        "arm": "LR_933",
+        "seed": 4,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.10267233848571777
+      },
+      {
+        "arm": "LR_933",
+        "seed": 5,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.1308472752571106
+      },
+      {
+        "arm": "LR_933",
+        "seed": 6,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.1624634712934494
+      },
+      {
+        "arm": "LR_933",
+        "seed": 7,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.1457524299621582
+      },
+      {
+        "arm": "LR_933",
+        "seed": 8,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.12796388566493988
+      },
+      {
+        "arm": "LR_933",
+        "seed": 9,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.15846507251262665
+      },
+      {
+        "arm": "LR_1216",
+        "seed": 0,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.14045196771621704
+      },
+      {
+        "arm": "LR_1216",
+        "seed": 1,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.13326501846313477
+      },
+      {
+        "arm": "LR_1216",
+        "seed": 2,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.11474885046482086
+      },
+      {
+        "arm": "LR_1216",
+        "seed": 3,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.12593017518520355
+      },
+      {
+        "arm": "LR_1216",
+        "seed": 4,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.10691864788532257
+      },
+      {
+        "arm": "LR_1216",
+        "seed": 5,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.1437724381685257
+      },
+      {
+        "arm": "LR_1216",
+        "seed": 6,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.1624634712934494
+      },
+      {
+        "arm": "LR_1216",
+        "seed": 7,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.14717774093151093
+      },
+      {
+        "arm": "LR_1216",
+        "seed": 8,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.12513865530490875
+      },
+      {
+        "arm": "LR_1216",
+        "seed": 9,
+        "shapes": {
+          "layer1_M": [
+            5001,
+            100
+          ],
+          "layer1_B": [
+            5001,
+            100
+          ],
+          "layer1_denom": [
+            5001,
+            100
+          ],
+          "layer1_p_hat": [
+            5001,
+            100
+          ],
+          "layer1_zbar": [
+            5001,
+            100
+          ],
+          "layer1_w_norm": [
+            5001,
+            100
+          ]
+        },
+        "nan_counts": {
+          "layer1_M": 0,
+          "layer1_B": 0
+        },
+        "denom_min": 0.1415809839963913
+      }
+    ],
+    "failures": []
+  },
+  "S_ref": {
+    "pass_": true,
+    "reference": "/home/issan/Projects/claude/proj_004_drift/results/gate_dose_0830",
+    "parent_git_hash": "e15e0815f61e86be554741cf2613aa77df429dbe",
+    "parent_on_remote": true,
+    "files_checked": 96,
+    "read_files_count": 42,
+    "hash_mismatches_on_read_files": [],
+    "hash_mismatches_on_unread_files": [
+      "summary.md"
+    ],
+    "verdict_column_check": {
+      "checked": true,
+      "provenance_era_commit": "c4fe8edb140758fc735b76a5c2d3bd9a7c979283",
+      "current_head_differs": true,
+      "columns_transcribed": [
+        "U_1m_seed_values",
+        "U_5m_seed_values",
+        "n_onset_1m",
+        "n_onset_5m"
+      ],
+      "arms": [
+        "R_933",
+        "R_1216",
+        "LR_933",
+        "LR_1216"
+      ],
+      "differing": [],
+      "missing": [],
+      "columns_that_changed_anywhere": [
+        "median_strict_dead_frac_5m"
+      ],
+      "unchanged": true
+    },
+    "recorded_but_missing": [],
+    "required_but_absent": [],
+    "note": "logs/*.npz are gitignored; P7b/P7c are not reproducible from a fresh clone (spec §6.2 追補 4). A hash mismatch on a file this run never reads is recorded, not fatal; verdict.csv is additionally checked column-by-column against the provenance-era blob."
+  },
+  "S_limit_bwd": {
+    "pass_": true,
+    "activation": "bwd_leaky",
+    "steps": 30000,
+    "static_forward_equal": true,
+    "static_grad_equal": true,
+    "trained_state_differences": []
+  },
+  "S_limit_fwd": {
+    "pass_": true,
+    "activation": "fwd_leaky",
+    "steps": 30000,
+    "static_forward_equal": true,
+    "static_grad_equal": true,
+    "trained_state_differences": []
+  },
+  "S_limit_wd": {
+    "pass_": true,
+    "steps": 30000,
+    "trained_state_differences": []
+  },
+  "S_log_b": {
+    "pass_": true,
+    "steps": 30000,
+    "differences": [],
+    "added_columns": [
+      "b_unit",
+      "v_unit"
+    ],
+    "removed_columns": []
+  },
+  "S_pair": {
+    "pass_": true,
+    "reference": "BL_933",
+    "arms": [
+      "BL_933",
+      "BL_1216",
+      "FL_933",
+      "FL_1216",
+      "RW_933",
+      "RW_1216",
+      "BLW_933",
+      "BLW_1216"
+    ],
+    "steps": 30000,
+    "match_by": "seed_init_hash",
+    "differences": [],
+    "dose_groups": {
+      "9.33": [
+        "BL_933",
+        "FL_933",
+        "RW_933",
+        "BLW_933"
+      ],
+      "12.16": [
+        "BL_1216",
+        "FL_1216",
+        "RW_1216",
+        "BLW_1216"
+      ]
+    },
+    "dose_offsets_distinct": true,
+    "parent_flip_rows": [
+      {
+        "arm": "BL_933",
+        "reference_arm": "R_933",
+        "seed": 0,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_933",
+        "reference_arm": "R_933",
+        "seed": 1,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_933",
+        "reference_arm": "R_933",
+        "seed": 2,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_933",
+        "reference_arm": "R_933",
+        "seed": 3,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_933",
+        "reference_arm": "R_933",
+        "seed": 4,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_933",
+        "reference_arm": "R_933",
+        "seed": 5,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_933",
+        "reference_arm": "R_933",
+        "seed": 6,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_933",
+        "reference_arm": "R_933",
+        "seed": 7,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_933",
+        "reference_arm": "R_933",
+        "seed": 8,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_933",
+        "reference_arm": "R_933",
+        "seed": 9,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_1216",
+        "reference_arm": "R_1216",
+        "seed": 0,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_1216",
+        "reference_arm": "R_1216",
+        "seed": 1,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_1216",
+        "reference_arm": "R_1216",
+        "seed": 2,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_1216",
+        "reference_arm": "R_1216",
+        "seed": 3,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_1216",
+        "reference_arm": "R_1216",
+        "seed": 4,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_1216",
+        "reference_arm": "R_1216",
+        "seed": 5,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_1216",
+        "reference_arm": "R_1216",
+        "seed": 6,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_1216",
+        "reference_arm": "R_1216",
+        "seed": 7,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_1216",
+        "reference_arm": "R_1216",
+        "seed": 8,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BL_1216",
+        "reference_arm": "R_1216",
+        "seed": 9,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_933",
+        "reference_arm": "R_933",
+        "seed": 0,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_933",
+        "reference_arm": "R_933",
+        "seed": 1,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_933",
+        "reference_arm": "R_933",
+        "seed": 2,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_933",
+        "reference_arm": "R_933",
+        "seed": 3,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_933",
+        "reference_arm": "R_933",
+        "seed": 4,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_933",
+        "reference_arm": "R_933",
+        "seed": 5,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_933",
+        "reference_arm": "R_933",
+        "seed": 6,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_933",
+        "reference_arm": "R_933",
+        "seed": 7,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_933",
+        "reference_arm": "R_933",
+        "seed": 8,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_933",
+        "reference_arm": "R_933",
+        "seed": 9,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_1216",
+        "reference_arm": "R_1216",
+        "seed": 0,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_1216",
+        "reference_arm": "R_1216",
+        "seed": 1,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_1216",
+        "reference_arm": "R_1216",
+        "seed": 2,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_1216",
+        "reference_arm": "R_1216",
+        "seed": 3,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_1216",
+        "reference_arm": "R_1216",
+        "seed": 4,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_1216",
+        "reference_arm": "R_1216",
+        "seed": 5,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_1216",
+        "reference_arm": "R_1216",
+        "seed": 6,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_1216",
+        "reference_arm": "R_1216",
+        "seed": 7,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_1216",
+        "reference_arm": "R_1216",
+        "seed": 8,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "FL_1216",
+        "reference_arm": "R_1216",
+        "seed": 9,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_933",
+        "reference_arm": "R_933",
+        "seed": 0,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_933",
+        "reference_arm": "R_933",
+        "seed": 1,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_933",
+        "reference_arm": "R_933",
+        "seed": 2,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_933",
+        "reference_arm": "R_933",
+        "seed": 3,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_933",
+        "reference_arm": "R_933",
+        "seed": 4,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_933",
+        "reference_arm": "R_933",
+        "seed": 5,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_933",
+        "reference_arm": "R_933",
+        "seed": 6,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_933",
+        "reference_arm": "R_933",
+        "seed": 7,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_933",
+        "reference_arm": "R_933",
+        "seed": 8,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_933",
+        "reference_arm": "R_933",
+        "seed": 9,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_1216",
+        "reference_arm": "R_1216",
+        "seed": 0,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_1216",
+        "reference_arm": "R_1216",
+        "seed": 1,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_1216",
+        "reference_arm": "R_1216",
+        "seed": 2,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_1216",
+        "reference_arm": "R_1216",
+        "seed": 3,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_1216",
+        "reference_arm": "R_1216",
+        "seed": 4,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_1216",
+        "reference_arm": "R_1216",
+        "seed": 5,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_1216",
+        "reference_arm": "R_1216",
+        "seed": 6,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_1216",
+        "reference_arm": "R_1216",
+        "seed": 7,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_1216",
+        "reference_arm": "R_1216",
+        "seed": 8,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "RW_1216",
+        "reference_arm": "R_1216",
+        "seed": 9,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_933",
+        "reference_arm": "R_933",
+        "seed": 0,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_933",
+        "reference_arm": "R_933",
+        "seed": 1,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_933",
+        "reference_arm": "R_933",
+        "seed": 2,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_933",
+        "reference_arm": "R_933",
+        "seed": 3,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_933",
+        "reference_arm": "R_933",
+        "seed": 4,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_933",
+        "reference_arm": "R_933",
+        "seed": 5,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_933",
+        "reference_arm": "R_933",
+        "seed": 6,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_933",
+        "reference_arm": "R_933",
+        "seed": 7,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_933",
+        "reference_arm": "R_933",
+        "seed": 8,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_933",
+        "reference_arm": "R_933",
+        "seed": 9,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_1216",
+        "reference_arm": "R_1216",
+        "seed": 0,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_1216",
+        "reference_arm": "R_1216",
+        "seed": 1,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_1216",
+        "reference_arm": "R_1216",
+        "seed": 2,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_1216",
+        "reference_arm": "R_1216",
+        "seed": 3,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_1216",
+        "reference_arm": "R_1216",
+        "seed": 4,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_1216",
+        "reference_arm": "R_1216",
+        "seed": 5,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_1216",
+        "reference_arm": "R_1216",
+        "seed": 6,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_1216",
+        "reference_arm": "R_1216",
+        "seed": 7,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_1216",
+        "reference_arm": "R_1216",
+        "seed": 8,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      },
+      {
+        "arm": "BLW_1216",
+        "reference_arm": "R_1216",
+        "seed": 9,
+        "flip_state_equal": true,
+        "parent_has_state_hash": true
+      }
+    ],
+    "parent_missing": [],
+    "caveat": "init/teacher/input realization only; trajectories diverge after step 1"
+  },
+  "S_dose": {
+    "pass_": true,
+    "tolerance": 1e-10,
+    "n_probes": 248,
+    "failures": []
+  },
+  "S_taut": {
+    "pass_": true,
+    "activation_changes_state": true,
+    "unfit_finite_positive": true,
+    "short_run_unfit": {
+      "RW_933": [
+        0.07290649744323426,
+        0.04876270404208279
+      ],
+      "BL_933": [
+        0.07299407781368723,
+        0.05287672745926573
+      ],
+      "FL_933": [
+        0.08837310315257124,
+        0.05869641415646004
+      ]
+    },
+    "verdict_mutants": {
+      "grad": "GRADIENT_CARRIES",
+      "out": "OUTPUT_CARRIES",
+      "either": "EITHER_SUFFICES",
+      "both": "BOTH_REQUIRED",
+      "partial": "PARTIAL",
+      "v2_restore": "RESTORING_FORCE_REQUIRED",
+      "v2_wd_alone": "WD_B_SUFFICIENT_ALONE",
+      "v2_fails": "COMPROMISE_FAILS",
+      "v2_na": "NOT_APPLICABLE"
+    },
+    "expected": {
+      "grad": "GRADIENT_CARRIES",
+      "out": "OUTPUT_CARRIES",
+      "either": "EITHER_SUFFICES",
+      "both": "BOTH_REQUIRED",
+      "partial": "PARTIAL",
+      "v2_restore": "RESTORING_FORCE_REQUIRED",
+      "v2_wd_alone": "WD_B_SUFFICIENT_ALONE",
+      "v2_fails": "COMPROMISE_FAILS",
+      "v2_na": "NOT_APPLICABLE"
+    }
+  },
+  "S6_floor_inherited": {
+    "pass_": true,
+    "reference": "/home/issan/Projects/claude/proj_004_drift/results/gate_dose_0830/floor_calibration.csv",
+    "reference_values": [
+      1e-16
+    ],
+    "configured": 1e-16,
+    "recalibrated": false
+  },
+  "S_CI_degeneracy": {
+    "pass_": true,
+    "result": {
+      "point": 0.0,
+      "studentized_ci_lo": 0.0,
+      "studentized_ci_hi": 0.0,
+      "percentile_ci_lo": 0.0,
+      "percentile_ci_hi": 0.0,
+      "se0": 0.0,
+      "degenerate_se_fraction": 1.0,
+      "studentized_width_ratio": 0.0,
+      "ci_degenerate": 1,
+      "boot_ok": 0,
+      "sign_test_p": 1.0,
+      "n_seed": 10,
+      "statistic": "median"
+    }
+  }
+}

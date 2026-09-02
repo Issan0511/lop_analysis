@@ -253,7 +253,7 @@ bwd_leak:
   # 追補（S-ceiling 相当）: 腕間のベースライン水準差が大きいと P6 は天井汚染を受ける。
   # 早期窓の腕間 log10 U の広がりを測り、閾値超えなら「P6 を単独で読むな」を出す
   ceiling_baseline_spread_flag_dex: 3.0
-  ceiling_baseline_window: early_tasks
+  ceiling_baseline_window: [early_tasks, window_1m_tasks]   # 対照には early 窓が無いので 1M も測る
 
   # --- §5.3 副次（REPORT_ONLY） ---
   revival:

@@ -135,9 +135,20 @@ class VecMLPL:
     the constant ``act_alpha`` slope.  The choice consumes no randomness, so
     arms differing only in ``act`` share init, teacher, input stream and flip
     trajectory bit for bit.
+
+    ``"bwd_leaky"`` and ``"fwd_leaky"`` split the ReLU kink's two directions
+    [bwd_leak_0902 §4.3].  ``bwd_leaky`` is forward-strict-ReLU with a leaky
+    *surrogate* backward slope (output 0, gradient ``a``); ``fwd_leaky`` is the
+    mirror (output ``a*z``, gradient 0).  Neither is the gradient of its own
+    forward map, so a finite-difference check is meaningless for them and
+    ``S-bwd`` replaces it.  Both are built by **reusing the existing ``relu``
+    and ``leaky_relu`` expressions verbatim** rather than writing new
+    arithmetic, so ``S-cross`` can assert bit identity against the halves they
+    are made of.
     """
 
-    ACTIVATIONS = ("relu", "elu", "leaky_relu")
+    ACTIVATIONS = ("relu", "elu", "leaky_relu", "bwd_leaky", "fwd_leaky")
+    SURROGATE_ACTIVATIONS = ("bwd_leaky", "fwd_leaky")
 
     def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
                  act_grad_form="alpha_exp", wd_b=0.0):
@@ -200,6 +211,8 @@ class VecMLPL:
             raise ValueError("ELU alpha must be non-negative")
         if act == "leaky_relu" and not 0.0 <= float(act_alpha) <= 1.0:
             raise ValueError("leaky ReLU slope must be in [0, 1]")
+        if act in self.SURROGATE_ACTIVATIONS and not 0.0 <= float(act_alpha) <= 1.0:
+            raise ValueError(f"{act} slope must be in [0, 1]")
         if act_grad_form is not None:
             if act_grad_form not in self.GRAD_FORMS:
                 raise ValueError(f"unknown ELU derivative form {act_grad_form!r}")
@@ -213,6 +226,12 @@ class VecMLPL:
         if self.act == "relu":
             return torch.relu(pre)
         if self.act == "leaky_relu":
+            return torch.where(pre > 0, pre, self.act_alpha * pre)
+        if self.act == "bwd_leaky":
+            # forward は厳密 ReLU。上の "relu" 分岐と同一の式を書く（S-cross）。
+            return torch.relu(pre)
+        if self.act == "fwd_leaky":
+            # forward は leaky。上の "leaky_relu" 分岐と同一の式を書く（S-cross）。
             return torch.where(pre > 0, pre, self.act_alpha * pre)
         # expm1 keeps the small-|z| negative branch accurate; the positive
         # branch of `where` is selected before any overflow of expm1 matters.
@@ -239,6 +258,14 @@ class VecMLPL:
         if self.act == "leaky_relu":
             return torch.where(pre > 0, torch.ones_like(pre),
                                torch.full_like(pre, self.act_alpha))
+        if self.act == "bwd_leaky":
+            # backward は leaky。上の "leaky_relu" 分岐と同一の式（S-cross）。
+            # これは phi' ではなく代替勾配なので、有限差分照合は成立しない。
+            return torch.where(pre > 0, torch.ones_like(pre),
+                               torch.full_like(pre, self.act_alpha))
+        if self.act == "fwd_leaky":
+            # backward は厳密 ReLU。上の "relu" 分岐と同一の式（S-cross）。
+            return (pre > 0).to(pre.dtype)
         if self.act_grad_form == "activation_plus_alpha":
             return torch.where(pre > 0, torch.ones_like(a), a + self.act_alpha)
         return torch.where(pre > 0, torch.ones_like(pre),
