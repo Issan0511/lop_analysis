@@ -1,0 +1,587 @@
+spec: specs/spec_gate_dial_0902.md
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  generator_offset: 0
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+activation:
+  relu:
+    name: relu
+  leaky:
+    name: leaky_relu
+    forward: where(z>0, z, a*z)
+    derivative: where(z>0, 1, a)
+    dial_symbol: a
+  elu:
+    name: elu
+    forward: where(z>0, z, alpha*expm1(z))
+    derivative_form: alpha_exp
+    dial_symbol: alpha
+  silu:
+    name: silu
+    forward: z*sigmoid(beta*z)
+    derivative: sigmoid(b)*(1 + b*(1-sigmoid(b))) with b = beta*z
+    stable_form: torch.sigmoid
+    dial_symbol: beta
+    has_valley: true
+  gelu:
+    name: gelu
+    forward: z*Phi(beta*z)
+    derivative: Phi(b) + b*phi(b) with b = beta*z
+    exact_erf: true
+    dial_symbol: beta
+    has_valley: true
+  autograd: false
+  consumes_rng: false
+  is_true_gradient: true
+intervention:
+  name: oracle_fixed_mu_offset
+  oracle: true
+  consumes_rng: false
+  center_alpha_compat: 0.01
+  is_ema_centering: false
+arms:
+- name: S_b1_1216
+  stage: 1
+  family: silu
+  activation: silu
+  dial: 1.0
+  u_star: 1.2785
+  u_fr: 16.56
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: G_b1_1216
+  stage: 1
+  family: gelu
+  activation: gelu
+  dial: 1.0
+  u_star: 0.7519
+  u_fr: 5.394
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: LR_a0p01_1216
+  stage: 2
+  family: leaky
+  activation: leaky
+  dial: 0.01
+  u_star: null
+  u_fr: null
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: LR_a0p001_1216
+  stage: 2
+  family: leaky
+  activation: leaky
+  dial: 0.001
+  u_star: null
+  u_fr: null
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: LR_a0p0001_1216
+  stage: 2
+  family: leaky
+  activation: leaky
+  dial: 0.0001
+  u_star: null
+  u_fr: null
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: E_a0p1_1216
+  stage: 2
+  family: elu
+  activation: elu
+  dial: 0.1
+  u_star: null
+  u_fr: 11.5129
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: E_a0p01_1216
+  stage: 2
+  family: elu
+  activation: elu
+  dial: 0.01
+  u_star: null
+  u_fr: 9.2103
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: S_b0p3_1216
+  stage: 2
+  family: silu
+  activation: silu
+  dial: 0.3
+  u_star: 4.2616
+  u_fr: 55.2
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: S_b3_1216
+  stage: 2
+  family: silu
+  activation: silu
+  dial: 3.0
+  u_star: 0.4262
+  u_fr: 5.52
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: G_b0p3_1216
+  stage: 2
+  family: gelu
+  activation: gelu
+  dial: 0.3
+  u_star: 2.5063
+  u_fr: 17.98
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: G_b3_1216
+  stage: 2
+  family: gelu
+  activation: gelu
+  dial: 3.0
+  u_star: 0.2506
+  u_fr: 1.798
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: LR_a0p00001_1216
+  stage: 3
+  family: leaky
+  activation: leaky
+  dial: 1.0e-05
+  u_star: null
+  u_fr: null
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: E_a0p001_1216
+  stage: 3
+  family: elu
+  activation: elu
+  dial: 0.001
+  u_star: null
+  u_fr: 6.9078
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: S_b10_1216
+  stage: 3
+  family: silu
+  activation: silu
+  dial: 10.0
+  u_star: 0.1278
+  u_fr: 1.656
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+staging:
+  stage1_arms:
+  - S_b1_1216
+  - G_b1_1216
+  stage2_arms:
+  - LR_a0p01_1216
+  - LR_a0p001_1216
+  - LR_a0p0001_1216
+  - E_a0p1_1216
+  - E_a0p01_1216
+  - S_b0p3_1216
+  - S_b3_1216
+  - G_b0p3_1216
+  - G_b3_1216
+  stage3_anchor_arms:
+  - LR_a0p00001_1216
+  - E_a0p001_1216
+  - S_b10_1216
+  issa_decision_0902: all_three_stages
+  single_dose: '1216'
+  single_dose_requires_dose_in_citation: true
+  outdir_per_stage: false
+  arm_process_parallel_allowed: true
+  arm_process_parallel_requires: S_par
+  gpu: false
+controls:
+  reference_run: results/gate_dose_0830
+  same_run_as_new_arms: false
+  caveat: controls_are_committed_values_from_a_separate_run
+  arms:
+    R_1216:
+      family: relu
+      activation: relu
+      dial: 0.0
+      u_star: 0.0
+      u_fr: 0.0
+      target_dose: 12.16
+      expected_onset_5m: 10
+    LR_1216:
+      family: leaky
+      activation: leaky_relu
+      dial: 0.1
+      u_star: null
+      u_fr: null
+      target_dose: 12.16
+      expected_onset_5m: 0
+    E_1216:
+      family: elu
+      activation: elu
+      dial: 1.0
+      u_star: null
+      u_fr: 13.8155
+      target_dose: 12.16
+      expected_onset_5m: 0
+  endpoint_source: verdict.csv
+  endpoint_columns:
+  - U_1m_seed_values
+  - U_5m_seed_values
+  - n_onset_1m
+  - n_onset_5m
+  unit_source: results/gate_dose_0830/logs/{arm}_seed{seed}.npz
+  unit_arrays:
+  - layer1_M
+  - layer1_B
+  - layer1_denom
+  - layer1_p_hat
+  - layer1_zbar
+  - layer1_w_norm
+  - layer1_submerged
+  - layer1_dzbar
+  series_arrays:
+  - unfit
+  onset_time_from_logs: true
+  m_minus_from_checkpoint: true
+  m_minus_checkpoint: results/gate_dose_0830/ckpts/{arm}_step{step}.pt
+  m_minus_checkpoint_step: 5000000
+  m_minus_checkpoint_window_label: final_step5000000
+  verify_reference_hashes: true
+phase1:
+  task_period: 10000
+  early_tasks:
+  - 2
+  - 11
+  late_tasks_5m:
+  - 491
+  - 500
+  window_1m_tasks:
+  - 91
+  - 100
+  window_points_are_task_ends_only: true
+  window_records_per_10task_window: 10
+  spec_literal_records_per_window: 100
+  onset_threshold: 0.05
+  onset_present_min: 5
+  unfit_floor: 1.0e-16
+  recalibrate_floor: false
+  bootstrap_B: 10000
+  bootstrap_seed: 20260907
+  ci_method: percentile_primary_studentized_secondary
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+gate_dial:
+  design:
+    uses_self_term_decomposition: false
+    displacement_bound_constant_K: 1.0
+    freeze_depth_phi_prime_threshold: 1.0e-06
+    freeze_depth_definition: sup_over_deeper_abs_phi_prime_below_threshold
+    valley_definition: first_negative_side_zero_of_phi_prime
+    u_fr_spec_rel_tol: 0.06
+    theory_absent_for: arrival_side
+  v1_arms:
+  - S_b1_1216
+  - G_b1_1216
+  onset_zero_max: 0
+  onset_present_min: 5
+  v1_map:
+    present_present: SOFT_GATES_RELU_SIDE
+    zero_zero: SOFT_GATES_SOFT_SIDE
+    present_zero: SPLIT_SILU_GELU
+    zero_present: SPLIT_SILU_GELU
+    zero_mid: PARTIAL
+    mid_zero: PARTIAL
+    mid_mid: PARTIAL
+    mid_present: PARTIAL
+    present_mid: PARTIAL
+  v1_emit_which_developed: true
+  control_expected_onset_5m:
+    R_1216: 10
+    LR_1216: 0
+    E_1216: 0
+  p3prime_baseline: R_1216
+  p5_soft_end_by_family:
+    leaky:
+    - LR_1216
+    elu:
+    - E_1216
+    silu:
+    - E_1216
+    - LR_1216
+    gelu:
+    - E_1216
+    - LR_1216
+  p5_equivalence_margin: 0.15
+  p5_margin_recalibrated_for_this_system: false
+  p5_labels:
+    equivalent: EQUIV_SOFT
+    short_of_soft: SHORT_OF_SOFT
+    inconclusive: INCONCLUSIVE_WIDE
+    order:
+    - equivalent
+    - short_of_soft
+    - inconclusive
+    suffix_is_soft_end_arm: true
+  p5_emit_ci_below_zero_flag: true
+  p5_sign_test_report_only: true
+  rho_report_only: true
+  rho_relu_end: R_1216
+  rho_min_abs_denominator_dex: 0.5
+  onset_time:
+    window_tasks: 10
+    k_min: 10
+    k_max: 500
+    censor_at: 500
+    emit_kaplan_meier: true
+  ladders:
+    leaky:
+    - LR_1216
+    - LR_a0p01_1216
+    - LR_a0p001_1216
+    - LR_a0p0001_1216
+    - LR_a0p00001_1216
+    - R_1216
+    elu:
+    - E_1216
+    - E_a0p1_1216
+    - E_a0p01_1216
+    - E_a0p001_1216
+    - R_1216
+    silu:
+    - S_b0p3_1216
+    - S_b1_1216
+    - S_b3_1216
+    - S_b10_1216
+    - R_1216
+    gelu:
+    - G_b0p3_1216
+    - G_b1_1216
+    - G_b3_1216
+    - R_1216
+  ladder_relu_end_is_exact_limit:
+    leaky: true
+    elu: true
+    silu: false
+    gelu: false
+  v2_adjacent_delta: log10U_harder_minus_softer
+  v2_margin: 0.15
+  v2_onset_drop_reversal_min: 3
+  v2_labels:
+  - MONOTONE_TOWARD_RELU
+  - REVERSAL
+  - FLAT_IN_RANGE
+  - PARTIAL
+  v2_label_order:
+  - REVERSAL
+  - FLAT_IN_RANGE
+  - MONOTONE_TOWARD_RELU
+  - PARTIAL
+  v2_emit_co_satisfied: true
+  v2_monotone_uses_all_adjacent_pairs: true
+  v2_flat_uses_new_arm_pairs_only: true
+  k_star_in_v2_formula: false
+  dial_table:
+    emit_label: false
+    predictors:
+    - m_minus
+    - u_fr
+    - frozen_plus_valley_frac
+    outcome: median_log10_U_5m
+    spearman_scopes:
+    - pool
+    - within_family
+    u_fr_infinite_rank: max
+    m_minus:
+      definition: median_of_layer1_mob_over_submerged_unit_records
+      window: late_tasks_5m
+      aggregation_order:
+      - submerged_unit_records_within_seed
+      - median_within_seed
+      - median_over_seeds
+      independent_only_for:
+      - elu
+      - silu
+      - gelu
+    frozen: zbar_le_minus_u_fr
+    beyond_valley: zmax_le_minus_u_star
+    submerged: zmax_le_zero
+    emit_abs_v_median: true
+    emit_residual_level: true
+  report_only:
+    submerged_frac_timeseries: true
+    per_boundary_submerge_and_revival_rate: true
+    revival_primary_condition: same_task_and_flip_state_unchanged
+    revival_also_report: across_task_boundary
+    depth_deciles_of_submerged_zbar: true
+    s_distribution: true
+    s_degeneracies_to_emit:
+    - median_s_vs_median_M_plus_median_B
+    - denom_median
+    q2_increments: true
+    timeseries:
+    - strict_dead
+    - submerged_frac
+    - alive
+    - eff_rank
+    - w_norm
+    - b_median
+    - median_M
+    - median_B
+    - preact_sd_median
+    - eval_loss_exact
+    strict_dead_relu_arms_only: true
+    primary_covariate: w_norm
+    in_verdict: false
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    rescue: none
+    v1_required_arms:
+    - S_b1_1216
+    - G_b1_1216
+    v2_drop_diverged_and_continue: true
+    inconclusive_label: INCONCLUSIVE_DIVERGENCE
+sanity:
+  s_pair_reference: results/gate_dose_0830
+  s_pair_reference_arm: R_1216
+  s_pair_steps: 30000
+  s_pair_match_by: seed_init_hash
+  s_limit_steps: 30000
+  s_dose_rel_tol: 1.0e-10
+  s_elu_limit_alpha_to_zero: true
+  s_limit_beta: 10000.0
+  s_limit_forward_tol_over_beta: 0.3
+  s_limit_grad_tol: 0.001
+  s_limit_grid_abs_z_min_over_beta: 10.0
+  s_fd_tol: 1.0e-06
+  s_fd_ranges:
+  - - -20.0
+    - 20.0
+  - - -20.0
+    - 20.0
+  s_fd_second_range_scaled_by_beta: true
+  s_fd_points: 41
+  s_num_range:
+  - -200.0
+  - 200.0
+  s_num_points: 40001
+  s_num_record_saturation_depth: true
+  s_mob_steps: 30000
+  s_mob_tol: 1.0e-06
+  s_mob_relu_identity: mob_equals_p_hat
+  s_mob_leaky_identity: mob_equals_a_plus_one_minus_a_times_p_hat
+  s_mob_zmean_identity: zmean_equals_M_plus_B_times_denom
+  s_log_b_steps: 30000
+  s_cap_window: early_tasks
+  s_cap_threshold: 0.05
+  s_cap_min_seeds: 9
+  s_cap_label: CAPACITY_UNDEFINED
+  s_taut_check: true
+  s_mask_check: true
+  s_dial_check: true
+  s_ref_hash_check: true
+  s_ref_remote_check: true
+  s_par_steps: 30000
+  s_par_arm: S_b1_1216
+  omp_num_threads: 1
+  s6_floor_calibration: false
+output:
+  dir: results/gate_dial_0902
+  verdict_csv: true
+  onset_times_csv: true
+  dial_table_csv: true
+  depth_hist_csv: true
+  layer_stats_csv: true
+  s_distribution_csv: true
+  increments_csv: true

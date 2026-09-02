@@ -1627,10 +1627,20 @@ def analyze(cfg: dict, outdir: Path, arms: list[str], stage: str, sanity: dict,
     v1_states = {}
     for arm in v1_arms:
         value = n_onset(arm, "5M")
-        v1_states[arm] = ("missing" if value is None else
-                          _onset_state([value], zero_max, present_min))
+        if arm in capacity_undefined:
+            # S-cap（spec §6）: 満たさない腕は V1・V2 の n_onset から外す。
+            # 「発症しなかった」ではなく「発症が定義されない」。水準は報告する。
+            v1_states[arm] = str(cfg["sanity"]["s_cap_label"])
+        elif value is None:
+            v1_states[arm] = "missing"
+        else:
+            v1_states[arm] = _onset_state([value], zero_max, present_min)
+    v1_capacity_blocked = [a for a in v1_arms if a in capacity_undefined]
     if any(a in divergences for a in v1_arms):
         v1 = str(G["numeric_divergence"]["inconclusive_label"])
+    elif v1_capacity_blocked:
+        # 登録された 4 ラベルのどれでもない。S-cap の除外規則の帰結である。
+        v1 = str(cfg["sanity"]["s_cap_label"])
     elif any(v == "missing" for v in v1_states.values()):
         v1 = "NOT_RUN"
     else:
@@ -1753,12 +1763,17 @@ def analyze(cfg: dict, outdir: Path, arms: list[str], stage: str, sanity: dict,
     ladders = dict(G["ladders"])
     v2: dict[str, dict] = {}
     for family, ladder in ladders.items():
+        # S-cap 落ちの腕は n_onset が定義されないので梯子から外す（spec §6）。
         present = [a for a in ladder
-                   if (a in controls) or (a in complete)]
+                   if ((a in controls) or (a in complete))
+                   and a not in capacity_undefined]
         dropped = [a for a in ladder if a not in present]
+        dropped_reason = {a: ("capacity_undefined" if a in capacity_undefined
+                              else NUMERIC_DIVERGENCE if a in divergences
+                              else "not_run") for a in dropped}
         if len(present) < 2:
             v2[family] = dict(status="NOT_RUN", ladder=ladder, used=present,
-                              dropped=dropped)
+                              dropped=dropped, dropped_reason=dropped_reason)
             continue
         adjacent, onsets = [], []
         for i in range(len(present) - 1):
@@ -1778,7 +1793,8 @@ def analyze(cfg: dict, outdir: Path, arms: list[str], stage: str, sanity: dict,
         new_onsets = [int(n_onset(a, "5M")) for a in new_only]
         label, hits = _v2_label(G, adjacent, onsets, new_contrasts, new_onsets)
         v2[family] = dict(status="OK", label=label, co_satisfied=hits, ladder=ladder,
-                          used=present, dropped=dropped, adjacent=adjacent,
+                          used=present, dropped=dropped,
+                          dropped_reason=dropped_reason, adjacent=adjacent,
                           onsets=onsets, new_arms=new_only, new_onsets=new_onsets,
                           k_star_median={a: (float(np.median(k_star_by_arm[a]))
                                              if a in k_star_by_arm else float("nan"))
@@ -1937,7 +1953,7 @@ def analyze(cfg: dict, outdir: Path, arms: list[str], stage: str, sanity: dict,
     result = dict(
         stage=stage, arms_run=list(arms), complete=complete,
         divergences=sorted(divergences), V1=v1, V1_states=v1_states,
-        V1_developed=v1_developed,
+        V1_developed=v1_developed, V1_capacity_blocked=v1_capacity_blocked,
         V2={f: {k: v for k, v in value.items() if k != "adjacent"}
             for f, value in v2.items()},
         V2_adjacent={f: value.get("adjacent", []) for f, value in v2.items()},
@@ -2145,6 +2161,12 @@ def _write_summary(cfg: dict, outdir: Path, result: dict, verdict_rows: list[dic
              f"- **V1（標準点の位置）: {result['V1']}** — "
              + ", ".join(f"{a}={s}" for a, s in result["V1_states"].items()),
              f"- V1 で発症した腕: {', '.join(result['V1_developed']) or '—'}",
+             (f"- **V1 は S-cap 除外の帰結として `{result['V1']}`**: "
+              f"{', '.join(result['V1_capacity_blocked'])} は early 窓でフィットして"
+              f"おらず、絶対閾値 0.05 に対して発症が**定義されない**（spec §6 の "
+              f"S-cap。`width5_gate_0901` と同型）。登録された 4 ラベルのどれでもない。"
+              if result["V1_capacity_blocked"] else
+              "- V1 は登録どおりの 4 ラベルから出ている（S-cap 落ちの腕は無い）"),
              ""]
     lines += ["| family | V2 | 当たっていた行 | 梯子（軟→硬） | n_onset(5M) | 落とした腕 |",
               "|---|---|---|---|---|---|"]
@@ -2159,7 +2181,7 @@ def _write_summary(cfg: dict, outdir: Path, result: dict, verdict_rows: list[dic
             f"{', '.join(value['co_satisfied'])} | "
             f"{' → '.join(value['used'])} | "
             f"{', '.join(str(v) for v in value['onsets'])} | "
-            f"{', '.join(value['dropped']) or '—'} |")
+            f"{', '.join(f'{a}({value['dropped_reason'][a]})' for a in value['dropped']) or '—'} |")
     lines += ["", f"- Numeric divergence: {', '.join(result['divergences']) or 'none'}",
               f"- CAPACITY_UNDEFINED: {', '.join(result['capacity_undefined']) or 'none'}",
               "",

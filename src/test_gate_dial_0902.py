@@ -373,10 +373,19 @@ class ControlTests(unittest.TestCase):
 
 
 def _fabricate_log(path: Path, arm: str, seed: int, *, unfit_level: float,
-                   width: int = 100, rng: np.random.Generator) -> None:
-    """集計経路の結合テスト用の合成ログ（記録点はタスク終端のみの粗い版）。"""
+                   early_level: float | None = None, width: int = 100,
+                   rng: np.random.Generator) -> None:
+    """集計経路の結合テスト用の合成ログ（記録点はタスク終端のみの粗い版）。
+
+    ``early_level`` を与えると early 窓（タスク 2-11）だけその水準にする。
+    既定は ``unfit_level`` と同じで、その場合 early も閾値を超えるので **S-cap が
+    立つ**（発症が定義されない腕になる）。「発症する腕」を作りたいときは
+    ``early_level`` を小さくすること。
+    """
     step = np.arange(0, 5_000_001, 10_000, dtype=np.int64)
     n = len(step)
+    early = unfit_level if early_level is None else early_level
+    level = np.where(step <= 200_000, early, unfit_level)
     zbar = rng.normal(-3.0, 1.0, size=(n, width)).astype(np.float32)
     p_hat = np.where(zbar < -1.0, 0.0, 0.5).astype(np.float32)
     payload = dict(
@@ -386,8 +395,8 @@ def _fabricate_log(path: Path, arm: str, seed: int, *, unfit_level: float,
         task_period=np.int64(10_000), target_mu_norm=np.float64(3.041),
         target_dose=np.float64(12.16),
         state_hash_final=np.array("{}"), state_hash_1m=np.array("{}"),
-        signal_var=np.full(n, 1.0), residual_var=np.full(n, unfit_level),
-        unfit=np.full(n, unfit_level), eval_loss_exact=np.full(n, unfit_level),
+        signal_var=np.full(n, 1.0), residual_var=level,
+        unfit=level, eval_loss_exact=level,
         flip_state=rng.integers(0, 2, size=(n, 15)).astype(np.float32),
         gamma=np.full(n, 0.5), gamma_negative=np.zeros(n),
         mu_norm_formula=np.full(n, 3.041), dose_formula=np.full(n, 12.16),
@@ -465,6 +474,7 @@ class AnalyzeIntegrationTests(unittest.TestCase):
             self.assertTrue(result["s_mask"]["pass_"])
 
     def test_onset_arms_flip_the_verdict(self):
+        """早期は当たり末尾で崩れる腕 = 本当の発症。S-cap は立たない。"""
         cfg = copy.deepcopy(CFG)
         rng = np.random.default_rng(8)
         with tempfile.TemporaryDirectory() as tmp:
@@ -472,12 +482,45 @@ class AnalyzeIntegrationTests(unittest.TestCase):
             for arm in self.ARMS:
                 for seed in range(10):
                     _fabricate_log(outdir / "logs" / f"{arm}_seed{seed}.npz",
-                                   arm, seed, unfit_level=0.5, rng=rng)
+                                   arm, seed, unfit_level=0.5,
+                                   early_level=1e-4, rng=rng)
             result = D.analyze(cfg, outdir, self.ARMS, "1", {}, {}, {})
+            self.assertEqual(result["capacity_undefined"], [])
             self.assertEqual(result["V1"], "SOFT_GATES_RELU_SIDE")
-            # 早期窓も 0.05 を超えるので S-cap が立つ（登録どおりの振る舞い）
-            self.assertEqual(sorted(result["capacity_undefined"]),
-                             sorted(self.ARMS))
+            self.assertEqual(result["onset"]["5M"],
+                             {"S_b1_1216": 10, "G_b1_1216": 10})
+
+    def test_capacity_undefined_arm_is_excluded_from_v1_and_the_ladder(self):
+        """S-cap（spec §6）: early で当たらない腕は発症が定義されないので外す。
+
+        `width5_gate_0901` と同型。「0/10 だった」でも「10/10 だった」でもなく、
+        **その腕については問いが立たない**。
+        """
+        cfg = copy.deepcopy(CFG)
+        rng = np.random.default_rng(11)
+        with tempfile.TemporaryDirectory() as tmp:
+            outdir = Path(tmp)
+            for seed in range(10):
+                # S_b1 は最初から当たらない（early も末尾も 0.5）
+                _fabricate_log(outdir / "logs" / f"S_b1_1216_seed{seed}.npz",
+                               "S_b1_1216", seed, unfit_level=0.5, rng=rng)
+                # G_b1 は当たってから崩れる = 本当の発症
+                _fabricate_log(outdir / "logs" / f"G_b1_1216_seed{seed}.npz",
+                               "G_b1_1216", seed, unfit_level=0.5,
+                               early_level=1e-4, rng=rng)
+            result = D.analyze(cfg, outdir, self.ARMS, "1", {}, {}, {})
+            self.assertEqual(result["capacity_undefined"], ["S_b1_1216"])
+            self.assertEqual(result["V1"], "CAPACITY_UNDEFINED")
+            self.assertEqual(result["V1_capacity_blocked"], ["S_b1_1216"])
+            self.assertEqual(result["V1_states"]["S_b1_1216"],
+                             "CAPACITY_UNDEFINED")
+            self.assertEqual(result["V1_states"]["G_b1_1216"], "present")
+            # 梯子からも外れ、理由が残る
+            silu = result["V2"]["silu"]
+            self.assertNotIn("S_b1_1216", silu["used"])
+            self.assertEqual(silu["dropped_reason"]["S_b1_1216"],
+                             "capacity_undefined")
+            self.assertIn("G_b1_1216", result["V2"]["gelu"]["used"])
 
     def test_split_verdict(self):
         cfg = copy.deepcopy(CFG)
@@ -486,10 +529,12 @@ class AnalyzeIntegrationTests(unittest.TestCase):
             outdir = Path(tmp)
             for seed in range(10):
                 _fabricate_log(outdir / "logs" / f"S_b1_1216_seed{seed}.npz",
-                               "S_b1_1216", seed, unfit_level=0.5, rng=rng)
+                               "S_b1_1216", seed, unfit_level=0.5,
+                               early_level=1e-4, rng=rng)
                 _fabricate_log(outdir / "logs" / f"G_b1_1216_seed{seed}.npz",
                                "G_b1_1216", seed, unfit_level=1e-3, rng=rng)
             result = D.analyze(cfg, outdir, self.ARMS, "1", {}, {}, {})
+            self.assertEqual(result["capacity_undefined"], [])
             self.assertEqual(result["V1"], "SPLIT_SILU_GELU")
             self.assertEqual(result["V1_developed"], ["S_b1_1216"])
 
