@@ -1,0 +1,379 @@
+# proj_004: gate_dial_0902 — ゲートの硬さダイヤル
+#   (ReLU に収束する 4 族 × 硬さダイヤル: 1 層・帯内用量 12.16 固定・5M)
+# 仕様: specs/spec_gate_dial_0902.md（実装より先に config と一緒に単独 commit すること）
+# Obsidian 側の正本: 可塑性喪失/spec/ゲート硬さダイヤル_spec_0902.md（v1・2026-09-02）
+#
+# 宿主は gate_dose_0830（1 層・オラクル用量固定・5M）。新規 14 腕を段 1 / 段 2 / 段 3（錨）に
+# 分けて回し、対照 R_1216 / LR_1216 / E_1216 は再走せず committed 出力から読む。
+#   V1（標準点の位置）: S_b1（SiLU β=1）と G_b1（GELU β=1）の発症数
+#   V2（族ごとの単調性）: 族内の隣接対比と n_onset の並び
+#   V3（硬さ表）: ラベルを置かない。3 予測子（m⁻ / u_fr / 凍結＋谷率）のどれが並べるか
+#   Issa 予測（§7.1・2026-09-02 記入・全項目）: V1 = SOFT_GATES_SOFT_SIDE（両方 0）／
+#     V2 族ごとは「わからない」／E_a0p1 は発症しない（先生の U2 と割れる）／
+#     leaky の遷移は a に線形（発症は 1e-4 付近）／V3 で並べるのは u_fr（凍結深さ）／
+#     外れたとき第一に疑うのは「境界の跳びで谷を越えてしまう」／Δ=0.15 は据え置き
+#   Claude 予測（§7.3）: V1 = SOFT_GATES_RELU_SIDE（両方 ≥5）／E_a0p1 は 0／leaky は a 線形／
+#     V3 で並べるのは「凍結＋谷率」（Issa と割れる）
+#   先生（§7.2・転記）: U2 = ELU α を 1→0.1 に下げると LoP が現れる（E_a0p1 ≥5）
+#
+# 命名: 作成日 0902。bootstrap seed は 20260907（spec §3。20260829/20260902/20260905 等は既用）。
+# generator_offset は **明示的に 0**。gate_dose_0830 と bit 一致の S-pair を取ることが
+# 設計の土台なので、ここで系列を切ってはいけない（bwd_leak_0902 と同じ理由）。
+# 床 1e-16 は dose_const_5m_0830 で較正済み。再較正しない。
+
+spec: specs/spec_gate_dial_0902.md
+
+# ---------------------------------------------------------------------------
+# gate_dose_0830 §3 の逐語継承
+# ---------------------------------------------------------------------------
+common:
+  total_steps: 5000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  generator_offset: 0                       # 明示。親走と同一系列（S-pair の土台）
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 1000000, 5000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  encodings: [std]
+
+# ---------------------------------------------------------------------------
+# 活性化（spec §4.3）。ReLU・leaky・ELU の経路は 1 行も触らない。
+# silu / gelu は閉形式で新規に足す（autograd に切り替えない）。どちらも**自分の
+# forward の真の導関数**なので、代替勾配（bwd_leak）と違い有限差分で検算できる。
+# ダイヤルは既存の act_alpha に載せる（leaky は傾き a、ELU は α、SiLU/GELU は鋭さ β）。
+# ---------------------------------------------------------------------------
+activation:
+  relu:
+    name: relu
+  leaky:
+    name: leaky_relu
+    forward: where(z>0, z, a*z)
+    derivative: where(z>0, 1, a)
+    dial_symbol: a
+  elu:
+    name: elu
+    forward: where(z>0, z, alpha*expm1(z))
+    derivative_form: alpha_exp              # elu_swamp_0830 §11.9（phi+alpha は深い負側が 0）
+    dial_symbol: alpha
+  silu:
+    name: silu
+    forward: z*sigmoid(beta*z)
+    derivative: sigmoid(b)*(1 + b*(1-sigmoid(b))) with b = beta*z
+    stable_form: torch.sigmoid              # exp(-beta*z) を裸で書かない
+    dial_symbol: beta
+    has_valley: true
+  gelu:
+    name: gelu
+    forward: z*Phi(beta*z)
+    derivative: Phi(b) + b*phi(b) with b = beta*z
+    exact_erf: true                         # tanh 近似は使わない
+    dial_symbol: beta
+    has_valley: true
+  autograd: false
+  consumes_rng: false
+  is_true_gradient: true                    # 4 族とも真の導関数（bwd_leak の代替勾配と違う）
+
+# dose_const_5m_0830 のオラクル固定。入力側の変換なので活性化に依存しない。
+intervention:
+  name: oracle_fixed_mu_offset
+  oracle: true
+  consumes_rng: false
+  center_alpha_compat: 0.01
+  is_ema_centering: false
+
+# ---------------------------------------------------------------------------
+# 腕（spec §4.1）。新規 14 本（段 1: 2 / 段 2: 9 / 段 3 錨: 3）。用量は 12.16 の 1 点。
+# u_star / u_fr は spec §2 の表の値（閉形式 + K=1 の代入）。**実験出力ではない**。
+# 実装は同じ量を数値で解き直して照合する（S-dial）。
+# ---------------------------------------------------------------------------
+arms:
+  - { name: S_b1_1216,       stage: 1, family: silu,  activation: silu,  dial: 1.0,     u_star: 1.2785, u_fr: 16.56, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: G_b1_1216,       stage: 1, family: gelu,  activation: gelu,  dial: 1.0,     u_star: 0.7519, u_fr: 5.394, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: LR_a0p01_1216,   stage: 2, family: leaky, activation: leaky, dial: 0.01,    u_star: null,   u_fr: null,  hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: LR_a0p001_1216,  stage: 2, family: leaky, activation: leaky, dial: 0.001,   u_star: null,   u_fr: null,  hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: LR_a0p0001_1216, stage: 2, family: leaky, activation: leaky, dial: 0.0001,  u_star: null,   u_fr: null,  hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: E_a0p1_1216,     stage: 2, family: elu,   activation: elu,   dial: 0.1,     u_star: null,   u_fr: 11.5129, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: E_a0p01_1216,    stage: 2, family: elu,   activation: elu,   dial: 0.01,    u_star: null,   u_fr: 9.2103,  hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: S_b0p3_1216,     stage: 2, family: silu,  activation: silu,  dial: 0.3,     u_star: 4.2616, u_fr: 55.20, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: S_b3_1216,       stage: 2, family: silu,  activation: silu,  dial: 3.0,     u_star: 0.4262, u_fr: 5.520, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: G_b0p3_1216,     stage: 2, family: gelu,  activation: gelu,  dial: 0.3,     u_star: 2.5063, u_fr: 17.98, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: G_b3_1216,       stage: 2, family: gelu,  activation: gelu,  dial: 3.0,     u_star: 0.2506, u_fr: 1.798, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: LR_a0p00001_1216, stage: 3, family: leaky, activation: leaky, dial: 0.00001, u_star: null,  u_fr: null,  hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: E_a0p001_1216,   stage: 3, family: elu,   activation: elu,   dial: 0.001,   u_star: null,   u_fr: 6.9078, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+  - { name: S_b10_1216,      stage: 3, family: silu,  activation: silu,  dial: 10.0,    u_star: 0.1278, u_fr: 1.656, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16 }
+
+# 段の切り方（spec §4.1・§9 #0）。2026-09-02 の Issa 裁定は **全 14 腕（段 3 の錨込み）を投入**。
+# 回した段と腕は provenance.json に記録する。
+staging:
+  stage1_arms: [S_b1_1216, G_b1_1216]
+  stage2_arms: [LR_a0p01_1216, LR_a0p001_1216, LR_a0p0001_1216, E_a0p1_1216,
+                E_a0p01_1216, S_b0p3_1216, S_b3_1216, G_b0p3_1216, G_b3_1216]
+  stage3_anchor_arms: [LR_a0p00001_1216, E_a0p001_1216, S_b10_1216]
+  issa_decision_0902: all_three_stages
+  single_dose: "1216"
+  single_dose_requires_dose_in_citation: true
+  outdir_per_stage: false                   # 全段を 1 つの results/gate_dial_0902/ に出す
+  # 腕プロセス並列（spec §6）。腕どうしは独立で runner の seed ループには触らない。
+  # S-par（1 腕を直列/並列で回して logs と state_hash が bit 一致）を通してから投入する。
+  arm_process_parallel_allowed: true
+  arm_process_parallel_requires: S_par
+  gpu: false                                # spec §6: GPU は縮約順が変わり S-pair が壊れる
+
+# ---------------------------------------------------------------------------
+# 対照（spec §4.2・§8）。再走せず committed 出力から読む。同一走の腕ではない。
+# ---------------------------------------------------------------------------
+controls:
+  reference_run: results/gate_dose_0830
+  same_run_as_new_arms: false
+  caveat: controls_are_committed_values_from_a_separate_run
+  arms:
+    R_1216:  { family: relu,  activation: relu,       dial: 0.0, u_star: 0.0,  u_fr: 0.0,     target_dose: 12.16, expected_onset_5m: 10 }
+    LR_1216: { family: leaky, activation: leaky_relu, dial: 0.1, u_star: null, u_fr: null,    target_dose: 12.16, expected_onset_5m: 0 }
+    E_1216:  { family: elu,   activation: elu,        dial: 1.0, u_star: null, u_fr: 13.8155, target_dose: 12.16, expected_onset_5m: 0 }
+  # 主 endpoint（U_k）は verdict.csv から**転記**する。logs から再計算しない
+  # （窓の定義がタスク終端の記録点であって全記録点ではないため）
+  endpoint_source: verdict.csv
+  endpoint_columns: [U_1m_seed_values, U_5m_seed_values, n_onset_1m, n_onset_5m]
+  # V3・§5.5 の対照だけは logs/*.npz と ckpts/*.pt を読む（§6 の「2 ファイルのみ」への
+  # 明示の carve-out。bwd_leak_0902 §6.2 追補 4 と同じ扱い）。読む配列と記録点を必ず添える。
+  unit_source: results/gate_dose_0830/logs/{arm}_seed{seed}.npz
+  unit_arrays: [layer1_M, layer1_B, layer1_denom, layer1_p_hat, layer1_zbar, layer1_w_norm,
+                layer1_submerged, layer1_dzbar]
+  # k*（発症時刻）は verdict.csv に無いので、対照だけは logs の unfit 系列から作る。
+  # 主 endpoint（U_k）は転記のままで、k* は §5.3 の「添えるだけ」の量（V2 の式に入らない）。
+  series_arrays: [unfit]
+  onset_time_from_logs: true
+  # 対照の committed logs には mob / absmob / zmax / v のユニット列が無い（P-3 の指摘そのもの）。
+  # V3 の m⁻ だけは 5M チェックポイントから 1 点で復元し、**窓を final_step5000000 と明記する**。
+  # 末尾窓（491-500）の量ではない。復元できなければ INSUFFICIENT_DATA。
+  m_minus_from_checkpoint: true
+  m_minus_checkpoint: results/gate_dose_0830/ckpts/{arm}_step{step}.pt
+  m_minus_checkpoint_step: 5000000
+  m_minus_checkpoint_window_label: final_step5000000
+  verify_reference_hashes: true             # S-ref: 親 provenance.json の output_sha256 と照合
+
+# ---------------------------------------------------------------------------
+# 窓・床・発症定義・CI（spec §5。gate_dose §5 を逐語継承・bootstrap seed のみ更新）
+# ---------------------------------------------------------------------------
+phase1:
+  task_period: 10000
+  early_tasks: [2, 11]
+  late_tasks_5m: [491, 500]
+  window_1m_tasks: [91, 100]
+  # ★ spec §5.3 の S-mask は「記録点数が各 k で 100」と書くが、宿主 _window_indices は
+  # step % task_period == 0 だけを拾う = **タスク終端 10 点**。spec 自身が要求する
+  # 「U^(10)_100 / U^(10)_500 が 1M / 5M の U_k に一致」と、committed 対照の U_k が
+  # 終端 10 点で作られている事実から、逐語継承（終端のみ）が正。実装はこちらを採り、
+  # 字義との差を sanity(S_mask) と summary.md に残す（spec 側の追補が要る）。
+  window_points_are_task_ends_only: true
+  window_records_per_10task_window: 10
+  spec_literal_records_per_window: 100      # 記録のみ。判定には使わない
+  onset_threshold: 0.05
+  onset_present_min: 5
+  unfit_floor: 1.0e-16
+  recalibrate_floor: false
+  bootstrap_B: 10000
+  bootstrap_seed: 20260907
+  ci_method: percentile_primary_studentized_secondary
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+
+gate_dial:
+  # --- §2 設計原理（分解を借りない）。判定には使わないが provenance に残す ---
+  design:
+    uses_self_term_decomposition: false
+    displacement_bound_constant_K: 1.0      # 約束事。§5.4 で実測 |v_i| と残差水準を併記
+    freeze_depth_phi_prime_threshold: 1.0e-6   # = 0.05 / (lr * total_steps * K)
+    freeze_depth_definition: sup_over_deeper_abs_phi_prime_below_threshold
+    valley_definition: first_negative_side_zero_of_phi_prime
+    u_fr_spec_rel_tol: 0.06                 # config の登録値は spec の 2 桁丸め。数値解と照合する
+    theory_absent_for: arrival_side          # 到達側（どの深さまで沈むか）の理論は持たない
+
+  # --- §5.1 E1 主判定 V1（段 1・標準点の位置） ---
+  v1_arms: [S_b1_1216, G_b1_1216]
+  onset_zero_max: 0
+  onset_present_min: 5
+  v1_map:                                   # (S_b1 状態)_(G_b1 状態) の全 9 セルを明示
+    present_present: SOFT_GATES_RELU_SIDE
+    zero_zero:       SOFT_GATES_SOFT_SIDE
+    present_zero:    SPLIT_SILU_GELU
+    zero_present:    SPLIT_SILU_GELU
+    zero_mid:        PARTIAL
+    mid_zero:        PARTIAL
+    mid_mid:         PARTIAL
+    mid_present:     PARTIAL
+    present_mid:     PARTIAL
+  v1_emit_which_developed: true             # SPLIT のときどちらが発症したかを添える
+  control_expected_onset_5m: { R_1216: 10, LR_1216: 0, E_1216: 0 }
+
+  # --- §5.2 E2 水準（主判定と同格） ---
+  p3prime_baseline: R_1216                  # 各新規腕 − R_1216
+  # P5'（軟らかい端との距離）。leaky 系は LR_1216、ELU 系は E_1216、
+  # SiLU/GELU 系は E_1216 と LR_1216 の**両方**。
+  p5_soft_end_by_family:
+    leaky: [LR_1216]
+    elu:   [E_1216]
+    silu:  [E_1216, LR_1216]
+    gelu:  [E_1216, LR_1216]
+  p5_equivalence_margin: 0.15               # dex。逆伝播漏れ2x2_spec_0902 §7.1 の Issa 裁定を継承
+  p5_margin_recalibrated_for_this_system: false
+  p5_labels:
+    equivalent:   EQUIV_SOFT                # CI が [-0.15, +0.15] に収まる
+    short_of_soft: SHORT_OF_SOFT            # CI が 0 を上に外す（ci_lo > 0）
+    inconclusive: INCONCLUSIVE_WIDE
+    order: [equivalent, short_of_soft, inconclusive]
+    suffix_is_soft_end_arm: true            # 例 EQUIV_SOFT_LR_1216
+  p5_emit_ci_below_zero_flag: true
+  p5_sign_test_report_only: true            # 較正定数の要らない seed 別符号検定を併記
+  # 位置比 rho = (logU_arm - logU_soft) / (logU_R - logU_soft)。0 = 軟らかい端、1 = ReLU
+  rho_report_only: true
+  rho_relu_end: R_1216
+  rho_min_abs_denominator_dex: 0.5          # 分母が痩せたら NaN（比が発散する）
+
+  # --- §5.3 E3 発症時刻と V2（族ごとの単調性） ---
+  onset_time:
+    window_tasks: 10                        # U^(10)_k = タスク k-9..k の記録点の unfit 平均
+    k_min: 10
+    k_max: 500
+    censor_at: 500
+    emit_kaplan_meier: true                 # 率。n_onset（総和）と並べる（教訓⑰）
+  # 族の梯子（軟らかい側 → 硬い側）。committed の両端を含む。
+  ladders:
+    leaky: [LR_1216, LR_a0p01_1216, LR_a0p001_1216, LR_a0p0001_1216, LR_a0p00001_1216, R_1216]
+    elu:   [E_1216, E_a0p1_1216, E_a0p01_1216, E_a0p001_1216, R_1216]
+    silu:  [S_b0p3_1216, S_b1_1216, S_b3_1216, S_b10_1216, R_1216]
+    gelu:  [G_b0p3_1216, G_b1_1216, G_b3_1216, R_1216]
+  ladder_relu_end_is_exact_limit: { leaky: true, elu: true, silu: false, gelu: false }
+  v2_adjacent_delta: log10U_harder_minus_softer      # 5M・paired
+  v2_margin: 0.15                           # P5' と同じ Δ（dex）
+  v2_onset_drop_reversal_min: 3             # 硬い側で n_onset が 3 以上減れば REVERSAL
+  v2_labels: [MONOTONE_TOWARD_RELU, REVERSAL, FLAT_IN_RANGE, PARTIAL]
+  # ★ spec §5.3 の表には順序が書かれていない。REVERSAL は単調性の破れなので隠してはならず、
+  # FLAT_IN_RANGE は MONOTONE の特殊形（新規腕が全部 0 で動いていない）なので先に見る。
+  # bwd_leak_0902 追補 7 に倣い、**当たっていた行も全部 verdict に残す**。
+  v2_label_order: [REVERSAL, FLAT_IN_RANGE, MONOTONE_TOWARD_RELU, PARTIAL]
+  v2_emit_co_satisfied: true
+  v2_monotone_uses_all_adjacent_pairs: true # 対照を含む梯子の全隣接対
+  v2_flat_uses_new_arm_pairs_only: true     # 「測った範囲」= 新規腕どうし
+  k_star_in_v2_formula: false               # k* は V2 に添えるだけ（打ち切りが多い族では無情報）
+
+  # --- §5.4 V3 硬さ表（登録・**ラベルを置かない**） ---
+  dial_table:
+    emit_label: false                       # 14 点の順位相関に閾値を置かない
+    predictors: [m_minus, u_fr, frozen_plus_valley_frac]
+    outcome: median_log10_U_5m
+    spearman_scopes: [pool, within_family]
+    u_fr_infinite_rank: max                 # leaky は u_fr = ∞ を最大順位に置く
+    m_minus:
+      definition: median_of_layer1_mob_over_submerged_unit_records
+      window: late_tasks_5m
+      aggregation_order: [submerged_unit_records_within_seed, median_within_seed, median_over_seeds]
+      independent_only_for: [elu, silu, gelu]   # ReLU/leaky では p_hat の一次関数
+    frozen: zbar_le_minus_u_fr              # K=1 の約束事つき。leaky は常に偽
+    beyond_valley: zmax_le_minus_u_star     # SiLU/GELU のみ。leaky/ELU は空欄
+    submerged: zmax_le_zero                 # p_hat==0 と恒真同値（引用禁止）
+    emit_abs_v_median: true                 # K=1 の事後確認
+    emit_residual_level: true
+
+  # --- §5.5 副次（REPORT_ONLY・総和と率の両方: 教訓⑰） ---
+  report_only:
+    submerged_frac_timeseries: true
+    per_boundary_submerge_and_revival_rate: true
+    revival_primary_condition: same_task_and_flip_state_unchanged   # bwd_leak 追補 6 の継承
+    revival_also_report: across_task_boundary
+    depth_deciles_of_submerged_zbar: true
+    s_distribution: true                    # s_i = M + B。中心化腕が無いので縮退(i) は非該当
+    s_degeneracies_to_emit: [median_s_vs_median_M_plus_median_B, denom_median]
+    q2_increments: true                     # 宿主の increments と同じ機構。主張には使わない
+    timeseries: [strict_dead, submerged_frac, alive, eff_rank, w_norm, b_median,
+                 median_M, median_B, preact_sd_median, eval_loss_exact]
+    strict_dead_relu_arms_only: true        # 非 ReLU 腕では submerged と恒真同値（引用禁止）
+    primary_covariate: w_norm
+    in_verdict: false
+
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    rescue: none
+    v1_required_arms: [S_b1_1216, G_b1_1216]
+    # 族の V2 は発散した腕を落として残りで判定し、使った点を summary.md に書く
+    v2_drop_diverged_and_continue: true
+    inconclusive_label: INCONCLUSIVE_DIVERGENCE
+
+# ---------------------------------------------------------------------------
+# 前段チェック（spec §6）
+# ---------------------------------------------------------------------------
+sanity:
+  s_pair_reference: results/gate_dose_0830
+  s_pair_reference_arm: R_1216              # 全新規腕が同一用量の R 腕と bit 一致するはず
+  s_pair_steps: 30000
+  s_pair_match_by: seed_init_hash
+  s_limit_steps: 30000
+  s_dose_rel_tol: 1.0e-10
+  # S-limit: ELU alpha=0 が ReLU 経路と 30k 短走で bit 一致（既存 leaky 版の ELU 版）
+  s_elu_limit_alpha_to_zero: true
+  # SiLU/GELU は極限が厳密一致しないので単体テストにする（spec §6）
+  s_limit_beta: 10000.0
+  s_limit_forward_tol_over_beta: 0.3        # |phi_b - relu| <= 0.3/beta
+  s_limit_grad_tol: 1.0e-3
+  s_limit_grid_abs_z_min_over_beta: 10.0    # |z| >= 10/beta の格子で見る
+  # S-fd: 真の導関数なので float64 中心差分で検算できる（代替勾配と違う）
+  s_fd_tol: 1.0e-6
+  s_fd_ranges: [[-20.0, 20.0], [-20.0, 20.0]]   # 2 本目は beta でスケールする
+  s_fd_second_range_scaled_by_beta: true
+  s_fd_points: 41
+  # S-num: NaN/inf が出ないことと、float32 で厳密 0 になる深さ（provenance に書く）
+  s_num_range: [-200.0, 200.0]
+  s_num_points: 40001
+  s_num_record_saturation_depth: true
+  # S-mob: 新規ロガーが既知の量と一致すること
+  s_mob_steps: 30000
+  s_mob_tol: 1.0e-6
+  s_mob_relu_identity: mob_equals_p_hat
+  s_mob_leaky_identity: mob_equals_a_plus_one_minus_a_times_p_hat
+  s_mob_zmean_identity: zmean_equals_M_plus_B_times_denom
+  s_log_b_steps: 30000                      # 追加ロガー有無の 2 走が bit 一致（軌道中立）
+  # S-cap: early 窓で U < 0.05 の seed が 9/10 以上。満たさない腕は CAPACITY_UNDEFINED
+  s_cap_window: early_tasks
+  s_cap_threshold: 0.05
+  s_cap_min_seeds: 9
+  s_cap_label: CAPACITY_UNDEFINED
+  s_taut_check: true
+  s_mask_check: true                        # U^(10) の記録点数と宿主 U_k との一致
+  s_dial_check: true                        # 登録した u_star / u_fr を数値解と照合
+  s_ref_hash_check: true
+  s_ref_remote_check: true
+  # S-par: 直列投入と腕プロセス並列投入が bit 一致（並列を使う前に 1 腕で通す）
+  s_par_steps: 30000
+  s_par_arm: S_b1_1216
+  omp_num_threads: 1
+  s6_floor_calibration: false               # 継承のみ
+
+output:
+  dir: results/gate_dial_0902
+  verdict_csv: true
+  onset_times_csv: true
+  dial_table_csv: true
+  depth_hist_csv: true
+  layer_stats_csv: true
+  s_distribution_csv: true
+  increments_csv: true
