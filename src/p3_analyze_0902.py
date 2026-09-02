@@ -35,6 +35,10 @@ U_STAR = {"S_b1_1216": 1.2785, "S_b0p3_1216": 4.2616, "G_b0p3_1216": 2.5063,
 WINDOWS_EXTEND = {"5M": [491, 500], "10M": [991, 1000], "15M": [1491, 1500]}
 WINDOWS_CLAMP = {"5M": [491, 500]}
 CLAMP_REF = {"Gc_b1_1216": "G_b1_1216", "Sc_b3_1216": "S_b3_1216"}
+CLAMP0_REF = {"Gz_b1_1216": ("G_b1_1216", "Gc_b1_1216"), "Sz_b3_1216": ("S_b3_1216", "Sc_b3_1216")}
+CLAMP_LOGS = Path(ROOT) / "results/valley_clamp_0902/logs"
+DOSE_LOGS = Path(ROOT) / "results/gate_dose_0830/logs"
+EQUIV = 0.15
 DIAL_LOGS = Path(ROOT) / "results/gate_dial_0902/logs"
 
 
@@ -233,6 +237,63 @@ def analyze_clamp(outdir: Path) -> dict:
     return dict(verdict=verdict, arms=arm_rows, seeds=seed_rows, contrasts=contrasts)
 
 
+def _contrast(a: list, b: list, rng) -> dict:
+    d = np.array(a) - np.array(b)
+    med, lo, hi = _boot_median_ci(d, rng)
+    sg = _sign_test(d)
+    return dict(median=med, ci_lo=lo, ci_hi=hi, neg=sg["neg"], pos=sg["pos"], p=sg["p_two_sided"])
+
+
+def analyze_clamp0(outdir: Path) -> dict:
+    """床ゼロの谷埋め（vault 論点ノート §7.3・事前登録）。対照は元腕・clamp 腕・ReLU。"""
+    cfg = _cfg()
+    floor, thr = float(cfg["phase1"]["unfit_floor"]), float(cfg["phase1"]["onset_threshold"])
+    rng = np.random.default_rng(BOOT_SEED)
+    seed_rows, arm_rows = [], []
+    for arm, (orig, clamp) in CLAMP0_REF.items():
+        U = {k: [] for k in ("z", "o", "c", "r")}
+        dz, fz, rz = [], [], []
+        ustar = U_STAR[clamp]
+        for seed in range(10):
+            pz = outdir / "logs" / f"{arm}_seed{seed}.npz"
+            sz = window_stats(_load(pz), WINDOWS_CLAMP["5M"], floor, thr, ustar)
+            so = window_stats(_load(DIAL_LOGS / f"{orig}_seed{seed}.npz"), WINDOWS_CLAMP["5M"], floor, thr, U_STAR[orig])
+            sc = window_stats(_load(CLAMP_LOGS / f"{clamp}_seed{seed}.npz"), WINDOWS_CLAMP["5M"], floor, thr, ustar)
+            sr = window_stats(_load(DOSE_LOGS / f"R_1216_seed{seed}.npz"), WINDOWS_CLAMP["5M"], floor, thr)
+            rev = _revival_counts(pz, ustar)
+            sz.update(arm=arm, seed=seed, role="clamp0", revive_across=rev["events_across_boundary"],
+                      revive_within=rev["events_within_task"])
+            seed_rows.append(sz)
+            for k, st in (("z", sz), ("o", so), ("c", sc), ("r", sr)):
+                U[k].append(st["log10_u"])
+            dz.append(sz["depth_q50"]); fz.append(sz["frozen_frac"]); rz.append(rev["events_across_boundary"])
+        c_orig, c_clamp, c_relu = _contrast(U["z"], U["o"], rng), _contrast(U["z"], U["c"], rng), _contrast(U["z"], U["r"], rng)
+        rescue = c_orig["median"] <= -0.3 and c_orig["neg"] >= 8
+        equiv_clamp = c_clamp["ci_lo"] >= -EQUIV and c_clamp["ci_hi"] <= EQUIV
+        if rescue and equiv_clamp:
+            label = "FLOOR_IRRELEVANT"
+        elif rescue and c_clamp["median"] >= EQUIV:
+            label = "FLOOR_CARRIES_RELU_MARGIN"
+        elif c_orig["median"] > -EQUIV:
+            label = "FLOOR_CARRIES_RESCUE"
+        else:
+            label = "MIXED"
+        row = dict(arm=arm, orig=orig, clamp=clamp,
+                   n_onset=int(sum(u >= np.log10(thr) for u in U["z"])),
+                   log10_u=float(np.median(U["z"])), log10_u_orig=float(np.median(U["o"])),
+                   log10_u_clamp=float(np.median(U["c"])), log10_u_relu=float(np.median(U["r"])),
+                   d_orig=c_orig["median"], d_orig_lo=c_orig["ci_lo"], d_orig_hi=c_orig["ci_hi"], d_orig_sign=f"{c_orig['neg']}:{c_orig['pos']}",
+                   d_clamp=c_clamp["median"], d_clamp_lo=c_clamp["ci_lo"], d_clamp_hi=c_clamp["ci_hi"], d_clamp_sign=f"{c_clamp['neg']}:{c_clamp['pos']}",
+                   d_relu=c_relu["median"], d_relu_lo=c_relu["ci_lo"], d_relu_hi=c_relu["ci_hi"], d_relu_sign=f"{c_relu['neg']}:{c_relu['pos']}",
+                   relu_equivalent=int(c_relu["ci_lo"] >= -EQUIV and c_relu["ci_hi"] <= EQUIV),
+                   depth_q50=float(np.nanmedian(dz)), frozen=float(np.nanmedian(fz)),
+                   revive_across=float(np.median(rz)), family_label=label)
+        arm_rows.append(row)
+    labels = {r["family_label"] for r in arm_rows}
+    verdict = labels.pop() if len(labels) == 1 else "PARTIAL"
+    return dict(verdict=verdict, arms=arm_rows, seeds=seed_rows)
+
+
 def selftest_clamp() -> None:
     """委託先（gate_dial_0902）の committed 値と窓関数の一致を確認する。"""
     cfg = _cfg()
@@ -280,7 +341,7 @@ def write_outputs(exp: str, outdir: Path, res: dict) -> None:
 
 def main() -> None:
     p = argparse.ArgumentParser()
-    p.add_argument("--exp", required=True, choices=["extend", "clamp"])
+    p.add_argument("--exp", required=True, choices=["extend", "clamp", "clamp0"])
     p.add_argument("--outdir", default=None)
     p.add_argument("--selftest", action="store_true")
     a = p.parse_args()
@@ -288,7 +349,8 @@ def main() -> None:
         selftest_clamp()
         return
     outdir = Path(a.outdir).resolve() if a.outdir else Path(ROOT) / EXPS[a.exp]["outdir"]
-    res = analyze_extend(outdir) if a.exp == "extend" else analyze_clamp(outdir)
+    res = (analyze_extend(outdir) if a.exp == "extend" else analyze_clamp(outdir) if a.exp == "clamp"
+           else analyze_clamp0(outdir))
     write_outputs(a.exp, outdir, res)
 
 

@@ -174,6 +174,7 @@ class VecMLPL:
 
     ACTIVATIONS = ("relu", "elu", "leaky_relu", "bwd_leaky", "fwd_leaky",
                    "silu", "gelu", "silu_clamp", "gelu_clamp",
+                   "silu_clamp0", "gelu_clamp0",
                    "bwd_reflect", "bwd_quad", "bwd_leaky_proj")
     SURROGATE_ACTIVATIONS = ("bwd_leaky", "fwd_leaky", "bwd_reflect", "bwd_quad",
                              "bwd_leaky_proj")
@@ -188,13 +189,20 @@ class VecMLPL:
     #     torch.equal は符号盲なので S-limit がバイトの違いを見逃す
     PHANTOM_ACTIVATIONS = ("bwd_reflect", "bwd_quad", "bwd_leaky_proj")
     # phi' の零点を負側に持つ族（谷）。act_alpha は傾きではなく鋭さ beta。
-    STEEPNESS_ACTIVATIONS = ("silu", "gelu", "silu_clamp", "gelu_clamp")
+    STEEPNESS_ACTIVATIONS = ("silu", "gelu", "silu_clamp", "gelu_clamp",
+                             "silu_clamp0", "gelu_clamp0")
     # 谷の向こうを谷底の値で埋めた版 [valley_clamp_0902]。谷底 z_c = -u*/beta より
     # 深い側では phi は定数 phi(z_c)、phi' は 0。谷の手前は silu / gelu と**同一の式を
     # 同一の入力に**当てるので bit 一致する。u* は phi' の負側で最初の零点（beta=1）。
     # 逃走（谷の向こうで phi' < 0）だけを消し、浅い硬い床を残す介入。
     VALLEY_ZERO = {"silu_clamp": 1.2784645427610739,
-                   "gelu_clamp": 0.7517915246935645}
+                   "gelu_clamp": 0.7517915246935645,
+                   "silu_clamp0": 1.2784645427610739,
+                   "gelu_clamp0": 0.7517915246935645}
+    # 床ゼロ版 [valley_clamp0_0902]。谷底より深い側で phi ≡ 0・phi' ≡ 0（z_c に
+    # phi(z_c) ぶんの段差がある）。谷の手前は clamp 版と同じ式・同じ入力なので bit 一致。
+    # 凍結ユニットの出力が厳密 0 になるので v_i も凍る（ReLU の死ユニットと同型）。
+    # clamp 版（床 = phi(z_c) ≠ 0・v_i に勾配が流れ続ける）との差が床の値の効果。
 
     def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
                  act_grad_form="alpha_exp", wd_b=0.0):
@@ -303,6 +311,14 @@ class VecMLPL:
             zc = -self.VALLEY_ZERO["gelu_clamp"] / self.act_alpha
             zz = torch.clamp(pre, min=zc)
             return zz * _std_normal_cdf(self.act_alpha * zz)
+        if self.act == "silu_clamp0":
+            zc = -self.VALLEY_ZERO["silu_clamp0"] / self.act_alpha
+            return torch.where(pre > zc, pre * torch.sigmoid(self.act_alpha * pre),
+                               torch.zeros_like(pre))
+        if self.act == "gelu_clamp0":
+            zc = -self.VALLEY_ZERO["gelu_clamp0"] / self.act_alpha
+            return torch.where(pre > zc, pre * _std_normal_cdf(self.act_alpha * pre),
+                               torch.zeros_like(pre))
         # expm1 keeps the small-|z| negative branch accurate; the positive
         # branch of `where` is selected before any overflow of expm1 matters.
         return torch.where(pre > 0, pre, self.act_alpha * torch.expm1(pre))
@@ -364,6 +380,16 @@ class VecMLPL:
             return torch.where(pre > zc, g, torch.zeros_like(g))
         if self.act == "gelu_clamp":
             zc = -self.VALLEY_ZERO["gelu_clamp"] / self.act_alpha
+            t = self.act_alpha * pre
+            g = _std_normal_cdf(t) + t * _std_normal_pdf(t)
+            return torch.where(pre > zc, g, torch.zeros_like(g))
+        if self.act == "silu_clamp0":
+            zc = -self.VALLEY_ZERO["silu_clamp0"] / self.act_alpha
+            s = torch.sigmoid(self.act_alpha * pre)
+            g = s * (1.0 + self.act_alpha * pre * (1.0 - s))
+            return torch.where(pre > zc, g, torch.zeros_like(g))
+        if self.act == "gelu_clamp0":
+            zc = -self.VALLEY_ZERO["gelu_clamp0"] / self.act_alpha
             t = self.act_alpha * pre
             g = _std_normal_cdf(t) + t * _std_normal_pdf(t)
             return torch.where(pre > zc, g, torch.zeros_like(g))

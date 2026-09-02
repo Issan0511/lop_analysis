@@ -56,6 +56,16 @@ EXPS = {
                                dial=3.0, u_star=0.4262, u_fr=5.520),
         },
         reference={}),
+    "clamp0": dict(
+        outdir="results/valley_clamp0_0902", total=5_000_000,
+        checkpoints=[0, 1_000_000, 5_000_000],
+        arms={
+            "Gz_b1_1216": dict(family="gelu_clamp0", activation="gelu_clamp0",
+                               dial=1.0, u_star=0.7519, u_fr=5.394),
+            "Sz_b3_1216": dict(family="silu_clamp0", activation="silu_clamp0",
+                               dial=3.0, u_star=0.4262, u_fr=5.520),
+        },
+        reference={}),
 }
 
 
@@ -66,6 +76,8 @@ def build_cfg(exp: str) -> dict:
     c["common"]["checkpoints"] = list(E["checkpoints"])
     c["activation"].setdefault("gelu_clamp", {"name": "gelu_clamp"})
     c["activation"].setdefault("silu_clamp", {"name": "silu_clamp"})
+    c["activation"].setdefault("gelu_clamp0", {"name": "gelu_clamp0"})
+    c["activation"].setdefault("silu_clamp0", {"name": "silu_clamp0"})
     have = {a["name"] for a in c["arms"]}
     for name, spec in E["arms"].items():
         if spec is None:
