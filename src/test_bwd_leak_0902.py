@@ -414,6 +414,46 @@ class AnalysisEndToEndTests(unittest.TestCase):
         arms = {r["arm"] for r in rows}
         self.assertTrue(set(B.CONTROL_ORDER) <= arms)
 
+    def test_analyze_survives_divergent_arms(self):
+        """発散腕が混じっても集計が最後まで走り、CSV のスキーマが崩れないこと。
+
+        本走で `BL` 2 腕が NUMERIC_DIVERGENCE になったので、この経路は実際に通る。
+        登録どおり V1 は INCONCLUSIVE_DIVERGENCE、V2 は BL の状態が決まらないので
+        同じラベルになる。
+        """
+        for arm in ("BL_933", "BL_1216"):
+            for seed in range(10):
+                (self.out / "logs" / f"{arm}_seed{seed}.npz").unlink()
+        divergences = {arm: dict(status="NUMERIC_DIVERGENCE", arm=arm,
+                                 detected_step=1_271_000, bad_seeds=[4])
+                       for arm in ("BL_933", "BL_1216")}
+        result = B.analyze(CFG, self.out, list(B.STAGE_ARMS[1]), "1", sanity={},
+                           elapsed={}, divergences=divergences, stage1_dir=None)
+        self.assertEqual(result["V1"], "INCONCLUSIVE_DIVERGENCE")
+        self.assertEqual(result["V2"], "INCONCLUSIVE_DIVERGENCE")
+        self.assertEqual(result["divergences"], ["BL_1216", "BL_933"])
+        # FL は読める
+        self.assertEqual(result["onset_states"]["FL"], "present")
+        for name in ("verdict.csv", "layer_stats.csv", "s_distribution.csv",
+                     "revival.csv", "summary.md"):
+            self.assertTrue((self.out / name).exists(), name)
+        with (self.out / "verdict.csv").open(newline="") as fh:
+            rows = list(csv.DictReader(fh))
+        fields = set(rows[0])
+        for row in rows:
+            self.assertEqual(set(row), fields, f"ragged row {row['arm']}")
+        by_arm = {r["arm"]: r for r in rows}
+        for arm in ("BL_933", "BL_1216"):
+            self.assertEqual(by_arm[arm]["status"], "NUMERIC_DIVERGENCE")
+            self.assertEqual(by_arm[arm]["NUMERIC_DIVERGENCE"], "1")
+            self.assertEqual(by_arm[arm]["median_log10_U_5m"], "")
+        # BL を含む対比は空セルとして残り、FL の対比は生きている
+        with (self.out / "layer_stats.csv").open(newline="") as fh:
+            contrasts = {r["contrast"]: r for r in csv.DictReader(fh)}
+        self.assertEqual(contrasts["BL_933_minus_LR_933"]["status"],
+                         "NUMERIC_DIVERGENCE")
+        self.assertEqual(contrasts["FL_933_minus_LR_933"]["status"], "OK")
+
     def test_control_onset_mismatch_blocks_the_analysis(self):
         c = copy.deepcopy(CFG)
         c["bwd_leak"]["control_expected_onset_5m"]["LR_933"] = 9
