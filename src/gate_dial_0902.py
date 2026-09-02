@@ -1530,19 +1530,28 @@ def _m_minus_from_checkpoint(cfg: dict, arm: str, seed_index: int,
                 source=str(path))
 
 
-def _revival_counts(path: Path) -> dict:
-    """``p_hat`` が 0 -> 正 になった件数。同一タスク内 / 境界越えを分ける。"""
+def _revival_counts(path: Path, u_star: float = float("nan")) -> dict:
+    """``p_hat`` が 0 -> 正 になった件数。同一タスク内 / 境界越えを分ける。
+
+    SiLU・GELU では **谷より深い状態からの復活**も別に数える（spec §5.5）。
+    谷底より深いユニットが勾配だけで表層へ戻る経路は無いので、これは**境界の
+    跳び $w\cdot\Delta\mu$ でしか起きないはず**であり、同一タスク内で起きていたら
+    実装を疑う —— というのが登録された検査。§7.1 で Issa が「外れたときに第一に
+    疑うもの」に挙げた経路でもある。
+    """
     with np.load(path, allow_pickle=False) as z:
         p = z["layer1_p_hat"]
         step = z["step"].astype(np.int64)
         flip = z["flip_state"]
         period = int(z["task_period"])
+        zmax = (z["layer1_zmax"].astype(np.float64)
+                if "layer1_zmax" in z.files else None)
     dead = p == 0.0
     revived = dead[:-1] & ~dead[1:]
     same_task = (step[:-1] // period) == (step[1:] // period)
     flip_same = (flip[:-1] == flip[1:]).all(axis=1)
     within = same_task & flip_same
-    return dict(
+    out = dict(
         events_within_task=int(revived[within].sum()),
         events_across_boundary=int(revived[~within].sum()),
         units_within_task=int(revived[within].any(axis=0).sum()),
@@ -1550,6 +1559,23 @@ def _revival_counts(path: Path) -> dict:
         opportunities_within_task=int(dead[:-1][within].sum()),
         opportunities_across_boundary=int(dead[:-1][~within].sum()),
         n_units=int(p.shape[1]), n_records=int(p.shape[0]))
+    if zmax is not None and np.isfinite(u_star):
+        deep = zmax <= -u_star
+        escaped = deep[:-1] & ~deep[1:]
+        out.update(
+            valley_escapes_within_task=int(escaped[within].sum()),
+            valley_escapes_across_boundary=int(escaped[~within].sum()),
+            valley_units_escaped_within_task=int(
+                escaped[within].any(axis=0).sum()),
+            valley_opportunities_within_task=int(deep[:-1][within].sum()),
+            valley_opportunities_across_boundary=int(deep[:-1][~within].sum()))
+    else:
+        out.update(valley_escapes_within_task="",
+                   valley_escapes_across_boundary="",
+                   valley_units_escaped_within_task="",
+                   valley_opportunities_within_task="",
+                   valley_opportunities_across_boundary="")
+    return out
 
 
 def _s_series(cfg: dict, path: Path) -> dict:
@@ -1914,16 +1940,25 @@ def analyze(cfg: dict, outdir: Path, arms: list[str], stage: str, sanity: dict,
             path = source / f"{arm}_seed{seed}.npz"
             if not path.exists():
                 continue
-            counts = _revival_counts(path)
+            counts = _revival_counts(
+                path, _geometry(cfg, arm)["u_star_numeric"])
             within = counts["opportunities_within_task"]
             across = counts["opportunities_across_boundary"]
+            v_within = counts["valley_opportunities_within_task"]
+            v_across = counts["valley_opportunities_across_boundary"]
             revival_rows.append(dict(
                 arm=arm, seed=seed, is_control=int(arm in CONTROL_ORDER),
                 **counts,
                 rate_within_task=(counts["events_within_task"] / within
                                   if within else float("nan")),
                 rate_across_boundary=(counts["events_across_boundary"] / across
-                                      if across else float("nan"))))
+                                      if across else float("nan")),
+                valley_rate_within_task=(
+                    counts["valley_escapes_within_task"] / v_within
+                    if v_within not in ("", 0) else ""),
+                valley_rate_across_boundary=(
+                    counts["valley_escapes_across_boundary"] / v_across
+                    if v_across not in ("", 0) else "")))
 
     increment_rows = []
     for arm in complete:

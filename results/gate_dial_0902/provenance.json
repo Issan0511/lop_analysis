@@ -1,13 +1,13 @@
 {
   "experiment": "gate_dial_0902",
-  "created": "2026-09-02 19:12:10 +0900",
+  "created": "2026-09-02 19:40:36 +0900",
   "command": [
     "/home/issan/Projects/claude/proj_004_drift/src/gate_dial_0902.py",
     "--stage",
     "all",
     "--analyze-only"
   ],
-  "elapsed_sec": 13.361,
+  "elapsed_sec": 16.519,
   "arm_elapsed_sec": {},
   "cwd": "/home/issan/Projects/claude/proj_004_drift",
   "python": "3.12.3 (main, Jul 15 2026, 23:46:41) [GCC 13.3.0]",
@@ -15,10 +15,12 @@
   "torch": "2.13.0+cu130",
   "numpy": "2.5.1",
   "device": "cpu",
-  "git_hash": "bfaa51402cf36bb9b72e5465d8556049c523965b",
+  "git_hash": "e94bf48ad532621689ee5cf66fa8531f99ac9886",
   "git_dirty": [
+    " M results/gate_dial_0902/dial_spearman.csv",
+    " M results/gate_dial_0902/revival.csv",
+    " M results/gate_dial_0902/summary.md",
     " M src/gate_dial_0902.py",
-    " M src/test_gate_dial_0902.py",
     "?? results/_preflight_centered_freeze_0901/free_replay/",
     "?? results/_preflight_dose_const_5m_0830/",
     "?? results/_preflight_gate_dial_0902/",
@@ -32,7 +34,6 @@
     "?? results/_smoke_lin0_base_0902/",
     "?? results/_spar_gate_dial_0902/",
     "?? results/dynrepair_0826_s8replay/",
-    "?? results/gate_dial_0902/",
     "?? results/mu_titration_0823_aborted_s2coverage_647316c/",
     "?? results/mu_titration_0823_invalid_s3_39986e2/"
   ],
@@ -5297,6 +5298,48 @@
       },
       {
         "scope": "within_family",
+        "group": "leaky",
+        "predictor": "m_minus",
+        "n": 5,
+        "rho": -0.7
+      },
+      {
+        "scope": "within_family",
+        "group": "leaky",
+        "predictor": "u_fr",
+        "n": 5,
+        "rho": NaN
+      },
+      {
+        "scope": "within_family",
+        "group": "leaky",
+        "predictor": "frozen_plus_valley_frac",
+        "n": 5,
+        "rho": NaN
+      },
+      {
+        "scope": "within_family",
+        "group": "relu",
+        "predictor": "m_minus",
+        "n": 1,
+        "rho": NaN
+      },
+      {
+        "scope": "within_family",
+        "group": "relu",
+        "predictor": "u_fr",
+        "n": 1,
+        "rho": NaN
+      },
+      {
+        "scope": "within_family",
+        "group": "relu",
+        "predictor": "frozen_plus_valley_frac",
+        "n": 1,
+        "rho": NaN
+      },
+      {
+        "scope": "within_family",
         "group": "silu",
         "predictor": "m_minus",
         "n": 4,
@@ -5318,6 +5361,27 @@
       },
       {
         "scope": "within_family",
+        "group": "elu",
+        "predictor": "m_minus",
+        "n": 4,
+        "rho": -1.0
+      },
+      {
+        "scope": "within_family",
+        "group": "elu",
+        "predictor": "u_fr",
+        "n": 4,
+        "rho": -1.0
+      },
+      {
+        "scope": "within_family",
+        "group": "elu",
+        "predictor": "frozen_plus_valley_frac",
+        "n": 4,
+        "rho": 1.0
+      },
+      {
+        "scope": "within_family",
         "group": "gelu",
         "predictor": "m_minus",
         "n": 3,
@@ -5336,69 +5400,6 @@
         "predictor": "frozen_plus_valley_frac",
         "n": 3,
         "rho": 0.8660254037844387
-      },
-      {
-        "scope": "within_family",
-        "group": "relu",
-        "predictor": "m_minus",
-        "n": 1,
-        "rho": NaN
-      },
-      {
-        "scope": "within_family",
-        "group": "relu",
-        "predictor": "u_fr",
-        "n": 1,
-        "rho": NaN
-      },
-      {
-        "scope": "within_family",
-        "group": "relu",
-        "predictor": "frozen_plus_valley_frac",
-        "n": 1,
-        "rho": NaN
-      },
-      {
-        "scope": "within_family",
-        "group": "elu",
-        "predictor": "m_minus",
-        "n": 4,
-        "rho": -1.0
-      },
-      {
-        "scope": "within_family",
-        "group": "elu",
-        "predictor": "u_fr",
-        "n": 4,
-        "rho": -1.0
-      },
-      {
-        "scope": "within_family",
-        "group": "elu",
-        "predictor": "frozen_plus_valley_frac",
-        "n": 4,
-        "rho": 1.0
-      },
-      {
-        "scope": "within_family",
-        "group": "leaky",
-        "predictor": "m_minus",
-        "n": 5,
-        "rho": -0.7
-      },
-      {
-        "scope": "within_family",
-        "group": "leaky",
-        "predictor": "u_fr",
-        "n": 5,
-        "rho": NaN
-      },
-      {
-        "scope": "within_family",
-        "group": "leaky",
-        "predictor": "frozen_plus_valley_frac",
-        "n": 5,
-        "rho": NaN
       }
     ],
     "s_mask": {
@@ -5690,15 +5691,15 @@
   },
   "output_sha256": {
     "verdict.csv": "b8812f4d2c4af19c6295d4648503ec014a01d9746b0b54a50cdc7d9ffe553cde",
-    "summary.md": "562516b94d4d40106698ec17708d8b54b08a592c21f45e15cb8dbb603bfcc294",
+    "summary.md": "96f8c598ad9d61a2ee6da167c16c514aea44591b059c834262302083b74c86ab",
     "layer_stats.csv": "199b59da65429e92c1fe332b8eff62c87915c899d4e5e0db04706d7acd43fb75",
     "dial_table.csv": "5e7f37cc87d5c3d60406d19dcdfe8b17643299cea0ef033b5ff23d4bf2742e62",
-    "dial_spearman.csv": "34b675c1c424848c35a4cf4650d6afe753f3525ee50deaed1032bcff255b097e",
+    "dial_spearman.csv": "ba255e1883610d068fdc773824407a658dfda6ce5c70740737125d3482c07646",
     "onset_times.csv": "170e4bd657b5f8d34e89fc15aeada4f53ea1161625580cbb11874d023089708f",
     "onset_km.csv": "86ad077971f3e754bc10f4dd49dfb6dd9c2e9dec78b4a5e478428167bd9820fd",
     "depth_hist.csv": "e5dd2c74e33f9633a057ddfa8391e095f3b1823e0a05325f3e9b189885e06442",
     "s_distribution.csv": "ffa81316d25d12a1a83dd702d6f0eba04374d2960cd3821a955e54f3f22ca21a",
-    "revival.csv": "83fc5f73c90d03ea7c15de92fe10ded383aece6c33f9b5d3ad77c100ae658ed6",
+    "revival.csv": "daf836af9be7b01246233eeb66f370b38b735878724a31c1c82878d61adddf6f",
     "increments.csv": "a3d739f3b956decfb9c908a7a9f0b53341c6dc7015caf1d4bbc1f565faac6d5d",
     "config_used.yaml": "58b505efd6427025030377b4f8a8d2a06c91107cbecbe77e3d4080e4a8de5797",
     "logs/E_a0p001_1216_seed0.npz": "bbf0423cab36d355a1b01568b931bb0deae57e3318e9d30719598df0f7d55210",

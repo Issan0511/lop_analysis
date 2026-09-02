@@ -84,21 +84,21 @@ Spearman（予測子 対 median log10 U 5M・**ラベル無し**）
 | pool | pool | m_minus | 17 | -0.3064 |
 | pool | pool | u_fr | 17 | -0.3921 |
 | pool | pool | frozen_plus_valley_frac | 17 | 0.5056 |
-| within_family | silu | m_minus | 4 | 0.6 |
-| within_family | silu | u_fr | 4 | -0.6 |
-| within_family | silu | frozen_plus_valley_frac | 4 | 0.7379 |
-| within_family | gelu | m_minus | 3 | 1 |
-| within_family | gelu | u_fr | 3 | -1 |
-| within_family | gelu | frozen_plus_valley_frac | 3 | 0.866 |
-| within_family | relu | m_minus | 1 | nan |
-| within_family | relu | u_fr | 1 | nan |
-| within_family | relu | frozen_plus_valley_frac | 1 | nan |
-| within_family | elu | m_minus | 4 | -1 |
-| within_family | elu | u_fr | 4 | -1 |
-| within_family | elu | frozen_plus_valley_frac | 4 | 1 |
 | within_family | leaky | m_minus | 5 | -0.7 |
 | within_family | leaky | u_fr | 5 | nan |
 | within_family | leaky | frozen_plus_valley_frac | 5 | nan |
+| within_family | relu | m_minus | 1 | nan |
+| within_family | relu | u_fr | 1 | nan |
+| within_family | relu | frozen_plus_valley_frac | 1 | nan |
+| within_family | silu | m_minus | 4 | 0.6 |
+| within_family | silu | u_fr | 4 | -0.6 |
+| within_family | silu | frozen_plus_valley_frac | 4 | 0.7379 |
+| within_family | elu | m_minus | 4 | -1 |
+| within_family | elu | u_fr | 4 | -1 |
+| within_family | elu | frozen_plus_valley_frac | 4 | 1 |
+| within_family | gelu | m_minus | 3 | 1 |
+| within_family | gelu | u_fr | 3 | -1 |
+| within_family | gelu | frozen_plus_valley_frac | 3 | 0.866 |
 
 ## S-mask（spec 字義との差）
 
