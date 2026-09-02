@@ -315,7 +315,13 @@ sanity:
   s_proj_report_float32: true
   s_proj_mu_rel_tol: 1.0e-10                # µ̂ が実際に加えた用量ベクトルと一致
   s_wd_w_ulp_factor: 4.0
+  # S-refl: **登録時は必須ゲート。9/2 Issa 裁定 A により REPORT_ONLY へ降格した**
+  # （spec §10.3 追補 13）。実装の検査ではなく本走の主 endpoint と同じ物理の主張を
+  # 検査するゲートで、30k では符号が安定しない（沈下ユニットの定義 3 通り・窓 4 通りの
+  # いずれでも反転しない）。実装側は他の 11 ゲートが保証している。測定は全部残す。
   s_refl_steps: 30000                       # 沈下ユニットの zbar が BL と逆向きに動く
+  s_refl_report_only: true
+  s_refl_is_required_gate: false
   s_taut_check: true
   s_ref_hash_check: true
   s_ref_remote_check: true

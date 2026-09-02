@@ -173,8 +173,20 @@ class VecMLPL:
     """
 
     ACTIVATIONS = ("relu", "elu", "leaky_relu", "bwd_leaky", "fwd_leaky",
-                   "silu", "gelu", "silu_clamp", "gelu_clamp")
-    SURROGATE_ACTIVATIONS = ("bwd_leaky", "fwd_leaky")
+                   "silu", "gelu", "silu_clamp", "gelu_clamp",
+                   "bwd_reflect", "bwd_quad", "bwd_leaky_proj")
+    SURROGATE_ACTIVATIONS = ("bwd_leaky", "fwd_leaky", "bwd_reflect", "bwd_quad",
+                             "bwd_leaky_proj")
+    # 幻の壁 3 型 [phantom_wall_0902 §4.3]。どれも forward は厳密 ReLU で、
+    # backward の負側だけが違う: -a（反転）・a_Q*z（深さ比例の反転）・+a（bwd_leaky と
+    # 同一。区別する µ 射影は act_grad では書けず、組み立てた勾配へ
+    # phantom_wall_0902.grads_phantom が掛ける）。
+    #   * act_alpha は **常に +a を格納**し、符号は act_grad の分岐で付ける
+    #     （set_activation の凍結済み [0,1] ガードを緩めないため）
+    #   * bwd_quad の act_alpha は a_Q で **1/z の次元。傾きではない**
+    #   * 反転分岐は `0.0 - act_alpha` と書く。`-act_alpha` だと a=0 で -0.0 になり、
+    #     torch.equal は符号盲なので S-limit がバイトの違いを見逃す
+    PHANTOM_ACTIVATIONS = ("bwd_reflect", "bwd_quad", "bwd_leaky_proj")
     # phi' の零点を負側に持つ族（谷）。act_alpha は傾きではなく鋭さ beta。
     STEEPNESS_ACTIVATIONS = ("silu", "gelu", "silu_clamp", "gelu_clamp")
     # 谷の向こうを谷底の値で埋めた版 [valley_clamp_0902]。谷底 z_c = -u*/beta より
@@ -191,6 +203,10 @@ class VecMLPL:
         # 対象外。既定 0.0 は恒等 (乱数消費も算術も無 WD 実装と bit 一致)。
         self.freeze_bias = False
         self.wd_b = _check_wd_b(wd_b, False)
+        # 隠れ層の W だけに掛ける素の L2 勾配係数 [phantom_wall_0902 §4.3]。
+        # v・b・出力 bias c は対象外。既定 0.0 は恒等（`gW + 0.0*W` は有限な W に
+        # 対し `gW` と bit 一致する。S-limit-w が実測する）。
+        self.wd_w = 0.0
         self.set_activation(act, act_alpha, act_grad_form)
         if isinstance(hidden, int):
             hidden = [hidden]
@@ -271,6 +287,9 @@ class VecMLPL:
         if self.act == "fwd_leaky":
             # forward は leaky。上の "leaky_relu" 分岐と同一の式を書く（S-cross）。
             return torch.where(pre > 0, pre, self.act_alpha * pre)
+        if self.act in ("bwd_reflect", "bwd_quad", "bwd_leaky_proj"):
+            # 幻の 3 型はどれも forward が厳密 ReLU。"relu" 分岐と同一の式（S-cross）。
+            return torch.relu(pre)
         if self.act == "silu":
             # torch.sigmoid は両裾で安定。exp(-beta*z) を裸で書かない（S-num）。
             return pre * torch.sigmoid(self.act_alpha * pre)
@@ -317,6 +336,21 @@ class VecMLPL:
         if self.act == "fwd_leaky":
             # backward は厳密 ReLU。上の "relu" 分岐と同一の式（S-cross）。
             return (pre > 0).to(pre.dtype)
+        if self.act == "bwd_reflect":
+            # 負側ゲートを **反転** する。`0.0 - a` と書くのは a=0 で -0.0 を
+            # 作らないため（追補 9）。0.0 - 0.1 は厳密に -0.1 なので a=0.1 は不変。
+            return torch.where(pre > 0, torch.ones_like(pre),
+                               torch.full_like(pre, 0.0 - self.act_alpha))
+        if self.act == "bwd_quad":
+            # 負側ゲートが深さ比例。act_alpha は a_Q で 1/z の次元。
+            # a_Q=0 かつ pre<0 で -0.0 を作らないよう 0.0 + を噛ませる（追補 9）。
+            return torch.where(pre > 0, torch.ones_like(pre),
+                               0.0 + self.act_alpha * pre)
+        if self.act == "bwd_leaky_proj":
+            # act_grad は bwd_leaky と同一の式。µ 射影は勾配を組み立てたあとに
+            # phantom_wall_0902.grads_phantom が掛ける（act_grad では書けない）。
+            return torch.where(pre > 0, torch.ones_like(pre),
+                               torch.full_like(pre, self.act_alpha))
         if self.act == "silu":
             s = torch.sigmoid(self.act_alpha * pre)
             return s * (1.0 + self.act_alpha * pre * (1.0 - s))
@@ -441,6 +475,17 @@ class VecMLPL:
         gWs, gbs, gv, gc = self.grads_layers_batch(x, [pre], [a], delta)
         return gWs[0], gbs[0], gv, gc
 
+    def set_weight_decay_w(self, wd_w):
+        """構築後に wd_w を差し替える。乱数も状態も消費しない。
+
+        ``set_weight_decay_b`` の鏡像で、掛かる相手が**隠れ層の W だけ**である点
+        だけが違う [phantom_wall_0902 §4.3]。
+        """
+        wd_w = float(wd_w)
+        if not math.isfinite(wd_w) or wd_w < 0.0:
+            raise ValueError(f"wd_w must be a finite non-negative float, got {wd_w!r}")
+        self.wd_w = wd_w
+        return self
     def set_weight_decay_b(self, wd_b):
         """構築後に wd_b を差し替える。乱数も状態も消費しないので、arm 設定は
         凍結済みの ``mlp2_phase0.setup_arm`` 経路のままでよい [bias_wd_0901 §6]
@@ -449,10 +494,14 @@ class VecMLPL:
         return self
 
     def sgd_step_layers(self, lr, gWs, gbs, gv, gc):
-        """wd_b > 0 のとき**全隠れ層の** bias だけが `b -= lr*(gb + wd_b*b)` になる
-        [bias_wd_0901 §6]。Ws・v・出力 bias c の更新式は wd_b に依らない。"""
+        """wd_b > 0 のとき**全隠れ層の** bias だけが `b -= lr*(gb + wd_b*b)` に、
+        wd_w > 0 のとき**全隠れ層の** W だけが `W -= lr*(gW + wd_w*W)` になる
+        [bias_wd_0901 §6・phantom_wall_0902 §4.3]。v・出力 bias c はどちらにも
+        依らない。既定 0.0 では両方とも恒等で既存の走と bit 一致する（分岐を
+        置かないのは wd=0 の腕が WD コード経路を通したうえで無 WD 実装と
+        bit 一致することを検査可能にするため）。"""
         for i in range(self.L):
-            self.Ws[i] -= lr[:, None, None] * gWs[i]
+            self.Ws[i] -= lr[:, None, None] * (gWs[i] + self.wd_w * self.Ws[i])
             self.bs[i] -= lr[:, None] * (gbs[i] + self.wd_b * self.bs[i])
         self.v -= lr[:, None] * gv
         self.c -= lr * gc

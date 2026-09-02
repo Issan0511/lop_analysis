@@ -1,0 +1,759 @@
+{
+  "pass_": true,
+  "S1_omp": {
+    "expected": "1",
+    "env": "1",
+    "torch_num_threads": 1,
+    "pass_": true
+  },
+  "S_cross": {
+    "pass_": true,
+    "rows": [
+      {
+        "act": "bwd_reflect",
+        "alpha": 0.1,
+        "forward_equals_relu": true
+      },
+      {
+        "act": "bwd_quad",
+        "alpha": 0.01,
+        "forward_equals_relu": true
+      },
+      {
+        "act": "bwd_leaky_proj",
+        "alpha": 0.1,
+        "forward_equals_relu": true
+      },
+      {
+        "act": "bwd_leaky_proj.grad == bwd_leaky.grad",
+        "alpha": NaN,
+        "forward_equals_relu": true
+      }
+    ],
+    "negative_gate_by_depth": {
+      "-1.0": {
+        "bwd_reflect": -0.1,
+        "bwd_quad": -0.01
+      },
+      "-10.0": {
+        "bwd_reflect": -0.1,
+        "bwd_quad": -0.1
+      },
+      "-30.0": {
+        "bwd_reflect": -0.1,
+        "bwd_quad": -0.3
+      },
+      "-100.0": {
+        "bwd_reflect": -0.1,
+        "bwd_quad": -1.0
+      }
+    },
+    "crossover_depth_z": -10.0
+  },
+  "S_limit_static": {
+    "pass_": true,
+    "rows": [
+      {
+        "act": "bwd_reflect",
+        "forward_equal": true,
+        "grad_equal": true,
+        "negative_zeros": 0,
+        "relu_negative_zeros": 0
+      },
+      {
+        "act": "bwd_quad",
+        "forward_equal": true,
+        "grad_equal": true,
+        "negative_zeros": 0,
+        "relu_negative_zeros": 0
+      },
+      {
+        "act": "bwd_leaky_proj",
+        "forward_equal": true,
+        "grad_equal": true,
+        "negative_zeros": 0,
+        "relu_negative_zeros": 0
+      }
+    ],
+    "failures": [],
+    "signbit_checked": true
+  },
+  "S_bwd": {
+    "pass_": true,
+    "rows": [
+      {
+        "type": "BLR",
+        "negative_units": [
+          0,
+          2
+        ],
+        "sign_flip_of_leaky": true,
+        "gv_zero_on_negative": true
+      },
+      {
+        "type": "BLQ",
+        "negative_units": [
+          0,
+          2
+        ],
+        "depth_scaled_match": true,
+        "gate_values": [
+          -0.029999999329447746,
+          -0.009999999776482582
+        ],
+        "gv_zero_on_negative": true
+      },
+      {
+        "type": "BLP",
+        "negative_units": [
+          0,
+          2
+        ],
+        "firing_units": [
+          1
+        ],
+        "projection_residual_float64": 9.540979117872439e-18,
+        "projection_residual_float32": 8.729731499311499e-10,
+        "tolerance": 1e-12,
+        "gate_precision": "float64",
+        "firing_units_untouched": true,
+        "gb_zero_on_submerged": true,
+        "gv_zero_on_submerged": true,
+        "orthogonal_component_preserved": 2.9756214089959876e-09
+      }
+    ],
+    "failures": [],
+    "comparison": "bit identity at the gradient level (追補 2 を継承)",
+    "note": "S-proj の float64 gate と float32 実現値の両方を出す。float32 では eps*|g| ~ 1e-7 が下限で 1e-12 は到達不能（追補 7）"
+  },
+  "S_proj": {
+    "pass_": true,
+    "tolerance": 1e-10,
+    "rows": [
+      {
+        "step": 0,
+        "mu_norm_rel_err": 0.0,
+        "mu_hat_unit_err": 1.1102230246251565e-16,
+        "direction_cos_err": 2.220446049250313e-16,
+        "min_cos_with_previous_probe": NaN
+      },
+      {
+        "step": 10000,
+        "mu_norm_rel_err": 0.0,
+        "mu_hat_unit_err": 1.1102230246251565e-16,
+        "direction_cos_err": 2.220446049250313e-16,
+        "min_cos_with_previous_probe": 0.9999999999999998
+      },
+      {
+        "step": 20000,
+        "mu_norm_rel_err": 1.4603393944428236e-16,
+        "mu_hat_unit_err": 0.0,
+        "direction_cos_err": 2.220446049250313e-16,
+        "min_cos_with_previous_probe": 0.948541077905558
+      },
+      {
+        "step": 30000,
+        "mu_norm_rel_err": 0.0,
+        "mu_hat_unit_err": 2.220446049250313e-16,
+        "direction_cos_err": 2.220446049250313e-16,
+        "min_cos_with_previous_probe": 0.9484316310711118
+      }
+    ],
+    "failures": [],
+    "note": "mu is a function of env.flip_state only; no exact-support enumeration is needed (追補 12)"
+  },
+  "S_wd_w": {
+    "pass_": true,
+    "lam": 0.0001,
+    "b_v_c_untouched": true,
+    "wd_zero_is_identity": true,
+    "W_delta_max_abs_err": 5.868849939361098e-08,
+    "W_delta_tol_ulp": 2.6114477691407956e-07,
+    "W_delta_signal": 5.47660306438047e-07
+  },
+  "S_ref": {
+    "pass_": true,
+    "runs": {
+      "results/gate_dose_0830": {
+        "pass_": true,
+        "files_checked": 96,
+        "hash_mismatches_on_read_files": [],
+        "hash_mismatches_on_unread_files": [
+          "summary.md"
+        ],
+        "recorded_but_missing": [],
+        "verdict_column_check": {
+          "checked": true,
+          "provenance_era_commit": "c4fe8edb140758fc735b76a5c2d3bd9a7c979283",
+          "differing": [],
+          "unchanged": true
+        }
+      },
+      "results/bwd_leak_0902": {
+        "pass_": true,
+        "files_checked": 52,
+        "hash_mismatches_on_read_files": [],
+        "hash_mismatches_on_unread_files": [],
+        "recorded_but_missing": [],
+        "verdict_column_check": null
+      }
+    },
+    "note": "logs/*.npz are gitignored; the unit-level endpoints are not reproducible from a fresh clone"
+  },
+  "S_limit_bwd_reflect": {
+    "pass_": true,
+    "activation": "bwd_reflect",
+    "steps": 30000,
+    "trained_state_differences": [],
+    "note": "BLP は a=0 でも射影経路を通るが、負側の勾配が 0 なので 射影する対象が無く ReLU と一致する"
+  },
+  "S_limit_bwd_quad": {
+    "pass_": true,
+    "activation": "bwd_quad",
+    "steps": 30000,
+    "trained_state_differences": [],
+    "note": "BLP は a=0 でも射影経路を通るが、負側の勾配が 0 なので 射影する対象が無く ReLU と一致する"
+  },
+  "S_limit_bwd_leaky_proj": {
+    "pass_": true,
+    "activation": "bwd_leaky_proj",
+    "steps": 30000,
+    "trained_state_differences": [],
+    "note": "BLP は a=0 でも射影経路を通るが、負側の勾配が 0 なので 射影する対象が無く ReLU と一致する"
+  },
+  "S_limit_wd_w": {
+    "pass_": true,
+    "steps": 30000,
+    "trained_state_differences": []
+  },
+  "S_refl": {
+    "pass_": true,
+    "report_only": true,
+    "gate_demoted_to_report_only": true,
+    "registered_expectation_met": false,
+    "steps": 30000,
+    "arms": {
+      "BL": {
+        "mean_zbar_drift": 0.006140460260212421,
+        "n_submerged_at_step0": 46
+      },
+      "BLR": {
+        "mean_zbar_drift": 0.00043620364158414304,
+        "n_submerged_at_step0": 46
+      }
+    },
+    "sign_only": true,
+    "note": "spec §6 S-refl は登録時 必須。§10.3 追補 13 により REPORT_ONLY へ降格した。registered_expectation_met が 実際の判定結果で、これが False でも本走は止まらない"
+  },
+  "S_pair": {
+    "pass_": true,
+    "reference": "BLR_1216",
+    "arms": [
+      "BLR_1216",
+      "BLQ_1216",
+      "BLP_1216",
+      "BLRw_1216",
+      "BLQw_1216",
+      "BLPw_1216",
+      "RWw_1216"
+    ],
+    "steps": 30000,
+    "match_by": "seed_init_hash",
+    "differences": [],
+    "parent_flip_rows": [
+      {
+        "arm": "BLR_1216",
+        "reference_arm": "R_1216",
+        "seed": 0,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLR_1216",
+        "reference_arm": "R_1216",
+        "seed": 1,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLR_1216",
+        "reference_arm": "R_1216",
+        "seed": 2,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLR_1216",
+        "reference_arm": "R_1216",
+        "seed": 3,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLR_1216",
+        "reference_arm": "R_1216",
+        "seed": 4,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLR_1216",
+        "reference_arm": "R_1216",
+        "seed": 5,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLR_1216",
+        "reference_arm": "R_1216",
+        "seed": 6,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLR_1216",
+        "reference_arm": "R_1216",
+        "seed": 7,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLR_1216",
+        "reference_arm": "R_1216",
+        "seed": 8,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLR_1216",
+        "reference_arm": "R_1216",
+        "seed": 9,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQ_1216",
+        "reference_arm": "R_1216",
+        "seed": 0,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQ_1216",
+        "reference_arm": "R_1216",
+        "seed": 1,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQ_1216",
+        "reference_arm": "R_1216",
+        "seed": 2,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQ_1216",
+        "reference_arm": "R_1216",
+        "seed": 3,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQ_1216",
+        "reference_arm": "R_1216",
+        "seed": 4,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQ_1216",
+        "reference_arm": "R_1216",
+        "seed": 5,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQ_1216",
+        "reference_arm": "R_1216",
+        "seed": 6,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQ_1216",
+        "reference_arm": "R_1216",
+        "seed": 7,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQ_1216",
+        "reference_arm": "R_1216",
+        "seed": 8,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQ_1216",
+        "reference_arm": "R_1216",
+        "seed": 9,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLP_1216",
+        "reference_arm": "R_1216",
+        "seed": 0,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLP_1216",
+        "reference_arm": "R_1216",
+        "seed": 1,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLP_1216",
+        "reference_arm": "R_1216",
+        "seed": 2,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLP_1216",
+        "reference_arm": "R_1216",
+        "seed": 3,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLP_1216",
+        "reference_arm": "R_1216",
+        "seed": 4,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLP_1216",
+        "reference_arm": "R_1216",
+        "seed": 5,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLP_1216",
+        "reference_arm": "R_1216",
+        "seed": 6,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLP_1216",
+        "reference_arm": "R_1216",
+        "seed": 7,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLP_1216",
+        "reference_arm": "R_1216",
+        "seed": 8,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLP_1216",
+        "reference_arm": "R_1216",
+        "seed": 9,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLRw_1216",
+        "reference_arm": "R_1216",
+        "seed": 0,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLRw_1216",
+        "reference_arm": "R_1216",
+        "seed": 1,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLRw_1216",
+        "reference_arm": "R_1216",
+        "seed": 2,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLRw_1216",
+        "reference_arm": "R_1216",
+        "seed": 3,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLRw_1216",
+        "reference_arm": "R_1216",
+        "seed": 4,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLRw_1216",
+        "reference_arm": "R_1216",
+        "seed": 5,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLRw_1216",
+        "reference_arm": "R_1216",
+        "seed": 6,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLRw_1216",
+        "reference_arm": "R_1216",
+        "seed": 7,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLRw_1216",
+        "reference_arm": "R_1216",
+        "seed": 8,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLRw_1216",
+        "reference_arm": "R_1216",
+        "seed": 9,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQw_1216",
+        "reference_arm": "R_1216",
+        "seed": 0,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQw_1216",
+        "reference_arm": "R_1216",
+        "seed": 1,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQw_1216",
+        "reference_arm": "R_1216",
+        "seed": 2,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQw_1216",
+        "reference_arm": "R_1216",
+        "seed": 3,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQw_1216",
+        "reference_arm": "R_1216",
+        "seed": 4,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQw_1216",
+        "reference_arm": "R_1216",
+        "seed": 5,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQw_1216",
+        "reference_arm": "R_1216",
+        "seed": 6,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQw_1216",
+        "reference_arm": "R_1216",
+        "seed": 7,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQw_1216",
+        "reference_arm": "R_1216",
+        "seed": 8,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLQw_1216",
+        "reference_arm": "R_1216",
+        "seed": 9,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLPw_1216",
+        "reference_arm": "R_1216",
+        "seed": 0,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLPw_1216",
+        "reference_arm": "R_1216",
+        "seed": 1,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLPw_1216",
+        "reference_arm": "R_1216",
+        "seed": 2,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLPw_1216",
+        "reference_arm": "R_1216",
+        "seed": 3,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLPw_1216",
+        "reference_arm": "R_1216",
+        "seed": 4,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLPw_1216",
+        "reference_arm": "R_1216",
+        "seed": 5,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLPw_1216",
+        "reference_arm": "R_1216",
+        "seed": 6,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLPw_1216",
+        "reference_arm": "R_1216",
+        "seed": 7,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLPw_1216",
+        "reference_arm": "R_1216",
+        "seed": 8,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "BLPw_1216",
+        "reference_arm": "R_1216",
+        "seed": 9,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "RWw_1216",
+        "reference_arm": "R_1216",
+        "seed": 0,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "RWw_1216",
+        "reference_arm": "R_1216",
+        "seed": 1,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "RWw_1216",
+        "reference_arm": "R_1216",
+        "seed": 2,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "RWw_1216",
+        "reference_arm": "R_1216",
+        "seed": 3,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "RWw_1216",
+        "reference_arm": "R_1216",
+        "seed": 4,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "RWw_1216",
+        "reference_arm": "R_1216",
+        "seed": 5,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "RWw_1216",
+        "reference_arm": "R_1216",
+        "seed": 6,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "RWw_1216",
+        "reference_arm": "R_1216",
+        "seed": 7,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "RWw_1216",
+        "reference_arm": "R_1216",
+        "seed": 8,
+        "flip_state_equal": true
+      },
+      {
+        "arm": "RWw_1216",
+        "reference_arm": "R_1216",
+        "seed": 9,
+        "flip_state_equal": true
+      }
+    ],
+    "parent_missing": [],
+    "caveat": "init/teacher/input realization only; trajectories diverge after step 1"
+  },
+  "S_dose": {
+    "pass_": true,
+    "tolerance": 1e-10,
+    "n_probes": 217,
+    "failures": []
+  },
+  "S_taut": {
+    "pass_": true,
+    "all_arms_distinct": true,
+    "unfit_finite_positive": true,
+    "short_run_unfit": {
+      "RWw_1216": [
+        0.10740618452420198,
+        0.043680150237468046
+      ],
+      "BLR_1216": [
+        0.10197707081818044,
+        0.03965461675900367
+      ],
+      "BLQ_1216": [
+        0.10158714182130896,
+        0.0443994271805649
+      ],
+      "BLP_1216": [
+        0.10823929564220632,
+        0.046961203564104013
+      ]
+    },
+    "verdict_mutants": {
+      "diverge": "PHANTOM_DIVERGES",
+      "rescue": "PHANTOM_RESCUES",
+      "spring": "PHANTOM_NEEDS_SPRING",
+      "wd_alone": "WD_W_SUFFICIENT_ALONE",
+      "deaf": "PHANTOM_DEAF",
+      "partial": "PARTIAL"
+    },
+    "expected": {
+      "diverge": "PHANTOM_DIVERGES",
+      "rescue": "PHANTOM_RESCUES",
+      "spring": "PHANTOM_NEEDS_SPRING",
+      "wd_alone": "WD_W_SUFFICIENT_ALONE",
+      "deaf": "PHANTOM_DEAF",
+      "partial": "PARTIAL"
+    }
+  },
+  "S6_floor_inherited": {
+    "pass_": true,
+    "reference": "/home/issan/Projects/claude/proj_004_drift/results/gate_dose_0830/floor_calibration.csv",
+    "reference_values": [
+      1e-16
+    ],
+    "configured": 1e-16
+  },
+  "S_CI_degeneracy": {
+    "pass_": true,
+    "result": {
+      "point": 0.0,
+      "studentized_ci_lo": 0.0,
+      "studentized_ci_hi": 0.0,
+      "percentile_ci_lo": 0.0,
+      "percentile_ci_hi": 0.0,
+      "se0": 0.0,
+      "degenerate_se_fraction": 1.0,
+      "studentized_width_ratio": 0.0,
+      "ci_degenerate": 1,
+      "boot_ok": 0,
+      "sign_test_p": 1.0,
+      "n_seed": 10,
+      "statistic": "median"
+    }
+  }
+}
