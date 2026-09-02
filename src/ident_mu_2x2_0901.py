@@ -105,8 +105,9 @@ CONFIG = Path(ROOT) / "configs" / "ident_mu_2x2_0901.yaml"
 
 CELL_ORDER = ("IM", "iM", "Im", "im")
 NOWD_ARM = "im_nowd"
+MPLUS_NOWD_ARM = "iM_nowd"      # 追補2（2026-09-02）
 ANCHOR_ARM = "std_anchor"
-ANCHOR_ARMS = (NOWD_ARM, ANCHOR_ARM)
+ANCHOR_ARMS = (NOWD_ARM, MPLUS_NOWD_ARM, ANCHOR_ARM)
 ARM_ORDER = CELL_ORDER + ANCHOR_ARMS
 VALID_ARM_STATUSES = {COMPLETE, COMPLETE_WITH_EXCLUSIONS}
 
@@ -125,6 +126,10 @@ INCONCLUSIVE_WIDE = "INCONCLUSIVE_WIDE"
 BWD_PREVENTS_EXTINCTION = "BWD_PREVENTS_EXTINCTION"
 EXTINCTION_PERSISTS = "EXTINCTION_PERSISTS"
 PARTIAL_RESCUE = "PARTIAL_RESCUE"
+# 登録副判定 R-ext-M+（追補2 §3）。符号ベースで、タイトな null は主張しない。
+BWD_DELAYS_EXTINCTION_UNDER_MU = "BWD_DELAYS_EXTINCTION_UNDER_MU"
+BWD_ACCELERATES_EXTINCTION_UNDER_MU = "BWD_ACCELERATES_EXTINCTION_UNDER_MU"
+BWD_EFFECT_NOT_DISTINGUISHED_UNDER_MU = "BWD_EFFECT_NOT_DISTINGUISHED_UNDER_MU"
 R_EXT_INVALID_TOO_FEW_PAIRED = "R_EXT_INVALID_TOO_FEW_PAIRED"
 # フラグ
 I_CELLS_INVALID_S_OP = "I_CELLS_INVALID_S_OP"
@@ -264,7 +269,9 @@ def validate_config(cfg: dict, *, stage: str) -> None:
     expected = [
         ("IM", "flip0", "flip_t", lam), ("iM", "flip0", "zero", lam),
         ("Im", "zero_centered", "flip_t", lam), ("im", "zero_centered", "zero", lam),
-        (NOWD_ARM, "zero_centered", "zero", 0.0), (ANCHOR_ARM, "raw", "zero", 0.0),
+        (NOWD_ARM, "zero_centered", "zero", 0.0),
+        (MPLUS_NOWD_ARM, "flip0", "zero", 0.0),
+        (ANCHOR_ARM, "raw", "zero", 0.0),
     ]
     got = [(a["name"], str(a["visible"]), str(a["code"]), float(a["wd_b"]))
            for a in cfg["arms"]]
@@ -282,9 +289,18 @@ def validate_config(cfg: dict, *, stage: str) -> None:
         raise ValueError("registered b-weight-decay differs")
     if cfg["pairing"]["paired_groups"] != [list(CELL_ORDER)]:
         raise ValueError("registered pairing differs")
-    if (list(cfg["pairing"]["anchor_arms"]) != list(ANCHOR_ARMS)
-            or list(cfg["pairing"]["r_ext_group"]) != ["im", NOWD_ARM]):
-        raise ValueError("registered anchors / R-ext group differ")
+    if (list(cfg["pairing"]["anchor_arms"]) != [NOWD_ARM, ANCHOR_ARM]
+            or list(cfg["pairing"]["r_ext_group"]) != ["im", NOWD_ARM]
+            or list(cfg["pairing"]["r_ext_mplus_group"]) != ["iM", MPLUS_NOWD_ARM]):
+        raise ValueError("registered anchors / R-ext groups differ")
+    mplus = P["r_ext_mplus"]
+    if (list(mplus["arms"]) != ["iM", MPLUS_NOWD_ARM]
+            or str(mplus["primary"]) != "extinction_task"
+            or str(mplus["rule"]) != "paired_ci_sign_only"
+            or mplus["equivalence_margin"] is not None
+            or mplus["null_is_not_tight"] is not True
+            or int(mplus["bootstrap_seed"]) != 20_260_913):
+        raise ValueError("registered R-ext-M+ differs")
     if int(cfg["phase1"]["task_period"]) != 10_000:
         raise ValueError("registered task period differs")
     if (list(P["early_block_tasks"]), list(P["late_block_tasks"]),
@@ -1696,6 +1712,93 @@ def _single_contrast_verdict(cfg: dict, values: dict[str, np.ndarray],
                 interaction_margin="not applicable")
 
 
+def classify_r_ext_mplus(ci: dict) -> str:
+    """R-ext-M+ の符号ベース判定（追補2 §3）。
+
+    等価限界を登録していないので、**「効果なし」は主張できない**。CI が 0 を
+    跨いだときのラベルは「区別できなかった」であって、タイトな null ではない。
+    """
+    if ci["ci_lo"] > 0.0:
+        return BWD_DELAYS_EXTINCTION_UNDER_MU
+    if ci["ci_hi"] < 0.0:
+        return BWD_ACCELERATES_EXTINCTION_UNDER_MU
+    return BWD_EFFECT_NOT_DISTINGUISHED_UNDER_MU
+
+
+def _r_ext_mplus(cfg: dict, frame: pd.DataFrame, levels: pd.DataFrame,
+                 meta: dict, valid: dict, included: dict, b02: int,
+                 b10: int) -> dict:
+    """登録副判定 R-ext-M+（追補2 §3）: µ が立っていても b-WD は何かしているか。
+
+    二値の全滅到達は両腕とも飽和する見込みなので（教訓⑪）、主 endpoint は
+    **全滅到達 task**（seed 対応・右打ち切り）。
+    """
+    R = _P(cfg)["r_ext_mplus"]
+    treat, control = str(R["arms"][0]), str(R["arms"][1])
+    minimum = int(_P(cfg)["seed_isolation"]["min_paired_seeds"])
+    if not (valid.get(treat) and valid.get(control)):
+        return dict(verdict=R_EXT_INVALID_TOO_FEW_PAIRED,
+                    evidence=f"{treat}={meta.get(treat, {}).get('status')}; "
+                             f"{control}={meta.get(control, {}).get('status')}")
+    seeds = sorted(included[treat] & included[control])
+    if len(seeds) < minimum:
+        return dict(verdict=R_EXT_INVALID_TOO_FEW_PAIRED,
+                    evidence=f"common complete seeds={seeds}; n={len(seeds)} "
+                             f"< {minimum}")
+    table = extinction_table(cfg, frame)
+    table = table[table.seed.isin(seeds)].set_index(["arm", "seed"])
+    tasks = {arm: np.array([float(table.loc[(arm, s), "extinction_task"])
+                            for s in seeds]) for arm in (treat, control)}
+    counts = {arm: int(sum(bool(table.loc[(arm, s), "extinct"]) for s in seeds))
+              for arm in (treat, control)}
+    censored = {arm: len(seeds) - counts[arm] for arm in (treat, control)}
+    rng = np.random.default_rng(int(R["bootstrap_seed"]))
+    draws = rng.integers(0, len(seeds),
+                         size=(int(_P(cfg)["bootstrap_B"]), len(seeds)))
+    delta = tasks[treat] - tasks[control]
+    ci = paired_ci(_compat_cfg(cfg), delta, draws)
+    heavy = [arm for arm in (treat, control)
+             if censored[arm] >= int(R["censor_flag_min_seeds"])]
+    verdict = classify_r_ext_mplus(ci)
+
+    def level(arm: str, block: int, column: str) -> float:
+        group = levels[(levels.arm == arm) & (levels.block == block)
+                       & levels.seed.isin(seeds)]
+        return float(group[column].mean())
+
+    detail = {arm: dict(
+        extinct=counts[arm], censored=censored[arm],
+        clopper_pearson=[float(v) for v in clopper_pearson(counts[arm], len(seeds))],
+        median_extinction_task=float(np.median(tasks[arm])),
+        E_level_B10=level(arm, b10, "mean_log10_unfit"),
+        E_drift=level(arm, b10, "mean_log10_unfit") - level(arm, b02,
+                                                            "mean_log10_unfit"),
+        b_median_all_B10=level(arm, b10, "L1_b_median_all"))
+        for arm in (treat, control)}
+    return dict(
+        verdict=(f"{verdict} (+{ONSET_CENSORED})" if heavy else verdict),
+        ci_basis="paired percentile", seeds=seeds, n=len(seeds),
+        delta_extinction_task={key: float(ci[key])
+                               for key in ("point", "ci_lo", "ci_hi")},
+        ci_degenerate=int(ci["ci_degenerate"]),
+        per_seed_delta=[float(v) for v in delta], arms=detail,
+        censored_flag=heavy,
+        null_is_not_tight=True,
+        evidence=(f"n={len(seeds)}; {treat} - {control} on the extinction task = "
+                  f"{_fmt_ci(ci)}; median task {treat}="
+                  f"{detail[treat]['median_extinction_task']:.1f} / {control}="
+                  f"{detail[control]['median_extinction_task']:.1f}; "
+                  f"extinct {treat}={counts[treat]}/{len(seeds)} / "
+                  f"{control}={counts[control]}/{len(seeds)} (REPORT); "
+                  f"E-level B10 {treat}={detail[treat]['E_level_B10']:.4f} / "
+                  f"{control}={detail[control]['E_level_B10']:.4f}; "
+                  f"b(all units) B10 {treat}={detail[treat]['b_median_all_B10']:+.4f}"
+                  f" / {control}={detail[control]['b_median_all_B10']:+.4f}; "
+                  f"censored={censored}"
+                  + ("; 等価限界を登録していないので『効果なし』は主張しない"
+                     if verdict == BWD_EFFECT_NOT_DISTINGUISHED_UNDER_MU else "")))
+
+
 def analyze(cfg: dict, outdir: Path, meta: dict[str, dict], *,
             i_cells_invalid: bool = False) -> dict:
     P, iso = _P(cfg), _P(cfg)["seed_isolation"]
@@ -1819,6 +1922,13 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict], *,
         r_ext = _r_ext(cfg, frame, onsets, levels, meta, valid, included, b10)
         add("R-ext", "extinction by 5M: im vs im_nowd", r_ext["verdict"],
             r_ext["evidence"], r_ext.get("ci_basis", ""))
+        r_ext_mplus = None
+        if MPLUS_NOWD_ARM in meta:
+            r_ext_mplus = _r_ext_mplus(cfg, frame, levels, meta, valid, included,
+                                       b02, b10)
+            add("R-ext-M+", "extinction task: iM vs iM_nowd",
+                r_ext_mplus["verdict"], r_ext_mplus["evidence"],
+                r_ext_mplus.get("ci_basis", ""))
 
         # REPORT_ONLY（spec §6.1 の E-onset 降格 / §6.5）
         primary_threshold = float(P["onset"]["threshold"])
@@ -1871,7 +1981,7 @@ def analyze(cfg: dict, outdir: Path, meta: dict[str, dict], *,
                 f"censored={int(tau.censored.sum())}")
         details = dict(
             drift=_plain(drift_result), level=_plain(level_result),
-            r_ext=r_ext, never_below=never_below,
+            r_ext=r_ext, r_ext_mplus=r_ext_mplus, never_below=never_below,
             b02_means=b02_means, b02_range=b02_range,
             ceiling_seeds_on_anchor={ceiling_arm: ceiling_seeds},
             floor_values={f"{arm}_B{block:02d}": value
@@ -1953,7 +2063,8 @@ def _plain(result: dict) -> dict:
 def _figure(frame: pd.DataFrame, outdir: Path) -> None:
     fig, axes = plt.subplots(2, 3, figsize=(15, 8))
     colors = {"IM": "#e34a33", "iM": "#fdae61", "Im": "#2b8cbe",
-              "im": "#31a354", NOWD_ARM: "#984ea3", ANCHOR_ARM: "#555555"}
+              "im": "#31a354", NOWD_ARM: "#984ea3", MPLUS_NOWD_ARM: "#a65628",
+              ANCHOR_ARM: "#555555"}
     panels = [("unfit", "exact-support unfit", True),
               ("L1_strict_dead_frac", "strict_dead_frac L1", False),
               ("L1_submerged_frac", "submerged_frac L1", False),

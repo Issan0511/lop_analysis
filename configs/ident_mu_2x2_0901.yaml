@@ -79,6 +79,8 @@ arms:
   - {name: Im,         hidden: [100], centered_layers: [1], visible: zero_centered, code: flip_t, wd_b: 1.0e-3, cell: true,  I: true,  M: false}
   - {name: im,         hidden: [100], centered_layers: [1], visible: zero_centered, code: zero,   wd_b: 1.0e-3, cell: true,  I: false, M: false}
   - {name: im_nowd,    hidden: [100], centered_layers: [1], visible: zero_centered, code: zero,   wd_b: 0.0,    cell: false, I: false, M: false}
+  # 追補2（2026-09-02）: iM の λ=0 対照。M+ 側で b-WD が何かしているかを見る。
+  - {name: iM_nowd,    hidden: [100], centered_layers: [1], visible: flip0,         code: zero,   wd_b: 0.0,    cell: false, I: false, M: true}
   - {name: std_anchor, hidden: [100], centered_layers: [1], visible: raw,           code: zero,   wd_b: 0.0,    cell: false, I: null,  M: null}
 
 pairing:
@@ -87,7 +89,8 @@ pairing:
   anchor_arms: [im_nowd, std_anchor]
   r_ext_group: [im, im_nowd]
   baseline: im
-  pairing_scope: init_teacher_input_realization_all_six_arms
+  r_ext_mplus_group: [iM, iM_nowd]
+  pairing_scope: init_teacher_input_realization_all_seven_arms
 
 phase1:
   task_period: 10000
@@ -156,6 +159,24 @@ ident_mu_2x2:
     ci_method: clopper_pearson
     reference: {arm: L1w100_Aexact, reached: 10, of: 10, task_range: [154, 454]}
     scope_note: death_claim_only_do_not_read_as_LOP_CURED
+
+  # ---- 登録副判定 R-ext-M+（追補2 §3）: µ が立っていても b-WD は何かしているか
+  # 二値の全滅到達は両腕とも飽和する見込みなので（教訓⑪）、主は**全滅到達 task**。
+  # 等価限界は登録しない（v2 で tau 側の Δ は落としてある）ので、判定は
+  # 符号ベース = CI が 0 を跨ぐかどうかだけ。**タイトな null は主張できない。**
+  r_ext_mplus:
+    arms: [iM, iM_nowd]
+    primary: extinction_task
+    extinction_rule: L1_strict_dead_frac == 1.0
+    censor_task: 501
+    censor_flag_min_seeds: 3
+    rule: paired_ci_sign_only
+    equivalence_margin: null
+    null_is_not_tight: true
+    companions_report_only: [binary_extinction_clopper_pearson, E_level_B10,
+                             E_drift, b_median_all_B10]
+    ci_method: percentile_paired
+    bootstrap_seed: 20260913
 
   # ---- 集計規約（spec §6.5）
   unfit_floor: 1.0e-16

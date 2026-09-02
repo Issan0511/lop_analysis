@@ -26,6 +26,7 @@ from src.ident_mu_2x2_0901 import (
     INTERACTION_DOMINATES,
     MU_DOMINANT,
     NEITHER_MATTERS,
+    MPLUS_NOWD_ARM,
     NOWD_ARM,
     PARTIAL_RESCUE,
     _setup,
@@ -36,6 +37,10 @@ from src.ident_mu_2x2_0901 import (
     block_levels,
     classify_2x2,
     classify_r_ext,
+    classify_r_ext_mplus,
+    BWD_ACCELERATES_EXTINCTION_UNDER_MU,
+    BWD_DELAYS_EXTINCTION_UNDER_MU,
+    BWD_EFFECT_NOT_DISTINGUISHED_UNDER_MU,
     I_CELLS_INVALID_S_OP,
     _s_op_identification,
     active_cells,
@@ -134,6 +139,7 @@ class ConfigTests(unittest.TestCase):
             ("Im", "zero_centered", "flip_t", 1e-3),
             ("im", "zero_centered", "zero", 1e-3),
             (NOWD_ARM, "zero_centered", "zero", 0.0),
+            (MPLUS_NOWD_ARM, "flip0", "zero", 0.0),
             (ANCHOR_ARM, "raw", "zero", 0.0)])
         broken = copy.deepcopy(self.cfg)
         broken["arms"][2]["code"] = "zero"        # (I+, M-) セルを潰す
@@ -146,7 +152,7 @@ class ConfigTests(unittest.TestCase):
             validate_config(unpurified, stage="implementation")
         # アンカーは逆に λ=0 でなければならない。
         decayed_anchor = copy.deepcopy(self.cfg)
-        decayed_anchor["arms"][4]["wd_b"] = 1.0e-3
+        decayed_anchor["arms"][4]["wd_b"] = 1.0e-3   # im_nowd
         with self.assertRaisesRegex(ValueError, "registered arms differ"):
             validate_config(decayed_anchor, stage="implementation")
 
@@ -338,6 +344,18 @@ class DecisionTreeTests(unittest.TestCase):
         self.assertEqual(report["frac_scored_boundaries_with_an_identified_bit"],
                          0.5)
 
+    def test_r_ext_mplus_is_sign_based_and_never_claims_a_tight_null(self) -> None:
+        """追補2 §3。等価限界を登録していないので「効果なし」は出さない。"""
+        self.assertEqual(classify_r_ext_mplus({"ci_lo": 12.0, "ci_hi": 40.0}),
+                         BWD_DELAYS_EXTINCTION_UNDER_MU)
+        self.assertEqual(classify_r_ext_mplus({"ci_lo": -40.0, "ci_hi": -3.0}),
+                         BWD_ACCELERATES_EXTINCTION_UNDER_MU)
+        for bounds in (("ci_lo", -1.0, "ci_hi", 1.0), ("ci_lo", -300.0, "ci_hi", 300.0)):
+            ci = {bounds[0]: bounds[1], bounds[2]: bounds[3]}
+            # 狭い CI も広い CI も同じラベル = タイトな null と区別しない。
+            self.assertEqual(classify_r_ext_mplus(ci),
+                             BWD_EFFECT_NOT_DISTINGUISHED_UNDER_MU)
+
     def test_r_ext_labels(self) -> None:
         thresholds = dict(prevents=8, persists=8, residual=1)
         cases = [
@@ -367,11 +385,12 @@ def _synthetic_frame(seeds=range(10), tasks=500, ladder=False,
     * `im_extinct=True`: b-WD 下の `im` も全滅させる（R-ext の反対側の枝）。
     """
     onsets = {"IM": 400, "iM": 300, "Im": 350, "im": 250,
-              NOWD_ARM: 250, ANCHOR_ARM: 450}
+              NOWD_ARM: 250, MPLUS_NOWD_ARM: 200, ANCHOR_ARM: 450}
     rows = []
     for arm, onset in onsets.items():
         # im_nowd は λ=0 の Aexact 双子なので全滅する側に置く。
-        dead_max = 1.0 if (arm == NOWD_ARM or (im_extinct and arm == "im")) else 0.9
+        dead_max = 1.0 if (arm in (NOWD_ARM, MPLUS_NOWD_ARM, "iM")
+                           or (im_extinct and arm == "im")) else 0.9
         for seed in seeds:
             shift = onset + 3 * (seed - 4.5) + 2 * np.sin(seed * 3 + onset)
             jitter = 0.02 * np.sin(seed * 7 + onset)
@@ -387,7 +406,8 @@ def _synthetic_frame(seeds=range(10), tasks=500, ladder=False,
                 dead = float(np.round(dead_max * gate * 100) / 100)
                 rows.append(dict(
                     arm=arm, seed=int(seed), step=task * 10_000, task=task,
-                    wd_b=0.0 if arm in (NOWD_ARM, ANCHOR_ARM) else 1e-3,
+                    wd_b=0.0 if arm in (NOWD_ARM, MPLUS_NOWD_ARM,
+                                        ANCHOR_ARM) else 1e-3,
                     unfit=10.0 ** level,
                     eval_loss_exact=10.0 ** level,
                     eval_loss_exact_nobypass=10.0 ** level,
@@ -401,6 +421,7 @@ def _synthetic_frame(seeds=range(10), tasks=500, ladder=False,
                     L1_b_median_all=-0.3 - dead,
                     L1_sigma_median_alive=0.5,
                     mu_norm_visible=0.0 if arm in ("Im", "im", NOWD_ARM) else 2.7,
+                    L1_alive_unused=0,
                     u_norm=0.4 if arm in ("IM", "Im") else 0.0,
                     bypass_value=0.3 if arm in ("IM", "Im") else 0.0,
                     bypass_share=0.5 if arm in ("IM", "Im") else 0.0,
@@ -445,8 +466,10 @@ class AnalysisTests(unittest.TestCase):
         self.assertEqual(sorted(table.threshold.unique()), [-1.5, -1.0, -0.5])
         self.assertEqual(int(table.primary.sum()), len(ARM_ORDER) * 10)
         order = table[table.primary].groupby("arm").tau.median().sort_values()
+        # 合成の onset 設計どおりの順（iM_nowd 200 < im/im_nowd 250 < ... < std 450）
+        self.assertEqual(list(order.index)[0], MPLUS_NOWD_ARM)
+        self.assertEqual(set(list(order.index)[1:3]), {"im", NOWD_ARM})
         self.assertEqual(list(order.index)[-1], ANCHOR_ARM)
-        self.assertEqual(set(list(order.index)[:2]), {"im", NOWD_ARM})
 
     def test_extinction_table_uses_both_rules(self) -> None:
         table = extinction_table(self.cfg, self.frame).set_index(["arm", "seed"])
@@ -490,6 +513,15 @@ class AnalysisTests(unittest.TestCase):
                                     _all_complete())
         self.assertEqual(persists["details"]["r_ext"]["verdict"],
                          EXTINCTION_PERSISTS)
+
+    def test_r_ext_mplus_row_is_emitted_with_the_new_arm(self) -> None:
+        result, outdir = self._analyze(self.frame, _all_complete())
+        mplus = result["details"]["r_ext_mplus"]
+        self.assertEqual(mplus["n"], 10)
+        self.assertTrue(mplus["null_is_not_tight"])
+        self.assertEqual(sorted(mplus["arms"]), ["iM", MPLUS_NOWD_ARM])
+        verdict = pd.read_csv(outdir / "verdict.csv")
+        self.assertIn("R-ext-M+", set(verdict.pred))
 
     def test_r_ext_falls_back_when_the_anchor_is_invalid(self) -> None:
         meta = _all_complete()
