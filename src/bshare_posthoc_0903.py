@@ -555,7 +555,13 @@ def _summary_md(source: Path, start_record: int, arm_rows: list[dict]) -> str:
              "median over seeds (C1's 取り方). `unit share` = median of the "
              "per-unit ratios. `share_ff` = the same ratio of medians with both "
              "routes accumulated only over flip-free intervals (µ' constant, so "
-             "no reorientation term).", "",
+             "no reorientation term). **It is therefore measured on the "
+             "within-task portion of the trajectory only**: the mask keeps ~90% "
+             "of the intervals but only the fraction of the descent shown as "
+             "`ff keeps Δb` below, and on the fast arms much of what survives "
+             "comes from the first probe interval, so `share_ff` moves more "
+             "than `share` when the window start does — read it against the "
+             "`_start1` output.", "",
              "| arm | seeds | share | diff | unit share | diff | share_ff | diff_ff | predicted | Δ(w·µ') | Δb | t_sub |",
              "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in arm_rows:
