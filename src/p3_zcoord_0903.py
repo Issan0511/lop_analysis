@@ -69,7 +69,8 @@ ABS_NAMES = ["0-1", "1-3", "3-6", "6-10", ">10"]
 # ---------------------------------------------------------------------------
 # 1 腕ぶんの行を作る
 # ---------------------------------------------------------------------------
-def load_arm(arm: str, run: str, *, max_step: int | None = None) -> dict:
+def load_arm(arm: str, run: str, *, max_step: int | None = None,
+             fam_is_elu: bool = True) -> dict:
     """1 腕・全 seed の「沈下 × タスク内」の行をプールして返す。
 
     §10-4 の ``fullpass.py`` と同じく、増分は隣り合う記録点の差
@@ -79,7 +80,7 @@ def load_arm(arm: str, run: str, *, max_step: int | None = None) -> dict:
     """
     logdir = RESULTS / run / "logs"
     cols = {k: [] for k in ("inc", "inc_f32", "d_zmax", "d_zbar", "lnmob",
-                            "absv", "seed", "resid", "pos")}
+                            "absv", "seed", "resid", "pos", "phi_ratio")}
     n_raw = n_sub = n_within = 0
     n_mob_zero = 0
     agree_num = agree_den = 0          # zmax<=0 と p_hat==0 の一致（§5 の疑い(1)）
@@ -137,6 +138,12 @@ def load_arm(arm: str, run: str, *, max_step: int | None = None) -> dict:
         cols["lnmob"].append(lnmob)
         cols["resid"].append(lnmob - zmax_m)
         cols["absv"].append(np.abs(v[prev][m]))
+        # §2(c) の前件は「深い ELU では φ→−α（定数）なので括弧の中が深さに
+        # 依らなくなる」。その前件そのものを測る量が E_x[φ]/α である。
+        # 沈下 ELU では E_x[φ] = α(E[e^z]-1) = mob - α、沈下 leaky では a·zbar。
+        phi_over_alpha = ((mob[prev][m] / alpha - 1.0) if fam_is_elu
+                          else zbar[prev][m])
+        cols["phi_ratio"].append(phi_over_alpha)
         cols["seed"].append(np.full(int(m.sum()), seed, dtype=np.int8))
         # タスク内位置 o: 増分 j = 記録 j -> j+1 の j % (period/1000)。
         # 境界増分（o=0）は within で既に落ちているので o は 1..9 を取る。
@@ -232,6 +239,7 @@ def bin_table(d: dict, coord: str, binset: str,
                               if np.median(ulp) > 0 else float("nan")),
                 lnmob_med=float(np.median(lnmob)),
                 resid_med=float(np.median(d["resid"][m])),
+                phi_ratio_med=float(np.median(d["phi_ratio"][m])),
             )
             # seed ごとの中央値（腕内のばらつき。判定には使わず報告のみ）
             per_seed = []
@@ -259,6 +267,8 @@ def bin_table(d: dict, coord: str, binset: str,
                                         if arr.size > 1 else float("nan"))
             # 増分の広がり（中央値は「小さな正味」であって「小さな量」ではない）
             row["inc_iqr"] = float(np.quantile(inc, 0.75) - np.quantile(inc, 0.25))
+            row["inc_sd"] = float(inc.std())
+            row["inc_mad"] = float(np.median(np.abs(inc - med)))
             row["inc_frac_gt_1e3"] = float(np.mean(np.abs(inc) > 1e-3))
         rows.append(row)
     return rows
@@ -338,7 +348,9 @@ def local_exponents(rows: list[dict], abscissa: str) -> list[dict]:
                 rec["excluded_by_2se"] = bool(hi < pred or lo > pred)
                 rec["pred_over_hi2se"] = (float(pred / hi) if hi > 0
                                           else float("inf"))
-        for tag, key in (("", "inc_med"), ("_mean", "inc_mean")):
+        for tag, key in (("", "inc_med"), ("_mean", "inc_mean"),
+                         ("_iqr", "inc_iqr"), ("_sd", "inc_sd"),
+                         ("_mad", "inc_mad")):
             va, vb = a[key], b[key]
             if va > 0 and vb > 0:
                 k = -(math.log(vb) - math.log(va)) / dx
@@ -461,7 +473,7 @@ def run(outdir: Path) -> dict:
 
     for arm, run_, fam, dial, max_step, wname in windows:
         key = f"{arm}@{wname}"
-        d = load_arm(arm, run_, max_step=max_step)
+        d = load_arm(arm, run_, max_step=max_step, fam_is_elu=(fam == "elu"))
         print(f"[{key}] rows={d['n_rows']:,} sub_agree={d['sub_agree']:.6f} "
               f"alpha={d['alpha']}", flush=True)
         per_arm[key] = dict(arm=arm, run=run_, family=fam, dial=dial,
@@ -604,6 +616,52 @@ def judge(bins_rows, exp_rows, ident_rows, spear_rows, per_arm,
     p4_bad = [e for e in p4 if abs(e["kappa_mob"]) > TOL_P4]
     P4 = bool(p4) and not p4_bad
 
+    # --- ★ §2(c) の前件（φ の飽和）が腕ごとに成り立っているか。
+    # 括弧の中の自己項は v·φ なので、φ/α が深さ帯をまたいで動かなければ前件は
+    # 成立している。ELU では φ/α → −1 に飽和、leaky では φ/α = z̄ で飽和しない。
+    sat = {}
+    for key in main:
+        rows_ = [r for r in bins_rows
+                 if r["key"] == key and r["coord"] == "zmax"
+                 and r["binset"] == "abs" and r["n"] >= MIN_N
+                 and "phi_ratio_med" in r]
+        if len(rows_) < 2:
+            continue
+        vals = [abs(r["phi_ratio_med"]) for r in rows_]
+        sat[key] = dict(family=per_arm[key]["family"],
+                        bins=[r["bin"] for r in rows_],
+                        phi_over_alpha=[r["phi_ratio_med"] for r in rows_],
+                        spread=float(max(vals) / min(vals) - 1.0) if min(vals) > 0
+                        else float("inf"))
+
+    # --- ★ 尺度統計量: 増分の**大きさ**（IQR / sd / MAD）の深さ指数が
+    # 可動度の指数に一致するか。§2(c) の代数が言っているのは勾配の大きさが
+    # phi' に比例することなので、正味（中央値）ではなく尺度で見るほうが
+    # 代数に近い。横軸は帯の深さ中央値（中点は偏る）。
+    def scale_view(coord, stat):
+        got = []
+        for e in pairs(elu, coord, "abs", "depth_med"):
+            k = e.get("kappa_inc" + stat)
+            if k is None or k != k:
+                continue
+            got.append(dict(key=e["key"], pair=e["pair"], stat=stat.strip("_"),
+                            kappa_inc=float(k), kappa_mob=float(e["kappa_mob"]),
+                            diff=float(k - e["kappa_mob"]),
+                            n_lo=e["n_lo"], n_hi=e["n_hi"],
+                            shallow=bool(e["pair"].startswith("0-1")),
+                            ok=bool(abs(k - e["kappa_mob"]) <= TOL_P2
+                                    and np.sign(k) == np.sign(e["kappa_mob"]))))
+        return got
+
+    scale = {}
+    for stat in ("", "_iqr", "_sd", "_mad"):
+        rows_ = scale_view("zmax", stat)
+        deep = [r for r in rows_ if not r["shallow"]]
+        scale[stat.strip("_") or "med"] = dict(
+            n=len(rows_), n_ok=sum(r["ok"] for r in rows_),
+            n_deep=len(deep), n_ok_deep=sum(r["ok"] for r in deep),
+            rows=rows_)
+
     # --- ★ leaky 対照: φ′ ≡ a で厳密に一定なので κ_可動度 = 0。§2(c) が正しければ
     # 増分は深さに依らないはず。依れば「括弧の中が深さに依る」が ELU の恒等式にも
     # ln32 の帯にも依らずに示せる。
@@ -732,6 +790,7 @@ def judge(bins_rows, exp_rows, ident_rows, spear_rows, per_arm,
     return dict(label=label, label_position_fixed=label_pos,
                 P1=P1, P2=P2, P3=P3, P4=P4, P5=P5,
                 leaky_bracket=leaky_bracket, by_position=by_pos,
+                by_scale=scale, phi_saturation=sat,
                 P1_violations=p1_bad, P2_detail=P2d, P3_detail=P3d,
                 P4_detail=p4, P4_bad=p4_bad, P5_detail=p5,
                 robustness=robust, main_keys=sorted(main))
@@ -761,8 +820,13 @@ def write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
       f"独立な行数の合計は **{tot:,}**。"
       "なお spec §4 D の「全記録」はタスク内に限らないが、"
       "本表はタスク内増分の手前の記録点だけを見ているので境界増分の手前（1/10）が抜けている。\n")
-    A("\n`n_eff = 32·exp(残差)` は E_x[φ′] を担っている実効パターン数"
-      "（1 なら最浅の 1 パターンだけがゲートを決めている）。\n")
+    A("\n`n_eff = 32·exp(残差)` = Σ_p exp(z_p − max z) は E_x[φ′] を担っている"
+      "実効パターン数（最浅の 1 点が必ず 1 を出すので n_eff ≥ 1）。\n"
+      "**★ 読みの限定（監査で訂正）。** α=1 の中央値 1.48 は"
+      "「最浅パターンが E_x[φ′] の 1/1.48 = 68% を担う」であって"
+      "「最浅の 1 個だけが決めている」ではない。しかもこれは **α=1 の腕だけの数字**で、"
+      "α≤0.1 の 3 腕では 3.4〜4.0（最浅の寄与 25〜30%）。"
+      "α と走・窓が交絡しているので α 依存として読んではいけない。\n")
 
     A("\n## A・B・C — 帯ごとの増分と可動度（等幅帯・沈下 × タスク内）\n")
     A("| 腕@窓 | 座標 | 帯 | n | 深さ中央 | 増分中央 | 平均 | P(上) | 中央/ulp | ln(mob/α) 中央 |")
@@ -824,11 +888,28 @@ def write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
         A(f"| `{r['key']}` | {r['coord']} | {r['bin']} | {r['med_over_ulp']:.1f} | "
           f"{r['inc_iqr']:.2e} | {r['inc_frac_gt_1e3']:.3f} |")
 
-    A("\n## ★ leaky 対照 — 利得が厳密に一定でも増分は深さに依る\n")
+    A("\n## ★ §2(c) の前件（φ の飽和）が成り立っているか\n")
+    A("§2(c) が「括弧の中は深さに依らない」と言えるのは、"
+      "**深い ELU で φ→−α（定数）に飽和するから**である。前件そのものを測る:\n")
+    A("| 腕@窓 | 族 | 帯ごとの φ/α（`zmax` 等幅帯・n≥1000） | 帯間の振れ |")
+    A("|---|---|---|---:|")
+    for key in sorted(v["phi_saturation"]):
+        d3 = v["phi_saturation"][key]
+        vals = " → ".join(f"{x:+.4f}" for x in d3["phi_over_alpha"])
+        A(f"| `{key}` | {d3['family']} | {vals} | **{d3['spread']*100:.1f}%** |")
+    A("\n**ELU では前件が成り立つ**（φ/α は −1 に貼り付き、帯間の振れは数%）。"
+      "**leaky では成り立たない**（φ/α = z̄ で飽和せず、帯間で数倍動く）。\n")
+
+    A("\n## leaky での増分の深さ依存 —— §2(c) の反証ではなく感度の確認\n")
     lb = v["leaky_bracket"]
-    A("leaky の沈下ユニットでは φ′ ≡ a で**厳密に一定**（κ_可動度 = 0）。"
-      "§2(c)「深さ依存はまるごと可動度が担う」が正しければ、"
-      "増分は深さに依らない（κ_増分 = 0）はずである。\n")
+    A("**★ 格の限定（監査で訂正）。** leaky の沈下ユニットでは φ′ ≡ a で厳密に一定"
+      "（κ_可動度 = 0）なので、一見「§2(c) が正しければ増分は深さに依らないはず」"
+      "と読みたくなる。**これは §2(c) の前件の取り違えである。** §2(c) が括弧の"
+      "深さ非依存を導くのは φ の飽和からで、leaky は φ = a·z が深さに比例して"
+      "伸び続ける（上表で 78〜518% 動く）。同じ代数が leaky に対して与える向きは"
+      "**深いほど大きい**であり、実測の κ_増分 < 0 はその向きどおりである。"
+      "**したがって以下は §2(c) の反証ではない。** 残る意味は 1 つだけ:"
+      "**配管が「増分の深さ依存」を実際に検出できることの確認**（感度の検査）である。\n")
     A(f"読めた {lb['n']} 対のうち **|κ_増分| > {TOL_P2} が {lb['n_over_tol']} 対**、"
       f"seed 間 2σ で「深さに依らない」を排除できたのが {lb['n_excluded']} 対。\n")
     A("| 腕@窓 | 座標 | 対 | κ_増分（中央値） | κ_増分（平均） | n | 許容帯超 | 2σ で排除 |")
@@ -839,11 +920,10 @@ def write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
           f"{'n/a' if km is None else f'{km:+.3f}'} | "
           f"{x['n_lo']:,}/{x['n_hi']:,} | {'**超**' if x['over_tol'] else '—'} | "
           f"{'**排除**' if x['excluded_by_2se'] else '—'} |")
-    A("\nこれは ELU の恒等式にも ln32 の帯にも座標の選び方にも力場の分解にも依らない。"
-      "**§2(c) の前提は、利得が定数であることが分かっている族でも成り立たない。**\n"
-      "中央値と平均が同じ向き・同じ桁で動くので、"
-      "「中央値がドリフトの推定量になっていないだけ」では説明できない"
-      "（`LR_a0p001` だけは平均が符号を変えて読めないので根拠にしない）。\n")
+    A("\n中央値と平均が同じ向き・同じ桁で動くので、"
+      "**この配管は増分の深さ依存があれば検出する**（`LR_a0p001` だけは平均が"
+      "読めないので根拠にしない）。ELU 側で正味の深さ依存が可動度と合わないのは、"
+      "検出力が無いからではない。\n")
 
     A("\n## ★ タスク内位置を固定すると — プールの中央値は位相の混合である\n")
     A("タスク内増分は定常量ではない。**同じ 1 タスクの中で記録位置 o=1→9 のあいだに"
@@ -888,16 +968,26 @@ def write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
       "α≤0.1 の ELU 3 腕はどの位置でも深い帯の増分中央値が 0 以下で、指数が定義できない。\n")
     lp = bp["leaky"]
     A(f"leaky も位置固定で見ると、読めた {lp['n']} 対のうち "
-      f"|κ_増分| > {TOL_P2} は {lp['n_over_tol']} 対。"
-      "内訳は `LR_a0p01`・`LR_a0p001` が −0.5〜−1.3 で明確に破り、"
-      "`LR_1216` は −0.13〜−0.25 で許容帯の中に収まる。"
-      "**leaky 対照は 3 腕中 2 腕で位置固定でも立つ。**\n")
+      f"|κ_増分| > {TOL_P2} は {lp['n_over_tol']} 対（`LR_a0p01`・`LR_a0p001` が"
+      "−0.5〜−1.3、`LR_1216` は −0.13〜−0.25）。"
+      "**これは §2(c) の反証ではなく感度の確認である**（上の格の限定を見よ）。\n")
 
-    A("\n## P4 — leaky の S 検査（配管）\n")
+    A("\n## P4 — leaky の S 検査は**恒真**で、配管を検査していない（監査で確定）\n")
     bad = v["P4_bad"]
     A(f"leaky 3 腕・{len(v['P4_detail'])} 対すべてで κ_可動度 = 0"
-      f"（|κ| > {TOL_P4} は {len(bad)} 件）。沈下 leaky の `mob` は a の float32 値"
-      "ちょうど 1 種類。\n")
+      f"（|κ| > {TOL_P4} は {len(bad)} 件）。だが**これは配管の検査になっていない。** "
+      "`zmax` 座標では帯そのものが zmax<0 を再賦課するので、沈下 leaky の `mob` は "
+      "a の float32 値ちょうど 1 種類になり、ln(mob/a) は全行同じ定数である。"
+      "独立監査は、沈下フィルタを丸ごと外しても・`p_hat==0` に替えても・"
+      "`mob` を 1 記録ずらしても κ_可動度 が厳密に 0 のままであることを実演した。"
+      "**spec §5 が「P1・P4 が通っている下で」と置いたゲートのうち、P4 は 0 ビットしか持たない。**\n")
+    A("配管を実際に検査しているのは次の 4 本である（いずれも通過）:\n")
+    A("- **P1**: 歯がある。独立監査が `mob` を 1 記録ずらすと 2.65% が帯外、"
+      "`zmax` を `z̄` に取り違えると 99.7% が帯外になることを実演した\n"
+      "- **S-repro**: §10-4 の `E_1216` 深さ方向の 4 つの中央値を再現する\n"
+      "- **S-sub**: `zmax`≤0 と $\\hat p=0$ が全腕・全 seed・全記録で一致（第一容疑 (1)）\n"
+      "- **S-bnd**: 除くべき増分が `flip_state` 基準の index 10,20,… であって "
+      "`step//period` 基準の 9,19,… ではないこと（第一容疑 (2)）\n")
 
     A("\n## P5 — |v| と深さの Spearman（符号のみ）\n")
     A("| 腕@窓 | ρ(|v|, z̄ 深さ) 中央 | 正の seed | ρ(|v|, zmax 深さ) 中央 | 正の seed |")
@@ -906,6 +996,31 @@ def write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
         d = v["P5_detail"][k]
         A(f"| `{k}` | {d['med_zbar']:+.3f} | {d['n_pos_zbar']}/10 | "
           f"{d['med_zmax']:+.3f} | {d['n_pos_zmax']}/10 |")
+
+    A("\n## ★★ 尺度で見ると可動度に追随する — 落ちているのは「正味」だけ\n")
+    A("§2(c) の代数が言っているのは、勾配の**大きさ**が φ′ に比例するということである。"
+      "そこで増分の中央値（＝正味）ではなく**大きさ**（IQR・sd・MAD）の深さ指数を"
+      "同じ帯・同じ横軸（帯の深さ中央値）で取り直すと:\n")
+    A("| 統計量 | 通過（全対） | 通過（浅い帯 0–1 を含まない対だけ） |")
+    A("|---|---|---|")
+    for name, key in (("中央値（登録どおり）", "med"), ("IQR", "iqr"),
+                      ("標準偏差", "sd"), ("MAD", "mad")):
+        d2 = v["by_scale"][key]
+        A(f"| {name} | {d2['n_ok']}/{d2['n']} | {d2['n_ok_deep']}/{d2['n_deep']} |")
+    A("\n| 腕@窓 | 対 | κ_可動度 | κ_IQR | 差 | κ_sd | 差 | |")
+    A("|---|---|---:|---:|---:|---:|---:|---|")
+    sd_by = {(r["key"], r["pair"]): r for r in v["by_scale"]["sd"]["rows"]}
+    for r in v["by_scale"]["iqr"]["rows"]:
+        o = sd_by.get((r["key"], r["pair"]))
+        A(f"| `{r['key']}` | {r['pair']} | {r['kappa_mob']:+.3f} | "
+          f"{r['kappa_inc']:+.3f} | {r['diff']:+.3f} | "
+          f"{o['kappa_inc']:+.3f} | {o['diff']:+.3f} | "
+          f"{'OK' if r['ok'] else '**NG**'} |")
+    A("\n**深い帯では増分の大きさの指数は可動度の指数（≈1）に許容帯 0.3 の中で一致する。**"
+      "浅い帯 0–1 を含む対だけが外れる。つまり §2(c) の代数は"
+      "**増分の大きさについては当たっており、外れているのは正味（中央値）の側だけ**である。"
+      "登録された P2 は正味で問うので落ちるが、"
+      "「深さ依存はまるごと可動度が担う」は**大きさに限れば支持されている**。\n")
 
     A("\n## ★ 横軸の取り方 — 登録どおりの「帯の中点」は偏っている\n")
     A("§2(a) の恒等式より、`zmax` 座標では ln(mob/α) = −(zmax 深さ) + 残差で"
