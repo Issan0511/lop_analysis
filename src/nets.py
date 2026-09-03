@@ -175,7 +175,13 @@ class VecMLPL:
     ACTIVATIONS = ("relu", "elu", "leaky_relu", "bwd_leaky", "fwd_leaky",
                    "silu", "gelu", "silu_clamp", "gelu_clamp",
                    "silu_clamp0", "gelu_clamp0",
-                   "bwd_reflect", "bwd_quad", "bwd_leaky_proj")
+                   "bwd_reflect", "bwd_quad", "bwd_leaky_proj",
+                   "mirror_leaky",
+                   "fold_leaky_d1", "fold_leaky_d2", "fold_leaky_dbig",
+                   "band_leaky_d0", "band_leaky_d0p5", "band_leaky_d1",
+                   "band_leaky_d2", "band_leaky_d4",
+                   "ramp_leaky_d1",
+                   "comb_binf", "comb_b5")
     SURROGATE_ACTIVATIONS = ("bwd_leaky", "fwd_leaky", "bwd_reflect", "bwd_quad",
                              "bwd_leaky_proj")
     # 幻の壁 3 型 [phantom_wall_0902 §4.3]。どれも forward は厳密 ReLU で、
@@ -203,6 +209,35 @@ class VecMLPL:
     # phi(z_c) ぶんの段差がある）。谷の手前は clamp 版と同じ式・同じ入力なので bit 一致。
     # 凍結ユニットの出力が厳密 0 になるので v_i も凍る（ReLU の死ユニットと同型）。
     # clamp 版（床 = phi(z_c) ≠ 0・v_i に勾配が流れ続ける）との差が床の値の効果。
+
+    # 謎関数ダイヤル 5 族 [weird_act_0903 §2]。どれも z >= 0 で恒等（ReLU と同じ正側）で、
+    # **負側の形を 1 か所だけ**設計する。5 族とも **自分の forward の真の導関数**なので
+    # 有限差分で検算できる（折れ目は測度 0。bwd_leak の代替勾配とは違う）。
+    #   * act_alpha は leaky 由来 4 族で傾き a、櫛で振動数 alpha
+    #   * 第 2 母数（帯の深さ d・包絡 beta）は **活性化名に埋め込み**、下の
+    #     クラス定数辞書で引く（VALLEY_ZERO と同じ流儀。set_activation の署名を変えない）
+    #   * 反転・0 倍の分岐は `0.0 - a` / `0.0 +` と書く（a=0 や z=-2d で -0.0 を作らない。
+    #     torch.equal は符号盲なので、これが無いと S-limit がバイトの違いを見逃す。追補 9）
+    #   * `*_dbig` / `*_d0` は S-limit 専用の退化点（d=1e6 で leaky、d=0 で leaky）。
+    #     本走の腕には使わない [weird_act_0903 §10 追補 9]
+    WEIRD_SLOPE_ACTIVATIONS = ("mirror_leaky", "fold_leaky_d1", "fold_leaky_d2",
+                               "fold_leaky_dbig", "band_leaky_d0",
+                               "band_leaky_d0p5", "band_leaky_d1",
+                               "band_leaky_d2", "band_leaky_d4", "ramp_leaky_d1")
+    # 櫛は act_alpha が振動数で [0,1] に入らない（CB_a2 は alpha=2）。有限正だけを課す。
+    WEIRD_FREQ_ACTIVATIONS = ("comb_binf", "comb_b5")
+    # 折り返しの折れ目の深さ d。phi の零点が 0 と -2d の 2 か所（分水嶺 d・極小 2d）。
+    FOLD_DEPTH = {"fold_leaky_d1": 1.0, "fold_leaky_d2": 2.0,
+                  "fold_leaky_dbig": 1.0e6}
+    # 死帯の幅 d。d=0 は leaky、d=inf は ReLU。
+    BAND_WIDTH = {"band_leaky_d0": 0.0, "band_leaky_d0p5": 0.5,
+                  "band_leaky_d1": 1.0, "band_leaky_d2": 2.0,
+                  "band_leaky_d4": 4.0}
+    # 滑り出しの二次区間の深さ d。kappa = a/(2d) は分岐内で解き直す（VALLEY_ZERO と同じで、
+    # forward と backward のあいだで第 2 母数がずれないようにキャッシュしない）。
+    RAMP_DEPTH = {"ramp_leaky_d1": 1.0}
+    # 櫛の包絡 beta。inf は包絡なし（env = 1.0・1/beta = 0.0 を定数で書き exp を呼ばない）。
+    COMB_ENVELOPE = {"comb_binf": float("inf"), "comb_b5": 5.0}
 
     def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
                  act_grad_form="alpha_exp", wd_b=0.0):
@@ -275,6 +310,12 @@ class VecMLPL:
             beta = float(act_alpha)
             if not (math.isfinite(beta) and beta > 0.0):
                 raise ValueError(f"{act} beta must be a finite positive float")
+        if act in self.WEIRD_SLOPE_ACTIVATIONS and not 0.0 <= float(act_alpha) <= 1.0:
+            raise ValueError(f"{act} slope must be in [0, 1]")
+        if act in self.WEIRD_FREQ_ACTIVATIONS:
+            freq = float(act_alpha)
+            if not (math.isfinite(freq) and freq > 0.0):
+                raise ValueError(f"{act} frequency must be a finite positive float")
         if act_grad_form is not None:
             if act_grad_form not in self.GRAD_FORMS:
                 raise ValueError(f"unknown ELU derivative form {act_grad_form!r}")
@@ -319,6 +360,42 @@ class VecMLPL:
             zc = -self.VALLEY_ZERO["gelu_clamp0"] / self.act_alpha
             return torch.where(pre > zc, pre * _std_normal_cdf(self.act_alpha * pre),
                                torch.zeros_like(pre))
+        if self.act == "mirror_leaky":
+            # leaky の負側を z 軸で折り返す。phi^2 は leaky と同一、phi' の符号だけ逆。
+            # `0.0 +` は a=0 のとき負側が -0.0 になるのを防ぐ（追補 9）。
+            return torch.where(pre > 0, pre,
+                               0.0 + (0.0 - self.act_alpha) * pre)
+        if self.act in self.FOLD_DEPTH:
+            d = self.FOLD_DEPTH[self.act]
+            # 深さ d で傾きが反転する V 字。phi の零点は 0 と -2d。
+            return torch.where(pre > 0, pre,
+                               torch.where(pre > -d, self.act_alpha * pre,
+                                           0.0 + (0.0 - self.act_alpha)
+                                           * (pre + 2.0 * d)))
+        if self.act in self.BAND_WIDTH:
+            d = self.BAND_WIDTH[self.act]
+            # 幅 d の死帯（ReLU の壁）の先に leaky。d=0 で leaky の式に退化する。
+            return torch.where(pre > 0, pre,
+                               torch.where(pre > -d, torch.zeros_like(pre),
+                                           self.act_alpha * (pre + d)))
+        if self.act in self.RAMP_DEPTH:
+            d = self.RAMP_DEPTH[self.act]
+            kappa = self.act_alpha / (2.0 * d)
+            # C^1。壁で phi'=0 だが深さ d で leaky に接続する（値も傾きも連続）。
+            return torch.where(pre > 0, pre,
+                               torch.where(pre > -d,
+                                           0.0 - kappa * pre * pre,
+                                           self.act_alpha * pre
+                                           + self.act_alpha * d / 2.0))
+        if self.act == "comb_binf":
+            # 包絡なしの櫛。env = 1.0 を定数で書き、exp を呼ばない（S-num）。
+            return torch.where(pre > 0, pre,
+                               0.0 - torch.sin(self.act_alpha * pre) ** 2)
+        if self.act == "comb_b5":
+            beta = self.COMB_ENVELOPE["comb_b5"]
+            env = torch.exp(-pre / beta)
+            return torch.where(pre > 0, pre,
+                               0.0 - env * torch.sin(self.act_alpha * pre) ** 2)
         # expm1 keeps the small-|z| negative branch accurate; the positive
         # branch of `where` is selected before any overflow of expm1 matters.
         return torch.where(pre > 0, pre, self.act_alpha * torch.expm1(pre))
@@ -393,6 +470,42 @@ class VecMLPL:
             t = self.act_alpha * pre
             g = _std_normal_cdf(t) + t * _std_normal_pdf(t)
             return torch.where(pre > zc, g, torch.zeros_like(g))
+        if self.act == "mirror_leaky":
+            # 負側ゲートを反転する。`0.0 - a` と書くのは a=0 で -0.0 を作らないため（追補 9）。
+            return torch.where(pre > 0, torch.ones_like(pre),
+                               torch.full_like(pre, 0.0 - self.act_alpha))
+        if self.act in self.FOLD_DEPTH:
+            d = self.FOLD_DEPTH[self.act]
+            return torch.where(pre > 0, torch.ones_like(pre),
+                               torch.where(pre > -d,
+                                           torch.full_like(pre, self.act_alpha),
+                                           torch.full_like(pre,
+                                                           0.0 - self.act_alpha)))
+        if self.act in self.BAND_WIDTH:
+            d = self.BAND_WIDTH[self.act]
+            return torch.where(pre > 0, torch.ones_like(pre),
+                               torch.where(pre > -d, torch.zeros_like(pre),
+                                           torch.full_like(pre, self.act_alpha)))
+        if self.act in self.RAMP_DEPTH:
+            d = self.RAMP_DEPTH[self.act]
+            kappa = self.act_alpha / (2.0 * d)
+            # 二次区間の傾きは -2*kappa*z（z<0 なので正）。`0.0 +` は z=-0.0 で
+            # -0.0 を作らないため（bwd_quad と同じ理由・追補 9）。
+            return torch.where(pre > 0, torch.ones_like(pre),
+                               torch.where(pre > -d,
+                                           0.0 + (0.0 - 2.0 * kappa) * pre,
+                                           torch.full_like(pre, self.act_alpha)))
+        if self.act == "comb_binf":
+            return torch.where(pre > 0, torch.ones_like(pre),
+                               0.0 - self.act_alpha
+                               * torch.sin(2.0 * self.act_alpha * pre))
+        if self.act == "comb_b5":
+            beta = self.COMB_ENVELOPE["comb_b5"]
+            env = torch.exp(-pre / beta)
+            g = env * (torch.sin(self.act_alpha * pre) ** 2 / beta
+                       - self.act_alpha
+                       * torch.sin(2.0 * self.act_alpha * pre))
+            return torch.where(pre > 0, torch.ones_like(pre), 0.0 + g)
         if self.act_grad_form == "activation_plus_alpha":
             return torch.where(pre > 0, torch.ones_like(a), a + self.act_alpha)
         return torch.where(pre > 0, torch.ones_like(pre),
