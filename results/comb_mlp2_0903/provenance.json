@@ -1,0 +1,236 @@
+{
+  "experiment": "comb_mlp2_0903",
+  "created": "2026-09-03T23:11:08+0900",
+  "command": [
+    "/home/i_nakatsuka/Projects/lop_analysis/src/comb_mlp2_0903.py",
+    "--stage",
+    "run"
+  ],
+  "elapsed_sec": 1058.0763931274414,
+  "cwd": "/home/i_nakatsuka/Projects/lop_analysis",
+  "python": "3.13.13 | packaged by Anaconda, Inc. | (main, Apr 14 2026, 06:19:41) [GCC 14.3.0]",
+  "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+  "torch": "2.12.0+cu126",
+  "numpy": "2.4.6",
+  "git_hash": "96aa8f3485a3c1cb9d1f489445169caf07f4a0d2",
+  "git_dirty": "?? results/comb_mlp2_0903/",
+  "device": "cpu",
+  "config": "/home/i_nakatsuka/Projects/lop_analysis/configs/comb_mlp2_0903.yaml",
+  "config_sha256": "eee589ff81bfe6cf376767b41870044cc283ac42fdeffe831456e6b18475b723",
+  "spec": "/home/i_nakatsuka/Projects/lop_analysis/specs/spec_comb_isolate_0903.md",
+  "spec_sha256": "b80c332c1cf9effe85cf3cd1fbda3c5014fc361fe5bdc087642c3719245a2418",
+  "stage": "B",
+  "arm": "CB_A1",
+  "activation": "comb_binf",
+  "act_alpha": 1.0,
+  "hidden": [
+    100,
+    100
+  ],
+  "centered_layers": [
+    1
+  ],
+  "window": "late_t451_500",
+  "unfit_floor": 1e-23,
+  "host": "lr_a1_0901 (setup / runner / log writer are copies; the host is untouched)",
+  "stage_note": "stage A and stage B are preregistered in the same commit (a6c93f6); submission is sequential (2026-09-03 Issa).",
+  "prediction_provenance": "draft_values_proposed_first_then_approved_by_Issa",
+  "control_source": "results/lr_a1_0901/verdict.csv",
+  "control_reconstruction": {
+    "LR_A1": "P2_log10_mean_unfit_level (arm LR_A1) の seed_values をそのまま",
+    "L2_A1": "LR_A1 の水準 - P2_delta_log10_mean_unfit (LR_A1 - L2_A1) の seed_values",
+    "E_A1": "L2_A1 の再構成値 + P2_E_A1_reference_delta_log10_mean_unfit (E_A1 - L2_A1)"
+  },
+  "control_reconstruction_verified_against_raw_logs": "L2_A1: bit-identical to results/mlp2_phase1_0829/logs recomputation for all 10 seeds (2026-09-03). E_A1 logs are absent on this machine.",
+  "generator_offset": 0,
+  "arm_status": {
+    "CB_A1": "NUMERIC_DIVERGENCE"
+  },
+  "sanity": {
+    "experiment": "comb_mlp2_0903",
+    "pass_": true,
+    "checks": {
+      "S_copy": {
+        "pass_": true,
+        "rows": [
+          {
+            "function": "setup_arm_comb",
+            "host": "setup_arm_lr",
+            "n_nodes_mine": 11,
+            "n_nodes_host": 11,
+            "similarity": 1.0,
+            "diffs": [],
+            "unexplained": [],
+            "pass_": true
+          },
+          {
+            "function": "write_arm_logs_comb",
+            "host": "write_arm_logs_lr",
+            "n_nodes_mine": 24,
+            "n_nodes_host": 24,
+            "similarity": 1.0,
+            "diffs": [],
+            "unexplained": [],
+            "pass_": true
+          },
+          {
+            "function": "_run_arm_comb",
+            "host": "_run_arm",
+            "n_nodes_mine": 47,
+            "n_nodes_host": 43,
+            "similarity": 0.9333,
+            "diffs": [
+              {
+                "tag": "insert",
+                "host": [],
+                "mine": [
+                  "call:_P"
+                ]
+              },
+              {
+                "tag": "insert",
+                "host": [],
+                "mine": [
+                  "call:_P"
+                ]
+              },
+              {
+                "tag": "insert",
+                "host": [],
+                "mine": [
+                  "call:print"
+                ]
+              },
+              {
+                "tag": "delete",
+                "host": [
+                  "call:_arm_status_path"
+                ],
+                "mine": []
+              },
+              {
+                "tag": "insert",
+                "host": [],
+                "mine": [
+                  "call:print"
+                ]
+              },
+              {
+                "tag": "insert",
+                "host": [],
+                "mine": [
+                  "call:print"
+                ]
+              }
+            ],
+            "unexplained": [],
+            "pass_": true
+          }
+        ],
+        "renamed": {
+          "setup_arm_lr": "setup_arm_comb",
+          "write_arm_logs_lr": "write_arm_logs_comb"
+        },
+        "added": [
+          "print",
+          "_P"
+        ],
+        "removed": [
+          "_arm_status_path"
+        ],
+        "note": "AST の呼び出し列で構造を比べる。意図した差は renamed/added/removed に列挙"
+      },
+      "S_activation_inherited": {
+        "pass_": true,
+        "inherited_from": "/home/i_nakatsuka/Projects/lop_analysis/results/_preflight_weird_act_0903/preflight.json",
+        "rows": [
+          {
+            "check": "S_fd",
+            "overall_pass": true,
+            "rows_for_comb": 2,
+            "all_pass": true
+          },
+          {
+            "check": "S_num",
+            "overall_pass": true,
+            "rows_for_comb": 2,
+            "all_pass": true
+          },
+          {
+            "check": "S_dial",
+            "overall_pass": true,
+            "rows_for_comb": 3,
+            "all_pass": true
+          }
+        ],
+        "refreshed_s_fd_worst": 1.1131640054173886e-09,
+        "note": "継承の確認のみ。床も窓も再較正しない"
+      },
+      "S_B": {
+        "pass_": true,
+        "steps": 30000,
+        "in_process_state_equal": true,
+        "in_process_env_equal": true,
+        "reference_status": "REFERENCE_LOGS_ABSENT_ON_THIS_MACHINE",
+        "reference_flip_rows": [],
+        "reference_missing": [
+          "/home/i_nakatsuka/Projects/lop_analysis/results/lr_a1_0901/logs/LR_A1_seed0.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/lr_a1_0901/logs/LR_A1_seed1.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/lr_a1_0901/logs/LR_A1_seed2.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/lr_a1_0901/logs/LR_A1_seed3.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/lr_a1_0901/logs/LR_A1_seed4.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/lr_a1_0901/logs/LR_A1_seed5.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/lr_a1_0901/logs/LR_A1_seed6.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/lr_a1_0901/logs/LR_A1_seed7.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/lr_a1_0901/logs/LR_A1_seed8.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/lr_a1_0901/logs/LR_A1_seed9.npz"
+        ],
+        "differences": [],
+        "caveat": "init/teacher/input realization only; trajectories diverge after step 1"
+      }
+    }
+  },
+  "output_sha256": {
+    "config_used.yaml": "9412ff584c2883c1980a9ef7eb32086385054a0df69dc1a1a80217d1c287c9db",
+    "arm_status/CB_A1.json": "d9dd9498766d26acf5821ea1d3c574b55e88cf8a9d2121339d12b3bdef35ad43"
+  },
+  "divergence": {
+    "status": "NUMERIC_DIVERGENCE",
+    "arm": "CB_A1",
+    "detected_step": 2091000,
+    "detected_task": 210,
+    "probe_every": 1000,
+    "bad_seeds": [
+      2
+    ],
+    "nonfinite_tensors": {
+      "2": [
+        "net.Ws.1",
+        "net.Ws.2",
+        "net.bs.1",
+        "net.bs.2",
+        "net.v",
+        "net.c"
+      ]
+    },
+    "action": "stop_arm_no_rescue",
+    "registered_total_steps": 5000000,
+    "registered_seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "activation": "comb_binf",
+    "act_alpha": 1.0,
+    "elapsed_sec": 1058.056482553482,
+    "detection": "nonfinite_training_state_at_probe",
+    "rescue": "none"
+  }
+}

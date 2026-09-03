@@ -1,0 +1,3 @@
+# comb_mlp2_0903
+
+`CB_A1` は `NUMERIC_DIVERGENCE`（step 2,091,000）。V7 は `INCONCLUSIVE_DIVERGENCE` で空にする（spec §6）。
