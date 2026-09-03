@@ -217,9 +217,25 @@ def bin_table(d: dict, coord: str, binset: str) -> list[dict]:
                     per_seed.append(float(np.median(inc[ms])))
             row["inc_med_seed_n"] = len(per_seed)
             if per_seed:
-                row["inc_med_seed_med"] = float(np.median(per_seed))
-                row["inc_med_seed_min"] = float(np.min(per_seed))
-                row["inc_med_seed_max"] = float(np.max(per_seed))
+                arr = np.array(per_seed, dtype=np.float64)
+                row["inc_med_seed_med"] = float(np.median(arr))
+                row["inc_med_seed_min"] = float(arr.min())
+                row["inc_med_seed_max"] = float(arr.max())
+                row["inc_med_seed_mean"] = float(arr.mean())
+                # seed 間のばらつきから作る中央値の誤差。記録点は自己相関するので
+                # プールの n では誤差を作れない（seed は独立な走）。
+                row["inc_med_seed_sd"] = float(arr.std(ddof=1)) if arr.size > 1 else float("nan")
+                row["inc_med_seed_se"] = (float(arr.std(ddof=1) / math.sqrt(arr.size))
+                                          if arr.size > 1 else float("nan"))
+                row["inc_med_hi2se"] = (float(arr.mean() + 2 * arr.std(ddof=1)
+                                              / math.sqrt(arr.size))
+                                        if arr.size > 1 else float("nan"))
+                row["inc_med_lo2se"] = (float(arr.mean() - 2 * arr.std(ddof=1)
+                                              / math.sqrt(arr.size))
+                                        if arr.size > 1 else float("nan"))
+            # 増分の広がり（中央値は「小さな正味」であって「小さな量」ではない）
+            row["inc_iqr"] = float(np.quantile(inc, 0.75) - np.quantile(inc, 0.25))
+            row["inc_frac_gt_1e3"] = float(np.mean(np.abs(inc) > 1e-3))
         rows.append(row)
     return rows
 
@@ -280,6 +296,18 @@ def local_exponents(rows: list[dict], abscissa: str) -> list[dict]:
             rec["pred_over_ulp_hi"] = (float(pred / b["ulp_med"])
                                        if b.get("ulp_med") else float("nan"))
             rec["obs_over_pred_hi"] = float(b["inc_med"] / pred) if pred else float("nan")
+            # ★ 判定の実体はここ: 深い側の中央値の seed 間 2σ 上限が §2(c) の
+            # 予測を下回っているか。下回っていれば「測れなかった」ではなく
+            # 「予測より小さいことが seed をまたいで示されている」。
+            hi, lo = b.get("inc_med_hi2se"), b.get("inc_med_lo2se")
+            rec["obs_hi2se_hi"] = hi
+            rec["obs_lo2se_hi"] = lo
+            if hi is not None and hi == hi:
+                # 両側。leaky（κ_可動度 = 0 ⇒ 予測は「深さに依らず同じ値」）では
+                # 増分が**増える**側にはみ出すので、下側 2σ も見ないと落とせない。
+                rec["excluded_by_2se"] = bool(hi < pred or lo > pred)
+                rec["pred_over_hi2se"] = (float(pred / hi) if hi > 0
+                                          else float("inf"))
         for tag, key in (("", "inc_med"), ("_mean", "inc_mean")):
             va, vb = a[key], b[key]
             if va > 0 and vb > 0:
@@ -512,6 +540,22 @@ def judge(bins_rows, exp_rows, ident_rows, spear_rows, per_arm) -> dict:
     p4_bad = [e for e in p4 if abs(e["kappa_mob"]) > TOL_P4]
     P4 = bool(p4) and not p4_bad
 
+    # --- ★ leaky 対照: φ′ ≡ a で厳密に一定なので κ_可動度 = 0。§2(c) が正しければ
+    # 増分は深さに依らないはず。依れば「括弧の中が深さに依る」が ELU の恒等式にも
+    # ln32 の帯にも依らずに示せる。
+    lb = []
+    for e in pairs(lky, "zmax") + pairs(lky, "zbar"):
+        k = e.get("kappa_inc")
+        if k is None or k != k:
+            continue
+        lb.append(dict(key=e["key"], coord=e["coord"], pair=e["pair"],
+                       kappa_inc=float(k), n_lo=e["n_lo"], n_hi=e["n_hi"],
+                       over_tol=bool(abs(k) > TOL_P2),
+                       excluded_by_2se=bool(e.get("excluded_by_2se"))))
+    leaky_bracket = dict(
+        n=len(lb), n_over_tol=sum(x["over_tol"] for x in lb),
+        n_excluded=sum(x["excluded_by_2se"] for x in lb), pairs=lb)
+
     # --- P5: |v| と深さの Spearman の符号
     p5 = {}
     for key in main:
@@ -579,6 +623,7 @@ def judge(bins_rows, exp_rows, ident_rows, spear_rows, per_arm) -> dict:
     robust["mean_based"] = dict(zmax=mean_based("zmax"), zbar=mean_based("zbar"))
 
     return dict(label=label, P1=P1, P2=P2, P3=P3, P4=P4, P5=P5,
+                leaky_bracket=leaky_bracket,
                 P1_violations=p1_bad, P2_detail=P2d, P3_detail=P3d,
                 P4_detail=p4, P4_bad=p4_bad, P5_detail=p5,
                 robustness=robust, main_keys=sorted(main))
@@ -629,18 +674,48 @@ def write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
             A(f"| `{g['key']}` | {g['pair']} | {ki_s} | {g['kappa_mob']:+.3f} | "
               f"{df_s} | {g['n_lo']:,}/{g['n_hi']:,} | {'OK' if g['ok'] else '**NG**'} |")
 
-    A("\n## 床か信号か — §2(c) が正しければ深い側の中央値はこうなるはず\n")
-    A("| 腕@窓 | 対 | 予測中央値 | 予測/ulp | 実測/予測 |")
-    A("|---|---|---:|---:|---:|")
+    A("\n## ★ 判定の実体 — §2(c) の予測を seed 間 2σ で排除できるか\n")
+    A("増分の中央値は**幅 ~1e-2 のほぼ対称なゆらぎに乗った小さな正味**であって、"
+      "小さな量ではない（下の IQR 欄）。記録点は 1000 step ごとで自己相関するので"
+      "プールの n では誤差を作れない。**誤差は 10 seed の per-seed 中央値から作る。**"
+      "「浅い帯の中央値 × exp(−κ_可動度·Δ深さ)」が §2(c) の予測で、"
+      "深い帯の実測の 2σ 上限がそれを下回れば §2(c) は排除される。\n")
+    A("| 腕@窓 | 座標 | 対 | §2(c) の予測 | 実測 2σ 区間 | 排除 | 向き |")
+    A("|---|---|---|---:|---:|---|---|")
     for e in exp_rows:
-        if (e["coord"] != "zmax" or e["binset"] != "abs"
-                or e["abscissa"] != "depth_mid" or "inc_med_pred_hi" not in e):
+        if (e["binset"] != "abs" or e["abscissa"] != "depth_mid"
+                or "inc_med_pred_hi" not in e or "excluded_by_2se" not in e):
             continue
-        A(f"| `{e['key']}` | {e['pair']} | {e['inc_med_pred_hi']:+.3e} | "
-          f"{e['pred_over_ulp_hi']:.1f} | {e['obs_over_pred_hi']:+.4f} |")
-    A("\n予測が ulp の数十〜数百倍なのに実測がその 1/25〜1/200 なら、"
-      "測れなかったのではなく**本当に速く落ちている**。予測が数 ulp しかない対は"
-      "分解能で読めないので判定の根拠にしない。\n")
+        pred, hi, lo = e["inc_med_pred_hi"], e["obs_hi2se_hi"], e["obs_lo2se_hi"]
+        side = ("予測より小" if hi < pred else
+                "予測より大" if lo > pred else "—")
+        A(f"| `{e['key']}` | {e['coord']} | {e['pair']} | {pred:.2e} | "
+          f"[{lo:.2e}, {hi:.2e}] | "
+          f"{'**排除**' if e['excluded_by_2se'] else '—'} | {side} |")
+    A("\n参考（分解能）: `zmax` 帯の中央値と float32 の ulp の比\n")
+    A("| 腕@窓 | 座標 | 帯 | 中央値/ulp | IQR | \\|増分\\|>1e−3 の割合 |")
+    A("|---|---|---|---:|---:|---:|")
+    for r in bins_rows:
+        if r["binset"] != "abs" or r["n"] == 0 or not r["key"].startswith("E_"):
+            continue
+        A(f"| `{r['key']}` | {r['coord']} | {r['bin']} | {r['med_over_ulp']:.1f} | "
+          f"{r['inc_iqr']:.2e} | {r['inc_frac_gt_1e3']:.3f} |")
+
+    A("\n## ★ leaky 対照 — 利得が厳密に一定でも増分は深さに依る\n")
+    lb = v["leaky_bracket"]
+    A("leaky の沈下ユニットでは φ′ ≡ a で**厳密に一定**（κ_可動度 = 0）。"
+      "§2(c)「深さ依存はまるごと可動度が担う」が正しければ、"
+      "増分は深さに依らない（κ_増分 = 0）はずである。\n")
+    A(f"読めた {lb['n']} 対のうち **|κ_増分| > {TOL_P2} が {lb['n_over_tol']} 対**、"
+      f"seed 間 2σ で「深さに依らない」を排除できたのが {lb['n_excluded']} 対。\n")
+    A("| 腕@窓 | 座標 | 対 | κ_増分 | n | 許容帯超 | 2σ で排除 |")
+    A("|---|---|---|---:|---:|---|---|")
+    for x in lb["pairs"]:
+        A(f"| `{x['key']}` | {x['coord']} | {x['pair']} | {x['kappa_inc']:+.3f} | "
+          f"{x['n_lo']:,}/{x['n_hi']:,} | {'**超**' if x['over_tol'] else '—'} | "
+          f"{'**排除**' if x['excluded_by_2se'] else '—'} |")
+    A("\nこれは ELU の恒等式にも ln32 の帯にも座標の選び方にも依らない。"
+      "**§2(c) の前提は、利得が定数であることが分かっている族でも成り立たない。**\n")
 
     A("\n## P4 — leaky の S 検査（配管）\n")
     bad = v["P4_bad"]
@@ -669,7 +744,11 @@ def write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
     nf = v["robustness"]["not_at_floor"]
     A(f"| 床に触れない対だけ | {nf['zmax']['n_ok']}/{nf['zmax']['n']} | "
       f"{nf['zbar']['n_ok']}/{nf['zbar']['n']} |")
-    A("\n**どの切り方でも P2 は 1 対も通らない。**\n")
+    A(f"\n**中央値では、どの切り方でも `zmax` 座標の P2 は 1 対も通らない。**"
+      f" 平均に替えると `zmax` は {mb['zmax']['n_ok']}/{mb['zmax']['n']} 対通るが、"
+      "通るのは `E_1216@15M` の 0-1→1-3 だけで、その帯の平均は上位 1% が総和の"
+      "半分近くを担う裾に引かれている（中央値と平均が食い違う）。"
+      "残りの ELU 3 腕は平均でも +1.9〜+2.8 でずれる。\n")
     (outdir / "summary.md").write_text("\n".join(L))
 
 def write_csv(path: Path, rows: list[dict]) -> None:
