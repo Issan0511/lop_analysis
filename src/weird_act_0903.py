@@ -1109,7 +1109,14 @@ def _onset_times(cfg: dict, step: np.ndarray, unfit: np.ndarray) -> dict:
         hit = np.flatnonzero((us[:, j] >= threshold) & (ks >= ONSET_K_MIN))
         rows.append(dict(k_star=int(ks[hit[0]]) if hit.size else ONSET_CENSOR_AT,
                          censored=0 if hit.size else 1))
+    # k* は「最初に横断した時刻」であって持続を意味しない。誤読を防ぐため、
+    # 横断していた窓の割合と末尾の U^(10) を並べる（REPORT・判定には入れない）。
+    over = (us >= threshold)
     return dict(rows=rows, rolled_k=ks, rolled_u=us,
+                frac_windows_over=[float(over[:, j].mean())
+                                   for j in range(us.shape[1])],
+                u10_at_last_k=[float(us[-1, j]) for j in range(us.shape[1])],
+                last_k=int(ks[-1]),
                 records_per_window=rolled["records_per_window"])
 
 
@@ -1469,8 +1476,12 @@ def analyze(cfg: dict, outdir: Path, stage: str) -> dict:
                                       window="window_1m_tasks")
         ot = _onset_times(cfg, w["data"]["step"], w["data"]["unfit"])
         entry["onset_times"] = ot
-        for seed, row in zip([int(v) for v in cfg["common"]["seeds"]], ot["rows"]):
-            onset_rows.append(dict(arm=arm, seed=seed, **row))
+        for j, (seed, row) in enumerate(zip([int(v) for v in cfg["common"]["seeds"]],
+                                            ot["rows"])):
+            onset_rows.append(dict(arm=arm, seed=seed, **row,
+                                   frac_windows_over=ot["frac_windows_over"][j],
+                                   u10_at_last_k=ot["u10_at_last_k"][j],
+                                   last_k=ot["last_k"]))
         km_rows.extend(dict(arm=arm, **r) for r in _kaplan_meier(
             [r["k_star"] for r in ot["rows"]], [r["censored"] for r in ot["rows"]],
             ONSET_CENSOR_AT))
@@ -1774,6 +1785,22 @@ def _write_summary(cfg, outdir, stage, data, controls, contrasts, verdicts,
                  f"{_f(u['median_submerged_frac'])} | "
                  f"{_f(u['median_span_median_submerged'])} | "
                  f"{_f(u['median_depth_median_submerged'])} |")
+    L.append("\n## E3 発症時刻 $k^\\ast$ と**横断の持続**（REPORT）\n")
+    L.append("| 腕 | $k^\\ast$ 中央値 | 横断した seed | 横断していた窓の割合（中央値） | "
+             "$U^{(10)}_{500}$ 中央値 | 末尾窓 n_onset |")
+    L.append("| --- | --- | --- | --- | --- | --- |")
+    for arm, e in data.items():
+        ot = e["onset_times"]
+        ks = [r["k_star"] for r in ot["rows"]]
+        n_cross = sum(1 for r in ot["rows"] if not r["censored"])
+        L.append(f"| `{arm}` | {float(np.median(ks)):.0f} | {n_cross}/10 | "
+                 f"{float(np.median(ot['frac_windows_over'])):.3f} | "
+                 f"{float(np.median(ot['u10_at_last_k'])):.3g} | "
+                 f"{e['5M']['onset']['n_onset']}/10 |")
+    L.append("\n**$k^\\ast$ は「最初に $U^{(10)}_k\\ge0.05$ を横断した時刻」であって"
+             "持続を意味しない。** 末尾窓の `n_onset` と食い違う腕（横断はするが戻る）が"
+             "あるので、$k^\\ast$ を単独で「発症した」と読まない。"
+             "横断窓の割合と $U^{(10)}_{500}$ は**事後の REPORT**で登録判定に入らない。\n")
     L.append("\n## 位置指標（末尾窓・REPORT・verdict には入れない）\n")
     L.append("| 腕 | in_band | at_sink | at_well | frozen | frozen_abs | |v| 中央値 |")
     L.append("| --- | --- | --- | --- | --- | --- | --- |")
