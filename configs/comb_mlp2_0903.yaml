@@ -1,0 +1,209 @@
+# proj_004: comb_mlp2_0903 — 櫛の分離（段 B・深さ 2）
+#   (櫛は深さ 2 でも LoP を出さないか: CB_A1 1 腕を committed 3 腕に paired で当てる)
+# 仕様: specs/spec_comb_isolate_0903.md（段 A と**同じ commit で事前登録する**）
+# Obsidian 側の正本: 可塑性喪失/spec/櫛の分離_spec_0903.md §4.2・§5.3（V7）
+#
+# 宿主は lr_a1_0901（深さ 2・幅 [100,100]・第 1 層のみ中心化・素の SGD・5M）。
+# 宿主の setup_arm_lr / _run_arm / write_arm_logs_lr は ARM="LR_A1" と
+# activation="leaky_relu" を直書きしているので、**本走は写しを持つ**（宿主は 1 行も触らない）。
+#   V7: paired（CB_A1 - L2_A1・末尾窓 log10 U）の CI で NO_LOP_DEPTH2 / LOP_PERSISTS_DEPTH2
+#   Issa 予測（§7.1・2026-09-03 記入）: NO_LOP_DEPTH2・EXACT_FIT 立つ・発散 0 seed
+#     **★ §7.2（Claude）と逐語で同一。独立の予言ではない**（下の prediction_provenance）
+#
+# 命名: 作成日 0903。bootstrap seed は 20260915（段 A と同一値・同一 spec の 2 段なので分けない）。
+# generator_offset は **明示的に 0**（L2_A1 / LR_A1 / E_A1 と同じ既存系列。S-B の土台）。
+# 床 1e-23 は mlp2_phase1_0829 / elu_swamp_0830 の較正値を継承。再較正しない。
+# 中心化なし（_none）は回さない（E_none の発散前例・spec §3）。
+
+spec: specs/spec_comb_isolate_0903.md
+
+common:
+  total_steps: 5000000
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  generator_offset: 0          # L2_A1 / LR_A1 / E_A1 と同じ既存系列。seed ラベルだけを変えない
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints: [0, 5000000]
+  run_freeze: false
+  dead_tol: 1.0e-7
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 1.0e-4
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values: [10000]
+  encodings: [std]
+
+# 櫛は weird_act_0903 で足した閉形式（真の導関数・autograd なし・乱数消費なし）。
+# act_alpha は振動数 alpha。包絡なし（beta = inf）。
+activation:
+  comb:
+    name: comb_binf
+    alpha: 1.0
+    forward: where(z>0, z, -sin(alpha*z)**2)
+    derivative: where(z>0, 1, -alpha*sin(2*alpha*z))
+    dial_symbol: alpha
+    envelope: inf
+    bounded_negative_side: true    # |phi| <= 1。深さ 2 でも第 2 層入力が発散しない見込み
+    consumes_rng: false
+  autograd: false
+
+intervention:
+  name: A_layer_input_centering
+  center_alpha: 0.01
+  stop_gradient_on_running_mean: true
+  consumes_rng: false
+
+arms:
+  - name: CB_A1
+    activation: comb
+    hidden: [100, 100]
+    centered_layers: [1]
+
+# 対照（committed・再走しない）。**3 腕とも results/lr_a1_0901/verdict.csv から転記する。**
+# LR_A1 は水準行がそのまま入っている。L2_A1 と E_A1 は水準行が無いので、
+# **同ファイルの paired 差から seed ごとに再構成する**（下の recipe）。
+# 再構成の検算: L2_A1 の U 中央値 0.02158 / E_A1 0.00282 / LR_A1 0.002621 が
+# vault spec §1 の 0.022 / 0.0028 / 0.0026 と一致する（2026-09-03 に確認）。
+references:
+  relu:
+    dir: results/mlp2_phase1_0829
+    arm: L2_A1
+    activation: relu
+  leaky:
+    dir: results/lr_a1_0901
+    arm: LR_A1
+    activation: leaky_relu
+  elu:
+    dir: results/elu_swamp_0830
+    arm: E_A1
+    activation: elu
+
+controls:
+  endpoint_source: results/lr_a1_0901/verdict.csv
+  endpoint_window: late_t451_500
+  endpoint_metric: P2_log10_mean_unfit_level
+  same_run_as_new_arm: false
+  caveat: controls_are_committed_values_from_a_separate_run
+  # seed 別水準の作り方（**再計算ではなく転記と算術**）
+  reconstruction:
+    LR_A1: "P2_log10_mean_unfit_level (arm LR_A1) の seed_values をそのまま"
+    L2_A1: "LR_A1 の水準 - P2_delta_log10_mean_unfit (LR_A1 - L2_A1) の seed_values"
+    E_A1:  "L2_A1 の再構成値 + P2_E_A1_reference_delta_log10_mean_unfit (E_A1 - L2_A1)"
+  reconstruction_is_exact: true   # seed ごとの引き算。丸め以外の近似を入れない
+  verify_reference_hashes: true
+
+pairing:
+  paired_arms: [CB_A1, L2_A1, LR_A1, E_A1]
+  pairing_scope: init_teacher_input_realization
+  trajectory_caveat: activations_diverge_after_step1
+  require_same_generator_offset: true
+
+comb_mlp2:
+  task_period: 10000
+  late_tasks: [451, 500]          # lr_a1_0901 の窓を逐語継承（段 A の 491-500 とは違う）
+  exact_support: 32
+  sigma_degenerate_tol: 1.0e-8
+
+  # Phase 1 / ELU swamp で実測較正済みの 2 層床を継承。再較正しない。
+  unfit_floor: 1.0e-23
+  floor_inherited_from: [mlp2_phase1_0829, elu_swamp_0830]
+  recalibrate_floor: false
+
+  bootstrap_B: 10000
+  bootstrap_seed: 20260915
+  ci_method: percentile_primary_studentized_fallback
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+
+  # --- V7（spec §5.3）。判定は 1 本だけ。段 A の V5・V6 とは独立 ---
+  v7:
+    metric: log10_mean_unfit
+    window: late_tasks
+    arm: CB_A1
+    reference_arm: L2_A1
+    leaky_reference_arm: LR_A1
+    margin: 0.15
+    labels:
+      below:    NO_LOP_DEPTH2          # CI が丸ごと -margin の下（観測。EXACT_FIT なら旗を添える）
+      persists: LOP_PERSISTS_DEPTH2    # CI が ±margin 内または 0 を含む
+      worse_than_leaky: WORSE_THAN_LEAKY_DEPTH2   # 併記（CB_A1 - LR_A1 が SHORT_OF_SOFT）
+      diverged: INCONCLUSIVE_DIVERGENCE
+
+  # ★ 段 A と同一のガード（spec §4.4）。深さ 2 では 1M 窓を同じ定義で作る。
+  exact_fit:
+    label: EXACT_FIT
+    window_1m_tasks: [91, 100]
+    statistic: seed_median
+    threshold: 1.0e-8
+    blocks_level_labels: true
+    keeps_onset_labels: true
+    emit_eval_loss_exact: true
+    note: "EXACT_FIT が立つ腕の水準差を機構として引かない（spec §8）"
+
+  # 報告のみ（判定に入れない）
+  report_only: [layer2_dose, layer2_submerged_count, layer2_submerged_frac,
+                layer2_mean_mobility, layer1_submerged_frac, eff_rank, s_i]
+  report_count_and_fraction: true
+  strict_dead_applicable_to_comb: false   # 負側が厳密 0 にならない（沈下は max_x z <= 0 で見る）
+  strict_dead_in_verdict: false
+  boundary_snapshot: task_end
+  layer_stats_task_end_only: true
+
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: stop_arm_no_rescue
+    rescue: none
+
+preregistration:
+  # この 5 つが true になるのは **この config を含む単独 commit そのもの**である
+  # （lr_a1_0901 の同名ブロックと同じ扱い）。commit より前に実装・実行しない。
+  conditions_complete: true
+  frozen: true
+  execution_authorized: true      # 2026-09-03 に Issa が「これで実装してください」と明示
+  repo_spec_committed: true       # specs/spec_comb_isolate_0903.md を同じ commit に含める
+  predictions_confirmed: true
+  bootstrap_seed_confirmed: true
+  # ★ 段 A・段 B に共通。lr_a1_0901 の同名フィールドと同じ格づけ。
+  prediction_provenance: draft_values_proposed_first_then_approved_by_Issa
+  prediction_provenance_note: "§7.1 の記入は §7.2（Claude）と逐語で同一。独立の予言ではない。結果ノートに「両方が当てた」と書かない（引用禁止 B の lr_a1_0901 先例）"
+  predicted_v7: NO_LOP_DEPTH2
+  predicted_exact_fit: true
+  predicted_divergence_seeds: 0
+  predicted_layer2_dose: 予測しない
+  dose_equivalence_margin: 0.15
+
+sanity:
+  # S-B（spec §6・新規）: step 0 で LR_A1 と init・教師・入力列が bit 一致
+  s_b_reference: results/lr_a1_0901
+  s_b_reference_arm: LR_A1
+  s_b_steps: 30000
+  s_b_metrics: [layer1_p_hat, layer2_p_hat, eval_loss_exact, unfit]
+  s_b_require_step0_bit_equality: true
+  require_same_generator_offset: true
+  require_rng_neutral_exact_support: true
+  finite_primary_metrics: [layer2_dose, unfit, eval_loss_exact]
+  s_grad_finite_difference_tol: 1.0e-6
+  s1_identity_tol: 1.0e-10
+  # 段 A で回した活性化検査（S-fd・S-num・S-limit・S-dial）は comb_binf について
+  # weird_act_0903 の preflight で PASS 済み。**再実施はするが再較正はしない。**
+  activation_checks_inherited_from: results/_preflight_weird_act_0903/preflight.json
+  omp_num_threads: 1
+
+output:
+  dir: results/comb_mlp2_0903
+  layer_stats_csv: true
+  s_distribution_csv: true
+  logs_npz: true
