@@ -1,0 +1,601 @@
+{
+  "experiment": "comb_isolate_0903",
+  "created": "2026-09-03T23:13:27+0900",
+  "command": [
+    "/home/i_nakatsuka/Projects/lop_analysis/src/comb_isolate_0903.py",
+    "--stage",
+    "finalize"
+  ],
+  "elapsed_sec": 976.8668501377106,
+  "cwd": "/home/i_nakatsuka/Projects/lop_analysis",
+  "python": "3.13.13 | packaged by Anaconda, Inc. | (main, Apr 14 2026, 06:19:41) [GCC 14.3.0]",
+  "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+  "torch": "2.12.0+cu126",
+  "numpy": "2.4.6",
+  "git_hash": "6494e1ebf7e560ad6015fc273b07f5b307d62387",
+  "git_dirty": "M src/comb_isolate_0903.py\n?? results/_preflight_comb_mlp2_0903/\n?? results/comb_isolate_0903/\n?? results/comb_mlp2_0903/\n?? src/comb_mlp2_0903.py",
+  "device": "cpu",
+  "config": "/home/i_nakatsuka/Projects/lop_analysis/configs/comb_isolate_0903.yaml",
+  "config_sha256": "1f47502576ab16a1190dc4022e384b7935a21981ea3049578ce60798735ee375",
+  "spec": "/home/i_nakatsuka/Projects/lop_analysis/specs/spec_comb_isolate_0903.md",
+  "spec_sha256": "b80c332c1cf9effe85cf3cd1fbda3c5014fc361fe5bdc087642c3719245a2418",
+  "stage": "A",
+  "stageB_config": "configs/comb_mlp2_0903.yaml",
+  "stages_registered": {
+    "stageA_arms": [
+      "CB1f_a1_1216",
+      "CB1l_a1_1216",
+      "RB_dpi_1216",
+      "SN_a1_1216"
+    ],
+    "stageB_config": "configs/comb_mlp2_0903.yaml",
+    "stageB_arms": [
+      "CB_A1"
+    ],
+    "issa_decision_0903": "stageA_and_stageB_preregistered_together_submitted_in_order",
+    "stageB_frozen_before_stageA_results": true,
+    "stageC_registered": false,
+    "single_dose": "1216",
+    "single_dose_requires_dose_in_citation": true,
+    "arm_process_parallel_allowed": true,
+    "arm_process_parallel_requires": "S_par_inherited_from_gate_dial_0902",
+    "gpu": false
+  },
+  "stage_note": "stage A and stage B are preregistered in the same commit; submission is sequential (2026-09-03 Issa).",
+  "prediction_provenance": "draft_values_proposed_first_then_approved_by_Issa; the §7.1 entry is verbatim identical to §7.2 (Claude) and is NOT an independent prediction",
+  "arms_run": [
+    "CB1f_a1_1216",
+    "CB1l_a1_1216",
+    "RB_dpi_1216",
+    "SN_a1_1216"
+  ],
+  "dose": "12.16",
+  "host": "gate_dial_0902._run_arm via weird_act_0903._run_arm_weird (S-copy checked)",
+  "unit_columns": [
+    "layer1_mob",
+    "layer1_absmob",
+    "layer1_zmax",
+    "layer1_zmean",
+    "layer1_v_unit",
+    "layer1_zmin"
+  ],
+  "generator_offset": 0,
+  "generator_offset_note": "explicit 0: shares the parent run's stream (S-pair).",
+  "exact_fit_guard": {
+    "label": "EXACT_FIT",
+    "window": "window_1m_tasks",
+    "statistic": "seed_median",
+    "threshold": 1e-08,
+    "blocks_level_labels": true,
+    "keeps_onset_labels": true,
+    "inconclusive_label": "INCONCLUSIVE_EXACT_FIT",
+    "emit_eval_loss_exact": true
+  },
+  "parent_logs_absent_on_this_machine": true,
+  "sanity": {
+    "experiment": "comb_isolate_0903",
+    "pass_": true,
+    "checks": {
+      "S_copy": {
+        "pass_": true,
+        "n_lines": 41,
+        "host_lines": 41,
+        "differences": [
+          {
+            "index": 10,
+            "mine": "rec = WeirdRecorder(probes, st)",
+            "host": "rec = DialRecorder(probes, st)"
+          }
+        ]
+      },
+      "S_const": {
+        "pass_": true,
+        "rows": [
+          {
+            "arm": "CB1f_a1_1216",
+            "activation": "comb1_flat",
+            "arm_value": 3.141592653589793,
+            "nets_value": 3.141592653589793,
+            "nets_source": "math.pi / act_alpha",
+            "config_block_value": 3.141592653589793,
+            "pass_": true
+          },
+          {
+            "arm": "CB1l_a1_1216",
+            "activation": "comb1_leaky",
+            "arm_value": 3.141592653589793,
+            "nets_value": 3.141592653589793,
+            "nets_source": "math.pi / act_alpha",
+            "config_block_value": 3.141592653589793,
+            "leak_nets": 0.1,
+            "leak_config": 0.1,
+            "pass_": true
+          },
+          {
+            "arm": "RB_dpi_1216",
+            "activation": "band_leaky_dpi",
+            "arm_value": 3.141592653589793,
+            "nets_value": 3.141592653589793,
+            "nets_source": "BAND_WIDTH",
+            "config_block_value": 3.141592653589793,
+            "pass_": true
+          },
+          {
+            "arm": "SN_a1_1216",
+            "activation": "snake",
+            "arm_value": null,
+            "nets_value": null,
+            "nets_source": "none",
+            "config_block_value": null,
+            "pass_": true
+          }
+        ],
+        "failures": []
+      },
+      "S_dial": {
+        "pass_": true,
+        "rel_tol": 0.06,
+        "rows": [
+          {
+            "arm": "CB1f_a1_1216",
+            "activation": "comb1_flat",
+            "dial": 1.0,
+            "registered_watershed": [
+              1.571
+            ],
+            "solved_maxima": [
+              1.5708
+            ],
+            "registered_wells": [
+              3.142
+            ],
+            "wells": [
+              {
+                "registered_u": 3.142,
+                "solved_zero_u": 3.1415929147374366,
+                "rel_error": 0.00012956246421491984,
+                "phi_prime_at_registered_u": 0.0,
+                "is_double_zero": true
+              }
+            ],
+            "well_definition": "position of the negative-side zero of phi; phi'=0 there is REPORT only (spec §2)",
+            "pass_": true
+          },
+          {
+            "arm": "CB1l_a1_1216",
+            "activation": "comb1_leaky",
+            "dial": 1.0,
+            "registered_watershed": [
+              1.571
+            ],
+            "solved_maxima": [
+              1.5708
+            ],
+            "registered_wells": [
+              3.142
+            ],
+            "wells": [
+              {
+                "registered_u": 3.142,
+                "solved_zero_u": 3.1415916828624373,
+                "rel_error": 0.00012995453136938873,
+                "phi_prime_at_registered_u": 0.1,
+                "is_double_zero": false
+              }
+            ],
+            "well_definition": "position of the negative-side zero of phi; phi'=0 there is REPORT only (spec §2)",
+            "pass_": true
+          },
+          {
+            "arm": "RB_dpi_1216",
+            "activation": "band_leaky_dpi",
+            "registered_none": true,
+            "pass_": true
+          },
+          {
+            "arm": "SN_a1_1216",
+            "activation": "snake",
+            "registered_none": true,
+            "pass_": true
+          }
+        ],
+        "failures": []
+      },
+      "S_fd": {
+        "pass_": true,
+        "rows": [
+          {
+            "activation": "comb1_flat",
+            "alpha": 1.0,
+            "n_points": 80,
+            "worst_abs": 1.0279563866788521e-09,
+            "tol": 1e-06,
+            "pass_": true
+          },
+          {
+            "activation": "comb1_leaky",
+            "alpha": 1.0,
+            "n_points": 80,
+            "worst_abs": 1.0279563866788521e-09,
+            "tol": 1e-06,
+            "pass_": true
+          },
+          {
+            "activation": "band_leaky_dpi",
+            "alpha": 0.1,
+            "n_points": 80,
+            "worst_abs": 1.0279563866788521e-09,
+            "tol": 1e-06,
+            "pass_": true
+          },
+          {
+            "activation": "snake",
+            "alpha": 1.0,
+            "n_points": 41,
+            "worst_abs": 2.1825097284988715e-09,
+            "tol": 1e-06,
+            "pass_": true
+          },
+          {
+            "activation": "band_leaky_d0",
+            "alpha": 0.1,
+            "n_points": 80,
+            "worst_abs": 1.0279563866788521e-09,
+            "tol": 1e-06,
+            "pass_": true
+          }
+        ],
+        "failures": []
+      },
+      "S_num": {
+        "pass_": true,
+        "rows": [
+          {
+            "arm": "CB1f_a1_1216",
+            "activation": "comb1_flat",
+            "alpha": 1.0,
+            "range": [
+              -200.0,
+              200.0
+            ],
+            "finite": true,
+            "float32_overflow_depth": null,
+            "max_abs": 200.0,
+            "pass_": true
+          },
+          {
+            "arm": "CB1l_a1_1216",
+            "activation": "comb1_leaky",
+            "alpha": 1.0,
+            "range": [
+              -200.0,
+              200.0
+            ],
+            "finite": true,
+            "float32_overflow_depth": null,
+            "max_abs": 200.0,
+            "pass_": true
+          },
+          {
+            "arm": "RB_dpi_1216",
+            "activation": "band_leaky_dpi",
+            "alpha": 0.1,
+            "range": [
+              -200.0,
+              200.0
+            ],
+            "finite": true,
+            "float32_overflow_depth": null,
+            "max_abs": 200.0,
+            "pass_": true
+          },
+          {
+            "arm": "SN_a1_1216",
+            "activation": "snake",
+            "alpha": 1.0,
+            "range": [
+              -200.0,
+              200.0
+            ],
+            "finite": true,
+            "float32_overflow_depth": null,
+            "max_abs": 200.7626495361328,
+            "pass_": true
+          }
+        ],
+        "failures": []
+      },
+      "S_limit": {
+        "pass_": true,
+        "rows": [
+          {
+            "kind": "open_interval",
+            "activation": "comb1_leaky",
+            "reference": "comb_binf",
+            "interval": "(-3.141593, 30]",
+            "forward_bit_equal": true,
+            "grad_bit_equal": true,
+            "endpoint_excluded": true,
+            "endpoint_new": 0.0,
+            "endpoint_reference": -1.4997597826618576e-32,
+            "pass_": true
+          },
+          {
+            "kind": "open_interval",
+            "activation": "comb1_flat",
+            "reference": "comb_binf",
+            "interval": "(-3.141593, 30]",
+            "forward_bit_equal": true,
+            "grad_bit_equal": true,
+            "endpoint_excluded": true,
+            "endpoint_new": 0.0,
+            "endpoint_reference": -1.4997597826618576e-32,
+            "pass_": true
+          },
+          {
+            "kind": "closed_bit",
+            "activation": "band_leaky_d0",
+            "reference": "leaky_relu",
+            "forward_bit_equal": true,
+            "grad_bit_equal": true,
+            "pass_": true
+          },
+          {
+            "kind": "snake_identity_limit",
+            "activation": "snake",
+            "alpha": 1e-06,
+            "max_rel_dev": 2.99999999910483e-05,
+            "tol": 0.0001,
+            "pass_": true
+          }
+        ]
+      },
+      "S_guard": {
+        "pass_": true,
+        "threshold": 1e-08,
+        "rows": [
+          {
+            "arm": "CB_a1_1216",
+            "u_1m_seed_median": 1.5034901518861568e-13,
+            "fired": true,
+            "expected": true,
+            "pass_": true
+          },
+          {
+            "arm": "LR_1216",
+            "u_1m_seed_median": 0.006244353426007812,
+            "fired": false,
+            "expected": false,
+            "pass_": true
+          },
+          {
+            "arm": "E_1216",
+            "u_1m_seed_median": 0.005574965546752188,
+            "fired": false,
+            "expected": false,
+            "pass_": true
+          },
+          {
+            "arm": "R_1216",
+            "u_1m_seed_median": 0.22430427054453836,
+            "fired": false,
+            "expected": false,
+            "pass_": true
+          },
+          {
+            "arm": "S_b1_1216",
+            "u_1m_seed_median": 0.01949560196440718,
+            "fired": false,
+            "expected": false,
+            "pass_": true
+          }
+        ],
+        "failures": [],
+        "separation_decades": 10.569141600047837,
+        "note": "閾値は事後に動かさない。分離しなければ V6 は GUARD_MISCALIBRATED"
+      },
+      "S_log_b": {
+        "pass_": true,
+        "steps": 30000,
+        "differences": [],
+        "added_columns": [
+          "absmob",
+          "mob",
+          "v_unit",
+          "zmax",
+          "zmean",
+          "zmin"
+        ],
+        "expected_columns": [
+          "absmob",
+          "mob",
+          "v_unit",
+          "zmax",
+          "zmean",
+          "zmin"
+        ]
+      },
+      "S_mob": {
+        "pass_": true,
+        "tolerance": 1e-06,
+        "steps": 30000,
+        "rows": [
+          {
+            "arm": "RB_dpi_1216",
+            "identity": "p_hat + a*Pr[z < -d]",
+            "max_abs_error": 3.469446951953614e-18,
+            "zmin_le_zmean_le_zmax": true,
+            "zmin_le_zmean_le_zmax_logged": true,
+            "pass_": true
+          },
+          {
+            "arm": "CB1l_a1_1216",
+            "identity": "E_x[phi'] rebuilt from the closed form",
+            "max_abs_error": 0.0,
+            "zmin_le_zmean_le_zmax": true,
+            "zmin_le_zmean_le_zmax_logged": true,
+            "pass_": true
+          }
+        ]
+      },
+      "S_pair": {
+        "pass_": true,
+        "reference": "CB1f_a1_1216",
+        "arms": [
+          "CB1f_a1_1216",
+          "CB1l_a1_1216",
+          "RB_dpi_1216",
+          "SN_a1_1216"
+        ],
+        "steps": 30000,
+        "match_by": "seed_init_hash",
+        "differences": [],
+        "parent_status": "PARENT_LOGS_ABSENT_ON_THIS_MACHINE",
+        "parent_flip_rows": [],
+        "parent_missing": [
+          "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed0.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed1.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed2.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed3.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed4.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed5.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed6.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed7.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed8.npz",
+          "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed9.npz"
+        ],
+        "caveat": "init/teacher/input realization only; trajectories diverge after step 1. The parent half of S-pair is UNVERIFIABLE here because results/gate_dose_0830/logs is gitignored and absent on this machine."
+      },
+      "S_dose": {
+        "pass_": true,
+        "tolerance": 1e-10,
+        "n_probes": 124,
+        "failures": []
+      },
+      "S_taut": {
+        "pass_": true,
+        "rows": [
+          {
+            "arm": "CB1f_a1_1216",
+            "frozen_frac": 0.0,
+            "frozen_abs_frac": 0.0,
+            "submerged_frac": 0.17166666666666666,
+            "tautological": true,
+            "note": "frozen / frozen_abs は REPORT_ONLY。判定式に入れていない"
+          },
+          {
+            "arm": "CB1l_a1_1216",
+            "frozen_frac": 0.0,
+            "frozen_abs_frac": 0.0,
+            "submerged_frac": 0.17166666666666666,
+            "tautological": true,
+            "note": "frozen / frozen_abs は REPORT_ONLY。判定式に入れていない"
+          },
+          {
+            "arm": "SN_a1_1216",
+            "frozen_frac": 0.0,
+            "frozen_abs_frac": 0.0,
+            "submerged_frac": 0.2675,
+            "tautological": true,
+            "note": "frozen / frozen_abs は REPORT_ONLY。判定式に入れていない"
+          }
+        ],
+        "note": "informational; SN は submerged を定義しない（spec §4）"
+      }
+    }
+  },
+  "output_sha256": {
+    "verdict.csv": "51fa0df0b1a8f05b59ecabd1f8a7217746bf0267fdf2081df195aec4b7996385",
+    "summary.md": "7d7c4f3a1d499b3b46ef876c09d2f43a54f101ea4e6fcc30571fbc89164258bc",
+    "onset_times.csv": "b77489d6752d7e5734f913afb580aec8480d2d864524b501499c2a3f7faec670",
+    "onset_km.csv": "924bc07c1fe5cf20663c420ac2cd5f0587cad31fc8c66c39cf3a004d4738fc0e",
+    "position_table.csv": "1c935cf168261a6c46a00aca631b5e989381252a44ea7ed3d98c1fad2c9af8f6",
+    "depth_hist.csv": "3c98eaa49132a2e658513845e33def7a8da85c0b8ef074ee848e64c57444dd76",
+    "layer_stats.csv": "ed6b09f070f4e89e62d813daa2371e961dd22d2a1ef19b16c0e1cfe49fd43c69",
+    "config_used.yaml": "e48f7310f0e45b64e3b846aa4b2c742c857610b9bb2f0df1414308c5e9a229fb",
+    "logs/CB1f_a1_1216_seed0.npz": "0b91329cd138db8228e76170b0d136d9d0e9c9fe05af76c094bb1ca7a569c1a7",
+    "logs/CB1f_a1_1216_seed1.npz": "23812348e0436de6103bf68d1603958b04cd9c962de1197d944dbbca567b93dc",
+    "logs/CB1f_a1_1216_seed2.npz": "65cb62aced58776b99cec3b766f0a3c045e5b206b8eff9b5dbc3a30e5bfc2aec",
+    "logs/CB1f_a1_1216_seed3.npz": "a7bf548f232516f36e40db4734c50d58de0ca4541a73826f8205d7bf2e3455ef",
+    "logs/CB1f_a1_1216_seed4.npz": "eeed89f6911c5e261ff1eaf8516315225932cb48ed0595c2b5fe0a699ab0a6ef",
+    "logs/CB1f_a1_1216_seed5.npz": "b9cee53d1742318880873f031cc0130072d48a8898c46bc9d7107c83d64a9d65",
+    "logs/CB1f_a1_1216_seed6.npz": "c2bfb4ab4f791b590407e48a71a5ea14a79d692e1965a410cce9a2517efe2001",
+    "logs/CB1f_a1_1216_seed7.npz": "5778a9c7c04cb2a9e394dc600e60cf8240a894667258aaeeaa00262fc9b10d4c",
+    "logs/CB1f_a1_1216_seed8.npz": "ac3ae8bb71890f6cf7bb1d6ee98112d5281c52124756174f0f3a54f4f43540e5",
+    "logs/CB1f_a1_1216_seed9.npz": "431aed9b8386e037a02a6e1380bb50e21a07fa1e9ae7d67709b836f2dc4b135d",
+    "logs/CB1l_a1_1216_seed0.npz": "8f732bf604e005e966fd1b29be3f04ca2675cb3574c11665ba840ef184a737de",
+    "logs/CB1l_a1_1216_seed1.npz": "b08c7ef09e196d36a702f3d388000b73ae9eb47f289f076f15d198b324bbf2ff",
+    "logs/CB1l_a1_1216_seed2.npz": "147e281b5f18e2a0372f563490a53b1f5b07216521868ee5ed0de544630739f1",
+    "logs/CB1l_a1_1216_seed3.npz": "b6a37b2019a9462343ad8bf153f0233b7c4f7ce9955dee88a6ba22dff472048f",
+    "logs/CB1l_a1_1216_seed4.npz": "0b34ebd09212f9a07aa711b521b04796ef2afffe30999557e6c420bdb495f630",
+    "logs/CB1l_a1_1216_seed5.npz": "7b906256619beb4c83b3f31d9fcbb19e51906fb3bae675ec30e036b7b2dec684",
+    "logs/CB1l_a1_1216_seed6.npz": "d8b81c45084ad9ef878f710c0acc74e4770d4136e837b1f2fea8338f582f8592",
+    "logs/CB1l_a1_1216_seed7.npz": "26e214d8203def3e5e7f48d70067ca91a533f71f6091bd6413e763e76bf91513",
+    "logs/CB1l_a1_1216_seed8.npz": "993153a8bbb3f8051b2f83bcc2de7c8459ba3ef6d06747ec856d762edc346bea",
+    "logs/CB1l_a1_1216_seed9.npz": "51124b1637ccc2d6863c885685959cabe5e96d931ecb1074ed58b94a883baf48",
+    "logs/RB_dpi_1216_seed0.npz": "d5a88d4a82809017770fc7b62a5ad482b8f4621a2829e2fed3c737d92a94cd07",
+    "logs/RB_dpi_1216_seed1.npz": "d746e6ed803a6c5f11238771838ed69e21f08865f3362f4b023d56d34770fe8d",
+    "logs/RB_dpi_1216_seed2.npz": "9860f1dd55cc109ddf2239515b31a1bb88df0c0e1d33c2f6a997a8e4a3b82e9d",
+    "logs/RB_dpi_1216_seed3.npz": "ca522c6b8653e4a277148cd4f67edd1deb42e3c2a99e707143fbd1bd5f0bed8e",
+    "logs/RB_dpi_1216_seed4.npz": "4e72d0aadc4ca9f95e369d3e7d9d0f75baa5067f9e6690f2a7f950efc4db7944",
+    "logs/RB_dpi_1216_seed5.npz": "27dcf72a051d331fd0a0ccc51a8857a78530d35bf3db36f9e666fd655f90fda7",
+    "logs/RB_dpi_1216_seed6.npz": "da18cac803b821c2be2824c58b84407eabfdd70d8cfe225d9ca39170552d10a8",
+    "logs/RB_dpi_1216_seed7.npz": "24206038b549bed519e1c8ad268d5bc56926cb366f6f007efe39369f6f8407aa",
+    "logs/RB_dpi_1216_seed8.npz": "5b6930a2080ccbc1312ebb2b6cd21c3ae69cfe476475326dfaf8d3e0064d0a9f",
+    "logs/RB_dpi_1216_seed9.npz": "b3f246f4ca4904b2deff00b3398e51d6b972821a93c650d80b7fa61104aa7aef",
+    "arm_status/CB1f_a1_1216_done.json": "ec4f0fa4e42d3fc7ffde937da5d78b7576aa85a6d0ca59b8bd5f945f4eb19885",
+    "arm_status/CB1l_a1_1216_done.json": "1fb3a6791a8f025090b93b3267c55f59d51e9faa13ea5ff207802948f52f5e91",
+    "arm_status/RB_dpi_1216_done.json": "b4447ec1b793b4226f769b1965db060e2b30d53816d038415c6dff31bc697328",
+    "arm_status/SN_a1_1216.json": "a84492b0427db488b57379656e641ca34550002ff81eff2449949e10f2d9563d",
+    "arm_status/SN_a1_1216_divergence_probe.json": "4198093d17ac0be8c21102b0c2c7a41f3097929855baab88daafb970d511dd76",
+    "arm_status/SN_a1_1216_done.json": "6145a7e58722435eaf6c7f58745daf89d48197367033c3b2a746c0d31790b61c"
+  },
+  "arm_status": {
+    "CB1f_a1_1216": "COMPLETE",
+    "CB1l_a1_1216": "COMPLETE",
+    "RB_dpi_1216": "COMPLETE",
+    "SN_a1_1216": "NUMERIC_DIVERGENCE"
+  },
+  "divergences": {
+    "SN_a1_1216": {
+      "status": "NUMERIC_DIVERGENCE",
+      "arm": "SN_a1_1216",
+      "detected_step": 1000,
+      "detected_task": 1,
+      "probe_every": 1000,
+      "bad_seeds": [
+        3
+      ],
+      "nonfinite_tensors": {
+        "3": [
+          "net.Ws.1",
+          "net.bs.1",
+          "net.v",
+          "net.c"
+        ]
+      },
+      "action": "arm_stopped_no_rescue",
+      "registered_total_steps": 5000000,
+      "registered_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "activation": "snake",
+      "act_alpha": 1.0,
+      "family": "snake",
+      "elapsed_sec": 0.18645977973937988,
+      "detection": "nonfinite_training_state_at_probe",
+      "partial_logs_excluded": true,
+      "rescue": "none"
+    }
+  },
+  "arm_process_parallel": true
+}

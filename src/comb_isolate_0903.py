@@ -38,8 +38,8 @@ from .mlp2_phase1 import NUMERIC_DIVERGENCE
 from .nets import VecMLPL
 from .ratchet_log import full_support_ro
 from .weird_act_0903 import (ONSET_CENSOR_AT, WEIRD_UNIT_KEYS, WeirdRecorder,
-                             _contrast, _onset_stats, _onset_times,
-                             _phi2_extrema, _run_arm_weird, _s_cap, _s_copy,
+                             _onset_stats, _onset_times, _phi2_extrema,
+                             _run_arm_weird, _s_cap, _s_copy,
                              _s_pair_and_dose, unit_zmin_record)
 
 EXPERIMENT = "comb_isolate_0903"
@@ -72,7 +72,8 @@ def _lobe(alpha: float) -> float:
 # Config
 # ---------------------------------------------------------------------------
 def validate_config(cfg: dict, *, stage: str) -> None:
-    if stage not in {"preflight", "smoke", "run", "analyze", "finalize"}:
+    if stage not in {"preflight", "smoke", "run", "analyze", "finalize",
+                     "diverge-probe"}:
         raise ValueError(f"unknown stage {stage!r}")
     C, A, I, P, G, S = (cfg["common"], cfg["condA"], cfg["intervention"],
                         cfg["phase1"], _P(cfg), cfg["sanity"])
@@ -725,6 +726,80 @@ def _v6_label(cfg: dict, data: dict, committed_fired: bool | None) -> tuple[str,
     return "PARTIAL", detail
 
 
+def divergence_probe(cfg: dict, arm: str, outdir: Path) -> dict:
+    """発散腕の性質を回収する診断走（spec §6 の報告項目・**判定には使わない**）。
+
+    宿主は発散時に部分ログを破棄するので、``arm_status/<arm>.json`` には検出 step しか
+    残らない。**同じ config・同じ腕・登録どおりの seed 集合（R=10）**で刻んで回し直し、
+    重みノルムがどこで非有限になるかを取る（seed を絞ると乱数の引き方が変わって別軌跡）。
+    実装の誤りか学習の発散かを切り分けるためのもので、**新しい実験ではない**。
+    """
+    c = copy.deepcopy(cfg)
+    st = setup_arm_dial(c, _arm(c, arm), "cpu")
+    rows: list[dict] = []
+
+    def probe(state: dict, step: int) -> None:
+        net = state["net"]
+        with torch.no_grad():
+            rows.append(dict(step=int(step),
+                             w_norm=float(net.Ws[0].norm()),
+                             v_norm=float(net.v.norm()),
+                             b_absmax=float(net.bs[0].abs().max()),
+                             finite=bool(torch.isfinite(net.Ws[0]).all()
+                                         and torch.isfinite(net.v).all())))
+
+    scratch = outdir / "_divergence_probe"
+    scratch.mkdir(parents=True, exist_ok=True)
+    steps, every = 400, 25
+    probes = list(range(0, steps + 1, every))
+    raised = None
+    try:
+        train_arm_gate(st, probe, probes, steps, scratch, [])
+    except Exception as exc:                     # 発散は登録どおり許容する腕なので握る
+        raised = f"{type(exc).__name__}: {str(exc)[:200]}"
+    first_bad = next((r["step"] for r in rows if not r["finite"]), None)
+    out = dict(arm=arm, activation=st["activation"], act_alpha=st["act_alpha"],
+               probe_every=every, probed_until=steps, rows=rows,
+               first_nonfinite_probe_step=first_bad, raised=raised,
+               note="diagnostic replay with the registered seed set; never used in a "
+                    "verdict. The registered arm_status event records the detection "
+                    "step on the 1000-step probe grid, which is coarser than this.")
+    path = outdir / "arm_status" / f"{arm}_divergence_probe.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"[divergence-probe] {arm}: first non-finite probe = {first_bad} "
+          f"-> {path}", flush=True)
+    return out
+
+
+def _contrast(cfg: dict, a: np.ndarray, b: np.ndarray, draws: np.ndarray,
+              label: str) -> dict:
+    """seed クラスタの paired 差（log10 U の差）の中央値と CI・符号検定。
+
+    ``weird_act_0903._contrast`` と同じ式だが、等価限界を**本走のブロック**
+    （``comb_isolate.p5_equivalence_margin``）から読む。宿主の ``_P`` は
+    ``cfg["weird_act"]`` を見るのでそのままでは使えない。
+    """
+    values = np.asarray(a, dtype=np.float64) - np.asarray(b, dtype=np.float64)
+    ci = _ci(cfg, values, draws)
+    sign = _sign_test(values)
+    margin = float(_P(cfg)["p5_equivalence_margin"])
+    lo, hi = ci.get("percentile_ci_lo"), ci.get("percentile_ci_hi")
+    if lo is None or hi is None or not np.isfinite([lo, hi]).all():
+        equiv = "INCONCLUSIVE_WIDE"
+    elif lo >= -margin and hi <= margin:
+        equiv = "EQUIV_SOFT"
+    elif lo > 0:
+        equiv = "SHORT_OF_SOFT"
+    elif hi < -margin:
+        equiv = "BELOW_SOFT"
+    else:
+        equiv = "INCONCLUSIVE_WIDE"
+    return dict(label=label, point=float(np.median(values)), ci=ci,
+                sign_test=sign, equivalence=equiv, margin=margin,
+                seed_values=[float(v) for v in values])
+
+
 def _load_controls(cfg: dict) -> dict:
     """対照の endpoint を各親走の committed ``verdict.csv`` から**転記**する。"""
     import csv as _csv
@@ -1151,7 +1226,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=EXPERIMENT)
     ap.add_argument("--config", default=str(CONFIG))
     ap.add_argument("--stage", default="preflight",
-                    choices=["preflight", "run", "analyze", "finalize"])
+                    choices=["preflight", "run", "analyze", "finalize",
+                             "diverge-probe"])
     ap.add_argument("--arm", default=None, help="run exactly one arm (process parallel)")
     ap.add_argument("--outdir", default=None)
     ap.add_argument("--steps", type=int, default=None)
@@ -1164,6 +1240,9 @@ def main() -> None:
     outdir = Path(args.outdir) if args.outdir else Path(ROOT) / cfg["output"]["dir"]
     if args.stage == "preflight":
         preflight(cfg, Path(ROOT) / "results" / f"_preflight_{EXPERIMENT}")
+        return
+    if args.stage == "diverge-probe":
+        divergence_probe(cfg, args.arm or "SN_a1_1216", outdir)
         return
     if args.stage == "analyze":
         got = analyze(cfg, outdir)
