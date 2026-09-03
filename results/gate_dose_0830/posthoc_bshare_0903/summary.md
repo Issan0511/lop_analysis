@@ -1,4 +1,4 @@
-# bshare_posthoc_0903 v2 (registered = 0, posthoc_not_preregistered)
+# bshare_posthoc_0903 v3 (registered = 0, posthoc_not_preregistered)
 
 source: `results/gate_dose_0830`  window: record 0 → first later record with `p_hat == 0`
 
@@ -18,16 +18,16 @@ source: `results/gate_dose_0830`  window: record 0 → first later record with `
 
 ## diagnostics (what the headline number hides)
 
-| arm | units/seed | submerged at start | no_descent | share incl. no_descent | routes same sign | share outside [0,1] | pred (mean-of-recip) | window (records) |
-|---|---|---|---|---|---|---|---|---|
-| E_1216 | 73 | 233/1000 | 42/1000 | 0.1019 | 0.866 | 0.134 | 0.0976 | 178 |
-| E_933 | 78 | 180/1000 | 46/1000 | 0.1528 | 0.818 | 0.182 | 0.1552 | 141 |
-| E_off | 74 | 222/1000 | 43/1000 | 0.1019 | 0.853 | 0.147 | 0.1082 | 166 |
-| LR_1216 | 78 | 234/1000 | 0/1000 | 0.0948 | 0.987 | 0.013 | 0.0976 | 34 |
-| LR_933 | 83 | 180/1000 | 0/1000 | 0.1374 | 0.974 | 0.026 | 0.1552 | 61 |
-| LR_off | 80 | 222/1000 | 0/1000 | 0.1008 | 0.975 | 0.025 | 0.1115 | 38 |
-| R_1216 | 78 | 234/1000 | 0/1000 | 0.0973 | 0.975 | 0.025 | 0.0976 | 38 |
-| R_933 | 83 | 180/1000 | 0/1000 | 0.1407 | 0.950 | 0.050 | 0.1552 | 68 |
-| R_off | 80 | 222/1000 | 0/1000 | 0.1030 | 0.980 | 0.020 | 0.1115 | 41 |
+| arm | units/seed | submerged at start | no_descent | share incl. no_descent | routes same sign | share outside [0,1] | ff share outside [0,1] | ff keeps Δb | ff keeps Δ(w·µ') | pred (mean-of-recip) | window (records) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| E_1216 | 73 | 234/1000 | 42/1000 | 0.1019 | 0.866 | 0.134 | 0.110 | 0.473 | 0.420 | 0.0976 | 178 |
+| E_933 | 78 | 180/1000 | 46/1000 | 0.1528 | 0.818 | 0.182 | 0.084 | 0.481 | 0.427 | 0.1552 | 141 |
+| E_off | 74 | 222/1000 | 43/1000 | 0.1019 | 0.853 | 0.147 | 0.132 | 0.520 | 0.410 | 0.1082 | 166 |
+| LR_1216 | 78 | 234/1000 | 0/1000 | 0.0948 | 0.987 | 0.013 | 0.119 | 0.413 | 0.351 | 0.0976 | 34 |
+| LR_933 | 83 | 180/1000 | 0/1000 | 0.1374 | 0.974 | 0.026 | 0.123 | 0.286 | 0.215 | 0.1552 | 61 |
+| LR_off | 80 | 222/1000 | 0/1000 | 0.1008 | 0.975 | 0.025 | 0.120 | 0.396 | 0.305 | 0.1115 | 38 |
+| R_1216 | 78 | 234/1000 | 0/1000 | 0.0973 | 0.975 | 0.025 | 0.121 | 0.373 | 0.329 | 0.0976 | 38 |
+| R_933 | 83 | 180/1000 | 0/1000 | 0.1407 | 0.950 | 0.050 | 0.100 | 0.277 | 0.206 | 0.1552 | 68 |
+| R_off | 80 | 222/1000 | 0/1000 | 0.1030 | 0.980 | 0.020 | 0.131 | 0.359 | 0.301 | 0.1115 | 41 |
 
 No verdict label: the prediction was not frozen before the 12.16 comparison; treat as descriptive (`registered = 0`). A registered PASSed rule for the same functional form exists (命題リスト Q19 C2, `results/mu_titration_0823/dose_response.csv`: 0.10137 [0.09642, 0.10744] at ‖µ‖ = 3.0414 and 0.13356 [0.12820, 0.13856] at 2.3333) — compare against that, not against nothing.
