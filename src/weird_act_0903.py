@@ -30,14 +30,17 @@ import torch
 import yaml
 
 from .common import ROOT, load_config, pick_device
-from .dose_const_5m import _input_stats, _refresh_fixed_offset
+from .dose_const_5m import (_input_stats, _refresh_fixed_offset,
+                            clopper_pearson)
 from .elu_swamp import exact_layer_record_elu
-from .gate_dose import IDENTITY_TOL, SIGMA_TOL, train_arm_gate
+from .gate_dose import IDENTITY_TOL, SIGMA_TOL, _load_arm, _window, train_arm_gate
 from .gate_dial_0902 import (DialRecorder, NEW_UNIT_KEYS, SanityError, _arm,
-                             _arm_status_path, setup_arm_dial,
+                             _arm_status_path, _ci, _draws, _kaplan_meier,
+                             _load_new_arm, _sign_test, setup_arm_dial,
                              unit_extra_record, write_arm_logs_dial)
 from .mlp2_phase0 import (_sha_array, _sha_file, identity_sanity_pass,
-                          require_omp)
+                          require_omp, write_csv)
+from .mlp2_phase0b import _window_indices
 from .mlp2_phase1 import (NUMERIC_DIVERGENCE, NumericDivergenceError,
                           StreamDigest, _env_hashes, _init_hashes,
                           _seed_state_hashes_p1)
@@ -92,7 +95,7 @@ def _selected_arms(cfg: dict, stage: str) -> list[str]:
 # ---------------------------------------------------------------------------
 def validate_config(cfg: dict, *, stage: str) -> None:
     """凍結した設計からのずれをすべて ValueError にする。"""
-    if stage not in {"preflight", "smoke", "run", "analyze"}:
+    if stage not in {"preflight", "smoke", "run", "analyze", "finalize"}:
         raise ValueError(f"unknown stage {stage!r}")
     C, A, I, P, G, S = (cfg["common"], cfg["condA"], cfg["intervention"],
                         cfg["phase1"], _P(cfg), cfg["sanity"])
@@ -896,6 +899,49 @@ def run(cfg_path: Path, cfg: dict, device: str, outdir: Path, stage: str,
     return prov
 
 
+def finalize(cfg_path: Path, cfg: dict, outdir: Path, stage: str) -> dict:
+    """腕プロセス並列の後始末: config_used.yaml と provenance.json を書く。"""
+    outdir.mkdir(parents=True, exist_ok=True)
+    with (outdir / "config_used.yaml").open("w", encoding="utf-8") as fh:
+        yaml.safe_dump(cfg, fh, allow_unicode=True, sort_keys=False)
+    pre_path = Path(ROOT) / "results" / f"_preflight_{EXPERIMENT}" / "preflight.json"
+    pre = json.loads(pre_path.read_text(encoding="utf-8"))
+    if not pre.get("pass_"):
+        raise SanityError(f"preflight did not pass: {pre_path}")
+    arms = _selected_arms(cfg, stage)
+    seeds = [int(v) for v in cfg["common"]["seeds"]]
+    statuses, divergences, elapsed = {}, {}, 0.0
+    for arm in arms:
+        status_path = outdir / "arm_status" / f"{arm}_done.json"
+        div_path = _arm_status_path(outdir, arm)
+        if div_path.exists():
+            divergences[arm] = json.loads(div_path.read_text(encoding="utf-8"))
+            statuses[arm] = NUMERIC_DIVERGENCE
+        elif status_path.exists():
+            done = json.loads(status_path.read_text(encoding="utf-8"))
+            statuses[arm] = done.get("status")
+            elapsed = max(elapsed, float(done.get("wall_sec") or 0.0))
+        else:
+            statuses[arm] = "MISSING"
+        missing = [s for s in seeds
+                   if not (outdir / "logs" / f"{arm}_seed{s}.npz").exists()]
+        if missing and statuses[arm] == "COMPLETE":
+            statuses[arm] = f"INCOMPLETE_LOGS:{missing}"
+    prov = _provenance(cfg_path, cfg, outdir, stage, arms, pre, elapsed,
+                       time.strftime("%Y-%m-%dT%H:%M:%S%z"))
+    prov["arm_status"] = statuses
+    prov["divergences"] = divergences
+    prov["arm_process_parallel"] = True
+    prov["s_par_note"] = ("arm-process parallelism is inherited from "
+                          "gate_dial_0902 S-par (arms are independent processes; "
+                          "the seed loop is vectorised inside one process).")
+    (outdir / "provenance.json").write_text(
+        json.dumps(prov, indent=2, ensure_ascii=False, default=str),
+        encoding="utf-8")
+    print(f"[finalize] stage={stage} arms={statuses}", flush=True)
+    return prov
+
+
 def run_single_arm(cfg: dict, arm: str, device: str, outdir: Path,
                    total: int) -> dict:
     seeds = [int(v) for v in cfg["common"]["seeds"]]
@@ -907,7 +953,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=EXPERIMENT)
     ap.add_argument("--config", default=str(CONFIG))
     ap.add_argument("--stage", default="preflight",
-                    choices=["preflight", "smoke", "run"])
+                    choices=["preflight", "smoke", "run", "finalize", "analyze"])
     ap.add_argument("--substage", default="1", help="1 / 2 / all")
     ap.add_argument("--arm", default=None, help="run exactly one arm (process parallel)")
     ap.add_argument("--outdir", default=None)
@@ -915,7 +961,8 @@ def main() -> None:
     args = ap.parse_args()
     cfg_path = Path(args.config)
     cfg = load_config(str(cfg_path))
-    validate_config(cfg, stage=("run" if args.stage == "run" else args.stage))
+    validate_config(cfg, stage=("run" if args.stage in ("run", "finalize")
+                                else args.stage))
     require_omp(cfg)
     device = pick_device(cfg) if args.stage != "preflight" else "cpu"
     main_dir = Path(ROOT) / cfg["output"]["dir"]
@@ -925,9 +972,29 @@ def main() -> None:
         return
     if args.arm:
         total = int(args.steps or cfg["common"]["total_steps"])
+        t0 = time.time()
+        head = _git("rev-parse", "HEAD")
         got = run_single_arm(cfg, args.arm, device, outdir, total)
-        print(json.dumps({k: v for k, v in got.items() if k != "sanity"},
-                         ensure_ascii=False), flush=True)
+        done = dict(arm=args.arm, total_steps=total,
+                    seeds=[int(v) for v in cfg["common"]["seeds"]],
+                    status=got.get("status"), elapsed_sec=got.get("elapsed_sec"),
+                    wall_sec=time.time() - t0, git_head=head,
+                    git_head_at_launch=head)
+        path = outdir / "arm_status" / f"{args.arm}_done.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(done, indent=2, ensure_ascii=False),
+                        encoding="utf-8")
+        print(json.dumps(done, ensure_ascii=False), flush=True)
+        return
+    if args.stage == "analyze":
+        got = analyze(cfg, outdir, args.substage)
+        print(json.dumps(got["verdicts"], ensure_ascii=False, indent=1, default=str),
+              flush=True)
+        return
+    if args.stage == "finalize":
+        # 腕プロセス並列で回したあとに provenance だけを書く（--arm は 1 腕ずつ走るので
+        # config_used.yaml / provenance.json を書かない）。
+        finalize(cfg_path, cfg, outdir, args.substage)
         return
     if args.stage == "smoke":
         run(cfg_path, cfg, device,
@@ -936,6 +1003,717 @@ def main() -> None:
         return
     run(cfg_path, cfg, device, outdir, args.substage)
 
+
+
+# ---------------------------------------------------------------------------
+# 集計（spec §6）。窓・床・発症定義・CI は gate_dial_0902 §5 の逐語継承。
+# ---------------------------------------------------------------------------
+# 宿主 config の gate_dial.onset_time の逐語継承（本走の config には置いていないので
+# 定数で持つ。値は gate_dial_0902.yaml と同一）。
+ONSET_WINDOW_TASKS = 10
+ONSET_K_MIN = 10
+ONSET_CENSOR_AT = 500
+
+
+def _rolling_window_unfit(step: np.ndarray, unfit: np.ndarray,
+                          period: int) -> dict:
+    """``U^(10)_k`` = タスク k-9..k のタスク終端記録点の unfit 平均（宿主の写し）。"""
+    width = ONSET_WINDOW_TASKS
+    ends = np.flatnonzero((step > 0) & (step % period == 0))
+    tasks = (step[ends] // period).astype(np.int64)
+    values = np.asarray(unfit, dtype=np.float64)[ends]
+    order = np.argsort(tasks, kind="mergesort")
+    tasks, values = tasks[order], values[order]
+    csum = np.cumsum(values, axis=0)
+    out_k, out_u = [], []
+    index = {int(t): i for i, t in enumerate(tasks)}
+    for k in range(width, int(tasks.max()) + 1):
+        lo, hi = index.get(k - width + 1), index.get(k)
+        if lo is None or hi is None or hi - lo + 1 != width:
+            continue
+        total = csum[hi] - (csum[lo - 1] if lo else 0.0)
+        out_k.append(k)
+        out_u.append(total / width)
+    return dict(k=np.asarray(out_k, dtype=np.int64),
+                u=np.asarray(out_u, dtype=np.float64), records_per_window=width)
+
+
+def _onset_times(cfg: dict, step: np.ndarray, unfit: np.ndarray) -> dict:
+    threshold = float(cfg["phase1"]["onset_threshold"])
+    rolled = _rolling_window_unfit(step, unfit, int(cfg["phase1"]["task_period"]))
+    ks, us = rolled["k"], rolled["u"]
+    rows = []
+    for j in range(us.shape[1]):
+        hit = np.flatnonzero((us[:, j] >= threshold) & (ks >= ONSET_K_MIN))
+        rows.append(dict(k_star=int(ks[hit[0]]) if hit.size else ONSET_CENSOR_AT,
+                         censored=0 if hit.size else 1))
+    return dict(rows=rows, rolled_k=ks, rolled_u=us,
+                records_per_window=rolled["records_per_window"])
+
+
+def _load_controls_weird(cfg: dict) -> dict:
+    """対照の endpoint を各親走の committed 出力から**転記**する（再計算しない）。"""
+    import csv as _csv
+
+    floor = float(cfg["phase1"]["unfit_floor"])
+    out: dict[str, dict] = {}
+    for name, block in cfg["controls"]["arms"].items():
+        run = str(block["source_run"])
+        verdict = Path(ROOT) / run / "verdict.csv"
+        seeds_csv = Path(ROOT) / run / "seed_values.csv"
+        got = None
+        if verdict.exists():
+            with verdict.open(newline="") as fh:
+                for row in _csv.DictReader(fh):
+                    if row.get("arm") != name or "U_5m_seed_values" not in row:
+                        continue
+                    u5 = np.maximum(np.asarray(json.loads(row["U_5m_seed_values"]),
+                                               dtype=np.float64), floor)
+                    u1 = np.maximum(np.asarray(json.loads(row["U_1m_seed_values"]),
+                                               dtype=np.float64), floor)
+                    got = dict(u_5m=u5, u_1m=u1, log_u_5m=np.log10(u5),
+                               log_u_1m=np.log10(u1),
+                               n_onset_5m=int(row["n_onset_5m"]),
+                               n_onset_1m=int(row["n_onset_1m"]),
+                               source=str(verdict), window="5M / 1M")
+        if got is None and seeds_csv.exists():
+            # valley_clamp_0902 は verdict.csv の schema が違う。末尾窓の seed 値だけを取る
+            u5, onset = [], 0
+            with seeds_csv.open(newline="") as fh:
+                for row in _csv.DictReader(fh):
+                    if row.get("arm") != name:
+                        continue
+                    u5.append(float(row["u"]))
+                    onset += int(row["onset"])
+            if u5:
+                arr = np.maximum(np.asarray(u5, dtype=np.float64), floor)
+                got = dict(u_5m=arr, u_1m=None, log_u_5m=np.log10(arr),
+                           log_u_1m=None, n_onset_5m=onset, n_onset_1m=None,
+                           source=str(seeds_csv), window="5M tail only")
+        if got is None:
+            raise SanityError(f"control {name} not found under {run}")
+        got.update(arm=name, source_run=run, level_only=(got["u_1m"] is None))
+        out[name] = got
+    return out
+
+
+def _contrast(cfg: dict, a: np.ndarray, b: np.ndarray, draws: np.ndarray,
+              label: str) -> dict:
+    """seed クラスタの paired 差（log10 U の差）の中央値と CI・符号検定。"""
+    values = np.asarray(a, dtype=np.float64) - np.asarray(b, dtype=np.float64)
+    ci = _ci(cfg, values, draws)
+    sign = _sign_test(values)
+    margin = float(_P(cfg)["p5_equivalence_margin"])
+    lo, hi = ci.get("percentile_ci_lo"), ci.get("percentile_ci_hi")
+    if lo is None or hi is None or not np.isfinite([lo, hi]).all():
+        equiv = "INCONCLUSIVE_WIDE"
+    elif lo >= -margin and hi <= margin:
+        equiv = "EQUIV_SOFT"
+    elif lo > 0:
+        equiv = "SHORT_OF_SOFT"
+    elif hi < -margin:
+        equiv = "BELOW_SOFT"
+    else:
+        equiv = "INCONCLUSIVE_WIDE"
+    return dict(label=label, point=float(np.median(values)),
+                ci=ci, sign_test=sign, equivalence=equiv, margin=margin,
+                seed_values=[float(v) for v in values])
+
+
+def _unit_tail(cfg: dict, outdir: Path, arm_block: dict) -> dict:
+    """末尾窓のユニット別量（沈下・span・深さ・位置指標・凍結・|v|）。
+
+    集計順は宿主の登録どおり: 沈下ユニット記録 → seed 内中央値 → seed 中央値。
+    """
+    P = cfg["phase1"]
+    arm = str(arm_block["name"])
+    act = str(arm_block["activation"])
+    alpha = float(arm_block["dial"])
+    d = None
+    if act in VecMLPL.BAND_WIDTH:
+        d = VecMLPL.BAND_WIDTH[act]
+    if act in VecMLPL.FOLD_DEPTH:
+        d = VecMLPL.FOLD_DEPTH[act]
+    per_seed, deciles = [], []
+    for seed in [int(v) for v in cfg["common"]["seeds"]]:
+        path = outdir / "logs" / f"{arm}_seed{seed}.npz"
+        with np.load(path, allow_pickle=False) as z:
+            step = z["step"]
+            idx = _window_indices(step, int(P["task_period"]),
+                                  list(P["late_tasks_5m"]))
+            zmax = z["layer1_zmax"][idx].astype(np.float64)
+            zmin = z["layer1_zmin"][idx].astype(np.float64)
+            zmean = z["layer1_zmean"][idx].astype(np.float64)
+            mob = z["layer1_mob"][idx].astype(np.float64)
+            absmob = z["layer1_absmob"][idx].astype(np.float64)
+            v_unit = z["layer1_v_unit"][idx].astype(np.float64)
+        sub = zmax <= 0.0
+        span = zmax - zmin
+        depth = -zmean
+        row = dict(seed=seed, n_records=int(zmax.shape[0]),
+                   submerged_frac=float(sub.mean()),
+                   span_median_submerged=float(np.median(span[sub])) if sub.any() else float("nan"),
+                   span_median_all=float(np.median(span)),
+                   depth_median_submerged=float(np.median(depth[sub])) if sub.any() else float("nan"),
+                   frozen_frac=float((np.abs(mob) < 1e-6).mean()),
+                   frozen_abs_frac=float((absmob < 1e-6).mean()),
+                   absv_median_submerged=float(np.median(np.abs(v_unit)[sub])) if sub.any() else float("nan"))
+        if act in VecMLPL.BAND_WIDTH:
+            row["in_band_frac"] = float((sub & (zmin >= -d)).mean())
+        if act in VecMLPL.FOLD_DEPTH:
+            row["at_sink_frac"] = float((np.abs(zmean + 2.0 * d) <= 0.5).mean())
+        if act in VecMLPL.COMB_ENVELOPE:
+            ks = np.arange(1, 8)[:, None, None]
+            dist = np.abs(zmean[None, ...] + ks * math.pi / alpha).min(axis=0)
+            row["at_well_frac"] = float((dist <= 0.5).mean())
+        per_seed.append(row)
+        if sub.any():
+            deciles.append(np.quantile(depth[sub], np.arange(1, 10) / 10.0))
+    out = dict(arm=arm, activation=act, dial=alpha, second_param=d,
+               per_seed=per_seed,
+               aggregation_order=["submerged_unit_records_within_seed",
+                                  "median_within_seed", "median_over_seeds"])
+    for key in ("submerged_frac", "span_median_submerged", "span_median_all",
+                "depth_median_submerged", "frozen_frac", "frozen_abs_frac",
+                "absv_median_submerged", "in_band_frac", "at_sink_frac",
+                "at_well_frac"):
+        vals = [r[key] for r in per_seed if key in r and not math.isnan(r[key])]
+        out[f"median_{key}"] = float(np.median(vals)) if vals else None
+    out["depth_deciles_median"] = ([float(v) for v in np.median(np.stack(deciles), axis=0)]
+                                   if deciles else None)
+    return out
+
+
+def _s_cap(cfg: dict, windows: dict) -> dict:
+    """S-cap（二段）: early 窓で U<0.05 が 9/10 以上。落ちたら 1M 窓で再判定 → SLOW_FIT。"""
+    S = cfg["sanity"]
+    threshold, need = float(S["s_cap_threshold"]), int(S["s_cap_min_seeds"])
+    early = np.asarray(windows["early"]["u"], dtype=np.float64)
+    one_m = np.asarray(windows["1M"]["u"], dtype=np.float64)
+    n_early = int((early < threshold).sum())
+    n_1m = int((one_m < threshold).sum())
+    if n_early >= need:
+        status = "OK"
+    elif n_1m >= need:
+        status = str(S["s_cap_fallback_label"])       # SLOW_FIT
+    else:
+        status = str(S["s_cap_label"])                # CAPACITY_UNDEFINED
+    return dict(status=status, n_seeds_below_early=n_early,
+                n_seeds_below_1m=n_1m, need=need, threshold=threshold)
+
+
+def _onset_stats(cfg: dict, u: np.ndarray) -> dict:
+    threshold = float(cfg["phase1"]["onset_threshold"])
+    n = int((np.asarray(u, dtype=np.float64) >= threshold).sum())
+    lo, hi = clopper_pearson(n, int(len(u)))
+    return dict(n_onset=n, cp95_lo=float(lo), cp95_hi=float(hi),
+                median_log10_u=float(np.median(np.log10(np.asarray(u, dtype=np.float64)))))
+
+
+def _onset_state(n: int, zero_max: int, present_min: int) -> str:
+    if n <= zero_max:
+        return "zero"
+    if n >= present_min:
+        return "present"
+    return "mid"
+
+
+def _v1_label(cfg: dict, n_onset: int) -> str:
+    G = _P(cfg)["v1"]
+    state = _onset_state(n_onset, int(G["onset_zero_max"]),
+                         int(G["onset_present_min"]))
+    return str(G["labels"][state])
+
+
+def _v3_label(cfg: dict, n_onset: int) -> str:
+    G = _P(cfg)["v3"]
+    state = _onset_state(n_onset, int(_P(cfg)["v1"]["onset_zero_max"]),
+                         int(_P(cfg)["v1"]["onset_present_min"]))
+    return str(G["labels"][state])
+
+
+def _v4_label(cfg: dict, n_onset: int, contrast: dict | None,
+              at_well_frac: float | None) -> tuple[str, dict]:
+    G = _P(cfg)["v4"]
+    margin = float(G["margin"])
+    ci = (contrast or {}).get("ci") or {}
+    lo, hi = ci.get("percentile_ci_lo"), ci.get("percentile_ci_hi")
+    below = bool(lo is not None and hi is not None
+                 and np.isfinite([lo, hi]).all() and hi < -margin)
+    detail = dict(n_onset=n_onset, ci_lo=lo, ci_hi=hi, ci_below_margin=below,
+                  at_well_frac=at_well_frac, margin=margin)
+    if n_onset <= int(G["rescue_onset_max"]) and below:
+        return str(G["labels"]["rescue"]), detail
+    if n_onset >= int(_P(cfg)["v1"]["onset_present_min"]):
+        if at_well_frac is not None and at_well_frac >= float(G["trap_at_well_min"]):
+            return str(G["labels"]["trap"]), detail
+        return str(G["labels"]["elsewhere"]), detail
+    return str(G["labels"]["partial"]), detail
+
+
+def _v2_ladder(cfg: dict, arms: dict, controls: dict, draws: np.ndarray,
+               stage: str) -> dict:
+    """V2 は **段 2 の完了後にのみ付く**（2026-09-03 の段裁定・spec §6 V2）。"""
+    G = _P(cfg)["v2"]
+    new_arms = [str(a) for a in G["ladder_new_arms"]]
+    have = [a for a in new_arms if a in arms]
+    if str(stage) != "2" and str(stage) not in ("all", "0"):
+        return dict(label=None, status="NOT_EVALUATED_STAGE_1_ONLY",
+                    reason="V2 の判定条件は RB 梯子 4 腕全体に掛かる（段裁定・spec §6 V2）",
+                    present_arms=have, missing_arms=[a for a in new_arms if a not in arms])
+    if len(have) < len(new_arms):
+        return dict(label=None, status="NOT_EVALUATED_INCOMPLETE_LADDER",
+                    present_arms=have,
+                    missing_arms=[a for a in new_arms if a not in arms])
+    onsets = [int(arms[a]["5M"]["onset"]["n_onset"]) for a in new_arms]
+    ds = [float(VecMLPL.BAND_WIDTH[str(REGISTERED_ARMS[a][2])]) for a in new_arms]
+    order = np.argsort(ds)
+    ordered = [onsets[i] for i in order]
+    non_decreasing = all(ordered[i] <= ordered[i + 1] for i in range(len(ordered) - 1))
+    zero_max = int(_P(cfg)["v1"]["onset_zero_max"])
+    present_min = int(_P(cfg)["v1"]["onset_present_min"])
+    drop = max(ordered) - min(ordered[ordered.index(max(ordered)):]) if ordered else 0
+    adjacent = []
+    ladder = [str(a) for a in G["ladder"]]
+    for soft, hard in zip(ladder[:-1], ladder[1:]):
+        both = []
+        for name in (hard, soft):
+            if name in arms:
+                both.append(arms[name]["5M"]["log_u"])
+            elif name in controls:
+                both.append(controls[name]["log_u_5m"])
+            else:
+                both = None
+                break
+        if both:
+            adjacent.append(_contrast(cfg, both[0], both[1], draws,
+                                      f"{hard} - {soft}"))
+    margin = float(G["margin"])
+    reversal = (drop >= int(G["onset_drop_reversal_min"])
+                or any((c["ci"].get("percentile_ci_hi") is not None
+                        and c["ci"]["percentile_ci_hi"] < -margin) for c in adjacent))
+    if reversal:
+        label = "REVERSAL"
+    elif non_decreasing and any(o <= zero_max for o in ordered) \
+            and any(o >= present_min for o in ordered):
+        label = "BAND_WIDTH_THRESHOLD"
+    elif all(o >= present_min for o in ordered):
+        label = "ANY_BAND_ABSORBS"
+    elif all(o <= zero_max for o in ordered):
+        label = "NO_BAND_ABSORBS_IN_RANGE"
+    else:
+        label = "PARTIAL"
+    d_star = None
+    if label == "BAND_WIDTH_THRESHOLD":
+        for i in order:
+            if onsets[i] >= present_min:
+                d_star = ds[i]
+                break
+    return dict(label=label, status="EVALUATED", d_star=d_star,
+                ladder=ladder, onsets_by_d=list(zip([ds[i] for i in order], ordered)),
+                adjacent_contrasts=adjacent)
+
+
+def _v3_followup(cfg: dict, outdir: Path) -> list[dict]:
+    """spec §7.4 (v) の登録済み追走: V3 が 0/10 のとき分水嶺を実際に越えているか。
+
+    越えていなければ ``LRv_d2`` は分水嶺を試していない。越えているのに戻っていれば
+    ``MOBILITY_SUFFICES`` は本物である（spec §7.4 (v) の字義）。
+    """
+    P = cfg["phase1"]
+    rows = []
+    for arm in ("LRv_d2_1216", "LRv_d1_1216"):
+        if not (outdir / "logs" / f"{arm}_seed0.npz").exists():
+            continue
+        d = float(VecMLPL.FOLD_DEPTH[str(REGISTERED_ARMS[arm][2])])
+        for window, tasks in (("1M", list(P["window_1m_tasks"])),
+                              ("5M", list(P["late_tasks_5m"]))):
+            depths, crossed, past_sink, subs = [], [], [], []
+            for seed in [int(v) for v in cfg["common"]["seeds"]]:
+                with np.load(outdir / "logs" / f"{arm}_seed{seed}.npz",
+                             allow_pickle=False) as z:
+                    idx = _window_indices(z["step"], int(P["task_period"]), tasks)
+                    zmax = z["layer1_zmax"][idx].astype(np.float64)
+                    zmean = z["layer1_zmean"][idx].astype(np.float64)
+                sub = zmax <= 0.0
+                subs.append(float(sub.mean()))
+                if sub.any():
+                    depth = -zmean[sub]
+                    depths.append(float(np.median(depth)))
+                    crossed.append(float((depth > d).mean()))
+                    past_sink.append(float((depth > 2.0 * d).mean()))
+            rows.append(dict(arm=arm, window=window, d=d,
+                             median_submerged_frac=float(np.median(subs)),
+                             median_depth_submerged=float(np.median(depths)),
+                             frac_past_watershed=float(np.median(crossed)),
+                             frac_past_sink=float(np.median(past_sink))))
+    return rows
+
+
+def analyze(cfg: dict, outdir: Path, stage: str) -> dict:
+    """spec §6 の集計。段 1 では V1・V3・V4 だけが付き、V2 は空にする。"""
+    P, G = cfg["phase1"], _P(cfg)
+    arms = _selected_arms(cfg, stage)
+    draws = _draws(cfg)
+    controls = _load_controls_weird(cfg)
+    blocks = {a["name"]: a for a in cfg["arms"]}
+    data: dict[str, dict] = {}
+    onset_rows, km_rows, position_rows, depth_rows = [], [], [], []
+    for arm in arms:
+        if not (outdir / "logs" / f"{arm}_seed0.npz").exists():
+            print(f"[analyze] {arm}: logs missing, skipped", flush=True)
+            continue
+        w = _load_new_arm(cfg, outdir, arm)
+        entry = {}
+        for key in ("5M", "1M", "early"):
+            u = np.asarray(w[key]["u"], dtype=np.float64)
+            entry[key] = dict(u=u, log_u=np.log10(u), onset=_onset_stats(cfg, u),
+                              metrics=w[key])
+        entry["s_cap"] = _s_cap(cfg, {k: dict(u=entry[k]["u"]) for k in
+                                      ("early", "1M", "5M")})
+        entry["unit"] = _unit_tail(cfg, outdir, blocks[arm])
+        ot = _onset_times(cfg, w["data"]["step"], w["data"]["unfit"])
+        entry["onset_times"] = ot
+        for seed, row in zip([int(v) for v in cfg["common"]["seeds"]], ot["rows"]):
+            onset_rows.append(dict(arm=arm, seed=seed, **row))
+        km_rows.extend(dict(arm=arm, **r) for r in _kaplan_meier(
+            [r["k_star"] for r in ot["rows"]], [r["censored"] for r in ot["rows"]],
+            ONSET_CENSOR_AT))
+        u = entry["unit"]
+        position_rows.append(dict(
+            arm=arm, activation=u["activation"], dial=u["dial"],
+            second_param=u["second_param"],
+            median_submerged_frac=u["median_submerged_frac"],
+            median_span_submerged=u["median_span_median_submerged"],
+            median_span_all=u["median_span_median_all"],
+            median_depth_submerged=u["median_depth_median_submerged"],
+            median_frozen_frac=u["median_frozen_frac"],
+            median_frozen_abs_frac=u["median_frozen_abs_frac"],
+            median_absv_submerged=u["median_absv_median_submerged"],
+            in_band_frac=u.get("median_in_band_frac"),
+            at_sink_frac=u.get("median_at_sink_frac"),
+            at_well_frac=u.get("median_at_well_frac"),
+            window="late_tasks_5m (491-500, task-end records only)"))
+        if u["depth_deciles_median"]:
+            depth_rows.append(dict(arm=arm, **{f"d{i + 1}": v for i, v in
+                                               enumerate(u["depth_deciles_median"])}))
+        data[arm] = entry
+
+    # --- 水準の対比（E2） ---
+    contrasts = []
+    for arm, entry in data.items():
+        family = str(blocks[arm]["family"])
+        base = str(G["p3prime_baseline"])
+        if base in controls:
+            for window, key in (("5M", "log_u_5m"), ("1M", "log_u_1m")):
+                if controls[base][key] is None:
+                    continue
+                contrasts.append(dict(
+                    arm=arm, kind="P3prime", window=window, against=base,
+                    **_contrast(cfg, entry[window]["log_u"], controls[base][key],
+                                draws, f"{arm} - {base} ({window})")))
+        for soft in [str(v) for v in G["p5_soft_end_by_family"].get(family, [])]:
+            if soft in controls and controls[soft]["log_u_5m"] is not None:
+                contrasts.append(dict(
+                    arm=arm, kind="P5prime", window="5M", against=soft,
+                    **_contrast(cfg, entry["5M"]["log_u"], controls[soft]["log_u_5m"],
+                                draws, f"{arm} - {soft} (5M)")))
+
+    # --- 判定 ---
+    verdicts: dict[str, object] = {}
+    v1_arm = str(G["v1"]["arm"])
+    if v1_arm in data:
+        verdicts["V1"] = _v1_label(cfg, data[v1_arm]["5M"]["onset"]["n_onset"])
+        verdicts["V1_n_onset_5m"] = data[v1_arm]["5M"]["onset"]["n_onset"]
+        if data[v1_arm]["s_cap"]["status"] == str(cfg["sanity"]["s_cap_label"]):
+            verdicts["V1"] = None
+            verdicts["V1_status"] = cfg["sanity"]["s_cap_label"]
+    v3_arm = str(G["v3"]["arm"])
+    if v3_arm in data:
+        verdicts["V3"] = _v3_label(cfg, data[v3_arm]["5M"]["onset"]["n_onset"])
+        verdicts["V3_n_onset_5m"] = data[v3_arm]["5M"]["onset"]["n_onset"]
+    anchor = str(G["v3"]["anchor_arm"])
+    if anchor in data:
+        # LRv_d1 は REPORT_ONLY。V3 が PARTIAL のときだけ V3' に格上げする（段裁定）
+        verdicts["V3_prime"] = (_v3_label(cfg, data[anchor]["5M"]["onset"]["n_onset"])
+                                if verdicts.get("V3") == "PARTIAL" else None)
+        verdicts["V3_prime_status"] = ("PROMOTED" if verdicts.get("V3") == "PARTIAL"
+                                       else "REPORT_ONLY")
+        verdicts["V3_prime_n_onset_5m"] = data[anchor]["5M"]["onset"]["n_onset"]
+    v4_arm = str(G["v4"]["arm"])
+    if v4_arm in data:
+        against = str(G["v4"]["against_level"])
+        v4_contrast = None
+        if against in controls and controls[against]["log_u_5m"] is not None:
+            v4_contrast = _contrast(cfg, data[v4_arm]["5M"]["log_u"],
+                                    controls[against]["log_u_5m"], draws,
+                                    f"{v4_arm} - {against} (5M)")
+            contrasts.append(dict(arm=v4_arm, kind="V4", window="5M",
+                                  against=against, **v4_contrast))
+        second = str(G["v4"]["against_level_secondary"])
+        if second in controls and controls[second]["log_u_5m"] is not None:
+            contrasts.append(dict(
+                arm=v4_arm, kind="V4_secondary", window="5M", against=second,
+                **_contrast(cfg, data[v4_arm]["5M"]["log_u"],
+                            controls[second]["log_u_5m"], draws,
+                            f"{v4_arm} - {second} (5M)")))
+        label, detail = _v4_label(cfg, data[v4_arm]["5M"]["onset"]["n_onset"],
+                                  v4_contrast,
+                                  data[v4_arm]["unit"].get("median_at_well_frac"))
+        verdicts["V4"], verdicts["V4_detail"] = label, detail
+    verdicts["V2"] = _v2_ladder(cfg, data, controls, draws, stage)
+    v3_rows = _v3_followup(cfg, outdir)
+    verdicts["V3_followup"] = v3_rows
+
+    result = dict(experiment=EXPERIMENT, stage=stage, arms=list(data),
+                  verdicts=verdicts, controls={k: dict(
+                      source=v["source"], source_run=v["source_run"],
+                      window=v["window"], n_onset_5m=v["n_onset_5m"],
+                      median_log10_u_5m=float(np.median(v["log_u_5m"])),
+                      level_only=v["level_only"]) for k, v in controls.items()})
+    if v3_rows:
+        write_csv(outdir / "v3_watershed_followup.csv", v3_rows)
+    _write_outputs(cfg, outdir, stage, data, controls, contrasts, verdicts,
+                   onset_rows, km_rows, position_rows, depth_rows, result)
+    return result
+
+
+def _write_outputs(cfg, outdir, stage, data, controls, contrasts, verdicts,
+                   onset_rows, km_rows, position_rows, depth_rows, result) -> None:
+    blocks = {a["name"]: a for a in cfg["arms"]}
+    G = _P(cfg)
+    v_rows = []
+    for arm, entry in data.items():
+        block = blocks[arm]
+        row = dict(
+            arm=arm, stage=int(block["stage"]), family=str(block["family"]),
+            activation=str(block["activation"]), dial=float(block["dial"]),
+            second_param=block.get("second_param"),
+            target_dose=float(block["target_dose"]),
+            is_control=False, status="COMPLETE",
+            capacity_status=entry["s_cap"]["status"],
+            n_onset_1m=entry["1M"]["onset"]["n_onset"],
+            cp95_1m_lo=entry["1M"]["onset"]["cp95_lo"],
+            cp95_1m_hi=entry["1M"]["onset"]["cp95_hi"],
+            U_1m_seed_values=json.dumps([float(v) for v in entry["1M"]["u"]]),
+            median_log10_U_1m=entry["1M"]["onset"]["median_log10_u"],
+            n_onset_5m=entry["5M"]["onset"]["n_onset"],
+            cp95_5m_lo=entry["5M"]["onset"]["cp95_lo"],
+            cp95_5m_hi=entry["5M"]["onset"]["cp95_hi"],
+            U_5m_seed_values=json.dumps([float(v) for v in entry["5M"]["u"]]),
+            median_log10_U_5m=entry["5M"]["onset"]["median_log10_u"],
+            median_submerged_frac_5m=entry["unit"]["median_submerged_frac"],
+            median_span_5m=entry["unit"]["median_span_median_submerged"],
+            median_depth_5m=entry["unit"]["median_depth_median_submerged"],
+            V1=verdicts.get("V1") if arm == str(G["v1"]["arm"]) else "",
+            V2="", V3=verdicts.get("V3") if arm == str(G["v3"]["arm"]) else "",
+            V3_prime=(verdicts.get("V3_prime") or verdicts.get("V3_prime_status", ""))
+            if arm == str(G["v3"]["anchor_arm"]) else "",
+            V4=verdicts.get("V4") if arm == str(G["v4"]["arm"]) else "",
+            NUMERIC_DIVERGENCE="")
+        v2 = verdicts.get("V2") or {}
+        if arm in [str(a) for a in G["v2"]["ladder_new_arms"]]:
+            row["V2"] = v2.get("label") or ""
+        row["V2_status"] = (v2.get("status")
+                            if arm in [str(a) for a in G["v2"]["ladder_new_arms"]]
+                            else "")
+        v_rows.append(row)
+    for name, c in controls.items():
+        v_rows.append(dict(
+            arm=name, stage="", family="", activation="", dial="",
+            second_param="", target_dose=12.16, is_control=True,
+            status="TRANSCRIBED", capacity_status="",
+            n_onset_1m=c["n_onset_1m"] if c["n_onset_1m"] is not None else "",
+            cp95_1m_lo="", cp95_1m_hi="",
+            U_1m_seed_values=json.dumps([float(v) for v in c["u_1m"]])
+            if c["u_1m"] is not None else "",
+            median_log10_U_1m=float(np.median(c["log_u_1m"]))
+            if c["log_u_1m"] is not None else "",
+            n_onset_5m=c["n_onset_5m"], cp95_5m_lo="", cp95_5m_hi="",
+            U_5m_seed_values=json.dumps([float(v) for v in c["u_5m"]]),
+            median_log10_U_5m=float(np.median(c["log_u_5m"])),
+            median_submerged_frac_5m="", median_span_5m="", median_depth_5m="",
+            V1="", V2="", V3="", V3_prime="", V4="", NUMERIC_DIVERGENCE="",
+            V2_status=""))
+    # write_csv は先頭行の keys を fieldnames にするので、全行を同じ形に揃える
+    columns: list[str] = []
+    for row in v_rows:
+        for key in row:
+            if key not in columns:
+                columns.append(key)
+    v_rows = [{key: row.get(key, "") for key in columns} for row in v_rows]
+    write_csv(outdir / "verdict.csv", v_rows)
+    if onset_rows:
+        write_csv(outdir / "onset_times.csv", onset_rows)
+    if km_rows:
+        write_csv(outdir / "onset_km.csv", km_rows)
+    if position_rows:
+        write_csv(outdir / "position_table.csv", position_rows)
+    if depth_rows:
+        write_csv(outdir / "depth_hist.csv", depth_rows)
+    layer_rows = []
+    for c in contrasts:
+        ci = c["ci"]
+        layer_rows.append(dict(
+            arm=c["arm"], kind=c["kind"], window=c["window"], against=c["against"],
+            point=c["point"], percentile_lo=ci.get("percentile_ci_lo"),
+            percentile_hi=ci.get("percentile_ci_hi"),
+            studentized_lo=ci.get("studentized_ci_lo"),
+            studentized_hi=ci.get("studentized_ci_hi"),
+            ci_degenerate=ci.get("ci_degenerate"),
+            equivalence=c["equivalence"], margin=c["margin"],
+            sign_pos=c["sign_test"]["n_positive"],
+            sign_neg=c["sign_test"]["n_negative"],
+            sign_p=c["sign_test"]["p_two_sided"],
+            seed_values=json.dumps(c["seed_values"])))
+    if layer_rows:
+        write_csv(outdir / "layer_stats.csv", layer_rows)
+    v2 = verdicts.get("V2") or {}
+    if v2.get("status") == "EVALUATED":
+        write_csv(outdir / "ladder_table.csv",
+                  [dict(d=d, n_onset_5m=n) for d, n in v2["onsets_by_d"]])
+    _write_summary(cfg, outdir, stage, data, controls, contrasts, verdicts, result)
+
+
+def _write_summary(cfg, outdir, stage, data, controls, contrasts, verdicts,
+                   result) -> None:
+    G = _P(cfg)
+    L = []
+    L.append(f"# {EXPERIMENT} — 謎関数ダイヤル（段 {stage}）\n")
+    L.append(f"spec: `{cfg['spec']}` / 事前登録 commit で凍結。"
+             "数値の引用は `verdict.csv` と本ファイルからのみ。\n")
+    L.append("## S-cover（§6 の各項目 → 実装の対応先）\n")
+    L.append("| §6 の項目 | 実装 | 出力 | 段 1 で付くか |")
+    L.append("| --- | --- | --- | --- |")
+    for item, impl, out, ok in (
+            ("V1 反転の定義", "_v1_label", "verdict.csv:V1", "○"),
+            ("V2 吸収域の幅", "_v2_ladder", "verdict.csv:V2 / ladder_table.csv",
+             "×（段 2 の完了後）"),
+            ("V3 分水嶺の位置", "_v3_label", "verdict.csv:V3", "○"),
+            ("V3' 錨 LRv_d1", "_v3_label（PARTIAL のときだけ格上げ）",
+             "verdict.csv:V3_prime", "REPORT_ONLY"),
+            ("V4 井戸の容量", "_v4_label", "verdict.csv:V4", "○"),
+            ("E1 発症数", "_onset_stats", "verdict.csv:n_onset_*", "○"),
+            ("E2 水準 P3'/P5'", "_contrast", "layer_stats.csv", "○"),
+            ("E3 発症時刻 k*", "_onset_times / _kaplan_meier",
+             "onset_times.csv / onset_km.csv", "○"),
+            ("span・位置指標・凍結", "_unit_tail", "position_table.csv", "○"),
+            ("深さ十分位", "_unit_tail", "depth_hist.csv", "○"),
+            ("C1 の再現", "未実装（走後の別解析）", "—", "×"),
+            ("境界回帰の 3 レジーム", "未実装（走後の別解析）", "—", "×")):
+        L.append(f"| {item} | {impl} | {out} | {ok} |")
+    L.append("\n**★ 未実装 2 件**: §6 副次の「C1 の再現」と「境界回帰の 3 レジーム」は "
+             "REPORT_ONLY で、判定には入らない。走後に別途起こす（spec §6 副次が"
+             "「診断スクリプトは本走で `src/` に置いて登録する」と書いているので、"
+             "**この 2 件は未了である**）。\n")
+    L.append("## 判定\n")
+    L.append("| 判定 | ラベル | 腕 | n_onset(5M) |")
+    L.append("| --- | --- | --- | --- |")
+    L.append(f"| V1 | {verdicts.get('V1')} | {G['v1']['arm']} | "
+             f"{verdicts.get('V1_n_onset_5m')} |")
+    v2 = verdicts.get("V2") or {}
+    L.append(f"| V2 | {v2.get('label') or '—'} | RB 梯子 | {v2.get('status')} |")
+    L.append(f"| V3 | {verdicts.get('V3')} | {G['v3']['arm']} | "
+             f"{verdicts.get('V3_n_onset_5m')} |")
+    L.append(f"| V3' | {verdicts.get('V3_prime') or verdicts.get('V3_prime_status')}"
+             f" | {G['v3']['anchor_arm']} | {verdicts.get('V3_prime_n_onset_5m')} |")
+    L.append(f"| V4 | {verdicts.get('V4')} | {G['v4']['arm']} | "
+             f"{(verdicts.get('V4_detail') or {}).get('n_onset')} |")
+    L.append("\n**V1〜V4 は互いに独立の判定で、1 つの verdict に畳まない。**"
+             "「3 列のどれが病理を担う」は 4 判定から人が読む裁定であって"
+             "本走のラベルではない（spec §9）。\n")
+    if str(stage) != "2":
+        L.append("**V2 は段 2 の完了後にのみ付く**（2026-09-03 の段裁定・spec §6 V2）。"
+                 "段 1 の `RB_d1_1216` は REPORT として置くだけで、"
+                 "その値を見て段 2 の母数を変えない。\n")
+    L.append("## 腕（新規・末尾窓 = タスク 491–500 のタスク終端 10 点）\n")
+    L.append("| 腕 | 活性化 | dial | S-cap | n_onset 1M | n_onset 5M | "
+             "median log10 U (5M) | 沈下率 | span 中央値 | 深さ中央値 |")
+    L.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+    for arm, e in data.items():
+        u = e["unit"]
+        def _f(x):
+            return "—" if x is None or (isinstance(x, float) and math.isnan(x)) \
+                else f"{x:.4g}"
+        L.append(f"| `{arm}` | {u['activation']} | {u['dial']:g} | "
+                 f"{e['s_cap']['status']} | {e['1M']['onset']['n_onset']}/10 | "
+                 f"{e['5M']['onset']['n_onset']}/10 | "
+                 f"{e['5M']['onset']['median_log10_u']:.4f} | "
+                 f"{_f(u['median_submerged_frac'])} | "
+                 f"{_f(u['median_span_median_submerged'])} | "
+                 f"{_f(u['median_depth_median_submerged'])} |")
+    L.append("\n## 位置指標（末尾窓・REPORT・verdict には入れない）\n")
+    L.append("| 腕 | in_band | at_sink | at_well | frozen | frozen_abs | |v| 中央値 |")
+    L.append("| --- | --- | --- | --- | --- | --- | --- |")
+    for arm, e in data.items():
+        u = e["unit"]
+        def _g(k):
+            v = u.get(k)
+            return "—" if v is None else f"{v:.4g}"
+        L.append(f"| `{arm}` | {_g('median_in_band_frac')} | "
+                 f"{_g('median_at_sink_frac')} | {_g('median_at_well_frac')} | "
+                 f"{_g('median_frozen_frac')} | {_g('median_frozen_abs_frac')} | "
+                 f"{_g('median_absv_median_submerged')} |")
+    L.append("\n**`frozen` は `LRv`・`CB` では凍結の指標にならない**"
+             "（支持が折れ目・井戸を跨ぐと $\\varphi'$ の符号が混じり打ち消す）。"
+             "引くなら `frozen_abs` と出所・窓を添える（spec §9）。\n")
+    rows = verdicts.get("V3_followup") or []
+    if rows:
+        L.append("## V3 の登録済み追走（spec §7.4 (v)）——分水嶺を実際に越えたか\n")
+        L.append("| 腕 | 窓 | d | 沈下率 | 深さ中央値 | 分水嶺 −d を越えた割合 | 極小 −2d より深い割合 |")
+        L.append("| --- | --- | --- | --- | --- | --- | --- |")
+        for r in rows:
+            L.append(f"| `{r['arm']}` | {r['window']} | {r['d']:g} | "
+                     f"{r['median_submerged_frac']:.3f} | "
+                     f"{r['median_depth_submerged']:.3f} | "
+                     f"{r['frac_past_watershed']:.3f} | {r['frac_past_sink']:.3f} |")
+        L.append("\nspec §7.4 (v) の字義: 「分水嶺 −d を**越えていない**なら `LRv_d2` は"
+                 "分水嶺を試していない。越えているのに戻っているなら `MOBILITY_SUFFICES` は"
+                 "本物」。\n")
+    L.append("## 水準の対比（対照は**別走の committed 値**・同一走の腕ではない）\n")
+    L.append("| 腕 | 種別 | 窓 | 相手 | 点推定 | percentile CI | 等価判定 | 符号 |")
+    L.append("| --- | --- | --- | --- | --- | --- | --- | --- |")
+    for c in contrasts:
+        ci = c["ci"]
+        lo, hi = ci.get("percentile_ci_lo"), ci.get("percentile_ci_hi")
+        ci_s = "—" if lo is None or hi is None else f"[{lo:+.3f}, {hi:+.3f}]"
+        L.append(f"| `{c['arm']}` | {c['kind']} | {c['window']} | `{c['against']}` | "
+                 f"{c['point']:+.4f} | {ci_s} | {c['equivalence']} | "
+                 f"{c['sign_test']['n_negative']}:{c['sign_test']['n_positive']} |")
+    L.append("\n### 対照の出所\n")
+    for name, c in controls.items():
+        L.append(f"- `{name}`: {c['source_run']} / `{Path(c['source']).name}`"
+                 f"（{c['window']}"
+                 f"{'・**水準のみ**' if c['level_only'] else ''}）")
+    v4_arm = str(G["v4"]["arm"])
+    if v4_arm in data and verdicts.get("V4"):
+        e = data[v4_arm]
+        at_well = e["unit"].get("median_at_well_frac")
+        level = e["5M"]["onset"]["median_log10_u"]
+        best_control = min(controls.items(),
+                           key=lambda kv: float(np.median(kv[1]["log_u_5m"])))
+        L.append("\n## ★ V4 の読みの限界（登録ラベルと機構の帰属は別物）\n")
+        L.append(f"- `{v4_arm}` の末尾窓 `at_well` 率は **{at_well:.4g}**。"
+                 f"登録表の `WELL_RESCUES` 分岐は `at_well` を条件に持たない"
+                 f"（条件を持つのは `WELL_TRAPS` 側だけ）ので**ラベルは登録どおり**だが、"
+                 f"**「井戸に居るから救われた」とは読めない**。")
+        L.append(f"- 水準は median log10 U = **{level:.4f}** で、対照の最良"
+                 f"（`{best_control[0]}` の {float(np.median(best_control[1]['log_u_5m'])):.4f}）"
+                 f"より桁で低い。**逃走の除去だけでは説明できない**"
+                 f"——櫛は負側に周期的な特徴を足すので、"
+                 f"**表現力が増えた可能性が交絡している**（spec §7.3 の `CB_a2` 欄と同じ懸念）。")
+        L.append("- したがって V4 は「井戸を置くと LoP が観測されなくなる」までで、"
+                 "「井戸の容量が救済を運ぶ」は**本走では分離できていない**。\n")
+    L.append("\n## 引用上の注意\n")
+    L.append("- 0/10 は「5M までに観測しなかった」（片側 95% 上限 0.2589）。"
+             "「起きない」と書かない")
+    L.append("- **用量 1 点（12.16）・1 層・5M・float32 の主張である。**"
+             "引くときは用量を添える")
+    L.append("- 5 族はすべて本走のための合成活性化。処方箋として一般化しない")
+    L.append("- §2 の分水嶺・井戸・極小は閉形式の代入値。`span` の実測が出るまで引かない")
+    L.append("- **S-pair の親走との照合は本機では検証不能**"
+             "（`results/gate_dose_0830/logs` が無い）。腕どうしの一致だけが取れている")
+    (outdir / "summary.md").write_text("\n".join(L) + "\n", encoding="utf-8")
 
 if __name__ == "__main__":
     main()
