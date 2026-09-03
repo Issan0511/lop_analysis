@@ -79,7 +79,7 @@ def load_arm(arm: str, run: str, *, max_step: int | None = None) -> dict:
     """
     logdir = RESULTS / run / "logs"
     cols = {k: [] for k in ("inc", "d_zmax", "d_zbar", "lnmob", "absv",
-                            "seed", "resid")}
+                            "seed", "resid", "pos")}
     n_raw = n_sub = n_within = 0
     n_mob_zero = 0
     agree_num = agree_den = 0          # zmax<=0 と p_hat==0 の一致（§5 の疑い(1)）
@@ -128,6 +128,11 @@ def load_arm(arm: str, run: str, *, max_step: int | None = None) -> dict:
         cols["resid"].append(lnmob - zmax_m)
         cols["absv"].append(np.abs(v[prev][m]))
         cols["seed"].append(np.full(int(m.sum()), seed, dtype=np.int8))
+        # タスク内位置 o: 増分 j = 記録 j -> j+1 の j % (period/1000)。
+        # 境界増分（o=0）は within で既に落ちているので o は 1..9 を取る。
+        every = int(L["task_period"]) // 1000
+        jj = np.arange(len(step) - 1) % every
+        cols["pos"].append(np.broadcast_to(jj[:, None], m.shape)[m].astype(np.int8))
         del L
     out = {k: (np.concatenate(vs) if vs else np.empty(0)) for k, vs in cols.items()}
     out["alpha"] = alpha
@@ -178,13 +183,21 @@ def bin_edges(depth: np.ndarray, binset: str) -> tuple[list[float], list[str]]:
     raise ValueError(binset)
 
 
-def bin_table(d: dict, coord: str, binset: str) -> list[dict]:
-    """A・B（coord="zmax"）と C（coord="zbar"）の帯ごとの量。"""
+def bin_table(d: dict, coord: str, binset: str,
+              keep: np.ndarray | None = None) -> list[dict]:
+    """A・B（coord="zmax"）と C（coord="zbar"）の帯ごとの量。
+
+    ``keep`` を渡すとその部分集合だけで集計する（タスク内位置を固定するのに使う）。
+    帯の切り目は ``keep`` を掛ける**前**の分布から決めるので、位置をまたいで
+    同じ帯になる。
+    """
     depth = d["d_zmax"] if coord == "zmax" else d["d_zbar"]
     edges, names = bin_edges(depth, binset)
     rows = []
     for lo, hi, name in zip(edges[:-1], edges[1:], names):
         m = (depth > lo) & (depth <= hi)
+        if keep is not None:
+            m = m & keep
         n = int(m.sum())
         row = dict(coord=coord, binset=binset, bin=name, lo=lo, hi=hi, n=n)
         if n:
@@ -420,6 +433,7 @@ def selftest(verbose: bool = True) -> dict:
 def run(outdir: Path) -> dict:
     outdir.mkdir(parents=True, exist_ok=True)
     bins_rows, exp_rows, ident_rows, spear_rows, seed_rows = [], [], [], [], []
+    pos_bins, pos_exp = [], []
     per_arm = {}
 
     windows = []
@@ -469,6 +483,21 @@ def run(outdir: Path) -> dict:
                         e.update(key=key, arm=arm, window=wname,
                                  family=fam, dial=dial)
                         exp_rows.append(e)
+                if binset == "abs":
+                    # ★ タスク内位置を固定した版。増分は 1 タスクの中で 2〜3 桁
+                    # 減衰するので、9 位置をプールした中央値は後半の静かな位置で
+                    # 決まる。登録どおりの主判定はプール版だが、位置固定版が
+                    # ラベルを動かすかを必ず見る。
+                    for o in range(1, 10):
+                        prows = bin_table(d, coord, binset, keep=(d["pos"] == o))
+                        for r in prows:
+                            r.update(key=key, arm=arm, window=wname,
+                                     family=fam, dial=dial, pos=o)
+                        pos_bins.extend(prows)
+                        for e in local_exponents(prows, "depth_mid"):
+                            e.update(key=key, arm=arm, window=wname,
+                                     family=fam, dial=dial, pos=o)
+                            pos_exp.append(e)
         # --- E / P5
         if d["n_rows"]:
             for seed in SEEDS:
@@ -481,15 +510,18 @@ def run(outdir: Path) -> dict:
                     rho_zmax=spearman(d["absv"][m], d["d_zmax"][m])))
         del d
 
+    verdict0 = judge(bins_rows, exp_rows, ident_rows, spear_rows, per_arm,
+                     pos_exp)
     write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
-                  per_arm, judge(bins_rows, exp_rows, ident_rows, spear_rows,
-                                 per_arm))
+                  per_arm, verdict0, pos_bins)
     write_csv(outdir / "bins.csv", bins_rows)
     write_csv(outdir / "bins_by_seed.csv", seed_rows)
+    write_csv(outdir / "bins_by_pos.csv", pos_bins)
+    write_csv(outdir / "exponents_by_pos.csv", pos_exp)
     write_csv(outdir / "exponents.csv", exp_rows)
     write_csv(outdir / "identity.csv", ident_rows)
     write_csv(outdir / "spearman.csv", spear_rows)
-    verdict = judge(bins_rows, exp_rows, ident_rows, spear_rows, per_arm)
+    verdict = verdict0
     (outdir / "verdict.json").write_text(
         json.dumps(verdict, indent=2, ensure_ascii=False, default=float))
     (outdir / "per_arm.json").write_text(
@@ -497,7 +529,8 @@ def run(outdir: Path) -> dict:
     return verdict
 
 
-def judge(bins_rows, exp_rows, ident_rows, spear_rows, per_arm) -> dict:
+def judge(bins_rows, exp_rows, ident_rows, spear_rows, per_arm,
+          pos_exp=()) -> dict:
     """spec §5 の P1–P5 と表のラベル。主判定は主窓（15M / 5M）だけで取る。"""
     main = {k for k, v in per_arm.items() if v["window"] in ("15M", "5M")
             and not (v["arm"] in ("E_1216", "LR_1216") and v["window"] == "5M")}
@@ -570,6 +603,39 @@ def judge(bins_rows, exp_rows, ident_rows, spear_rows, per_arm) -> dict:
         n=len(lb), n_over_tol=sum(x["over_tol"] for x in lb),
         n_excluded=sum(x["excluded_by_2se"] for x in lb), pairs=lb)
 
+    # --- ★ タスク内位置を固定した版（プールの中央値が位相の混合であることへの対処）
+    def pos_view(family, coord):
+        out = []
+        for e in pos_exp:
+            if (e["coord"] != coord or per_arm[e["key"]]["family"] != family
+                    or e["key"] not in main or "kappa_mob" not in e):
+                continue
+            k = e.get("kappa_inc")
+            defined = bool(k is not None and k == k)
+            diff = (k - e["kappa_mob"]) if defined else None
+            out.append(dict(key=e["key"], pos=e["pos"], pair=e["pair"],
+                            kappa_inc=(float(k) if defined else None),
+                            kappa_mob=float(e["kappa_mob"]),
+                            diff=(float(diff) if defined else None),
+                            n_lo=e["n_lo"], n_hi=e["n_hi"], defined=defined,
+                            ok=bool(defined and abs(diff) <= TOL_P2
+                                    and np.sign(k) == np.sign(e["kappa_mob"])
+                                    and k != 0.0)))
+        return out
+
+    by_pos = {}
+    for coord in ("zmax", "zbar"):
+        rows_ = [r for r in pos_view("elu", coord) if r["pos"] in (1, 2, 3)]
+        by_pos[coord] = dict(
+            n=len(rows_), n_defined=sum(r["defined"] for r in rows_),
+            n_ok=sum(r["ok"] for r in rows_), rows=rows_)
+    lky_pos = [r for r in pos_view("leaky", "zmax") + pos_view("leaky", "zbar")
+               if r["pos"] in (1, 2, 3) and r["defined"]]
+    by_pos["leaky"] = dict(n=len(lky_pos),
+                           n_over_tol=sum(abs(r["kappa_inc"]) > TOL_P2
+                                          for r in lky_pos),
+                           rows=lky_pos)
+
     # --- P5: |v| と深さの Spearman の符号
     p5 = {}
     for key in main:
@@ -636,8 +702,15 @@ def judge(bins_rows, exp_rows, ident_rows, spear_rows, per_arm) -> dict:
                                 diff=e["diff_mean"]) for e in got])
     robust["mean_based"] = dict(zmax=mean_based("zmax"), zbar=mean_based("zbar"))
 
-    return dict(label=label, P1=P1, P2=P2, P3=P3, P4=P4, P5=P5,
-                leaky_bracket=leaky_bracket,
+    # 位置を固定してもラベルは動くか（登録どおりの主判定はプール版）
+    label_pos = ("GAIN_CARRIES_DEPTH"
+                 if (by_pos["zmax"]["n"] and not
+                     any(not r["ok"] for r in by_pos["zmax"]["rows"]))
+                 else "BRACKET_DEPENDS_ON_DEPTH")
+
+    return dict(label=label, label_position_fixed=label_pos,
+                P1=P1, P2=P2, P3=P3, P4=P4, P5=P5,
+                leaky_bracket=leaky_bracket, by_position=by_pos,
                 P1_violations=p1_bad, P2_detail=P2d, P3_detail=P3d,
                 P4_detail=p4, P4_bad=p4_bad, P5_detail=p5,
                 robustness=robust, main_keys=sorted(main))
@@ -645,7 +718,7 @@ def judge(bins_rows, exp_rows, ident_rows, spear_rows, per_arm) -> dict:
 
 
 def write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
-                  per_arm, v) -> None:
+                  per_arm, v, pos_bins=()) -> None:
     """人が読む表を 1 枚にまとめる（判定の根拠はすべて CSV 側にある）。"""
     L = []
     A = L.append
@@ -742,6 +815,54 @@ def write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
       "中央値と平均が同じ向き・同じ桁で動くので、"
       "「中央値がドリフトの推定量になっていないだけ」では説明できない"
       "（`LR_a0p001` だけは平均が符号を変えて読めないので根拠にしない）。\n")
+
+    A("\n## ★ タスク内位置を固定すると — プールの中央値は位相の混合である\n")
+    A("タスク内増分は定常量ではない。**同じ 1 タスクの中で記録位置 o=1→9 のあいだに"
+      "2〜3 桁減衰する**（`E_1216`@15M・`zmax` 帯 0–1 の中央値は +1.23e−2 → +2.3e−5）。"
+      "9 位置をプールした中央値は後半の静かな位置で決まるので、"
+      "**プール版の指数は位相の混合の指数であって、ドリフトの深さ依存の指数ではない。**"
+      "帯の切り目は位置を掛ける前の分布から決めてあるので、位置をまたいで同じ帯である。\n")
+    if pos_bins:
+        A("| 腕@窓 | 座標 | 帯 | " + " | ".join(f"o={o}" for o in range(1, 10)) + " |")
+        A("|---|---|---|" + "---:|" * 9)
+        seen = set()
+        for r in pos_bins:
+            if (r["coord"] != "zmax" or r["n"] == 0
+                    or (r["key"], r["bin"]) in seen
+                    or r["key"] not in ("E_1216@15M", "LR_a0p01_1216@5M")):
+                continue
+            seen.add((r["key"], r["bin"]))
+            vals = []
+            for o in range(1, 10):
+                hit = [q for q in pos_bins
+                       if q["key"] == r["key"] and q["coord"] == "zmax"
+                       and q["bin"] == r["bin"] and q["pos"] == o and q["n"]]
+                vals.append(f"{hit[0]['inc_med']:+.2e}" if hit else "—")
+            A(f"| `{r['key']}` | zmax | {r['bin']} | " + " | ".join(vals) + " |")
+    bp = v["by_position"]
+    A(f"\n位置を o∈{{1,2,3}} に固定して同じ判定をすると（ELU 4 腕・`zmax`）: "
+      f"κ_増分 が有限なのは {bp['zmax']['n_defined']}/{bp['zmax']['n']} 対、"
+      f"通過は **{bp['zmax']['n_ok']}/{bp['zmax']['n']} 対**。"
+      f"位置固定のラベルは **`{v['label_position_fixed']}`**（登録どおりのプール版と同じ）。\n")
+    A("| 腕@窓 | o | 対 | κ_増分 | κ_可動度 | 差 | |")
+    A("|---|---:|---|---:|---:|---:|---|")
+    for r in bp["zmax"]["rows"]:
+        ki = "中央値≤0" if not r["defined"] else f"{r['kappa_inc']:+.3f}"
+        df = "n/a" if not r["defined"] else f"{r['diff']:+.3f}"
+        A(f"| `{r['key']}` | {r['pos']} | {r['pair']} | {ki} | "
+          f"{r['kappa_mob']:+.3f} | {df} | {'OK' if r['ok'] else '**NG**'} |")
+    A(f"\n**位置を固定するとずれは小さくなるが、消えない。** "
+      f"`E_1216` の 0–1→1–3 の差はプールの +2.16 に対し o=1 で +0.36・"
+      "o=2 で +1.05・o=3 で +1.58 で、**どの位置でも許容帯 0.3 を超える**。"
+      "いっぽう `E_1216` の 3–6→6–10 は位置固定だと 3 位置とも通る（差 +0.14／+0.06／−0.08）ので、"
+      "**「全対で外れる」はプール版だけの言い方であり、位置固定では対によって割れる。** "
+      "α≤0.1 の ELU 3 腕はどの位置でも深い帯の増分中央値が 0 以下で、指数が定義できない。\n")
+    lp = bp["leaky"]
+    A(f"leaky も位置固定で見ると、読めた {lp['n']} 対のうち "
+      f"|κ_増分| > {TOL_P2} は {lp['n_over_tol']} 対。"
+      "内訳は `LR_a0p01`・`LR_a0p001` が −0.5〜−1.3 で明確に破り、"
+      "`LR_1216` は −0.13〜−0.25 で許容帯の中に収まる。"
+      "**leaky 対照は 3 腕中 2 腕で位置固定でも立つ。**\n")
 
     A("\n## P4 — leaky の S 検査（配管）\n")
     bad = v["P4_bad"]
