@@ -19,15 +19,22 @@ have ``||µ'||² = k + 1.25`` exactly, with ``k`` the number of active flip bits
 of ``||µ'||²`` — NOT the mean of the per-step shares.  This module therefore
 predicts ``1/(1 + mean_t k_t + 1.25)`` for raw arms and also emits the
 mean-of-reciprocals convention (``pred_meanrecip``) that the vault brackets as
-the other reading.  ``c_t`` is not recoverable from the logs, so every window
-mean here is unweighted over the (uniformly spaced) records.
+the other reading.  Both are taken over the window's step *intervals*
+(``k_rec[start:j]``, left endpoints), so ``pred_meanrecip`` is the v1 convention
+on the v2 window, not the v1 number.  ``c_t`` is not recoverable from the logs,
+so every window mean here is unweighted over the (uniformly spaced) records.
 
 REGISTRATION.  This is not a preregistration: the 12.16 value (0.0976) was
 compared with the C1 figures in chat on 2026-09-03 before any spec was written,
 so every emitted row carries ``registered = 0``.  That label is about *this*
 window/statistic only — a registered rule for the same functional form already
 exists and PASSed (命題リスト Q19 C2, run ``mu_titration_0823``: slope of bias
-share against ``1/(1+||µ||²)`` = +0.811 [+0.764, +0.856]), and its committed
+share against ``1/(1+||µ||²)`` = +0.811 [+0.764, +0.856]).  That rule registers
+the DIRECTION only (slope CI above 0 plus a per-seed Spearman floor); it does
+not register numerical agreement, and it measures a different quantity (a
+one-step expected-gradient magnitude ratio over a whole 1M run) at a ``||µ||``
+that is a run median of a decaying transient, not an oracle-fixed dose.  Its
+committed
 ``results/mu_titration_0823/dose_response.csv`` carries measured shares at both
 of these ``||µ||`` (0.10137 [0.09642, 0.10744] at 3.0414; 0.13356 [0.12820,
 0.13856] at 2.3333).  Compare against those rather than treating this as the
@@ -37,10 +44,15 @@ WHAT THE MEASURED Δ(w·µ') IS NOT.  ``µ'`` is re-derived from the current
 ``flip_state`` at every probe, so the endpoint difference
 ``w_j·µ'_j − w_s·µ'_s`` contains ``w_s·(µ'_j − µ'_s)`` — pure reorientation of
 the input mean at task boundaries, with no weight update and no ``Δb`` partner.
-On these runs that term is ~1/3 of the measured weight route.  The module
-therefore also emits a rotation-free estimator (``*_ff``) that accumulates both
-routes only over record intervals in which ``flip_state`` (and ``gamma``) do not
-change, where ``µ'`` is provably constant.
+On these runs that term is ~2/5 of the measured weight route (measured on
+bias-frozen units in a side script, not by this module).  The module therefore
+also emits a rotation-free estimator (``*_ff``) that accumulates both routes
+only over record intervals in which ``flip_state`` (and ``gamma``) do not
+change, where ``µ'`` is provably constant.  The price is a change of estimand,
+not just of noise: those intervals carry only part of the descent
+(``med_frac_db_ff`` / ``med_frac_dwmu_ff`` report how much), and on the fast
+arms much of what survives comes from the first probe interval, so ``share_ff``
+moves more than ``share`` when ``--start-record`` changes.
 
 Inputs are the per-seed ``logs/*.npz`` of the parent runs.  Those logs are not
 committed (``.gitignore``: raw trajectories stay local), so this script must be
@@ -70,7 +82,7 @@ import numpy as np
 
 EXPERIMENT = "bshare_posthoc_0903"
 ANALYSIS_GRADE = "posthoc_not_preregistered"
-ANALYSIS_VERSION = 2
+ANALYSIS_VERSION = 3
 REGISTERED = 0
 
 # Log layout written by ``gate_dose.write_arm_logs_gate`` /
@@ -87,6 +99,8 @@ KEY_GAMMA = "gamma"
 # real logs this passes through ``atol`` (max abs residual ~2e-6 against
 # |zbar| up to ~12); ``rtol`` alone would not, because |zbar| crosses zero.
 ZBAR_RTOL, ZBAR_ATOL = 1e-4, 1e-4
+# Relative floor on |Δ(w·µ')_ff + Δb_ff| before a flip-free share is emitted.
+FF_DEN_REL = 1e-6
 # Free (per-step random) input dimensions in condA: m - f = 20 - 15.
 N_FREE_BITS = 5
 FREE_VAR_TERM = 0.25 * N_FREE_BITS          # ||µ'||² = k + 1.25 on raw arms
@@ -155,6 +169,13 @@ def _git_dirty() -> str:
         return out.strip() or "clean"
     except Exception:  # pragma: no cover - provenance only
         return "unknown"
+
+
+def _ratio(num: float, den: float) -> float:
+    """num/den, nan on an exactly cancelling or non-finite denominator."""
+    if not (np.isfinite(num) and np.isfinite(den)) or den == 0.0:
+        return float("nan")
+    return float(num) / float(den)
 
 
 def _median(values) -> float:
@@ -244,11 +265,13 @@ def analyse_seed(z: dict, *, min_descent: float = 0.0,
     reason = np.full(width, "ok", dtype=object)
 
     for i in range(width):
-        if first[i] < 0:
-            reason[i] = "never_submerged"
-            continue
+        # order matters: a unit already down at ``start_record`` that resurfaces
+        # and never re-submerges is "submerged_at_start", not "never_submerged"
         if submerged[start_record, i]:
             reason[i] = "submerged_at_start"
+            continue
+        if first[i] < 0:
+            reason[i] = "never_submerged"
             continue
         j = int(first[i])
         vals = (wmu[start_record, i], wmu[j, i], b[start_record, i], b[j, i])
@@ -283,8 +306,22 @@ def analyse_seed(z: dict, *, min_descent: float = 0.0,
     share_ff = np.full(width, nan)
     ff_good = good & np.isfinite(d_wmu_ff) & np.isfinite(d_b_ff)
     den_ff = d_wmu_ff + d_b_ff
-    ff_good &= np.where(np.isfinite(den_ff), den_ff != 0.0, False)
+    # relative floor: an exact-zero test lets |den| ~ 1e-12 through and puts a
+    # 1e12-sized "share" into the per-unit CSV
+    scale = np.abs(d_wmu_ff) + np.abs(d_b_ff)
+    with np.errstate(invalid="ignore"):
+        big_enough = np.abs(den_ff) >= FF_DEN_REL * scale
+    ff_dropped = int((ff_good & ~np.where(np.isfinite(den_ff), big_enough, False)).sum())
+    ff_good &= np.where(np.isfinite(den_ff), big_enough, False)
     share_ff[ff_good] = d_b_ff[ff_good] / den_ff[ff_good]
+    # What fraction of the descent survives the flip-free mask?  The mask keeps
+    # ~90% of the intervals but far less of the movement, because the boundary
+    # intervals it drops are where most of the descent happens.
+    frac_db_ff = np.full(width, nan)
+    frac_dwmu_ff = np.full(width, nan)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        frac_db_ff[ff_good] = d_b_ff[ff_good] / d_b[ff_good]
+        frac_dwmu_ff[ff_good] = d_wmu_ff[ff_good] / d_wmu[ff_good]
 
     # ------------------------------------------------ prediction per unit
     target = float(z[KEY_TARGET]) if KEY_TARGET in z else nan
@@ -314,6 +351,8 @@ def analyse_seed(z: dict, *, min_descent: float = 0.0,
     counts = {r: int((reason == r).sum()) for r in EXCLUSIONS}
     return dict(d_wmu=d_wmu, d_b=d_b, d_wmu_all=d_wmu_all, d_b_all=d_b_all,
                 d_wmu_ff=d_wmu_ff, d_b_ff=d_b_ff, n_ff=n_ff,
+                frac_db_ff=frac_db_ff, frac_dwmu_ff=frac_dwmu_ff,
+                n_ff_dropped=ff_dropped,
                 t_sub=t_sub, win_len=win_len, share_unit=share_unit,
                 share_ff=share_ff, same_sign=same_sign, pred_unit=pred_unit,
                 pred_meanrecip=pred_meanrecip, pred_ff=pred_ff,
@@ -331,7 +370,8 @@ def summarise_seed(res: dict) -> dict:
                  med_pred_meanrecip=np.nan, med_pred_ff=np.nan,
                  med_t_sub=np.nan, med_win_len=np.nan,
                  frac_routes_same_sign=np.nan, frac_share_outside01=np.nan,
-                 n_units_ff=0)
+                 n_units_ff=0, med_frac_db_ff=np.nan, med_frac_dwmu_ff=np.nan,
+                 frac_share_ff_outside01=np.nan)
     if not g.any():
         return empty
     med_dw, med_db = _median(res["d_wmu"][g]), _median(res["d_b"][g])
@@ -339,20 +379,28 @@ def summarise_seed(res: dict) -> dict:
     ga = np.isfinite(res["d_wmu_all"])
     dw_a, db_a = _median(res["d_wmu_all"][ga]), _median(res["d_b_all"][ga])
     s = res["share_unit"][g]
+    sff = res["share_ff"][gf]
     return dict(
         n_units=int(g.sum()),
         med_d_wmu=med_dw, med_d_b=med_db,
         # C1's "分担" as ratio of unit medians (matches how C1 quotes Δ(w·µ)/Δb)
-        share_of_medians=med_db / (med_dw + med_db),
+        share_of_medians=_ratio(med_db, med_dw + med_db),
         med_share_unit=_median(s),
         # rotation-free: both routes accumulated only over flip-free intervals
-        share_of_medians_ff=(_median(res["d_b_ff"][gf]) /
-                             (_median(res["d_wmu_ff"][gf]) + _median(res["d_b_ff"][gf]))
+        share_of_medians_ff=(_ratio(_median(res["d_b_ff"][gf]),
+                                    _median(res["d_wmu_ff"][gf])
+                                    + _median(res["d_b_ff"][gf]))
                              if gf.any() else np.nan),
-        med_share_unit_ff=_median(res["share_ff"][gf]) if gf.any() else np.nan,
+        med_share_unit_ff=_median(sff) if gf.any() else np.nan,
+        # how much of the descent survives the mask (the mask keeps ~90% of the
+        # intervals but far less of the movement)
+        med_frac_db_ff=_median(res["frac_db_ff"][gf]) if gf.any() else np.nan,
+        med_frac_dwmu_ff=_median(res["frac_dwmu_ff"][gf]) if gf.any() else np.nan,
+        frac_share_ff_outside01=(float(((sff < 0) | (sff > 1)).mean())
+                                 if gf.any() else np.nan),
         # sensitivity: put the no_descent units back (selection on the very
         # denominator of the share)
-        share_of_medians_incl_nodesc=db_a / (dw_a + db_a),
+        share_of_medians_incl_nodesc=_ratio(db_a, dw_a + db_a),
         med_pred=_median(res["pred_unit"][g]),
         med_pred_meanrecip=_median(res["pred_meanrecip"][g]),
         med_pred_ff=_median(res["pred_ff"][gf]) if gf.any() else np.nan,
@@ -384,7 +432,8 @@ SEED_STATS = ("n_units", "n_units_ff", "med_d_wmu", "med_d_b",
               "share_of_medians", "med_share_unit", "share_of_medians_ff",
               "med_share_unit_ff", "share_of_medians_incl_nodesc", "med_pred",
               "med_pred_meanrecip", "med_pred_ff", "med_t_sub", "med_win_len",
-              "frac_routes_same_sign", "frac_share_outside01")
+              "frac_routes_same_sign", "frac_share_outside01",
+              "med_frac_db_ff", "med_frac_dwmu_ff", "frac_share_ff_outside01")
 
 
 def run(source: Path, out: Path, *, min_descent: float,
@@ -396,7 +445,7 @@ def run(source: Path, out: Path, *, min_descent: float,
         if not arms:
             raise SanityError(f"--arms matched nothing under {source}/logs")
     unit_rows, seed_rows, arm_rows, inputs = [], [], [], {}
-    zmax_checked_any = False
+    n_zmax_checked, n_seeds_total, n_ff_dropped_total = 0, 0, 0
     for arm, paths in sorted(arms.items()):
         per_seed, pred_kinds, counts_tot = [], set(), {r: 0 for r in EXCLUSIONS}
         for p in paths:
@@ -408,7 +457,9 @@ def run(source: Path, out: Path, *, min_descent: float,
             summ = summarise_seed(res)
             per_seed.append(summ)
             pred_kinds.add(res["pred_kind"])
-            zmax_checked_any |= res["zmax_checked"]
+            n_seeds_total += 1
+            n_zmax_checked += int(res["zmax_checked"])
+            n_ff_dropped_total += int(res["n_ff_dropped"])
             for r, n in res["counts"].items():
                 counts_tot[r] += n
             inputs[str(p.relative_to(source))] = sha_file(p)
@@ -429,6 +480,8 @@ def run(source: Path, out: Path, *, min_descent: float,
                         d_wmu_ff=res["d_wmu_ff"][i], d_b_ff=res["d_b_ff"][i],
                         n_ff_intervals=int(res["n_ff"][i]),
                         share_unit_ff=res["share_ff"][i],
+                        frac_db_ff=res["frac_db_ff"][i],
+                        frac_dwmu_ff=res["frac_dwmu_ff"][i],
                         pred=res["pred_unit"][i],
                         pred_meanrecip=res["pred_meanrecip"][i],
                         pred_ff=res["pred_ff"][i]))
@@ -459,8 +512,12 @@ def run(source: Path, out: Path, *, min_descent: float,
         source=str(source), out=str(out), min_descent=min_descent,
         start_record=start_record, arms_filter=arms_filter,
         submersion="p_hat == 0 on the exact 32-pattern support",
-        zmax_cross_check=("layer1_zmax present and checked" if zmax_checked_any
-                          else "layer1_zmax absent from these logs; p_hat==0 used alone"),
+        zmax_cross_check=(f"layer1_zmax present and checked on "
+                          f"{n_zmax_checked}/{n_seeds_total} seeds"
+                          if n_zmax_checked else
+                          f"layer1_zmax absent from all {n_seeds_total} seeds; "
+                          "p_hat==0 used alone"),
+        ff_units_dropped_by_denominator_floor=n_ff_dropped_total,
         window=f"record {start_record} -> first later record with p_hat == 0",
         weight_route=("endpoint difference w_j.mu'_j - w_s.mu'_s; contains the "
                       "mu'-reorientation term w_s.(mu'_j - mu'_s). The *_ff "
@@ -510,8 +567,8 @@ def _summary_md(source: Path, start_record: int, arm_rows: list[dict]) -> str:
             f"{_f(r['seedmed_med_pred'])} | {_f(r['seedmed_med_d_wmu'])} | "
             f"{_f(r['seedmed_med_d_b'])} | {r['seedmed_med_t_sub']:.0f} |")
     lines += ["", "## diagnostics (what the headline number hides)", "",
-              "| arm | units/seed | submerged at start | no_descent | share incl. no_descent | routes same sign | share outside [0,1] | pred (mean-of-recip) | window (records) |",
-              "|---|---|---|---|---|---|---|---|---|"]
+              "| arm | units/seed | submerged at start | no_descent | share incl. no_descent | routes same sign | share outside [0,1] | ff share outside [0,1] | ff keeps Δb | ff keeps Δ(w·µ') | pred (mean-of-recip) | window (records) |",
+              "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in arm_rows:
         tot = sum(r[f"n_{k}_total"] for k in EXCLUSIONS)
         lines.append(
@@ -520,6 +577,9 @@ def _summary_md(source: Path, start_record: int, arm_rows: list[dict]) -> str:
             f"{_f(r['seedmed_share_of_medians_incl_nodesc'])} | "
             f"{_f(r['seedmed_frac_routes_same_sign'], 3)} | "
             f"{_f(r['seedmed_frac_share_outside01'], 3)} | "
+            f"{_f(r['seedmed_frac_share_ff_outside01'], 3)} | "
+            f"{_f(r['seedmed_med_frac_db_ff'], 3)} | "
+            f"{_f(r['seedmed_med_frac_dwmu_ff'], 3)} | "
             f"{_f(r['seedmed_med_pred_meanrecip'])} | {r['seedmed_med_win_len']:.0f} |")
     lines += ["",
               "No verdict label: the prediction was not frozen before the 12.16 "

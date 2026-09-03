@@ -104,7 +104,88 @@ def handmade_log_raw():
     return z
 
 
+def two_unit_log(wmu, b, p_hat, flip_at):
+    """Six-record, two-unit log with a single task flip before ``flip_at``."""
+    wmu, b, p_hat = (np.asarray(x, np.float64) for x in (wmu, b, p_hat))
+    flip = np.zeros((6, F))
+    flip[flip_at:, 0] = 1.0
+    return {"layer1_M": wmu.astype(np.float32), "layer1_B": b.astype(np.float32),
+            "layer1_denom": np.ones((6, 2), np.float32),
+            "layer1_p_hat": p_hat.astype(np.float32),
+            "layer1_zbar": (wmu + b).astype(np.float32),
+            "flip_state": flip, "step": np.arange(6, dtype=np.int64) * 1000,
+            "seed": np.int64(0), "target_mu_norm": np.float64(3.041)}
+
+
 class ShareRecovery(unittest.TestCase):
+    def test_ratio_guard_returns_nan_instead_of_raising(self):
+        self.assertTrue(np.isnan(P._ratio(1.0, 0.0)))
+        self.assertTrue(np.isnan(P._ratio(np.nan, -2.0)))
+        self.assertAlmostEqual(P._ratio(-1.0, -2.0), 0.5)
+
+    def test_submerged_at_start_wins_over_never_submerged(self):
+        """A unit down at the start that resurfaces and never re-submerges is
+        excluded as ``submerged_at_start``, not mislabelled ``never_submerged``."""
+        z = handmade_log()
+        ph = np.asarray(z["layer1_p_hat"], np.float64)
+        ph[:, 0] = 0.5
+        ph[0, 0] = 0.0                      # down at record 0, up ever after
+        z["layer1_p_hat"] = ph.astype(np.float32)
+        res = P.analyse_seed(z)
+        self.assertEqual(res["counts"]["submerged_at_start"], 1)
+        self.assertEqual(res["counts"]["never_submerged"], 1)
+
+    def test_cancelling_ff_routes_are_dropped_by_the_relative_floor(self):
+        # weight route climbs by +0.4 over the flip-free intervals while the
+        # bias route falls by -0.4: the ff denominator is exactly zero
+        z = two_unit_log(
+            wmu=[[10.0, 5.0], [10.1, 5.0], [10.2, 5.0],
+                 [5.0, 5.0], [5.1, 5.0], [5.2, 5.0]],
+            b=[[1.0, 2.0], [0.9, 2.0], [0.8, 2.0],
+               [0.8, 2.0], [0.7, 2.0], [0.6, 2.0]],
+            p_hat=[[0.5, 0.5]] * 5 + [[0.0, 0.5]], flip_at=3)
+        res = P.analyse_seed(z)
+        self.assertEqual(res["counts"]["ok"], 1)          # endpoint descends
+        self.assertAlmostEqual(res["d_wmu_ff"][0], 0.4, places=6)
+        self.assertAlmostEqual(res["d_b_ff"][0], -0.4, places=6)
+        self.assertEqual(res["n_ff_dropped"], 1)
+        self.assertTrue(np.isnan(res["share_ff"][0]))
+        self.assertTrue(np.isnan(P.summarise_seed(res)["share_of_medians_ff"]))
+
+    def test_ff_subset_and_kept_fraction_are_reported(self):
+        # unit 0 submerges after one interval and that interval straddles the
+        # flip, so it has no flip-free interval at all; unit 1 has four
+        z = two_unit_log(
+            wmu=[[10.0, 8.0], [9.0, 7.5], [9.0, 7.0],
+                 [9.0, 6.5], [9.0, 6.0], [9.0, 5.5]],
+            b=[[1.0, 2.0], [0.9, 1.9], [0.9, 1.8],
+               [0.9, 1.7], [0.9, 1.6], [0.9, 1.5]],
+            p_hat=[[0.5, 0.5], [0.0, 0.5], [0.5, 0.5],
+                   [0.5, 0.5], [0.5, 0.5], [0.5, 0.0]], flip_at=1)
+        res = P.analyse_seed(z)
+        s = P.summarise_seed(res)
+        self.assertEqual(res["counts"]["ok"], 2)
+        self.assertEqual(int(res["n_ff"][0]), 0)
+        self.assertEqual(int(res["n_ff"][1]), 4)
+        self.assertEqual(s["n_units"], 2)
+        self.assertEqual(s["n_units_ff"], 1)              # different unit sets
+        self.assertAlmostEqual(s["share_of_medians_ff"], -0.4 / -2.4, places=5)
+        # the mask kept 4 of unit 1's 5 intervals -> 4/5 of each route
+        self.assertAlmostEqual(s["med_frac_db_ff"], 0.8, places=5)
+        self.assertAlmostEqual(s["med_frac_dwmu_ff"], 0.8, places=5)
+        self.assertEqual(s["frac_share_ff_outside01"], 0.0)
+
+    def test_summarise_seed_handles_a_seed_with_no_usable_unit(self):
+        z = two_unit_log(
+            wmu=[[10.0, 5.0]] * 6, b=[[1.0, 2.0]] * 6,
+            p_hat=[[0.5, 0.5]] * 6, flip_at=3)
+        res = P.analyse_seed(z)
+        s = P.summarise_seed(res)
+        self.assertEqual(res["counts"]["never_submerged"], 2)
+        self.assertEqual(s["n_units"], 0)
+        for key in ("share_of_medians", "share_of_medians_ff", "med_frac_db_ff"):
+            self.assertTrue(np.isnan(s[key]), key)
+
     def test_oracle_arm_recovers_geometric_share(self):
         for target, expect in ((3.041, 1 / (1 + 3.041 ** 2)), (2.333, 1 / (1 + 2.333 ** 2))):
             res = P.analyse_seed(synth_log(1, target))
