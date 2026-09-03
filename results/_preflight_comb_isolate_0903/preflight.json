@@ -1,0 +1,432 @@
+{
+  "experiment": "comb_isolate_0903",
+  "pass_": true,
+  "checks": {
+    "S_copy": {
+      "pass_": true,
+      "n_lines": 41,
+      "host_lines": 41,
+      "differences": [
+        {
+          "index": 10,
+          "mine": "rec = WeirdRecorder(probes, st)",
+          "host": "rec = DialRecorder(probes, st)"
+        }
+      ]
+    },
+    "S_const": {
+      "pass_": true,
+      "rows": [
+        {
+          "arm": "CB1f_a1_1216",
+          "activation": "comb1_flat",
+          "arm_value": 3.141592653589793,
+          "nets_value": 3.141592653589793,
+          "nets_source": "math.pi / act_alpha",
+          "config_block_value": 3.141592653589793,
+          "pass_": true
+        },
+        {
+          "arm": "CB1l_a1_1216",
+          "activation": "comb1_leaky",
+          "arm_value": 3.141592653589793,
+          "nets_value": 3.141592653589793,
+          "nets_source": "math.pi / act_alpha",
+          "config_block_value": 3.141592653589793,
+          "leak_nets": 0.1,
+          "leak_config": 0.1,
+          "pass_": true
+        },
+        {
+          "arm": "RB_dpi_1216",
+          "activation": "band_leaky_dpi",
+          "arm_value": 3.141592653589793,
+          "nets_value": 3.141592653589793,
+          "nets_source": "BAND_WIDTH",
+          "config_block_value": 3.141592653589793,
+          "pass_": true
+        },
+        {
+          "arm": "SN_a1_1216",
+          "activation": "snake",
+          "arm_value": null,
+          "nets_value": null,
+          "nets_source": "none",
+          "config_block_value": null,
+          "pass_": true
+        }
+      ],
+      "failures": []
+    },
+    "S_dial": {
+      "pass_": true,
+      "rel_tol": 0.06,
+      "rows": [
+        {
+          "arm": "CB1f_a1_1216",
+          "activation": "comb1_flat",
+          "dial": 1.0,
+          "registered_watershed": [
+            1.571
+          ],
+          "solved_maxima": [
+            1.5708
+          ],
+          "registered_wells": [
+            3.142
+          ],
+          "wells": [
+            {
+              "registered_u": 3.142,
+              "solved_zero_u": 3.1415929147374366,
+              "rel_error": 0.00012956246421491984,
+              "phi_prime_at_registered_u": 0.0,
+              "is_double_zero": true
+            }
+          ],
+          "well_definition": "position of the negative-side zero of phi; phi'=0 there is REPORT only (spec §2)",
+          "pass_": true
+        },
+        {
+          "arm": "CB1l_a1_1216",
+          "activation": "comb1_leaky",
+          "dial": 1.0,
+          "registered_watershed": [
+            1.571
+          ],
+          "solved_maxima": [
+            1.5708
+          ],
+          "registered_wells": [
+            3.142
+          ],
+          "wells": [
+            {
+              "registered_u": 3.142,
+              "solved_zero_u": 3.1415916828624373,
+              "rel_error": 0.00012995453136938873,
+              "phi_prime_at_registered_u": 0.1,
+              "is_double_zero": false
+            }
+          ],
+          "well_definition": "position of the negative-side zero of phi; phi'=0 there is REPORT only (spec §2)",
+          "pass_": true
+        },
+        {
+          "arm": "RB_dpi_1216",
+          "activation": "band_leaky_dpi",
+          "registered_none": true,
+          "pass_": true
+        },
+        {
+          "arm": "SN_a1_1216",
+          "activation": "snake",
+          "registered_none": true,
+          "pass_": true
+        }
+      ],
+      "failures": []
+    },
+    "S_fd": {
+      "pass_": true,
+      "rows": [
+        {
+          "activation": "comb1_flat",
+          "alpha": 1.0,
+          "n_points": 80,
+          "worst_abs": 1.0279563866788521e-09,
+          "tol": 1e-06,
+          "pass_": true
+        },
+        {
+          "activation": "comb1_leaky",
+          "alpha": 1.0,
+          "n_points": 80,
+          "worst_abs": 1.0279563866788521e-09,
+          "tol": 1e-06,
+          "pass_": true
+        },
+        {
+          "activation": "band_leaky_dpi",
+          "alpha": 0.1,
+          "n_points": 80,
+          "worst_abs": 1.0279563866788521e-09,
+          "tol": 1e-06,
+          "pass_": true
+        },
+        {
+          "activation": "snake",
+          "alpha": 1.0,
+          "n_points": 41,
+          "worst_abs": 2.1825097284988715e-09,
+          "tol": 1e-06,
+          "pass_": true
+        },
+        {
+          "activation": "band_leaky_d0",
+          "alpha": 0.1,
+          "n_points": 80,
+          "worst_abs": 1.0279563866788521e-09,
+          "tol": 1e-06,
+          "pass_": true
+        }
+      ],
+      "failures": []
+    },
+    "S_num": {
+      "pass_": true,
+      "rows": [
+        {
+          "arm": "CB1f_a1_1216",
+          "activation": "comb1_flat",
+          "alpha": 1.0,
+          "range": [
+            -200.0,
+            200.0
+          ],
+          "finite": true,
+          "float32_overflow_depth": null,
+          "max_abs": 200.0,
+          "pass_": true
+        },
+        {
+          "arm": "CB1l_a1_1216",
+          "activation": "comb1_leaky",
+          "alpha": 1.0,
+          "range": [
+            -200.0,
+            200.0
+          ],
+          "finite": true,
+          "float32_overflow_depth": null,
+          "max_abs": 200.0,
+          "pass_": true
+        },
+        {
+          "arm": "RB_dpi_1216",
+          "activation": "band_leaky_dpi",
+          "alpha": 0.1,
+          "range": [
+            -200.0,
+            200.0
+          ],
+          "finite": true,
+          "float32_overflow_depth": null,
+          "max_abs": 200.0,
+          "pass_": true
+        },
+        {
+          "arm": "SN_a1_1216",
+          "activation": "snake",
+          "alpha": 1.0,
+          "range": [
+            -200.0,
+            200.0
+          ],
+          "finite": true,
+          "float32_overflow_depth": null,
+          "max_abs": 200.7626495361328,
+          "pass_": true
+        }
+      ],
+      "failures": []
+    },
+    "S_limit": {
+      "pass_": true,
+      "rows": [
+        {
+          "kind": "open_interval",
+          "activation": "comb1_leaky",
+          "reference": "comb_binf",
+          "interval": "(-3.141593, 30]",
+          "forward_bit_equal": true,
+          "grad_bit_equal": true,
+          "endpoint_excluded": true,
+          "endpoint_new": 0.0,
+          "endpoint_reference": -1.4997597826618576e-32,
+          "pass_": true
+        },
+        {
+          "kind": "open_interval",
+          "activation": "comb1_flat",
+          "reference": "comb_binf",
+          "interval": "(-3.141593, 30]",
+          "forward_bit_equal": true,
+          "grad_bit_equal": true,
+          "endpoint_excluded": true,
+          "endpoint_new": 0.0,
+          "endpoint_reference": -1.4997597826618576e-32,
+          "pass_": true
+        },
+        {
+          "kind": "closed_bit",
+          "activation": "band_leaky_d0",
+          "reference": "leaky_relu",
+          "forward_bit_equal": true,
+          "grad_bit_equal": true,
+          "pass_": true
+        },
+        {
+          "kind": "snake_identity_limit",
+          "activation": "snake",
+          "alpha": 1e-06,
+          "max_rel_dev": 2.99999999910483e-05,
+          "tol": 0.0001,
+          "pass_": true
+        }
+      ]
+    },
+    "S_guard": {
+      "pass_": true,
+      "threshold": 1e-08,
+      "rows": [
+        {
+          "arm": "CB_a1_1216",
+          "u_1m_seed_median": 1.5034901518861568e-13,
+          "fired": true,
+          "expected": true,
+          "pass_": true
+        },
+        {
+          "arm": "LR_1216",
+          "u_1m_seed_median": 0.006244353426007812,
+          "fired": false,
+          "expected": false,
+          "pass_": true
+        },
+        {
+          "arm": "E_1216",
+          "u_1m_seed_median": 0.005574965546752188,
+          "fired": false,
+          "expected": false,
+          "pass_": true
+        },
+        {
+          "arm": "R_1216",
+          "u_1m_seed_median": 0.22430427054453836,
+          "fired": false,
+          "expected": false,
+          "pass_": true
+        },
+        {
+          "arm": "S_b1_1216",
+          "u_1m_seed_median": 0.01949560196440718,
+          "fired": false,
+          "expected": false,
+          "pass_": true
+        }
+      ],
+      "failures": [],
+      "separation_decades": 10.569141600047837,
+      "note": "閾値は事後に動かさない。分離しなければ V6 は GUARD_MISCALIBRATED"
+    },
+    "S_log_b": {
+      "pass_": true,
+      "steps": 30000,
+      "differences": [],
+      "added_columns": [
+        "absmob",
+        "mob",
+        "v_unit",
+        "zmax",
+        "zmean",
+        "zmin"
+      ],
+      "expected_columns": [
+        "absmob",
+        "mob",
+        "v_unit",
+        "zmax",
+        "zmean",
+        "zmin"
+      ]
+    },
+    "S_mob": {
+      "pass_": true,
+      "tolerance": 1e-06,
+      "steps": 30000,
+      "rows": [
+        {
+          "arm": "RB_dpi_1216",
+          "identity": "p_hat + a*Pr[z < -d]",
+          "max_abs_error": 3.469446951953614e-18,
+          "zmin_le_zmean_le_zmax": true,
+          "zmin_le_zmean_le_zmax_logged": true,
+          "pass_": true
+        },
+        {
+          "arm": "CB1l_a1_1216",
+          "identity": "E_x[phi'] rebuilt from the closed form",
+          "max_abs_error": 0.0,
+          "zmin_le_zmean_le_zmax": true,
+          "zmin_le_zmean_le_zmax_logged": true,
+          "pass_": true
+        }
+      ]
+    },
+    "S_pair": {
+      "pass_": true,
+      "reference": "CB1f_a1_1216",
+      "arms": [
+        "CB1f_a1_1216",
+        "CB1l_a1_1216",
+        "RB_dpi_1216",
+        "SN_a1_1216"
+      ],
+      "steps": 30000,
+      "match_by": "seed_init_hash",
+      "differences": [],
+      "parent_status": "PARENT_LOGS_ABSENT_ON_THIS_MACHINE",
+      "parent_flip_rows": [],
+      "parent_missing": [
+        "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed0.npz",
+        "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed1.npz",
+        "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed2.npz",
+        "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed3.npz",
+        "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed4.npz",
+        "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed5.npz",
+        "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed6.npz",
+        "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed7.npz",
+        "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed8.npz",
+        "/home/i_nakatsuka/Projects/lop_analysis/results/gate_dose_0830/logs/R_1216_seed9.npz"
+      ],
+      "caveat": "init/teacher/input realization only; trajectories diverge after step 1. The parent half of S-pair is UNVERIFIABLE here because results/gate_dose_0830/logs is gitignored and absent on this machine."
+    },
+    "S_dose": {
+      "pass_": true,
+      "tolerance": 1e-10,
+      "n_probes": 124,
+      "failures": []
+    },
+    "S_taut": {
+      "pass_": true,
+      "rows": [
+        {
+          "arm": "CB1f_a1_1216",
+          "frozen_frac": 0.0,
+          "frozen_abs_frac": 0.0,
+          "submerged_frac": 0.17166666666666666,
+          "tautological": true,
+          "note": "frozen / frozen_abs は REPORT_ONLY。判定式に入れていない"
+        },
+        {
+          "arm": "CB1l_a1_1216",
+          "frozen_frac": 0.0,
+          "frozen_abs_frac": 0.0,
+          "submerged_frac": 0.17166666666666666,
+          "tautological": true,
+          "note": "frozen / frozen_abs は REPORT_ONLY。判定式に入れていない"
+        },
+        {
+          "arm": "SN_a1_1216",
+          "frozen_frac": 0.0,
+          "frozen_abs_frac": 0.0,
+          "submerged_frac": 0.2675,
+          "tautological": true,
+          "note": "frozen / frozen_abs は REPORT_ONLY。判定式に入れていない"
+        }
+      ],
+      "note": "informational; SN は submerged を定義しない（spec §4）"
+    }
+  }
+}

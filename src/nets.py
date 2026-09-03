@@ -181,7 +181,8 @@ class VecMLPL:
                    "band_leaky_d0", "band_leaky_d0p5", "band_leaky_d1",
                    "band_leaky_d2", "band_leaky_d4",
                    "ramp_leaky_d1",
-                   "comb_binf", "comb_b5")
+                   "comb_binf", "comb_b5",
+                   "comb1_flat", "comb1_leaky", "band_leaky_dpi", "snake")
     SURROGATE_ACTIVATIONS = ("bwd_leaky", "fwd_leaky", "bwd_reflect", "bwd_quad",
                              "bwd_leaky_proj")
     # 幻の壁 3 型 [phantom_wall_0902 §4.3]。どれも forward は厳密 ReLU で、
@@ -223,21 +224,35 @@ class VecMLPL:
     WEIRD_SLOPE_ACTIVATIONS = ("mirror_leaky", "fold_leaky_d1", "fold_leaky_d2",
                                "fold_leaky_dbig", "band_leaky_d0",
                                "band_leaky_d0p5", "band_leaky_d1",
-                               "band_leaky_d2", "band_leaky_d4", "ramp_leaky_d1")
+                               "band_leaky_d2", "band_leaky_d4", "ramp_leaky_d1",
+                               "band_leaky_dpi")
     # 櫛は act_alpha が振動数で [0,1] に入らない（CB_a2 は alpha=2）。有限正だけを課す。
-    WEIRD_FREQ_ACTIVATIONS = ("comb_binf", "comb_b5")
+    # comb1_* と snake も act_alpha は振動数 alpha（漏れ a はクラス定数）。
+    WEIRD_FREQ_ACTIVATIONS = ("comb_binf", "comb_b5",
+                              "comb1_flat", "comb1_leaky", "snake")
     # 折り返しの折れ目の深さ d。phi の零点が 0 と -2d の 2 か所（分水嶺 d・極小 2d）。
     FOLD_DEPTH = {"fold_leaky_d1": 1.0, "fold_leaky_d2": 2.0,
                   "fold_leaky_dbig": 1.0e6}
     # 死帯の幅 d。d=0 は leaky、d=inf は ReLU。
     BAND_WIDTH = {"band_leaky_d0": 0.0, "band_leaky_d0p5": 0.5,
                   "band_leaky_d1": 1.0, "band_leaky_d2": 2.0,
-                  "band_leaky_d4": 4.0}
+                  "band_leaky_d4": 4.0,
+                  # 幅 pi の死帯 [comb_isolate_0903]。comb1_leaky の葉を平坦に置き換えた
+                  # 対照なので、幅は葉の端 pi/alpha（alpha=1）に合わせる。
+                  "band_leaky_dpi": math.pi}
     # 滑り出しの二次区間の深さ d。kappa = a/(2d) は分岐内で解き直す（VALLEY_ZERO と同じで、
     # forward と backward のあいだで第 2 母数がずれないようにキャッシュしない）。
     RAMP_DEPTH = {"ramp_leaky_d1": 1.0}
     # 櫛の包絡 beta。inf は包絡なし（env = 1.0・1/beta = 0.0 を定数で書き exp を呼ばない）。
     COMB_ENVELOPE = {"comb_binf": float("inf"), "comb_b5": 5.0}
+    # 櫛の分離 [comb_isolate_0903 §2]。負側の**最初の 1 葉だけ**を残し、その先を
+    # ReLU の平坦（comb1_flat）か leaky（comb1_leaky）にする。葉の端は u = pi/alpha で
+    # そこは二重零点（phi = phi' = 0）なので、平坦との接続は C^1 で、leaky との接続は
+    # C^0（折れ目・S-fd で除外する）。
+    #   * act_alpha は **振動数 alpha**（漏れ a ではない）
+    #   * comb1_leaky の漏れ a は LR_1216 に揃えたクラス定数（下）
+    COMB1_ACTIVATIONS = ("comb1_flat", "comb1_leaky")
+    COMB1_LEAK = {"comb1_leaky": 0.1}
 
     def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
                  act_grad_form="alpha_exp", wd_b=0.0):
@@ -387,6 +402,17 @@ class VecMLPL:
                                            0.0 - kappa * pre * pre,
                                            self.act_alpha * pre
                                            + self.act_alpha * d / 2.0))
+        if self.act in self.COMB1_ACTIVATIONS:
+            lobe = math.pi / self.act_alpha
+            leaf = 0.0 - torch.sin(self.act_alpha * pre) ** 2
+            beyond = (torch.zeros_like(pre) if self.act == "comb1_flat"
+                      else self.COMB1_LEAK["comb1_leaky"] * (pre + lobe))
+            return torch.where(pre > 0, pre,
+                               torch.where(pre > -lobe, leaf, beyond))
+        if self.act == "snake":
+            # ゲートを持たない周期活性化 [Ziyin et al. 2020]。**正側も恒等ではない**。
+            # 単調（phi' = 1 + sin 2az >= 0）で、負側の可動度の平均は 1。
+            return pre + torch.sin(self.act_alpha * pre) ** 2 / self.act_alpha
         if self.act == "comb_binf":
             # 包絡なしの櫛。env = 1.0 を定数で書き、exp を呼ばない（S-num）。
             return torch.where(pre > 0, pre,
@@ -495,6 +521,15 @@ class VecMLPL:
                                torch.where(pre > -d,
                                            0.0 + (0.0 - 2.0 * kappa) * pre,
                                            torch.full_like(pre, self.act_alpha)))
+        if self.act in self.COMB1_ACTIVATIONS:
+            lobe = math.pi / self.act_alpha
+            leaf = 0.0 - self.act_alpha * torch.sin(2.0 * self.act_alpha * pre)
+            beyond = (torch.zeros_like(pre) if self.act == "comb1_flat"
+                      else torch.full_like(pre, self.COMB1_LEAK["comb1_leaky"]))
+            return torch.where(pre > 0, torch.ones_like(pre),
+                               torch.where(pre > -lobe, leaf, beyond))
+        if self.act == "snake":
+            return 1.0 + torch.sin(2.0 * self.act_alpha * pre)
         if self.act == "comb_binf":
             return torch.where(pre > 0, torch.ones_like(pre),
                                0.0 - self.act_alpha
