@@ -78,8 +78,8 @@ def load_arm(arm: str, run: str, *, max_step: int | None = None) -> dict:
     の状態で測る。沈下の判定も手前の記録点で行う（spec §4）。
     """
     logdir = RESULTS / run / "logs"
-    cols = {k: [] for k in ("inc", "d_zmax", "d_zbar", "lnmob", "absv",
-                            "seed", "resid", "pos")}
+    cols = {k: [] for k in ("inc", "inc_f32", "d_zmax", "d_zbar", "lnmob",
+                            "absv", "seed", "resid", "pos")}
     n_raw = n_sub = n_within = 0
     n_mob_zero = 0
     agree_num = agree_den = 0          # zmax<=0 と p_hat==0 の一致（§5 の疑い(1)）
@@ -102,9 +102,18 @@ def load_arm(arm: str, run: str, *, max_step: int | None = None) -> dict:
         phat = L["layer1_p_hat"][keep]
 
         within = ~(fs[1:] != fs[:-1]).any(1)          # 増分 j = 記録 j -> j+1
-        inc = zbar[1:] - zbar[:-1]
+        # ★ 増分はロガーの ``layer1_dzbar`` を使う。これは float64 の zbar 同士の
+        # 差を取ってから float32 に落とした量で、``EluRecorder`` の docstring が
+        # 「zbar を float32 に落としてから引くと深い沈下域が丸めに沈む」と明示的に
+        # 警告している。dzbar[i] は記録 i-1 -> i の増分なので、増分 j に対応する
+        # のは dzbar[j+1]。dzbar[0] は NaN（前の記録が無い）。
+        dzbar = L["layer1_dzbar"][keep].astype(np.float64)
+        inc = dzbar[1:]
+        inc_f32 = zbar[1:] - zbar[:-1]      # §10-4 の作り方（S-repro と比較用）
         prev = slice(0, len(step) - 1)
         sub = zmax[prev] <= 0.0
+        if np.isnan(inc[within[:, None] & sub]).any():
+            raise ValueError(f"{arm} seed{seed}: dzbar に NaN が残っている")
 
         agree_num += int((sub == (phat[prev] == 0)).sum())
         agree_den += int(sub.size)
@@ -122,6 +131,7 @@ def load_arm(arm: str, run: str, *, max_step: int | None = None) -> dict:
             lnmob = np.log(mob_m / alpha)
         zmax_m = zmax[prev][m]
         cols["inc"].append(inc[m].astype(np.float64))
+        cols["inc_f32"].append(inc_f32[m].astype(np.float64))
         cols["d_zmax"].append(-zmax_m)
         cols["d_zbar"].append(-zbar[prev][m])
         cols["lnmob"].append(lnmob)
@@ -213,6 +223,7 @@ def bin_table(d: dict, coord: str, binset: str,
                 depth_med=float(np.median(dep)),
                 depth_mid=float(mid) if np.isfinite(mid) else float(np.median(dep)),
                 inc_med=med,
+                inc_med_f32=float(np.median(d["inc_f32"][m])),
                 inc_mean=float(inc.mean()),
                 inc_p_up=float(np.mean(inc > 0)),
                 inc_frac_zero=float(np.mean(inc == 0.0)),
@@ -315,7 +326,13 @@ def local_exponents(rows: list[dict], abscissa: str) -> list[dict]:
             hi, lo = b.get("inc_med_hi2se"), b.get("inc_med_lo2se")
             rec["obs_hi2se_hi"] = hi
             rec["obs_lo2se_hi"] = lo
-            if hi is not None and hi == hi:
+            rec["n_seed_hi"] = b.get("inc_med_seed_n")
+            # seed が 10 本そろっていない帯と、区間の幅が 0 の帯（10 seed の
+            # 中央値が全部同じ値＝多くは全部 0）は排除の根拠にしない。
+            rec["ci_usable"] = bool(b.get("inc_med_seed_n") == len(list(SEEDS))
+                                    and hi is not None and hi == hi
+                                    and lo is not None and hi > lo)
+            if hi is not None and hi == hi and rec["ci_usable"]:
                 # 両側。leaky（κ_可動度 = 0 ⇒ 予測は「深さに依らず同じ値」）では
                 # 増分が**増える**側にはみ出すので、下側 2σ も見ないと落とせない。
                 rec["excluded_by_2se"] = bool(hi < pred or lo > pred)
@@ -454,11 +471,15 @@ def run(outdir: Path) -> dict:
                             n_mob_zero=d["n_mob_zero"])
         # --- D / P1（ELU のみ。leaky では恒等式が別物）
         if fam == "elu" and d["n_rows"]:
+            # 5M 打ち切り窓は 15M 窓の**部分集合**（先頭を切るだけなので行集合が
+            # prefix になる）。合計行数を出すときに足してはいけない。
+            subset_of = (f"{arm}@15M" if wname == "5M" and max_step else None)
             r = d["resid"]
             # n_eff = 32*exp(resid): ゲートを担っている「実効パターン数」。
             # 1 なら最浅の 1 パターンだけが E_x[phi'] を決めている。
             ident_rows.append(dict(
                 key=key, arm=arm, window=wname, n=int(r.size),
+                subset_of=subset_of,
                 resid_min=float(r.min()), resid_max=float(r.max()),
                 resid_q01=float(np.quantile(r, 0.01)),
                 resid_med=float(np.median(r)),
@@ -731,9 +752,15 @@ def write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
     A("| 腕@窓 | n | min | 中央 | max | 帯外 | n_eff 中央 |")
     A("|---|---:|---:|---:|---:|---:|---:|")
     for r in ident_rows:
-        A(f"| `{r['key']}` | {r['n']:,} | {r['resid_min']:+.4f} | "
+        note = " ※" if r.get("subset_of") else ""
+        A(f"| `{r['key']}`{note} | {r['n']:,} | {r['resid_min']:+.4f} | "
           f"{r['resid_med']:+.4f} | {r['resid_max']:+.4f} | "
           f"{r['n_below']+r['n_above']} | {r['n_eff_med']:.2f} |")
+    tot = sum(r["n"] for r in ident_rows if not r.get("subset_of"))
+    A(f"\n※ 印の行は上の 15M 窓の**部分集合**（先頭を切っただけ）なので合計に足さない。"
+      f"独立な行数の合計は **{tot:,}**。"
+      "なお spec §4 D の「全記録」はタスク内に限らないが、"
+      "本表はタスク内増分の手前の記録点だけを見ているので境界増分の手前（1/10）が抜けている。\n")
     A("\n`n_eff = 32·exp(残差)` は E_x[φ′] を担っている実効パターン数"
       "（1 なら最浅の 1 パターンだけがゲートを決めている）。\n")
 
@@ -774,17 +801,19 @@ def write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
       "プールの n では誤差を作れない。**誤差は 10 seed の per-seed 中央値から作る。**"
       "「浅い帯の中央値 × exp(−κ_可動度·Δ深さ)」が §2(c) の予測で、"
       "深い帯の実測の 2σ 上限がそれを下回れば §2(c) は排除される。\n")
-    A("| 腕@窓 | 座標 | 対 | §2(c) の予測 | 実測 2σ 区間 | 排除 | 向き |")
-    A("|---|---|---|---:|---:|---|---|")
+    A("**区間が使えるのは 10 seed そろっていて幅が 0 でない帯だけ**"
+      "（seed の中央値が全部同じ＝多くは全部 0、という帯は排除の根拠にしない）。\n")
+    A("| 腕@窓 | 座標 | 対 | §2(c) の予測 | 実測 2σ 区間 | seed | 排除 | 向き |")
+    A("|---|---|---|---:|---:|---:|---|---|")
     for e in exp_rows:
         if (e["binset"] != "abs" or e["abscissa"] != "depth_mid"
-                or "inc_med_pred_hi" not in e or "excluded_by_2se" not in e):
+                or "inc_med_pred_hi" not in e or not e.get("ci_usable")):
             continue
         pred, hi, lo = e["inc_med_pred_hi"], e["obs_hi2se_hi"], e["obs_lo2se_hi"]
         side = ("予測より小" if hi < pred else
                 "予測より大" if lo > pred else "—")
         A(f"| `{e['key']}` | {e['coord']} | {e['pair']} | {pred:.2e} | "
-          f"[{lo:.2e}, {hi:.2e}] | "
+          f"[{lo:.2e}, {hi:.2e}] | {e.get('n_seed_hi')} | "
           f"{'**排除**' if e['excluded_by_2se'] else '—'} | {side} |")
     A("\n参考（分解能）: `zmax` 帯の中央値と float32 の ulp の比\n")
     A("| 腕@窓 | 座標 | 帯 | 中央値/ulp | IQR | \\|増分\\|>1e−3 の割合 |")
