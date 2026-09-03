@@ -1,0 +1,995 @@
+{
+  "experiment": "valley_off_0903",
+  "created": "2026-09-03 09:01:59 +0900",
+  "command": [
+    "/home/issan/Projects/claude/proj_004_drift/src/valley_off_0903.py"
+  ],
+  "elapsed_sec": 1180.32,
+  "arm_elapsed_sec": {
+    "G_off": 668.2262759208679,
+    "S_off": 501.8455069065094
+  },
+  "cwd": "/home/issan/Projects/claude/proj_004_drift",
+  "python": "3.12.3 (main, Jul 15 2026, 23:46:41) [GCC 13.3.0]",
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+  "torch": "2.13.0+cu130",
+  "numpy": "2.5.1",
+  "device": "cpu",
+  "git_hash": "f36542fbb6adba3fa651ab821f748ea4889e81b3",
+  "git_dirty": [
+    "?? results/_preflight_centered_freeze_0901/free_replay/",
+    "?? results/_preflight_dose_const_5m_0830/",
+    "?? results/_preflight_gate_dial_0902/",
+    "?? results/_preflight_gate_dose_0830/",
+    "?? results/_preflight_valley_off_0903/",
+    "?? results/_s0_bias_wd_pilot_0901/",
+    "?? results/_smoke_centered_freeze_0901/",
+    "?? results/_smoke_dose_const_5m_0830/",
+    "?? results/_smoke_gate_dial_0902/",
+    "?? results/_smoke_gate_dose_0830/",
+    "?? results/_smoke_ident_mu_2x2_0901/",
+    "?? results/_smoke_lin0_base_0902/",
+    "?? results/_smoke_p3_0902/",
+    "?? results/_smoke_valley_off_0903/",
+    "?? results/_spar_gate_dial_0902/",
+    "?? results/dynrepair_0826_s8replay/",
+    "?? results/mu_titration_0823_aborted_s2coverage_647316c/",
+    "?? results/mu_titration_0823_invalid_s3_39986e2/",
+    "?? results/p3_extend_0902/stdout_E_1216.log",
+    "?? results/p3_extend_0902/stdout_G_b0p3_1216.log",
+    "?? results/p3_extend_0902/stdout_LR_1216.log",
+    "?? results/p3_extend_0902/stdout_S_b0p3_1216.log",
+    "?? results/p3_extend_0902/stdout_S_b1_1216.log",
+    "?? results/valley_clamp0_0902/stdout_Gz_b1_1216.log",
+    "?? results/valley_clamp0_0902/stdout_Sz_b3_1216.log",
+    "?? results/valley_clamp_0902/stdout_Gc_b1_1216.log",
+    "?? results/valley_clamp_0902/stdout_Sc_b3_1216.log",
+    "?? results/valley_off_0903/"
+  ],
+  "config": "/home/issan/Projects/claude/proj_004_drift/configs/valley_off_0903.yaml",
+  "config_sha256": "b10cf80715a25cf611d7a30408d091b5a8cd7b146ec7078817ee88d5f2be1e5a",
+  "spec": "/home/issan/Projects/claude/proj_004_drift/specs/spec_valley_off_0903.md",
+  "spec_sha256": "373a3331f0e35c69f99375009068b74cf243888276fd031259798e2e7551fa4d",
+  "arms_run": [
+    "G_off",
+    "S_off"
+  ],
+  "oracle": false,
+  "dose": "off (natural condA)",
+  "generator_offset": 0,
+  "generator_offset_note": "explicit 0: this run deliberately shares the parent run's seed set and random stream (S-pair).",
+  "freeze_definition": {
+    "column": "layer1_mob",
+    "threshold": 1e-06,
+    "note": "this run's logger; NOT the u_fr-based freeze rate of gate_dial_0902"
+  },
+  "window_definition": {
+    "task_ends_only": true,
+    "records_per_10task_window": 10,
+    "spec_literal": 100
+  },
+  "baseline_reference": "/home/issan/Projects/claude/proj_004_drift/results/gate_dose_0830",
+  "baseline_git_hash": "e15e0815f61e86be554741cf2613aa77df429dbe",
+  "baseline_endpoint_source": "/home/issan/Projects/claude/proj_004_drift/results/gate_dose_0830/verdict.csv",
+  "baseline_unit_source": "/home/issan/Projects/claude/proj_004_drift/results/gate_dose_0830/logs",
+  "baseline_unit_source_is_gitignored": true,
+  "baseline_unit_proxy": "controls carry no mob/zmax column: submergence uses p_hat == 0 and freezing uses p_hat < 1e-6, exact on ReLU only",
+  "reference_logs": {
+    "R_off_seed0": "aada32f3b2b42e1e5e9da2b8e366d3d0172abcd41dcd5e546dbac6e10ea1886c",
+    "R_off_seed1": "9e88ccb3fec4e943757918f18b537f2f809a11e30e78faef845a5a6a757c98fb",
+    "R_off_seed2": "65b7aea9abea811a0e68e790b9ee3455b5b0eececc6dd4468646d4708d2d2cdd",
+    "R_off_seed3": "ffec74f6476cc0a25b092295fd6802e96b98935c5148dc65284713cb5745f5aa",
+    "R_off_seed4": "2960c5c1eaa622f735eb0b7207c2feafcb6d489cbf77ba2e6b173d4b28b6c46b",
+    "R_off_seed5": "8b6dc43cf3f68fdeb7b93d335308fe9771457b47a7a791e191083973322acd71",
+    "R_off_seed6": "29ed4ff84b974d4a22c83caae39acfc87c46ab07a9e522c492a5d16b171ac6f7",
+    "R_off_seed7": "460689a7fe64333dbc58ae9b9013cfdba8f87a1a92f228f9aa8872fb3894c37d",
+    "R_off_seed8": "f671cfd9f72ec952303d0ca9c739561480ca0edbf26b7afef85809ad7f168f96",
+    "R_off_seed9": "c42a2939ba575c465012cfcbf5c194249c89e0b3e379560160c33e4720376c4b",
+    "E_off_seed0": "c6ffbb4731492ff956b8d2d8927f353fb7510a7029ea02033d5f4a6e28fde24b",
+    "E_off_seed1": "7eeab2ed3663925a17275b9aa33d83d381d0dcc4fc7c915063fad564dd06a47b",
+    "E_off_seed2": "c72067451b506fbc9ede442478cd16e0d0825f4f8f664e5199d0d5e65521de76",
+    "E_off_seed3": "74f4ab741485cc9ae7281510c8735962afca00b9fd4d783cc8e9c0332a1936dc",
+    "E_off_seed4": "eb86cd267126c76c94f2cc893ac040944b925380ceab4605d0364323d9baff4f",
+    "E_off_seed5": "01f3444a7938cdbd73dd21c8e6231153d017e9866138b6f47c7f9d4b2ceb7253",
+    "E_off_seed6": "2126a44b756d4c1295a5e0c218e9e0cf27ef452f66dd6e24245e0a1be4261276",
+    "E_off_seed7": "34b37772c575157bfbb63df39fbf701b93ba59a35c40ed734c2aa125554501b9",
+    "E_off_seed8": "cd4a70a285f00209da5580afeee8d652677f94c8efe87fe62258ff74bded384f",
+    "E_off_seed9": "fcbd2777ae61df2f0d50b52752ae208a35d01c341e2631570f77fe71445eab59",
+    "LR_off_seed0": "707395115ee7e9ca07f9c93be79a93a0b50dcd517475d71c3eea6979e612ba1b",
+    "LR_off_seed1": "f1025210a2401f020b590fe729d470c000b183c12280fe6a90a204e33db76c55",
+    "LR_off_seed2": "0de3b6cf356252fb0ea67ac70906dfaee60b09d782d77c6bcb86894c66b0a06d",
+    "LR_off_seed3": "417cc882c662b85f1e807dfbf564079db530e766ba702568516d35cdbdbc3cd6",
+    "LR_off_seed4": "1c93ab149e1b09c71264cd1a7cc37554f6f1f40e938871149d2774711ecdec73",
+    "LR_off_seed5": "8d81cfb330700ae198ea3dff358c645a01b17025ba227f930b40b2e2bcc0bde9",
+    "LR_off_seed6": "2193598048c7652e64d27e0edf44e869eebda044ffedc3ce18a32c359e3a6755",
+    "LR_off_seed7": "2abb12e5c5bc4d021f8074419ae4263a4d2b7ba7bda4bd0a3722531219b6432d",
+    "LR_off_seed8": "7fa941de3e26970baa2fec8d5a02d5b888825d9b4c0b7c56c6be29848a5e4c97",
+    "LR_off_seed9": "e4404a273d01d1767ddf3440d0c51fb31c10feafb97215d9db50f4610a344296"
+  },
+  "sanity": {
+    "experiment": "valley_off_0903",
+    "created": "2026-09-03 08:42:00 +0900",
+    "S1_omp": {
+      "expected": "1",
+      "env": "1",
+      "torch_num_threads": 1,
+      "pass_": true
+    },
+    "S_dial": {
+      "pass_": true,
+      "rel_tol": 0.06,
+      "rows": [
+        {
+          "arm": "G_off",
+          "activation": "gelu",
+          "dial": 1.0,
+          "u_star_registered": 0.7519,
+          "u_fr_registered": 5.394,
+          "u_star_numeric": 0.7517915246935645,
+          "u_fr_numeric": 5.394073331333958,
+          "has_valley": true,
+          "threshold": 1e-06,
+          "u_star_agrees": true,
+          "u_fr_agrees": true
+        },
+        {
+          "arm": "S_off",
+          "activation": "silu",
+          "dial": 1.0,
+          "u_star_registered": 1.2785,
+          "u_fr_registered": 16.56,
+          "u_star_numeric": 1.278464542761074,
+          "u_fr_numeric": 16.560228637895733,
+          "has_valley": true,
+          "threshold": 1e-06,
+          "u_star_agrees": true,
+          "u_fr_agrees": true
+        },
+        {
+          "arm": "R_off",
+          "activation": "relu",
+          "dial": 0.0,
+          "u_star_registered": 0.0,
+          "u_fr_registered": 0.0,
+          "u_star_numeric": 0.0,
+          "u_fr_numeric": 0.0,
+          "has_valley": false,
+          "threshold": 1e-06,
+          "u_star_agrees": true,
+          "u_fr_agrees": true
+        },
+        {
+          "arm": "E_off",
+          "activation": "elu",
+          "dial": 1.0,
+          "u_star_registered": null,
+          "u_fr_registered": 13.8155,
+          "u_star_numeric": NaN,
+          "u_fr_numeric": 13.815510557964275,
+          "has_valley": false,
+          "threshold": 1e-06,
+          "u_star_agrees": true,
+          "u_fr_agrees": true
+        },
+        {
+          "arm": "LR_off",
+          "activation": "leaky_relu",
+          "dial": 0.1,
+          "u_star_registered": null,
+          "u_fr_registered": null,
+          "u_star_numeric": NaN,
+          "u_fr_numeric": Infinity,
+          "has_valley": false,
+          "threshold": 1e-06,
+          "u_star_agrees": true,
+          "u_fr_agrees": true
+        }
+      ],
+      "failures": [],
+      "note": "closed-form + K=1 substitution; not an experimental output"
+    },
+    "S_fd": {
+      "pass_": true,
+      "tolerance": 1e-06,
+      "absolute_tolerance": 1.7763568394002505e-15,
+      "rows": [
+        {
+          "arm": "S_b1_1216",
+          "activation": "silu",
+          "dial": 1.0,
+          "lo": -20.0,
+          "hi": 20.0,
+          "points": 41,
+          "informative_points": 41,
+          "fd_max_relerr": 1.4568868468884877e-10,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": NaN
+        },
+        {
+          "arm": "S_b1_1216",
+          "activation": "silu",
+          "dial": 1.0,
+          "lo": -20.0,
+          "hi": 20.0,
+          "points": 41,
+          "informative_points": 41,
+          "fd_max_relerr": 1.4568868468884877e-10,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": NaN
+        },
+        {
+          "arm": "G_b1_1216",
+          "activation": "gelu",
+          "dial": 1.0,
+          "lo": -20.0,
+          "hi": 20.0,
+          "points": 41,
+          "informative_points": 25,
+          "fd_max_relerr": 8.626028719462084e-09,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": -5.0
+        },
+        {
+          "arm": "G_b1_1216",
+          "activation": "gelu",
+          "dial": 1.0,
+          "lo": -20.0,
+          "hi": 20.0,
+          "points": 41,
+          "informative_points": 25,
+          "fd_max_relerr": 8.626028719462084e-09,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": -5.0
+        },
+        {
+          "arm": "S_b0p3_1216",
+          "activation": "silu",
+          "dial": 0.3,
+          "lo": -20.0,
+          "hi": 20.0,
+          "points": 41,
+          "informative_points": 41,
+          "fd_max_relerr": 1.226603040923297e-09,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": NaN
+        },
+        {
+          "arm": "S_b0p3_1216",
+          "activation": "silu",
+          "dial": 0.3,
+          "lo": -66.66666666666667,
+          "hi": 66.66666666666667,
+          "points": 41,
+          "informative_points": 41,
+          "fd_max_relerr": 2.8098641966176973e-10,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": NaN
+        },
+        {
+          "arm": "S_b3_1216",
+          "activation": "silu",
+          "dial": 3.0,
+          "lo": -20.0,
+          "hi": 20.0,
+          "points": 41,
+          "informative_points": 41,
+          "fd_max_relerr": 6.146945583574091e-10,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": NaN
+        },
+        {
+          "arm": "S_b3_1216",
+          "activation": "silu",
+          "dial": 3.0,
+          "lo": -6.666666666666667,
+          "hi": 6.666666666666667,
+          "points": 41,
+          "informative_points": 41,
+          "fd_max_relerr": 1.558849917227372e-10,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": NaN
+        },
+        {
+          "arm": "G_b0p3_1216",
+          "activation": "gelu",
+          "dial": 0.3,
+          "lo": -20.0,
+          "hi": 20.0,
+          "points": 41,
+          "informative_points": 36,
+          "fd_max_relerr": 2.6821287128441056e-07,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": -16.0
+        },
+        {
+          "arm": "G_b0p3_1216",
+          "activation": "gelu",
+          "dial": 0.3,
+          "lo": -66.66666666666667,
+          "hi": 66.66666666666667,
+          "points": 41,
+          "informative_points": 25,
+          "fd_max_relerr": 8.626025275156263e-09,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": -16.666666666666668
+        },
+        {
+          "arm": "G_b3_1216",
+          "activation": "gelu",
+          "dial": 3.0,
+          "lo": -20.0,
+          "hi": 20.0,
+          "points": 41,
+          "informative_points": 22,
+          "fd_max_relerr": 1.023765399694004e-09,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": -2.0
+        },
+        {
+          "arm": "G_b3_1216",
+          "activation": "gelu",
+          "dial": 3.0,
+          "lo": -6.666666666666667,
+          "hi": 6.666666666666667,
+          "points": 41,
+          "informative_points": 25,
+          "fd_max_relerr": 8.620986470962513e-09,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": -1.6666666666666665
+        },
+        {
+          "arm": "S_b10_1216",
+          "activation": "silu",
+          "dial": 10.0,
+          "lo": -20.0,
+          "hi": 20.0,
+          "points": 41,
+          "informative_points": 41,
+          "fd_max_relerr": 6.633313771540664e-09,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": NaN
+        },
+        {
+          "arm": "S_b10_1216",
+          "activation": "silu",
+          "dial": 10.0,
+          "lo": -2.0,
+          "hi": 2.0,
+          "points": 41,
+          "informative_points": 41,
+          "fd_max_relerr": 1.2790614525839821e-10,
+          "reference_max_relerr": 0.0,
+          "fd_uninformative_at_or_below_z": NaN
+        }
+      ],
+      "failures": [],
+      "note": "the registered Phi = 0.5*(1+erf) cancels in the deep negative tail, so the central difference stops being informative there; those probes are checked against the erfc form instead. The registered arithmetic is unchanged (spec §4.3).",
+      "borrowed_from": "configs/gate_dial_0902.yaml",
+      "borrowed_note": "activation-only check; this run's SiLU/GELU are the same closed forms at the same dial (1.0) as gate_dial_0902's S_b1_1216 / G_b1_1216"
+    },
+    "S_num": {
+      "pass_": true,
+      "range": [
+        -200.0,
+        200.0
+      ],
+      "points": 40001,
+      "rows": [
+        {
+          "arm": "S_b1_1216",
+          "activation": "silu",
+          "dial": 1.0,
+          "finite": true,
+          "float32_forward_exact_zero_depth": 88.7300033569336,
+          "float32_backward_exact_zero_depth": 88.7300033569336
+        },
+        {
+          "arm": "G_b1_1216",
+          "activation": "gelu",
+          "dial": 1.0,
+          "finite": true,
+          "float32_forward_exact_zero_depth": 5.560004234313965,
+          "float32_backward_exact_zero_depth": 14.350004196166992
+        },
+        {
+          "arm": "LR_a0p01_1216",
+          "activation": "leaky_relu",
+          "dial": 0.01,
+          "finite": true,
+          "float32_forward_exact_zero_depth": Infinity,
+          "float32_backward_exact_zero_depth": Infinity
+        },
+        {
+          "arm": "LR_a0p001_1216",
+          "activation": "leaky_relu",
+          "dial": 0.001,
+          "finite": true,
+          "float32_forward_exact_zero_depth": Infinity,
+          "float32_backward_exact_zero_depth": Infinity
+        },
+        {
+          "arm": "LR_a0p0001_1216",
+          "activation": "leaky_relu",
+          "dial": 0.0001,
+          "finite": true,
+          "float32_forward_exact_zero_depth": Infinity,
+          "float32_backward_exact_zero_depth": Infinity
+        },
+        {
+          "arm": "E_a0p1_1216",
+          "activation": "elu",
+          "dial": 0.1,
+          "finite": true,
+          "float32_forward_exact_zero_depth": Infinity,
+          "float32_backward_exact_zero_depth": 101.77999877929688
+        },
+        {
+          "arm": "E_a0p01_1216",
+          "activation": "elu",
+          "dial": 0.01,
+          "finite": true,
+          "float32_forward_exact_zero_depth": Infinity,
+          "float32_backward_exact_zero_depth": 99.36000061035156
+        },
+        {
+          "arm": "S_b0p3_1216",
+          "activation": "silu",
+          "dial": 0.3,
+          "finite": true,
+          "float32_forward_exact_zero_depth": Infinity,
+          "float32_backward_exact_zero_depth": Infinity
+        },
+        {
+          "arm": "S_b3_1216",
+          "activation": "silu",
+          "dial": 3.0,
+          "finite": true,
+          "float32_forward_exact_zero_depth": 29.58000373840332,
+          "float32_backward_exact_zero_depth": 29.58000373840332
+        },
+        {
+          "arm": "G_b0p3_1216",
+          "activation": "gelu",
+          "dial": 0.3,
+          "finite": true,
+          "float32_forward_exact_zero_depth": 18.49000358581543,
+          "float32_backward_exact_zero_depth": 47.820003509521484
+        },
+        {
+          "arm": "G_b3_1216",
+          "activation": "gelu",
+          "dial": 3.0,
+          "finite": true,
+          "float32_forward_exact_zero_depth": 1.8600044250488281,
+          "float32_backward_exact_zero_depth": 4.790004253387451
+        },
+        {
+          "arm": "LR_a0p00001_1216",
+          "activation": "leaky_relu",
+          "dial": 1e-05,
+          "finite": true,
+          "float32_forward_exact_zero_depth": Infinity,
+          "float32_backward_exact_zero_depth": Infinity
+        },
+        {
+          "arm": "E_a0p001_1216",
+          "activation": "elu",
+          "dial": 0.001,
+          "finite": true,
+          "float32_forward_exact_zero_depth": Infinity,
+          "float32_backward_exact_zero_depth": 97.06999969482422
+        },
+        {
+          "arm": "S_b10_1216",
+          "activation": "silu",
+          "dial": 10.0,
+          "finite": true,
+          "float32_forward_exact_zero_depth": 8.880003929138184,
+          "float32_backward_exact_zero_depth": 8.880003929138184
+        }
+      ],
+      "failures": [],
+      "note": "saturation depths are recorded, not judged",
+      "borrowed_from": "configs/gate_dial_0902.yaml",
+      "borrowed_note": "activation-only check; this run's SiLU/GELU are the same closed forms at the same dial (1.0) as gate_dial_0902's S_b1_1216 / G_b1_1216"
+    },
+    "S_limit": {
+      "pass_": true,
+      "rows": [
+        {
+          "activation": "silu",
+          "beta": 10000.0,
+          "forward_max_abs": 4.5397868702434396e-08,
+          "forward_tol": 2.9999999999999997e-05,
+          "grad_max_abs": 0.00040856020865708237,
+          "grad_tol": 0.001,
+          "phi_prime_at_zero": 0.5
+        },
+        {
+          "activation": "gelu",
+          "beta": 10000.0,
+          "forward_max_abs": 0.0,
+          "forward_tol": 2.9999999999999997e-05,
+          "grad_max_abs": 7.694598626706419e-22,
+          "grad_tol": 0.001,
+          "phi_prime_at_zero": 0.5
+        }
+      ],
+      "failures": [],
+      "borrowed_from": "configs/gate_dial_0902.yaml",
+      "borrowed_note": "activation-only check; this run's SiLU/GELU are the same closed forms at the same dial (1.0) as gate_dial_0902's S_b1_1216 / G_b1_1216"
+    },
+    "S_mob": {
+      "pass_": true,
+      "tolerance": 1e-06,
+      "rows": [
+        {
+          "arm": "relu",
+          "activation": "relu",
+          "dial": 0.0,
+          "steps": 30000,
+          "mob_max_abs_err_vs_p_hat": 0.0,
+          "zmean_max_rel_err": 1.023594592531471e-07,
+          "zmax_ge_zmean": true,
+          "n_na_in_formula": 0,
+          "centered": false
+        },
+        {
+          "arm": "gelu",
+          "activation": "gelu",
+          "dial": 1.0,
+          "steps": 30000,
+          "mob_max_abs_err_vs_p_hat": NaN,
+          "zmean_max_rel_err": 1.2835259200219393e-07,
+          "zmax_ge_zmean": true,
+          "n_na_in_formula": 0,
+          "centered": false
+        }
+      ],
+      "failures": [],
+      "note": "mob equals p_hat on ReLU only; on GELU it is an independent quantity (that is the point of the logger)"
+    },
+    "S_log_b": {
+      "pass_": true,
+      "steps": 30000,
+      "columns": 40,
+      "differing_columns": [],
+      "differing_env": []
+    },
+    "S_pair": {
+      "pass_": true,
+      "reference": "G_off",
+      "arms": [
+        "G_off",
+        "S_off",
+        "relu_probe"
+      ],
+      "steps": 30000,
+      "match_by": "seed_init_hash",
+      "differences": [],
+      "parent_flip_rows": [
+        {
+          "arm": "G_off",
+          "reference_arm": "R_off",
+          "seed": 0,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "G_off",
+          "reference_arm": "R_off",
+          "seed": 1,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "G_off",
+          "reference_arm": "R_off",
+          "seed": 2,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "G_off",
+          "reference_arm": "R_off",
+          "seed": 3,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "G_off",
+          "reference_arm": "R_off",
+          "seed": 4,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "G_off",
+          "reference_arm": "R_off",
+          "seed": 5,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "G_off",
+          "reference_arm": "R_off",
+          "seed": 6,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "G_off",
+          "reference_arm": "R_off",
+          "seed": 7,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "G_off",
+          "reference_arm": "R_off",
+          "seed": 8,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "G_off",
+          "reference_arm": "R_off",
+          "seed": 9,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "S_off",
+          "reference_arm": "R_off",
+          "seed": 0,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "S_off",
+          "reference_arm": "R_off",
+          "seed": 1,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "S_off",
+          "reference_arm": "R_off",
+          "seed": 2,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "S_off",
+          "reference_arm": "R_off",
+          "seed": 3,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "S_off",
+          "reference_arm": "R_off",
+          "seed": 4,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "S_off",
+          "reference_arm": "R_off",
+          "seed": 5,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "S_off",
+          "reference_arm": "R_off",
+          "seed": 6,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "S_off",
+          "reference_arm": "R_off",
+          "seed": 7,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "S_off",
+          "reference_arm": "R_off",
+          "seed": 8,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "S_off",
+          "reference_arm": "R_off",
+          "seed": 9,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "relu_probe",
+          "reference_arm": "R_off",
+          "seed": 0,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "relu_probe",
+          "reference_arm": "R_off",
+          "seed": 1,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "relu_probe",
+          "reference_arm": "R_off",
+          "seed": 2,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "relu_probe",
+          "reference_arm": "R_off",
+          "seed": 3,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "relu_probe",
+          "reference_arm": "R_off",
+          "seed": 4,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "relu_probe",
+          "reference_arm": "R_off",
+          "seed": 5,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "relu_probe",
+          "reference_arm": "R_off",
+          "seed": 6,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "relu_probe",
+          "reference_arm": "R_off",
+          "seed": 7,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "relu_probe",
+          "reference_arm": "R_off",
+          "seed": 8,
+          "flip_state_equal": true
+        },
+        {
+          "arm": "relu_probe",
+          "reference_arm": "R_off",
+          "seed": 9,
+          "flip_state_equal": true
+        }
+      ],
+      "parent_missing": [],
+      "oracle_arms": [],
+      "caveat": "init/teacher/input realization only; trajectories diverge after step 1"
+    },
+    "S_ref": {
+      "pass_": true,
+      "reference": "/home/issan/Projects/claude/proj_004_drift/results/gate_dose_0830",
+      "parent_git_hash": "e15e0815f61e86be554741cf2613aa77df429dbe",
+      "parent_on_remote": true,
+      "files_checked": 96,
+      "hash_mismatches_on_read_files": [],
+      "hash_mismatches_on_unread_files": [
+        "summary.md"
+      ],
+      "verdict_column_check": {
+        "checked": true,
+        "provenance_era_commit": "c4fe8edb140758fc735b76a5c2d3bd9a7c979283",
+        "columns_transcribed": [
+          "U_1m_seed_values",
+          "U_5m_seed_values",
+          "n_onset_1m",
+          "n_onset_5m"
+        ],
+        "arms": [
+          "R_off",
+          "E_off",
+          "LR_off"
+        ],
+        "differing": [],
+        "missing": [],
+        "unchanged": true
+      },
+      "recorded_but_missing": [],
+      "required_but_absent": [],
+      "note": "logs/*.npz are gitignored; the control side of the unit quantities is not reproducible from a fresh clone. The controls carry no mob/zmax column, so submergence uses p_hat == 0 and freezing uses p_hat < 1e-6 (exact on ReLU)."
+    },
+    "S_floor": {
+      "pass_": true,
+      "reference": "/home/issan/Projects/claude/proj_004_drift/results/gate_dose_0830/floor_calibration.csv",
+      "reference_values": [
+        1e-16
+      ],
+      "configured": 1e-16,
+      "recalibrated": false
+    },
+    "S_ci": {
+      "pass_": true,
+      "result": {
+        "point": 0.0,
+        "studentized_ci_lo": 0.0,
+        "studentized_ci_hi": 0.0,
+        "percentile_ci_lo": 0.0,
+        "percentile_ci_hi": 0.0,
+        "se0": 0.0,
+        "degenerate_se_fraction": 1.0,
+        "studentized_width_ratio": 0.0,
+        "ci_degenerate": 1,
+        "boot_ok": 0,
+        "sign_test_p": 1.0,
+        "n_seed": 10,
+        "statistic": "median"
+      }
+    },
+    "S_cap": {
+      "pass_": false,
+      "rows": [
+        {
+          "arm": "G_off",
+          "n_seeds_below": 10,
+          "required": 9,
+          "pass_": true
+        },
+        {
+          "arm": "S_off",
+          "n_seeds_below": 2,
+          "required": 9,
+          "pass_": false
+        }
+      ]
+    },
+    "S_mask": {
+      "checked": true,
+      "n_records_1m": 10,
+      "n_records_5m": 10,
+      "expected": 10,
+      "spec_literal": 100,
+      "steps_1m": [
+        910000,
+        920000,
+        930000,
+        940000,
+        950000,
+        960000,
+        970000,
+        980000,
+        990000,
+        1000000
+      ],
+      "pass_": true,
+      "resolution": "task-end records only, inherited verbatim from the parent run's U_k"
+    }
+  },
+  "analysis": {
+    "label": "PARTIAL",
+    "co_satisfied": [
+      "PARTIAL"
+    ],
+    "checks": {
+      "A1": {
+        "hit": false,
+        "n_onset_5m": 10,
+        "n_onset_1m": 1,
+        "note": "the 1M side does not imply a difference from ReLU; R_off is itself 9/10 at 1M"
+      },
+      "A2": {
+        "hit": false,
+        "window": "1M",
+        "point": -1.163128617098634,
+        "ci": [
+          -1.8458977826410474,
+          -0.8036578561972048
+        ],
+        "sign": "0:10"
+      },
+      "A3": {
+        "hit": true,
+        "submerged_frac": 1.0,
+        "depth_median": 13.468639612197876,
+        "frozen_frac": 0.9824999999999999,
+        "frozen_source": "layer1_mob",
+        "n_seeds_deeper": 10
+      },
+      "A5": {
+        "hit": true,
+        "median_rate_per_unit_record": 0.0020375924815036993,
+        "total_escapes_within_task": 10147,
+        "total_escapes_across_boundary": 10568,
+        "report_only": true
+      },
+      "A4": {
+        "hit": true,
+        "n_onset_5m": 10,
+        "depth_median": 18.359731674194336,
+        "submerged_frac": 0.9995,
+        "report_only": true
+      }
+    },
+    "capacity": [
+      {
+        "arm": "G_off",
+        "n_seeds_below": 10,
+        "required": 9,
+        "pass_": true
+      },
+      {
+        "arm": "S_off",
+        "n_seeds_below": 2,
+        "required": 9,
+        "pass_": false
+      }
+    ],
+    "capacity_undefined": [
+      "S_off"
+    ],
+    "s_mask": {
+      "checked": true,
+      "n_records_1m": 10,
+      "n_records_5m": 10,
+      "expected": 10,
+      "spec_literal": 100,
+      "steps_1m": [
+        910000,
+        920000,
+        930000,
+        940000,
+        950000,
+        960000,
+        970000,
+        980000,
+        990000,
+        1000000
+      ],
+      "pass_": true,
+      "resolution": "task-end records only, inherited verbatim from the parent run's U_k"
+    },
+    "divergences": {},
+    "elapsed": {
+      "G_off": 668.2262759208679,
+      "S_off": 501.8455069065094
+    },
+    "controls": {
+      "R_off": {
+        "n_onset_5m": 10,
+        "n_onset_1m": 9,
+        "median_log10_U_5m": -0.09296997641429522,
+        "median_log10_U_1m": -0.6748316360257625,
+        "source": "/home/issan/Projects/claude/proj_004_drift/results/gate_dose_0830/verdict.csv"
+      },
+      "E_off": {
+        "n_onset_5m": 0,
+        "n_onset_1m": 0,
+        "median_log10_U_5m": -1.9703827351945704,
+        "median_log10_U_1m": -2.164127280317682,
+        "source": "/home/issan/Projects/claude/proj_004_drift/results/gate_dose_0830/verdict.csv"
+      },
+      "LR_off": {
+        "n_onset_5m": 0,
+        "n_onset_1m": 0,
+        "median_log10_U_5m": -2.2754643944160033,
+        "median_log10_U_1m": -3.2451187595164233,
+        "source": "/home/issan/Projects/claude/proj_004_drift/results/gate_dose_0830/verdict.csv"
+      }
+    }
+  },
+  "output_sha256": {
+    "verdict.csv": "91c76b10b23ae35ff95604951e1a006dc78d672bf386702b283ee1cc0e59acf6",
+    "contrasts.csv": "d2d5dc022dc2fd5c731ca99f5b3e4b283b00a0457f08829dc7cfa684bcf28110",
+    "unit_summary.csv": "ccae3c867b174ce73fc6f484818b1f781ec68200d09ded631c743c6cde9d895a",
+    "revival.csv": "ab5f1c9aa43c2e26729076c4445516a45b103786ffb7127a67ce3047bedb5357",
+    "depth_hist.csv": "be9217968247308854910aa4c6783f3d53d4d0d2ab10e31fef98d5eed71f540d",
+    "summary.md": "1e4f463ed79e3eb5fcaa767dfb7bb29bea90eae8f394cedf453f546f3648ab49",
+    "config_used.yaml": "f404e542ad51260aa81bc388f315fa6e2dd532ce90cbebd741c9fd728429e474",
+    "logs/G_off_seed0.npz": "83a2d7c7bb164f8162211df3f24df21919ca678e7b7256a64e8de13bbceb4f60",
+    "logs/G_off_seed1.npz": "35bec33d680a351551da7ef2729b67fe7838593d760a4e2165b8fde4a9141ea4",
+    "logs/G_off_seed2.npz": "e73b499a31977309be0a3e84c514fe74963288211fe9aa7b37056614d2a30e34",
+    "logs/G_off_seed3.npz": "65f974ab4b030d0ec7ccc989c06fda71daf8b19e27a1a05248ed81ad04a6bcb7",
+    "logs/G_off_seed4.npz": "27a833e058c2b66a0de33c809d42b1e716f28cc37e3957c794fcbf8a0c1aaccb",
+    "logs/G_off_seed5.npz": "d4097ce3c2b4029fc87fec690d6fb66e9eae8bb52e1fc25fcb12db9840c17ba0",
+    "logs/G_off_seed6.npz": "71abfd0395fe6c8f237d3145746220949f1c0da3d27d048646a1c5b889bbbcc6",
+    "logs/G_off_seed7.npz": "e13fdeb95f024c1fc06959659a7f1d2a579c0bef7a2bde55a9c01b4335853f17",
+    "logs/G_off_seed8.npz": "a957da7b0613e4431e954b24a72bcba6420e56a5c9fcf51dbb8e9a632695cf45",
+    "logs/G_off_seed9.npz": "2af6c274bfcda534ee3fb638f7145365b5b6174a5e3a0cbd3a8bf3aeca651838",
+    "logs/S_off_seed0.npz": "2ae8f2523fcaa5ab97d1fd6ec4623ca4d7d6b6e461703ca5b5164bada53c06ba",
+    "logs/S_off_seed1.npz": "1dd719d0ca61320e000c556f38dfd8f235d79607b92a2b0c14fcc82fbb88a4a8",
+    "logs/S_off_seed2.npz": "936b4539b2a0dda87a7250d590bc20d873c71ac4531c12aecadc2f1ca73d1aa0",
+    "logs/S_off_seed3.npz": "722448448089d7e1fd62253c3f9cc2907668ac16b36199bb070fa3b9ac4dd3e8",
+    "logs/S_off_seed4.npz": "60cc9a4883d2eea7a363b8477591fa81f831fbe8e6ab2b7f8240e0f6de15aac3",
+    "logs/S_off_seed5.npz": "f2df69ba4f829a716bb62747a1cda5b0c7fc09799fe1701bd89b3eb0903537b0",
+    "logs/S_off_seed6.npz": "7bfbced87c2b6c87445f022be792e47a59d93143f8b4ed9a7ba97548742f46c0",
+    "logs/S_off_seed7.npz": "ba417b44028d45c73190b57d491850c1af824a07a6dd2b32316f984ed736bbaa",
+    "logs/S_off_seed8.npz": "69b0c405a05954055e4b93e63f5eeb744ab1073edad65da71cd5c5f2dc1e9607",
+    "logs/S_off_seed9.npz": "1d38ac039f6a1fc43b674538c4d4a102e1a7245d19e1c8fe715b600198efd7b6"
+  }
+}

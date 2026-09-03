@@ -1,0 +1,277 @@
+spec: specs/spec_valley_off_0903.md
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  generator_offset: 0
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+activation:
+  relu:
+    name: relu
+  elu:
+    name: elu
+    forward: where(z>0, z, alpha*expm1(z))
+    derivative_form: alpha_exp
+    dial_symbol: alpha
+  leaky:
+    name: leaky_relu
+    forward: where(z>0, z, a*z)
+    derivative: where(z>0, 1, a)
+    dial_symbol: a
+  silu:
+    name: silu
+    forward: z*sigmoid(beta*z)
+    derivative: sigmoid(b)*(1 + b*(1-sigmoid(b))) with b = beta*z
+    stable_form: torch.sigmoid
+    dial_symbol: beta
+    has_valley: true
+  gelu:
+    name: gelu
+    forward: z*Phi(beta*z)
+    derivative: Phi(b) + b*phi(b) with b = beta*z
+    exact_erf: true
+    dial_symbol: beta
+    has_valley: true
+  autograd: false
+  consumes_rng: false
+  is_true_gradient: true
+intervention:
+  name: none_natural_condA
+  oracle: false
+  consumes_rng: false
+  center_alpha_compat: 0.01
+  is_ema_centering: false
+arms:
+- name: G_off
+  family: gelu
+  activation: gelu
+  dial: 1.0
+  u_star: 0.7519
+  u_fr: 5.394
+  hidden:
+  - 100
+  centered_layers: []
+  target_mu_norm: null
+  target_dose: null
+- name: S_off
+  family: silu
+  activation: silu
+  dial: 1.0
+  u_star: 1.2785
+  u_fr: 16.56
+  hidden:
+  - 100
+  centered_layers: []
+  target_mu_norm: null
+  target_dose: null
+staging:
+  arms:
+  - G_off
+  - S_off
+  primary_arm: G_off
+  secondary_arm: S_off
+  arm_process_parallel_allowed: false
+  gpu: false
+controls:
+  reference_run: results/gate_dose_0830
+  same_run_as_new_arms: false
+  caveat: controls_are_committed_values_from_a_separate_run
+  arms:
+    R_off:
+      family: relu
+      activation: relu
+      dial: 0.0
+      u_star: 0.0
+      u_fr: 0.0
+      expected_onset_5m: 10
+      expected_onset_1m: 9
+    E_off:
+      family: elu
+      activation: elu
+      dial: 1.0
+      u_star: null
+      u_fr: 13.8155
+      expected_onset_5m: 0
+      expected_onset_1m: 0
+    LR_off:
+      family: leaky
+      activation: leaky_relu
+      dial: 0.1
+      u_star: null
+      u_fr: null
+      expected_onset_5m: 0
+      expected_onset_1m: 0
+  baseline: R_off
+  endpoint_source: verdict.csv
+  endpoint_columns:
+  - U_1m_seed_values
+  - U_5m_seed_values
+  - n_onset_1m
+  - n_onset_5m
+  unit_source: results/gate_dose_0830/logs/{arm}_seed{seed}.npz
+  unit_arrays:
+  - layer1_p_hat
+  - layer1_zbar
+  - layer1_submerged
+  - layer1_w_norm
+  - flip_state
+  unit_proxy_on_controls: true
+  unit_proxy_exact_for:
+  - R_off
+  verify_reference_hashes: true
+phase1:
+  task_period: 10000
+  early_tasks:
+  - 2
+  - 11
+  late_tasks_5m:
+  - 491
+  - 500
+  window_1m_tasks:
+  - 91
+  - 100
+  window_points_are_task_ends_only: true
+  window_records_per_10task_window: 10
+  spec_literal_records_per_window: 100
+  onset_threshold: 0.05
+  unfit_floor: 1.0e-16
+  recalibrate_floor: false
+  bootstrap_B: 10000
+  bootstrap_seed: 20260912
+  ci_method: percentile_primary_studentized_secondary
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+valley_off:
+  design:
+    freeze_phi_prime_threshold: 1.0e-06
+    freeze_definition: abs_layer1_mob_below_threshold
+    freeze_source_column: layer1_mob
+    valley_definition: first_negative_side_zero_of_phi_prime
+    u_fr_spec_rel_tol: 0.06
+    displacement_bound_constant_K: 1.0
+    theory_absent_for: arrival_side
+  predictions:
+    primary_arm: G_off
+    A1:
+      onset_5m_min: 10
+      onset_1m_min: 8
+    A2:
+      window: 1M
+      min_delta_dex: 0.2
+      min_sign_positive: 8
+    A3:
+      submerged_frac_min: 0.99
+      depth_median_min: 8.0
+      frozen_frac_min: 0.9
+      deeper_than_baseline_paired_min: 10
+    A4:
+      arm: S_off
+      onset_5m_min: 5
+      depth_median_min: 5.0
+      submerged_frac_min: 0.95
+    A5:
+      arm: G_off
+      valley_escape_within_task: true
+      rate_per_record_min: 0.0001
+  labels:
+    needs_offset_onset_max: 2
+    slow_onset_range:
+    - 3
+    - 7
+    order:
+    - FLIGHT_NEEDS_OFFSET
+    - WORSE_UNTESTABLE_AT_CEILING
+    - FLIGHT_WITHOUT_ORACLE
+    - FLIGHT_SLOW
+    - PARTIAL
+    emit_co_satisfied: true
+  report_only:
+    per_boundary_submerge_and_revival_rate: true
+    revival_primary_condition: same_task_and_flip_state_unchanged
+    revival_also_report: across_task_boundary
+    depth_deciles_of_submerged_zbar: true
+    m_minus: true
+    emit_abs_v_median: true
+    dose_of_natural_condA: true
+    in_verdict: false
+  numeric_divergence:
+    status: NUMERIC_DIVERGENCE
+    detection: nonfinite_training_state_at_probe
+    probe_every: 1000
+    action: mark_arm_failed_and_continue
+    rescue: none
+    inconclusive_if_arm_missing:
+    - G_off
+    inconclusive_label: INCONCLUSIVE_DIVERGENCE
+sanity:
+  s_pair_reference: results/gate_dose_0830
+  s_pair_reference_arm: R_off
+  s_pair_steps: 30000
+  s_pair_match_by: seed_init_hash
+  activation_checks_via: configs/gate_dial_0902.yaml
+  s_limit_beta: 10000.0
+  s_limit_forward_tol_over_beta: 0.3
+  s_limit_grad_tol: 0.001
+  s_limit_grid_abs_z_min_over_beta: 10.0
+  s_fd_tol: 1.0e-06
+  s_fd_points: 41
+  s_num_range:
+  - -200.0
+  - 200.0
+  s_num_points: 40001
+  s_mob_steps: 30000
+  s_mob_tol: 1.0e-06
+  s_mob_relu_identity: mob_equals_p_hat
+  s_mob_zmean_identity: zmean_equals_M_plus_B_times_denom
+  s_log_b_steps: 30000
+  s_cap_window: early_tasks
+  s_cap_threshold: 0.05
+  s_cap_min_seeds: 9
+  s_cap_label: CAPACITY_UNDEFINED
+  s_mask_check: true
+  s_dial_check: true
+  s_ref_hash_check: true
+  s_ref_remote_check: true
+  omp_num_threads: 1
+  s6_floor_calibration: false
+output:
+  dir: results/valley_off_0903
+  verdict_csv: true
+  contrasts_csv: true
+  unit_summary_csv: true
+  revival_csv: true
+  depth_hist_csv: true
