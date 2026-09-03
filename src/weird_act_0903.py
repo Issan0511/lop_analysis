@@ -95,7 +95,8 @@ def _selected_arms(cfg: dict, stage: str) -> list[str]:
 # ---------------------------------------------------------------------------
 def validate_config(cfg: dict, *, stage: str) -> None:
     """凍結した設計からのずれをすべて ValueError にする。"""
-    if stage not in {"preflight", "smoke", "run", "analyze", "finalize"}:
+    if stage not in {"preflight", "smoke", "run", "analyze", "finalize",
+                     "diverge-probe"}:
         raise ValueError(f"unknown stage {stage!r}")
     C, A, I, P, G, S = (cfg["common"], cfg["condA"], cfg["intervention"],
                         cfg["phase1"], _P(cfg), cfg["sanity"])
@@ -953,7 +954,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=EXPERIMENT)
     ap.add_argument("--config", default=str(CONFIG))
     ap.add_argument("--stage", default="preflight",
-                    choices=["preflight", "smoke", "run", "finalize", "analyze"])
+                    choices=["preflight", "smoke", "run", "finalize", "analyze",
+                             "diverge-probe"])
     ap.add_argument("--substage", default="1", help="1 / 2 / all")
     ap.add_argument("--arm", default=None, help="run exactly one arm (process parallel)")
     ap.add_argument("--outdir", default=None)
@@ -986,6 +988,9 @@ def main() -> None:
                         encoding="utf-8")
         print(json.dumps(done, ensure_ascii=False), flush=True)
         return
+    if args.stage == "diverge-probe":
+        divergence_probe(cfg, args.arm or "CB_a1_b5_1216", outdir)
+        return
     if args.stage == "analyze":
         got = analyze(cfg, outdir, args.substage)
         print(json.dumps(got["verdicts"], ensure_ascii=False, indent=1, default=str),
@@ -1003,6 +1008,63 @@ def main() -> None:
         return
     run(cfg_path, cfg, device, outdir, args.substage)
 
+
+
+def divergence_probe(cfg: dict, arm: str, outdir: Path) -> dict:
+    """§5.6 が要求する「直前の最深 z̄」を回収する診断走（spec §10 追補 10）。
+
+    宿主は発散時に部分ログを破棄する（``partial_logs_excluded``）ので、登録された
+    報告項目のうち「直前の最深 z̄」だけが残らない。**同じ config・同じ腕・登録どおりの
+    seed 集合（R=10）**で回し直し、記録器が持っている ``zmean`` を発散直前の probe まで
+    読む。seed を 1 本に絞ると乱数の引き方が変わって別の軌跡になるので、絞らない。
+    **新しい実験ではなく、登録済みの報告項目の回収である**（判定には一切使わない）。
+    """
+    c = copy.deepcopy(cfg)
+    seeds = [int(v) for v in c["common"]["seeds"]]
+    total = int(c["common"]["total_steps"])
+    every = int(c["common"]["lop_every"])
+    st = setup_arm_dial(c, _arm(c, arm), "cpu")
+    probes = list(range(0, total + 1, every))
+    rec = WeirdRecorder(probes, st)
+    scratch = outdir / "_divergence_probe"
+    scratch.mkdir(parents=True, exist_ok=True)
+    event = None
+    try:
+        train_arm_gate(st, rec, probes, total, scratch, [])
+    except NumericDivergenceError as exc:
+        event = dict(exc.event)
+    if event is None:
+        return dict(arm=arm, status="NO_DIVERGENCE_ON_REPLAY",
+                    note="the replay did not diverge; do not use this arm's numbers")
+    detected = int(event["detected_step"])
+    last = detected // every - 1          # 発散を検出した probe の 1 つ前
+    zmean = rec.unit["zmean"][:last + 1]  # [probe, seed, unit]
+    zmin = rec.unit["zmin"][:last + 1]
+    finite = np.isfinite(zmean).all(axis=(1, 2))
+    last_finite = int(np.flatnonzero(finite)[-1]) if finite.any() else -1
+    rows = []
+    for j, seed in enumerate(seeds):
+        block = zmean[:last_finite + 1, j, :]
+        rows.append(dict(
+            seed=seed,
+            deepest_zbar_at_last_probe=float(block[-1].min()),
+            deepest_zbar_over_run=float(block.min()),
+            step_of_deepest=int(probes[int(np.unravel_index(block.argmin(),
+                                                            block.shape)[0])]),
+            deepest_zmin_at_last_probe=float(zmin[last_finite, j, :].min()),
+            diverged=bool(seed in [int(v) for v in event.get("bad_seeds", [])])))
+    out = dict(arm=arm, status="RECOVERED", detected_step=detected,
+               last_finite_probe_step=int(probes[last_finite]),
+               probe_every=every, bad_seeds=event.get("bad_seeds"),
+               nonfinite_tensors=event.get("nonfinite_tensors"),
+               per_seed=rows,
+               note="replay of the registered arm with the registered seed set; "
+                    "used only to fill the §5.6 reporting field, never in a verdict")
+    path = outdir / "arm_status" / f"{arm}_divergence_probe.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"[divergence-probe] {arm}: recovered -> {path}", flush=True)
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -1120,7 +1182,8 @@ def _contrast(cfg: dict, a: np.ndarray, b: np.ndarray, draws: np.ndarray,
                 seed_values=[float(v) for v in values])
 
 
-def _unit_tail(cfg: dict, outdir: Path, arm_block: dict) -> dict:
+def _unit_tail(cfg: dict, outdir: Path, arm_block: dict,
+               window: str = "late_tasks_5m") -> dict:
     """末尾窓のユニット別量（沈下・span・深さ・位置指標・凍結・|v|）。
 
     集計順は宿主の登録どおり: 沈下ユニット記録 → seed 内中央値 → seed 中央値。
@@ -1139,8 +1202,7 @@ def _unit_tail(cfg: dict, outdir: Path, arm_block: dict) -> dict:
         path = outdir / "logs" / f"{arm}_seed{seed}.npz"
         with np.load(path, allow_pickle=False) as z:
             step = z["step"]
-            idx = _window_indices(step, int(P["task_period"]),
-                                  list(P["late_tasks_5m"]))
+            idx = _window_indices(step, int(P["task_period"]), list(P[window]))
             zmax = z["layer1_zmax"][idx].astype(np.float64)
             zmin = z["layer1_zmin"][idx].astype(np.float64)
             zmean = z["layer1_zmean"][idx].astype(np.float64)
@@ -1170,7 +1232,7 @@ def _unit_tail(cfg: dict, outdir: Path, arm_block: dict) -> dict:
         if sub.any():
             deciles.append(np.quantile(depth[sub], np.arange(1, 10) / 10.0))
     out = dict(arm=arm, activation=act, dial=alpha, second_param=d,
-               per_seed=per_seed,
+               window=window, per_seed=per_seed,
                aggregation_order=["submerged_unit_records_within_seed",
                                   "median_within_seed", "median_over_seeds"])
     for key in ("submerged_frac", "span_median_submerged", "span_median_all",
@@ -1304,13 +1366,31 @@ def _v2_ladder(cfg: dict, arms: dict, controls: dict, draws: np.ndarray,
     else:
         label = "PARTIAL"
     d_star = None
-    if label == "BAND_WIDTH_THRESHOLD":
-        for i in order:
-            if onsets[i] >= present_min:
-                d_star = ds[i]
-                break
+    for i in order:
+        if onsets[i] >= present_min:
+            d_star = ds[i]
+            break
+    # 登録された量的照合（REPORT・ラベルを作らない）: d* と 1M 窓の沈下ユニットの
+    # span の seed 中央値。LR_1216 には zmin 列が無いので RB_d0p5 を代理にする。
+    report_rows = []
+    for i in order:
+        name = new_arms[i]
+        e = arms[name]
+        report_rows.append(dict(
+            arm=name, d=ds[i],
+            n_onset_1m=int(e["1M"]["onset"]["n_onset"]),
+            n_onset_5m=int(e["5M"]["onset"]["n_onset"]),
+            median_log10_U_5m=float(e["5M"]["onset"]["median_log10_u"]),
+            span_median_1m=e["unit_1m"]["median_span_median_submerged"],
+            span_median_5m=e["unit"]["median_span_median_submerged"],
+            in_band_frac_1m=e["unit_1m"].get("median_in_band_frac"),
+            in_band_frac_5m=e["unit"].get("median_in_band_frac"),
+            submerged_frac_5m=e["unit"]["median_submerged_frac"]))
     return dict(label=label, status="EVALUATED", d_star=d_star,
                 ladder=ladder, onsets_by_d=list(zip([ds[i] for i in order], ordered)),
+                non_decreasing=bool(non_decreasing), drop_after_peak=int(drop),
+                report_rows=report_rows,
+                span_proxy_for_LR_1216=str(G.get("span_proxy_for_LR_1216")),
                 adjacent_contrasts=adjacent)
 
 
@@ -1359,9 +1439,22 @@ def analyze(cfg: dict, outdir: Path, stage: str) -> dict:
     blocks = {a["name"]: a for a in cfg["arms"]}
     data: dict[str, dict] = {}
     onset_rows, km_rows, position_rows, depth_rows = [], [], [], []
+    diverged: dict[str, dict] = {}
     for arm in arms:
         if not (outdir / "logs" / f"{arm}_seed0.npz").exists():
-            print(f"[analyze] {arm}: logs missing, skipped", flush=True)
+            event_path = _arm_status_path(outdir, arm)
+            if event_path.exists():
+                event = json.loads(event_path.read_text(encoding="utf-8"))
+                probe_path = (outdir / "arm_status"
+                              / f"{arm}_divergence_probe.json")
+                event["probe"] = (json.loads(probe_path.read_text(encoding="utf-8"))
+                                  if probe_path.exists() else None)
+                diverged[arm] = event
+                print(f"[analyze] {arm}: {NUMERIC_DIVERGENCE} at step "
+                      f"{event['detected_step']:,}, dropped (spec §6 数値発散)",
+                      flush=True)
+            else:
+                print(f"[analyze] {arm}: logs missing, skipped", flush=True)
             continue
         w = _load_new_arm(cfg, outdir, arm)
         entry = {}
@@ -1372,6 +1465,8 @@ def analyze(cfg: dict, outdir: Path, stage: str) -> dict:
         entry["s_cap"] = _s_cap(cfg, {k: dict(u=entry[k]["u"]) for k in
                                       ("early", "1M", "5M")})
         entry["unit"] = _unit_tail(cfg, outdir, blocks[arm])
+        entry["unit_1m"] = _unit_tail(cfg, outdir, blocks[arm],
+                                      window="window_1m_tasks")
         ot = _onset_times(cfg, w["data"]["step"], w["data"]["unfit"])
         entry["onset_times"] = ot
         for seed, row in zip([int(v) for v in cfg["common"]["seeds"]], ot["rows"]):
@@ -1465,8 +1560,11 @@ def analyze(cfg: dict, outdir: Path, stage: str) -> dict:
     v3_rows = _v3_followup(cfg, outdir)
     verdicts["V3_followup"] = v3_rows
 
+    verdicts["divergences"] = {k: dict(detected_step=v["detected_step"],
+                                       bad_seeds=v.get("bad_seeds"))
+                               for k, v in diverged.items()}
     result = dict(experiment=EXPERIMENT, stage=stage, arms=list(data),
-                  verdicts=verdicts, controls={k: dict(
+                  diverged=list(diverged), verdicts=verdicts, controls={k: dict(
                       source=v["source"], source_run=v["source_run"],
                       window=v["window"], n_onset_5m=v["n_onset_5m"],
                       median_log10_u_5m=float(np.median(v["log_u_5m"])),
@@ -1474,12 +1572,15 @@ def analyze(cfg: dict, outdir: Path, stage: str) -> dict:
     if v3_rows:
         write_csv(outdir / "v3_watershed_followup.csv", v3_rows)
     _write_outputs(cfg, outdir, stage, data, controls, contrasts, verdicts,
-                   onset_rows, km_rows, position_rows, depth_rows, result)
+                   onset_rows, km_rows, position_rows, depth_rows, result,
+                   diverged)
     return result
 
 
 def _write_outputs(cfg, outdir, stage, data, controls, contrasts, verdicts,
-                   onset_rows, km_rows, position_rows, depth_rows, result) -> None:
+                   onset_rows, km_rows, position_rows, depth_rows, result,
+                   diverged=None) -> None:
+    diverged = diverged or {}
     blocks = {a["name"]: a for a in cfg["arms"]}
     G = _P(cfg)
     v_rows = []
@@ -1518,6 +1619,23 @@ def _write_outputs(cfg, outdir, stage, data, controls, contrasts, verdicts,
                             if arm in [str(a) for a in G["v2"]["ladder_new_arms"]]
                             else "")
         v_rows.append(row)
+    for arm, event in diverged.items():
+        block = blocks[arm]
+        v_rows.append(dict(
+            arm=arm, stage=int(block["stage"]), family=str(block["family"]),
+            activation=str(block["activation"]), dial=float(block["dial"]),
+            second_param=block.get("second_param"),
+            target_dose=float(block["target_dose"]), is_control=False,
+            status=NUMERIC_DIVERGENCE, capacity_status="",
+            n_onset_1m="", cp95_1m_lo="", cp95_1m_hi="", U_1m_seed_values="",
+            median_log10_U_1m="", n_onset_5m="", cp95_5m_lo="", cp95_5m_hi="",
+            U_5m_seed_values="", median_log10_U_5m="",
+            median_submerged_frac_5m="", median_span_5m="", median_depth_5m="",
+            V1="", V2="", V3="", V3_prime="", V4="",
+            NUMERIC_DIVERGENCE=json.dumps(dict(
+                detected_step=event["detected_step"],
+                bad_seeds=event.get("bad_seeds")), ensure_ascii=False),
+            V2_status=""))
     for name, c in controls.items():
         v_rows.append(dict(
             arm=name, stage="", family="", activation="", dial="",
@@ -1570,13 +1688,27 @@ def _write_outputs(cfg, outdir, stage, data, controls, contrasts, verdicts,
         write_csv(outdir / "layer_stats.csv", layer_rows)
     v2 = verdicts.get("V2") or {}
     if v2.get("status") == "EVALUATED":
-        write_csv(outdir / "ladder_table.csv",
-                  [dict(d=d, n_onset_5m=n) for d, n in v2["onsets_by_d"]])
-    _write_summary(cfg, outdir, stage, data, controls, contrasts, verdicts, result)
+        write_csv(outdir / "ladder_table.csv", v2["report_rows"])
+        if v2.get("adjacent_contrasts"):
+            adj = []
+            for c in v2["adjacent_contrasts"]:
+                ci = c["ci"]
+                adj.append(dict(
+                    contrast=c["label"], point=c["point"],
+                    percentile_lo=ci.get("percentile_ci_lo"),
+                    percentile_hi=ci.get("percentile_ci_hi"),
+                    equivalence=c["equivalence"], margin=c["margin"],
+                    sign_pos=c["sign_test"]["n_positive"],
+                    sign_neg=c["sign_test"]["n_negative"],
+                    seed_values=json.dumps(c["seed_values"])))
+            write_csv(outdir / "ladder_adjacent_contrasts.csv", adj)
+    _write_summary(cfg, outdir, stage, data, controls, contrasts, verdicts,
+                   result, diverged)
 
 
 def _write_summary(cfg, outdir, stage, data, controls, contrasts, verdicts,
-                   result) -> None:
+                   result, diverged=None) -> None:
+    diverged = diverged or {}
     G = _P(cfg)
     L = []
     L.append(f"# {EXPERIMENT} — 謎関数ダイヤル（段 {stage}）\n")
@@ -1622,7 +1754,7 @@ def _write_summary(cfg, outdir, stage, data, controls, contrasts, verdicts,
     L.append("\n**V1〜V4 は互いに独立の判定で、1 つの verdict に畳まない。**"
              "「3 列のどれが病理を担う」は 4 判定から人が読む裁定であって"
              "本走のラベルではない（spec §9）。\n")
-    if str(stage) != "2":
+    if (verdicts.get("V2") or {}).get("status") != "EVALUATED":
         L.append("**V2 は段 2 の完了後にのみ付く**（2026-09-03 の段裁定・spec §6 V2）。"
                  "段 1 の `RB_d1_1216` は REPORT として置くだけで、"
                  "その値を見て段 2 の母数を変えない。\n")
@@ -1657,6 +1789,43 @@ def _write_summary(cfg, outdir, stage, data, controls, contrasts, verdicts,
     L.append("\n**`frozen` は `LRv`・`CB` では凍結の指標にならない**"
              "（支持が折れ目・井戸を跨ぐと $\\varphi'$ の符号が混じり打ち消す）。"
              "引くなら `frozen_abs` と出所・窓を添える（spec §9）。\n")
+    v2 = verdicts.get("V2") or {}
+    if v2.get("status") == "EVALUATED":
+        L.append("## V2 の梯子（`RB` 4 腕・登録された量的照合も併記）\n")
+        L.append("| 腕 | d | n_onset 1M | n_onset 5M | median log10 U (5M) | "
+                 "span 中央値 (1M) | in_band 率 (1M) | in_band 率 (5M) |")
+        L.append("| --- | --- | --- | --- | --- | --- | --- | --- |")
+        for r in v2["report_rows"]:
+            L.append(f"| `{r['arm']}` | {r['d']:g} | {r['n_onset_1m']}/10 | "
+                     f"{r['n_onset_5m']}/10 | {r['median_log10_U_5m']:.4f} | "
+                     f"{r['span_median_1m']:.3f} | {r['in_band_frac_1m']:.4f} | "
+                     f"{r['in_band_frac_5m']:.4f} |")
+        L.append(f"\n判定は **{v2['label']}**。梯子は $d$ について**単調ではない**"
+                 f"（非減少 = {v2['non_decreasing']}・ピーク後の落ち幅 "
+                 f"{v2['drop_after_peak']}）。`span` の代理は "
+                 f"`{v2['span_proxy_for_LR_1216']}`（`LR_1216` に `zmin` 列が無いため）。\n")
+        d_star, spans = v2.get("d_star"), [r["span_median_1m"] for r in v2["report_rows"]]
+        span_med = float(np.median([x for x in spans if x is not None]))
+        L.append(f"**登録された予言の照合（§6 V2 の REPORT）**: $d^\\ast$（$n_{{\\rm onset}}\\ge5$ "
+                 f"になる最小の $d$）= **{d_star}**、1M 窓の `span` 中央値 = **{span_med:.3f}**。"
+                 f"予言「$d^\\ast$ は `span` の中央値の隣の目盛りに来る」は**外れている**"
+                 f"（目盛りは 0.5 / 1 / 2 / 4）。")
+        L.append("spec §7.4 (iv) の字義: 「$d^\\ast$ が `span` から 2 目盛り以上離れていれば、"
+                 "**幅の条件そのものが誤りで実装ではない**」。ここは 2 目盛り以上離れている。\n")
+        L.append("**★ さらに逆向き**: 支持が死帯に丸ごと収まる `in_band` 率は "
+                 "$d$=4 の 1M 窓で **0.27** と唯一まとまって立つのに、その $d$=4 が"
+                 "**発症 0/10 で梯子の中で最も軽い**。"
+                 "「吸収域が支持幅を越えると凍る」という幾何の条件は、"
+                 "この 4 点では**支持されない**。\n")
+        L.append("| 隣接対比（硬い側 − 軟らかい側・5M） | 点推定 | percentile CI | 等価判定 | 符号 |")
+        L.append("| --- | --- | --- | --- | --- |")
+        for c in v2["adjacent_contrasts"]:
+            ci = c["ci"]
+            L.append(f"| {c['label']} | {c['point']:+.4f} | "
+                     f"[{ci['percentile_ci_lo']:+.3f}, {ci['percentile_ci_hi']:+.3f}] | "
+                     f"{c['equivalence']} | "
+                     f"{c['sign_test']['n_negative']}:{c['sign_test']['n_positive']} |")
+        L.append("")
     rows = verdicts.get("V3_followup") or []
     if rows:
         L.append("## V3 の登録済み追走（spec §7.4 (v)）——分水嶺を実際に越えたか\n")
@@ -1685,6 +1854,40 @@ def _write_summary(cfg, outdir, stage, data, controls, contrasts, verdicts,
         L.append(f"- `{name}`: {c['source_run']} / `{Path(c['source']).name}`"
                  f"（{c['window']}"
                  f"{'・**水準のみ**' if c['level_only'] else ''}）")
+    if diverged:
+        L.append("\n## 数値発散（spec §6・gate_dose §5.6 の逐語継承）\n")
+        for arm, event in diverged.items():
+            bad = event.get("bad_seeds") or []
+            L.append(f"- **`{arm}` は `{NUMERIC_DIVERGENCE}`**。"
+                     f"最初の発散 step **{int(event['detected_step']):,}**"
+                     f"（タスク {event.get('detected_task')}）・"
+                     f"発散 seed **{len(bad)}/10**（seed {bad}）。"
+                     f"登録どおり**当該腕だけを落とし**、部分ログは破棄した。")
+            probe = event.get("probe")
+            if probe:
+                rows = {int(r["seed"]): r for r in probe["per_seed"]}
+                bad_row = rows.get(bad[0]) if bad else None
+                deepest = min(r["deepest_zbar_at_last_probe"]
+                              for r in probe["per_seed"])
+                L.append(f"  - **直前の最深 z̄**（登録された報告項目・"
+                         f"最後に有限だった probe = step "
+                         f"{int(probe['last_finite_probe_step']):,}）: "
+                         f"全 seed の最深は **{deepest:.4f}**、"
+                         + (f"発散した seed {bad[0]} は **{bad_row['deepest_zbar_at_last_probe']:.4f}**"
+                            f"（走行中の最深は {bad_row['deepest_zbar_over_run']:.4f} @ step "
+                            f"{int(bad_row['step_of_deepest']):,}）。" if bad_row else ""))
+                if bad_row and bad_row["deepest_zbar_at_last_probe"] > deepest:
+                    L.append("  - **★ 発散した seed は、発散直前にいちばん深かった seed ではない。**"
+                             " 深さで発散を説明できない（包絡 $e^{-z/\\beta}$ が"
+                             " float32 で溢れる深さは 444 で、どの seed もその桁に居ない）。"
+                             " §7.3 の理由づけ「深さ 15 に達する seed があれば発散する」は"
+                             "**外れている**——予測（発散 0–2 seed）が当たったのは理由が違う。")
+                L.append(f"  - 回収は同一 config・同一腕・**登録どおりの seed 集合（R=10）**"
+                         f"での再走による（seed を 1 本に絞ると乱数の引き方が変わり別軌跡になる）。"
+                         f"再走でも発散 step は同一で決定的。**判定には一切使っていない。**")
+            L.append(f"  - `{arm}` は**錨であって判定腕ではない**ので、"
+                     f"V4 は `{G['v4']['arm']}` で判定する（spec §6 数値発散）。"
+                     f"失われるのは錨 1 本（包絡の効果 `{arm} − {G['v4']['arm']}`）だけ。\n")
     v4_arm = str(G["v4"]["arm"])
     if v4_arm in data and verdicts.get("V4"):
         e = data[v4_arm]
