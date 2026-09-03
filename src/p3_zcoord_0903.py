@@ -520,14 +520,24 @@ def judge(bins_rows, exp_rows, ident_rows, spear_rows, per_arm) -> dict:
             if min_n and (e["n_lo"] < min_n or e["n_hi"] < min_n):
                 continue
             ok = bool(e.get("same_sign") and e.get("within_tol"))
+            ki = e.get("kappa_inc")
             got.append(dict(key=e["key"], pair=e["pair"],
-                            kappa_inc=e.get("kappa_inc"),
+                            kappa_inc=ki,
                             kappa_mob=e.get("kappa_mob"),
                             diff=e.get("diff"), n_lo=e["n_lo"], n_hi=e["n_hi"],
+                            # 「指数が測れたうえで合わない」のか「片方の帯の
+                            # 中央値が 0 以下で指数が定義できない」のかを分ける。
+                            # 後者は非測定ではなく、正の予測に対する符号の不一致。
+                            kappa_defined=bool(ki is not None and ki == ki),
+                            excluded_by_2se=bool(e.get("excluded_by_2se")),
                             ok=ok))
             if not ok:
                 bad.append(got[-1])
-        return dict(n=len(got), n_ok=sum(g["ok"] for g in got), bad=bad, all=got)
+        return dict(n=len(got), n_ok=sum(g["ok"] for g in got),
+                    n_defined=sum(g["kappa_defined"] for g in got),
+                    n_ok_of_defined=sum(g["ok"] for g in got if g["kappa_defined"]),
+                    n_excluded=sum(g["excluded_by_2se"] for g in got),
+                    bad=bad, all=got)
 
     P2d = p2_like("zmax")
     P3d = p2_like("zbar")
@@ -548,8 +558,12 @@ def judge(bins_rows, exp_rows, ident_rows, spear_rows, per_arm) -> dict:
         k = e.get("kappa_inc")
         if k is None or k != k:
             continue
+        km = e.get("kappa_inc_mean")
         lb.append(dict(key=e["key"], coord=e["coord"], pair=e["pair"],
-                       kappa_inc=float(k), n_lo=e["n_lo"], n_hi=e["n_hi"],
+                       kappa_inc=float(k),
+                       kappa_inc_mean=(float(km) if km is not None and km == km
+                                       else None),
+                       n_lo=e["n_lo"], n_hi=e["n_hi"],
                        over_tol=bool(abs(k) > TOL_P2),
                        excluded_by_2se=bool(e.get("excluded_by_2se"))))
     leaky_bracket = dict(
@@ -664,15 +678,22 @@ def write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
     for name, coord in (("P2（`zmax` 座標・主判定）", "zmax"), ("P3（`z̄` 座標）", "zbar")):
         d = v["P2_detail"] if coord == "zmax" else v["P3_detail"]
         A(f"\n### {name} — {d['n_ok']}/{d['n']} 対が通過\n")
-        A("| 腕@窓 | 対 | κ_増分 | κ_可動度 | 差 | n | |")
-        A("|---|---|---:|---:|---:|---:|---|")
+        A(f"内訳: κ_増分 が有限値を持つのは **{d['n_defined']}/{d['n']} 対**"
+          f"（うち通過 {d['n_ok_of_defined']}）。残りは深い側の帯の増分中央値が"
+          "0 以下で対数が取れない対で、**「測れなかった」のではなく"
+          "「正である §2(c) の予測に対して中央値が 0 か負」**である"
+          f"（その多くは下の 2σ 表で排除されている: {d['n_excluded']}/{d['n']} 対）。\n")
+        A("| 腕@窓 | 対 | κ_増分 | κ_可動度 | 差 | n | 2σ 排除 | |")
+        A("|---|---|---:|---:|---:|---:|---|---|")
         for g in d["all"]:
             ki = g["kappa_inc"]
-            ki_s = "n/a" if ki is None or ki != ki else f"{ki:+.3f}"
+            ki_s = ("中央値≤0" if not g["kappa_defined"] else f"{ki:+.3f}")
             df = g["diff"]
             df_s = "n/a" if df is None or df != df else f"{df:+.3f}"
             A(f"| `{g['key']}` | {g['pair']} | {ki_s} | {g['kappa_mob']:+.3f} | "
-              f"{df_s} | {g['n_lo']:,}/{g['n_hi']:,} | {'OK' if g['ok'] else '**NG**'} |")
+              f"{df_s} | {g['n_lo']:,}/{g['n_hi']:,} | "
+              f"{'**排除**' if g['excluded_by_2se'] else '—'} | "
+              f"{'OK' if g['ok'] else '**NG**'} |")
 
     A("\n## ★ 判定の実体 — §2(c) の予測を seed 間 2σ で排除できるか\n")
     A("増分の中央値は**幅 ~1e-2 のほぼ対称なゆらぎに乗った小さな正味**であって、"
@@ -708,14 +729,19 @@ def write_summary(outdir, bins_rows, exp_rows, ident_rows, spear_rows,
       "増分は深さに依らない（κ_増分 = 0）はずである。\n")
     A(f"読めた {lb['n']} 対のうち **|κ_増分| > {TOL_P2} が {lb['n_over_tol']} 対**、"
       f"seed 間 2σ で「深さに依らない」を排除できたのが {lb['n_excluded']} 対。\n")
-    A("| 腕@窓 | 座標 | 対 | κ_増分 | n | 許容帯超 | 2σ で排除 |")
-    A("|---|---|---|---:|---:|---|---|")
+    A("| 腕@窓 | 座標 | 対 | κ_増分（中央値） | κ_増分（平均） | n | 許容帯超 | 2σ で排除 |")
+    A("|---|---|---|---:|---:|---:|---|---|")
     for x in lb["pairs"]:
+        km = x.get("kappa_inc_mean")
         A(f"| `{x['key']}` | {x['coord']} | {x['pair']} | {x['kappa_inc']:+.3f} | "
+          f"{'n/a' if km is None else f'{km:+.3f}'} | "
           f"{x['n_lo']:,}/{x['n_hi']:,} | {'**超**' if x['over_tol'] else '—'} | "
           f"{'**排除**' if x['excluded_by_2se'] else '—'} |")
-    A("\nこれは ELU の恒等式にも ln32 の帯にも座標の選び方にも依らない。"
-      "**§2(c) の前提は、利得が定数であることが分かっている族でも成り立たない。**\n")
+    A("\nこれは ELU の恒等式にも ln32 の帯にも座標の選び方にも力場の分解にも依らない。"
+      "**§2(c) の前提は、利得が定数であることが分かっている族でも成り立たない。**\n"
+      "中央値と平均が同じ向き・同じ桁で動くので、"
+      "「中央値がドリフトの推定量になっていないだけ」では説明できない"
+      "（`LR_a0p001` だけは平均が符号を変えて読めないので根拠にしない）。\n")
 
     A("\n## P4 — leaky の S 検査（配管）\n")
     bad = v["P4_bad"]
