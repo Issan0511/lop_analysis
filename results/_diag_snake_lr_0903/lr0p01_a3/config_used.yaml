@@ -1,0 +1,438 @@
+spec: specs/spec_comb_isolate_0903.md
+common:
+  total_steps: 5000000
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  generator_offset: 0
+  lr_main: 0.01
+  device: cpu
+  eval_batch: 2000
+  lop_every: 1000
+  loss_bin: 1000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  run_freeze: false
+  dead_tol: 1.0e-07
+  dead_tau: 0.95
+  dup_tau: 0.95
+  sat_ratio_tol: 0.0001
+  sat_frac: 0.99
+  sign_match_tau: 0.95
+condA:
+  m: 20
+  f: 15
+  target_hidden: 100
+  beta: 0.7
+  T_values:
+  - 10000
+  encodings:
+  - std
+activation:
+  relu:
+    name: relu
+  leaky:
+    name: leaky_relu
+    forward: where(z>0, z, a*z)
+    derivative: where(z>0, 1, a)
+    dial_symbol: a
+  elu:
+    name: elu
+    forward: where(z>0, z, alpha*expm1(z))
+    derivative_form: alpha_exp
+    dial_symbol: alpha
+  silu:
+    name: silu
+    forward: z*sigmoid(beta*z)
+    stable_form: torch.sigmoid
+    dial_symbol: beta
+    has_valley: true
+  gelu:
+    name: gelu
+    forward: z*Phi(beta*z)
+    exact_erf: true
+    dial_symbol: beta
+    has_valley: true
+  comb_binf:
+    name: comb_binf
+    forward: where(z>0, z, -sin(alpha*z)**2)
+    derivative: where(z>0, 1, -alpha*sin(2*alpha*z))
+    dial_symbol: alpha
+    second_param: beta
+    second_param_value: .inf
+  comb1_flat:
+    name: comb1_flat
+    forward: where(z>0, z, where(z>-LOBE, -sin(alpha*z)**2, 0))
+    derivative: where(z>0, 1, where(z>-LOBE, -alpha*sin(2*alpha*z), 0))
+    dial_symbol: alpha
+    second_param: lobe
+    second_param_value: 3.141592653589793
+    joins_flat_at_lobe_is_C1: true
+  comb1_leaky:
+    name: comb1_leaky
+    forward: where(z>0, z, where(z>-LOBE, -sin(alpha*z)**2, a*(z+LOBE)))
+    derivative: where(z>0, 1, where(z>-LOBE, -alpha*sin(2*alpha*z), a))
+    dial_symbol: alpha
+    second_param: lobe
+    second_param_value: 3.141592653589793
+    leak_a: 0.1
+    joins_leaky_at_lobe_is_C0: true
+  band_leaky_dpi:
+    name: band_leaky_dpi
+    forward: where(z>0, z, where(z>-d, 0, a*(z+d)))
+    derivative: where(z>0, 1, where(z>-d, 0, a))
+    dial_symbol: a
+    second_param: d
+    second_param_value: 3.141592653589793
+  snake:
+    name: snake
+    forward: z + sin(alpha*z)**2 / alpha
+    derivative: 1 + sin(2*alpha*z)
+    dial_symbol: alpha
+    second_param: none
+    monotone: true
+    gate: false
+    prior_work: Snake [Ziyin et al. 2020]・SIREN [Sitzmann et al. 2020]（**原典未精読・引用不可**）
+  autograd: false
+  consumes_rng: false
+  is_true_gradient: true
+intervention:
+  name: oracle_fixed_mu_offset
+  oracle: true
+  consumes_rng: false
+  center_alpha_compat: 0.01
+  is_ema_centering: false
+arms:
+- name: CB1f_a1_1216
+  stage: A
+  family: comb1
+  activation: comb1_flat
+  dial: 1.0
+  second_param: 3.141592653589793
+  watershed:
+  - 1.571
+  well:
+  - 3.142
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: CB1l_a1_1216
+  stage: A
+  family: comb1
+  activation: comb1_leaky
+  dial: 1.0
+  second_param: 3.141592653589793
+  watershed:
+  - 1.571
+  well:
+  - 3.142
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: RB_dpi_1216
+  stage: A
+  family: band
+  activation: band_leaky_dpi
+  dial: 0.1
+  second_param: 3.141592653589793
+  watershed: []
+  well: []
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+- name: SN_a1_1216
+  stage: A
+  family: snake
+  activation: snake
+  dial: 3.0
+  second_param: null
+  watershed: []
+  well: []
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+staging:
+  stageA_arms:
+  - CB1f_a1_1216
+  - CB1l_a1_1216
+  - RB_dpi_1216
+  - SN_a1_1216
+  stageB_config: configs/comb_mlp2_0903.yaml
+  stageB_arms:
+  - CB_A1
+  issa_decision_0903: stageA_and_stageB_preregistered_together_submitted_in_order
+  stageB_frozen_before_stageA_results: true
+  stageC_registered: false
+  single_dose: '1216'
+  single_dose_requires_dose_in_citation: true
+  arm_process_parallel_allowed: true
+  arm_process_parallel_requires: S_par_inherited_from_gate_dial_0902
+  gpu: false
+controls:
+  reference_run: results/gate_dose_0830
+  same_run_as_new_arms: false
+  caveat: controls_are_committed_values_from_a_separate_run
+  arms:
+    R_1216:
+      family: relu
+      activation: relu
+      dial: 0.0
+      source_run: results/gate_dose_0830
+    LR_1216:
+      family: leaky
+      activation: leaky_relu
+      dial: 0.1
+      source_run: results/gate_dose_0830
+    E_1216:
+      family: elu
+      activation: elu
+      dial: 1.0
+      source_run: results/gate_dose_0830
+    S_b1_1216:
+      family: silu
+      activation: silu
+      dial: 1.0
+      source_run: results/gate_dial_0902
+    CB_a1_1216:
+      family: comb
+      activation: comb_binf
+      dial: 1.0
+      source_run: results/weird_act_0903
+    RB_d2_1216:
+      family: band
+      activation: band_leaky_d2
+      dial: 0.1
+      source_run: results/weird_act_0903
+    RB_d4_1216:
+      family: band
+      activation: band_leaky_d4
+      dial: 0.1
+      source_run: results/weird_act_0903
+  endpoint_source: verdict.csv
+  endpoint_columns:
+  - U_1m_seed_values
+  - U_5m_seed_values
+  - n_onset_1m
+  - n_onset_5m
+  control_unit_columns_absent_for:
+  - R_1216
+  - LR_1216
+  - E_1216
+  - S_b1_1216
+  verify_reference_hashes: true
+phase1:
+  task_period: 10000
+  early_tasks:
+  - 2
+  - 11
+  late_tasks_5m:
+  - 491
+  - 500
+  window_1m_tasks:
+  - 91
+  - 100
+  window_points_are_task_ends_only: true
+  window_records_per_10task_window: 10
+  spec_literal_records_per_window: 100
+  onset_threshold: 0.05
+  onset_present_min: 5
+  unfit_floor: 1.0e-16
+  recalibrate_floor: false
+  bootstrap_B: 10000
+  bootstrap_seed: 20260915
+  ci_method: percentile_primary_studentized_secondary
+  degenerate_se_tol: 1.0e-15
+  degenerate_frac_max: 0.01
+  degenerate_width_ratio_max: 100.0
+comb_isolate:
+  design:
+    uses_self_term_decomposition: false
+    displacement_bound_constant_K: 1.0
+    freeze_depth_phi_prime_threshold: 1.0e-06
+    question: gate_vs_oscillation_for_nonlinearity
+    motivation_is_not_a_label: true
+    prescription: false
+  verdict_order:
+  - V5
+  - V6
+  verdicts_are_independent: true
+  exact_fit:
+    label: EXACT_FIT
+    window: window_1m_tasks
+    statistic: seed_median
+    threshold: 1.0e-08
+    blocks_level_labels: true
+    keeps_onset_labels: true
+    inconclusive_label: INCONCLUSIVE_EXACT_FIT
+    emit_eval_loss_exact: true
+  v5:
+    arms:
+    - CB1f_a1_1216
+    - CB1l_a1_1216
+    against:
+      CB1f_a1_1216: R_1216
+      CB1l_a1_1216: RB_dpi_1216
+    rescue_onset_max: 2
+    onset_present_min: 5
+    margin: 0.15
+    label_order:
+    - SINGLE_WELL_RESCUES
+    - WELL_HELPS_ONLY_WITH_RETURN_PATH
+    - WELL_IRRELEVANT_RETURN_PATH_CARRIES
+    - LOBE_DOES_NOT_RESCUE
+    - PARTIAL
+  v6:
+    committed_arm: CB_a1_1216
+    new_arms:
+    - CB1l_a1_1216
+    - CB1f_a1_1216
+    label_order:
+    - GUARD_MISCALIBRATED
+    - LEVEL_FROM_SINGLE_LOBE
+    - LEVEL_FROM_MULTILOBE
+    - PARTIAL
+  p3prime_baseline: R_1216
+  p5_soft_end_by_family:
+    comb1:
+    - E_1216
+    - LR_1216
+    band:
+    - LR_1216
+    snake:
+    - E_1216
+    - LR_1216
+  p5_equivalence_margin: 0.15
+  p5_margin_recalibrated_for_this_system: false
+  p5_labels:
+    equivalent: EQUIV_SOFT
+    short_of_soft: SHORT_OF_SOFT
+    inconclusive: INCONCLUSIVE_WIDE
+  terms:
+    submerged: max_x_z_le_0
+    submerged_undefined_for:
+    - SN_a1_1216
+    span: layer1_zmax_minus_layer1_zmin
+    frozen: abs_E_phi_prime_lt_1e-6
+    frozen_abs: E_abs_phi_prime_lt_1e-6
+    at_well: abs_zbar_plus_lobe_le_0p5
+    in_band: zmax_le_0_and_zmin_ge_minus_d
+    position_tolerance: 0.5
+  report_only:
+    in_verdict: false
+    c1_reproduction: true
+    c1_b_share_prediction: 0.098
+    span_all_units: true
+    absv_all_units: true
+    snake_preact_sd: true
+    depth_deciles: true
+  divergence:
+    label: NUMERIC_DIVERGENCE
+    empty_cell_label: INCONCLUSIVE_DIVERGENCE
+    drop_diverged_and_continue: true
+    anchor_arms_droppable:
+    - SN_a1_1216
+    record_first_divergence_step_and_depth: true
+sanity:
+  s_pair_reference: results/gate_dose_0830
+  s_pair_reference_arm: R_1216
+  s_pair_steps: 30000
+  s_pair_match_by: seed_init_hash
+  s_limit_steps: 30000
+  s_limit_cases:
+  - act: comb1_leaky
+    alpha: 1.0
+    equals: comb_binf
+    equals_alpha: 1.0
+    on_interval_open:
+    - -3.141592653589793
+    - null
+  - act: comb1_flat
+    alpha: 1.0
+    equals: comb_binf
+    equals_alpha: 1.0
+    on_interval_open:
+    - -3.141592653589793
+    - null
+  - act: band_leaky_d0
+    alpha: 0.1
+    equals: leaky_relu
+    equals_alpha: 0.1
+  s_limit_lobe_endpoint_excluded: true
+  s_limit_snake_alpha: 1.0e-06
+  s_limit_snake_rel_tol: 0.0001
+  s_dose_rel_tol: 1.0e-10
+  s_fd_tol: 1.0e-06
+  s_fd_range:
+  - -20.0
+  - 20.0
+  s_fd_points: 41
+  s_fd_kink_offsets:
+  - 0.1
+  s_fd_kink_exclusion: 0.001
+  s_fd_relative_for: []
+  s_num_range:
+  - -200.0
+  - 200.0
+  s_num_points: 40001
+  s_num_record_saturation_depth: true
+  s_dial_check: true
+  s_dial_rel_tol: 0.06
+  s_const_check: true
+  s_mob_steps: 30000
+  s_mob_tol: 1.0e-06
+  s_mob_band_identity: mob_equals_p_hat_plus_a_times_prob_z_below_minus_d
+  s_mob_zmin_order: zmin_le_zmean_le_zmax
+  s_log_b_steps: 30000
+  s_guard_check: true
+  s_guard_must_fire:
+  - CB_a1_1216
+  s_guard_must_not_fire:
+  - LR_1216
+  - E_1216
+  - R_1216
+  - S_b1_1216
+  s_cap_window: early_tasks
+  s_cap_fallback_window: window_1m_tasks
+  s_cap_threshold: 0.05
+  s_cap_min_seeds: 9
+  s_cap_label: CAPACITY_UNDEFINED
+  s_cap_fallback_label: SLOW_FIT
+  s_cap_suspects:
+  - SN_a1_1216
+  - CB1f_a1_1216
+  s_taut_check: true
+  s_mask_check: true
+  s_ref_hash_check: true
+  s_cover_check: true
+  omp_num_threads: 1
+  s6_floor_calibration: false
+output:
+  dir: results/comb_isolate_0903
+  verdict_csv: true
+  position_table_csv: true
+  c1_table_csv: true
+  onset_times_csv: true
+  depth_hist_csv: true
+  layer_stats_csv: true
