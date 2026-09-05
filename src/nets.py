@@ -9,6 +9,7 @@
 """
 import math
 import torch
+import torch.nn.functional as F      # softplus_b だけが使う [edge_law_0905 §3.2]
 
 from .envs import kaiming_mlp_params
 
@@ -254,6 +255,46 @@ class VecMLPL:
     COMB1_ACTIVATIONS = ("comb1_flat", "comb1_leaky")
     COMB1_LEAK = {"comb1_leaky": 0.1}
 
+    # ---- 上端則 11 名 [edge_law_0905 §3.2]（逐語登録・等価な別形に書き換えない）----
+    # どれも **自分の forward の真の導関数**を持ち、`act_curv` にも分岐がある
+    # （§5 S-fd / S-curv / S-fallthrough）。既存の名前・式・タプルは 1 行も
+    # 書き換えず、**足すだけ**にする（既存腕の実行経路を byte 一致に保つため。
+    # ACTIVATIONS 等は下でタプル連結して伸ばす）。
+    #   * `flip_leaky` … leaky の奇鏡像 -phi(-z)。述語は **`< 0`**
+    #   * `shelf_leaky_d*` … 折れ目を深さ d に置いた leaky（`d0` は S-limit 専用）
+    #   * `steep_shelf_d*` … 折れ目位置と上側傾きは棚と同じで、下側傾きだけ 2
+    #   * `softplus_b` / `tanh_b` … 滑らかな 2 族（beta = 1）
+    EDGE_LAW_ACTIVATIONS = ("flip_leaky",
+                            "shelf_leaky_d0", "shelf_leaky_d0p5",
+                            "shelf_leaky_d1", "shelf_leaky_d2",
+                            "shelf_leaky_d3", "shelf_leaky_d30",
+                            "steep_shelf_d1", "steep_shelf_d2",
+                            "softplus_b", "tanh_b")
+    # 棚の折れ目の深さ d（第 2 母数は名前に埋め、クラス定数辞書で引く。
+    # BAND_WIDTH / FOLD_DEPTH と同じ流儀で set_activation の署名を変えない）。
+    # d=0 は leaky と bit 一致する退化点で **S-limit 専用**（本走に使わない）。
+    SHELF_DEPTH = {"shelf_leaky_d0": 0.0, "shelf_leaky_d0p5": 0.5,
+                   "shelf_leaky_d1": 1.0, "shelf_leaky_d2": 2.0,
+                   "shelf_leaky_d3": 3.0, "shelf_leaky_d30": 30.0}
+    # 傾きを反転した棚の折れ目の深さ d。下側の傾き 2 は **act_alpha に入れない**
+    # （WEIRD_SLOPE_ACTIVATIONS の [0,1] ガードに触れるため）。
+    STEEP_DEPTH = {"steep_shelf_d1": 1.0, "steep_shelf_d2": 2.0}
+    STEEP_SLOPE = 2.0
+    SOFTPLUS_BETA = 1.0
+    TANH_BETA = 1.0
+    # act_alpha を**使わない**族。dial が誤って 0.1 などで渡ると、名前だけ合って
+    # いて実際の関数が別物になる事故が黙って通るので、`act_alpha == 1.0` を要求する。
+    UNIT_ALPHA_ACTIVATIONS = ("steep_shelf_d1", "steep_shelf_d2",
+                              "softplus_b", "tanh_b")
+    # phi'' が恒等的に 0 な区分線形族（折れ目は測度 0）。線形は leaky の a=1。
+    ZERO_CURVATURE_ACTIVATIONS = (
+        ("relu", "leaky_relu", "flip_leaky")
+        + tuple(SHELF_DEPTH) + tuple(STEEP_DEPTH))
+    ACTIVATIONS = ACTIVATIONS + EDGE_LAW_ACTIVATIONS
+    # 傾き a を act_alpha に持つ族は [0,1] ガードへ（S-guard）。
+    WEIRD_SLOPE_ACTIVATIONS = (WEIRD_SLOPE_ACTIVATIONS
+                               + ("flip_leaky",) + tuple(SHELF_DEPTH))
+
     def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
                  act_grad_form="alpha_exp", wd_b=0.0):
         self.act_grad_form = "alpha_exp"
@@ -331,6 +372,11 @@ class VecMLPL:
             freq = float(act_alpha)
             if not (math.isfinite(freq) and freq > 0.0):
                 raise ValueError(f"{act} frequency must be a finite positive float")
+        if act in self.UNIT_ALPHA_ACTIVATIONS and float(act_alpha) != 1.0:
+            # 傾き 2 も beta も act_alpha には入っていない [edge_law_0905 §3.2]。
+            # dial が 1.0 以外で渡ったら、名前は合っているのに別の関数を走らせて
+            # いる（腕表の写し間違い）ので落とす（S-guard）。
+            raise ValueError(f"{act} requires act_alpha == 1.0, got {act_alpha!r}")
         if act_grad_form is not None:
             if act_grad_form not in self.GRAD_FORMS:
                 raise ValueError(f"unknown ELU derivative form {act_grad_form!r}")
@@ -422,6 +468,25 @@ class VecMLPL:
             env = torch.exp(-pre / beta)
             return torch.where(pre > 0, pre,
                                0.0 - env * torch.sin(self.act_alpha * pre) ** 2)
+        if self.act == "flip_leaky":
+            # leaky の奇鏡像 -phi(-z) [edge_law_0905 §3.2]。**述語は `< 0`**:
+            # `> 0` で書くと phi'(±0.0) が 1 になり、鏡像の要請
+            # phi~'(u) = phi'(-u) = a と食い違う（S-flip がバイトで落とす）。
+            return torch.where(pre < 0, pre, self.act_alpha * pre)
+        if self.act in self.SHELF_DEPTH:
+            d = self.SHELF_DEPTH[self.act]
+            # z >= -d で恒等・折れ目より下で傾き a。折れ目ちょうどで恒等枝と
+            # 厳密に連続（`a*pre + (a-1)*d` は丸めが 2 回入り -d を厳密に返さない）。
+            return torch.where(pre > -d, pre, self.act_alpha * (pre + d) - d)
+        if self.act in self.STEEP_DEPTH:
+            d = self.STEEP_DEPTH[self.act]
+            # 棚と折れ目位置・上側傾きを揃え、下側の傾きだけ 2（曲率の符号が逆）。
+            return torch.where(pre > -d, pre, self.STEEP_SLOPE * (pre + d) - d)
+        if self.act == "softplus_b":
+            # beta は SOFTPLUS_BETA（= 1.0・S-const が config と突き合わせる）。
+            return F.softplus(pre, beta=1.0)
+        if self.act == "tanh_b":
+            return torch.tanh(pre)
         # expm1 keeps the small-|z| negative branch accurate; the positive
         # branch of `where` is selected before any overflow of expm1 matters.
         return torch.where(pre > 0, pre, self.act_alpha * torch.expm1(pre))
@@ -541,10 +606,52 @@ class VecMLPL:
                        - self.act_alpha
                        * torch.sin(2.0 * self.act_alpha * pre))
             return torch.where(pre > 0, torch.ones_like(pre), 0.0 + g)
+        if self.act == "flip_leaky":
+            # act_fn と同じ述語 `< 0`（S-flip: phi~'(z) == phi'(-z) がバイト一致）。
+            return torch.where(pre < 0, torch.ones_like(pre),
+                               torch.full_like(pre, self.act_alpha))
+        if self.act in self.SHELF_DEPTH:
+            d = self.SHELF_DEPTH[self.act]
+            return torch.where(pre > -d, torch.ones_like(pre),
+                               torch.full_like(pre, self.act_alpha))
+        if self.act in self.STEEP_DEPTH:
+            d = self.STEEP_DEPTH[self.act]
+            # 下側は STEEP_SLOPE（act_alpha ではない）。
+            return torch.where(pre > -d, torch.ones_like(pre),
+                               torch.full_like(pre, self.STEEP_SLOPE))
+        if self.act == "softplus_b":
+            return torch.sigmoid(pre)
+        if self.act == "tanh_b":
+            t = torch.tanh(pre)
+            return 1.0 - t ** 2
         if self.act_grad_form == "activation_plus_alpha":
             return torch.where(pre > 0, torch.ones_like(a), a + self.act_alpha)
         return torch.where(pre > 0, torch.ones_like(pre),
                            self.act_alpha * torch.exp(pre))
+
+    def act_curv(self, pre):
+        """phi''(pre) [edge_law_0905 §3.2]。**未登録名は `NotImplementedError`**。
+
+        `act_fn`/`act_grad` の if 連鎖と違い、最後を ELU に落とさない。落とすと
+        分岐の書き忘れが例外にならず、`m_dphiddphi` 列（§4.5-g の停留残差
+        $G_i = 2E[\\varphi\\varphi'] + 2\\kappa E[\\varphi'\\varphi'']$ が全部乗る列）が
+        黙って ELU の曲率になる。代替勾配の族（`bwd_*`/`fwd_leaky`）は
+        `act_grad` が自分の forward の導関数ではないので phi'' も定義しない。
+        """
+        if self.act in self.ZERO_CURVATURE_ACTIVATIONS:
+            # 区分線形（relu・leaky・線形 = leaky a=1・flip・棚・傾き反転棚）は
+            # 折れ目が測度 0 なので恒等的に 0 と登録する。
+            return torch.zeros_like(pre)
+        if self.act == "elu":
+            return torch.where(pre > 0, torch.zeros_like(pre),
+                               self.act_alpha * torch.exp(pre))
+        if self.act == "softplus_b":
+            s = torch.sigmoid(pre)
+            return s * (1.0 - s)
+        if self.act == "tanh_b":
+            t = torch.tanh(pre)
+            return -2.0 * t * (1.0 - t ** 2)
+        raise NotImplementedError(f"act_curv is not registered for {self.act!r}")
 
     def params(self):
         if self.L == 1:
