@@ -36,7 +36,10 @@ ARMS = {"SN5_a1": 1.0, "SN5_a3": 3.0, "SN5_a0p5": 0.5}
 # 2026-09-05 追加: ‖J‖² 規則が処方する lr で活性化を比べるための一般化。
 # 既存 3 腕の挙動は変えない（--lr 未指定なら config の 0.01 のまま）。
 ACTS = {"SN5_a1": ("snake", 1.0), "SN5_a3": ("snake", 3.0), "SN5_a0p5": ("snake", 0.5),
-        "LR5x": ("leaky_relu", 0.1), "R5x": ("relu", 1.0), "LIN5x": ("leaky_relu", 1.0)}
+        "LR5x": ("leaky_relu", 0.1), "R5x": ("relu", 1.0), "LIN5x": ("leaky_relu", 1.0),
+        # snake_flip_0906（spec §2.2）: 周期を外した 1 葉と、零点を外した反転
+        "SN1_a1": ("snake1", 1.0), "SNA05_a1": ("snake_amp0p5", 1.0),
+        "SNA025_a1": ("snake_amp0p25", 1.0)}
 UNREG = ("この走は事前登録されていない（Issa の指示・2026-09-05）。**verdict には入れない。**"
          " 変えた軸は活性化 1 本だけで、config・generator_offset・seeds・lr は "
          "`width5_gate_b_0901` と同一。対照 R5 / LR5 / E5 / LIN5 と同じハーネスに乗る。")
@@ -102,6 +105,39 @@ def _run(cfg: dict, name: str, alpha: float, outdir: Path, seeds, total: int, ac
     print(f"[{name}] complete in {elapsed:.1f}s", flush=True)
     return dict(status="COMPLETE", elapsed_sec=elapsed, sanity=sanity, final_env=_env_hashes(st))
 
+def jnorm_sq(name: str, alpha_override: float | None = None) -> dict:
+    """‖J‖² 則の材料 [snake_flip_0906 §2.2]。J = ∂ŷ/∂θ を init・32 パターン・全 seed で測る。
+
+    ∂ŷ/∂v_i = φ(z_i)、∂ŷ/∂w_i = v_i φ'(z_i) x、∂ŷ/∂b_i = v_i φ'(z_i)、∂ŷ/∂c = 1。
+    パターンと seed で平均した ‖J‖² を返す（float64）。lr_arm = lr_ref · ‖J_ref‖² / ‖J_arm‖²。
+    """
+    from .ratchet_log import full_support_ro
+    act, alpha = ACTS[name]
+    if alpha_override is not None:
+        alpha = float(alpha_override)
+    cfg = _cfg_for(name)
+    st = _setup(cfg, name, alpha, "cpu", act)
+    net = st["net"]
+    with torch.no_grad():
+        x = full_support_ro(st["env"]).double()                 # (P, R, d)
+        W, b, v = net.Ws[0].double(), net.bs[0].double(), net.v.double()
+        z = torch.einsum("rhd,prd->prh", W, x) + b                # (P, R, h)
+        phi, dphi = net.act_fn(z), net.act_grad(z, net.act_fn(z))
+        x2 = (x ** 2).sum(-1)                                     # (P, R)
+        jv = (phi ** 2).sum(-1)                                   # Σ_i φ²
+        jwb = ((v[None] * dphi) ** 2 * (x2[..., None] + 1.0)).sum(-1)   # Σ_i v² φ'² (‖x‖²+1)
+        total = jv + jwb + 1.0
+    return dict(arm=name, activation=act, alpha=float(alpha),
+                J2=float(total.mean()), J2_v=float(jv.mean()), J2_wb=float(jwb.mean()))
+
+
+def lr_rule(name: str, ref: str = "LR5x", lr_ref: float = 0.01,
+            alpha_override: float | None = None) -> dict:
+    a, r = jnorm_sq(name, alpha_override), jnorm_sq(ref)
+    return dict(arm=name, ref=ref, lr_ref=lr_ref, J2_arm=a["J2"], J2_ref=r["J2"],
+                lr=lr_ref * r["J2"] / a["J2"])
+
+
 def run(name: str, steps: int | None = None, seeds=None, lr: float | None = None,
         tag: str | None = None, alpha_override: float | None = None) -> dict:
     act, alpha = ACTS[name]
@@ -140,7 +176,12 @@ def main():
     ap.add_argument("--lr", type=float, default=None)
     ap.add_argument("--tag", default=None)
     ap.add_argument("--alpha", type=float, default=None)
-    a = ap.parse_args(); run(a.arm, a.steps, a.seeds, a.lr, a.tag, a.alpha)
+    ap.add_argument("--lr-rule", action="store_true",
+                    help="‖J‖² 則が処方する lr を印字して終わる（走らせない）")
+    a = ap.parse_args()
+    if a.lr_rule:
+        print(json.dumps(lr_rule(a.arm, alpha_override=a.alpha), indent=1)); return
+    run(a.arm, a.steps, a.seeds, a.lr, a.tag, a.alpha)
 
 if __name__ == "__main__":
     main()

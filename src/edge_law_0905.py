@@ -1720,7 +1720,15 @@ def main() -> None:
     parser.add_argument("--launch-plan", action="store_true")
     parser.add_argument("--parallel", type=int, default=None)
     parser.add_argument("--peak-gib", type=float, default=None)
+    parser.add_argument("--config", default=None,
+                        help="腕表・活性化マップ・出力先を別 config に差し替える"
+                             "（snake_flip_0906 など edge_law 形式の派生走）。"
+                             "省略時は configs/edge_law_0905.yaml で挙動不変")
     args = parser.parse_args()
+    if args.config:
+        global CONFIG, _TABLE
+        CONFIG = Path(args.config).resolve()
+        _TABLE = None                     # 腕表キャッシュを差し替え先で引き直す
 
     out = Path(args.outdir).resolve() if args.outdir else None
     main_dir = Path(ROOT) / registered()["output"]["dir"]

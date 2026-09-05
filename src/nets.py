@@ -294,6 +294,15 @@ class VecMLPL:
     # 傾き a を act_alpha に持つ族は [0,1] ガードへ（S-guard）。
     WEIRD_SLOPE_ACTIVATIONS = (WEIRD_SLOPE_ACTIVATIONS
                                + ("flip_leaky",) + tuple(SHELF_DEPTH))
+    # Snake の「反転」を切り分ける 2 族 [snake_flip_0906 §3]。act_alpha は振動数 α。
+    #   * snake1: 第 1 罠までの 1 葉 [-3π/4α, +π/4α] だけ Snake、外は z + 1/(2α)
+    #     （連続・傾き 1。切る点は φ' の極大なので継ぎ目で φ' が 2→1 に跳ぶ C^0）
+    #   * snake_amp{A}: φ = z + A sin²(αz)/α（φ' = 1 + A sin 2αz・零点なし・反転位置は同じ）。
+    #     A=1 は S-limit 専用で snake と bit 一致（1.0*x は x と bit 一致）
+    SNAKE_AMP = {"snake_amp0p25": 0.25, "snake_amp0p5": 0.5, "snake_amp1": 1.0}
+    SNAKE_FLIP_ACTIVATIONS = ("snake1",) + tuple(SNAKE_AMP)
+    ACTIVATIONS = ACTIVATIONS + SNAKE_FLIP_ACTIVATIONS
+    WEIRD_FREQ_ACTIVATIONS = WEIRD_FREQ_ACTIVATIONS + SNAKE_FLIP_ACTIVATIONS
 
     def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
                  act_grad_form="alpha_exp", wd_b=0.0):
@@ -459,6 +468,15 @@ class VecMLPL:
             # ゲートを持たない周期活性化 [Ziyin et al. 2020]。**正側も恒等ではない**。
             # 単調（phi' = 1 + sin 2az >= 0）で、負側の可動度の平均は 1。
             return pre + torch.sin(self.act_alpha * pre) ** 2 / self.act_alpha
+        if self.act == "snake1":
+            # 1 葉だけの Snake [snake_flip_0906 §3]。葉の内側は snake と同一の式。
+            a = self.act_alpha
+            lo, hi = -3.0 * math.pi / (4.0 * a), math.pi / (4.0 * a)
+            inside = pre + torch.sin(a * pre) ** 2 / a
+            return torch.where((pre >= lo) & (pre <= hi), inside, pre + 0.5 / a)
+        if self.act in self.SNAKE_AMP:
+            A = self.SNAKE_AMP[self.act]
+            return pre + A * torch.sin(self.act_alpha * pre) ** 2 / self.act_alpha
         if self.act == "comb_binf":
             # 包絡なしの櫛。env = 1.0 を定数で書き、exp を呼ばない（S-num）。
             return torch.where(pre > 0, pre,
@@ -595,6 +613,14 @@ class VecMLPL:
                                torch.where(pre > -lobe, leaf, beyond))
         if self.act == "snake":
             return 1.0 + torch.sin(2.0 * self.act_alpha * pre)
+        if self.act == "snake1":
+            a = self.act_alpha
+            lo, hi = -3.0 * math.pi / (4.0 * a), math.pi / (4.0 * a)
+            return torch.where((pre >= lo) & (pre <= hi),
+                               1.0 + torch.sin(2.0 * a * pre), torch.ones_like(pre))
+        if self.act in self.SNAKE_AMP:
+            A = self.SNAKE_AMP[self.act]
+            return 1.0 + A * torch.sin(2.0 * self.act_alpha * pre)
         if self.act == "comb_binf":
             return torch.where(pre > 0, torch.ones_like(pre),
                                0.0 - self.act_alpha
@@ -651,6 +677,17 @@ class VecMLPL:
         if self.act == "tanh_b":
             t = torch.tanh(pre)
             return -2.0 * t * (1.0 - t ** 2)
+        if self.act == "snake":
+            # φ'' = 2α cos 2αz [snake_flip_0906 §3]。零点（φ'=0）は φ''=0 の変曲点。
+            return 2.0 * self.act_alpha * torch.cos(2.0 * self.act_alpha * pre)
+        if self.act == "snake1":
+            a = self.act_alpha
+            lo, hi = -3.0 * math.pi / (4.0 * a), math.pi / (4.0 * a)
+            return torch.where((pre >= lo) & (pre <= hi),
+                               2.0 * a * torch.cos(2.0 * a * pre), torch.zeros_like(pre))
+        if self.act in self.SNAKE_AMP:
+            A = self.SNAKE_AMP[self.act]
+            return 2.0 * self.act_alpha * A * torch.cos(2.0 * self.act_alpha * pre)
         raise NotImplementedError(f"act_curv is not registered for {self.act!r}")
 
     def params(self):

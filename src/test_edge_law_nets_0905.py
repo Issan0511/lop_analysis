@@ -312,7 +312,8 @@ class SCurvTests(unittest.TestCase):
 
     def test_act_curv_raises_for_every_unregistered_name(self):
         """未登録名は ELU に落ちず `NotImplementedError`（`m_dphiddphi` の保険）。"""
-        for act, alpha in (("silu", 1.0), ("gelu", 1.0), ("snake", 1.0),
+        # snake は snake_flip_0906 で act_curv に登録した（2α cos 2αz）ので外す
+        for act, alpha in (("silu", 1.0), ("gelu", 1.0), ("comb_binf", 1.0),
                            ("bwd_leaky", 0.1), ("fwd_leaky", 0.1),
                            ("band_leaky_d1", 0.1), ("mirror_leaky", 0.1)):
             with self.subTest(act=act):
