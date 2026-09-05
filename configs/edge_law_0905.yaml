@@ -1,0 +1,120 @@
+# proj_004: edge_law_0905 — 命題 1–5（前活性の釣り合いは支持の上端で決まるか）
+# 事前登録 spec: specs/spec_edge_law_0905.md（vault: 可塑性喪失/spec/命題1-5_上端則_spec_0905.md）
+# 宿主: configs/gate_dial_0902.yaml を読み、activation マップと腕表だけをここから足す（p3_runs_0902.build_cfg の流儀）。
+# 宿主の validate_config / _s_dial / _geometry は呼ばない（ラベル辞書が {relu, leaky_relu, elu} 固定で KeyError）。
+# この config は実装より先に commit する（運用ルール §2）。実装はこの腕表を逐語で消費し、書き換えない。
+
+experiment: edge_law_0905
+host_config: configs/gate_dial_0902.yaml
+output:
+  dir: results/edge_law_0905
+  logs_tail_dir: results/edge_law_0905/logs_tail      # 登録判定が読む末尾窓だけの縮約 npz（git add -f 対象）
+common_overrides:
+  lr_main: 0.01                                        # 宿主と同じ。lr フックの腕だけ st['lr'] と runs[i]['lr'] を上書きし、logs に lr_used を書く
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  generator_offset: 0
+  omp_num_threads: 1
+
+# 新規活性化（src/nets.py に逐語で登録・真の導関数・乱数消費なし・spec §3.2）
+activation:
+  leaky_relu:      { name: leaky_relu }
+  elu:             { name: elu, derivative_form: alpha_exp }
+  flip_leaky:      { name: flip_leaky,      forward: 'where(z<0, z, a*z)',                  derivative: 'where(z<0, 1, a)',   note: 'odd mirror of leaky: -leaky(-z); predicate is <0 so that phi(±0.0)=a matches leaky(-z)' }
+  shelf_leaky_d0: { name: shelf_leaky_d0, depth: 0.0, forward: 'where(z>-d, z, a*(z+d)-d)', derivative: 'where(z>-d, 1, a)' }
+  shelf_leaky_d0p5: { name: shelf_leaky_d0p5, depth: 0.5, forward: 'where(z>-d, z, a*(z+d)-d)', derivative: 'where(z>-d, 1, a)' }
+  shelf_leaky_d1: { name: shelf_leaky_d1, depth: 1.0, forward: 'where(z>-d, z, a*(z+d)-d)', derivative: 'where(z>-d, 1, a)' }
+  shelf_leaky_d2: { name: shelf_leaky_d2, depth: 2.0, forward: 'where(z>-d, z, a*(z+d)-d)', derivative: 'where(z>-d, 1, a)' }
+  shelf_leaky_d3: { name: shelf_leaky_d3, depth: 3.0, forward: 'where(z>-d, z, a*(z+d)-d)', derivative: 'where(z>-d, 1, a)' }
+  shelf_leaky_d30: { name: shelf_leaky_d30, depth: 30.0, forward: 'where(z>-d, z, a*(z+d)-d)', derivative: 'where(z>-d, 1, a)' }
+  steep_shelf_d1: { name: steep_shelf_d1, depth: 1.0, lower_slope: 2.0, forward: 'where(z>-d, z, 2*(z+d)-d)', derivative: 'where(z>-d, 1, 2)', dial_must_be: 1.0 }
+  steep_shelf_d2: { name: steep_shelf_d2, depth: 2.0, lower_slope: 2.0, forward: 'where(z>-d, z, 2*(z+d)-d)', derivative: 'where(z>-d, 1, 2)', dial_must_be: 1.0 }
+  softplus_b:      { name: softplus_b, beta: 1.0, forward: 'softplus(z)', derivative: 'sigmoid(z)', curvature: 's*(1-s)', dial_must_be: 1.0 }
+  tanh_b:          { name: tanh_b,     beta: 1.0, forward: 'tanh(z)',     derivative: '1-t^2',      curvature: '-2*t*(1-t^2)', dial_must_be: 1.0 }
+  shelf_leaky_d0_is_s_limit_only: true               # leaky と bit 一致（pre=-0.0 の 1 点は既知差）・本走に使わない
+  act_curv_required_for_all: true                    # act_fn / act_grad / act_curv の三方向に分岐を置く
+
+# 記録列（spec §3.4）。宿主の mob/absmob/zmax/zmean/v_unit に加える。
+record:
+  zmin_every: 1000
+  w_free_every: 10000                                  # タスク終端のみ (rec, h, 5)
+  moments: [m_phi2, m_dphi2, m_phidphi, m_dphiddphi]   # E_W[phi^2], E_W[phi'^2], E_W[phi phi'], E_W[phi' phi'']
+  moments_every: 10000
+  moments_dense_last_tasks: 20                         # 末尾 20 タスクは 1000 step ごと
+  payload_columns: [init_hook, init_hook_arg, lr_used, freeze_v, batch_mode]
+
+# init フック / 実行フラグ（spec §3.3・setup_arm_dial 直後・恒等式検査より前・in-place・乱数消費なし）
+hooks:
+  negate:     'W1.neg_(); b1.neg_(); v.neg_()  (c unchanged)'
+  b_offset:   'b1.add_(value)'
+  scale:      'W1.mul_(value); b1.mul_(value); v.div_(value)  (function-preserving only for positively homogeneous phi)'
+  lr:         "st['lr'] = full_like(value) and runs[i]['lr'] = value; logs lr_used"
+  v_freeze:   'v.mul_(value) then skip the v update in the training loop; logs freeze_v'
+  full_batch: 'exact 32-pattern gradient each step (VecMLPL.forward_batch/grads_batch; batch version of grads_centered_elu); logs batch_mode'
+
+# 腕（spec §3.1・30 本・すべて 1 層・幅 100・centered_layers [1]・target_mu_norm 3.041・target_dose 12.16・10 seed）
+arm_template: { stage: 0, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16, u_star: null }
+arms:
+  - { name: LRnull_1216, family: leaky, activation: leaky_relu, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # S-null vs LR_1216; leaky reference with new columns
+  - { name: Enull_1216, family: elu, activation: elu, dial: 1.0, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.8155 }   # S-null-E vs E_1216; ELU reference with new columns
+  - { name: LIN_1216, family: linear, activation: leaky_relu, dial: 1.0, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # proposition 1 subject (linear via leaky a=1.0)
+  - { name: FL_1216, family: flip, activation: flip_leaky, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # 1-c ensemble mirror (REPORT) / 2-a sign
+  - { name: FLn_1216, family: flip, activation: flip_leaky, dial: 0.1, hook: { type: negate }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # S-mirror (bit mirror of LR_1216 over 5M)
+  - { name: TH_1216, family: tanh, activation: tanh_b, dial: 1.0, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # 1-e odd nonlinear
+  - { name: SP_1216, family: softplus, activation: softplus_b, dial: 1.0, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # 2-c smooth convex (phi''>0 everywhere)
+  - { name: SH_d0p5_1216, family: shelf, activation: shelf_leaky_d0p5, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # shelf kink at -0.5
+  - { name: SH_d1_1216, family: shelf, activation: shelf_leaky_d1, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # shelf kink at -1.0
+  - { name: SH_d2_1216, family: shelf, activation: shelf_leaky_d2, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # shelf kink at -2.0
+  - { name: SH_d3_1216, family: shelf, activation: shelf_leaky_d3, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # shelf kink at -3.0
+  - { name: SH_d30_1216, family: shelf, activation: shelf_leaky_d30, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # shelf kink at -30.0
+  - { name: ST_d1_1216, family: steep, activation: steep_shelf_d1, dial: 1.0, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # curvature-sign-flipped control (lower slope 2) kink at -1.0
+  - { name: ST_d2_1216, family: steep, activation: steep_shelf_d2, dial: 1.0, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # curvature-sign-flipped control (lower slope 2) kink at -2.0
+  - { name: E_a0p5_1216, family: elu, activation: elu, dial: 0.5, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.1224 }   # 5-a/5-b alpha sweep
+  - { name: E_a2_1216, family: elu, activation: elu, dial: 2.0, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 14.5087 }   # 5-a/5-b alpha sweep
+  - { name: E_a4_1216, family: elu, activation: elu, dial: 4.0, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 15.2018 }   # 5-a/5-b alpha sweep
+  - { name: LRbp5_1216, family: leaky, activation: leaky_relu, dial: 0.1, hook: { type: b_offset, value: 5.0 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # P3 from above
+  - { name: Ebp4_1216, family: elu, activation: elu, dial: 1.0, hook: { type: b_offset, value: 4.0 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.8155 }   # P3 from above
+  - { name: LRbm5_1216, family: leaky, activation: leaky_relu, dial: 0.1, hook: { type: b_offset, value: -5.0 }, total_steps: 15000000, checkpoints: [0, 1000000, 5000000, 10000000, 15000000], u_fr: null }   # P3 from below (slow side, 3x horizon)
+  - { name: Ebm4_1216, family: elu, activation: elu, dial: 1.0, hook: { type: b_offset, value: -4.0 }, total_steps: 15000000, checkpoints: [0, 1000000, 5000000, 10000000, 15000000], u_fr: 13.8155 }   # P3 from below
+  - { name: LRs0p5_1216, family: leaky, activation: leaky_relu, dial: 0.1, hook: { type: scale, value: 0.5 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # 5-f scale (function-preserving for leaky)
+  - { name: LRs2_1216, family: leaky, activation: leaky_relu, dial: 0.1, hook: { type: scale, value: 2.0 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # 5-f scale
+  - { name: Evf1_1216, family: elu, activation: elu, dial: 1.0, hook: { type: v_freeze, value: 1.0 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.8155 }   # 5-c v frozen at init (kappa exogenous)
+  - { name: Evf4_1216, family: elu, activation: elu, dial: 1.0, hook: { type: v_freeze, value: 4.0 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.8155 }   # 5-c v frozen at 4x init (kappa x16)
+  - { name: LRlr0p005_1216, family: leaky, activation: leaky_relu, dial: 0.1, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: null }   # 5-d eta sweep (eta*step matched at 10M)
+  - { name: LRlr0p02_1216, family: leaky, activation: leaky_relu, dial: 0.1, hook: { type: lr, value: 0.02 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # 5-d eta sweep (eta*step matched at record step 2.5M)
+  - { name: Elr0p005_1216, family: elu, activation: elu, dial: 1.0, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: 13.8155 }   # 5-d eta sweep
+  - { name: Elr0p02_1216, family: elu, activation: elu, dial: 1.0, hook: { type: lr, value: 0.02 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.8155 }   # 5-d eta sweep
+  - { name: FBLR_1216, family: leaky, activation: leaky_relu, dial: 0.1, hook: { type: full_batch }, total_steps: 500000, checkpoints: [], u_fr: null }   # 5-i full-batch exact-support gradient (REPORT_ONLY; NOT_RUN if S-fb fails)
+
+controls_committed:
+  LR_1216: results/p3_extend_0902/logs      # 先頭 5M は gate_dose_0830 と bit 一致（S-ext 済み）
+  E_1216:  results/p3_extend_0902/logs
+  E_a0p1_1216: results/gate_dial_0902/logs
+  E_a0p01_1216: results/gate_dial_0902/logs
+  LR_a0p01_1216: results/gate_dial_0902/logs
+
+# 解析定数（spec §3.5・§3.6）
+analysis:
+  task_period: 10000
+  tail_window_tasks: [451, 500]                # 15M 腕は [1451, 1500] を主・[451, 500] を併記
+  lag_window_tasks: [351, 400]                 # kappa の v はここ
+  settle_windows_tasks: [[301, 350], [376, 425], [451, 500]]   # G2
+  alive_rule: 'layer1_denom (tail mean) > 0.25'
+  alive_rule_secondary: '(zmax - zbar) > 0.25'
+  C: 11.497681                                 # E|x_c|^2 + 1 = 3.041^2 + 5*0.25 + 1（閉形式定数・S-C で 1e-12 照合）
+  bootstrap: { n: 2000, seed: 20260905, level: 0.95, unit: seed }
+  gates:
+    G1_progress: { w_norm_ratio_to_family_ref: [0.5, 2.0], min_zmax_median_move_from_init: 0.3, family_ref: { leaky: LRnull_1216, elu: Enull_1216, other: 'own init x1.5' } }
+    G2_settled: 'monotone drift across settle_windows must not exceed tail CI width'
+    G3_exclusion_agreement: 'labels must agree under ALIVE and ALL'
+    G4_comparability_death_rate_gap: 0.10
+    G5_pairing: 'same (seed, unit index) across arms (S-stream)'
+    G6_divergence: { nan_seed_drop_max: 2, runaway_abs_median_zbar: 50 }
+  confirmatory:
+    P1: 'S-mirror bit parity (FLn_1216 vs LR_1216)'
+    P2: 'Delta_3 = median_i[zmax_i(SH_d3) - zmax_i(SH_d30)]; NONLOCAL if CI_hi < -0.3; AT_INIT if CI within [-0.3, 0.3]'
+    P3: 'retention rho on zmax (from-below arms, 15M); INDEPENDENT if CI_hi < 0.15 (+pair conditions); DEPENDENT if CI_lo > 0.40; else relaxation fit'
+    P4: 'locality radius d* = min d with |med zmax(SH_d) - med zmax(LIN)| <= 0.5 and |med zbar diff| <= 0.5'
+    P5: 'stationarity residual G_i = 2E[phi phi_prime] + 2 kappa_i E[phi_prime phi_double_prime] (5-g) + numerical equilibrium (5-b); v_freeze (5-c) as causal modifier'
+
+sanity_required_before_run: [S-limit, S-flip, S-fd, S-curv, S-fallthrough, S-const, S-guard, S-hook-inplace, S-hook-noop, S-copy, S-stream, S-support, S-moment, S-C, S-vfreeze, S-lr, S-fb, S-par, RSS]
+sanity_from_run: [S-null, S-null-E, S-mirror, S-taut, S-KSnull]
