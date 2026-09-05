@@ -1,0 +1,70 @@
+# proj_004: snake_flip_0906 — Issa の仮説「Snake が効くのは周期ではなく、原点付近の下に凸の
+# すぐ下に上に凸があること（最初の 1 回の曲率反転）」を切り分ける（幅 100・深さ 1・用量 12.16）。
+# 事前登録 spec: specs/spec_snake_flip_0906.md（vault: 可塑性喪失/spec/Snake反転_spec_0906.md）
+# 宿主: edge_law_0905 の runner（configs/gate_dial_0902.yaml を読み、activation マップと腕表だけ足す）。
+# この config は実装より先に commit する。実装はこの腕表を逐語で消費する。
+# 幅 5 の腕（U で適合を測る側）は src/w5_snake_0905.py の ACTS で回す（spec §3.2）。
+
+experiment: snake_flip_0906
+host_config: configs/gate_dial_0902.yaml
+output:
+  dir: results/snake_flip_0906
+  logs_tail_dir: results/snake_flip_0906/logs_tail
+common_overrides:
+  lr_main: 0.01            # 宿主値。4 腕とも lr フックで 0.005 に揃える（Snake α=1 が幅 100 で完走する lr・snake_lr_diag_0903）
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  generator_offset: 0
+  omp_num_threads: 1
+
+# 新規活性化（src/nets.py に逐語で登録・真の導関数・乱数消費なし・spec §3.1）。
+# act_alpha は振動数 α（WEIRD_FREQ_ACTIVATIONS のガード: 有限正）。
+activation:
+  snake:           { name: snake,          forward: 'z + sin(a z)^2 / a',        derivative: '1 + sin(2 a z)',        curvature: '2 a cos(2 a z)' }
+  snake1:          { name: snake1,         forward: 'snake on [-3π/4a, +π/4a]; z + 1/(2a) outside (C^0, slope 1)', derivative: '1 + sin(2 a z) inside; 1 outside', curvature: '2 a cos(2 a z) inside; 0 outside',
+                     note: '最初の下に凸（原点周り）と、そのすぐ下の上に凸（第 1 罠まで）だけを残し、周期性を外す。切る点は φ′ の極大（φ″=0）なので継ぎ目で φ′ が 2→1 に跳ぶ C^0' }
+  snake_amp0p25:   { name: snake_amp0p25,  amp: 0.25, forward: 'z + A sin(a z)^2 / a', derivative: '1 + A sin(2 a z)', curvature: '2 a A cos(2 a z)', note: 'φ′ ∈ [0.75, 1.25]・零点なし・反転位置は Snake と同一' }
+  snake_amp0p5:    { name: snake_amp0p5,   amp: 0.5,  forward: 'z + A sin(a z)^2 / a', derivative: '1 + A sin(2 a z)', curvature: '2 a A cos(2 a z)', note: 'φ′ ∈ [0.5, 1.5]・零点なし' }
+  snake_amp1:      { name: snake_amp1,     amp: 1.0,  note: 'S-limit 専用: snake と bit 一致（1.0*x は x と bit 一致）。本走に使わない' }
+
+record:
+  zmin_every: 1000
+  w_free_every: 10000
+  moments: [m_phi2, m_dphi2, m_phidphi, m_dphiddphi]
+  moments_every: 10000
+  moments_dense_last_tasks: 20
+  payload_columns: [init_hook, init_hook_arg, lr_used, freeze_v, batch_mode]
+
+hooks:
+  lr: "st['lr'] = full_like(value) and runs[i]['lr'] = value; logs lr_used"
+
+# 腕（幅 100・deepth 1・centered_layers [1]・target_mu_norm 3.041・target_dose 12.16・10 seed・5M）
+arm_template: { stage: 0, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16, u_star: null }
+arms:
+  - { name: SN_a1_1216,     family: snake, activation: snake,          dial: 1.0, hook: { type: lr, value: 0.005 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # 参照（Snake α=1・lr 0.005・新列つきで取り直す）
+  - { name: SN1_a1_1216,    family: snake, activation: snake1,         dial: 1.0, hook: { type: lr, value: 0.005 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # H1: 反転 1 回だけ
+  - { name: SNA05_a1_1216,  family: snake, activation: snake_amp0p5,   dial: 1.0, hook: { type: lr, value: 0.005 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # H2: 零点なしの反転
+  - { name: SNA025_a1_1216, family: snake, activation: snake_amp0p25,  dial: 1.0, hook: { type: lr, value: 0.005 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # H2: さらに浅い反転
+
+# 幅 5 側（src/w5_snake_0905.py・宿主 width5_gate_b_0901・20 seed・5M・lr は ‖J‖² 則）
+width5_arms:
+  runner: src/w5_snake_0905.py
+  lr_rule: "lr_arm = 0.01 * ||J_LR5||^2 / ||J_arm||^2, J = d yhat / d theta at init over the 32 patterns x 20 seeds (S-lr-rule: snake α=1 で 0.0037 を再現すること)"
+  arms:
+    - { tag: SN1_a1,    activation: snake1,        alpha: 1.0 }
+    - { tag: SNA05_a1,  activation: snake_amp0p5,  alpha: 1.0 }
+    - { tag: SNA025_a1, activation: snake_amp0p25, alpha: 1.0 }
+  references:
+    SN5_a1_lr00037: /home/issan/Projects/claude/snake_out_0904/results/_diag_w5_snake_0905/asweep_a10     # Snake α=1・lr 0.0037（掃引の最良）
+    LR5x_lr00037:   /home/issan/Projects/claude/snake_out_0904/results/_diag_w5_snake_0905/LR5x_lr00037   # leaky 0.1 を同じ lr で
+    LR5_lr001:      results/width5_gate_b_0901/logs                                                        # leaky 0.1・登録 lr 0.01
+    LIN5:           results/width5_gate_b_0901/logs
+
+analysis:
+  task_period: 10000
+  tail_window_tasks_w100: [451, 500]
+  tail_window_tasks_w5: [491, 500]
+  settle_windows_tasks: [[301, 350], [376, 425], [451, 500]]
+  alive_rule: 'layer1_denom (tail mean) > 0.25'
+  bootstrap: { n: 2000, seed: 20260906, level: 0.95, unit: seed }
+  first_trap_z1: '-pi/(4*alpha)'
+  trap_occupancy: '|zbar - z1| < pi/(4*alpha)'
