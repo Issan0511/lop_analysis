@@ -4,6 +4,7 @@
     python3 receive.py --manifest manifest.json --results-dir results [--only a,b] [--download-dir DIR]
 
 - データ tar（kind=tar）は `results-dir` に展開する（トップレベルが run 名なので results/<run>/ になる）。
+- manifest に `extract_to` があればそこへ（repo 基準の相対パス）。tar のトップが run 名でない束（`logs_tail/` など）用。
 - 束（kind=tgz・name が bundle を含む）は `download-dir/<name>/` に展開する。
 - 展開済み（results/<run>/arm_status がある等）はサイズ照合だけして飛ばす。
 依存: pip install gigafile（モジュール名 gfile）。
@@ -64,7 +65,13 @@ def main() -> None:
         kind = rec.get("kind", "tar")
         if kind == "file":
             continue
-        dest = (dl / name) if (kind == "tgz" or "bundle" in name) else res
+        if rec.get("extract_to"):
+            # manifest の extract_to（results-dir の親＝repo 基準の相対パス、または絶対パス）
+            dest = Path(rec["extract_to"])
+            if not dest.is_absolute():
+                dest = res.parent / dest
+        else:
+            dest = (dl / name) if (kind == "tgz" or "bundle" in name) else res
         dest.mkdir(parents=True, exist_ok=True)
         subprocess.run(["tar", "-xf", str(local), "-C", str(dest)], check=True)
         print(f"[extract] {name} → {dest}/")

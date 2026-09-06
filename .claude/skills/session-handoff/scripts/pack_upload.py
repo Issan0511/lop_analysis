@@ -8,6 +8,8 @@ ITEM の書式:
                                          展開すると path.name がトップレベルに現れる）
     name=@/abs/file                   → 既存ファイルをそのまま上げる（tar しない）
     name=gz:/abs/path[,...]           → OUTDIR/name.tar.gz（小さい束・テキスト向け）
+    name=/abs/path[,...]>results/run  → 末尾の `>dir` は受け側の展開先（manifest の extract_to・repo 基準の相対パス）。
+                                         tar のトップが run 名でないとき（logs_tail/ など）に使う
 
 出力: OUTDIR/manifest.json（1 項目 1 レコード。built/sha256/size/url/delete_key）と、
 標準出力に Markdown 表。アップロードは **1 ファイル 1 プロセス**（gfile の cookie jar を分ける）。
@@ -71,16 +73,18 @@ def upload(path: Path, tries: int = 3) -> dict:
     return last
 
 
-def parse_item(s: str) -> tuple[str, list[Path], str]:
+def parse_item(s: str) -> tuple[str, list[Path], str, str | None]:
     name, _, rhs = s.partition("=")
     if not name or not rhs:
         raise SystemExit(f"bad ITEM: {s}")
+    rhs, _, extract_to = rhs.partition(">")
+    extract_to = extract_to or None
     if rhs.startswith("@"):
-        return name, [Path(rhs[1:]).expanduser().resolve()], "file"
+        return name, [Path(rhs[1:]).expanduser().resolve()], "file", extract_to
     kind = "tar"
     if rhs.startswith("gz:"):
         kind, rhs = "tgz", rhs[3:]
-    return name, [Path(p).expanduser().resolve() for p in rhs.split(",")], kind
+    return name, [Path(p).expanduser().resolve() for p in rhs.split(",")], kind, extract_to
 
 
 def main() -> None:
@@ -99,7 +103,7 @@ def main() -> None:
         mpath.write_text(json.dumps(manifest, ensure_ascii=False, indent=1))
 
     for item in a.items:
-        name, paths, kind = parse_item(item)
+        name, paths, kind, extract_to = parse_item(item)
         rec = manifest["items"].get(name, {})
         if kind == "file":
             dst = paths[0]
@@ -112,6 +116,10 @@ def main() -> None:
         if not rec.get("sha256"):
             rec.update(file=str(dst), size_bytes=dst.stat().st_size, sha256=sha256_of(dst), built=True,
                        sources=[str(p) for p in paths], kind=kind)
+            manifest["items"][name] = rec
+            save()
+        if extract_to:
+            rec["extract_to"] = extract_to
             manifest["items"][name] = rec
             save()
         if a.no_upload or rec.get("url"):
