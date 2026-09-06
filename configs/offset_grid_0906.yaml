@@ -72,6 +72,8 @@ arms:
   # ---- ブロック 4: full-batch 500 タスク（雑音ゼロ・32 パターン厳密勾配）----
   - { name: FBLRoff0_1216,            family: leaky, activation: leaky_off_0,     dial: 0.1, hook: { type: full_batch }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
   - { name: FBLRoffp0p5_1216,         family: leaky, activation: leaky_off_p0p5,  dial: 0.1, hook: { type: full_batch }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  # 追補（投入後・結果を見る前・Issa の指摘「c=−2 の上群は Chen の確率的崩壊に似る」）: 雑音ゼロで c<0 の「上」群が出るか
+  - { name: FBLRoffm0p5_1216,         family: leaky, activation: leaky_off_m0p5,  dial: 0.1, hook: { type: full_batch }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
   # ---- ブロック 5: 小さい c（登録 lr・−c/a = −2.5 は c=0 の着座 −3.6 より上）----
   - { name: LRoffm0p25_1216,          family: leaky, activation: leaky_off_m0p25, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
   - { name: LRoffp0p25_1216,          family: leaky, activation: leaky_off_p0p25, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
