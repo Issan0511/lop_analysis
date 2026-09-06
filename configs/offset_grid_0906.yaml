@@ -1,0 +1,94 @@
+# proj_004: offset_grid_0906 — act_offset_0906 の続き（夜間・7 ブロック・27 腕）。
+# 事前登録 spec: specs/spec_offset_grid_0906.md（vault: 可塑性喪失/spec/前活性オフセット格子_spec_0906.md）
+# 宿主: edge_law_0905 の runner（configs/gate_dial_0902.yaml を読み、activation マップと腕表だけ足す）。
+# この config は実装（活性化名の追加）と同時に、走らせる前に commit する。実装はこの腕表を逐語で消費する。
+# 新しい機構は 1 つも入れない: 活性化は leaky_off_*（c=±1・±0.25 の 4 名を LEAKY_OFFSET に足すだけ）と elu、
+# フックは既存の lr / v_freeze / full_batch / b_offset。
+
+experiment: offset_grid_0906
+host_config: configs/gate_dial_0902.yaml
+output:
+  dir: results/offset_grid_0906
+  logs_tail_dir: results/offset_grid_0906/logs_tail
+common_overrides:
+  lr_main: 0.01
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  generator_offset: 0
+  omp_num_threads: 1
+
+# act_alpha は leaky 族では傾き a（[0,1] ガード）、elu では α（≥0 ガード）。offset は spec §3 の定数 c。
+activation:
+  leaky_off_0:     { name: leaky_off_0,     offset: 0.0,   forward: 'leaky_relu(z; a)  (加算せず逐語)', derivative: '1 (z>0) / a (z<=0)', curvature: '0' }
+  leaky_off_m2:    { name: leaky_off_m2,    offset: -2.0,  forward: 'leaky_relu(z; a) + c', derivative: 'leaky と同一', curvature: '0' }
+  leaky_off_m1:    { name: leaky_off_m1,    offset: -1.0,  forward: 'leaky_relu(z; a) + c', derivative: 'leaky と同一', curvature: '0' }
+  leaky_off_m0p5:  { name: leaky_off_m0p5,  offset: -0.5,  forward: 'leaky_relu(z; a) + c', derivative: 'leaky と同一', curvature: '0' }
+  leaky_off_m0p25: { name: leaky_off_m0p25, offset: -0.25, forward: 'leaky_relu(z; a) + c', derivative: 'leaky と同一', curvature: '0' }
+  leaky_off_p0p25: { name: leaky_off_p0p25, offset: 0.25,  forward: 'leaky_relu(z; a) + c', derivative: 'leaky と同一', curvature: '0' }
+  leaky_off_p0p5:  { name: leaky_off_p0p5,  offset: 0.5,   forward: 'leaky_relu(z; a) + c', derivative: 'leaky と同一', curvature: '0' }
+  leaky_off_p1:    { name: leaky_off_p1,    offset: 1.0,   forward: 'leaky_relu(z; a) + c', derivative: 'leaky と同一', curvature: '0' }
+  leaky_off_p2:    { name: leaky_off_p2,    offset: 2.0,   forward: 'leaky_relu(z; a) + c', derivative: 'leaky と同一', curvature: '0' }
+  elu:             { name: elu,             offset: 0.0,   note: 'ブロック 6 の ELU c=0 参照（act_offset の Eoffm1/Eoffp1 を Δ で読むため）' }
+
+record:
+  zmin_every: 1000
+  w_free_every: 10000
+  moments: [m_phi2, m_dphi2, m_phidphi, m_dphiddphi]
+  moments_every: 10000
+  moments_dense_last_tasks: 20
+  payload_columns: [init_hook, init_hook_arg, lr_used, freeze_v, batch_mode]
+
+hooks:
+  lr:         "st['lr'] = full_like(value) and runs[i]['lr'] = value; logs lr_used"
+  v_freeze:   'v.mul_(value) then skip the v update in the training loop; logs freeze_v'
+  full_batch: 'exact 32-pattern gradient each step; logs batch_mode'
+  b_offset:   'b1.add_(value)'
+
+arm_template: { stage: 0, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16, u_star: null }
+arms:
+  # ---- S-null（走内）: act_offset_0906 の LRoff0_1216 と logs がバイト一致すること（同じマシン・同じ設定）----
+  - { name: LRoff0_1216,              family: leaky, activation: leaky_off_0,     dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  # ---- ブロック 1: a × c の格子（井戸の底 −c/a が a とともに動くか）----
+  - { name: LRa0p2_off0_1216,         family: leaky, activation: leaky_off_0,     dial: 0.2, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRa0p2_offm0p5_1216,      family: leaky, activation: leaky_off_m0p5,  dial: 0.2, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRa0p2_offp0p5_1216,      family: leaky, activation: leaky_off_p0p5,  dial: 0.2, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRa0p3_off0_1216,         family: leaky, activation: leaky_off_0,     dial: 0.3, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRa0p3_offm0p5_1216,      family: leaky, activation: leaky_off_m0p5,  dial: 0.3, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRa0p3_offp0p5_1216,      family: leaky, activation: leaky_off_p0p5,  dial: 0.3, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRa0p5_off0_1216,         family: leaky, activation: leaky_off_0,     dial: 0.5, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRa0p5_offm0p5_1216,      family: leaky, activation: leaky_off_m0p5,  dial: 0.5, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRa0p5_offp0p5_1216,      family: leaky, activation: leaky_off_p0p5,  dial: 0.5, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRa0p7_off0_1216,         family: leaky, activation: leaky_off_0,     dial: 0.7, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRa0p7_offm0p5_1216,      family: leaky, activation: leaky_off_m0p5,  dial: 0.7, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRa0p7_offp0p5_1216,      family: leaky, activation: leaky_off_p0p5,  dial: 0.7, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  # ---- ブロック 2: v 凍結 × c（井戸の作用経路）----
+  - { name: LRvf1_1216,               family: leaky, activation: leaky_off_0,     dial: 0.1, hook: { type: v_freeze, value: 1.0 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRoffm0p5_vf1_1216,       family: leaky, activation: leaky_off_m0p5,  dial: 0.1, hook: { type: v_freeze, value: 1.0 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRoffp0p5_vf1_1216,       family: leaky, activation: leaky_off_p0p5,  dial: 0.1, hook: { type: v_freeze, value: 1.0 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  # ---- ブロック 3: ラダー B（lr 0.00125・40M）の c を埋める（既存 0・±2 と合わせて 7 点）----
+  - { name: LRoffm1_lr0p00125_1216,   family: leaky, activation: leaky_off_m1,    dial: 0.1, hook: { type: lr, value: 0.00125 }, total_steps: 40000000, checkpoints: [0, 1000000, 5000000, 40000000], u_fr: null }
+  - { name: LRoffm0p5_lr0p00125_1216, family: leaky, activation: leaky_off_m0p5,  dial: 0.1, hook: { type: lr, value: 0.00125 }, total_steps: 40000000, checkpoints: [0, 1000000, 5000000, 40000000], u_fr: null }
+  - { name: LRoffp0p5_lr0p00125_1216, family: leaky, activation: leaky_off_p0p5,  dial: 0.1, hook: { type: lr, value: 0.00125 }, total_steps: 40000000, checkpoints: [0, 1000000, 5000000, 40000000], u_fr: null }
+  - { name: LRoffp1_lr0p00125_1216,   family: leaky, activation: leaky_off_p1,    dial: 0.1, hook: { type: lr, value: 0.00125 }, total_steps: 40000000, checkpoints: [0, 1000000, 5000000, 40000000], u_fr: null }
+  # ---- ブロック 4: full-batch 500 タスク（雑音ゼロ・32 パターン厳密勾配）----
+  - { name: FBLRoff0_1216,            family: leaky, activation: leaky_off_0,     dial: 0.1, hook: { type: full_batch }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: FBLRoffp0p5_1216,         family: leaky, activation: leaky_off_p0p5,  dial: 0.1, hook: { type: full_batch }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  # ---- ブロック 5: 小さい c（登録 lr・−c/a = −2.5 は c=0 の着座 −3.6 より上）----
+  - { name: LRoffm0p25_1216,          family: leaky, activation: leaky_off_m0p25, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: LRoffp0p25_1216,          family: leaky, activation: leaky_off_p0p25, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  # ---- ブロック 6: ELU の c=0 参照 ----
+  - { name: Eoff0_1216,               family: elu,   activation: elu,             dial: 1.0, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.8155 }
+  # ---- ブロック 7: 命題 3 の「上から」（b +2・15M・edge_law §9-1）----
+  - { name: LRbp2_1216,               family: leaky, activation: leaky_off_0,     dial: 0.1, hook: { type: b_offset, value: 2.0 }, total_steps: 15000000, checkpoints: [0, 1000000, 5000000, 15000000], u_fr: null }
+  - { name: Ebp2_1216,                family: elu,   activation: elu,             dial: 1.0, hook: { type: b_offset, value: 2.0 }, total_steps: 15000000, checkpoints: [0, 1000000, 5000000, 15000000], u_fr: 13.8155 }
+
+analysis:
+  task_period: 10000
+  tail_window_tasks_5m: [451, 500]
+  tail_window_tasks_15m: [1451, 1500]
+  tail_window_tasks_40m: [3951, 4000]
+  settle_windows_tasks_5m: [[301, 350], [376, 425], [451, 500]]
+  alive_rule: 'layer1_denom (tail mean) > 0.25'
+  support_split: 'up: zmin>0 / mid: zmin<=0<=zmax / dn: zmax<0  (ラチェットの作動条件そのもの)'
+  bootstrap: { n: 2000, seed: 20260906, level: 0.95, unit: seed }
+  well_bottom: 'c>0: -c/a (下の枝) / c<0: +|c| (上の枝) / c=0: 0'
+  s_null_reference: results/act_offset_0906/logs   # LRoff0_1216 のバイト一致（同じマシン）
