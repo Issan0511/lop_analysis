@@ -1,6 +1,6 @@
 # 追補 1 — c=±2 を回すための低 lr ラダー（`act_offset_0906`）
 
-親: `specs/spec_act_offset_0906.md`（vault [[前活性オフセット_spec_0906]]・実装前 commit f62625b / a80f3e7・実装 b6a380d） / 状態: **事前登録（2026-09-06・実装（config 追加）より先に commit）** / 出典チャット: 引き継ぎ後の lab セッション（Issa 裁定「B でお願い」）
+親: `specs/spec_act_offset_0906.md`（vault [[前活性オフセット_spec_0906]]・実装前 commit f62625b / a80f3e7・実装 b6a380d） / 状態: **実行済み（2026-09-06 19:14 完走・lab・`OFFSET_SIGNED_B`・登録判定 `results/act_offset_0906/verdict.csv`）** / 出典チャット: 引き継ぎ後の lab セッション（Issa 裁定「B でお願い」）
 
 > **run id は本編と同じ `act_offset_0906`**（同じ config・同じ出力先）。本追補が足すのは **腕 3 本と、その 3 本だけを見る判定 1 つ**である。本編 §1–§3・§5・§8 はそのまま生きる。
 > **本追補と config の腕追加を、解析の実装より先に commit する**（[[運用ルール]] §2）。
