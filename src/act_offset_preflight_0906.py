@@ -35,6 +35,12 @@ S_LIMIT_ARM = "LRoff0_1216"
 S_LIMIT_MUTANT = "LRoffp0p5_1216"
 SHORT_STEPS = 30_000
 LR_REGISTERED = 0.01
+# 追補 1 §1 で**登録済み**の発散: lr 0.01 の c=±2 は λ ≈ 2hc² = 800 に対し lr·λ = 8 で
+# step 1,000 に落ちる。ここは「落ちること」まで込みで登録なので、
+#   * この 2 腕が落ちる → 前検査は PASS（ラダー A ではこの 2 腕を NOT_RUN として扱う）
+#   * この 2 腕が**落ちなかった** → 追補 1 の前提が崩れているので FAIL
+# の両方向で検査する（片側だけだと空虚な whitelist になる）。
+EXPECTED_DIVERGENT = ("LRoffm2_1216", "LRoffp2_1216")
 # 比較から外す列: 腕名を含む文字列と、1M 未満では空の state_hash_1m。
 SKIP_COLUMNS = ("arm", "run_id", "activation", "state_hash_1m")
 # 発散の検査から外す既知の NaN 列: フック無しの腕は init_hook_arg が NaN（payload の登録どおり）、
@@ -111,6 +117,13 @@ def compare_logs(dir_a: Path, arm_a: str, dir_b: Path, arm_b: str,
                 rows=rows)
 
 
+def expected_lr(arm: str, config: Path = CONFIG, default: float = LR_REGISTERED) -> float:
+    """腕の `lr` フックの値（無ければ登録 lr）。追補 1 の 3 腕は 0.00125（S-lr）。"""
+    row = E.arm_table(load_config(str(config)))[str(arm)]
+    hook = row["hook"]
+    return float(hook["value"]) if hook and hook.get("type") == "lr" else float(default)
+
+
 def divergence_detail(outdir: Path, arm: str) -> dict:
     """runner の `arm_status/<arm>_done.json` から発散の要点（検出 step・seed）を抜く。"""
     f = Path(outdir) / "arm_status" / f"{arm}_done.json"
@@ -176,7 +189,8 @@ def main() -> None:
             print(f"[short {arm}] DIVERGED {report['checks'][-1]['detail']}", flush=True)
             continue
         report["checks"].append(dict(check="short_run", diverged=False,
-                                     **check_run(out / "arms", arm, a.steps)))
+                                     **check_run(out / "arms", arm, a.steps,
+                                                 expected_lr(arm, CONFIG))))
         print(f"[short {arm}] {'PASS' if report['checks'][-1]['pass_'] else 'FAIL'}", flush=True)
     report["diverged_arms"] = diverged
 
@@ -204,10 +218,22 @@ def main() -> None:
     print(f"[S-limit-30k] {'PASS' if s_limit['pass_'] else 'FAIL'} "
           f"(same={same['pass_']}, mutant_fails={mutant_fails})", flush=True)
 
-    report["pass_"] = bool(all(c["pass_"] for c in report["checks"]))
+    # 合否: 「登録済みの発散 2 腕がちょうど落ちた」ことを要求し、それ以外の失敗は許さない。
+    report["all_checks_pass"] = bool(all(c["pass_"] for c in report["checks"]))
+    unexpected_fail = [c for c in report["checks"]
+                       if not c["pass_"] and not (c.get("check") == "short_run"
+                                                  and c.get("diverged")
+                                                  and c.get("arm") in EXPECTED_DIVERGENT)]
+    missing_divergence = [a for a in EXPECTED_DIVERGENT if a not in diverged]
+    report["expected_divergent"] = list(EXPECTED_DIVERGENT)
+    report["unexpected_failures"] = [c.get("arm", c.get("check")) for c in unexpected_fail]
+    report["missing_expected_divergence"] = missing_divergence
+    report["pass_"] = bool(not unexpected_fail and not missing_divergence)
     (out / "preflight.json").write_text(
         json.dumps(report, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
-    print(f"[preflight] {'PASS' if report['pass_'] else 'FAIL'} -> {out / 'preflight.json'}")
+    print(f"[preflight] {'PASS' if report['pass_'] else 'FAIL'} "
+          f"(登録済みの発散 {list(EXPECTED_DIVERGENT)} を除く失敗 {report['unexpected_failures']}"
+          f" / 落ちるはずが落ちなかった腕 {missing_divergence}) -> {out / 'preflight.json'}")
     raise SystemExit(0 if report["pass_"] else 1)
 
 

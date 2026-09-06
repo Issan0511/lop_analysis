@@ -37,6 +37,8 @@ CFG_NEW = Path(ROOT) / "configs" / "act_offset_0906.yaml"
 CFG_EDGE = Path(ROOT) / "configs" / "edge_law_0905.yaml"
 ARMS = ["LRoff0_1216", "LRoffm2_1216", "LRoffm0p5_1216", "LRoffp0p5_1216",
         "LRoffp2_1216", "Eoffm1_1216", "Eoffp1_1216"]
+# 追補 1（specs/spec_act_offset_0906_addendum1.md）の低 lr ラダー
+ARMS_B = ["LRoff0_lr0p00125_1216", "LRoffm2_lr0p00125_1216", "LRoffp2_lr0p00125_1216"]
 
 
 def _net(act: str, alpha: float) -> VecMLPL:
@@ -285,10 +287,11 @@ class ConfigTests(unittest.TestCase):
             self.assertNotIn(arm, table)
         self.assertEqual(E.CONFIG, CFG_EDGE)
 
-    def test_new_config_gives_the_seven_registered_arms_verbatim(self):
+    def test_new_config_gives_the_ten_registered_arms_verbatim(self):
         table = E.arm_table(load_config(str(CFG_NEW)))
-        self.assertEqual(list(table), ARMS)
-        for name, row in table.items():
+        self.assertEqual(list(table), ARMS + ARMS_B)
+        for name in ARMS:
+            row = table[name]
             self.assertIsNone(row["hook"])
             self.assertEqual(row["total_steps"], 5_000_000)
             self.assertEqual(row["checkpoints"], [0, 1_000_000, 5_000_000])
@@ -296,6 +299,31 @@ class ConfigTests(unittest.TestCase):
                 self.assertEqual((row["family"], row["dial"], row["u_fr"]), ("leaky", 0.1, None))
             else:
                 self.assertEqual((row["family"], row["dial"], row["u_fr"]), ("elu", 1.0, 13.8155))
+
+    def test_addendum_arms_are_the_low_lr_ladder(self):
+        """追補 1 §2: {c=0, −2, +2} を lr 0.00125・40M（eta*step = 50,000 を本編と揃える）で。"""
+        table = E.arm_table(load_config(str(CFG_NEW)))
+        want_c = {"LRoff0_lr0p00125_1216": "leaky_off_0",
+                  "LRoffm2_lr0p00125_1216": "leaky_off_m2",
+                  "LRoffp2_lr0p00125_1216": "leaky_off_p2"}
+        for name in ARMS_B:
+            row = table[name]
+            self.assertEqual(row["hook"], {"type": "lr", "value": 0.00125}, name)
+            self.assertEqual(row["total_steps"], 40_000_000, name)
+            self.assertEqual(row["checkpoints"], [0, 1_000_000, 5_000_000, 40_000_000], name)
+            self.assertEqual((row["family"], row["dial"], row["u_fr"]), ("leaky", 0.1, None), name)
+            self.assertEqual(row["activation"], want_c[name], name)
+        # eta*step が本編（0.01 x 5M）と一致する
+        self.assertEqual(0.00125 * 40_000_000, 0.01 * 5_000_000)
+        # 活性化は 1 つも増えていない（既存の leaky_off_* をそのまま使う）
+        self.assertEqual({table[n]["activation"] for n in ARMS_B},
+                         {"leaky_off_0", "leaky_off_m2", "leaky_off_p2"})
+
+    def test_expected_lr_reads_the_hook(self):
+        for name in ARMS:
+            self.assertEqual(P.expected_lr(name, CFG_NEW), 0.01, name)
+        for name in ARMS_B:
+            self.assertEqual(P.expected_lr(name, CFG_NEW), 0.00125, name)
 
     def test_elu_u_fr_equals_the_edge_law_reference_arm(self):
         edge = E.arm_table(load_config(str(CFG_EDGE)))
@@ -308,10 +336,10 @@ class ConfigTests(unittest.TestCase):
         for act in NEW:
             self.assertEqual(built["activation"][act]["name"], act)
         self.assertEqual([a["name"] for a in built["arms"]],
-                         [a["name"] for a in host["arms"]] + ARMS)
+                         [a["name"] for a in host["arms"]] + ARMS + ARMS_B)
         self.assertEqual(built["common"]["lr_main"], 0.01)
         self.assertEqual(built["common"]["seeds"], list(range(10)))
-        for a in built["arms"][-7:]:
+        for a in built["arms"][-10:]:
             self.assertEqual(a["hidden"], [100])
             self.assertEqual(a["target_dose"], 12.16)
 
@@ -330,6 +358,48 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(A["tail_window_tasks"], [451, 500])
         self.assertEqual(A["bands"], {"dzmax_irrelevant": 0.3, "dzbar_irrelevant": 0.5})
         self.assertEqual(A["bootstrap"]["seed"], AN.RNG_SEED)
+
+    def test_addendum_analysis_block(self):
+        B = load_config(str(CFG_NEW))["analysis"]["addendum1"]
+        self.assertEqual(B["reference_arm"], "LRoff0_lr0p00125_1216")
+        self.assertEqual(B["judged_arms"], ARMS_B[1:])
+        self.assertEqual(B["lr"], 0.00125)
+        self.assertEqual(B["tail_window_tasks"], [3951, 4000])
+        self.assertEqual(B["settle_windows_tasks"],
+                         [[2751, 2800], [3351, 3400], [3951, 4000]])
+        self.assertFalse(B["require_monotone"])
+        self.assertEqual(B["label_suffix"], "_B")
+
+    def test_the_addendum_windows_keep_the_main_ladder_fractions(self):
+        """追補 1 §3: 主窓は末尾 50 タスク、settle は地平線の 70% / 85% / 100%。"""
+        cfg = load_config(str(CFG_NEW))
+        A, B = cfg["analysis"], cfg["analysis"]["addendum1"]
+        n_a, n_b = 500, 4000                                    # 5M / 40M を task_period 10,000 で
+        self.assertEqual(A["tail_window_tasks"][1], n_a)
+        self.assertEqual(B["tail_window_tasks"][1], n_b)
+        for wa, wb in zip(A["settle_windows_tasks"], B["settle_windows_tasks"]):
+            self.assertEqual(wa[1] / n_a, wb[1] / n_b)          # 終端の割合が一致
+            self.assertEqual(wa[1] - wa[0], wb[1] - wb[0])      # 窓幅は 50 タスクのまま
+
+
+class LadderTests(unittest.TestCase):
+    def test_two_ladders_with_the_registered_shapes(self):
+        L = AN.ladders(load_config(str(CFG_NEW)))
+        self.assertEqual([d["name"] for d in L], ["A", "B"])
+        a, b = L
+        self.assertEqual((a["lr"], a["ref"], a["tail"], a["expect_c"], a["require_monotone"],
+                          a["suffix"]),
+                         (0.01, "LRoff0_1216", (451, 500), AN.JUDGED_C, True, ""))
+        self.assertEqual((b["lr"], b["ref"], b["tail"], b["expect_c"], b["require_monotone"],
+                          b["suffix"]),
+                         (0.00125, "LRoff0_lr0p00125_1216", (3951, 4000), AN.JUDGED_C_B,
+                          False, "_B"))
+        self.assertEqual(b["settles"], [(2751, 2800), (3351, 3400), (3951, 4000)])
+
+    def test_a_config_without_the_addendum_gives_one_ladder(self):
+        cfg = load_config(str(CFG_NEW))
+        cfg["analysis"].pop("addendum1")
+        self.assertEqual([d["name"] for d in AN.ladders(cfg)], ["A"])
 
 
 # ---------------------------------------------------------------------------
@@ -393,6 +463,72 @@ class LabelTests(unittest.TestCase):
         zmax[0.5] = _d(0.2, 0.0, 0.3001)
         self.assertNotEqual(AN.offset_label(_deltas(zmax, self.FLAT), self.BANDS, False),
                             "OFFSET_IRRELEVANT")
+
+
+class LabelBTests(unittest.TestCase):
+    """追補 1 §4 のラダー B — 判定 c は ±2 の 2 本だけ・単調性は課さない・ラベルに _B が付く。"""
+
+    BANDS = {"dzmax_irrelevant": 0.3, "dzbar_irrelevant": 0.5}
+
+    def _d(self, zmax: dict, zbar: dict) -> dict:
+        return {c: dict(dzmax=zmax[c], dzbar=zbar[c]) for c in (-2.0, 2.0)}
+
+    def _label(self, zmax, zbar, nd=False):
+        return AN.offset_label(self._d(zmax, zbar), self.BANDS, nd,
+                               expect_c=AN.JUDGED_C_B, require_monotone=False, suffix="_B")
+
+    FLAT = {c: _d(0.0, -0.1, 0.1) for c in (-2.0, 2.0)}
+
+    def test_irrelevant_b(self):
+        self.assertEqual(self._label(self.FLAT, self.FLAT), "OFFSET_IRRELEVANT_B")
+
+    def test_signed_b_without_any_half_arm(self):
+        zbar = {-2.0: _d(1.0, 0.6, 1.4), 2.0: _d(-1.0, -1.4, -0.6)}
+        self.assertEqual(self._label(self.FLAT, zbar), "OFFSET_SIGNED_B")
+
+    def test_both_signs_deeper_is_other_b(self):
+        zbar = {c: _d(-1.0, -1.4, -0.6) for c in (-2.0, 2.0)}
+        self.assertEqual(self._label(self.FLAT, zbar), "OFFSET_OTHER_B")
+
+    def test_not_determined_and_inconclusive_carry_no_suffix(self):
+        self.assertEqual(self._label(self.FLAT, self.FLAT, nd=True), "NOT_DETERMINED")
+        zbar = dict(self.FLAT); zbar[2.0] = _d(-0.3, -0.7, 0.1)
+        self.assertEqual(self._label(self.FLAT, zbar), "INCONCLUSIVE")
+
+    def test_a_missing_judged_arm_is_not_determined(self):
+        d = self._d(self.FLAT, self.FLAT); d.pop(2.0)
+        self.assertEqual(AN.offset_label(d, self.BANDS, False, expect_c=AN.JUDGED_C_B,
+                                         require_monotone=False, suffix="_B"),
+                         "NOT_DETERMINED")
+
+    def test_the_four_arm_deltas_are_rejected_by_ladder_B_expectations(self):
+        """ラダー B に 4 本渡すと c の集合が合わず NOT_DETERMINED（取り違え防止）。"""
+        four = {c: dict(dzmax=_d(0.0, -0.1, 0.1), dzbar=_d(0.0, -0.1, 0.1))
+                for c in (-2.0, -0.5, 0.5, 2.0)}
+        self.assertEqual(AN.offset_label(four, self.BANDS, False, expect_c=AN.JUDGED_C_B,
+                                         require_monotone=False, suffix="_B"),
+                         "NOT_DETERMINED")
+
+    def test_monotonicity_is_required_in_A_but_not_in_B(self):
+        """同じ ±2 の符号反転でも、ラダー A は ±0.5 との単調性で OTHER に落ちうる。"""
+        zbar4 = {-2.0: _d(0.6, 0.4, 0.8), -0.5: _d(1.0, 0.8, 1.2),
+                 0.5: _d(-1.0, -1.2, -0.8), 2.0: _d(-0.6, -0.8, -0.4)}
+        flat4 = {c: _d(0.0, -0.1, 0.1) for c in (-2.0, -0.5, 0.5, 2.0)}
+        self.assertEqual(AN.offset_label(_deltas(flat4, zbar4), self.BANDS, False),
+                         "OFFSET_OTHER")
+        zbar2 = {c: zbar4[c] for c in (-2.0, 2.0)}
+        self.assertEqual(self._label(self.FLAT, zbar2), "OFFSET_SIGNED_B")
+
+    def test_inside_the_band_irrelevant_wins_over_signed(self):
+        """ラベルの優先順は spec §4 の並び順。**帯に内包されていれば符号が反対でも IRRELEVANT**
+        （＝「動いたが無視できる大きさ」を SIGNED と呼ばない）。両ラダーで同じ。"""
+        tiny = {-2.0: _d(0.2, 0.1, 0.3), 2.0: _d(-0.2, -0.3, -0.1)}
+        self.assertEqual(self._label(self.FLAT, tiny), "OFFSET_IRRELEVANT_B")
+        tiny4 = {-2.0: _d(0.2, 0.1, 0.3), -0.5: _d(0.1, 0.05, 0.15),
+                 0.5: _d(-0.1, -0.15, -0.05), 2.0: _d(-0.2, -0.3, -0.1)}
+        flat4 = {c: _d(0.0, -0.1, 0.1) for c in (-2.0, -0.5, 0.5, 2.0)}
+        self.assertEqual(AN.offset_label(_deltas(flat4, tiny4), self.BANDS, False),
+                         "OFFSET_IRRELEVANT")
 
 
 # ---------------------------------------------------------------------------

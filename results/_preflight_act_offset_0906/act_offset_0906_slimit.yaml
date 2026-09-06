@@ -170,6 +170,48 @@ arms:
   - 1000000
   - 5000000
   u_fr: 13.8155
+- name: LRoff0_lr0p00125_1216
+  family: leaky
+  activation: leaky_off_0
+  dial: 0.1
+  hook:
+    type: lr
+    value: 0.00125
+  total_steps: 40000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  - 40000000
+  u_fr: null
+- name: LRoffm2_lr0p00125_1216
+  family: leaky
+  activation: leaky_off_m2
+  dial: 0.1
+  hook:
+    type: lr
+    value: 0.00125
+  total_steps: 40000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  - 40000000
+  u_fr: null
+- name: LRoffp2_lr0p00125_1216
+  family: leaky
+  activation: leaky_off_p2
+  dial: 0.1
+  hook:
+    type: lr
+    value: 0.00125
+  total_steps: 40000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  - 40000000
+  u_fr: null
 - name: LRleaky_1216
   family: leaky
   activation: leaky_relu
@@ -208,3 +250,21 @@ analysis:
   bands:
     dzmax_irrelevant: 0.3
     dzbar_irrelevant: 0.5
+  addendum1:
+    reference_arm: LRoff0_lr0p00125_1216
+    judged_arms:
+    - LRoffm2_lr0p00125_1216
+    - LRoffp2_lr0p00125_1216
+    lr: 0.00125
+    tail_window_tasks:
+    - 3951
+    - 4000
+    settle_windows_tasks:
+    - - 2751
+      - 2800
+    - - 3351
+      - 3400
+    - - 3951
+      - 4000
+    require_monotone: false
+    label_suffix: _B
