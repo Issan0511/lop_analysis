@@ -1,6 +1,6 @@
 # 前活性オフセットの格子 — 「井戸の底は同じ線形領域にあるときだけ着座点になる」を a・v・雑音・c の 4 軸で試す（夜間・27 腕）
 
-親: `specs/spec_act_offset_0906.md`（vault [[前活性オフセット結果_0906]]・ラダー B `OFFSET_SIGNED_B`）／`specs/spec_edge_law_0905.md` §9（full-batch 500 タスク・命題 3 の上から） / 状態: **事前登録（2026-09-06 夜・走らせる前に commit・診断の格＝判定ラベルはブロック 1・2 だけ）** / 出典チャット: lab の引き継ぎセッション（Issa「計算実験いっぱい回しときたい」）
+親: `specs/spec_act_offset_0906.md`（vault [[前活性オフセット結果_0906]]・ラダー B `OFFSET_SIGNED_B`）／`specs/spec_edge_law_0905.md` §9（full-batch 500 タスク・命題 3 の上から） / 状態: **実行済み（2026-09-07 00:53 完走・lab・登録判定 `results/offset_grid_0906/verdict.csv`・結果ノート vault `測定/前活性オフセット格子結果_0906.md`。ブロック 1 `NOT_DETERMINED`（k=4/4 だが settle 窓のドリフトが極細の CI 幅を超えた・G2 型の誤射）／ブロック 2 `INCONCLUSIVE`）** / 出典チャット: lab の引き継ぎセッション（Issa「計算実験いっぱい回しときたい」）
 
 > **run id: `offset_grid_0906`**。`edge_law_0905` runner に `--config configs/offset_grid_0906.yaml`。**新しい機構は 1 つも入れない**——活性化は `leaky_off_*`（c=±1・±0.25 の 4 名を `LEAKY_OFFSET` に足すだけ・式は同一）と `elu`、フックは既存の `lr` / `v_freeze` / `full_batch` / `b_offset`。
 > 主判定を持つのは**ブロック 1・2 だけ**。残りは「見る量」と予測を登録する診断。数値の正本は `results/offset_grid_0906/summary.md`（朝に解析を書く）。
