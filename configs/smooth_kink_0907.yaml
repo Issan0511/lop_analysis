@@ -1,0 +1,67 @@
+# proj_004: smooth_kink_0907 — leaky の折れ目を幅 s で滑らかにして、ラチェットが効く長さスケールを読む。
+# 事前登録 spec: specs/spec_smooth_kink_0907.md（vault: 可塑性喪失/spec/折れ目を滑らかに_spec_0907.md）
+# 宿主: edge_law_0905 の runner（configs/gate_dial_0902.yaml を読み、activation マップと腕表だけ足す）。
+# この config は実装（活性化名の追加）と同時に、走らせる前に commit する。実装はこの腕表を逐語で消費する。
+# 新しい機構は 1 つも入れない: 足すのは活性化 smleaky_s* の 6 名だけ。フックは使わない（hook: null）。
+
+experiment: smooth_kink_0907
+host_config: configs/gate_dial_0902.yaml
+output:
+  dir: results/smooth_kink_0907
+  logs_tail_dir: results/smooth_kink_0907/logs_tail
+common_overrides:
+  lr_main: 0.01
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  generator_offset: 0
+  omp_num_threads: 1
+
+# act_alpha は leaky 族と同じ傾き a（[0,1] ガードを共有）。smooth は spec §2 の平滑化幅 s（> 0）。
+# forward: a*z + (1-a)*s*softplus(z/s) / derivative: a + (1-a)*sigmoid(z/s) / curvature: (1-a)*sig*(1-sig)/s
+activation:
+  leaky_off_0:   { name: leaky_off_0,   smooth: 0.0,  forward: 'leaky_relu(z; a)  (加算せず逐語)', derivative: '1 (z>0) / a (z<=0)', curvature: '0' }
+  smleaky_s0p01: { name: smleaky_s0p01, smooth: 0.01, forward: 'a*z + (1-a)*s*softplus(z/s)', derivative: 'a + (1-a)*sigmoid(z/s)', curvature: '(1-a)*sig*(1-sig)/s' }
+  smleaky_s0p03: { name: smleaky_s0p03, smooth: 0.03, forward: 'a*z + (1-a)*s*softplus(z/s)', derivative: 'a + (1-a)*sigmoid(z/s)', curvature: '(1-a)*sig*(1-sig)/s' }
+  smleaky_s0p1:  { name: smleaky_s0p1,  smooth: 0.1,  forward: 'a*z + (1-a)*s*softplus(z/s)', derivative: 'a + (1-a)*sigmoid(z/s)', curvature: '(1-a)*sig*(1-sig)/s' }
+  smleaky_s0p3:  { name: smleaky_s0p3,  smooth: 0.3,  forward: 'a*z + (1-a)*s*softplus(z/s)', derivative: 'a + (1-a)*sigmoid(z/s)', curvature: '(1-a)*sig*(1-sig)/s' }
+  smleaky_s1:    { name: smleaky_s1,    smooth: 1.0,  forward: 'a*z + (1-a)*s*softplus(z/s)', derivative: 'a + (1-a)*sigmoid(z/s)', curvature: '(1-a)*sig*(1-sig)/s' }
+  smleaky_s3:    { name: smleaky_s3,    smooth: 3.0,  forward: 'a*z + (1-a)*s*softplus(z/s)', derivative: 'a + (1-a)*sigmoid(z/s)', curvature: '(1-a)*sig*(1-sig)/s' }
+
+record:
+  zmin_every: 1000
+  w_free_every: 10000
+  moments: [m_phi2, m_dphi2, m_phidphi, m_dphiddphi]
+  moments_every: 10000
+  moments_dense_last_tasks: 20
+  payload_columns: [init_hook, init_hook_arg, lr_used, freeze_v, batch_mode]
+
+hooks: {}   # 本走はフックを使わない（活性化だけが違う）
+
+arm_template: { stage: 0, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16, u_star: null }
+arms:
+  # ---- S-null: offset_grid_0906 の LRoff0_1216 / LRa0p5_off0_1216 と全列バイト一致すること ----
+  - { name: SKref_1216,        family: leaky, activation: leaky_off_0,   dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: SKa0p5ref_1216,    family: leaky, activation: leaky_off_0,   dial: 0.5, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  # ---- 梯子 A: a=0.1（支持の半幅 W ≈ 3.79・1 タスクの移動 δ ≈ 0.05–0.12）----
+  - { name: SKs0p01_1216,      family: leaky, activation: smleaky_s0p01, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: SKs0p03_1216,      family: leaky, activation: smleaky_s0p03, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: SKs0p1_1216,       family: leaky, activation: smleaky_s0p1,  dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: SKs0p3_1216,       family: leaky, activation: smleaky_s0p3,  dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: SKs1_1216,         family: leaky, activation: smleaky_s1,    dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: SKs3_1216,         family: leaky, activation: smleaky_s3,    dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  # ---- 梯子 B: a=0.5（W ≈ 1.54・支持スケール説なら転移が 2.5 倍小さい s に動く）----
+  - { name: SKa0p5_s0p1_1216,  family: leaky, activation: smleaky_s0p1,  dial: 0.5, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: SKa0p5_s0p3_1216,  family: leaky, activation: smleaky_s0p3,  dial: 0.5, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+  - { name: SKa0p5_s1_1216,    family: leaky, activation: smleaky_s1,    dial: 0.5, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }
+
+analysis:
+  reference: { a0p1: SKref_1216, a0p5: SKa0p5ref_1216 }
+  ladder_a0p1: [SKs0p01_1216, SKs0p03_1216, SKs0p1_1216, SKs0p3_1216, SKs1_1216, SKs3_1216]
+  ladder_a0p5: [SKa0p5_s0p1_1216, SKa0p5_s0p3_1216, SKa0p5_s1_1216]
+  s_values: { SKs0p01_1216: 0.01, SKs0p03_1216: 0.03, SKs0p1_1216: 0.1, SKs0p3_1216: 0.3, SKs1_1216: 1.0, SKs3_1216: 3.0,
+              SKa0p5_s0p1_1216: 0.1, SKa0p5_s0p3_1216: 0.3, SKa0p5_s1_1216: 1.0 }
+  tail: [3951, 4000]          # edge_law の tail 窓（末尾 50 記録）
+  boot: { n: 2000, seed: 20260907 }
+  labels: { delta_scale_max_s: 0.1, support_scale_min_s: 1.0 }
+  s_null_pairs:               # バイト一致の相手（results/offset_grid_0906/logs/）
+    SKref_1216: LRoff0_1216
+    SKa0p5ref_1216: LRa0p5_off0_1216
