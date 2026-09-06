@@ -1,0 +1,60 @@
+# proj_004: scale_attractor_0906 — **未登録診断**（Issa の問い「縮む力は活性化に対応するか」2026-09-06）。
+# 宿主は edge_law_0905 runner（--config で腕表を差し替え・configs/gate_dial_0902.yaml を読む）。
+# 変えた軸は (1) leaky の傾き a、(2) init スケール s の 2 本だけ。lr・seeds・用量・中心化は宿主のまま。
+# **verdict には入れない。** 事前予測は起票時にチャットへ記入した（結果ノートに転記する）。
+#
+# 動機: 傾き梯子（a = 1 / 0.1 / 0.01 / … / 1e-5）で ‖w‖ の 500/0 比が 0.31 と 2.6–3.1 に
+# 割れ、a=1 だけが縮む。転移は a ∈ (0.1, 1) にある。またスケールフック（×0.5 / ×2）で
+# leaky が 4% に収束したので、スケールにはアトラクタがある。線形側にも同じ復元力があるか。
+
+experiment: scale_attractor_0906
+host_config: configs/gate_dial_0902.yaml
+output:
+  dir: results/scale_attractor_0906
+  logs_tail_dir: results/scale_attractor_0906/logs_tail
+common_overrides:
+  lr_main: 0.01
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  generator_offset: 0
+  omp_num_threads: 1
+
+activation:
+  leaky: { name: leaky_relu }
+
+record:
+  zmin_every: 1000
+  w_free_every: 10000
+  moments: [m_phi2, m_dphi2, m_phidphi, m_dphiddphi]
+  moments_every: 10000
+  moments_dense_last_tasks: 20
+  payload_columns: [init_hook, init_hook_arg, lr_used, freeze_v, batch_mode]
+
+hooks:
+  scale: "W1.mul_(s); b1.mul_(s); v.div_(s)（leaky は正斉次なので厳密に関数保存）"
+
+arm_template: { stage: 0, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16, u_fr: null, u_star: null }
+arms:
+  # (1) 傾きの隙間を埋める（既存: a = 1 / 0.1 / 0.01 / 1e-3 / 1e-4 / 1e-5）
+  - { name: LRa0p2_1216,   family: leaky, activation: leaky, dial: 0.2,  hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000] }
+  - { name: LRa0p3_1216,   family: leaky, activation: leaky, dial: 0.3,  hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000] }
+  - { name: LRa0p5_1216,   family: leaky, activation: leaky, dial: 0.5,  hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000] }
+  - { name: LRa0p7_1216,   family: leaky, activation: leaky, dial: 0.7,  hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000] }
+  - { name: LRa0p9_1216,   family: leaky, activation: leaky, dial: 0.9,  hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000] }
+  - { name: LRa0p99_1216,  family: leaky, activation: leaky, dial: 0.99, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000] }
+  # (2) 線形と準線形にスケールフック（0.46 はアトラクタか、単に伸びないだけか）
+  - { name: LINs0p5_1216,  family: leaky, activation: leaky, dial: 1.0,  hook: { type: scale, value: 0.5 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000] }
+  - { name: LINs2_1216,    family: leaky, activation: leaky, dial: 1.0,  hook: { type: scale, value: 2.0 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000] }
+  - { name: LRa0p9s0p5_1216, family: leaky, activation: leaky, dial: 0.9, hook: { type: scale, value: 0.5 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000] }
+  - { name: LRa0p9s2_1216,   family: leaky, activation: leaky, dial: 0.9, hook: { type: scale, value: 2.0 }, total_steps: 5000000, checkpoints: [0, 1000000, 5000000] }
+
+controls_committed:
+  a1p0_LIN_1216:     results/edge_law_0905/logs        # 線形・‖w‖ 比 0.31
+  a0p1_LR_1216:      results/p3_extend_0902/logs       # 比 2.86
+  a0p01_and_below:   results/gate_dial_0902/logs       # 比 2.6–3.1
+  scale_hooks_leaky: results/edge_law_0905/logs        # LRs0p5 / LRnull / LRs2（a=0.1・4% に収束）
+
+analysis:
+  task_period: 10000
+  tail_window_tasks: [451, 500]
+  alive_rule: 'layer1_denom (tail mean) > 0.25'
+  primary: '‖w‖ 中央値の 500/0 比を a の関数として。スケールフック 3 点（×0.5・×1・×2）が同じ値へ収束するか'
