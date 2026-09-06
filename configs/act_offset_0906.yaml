@@ -46,6 +46,14 @@ arms:
   - { name: LRoffp2_1216,   family: leaky, activation: leaky_off_p2,   dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }   # c=+2
   - { name: Eoffm1_1216,    family: elu,   activation: elu_off_m1,     dial: 1.0, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.8155 }   # 併記 ELU c=-1
   - { name: Eoffp1_1216,    family: elu,   activation: elu_off_p1,     dial: 1.0, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.8155 }   # 併記 ELU c=+1
+  # ---- 追補 1（specs/spec_act_offset_0906_addendum1.md・vault 前活性オフセット_spec_0906_追補1）----
+  # c=±2 は lr 0.01・step 1000 で 10/10 seed 発散する（一様方向のコヒーレント曲率 lambda ~ 2*h*c^2 = 800
+  # に対し安定条件 lr < 2/lambda = 0.0025）。lr 0.00125（lambda*lr ~ 1 で係数 2 の余裕）・40M step
+  # （eta*step = 50,000 を本編 0.01 x 5M と揃える）で {c=0, -2, +2} を別ラダーとして登録する。
+  # 活性化は 1 つも増えない（既存の leaky_off_* をそのまま使う）。この 3 行は解析の実装より先に commit する。
+  - { name: LRoff0_lr0p00125_1216,  family: leaky, activation: leaky_off_0,  dial: 0.1, hook: { type: lr, value: 0.00125 }, total_steps: 40000000, checkpoints: [0, 1000000, 5000000, 40000000], u_fr: null }   # 追補 1 の参照（c=0・同 lr）
+  - { name: LRoffm2_lr0p00125_1216, family: leaky, activation: leaky_off_m2, dial: 0.1, hook: { type: lr, value: 0.00125 }, total_steps: 40000000, checkpoints: [0, 1000000, 5000000, 40000000], u_fr: null }   # 追補 1: c=-2（H-mag なら浮く）
+  - { name: LRoffp2_lr0p00125_1216, family: leaky, activation: leaky_off_p2, dial: 0.1, hook: { type: lr, value: 0.00125 }, total_steps: 40000000, checkpoints: [0, 1000000, 5000000, 40000000], u_fr: null }   # 追補 1: c=+2（H-mag なら沈む）
 
 analysis:
   task_period: 10000
@@ -56,3 +64,15 @@ analysis:
   reference_arm: LRoff0_1216
   judged_arms: [LRoffm2_1216, LRoffm0p5_1216, LRoffp0p5_1216, LRoffp2_1216]
   bands: { dzmax_irrelevant: 0.3, dzbar_irrelevant: 0.5 }
+  # 追補 1 のラダー B（spec_act_offset_0906_addendum1.md §3・§4）。窓は本編の割合を保つ
+  # （40M = 4000 タスク・主窓は末尾 50・settle は地平線の 70% / 85% / 100%）。
+  # 単調性（±0.5 < ±2）は ±0.5 が無いので検査しない（require_monotone: false）。
+  # ラベルは本編と混ざらないよう _B を付ける。総合は 2 ラダー併記で畳まない。
+  addendum1:
+    reference_arm: LRoff0_lr0p00125_1216
+    judged_arms: [LRoffm2_lr0p00125_1216, LRoffp2_lr0p00125_1216]
+    lr: 0.00125
+    tail_window_tasks: [3951, 4000]
+    settle_windows_tasks: [[2751, 2800], [3351, 3400], [3951, 4000]]
+    require_monotone: false
+    label_suffix: _B
