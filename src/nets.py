@@ -314,7 +314,10 @@ class VecMLPL:
     #   名前と定数は明示 dict（SNAKE_AMP と同じ流儀）。config の `offset` と S-const で
     #   突き合わせる。既存の名前・式・タプルは 1 行も書き換えず、**足すだけ**。
     LEAKY_OFFSET = {"leaky_off_m2": -2.0, "leaky_off_m0p5": -0.5,
-                    "leaky_off_0": 0.0, "leaky_off_p0p5": 0.5, "leaky_off_p2": 2.0}
+                    "leaky_off_0": 0.0, "leaky_off_p0p5": 0.5, "leaky_off_p2": 2.0,
+                    # offset_grid_0906 で足した 4 名（同じ式・定数が違うだけ）
+                    "leaky_off_m1": -1.0, "leaky_off_p1": 1.0,
+                    "leaky_off_m0p25": -0.25, "leaky_off_p0p25": 0.25}
     ELU_OFFSET = {"elu_off_m1": -1.0, "elu_off_p1": 1.0}
     ACT_OFFSET_ACTIVATIONS = tuple(LEAKY_OFFSET) + tuple(ELU_OFFSET)
     ACTIVATIONS = ACTIVATIONS + ACT_OFFSET_ACTIVATIONS

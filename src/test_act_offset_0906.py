@@ -71,8 +71,10 @@ def _three(net: VecMLPL, z: torch.Tensor):
 # S-guard / S-const
 # ---------------------------------------------------------------------------
 class GuardTests(unittest.TestCase):
-    def test_seven_names_are_registered(self):
-        self.assertEqual(len(NEW), 7)
+    def test_all_offset_names_are_registered(self):
+        # 本編 7 名 ＋ offset_grid_0906 で足した 4 名（±1・±0.25）
+        self.assertEqual(len(NEW), 11)
+        self.assertEqual(len(LEAKY_NEW), 9)
         for act in NEW:
             self.assertIn(act, VecMLPL.ACTIVATIONS)
 
@@ -97,11 +99,18 @@ class GuardTests(unittest.TestCase):
             _net("leaky_off_p3", 0.1)
 
     def test_offsets_match_the_config(self):
-        """S-const: 名前に埋めた定数 c と config の `offset` が一致。7 名とも config に居る。"""
+        """S-const: 名前に埋めた定数 c と config の `offset` が一致。本編の 7 名は act_offset の
+        config に、offset_grid_0906 で足した 4 名（±1・±0.25）はその config に居る。"""
         cfg = load_config(str(CFG_NEW))
+        grid = load_config(str(Path(ROOT) / "configs" / "offset_grid_0906.yaml"))
         for act in NEW:
-            self.assertIn(act, cfg["activation"], act)
-            self.assertEqual(float(cfg["activation"][act]["offset"]), _offset(act), act)
+            src = cfg if act in cfg["activation"] else grid
+            self.assertIn(act, src["activation"], act)
+            self.assertEqual(float(src["activation"][act]["offset"]), _offset(act), act)
+        for act in ELU_NEW + ("leaky_off_m2", "leaky_off_m0p5", "leaky_off_0", "leaky_off_p0p5", "leaky_off_p2"):
+            self.assertIn(act, cfg["activation"], act)       # 本編の 7 名は本編の config に
+        for act in ("leaky_off_m1", "leaky_off_p1", "leaky_off_m0p25", "leaky_off_p0p25"):
+            self.assertIn(act, grid["activation"], act)
         self.assertEqual(VecMLPL.LEAKY_OFFSET["leaky_off_0"], 0.0)
 
     def test_activation_choice_consumes_no_randomness(self):
@@ -333,7 +342,7 @@ class ConfigTests(unittest.TestCase):
     def test_build_cfg_appends_the_seven_activations_and_arms(self):
         host = load_config(str(E.HOST_CONFIG))
         built = E.build_cfg(CFG_NEW)
-        for act in NEW:
+        for act in load_config(str(CFG_NEW))["activation"]:      # 本編 config の 7 名
             self.assertEqual(built["activation"][act]["name"], act)
         self.assertEqual([a["name"] for a in built["arms"]],
                          [a["name"] for a in host["arms"]] + ARMS + ARMS_B)
