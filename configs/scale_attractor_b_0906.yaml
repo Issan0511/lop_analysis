@@ -1,0 +1,130 @@
+# scale_attractor_0906 の追補: 転移の境目 a ∈ {0.35,0.4,0.45,0.55,0.6,0.65,0.8} を細かく（未登録診断・Issa 指示 09-06）
+experiment: scale_attractor_b_0906
+host_config: configs/gate_dial_0902.yaml
+output:
+  dir: results/scale_attractor_b_0906
+  logs_tail_dir: results/scale_attractor_b_0906/logs_tail
+common_overrides:
+  lr_main: 0.01
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  generator_offset: 0
+  omp_num_threads: 1
+activation:
+  leaky:
+    name: leaky_relu
+record:
+  zmin_every: 1000
+  w_free_every: 10000
+  moments:
+  - m_phi2
+  - m_dphi2
+  - m_phidphi
+  - m_dphiddphi
+  moments_every: 10000
+  moments_dense_last_tasks: 20
+  payload_columns:
+  - init_hook
+  - init_hook_arg
+  - lr_used
+  - freeze_v
+  - batch_mode
+hooks:
+  scale: W1.mul_(s); b1.mul_(s); v.div_(s)（leaky は正斉次なので厳密に関数保存）
+arm_template:
+  stage: 0
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+  u_fr: null
+  u_star: null
+arms:
+- name: LRa0p35_1216
+  family: leaky
+  activation: leaky
+  dial: 0.35
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+- name: LRa0p4_1216
+  family: leaky
+  activation: leaky
+  dial: 0.4
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+- name: LRa0p45_1216
+  family: leaky
+  activation: leaky
+  dial: 0.45
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+- name: LRa0p55_1216
+  family: leaky
+  activation: leaky
+  dial: 0.55
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+- name: LRa0p6_1216
+  family: leaky
+  activation: leaky
+  dial: 0.6
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+- name: LRa0p65_1216
+  family: leaky
+  activation: leaky
+  dial: 0.65
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+- name: LRa0p8_1216
+  family: leaky
+  activation: leaky
+  dial: 0.8
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+analysis:
+  task_period: 10000
+  tail_window_tasks:
+  - 451
+  - 500
+  alive_rule: layer1_denom (tail mean) > 0.25
+  primary: '境目 a∈(0.3,0.9) を 7 点で細かく: ‖w‖ 比・|v|・線形化率・per-unit の二峰性'
