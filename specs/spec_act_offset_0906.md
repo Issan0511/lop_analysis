@@ -87,3 +87,4 @@ REPORT（登録外・併記）: |v|・‖w‖・線形化率（|v|<0.05）・出
 
 ## Log
 - 2026-09-06: Issa の 2 候補（|φ| の偏り／曲率が正）から起票。config `configs/act_offset_0906.yaml` と同時に実装前 commit。元マシンは pmnist_rlmnist_0906 が走行中のため、実装・本走は lab に委託。
+- 2026-09-06 lab（引き継ぎ後・実装 commit 前の記録）: §9-2/3 の実装と検査（S-fd／S-limit 格子＋30k 走行／S-shift／S-fallthrough／S-guard／S-cfg・42 本＋既存 edge_law/snake_flip 244 本）は PASS。**短縮走行 30k で `LRoffm2_1216`・`LRoffp2_1216`（c=±2）が lr 0.01・step 1000 で 10/10 seed 発散**（§6「外れたときに疑うもの (ii)」が実装前検査で的中）。理由: ŷ = Σ v_i(φ_i + c) + c_out なので v 空間の一様方向 (1,…,1) にコヒーレントな曲率 λ ≈ 2·h·c²（h=100）が立ち、c=2 で λ≈800 → SGD の安定条件 lr < 2/λ = 0.0025。未登録診断（scratchpad・30k）: c=±2 は lr 0.005 で 1 seed 発散・**lr 0.0025 と 0.00125 で完走**、ELU c=±1 は lr 0.01 でも完走（`Eoffp1` は派生列 `layer1_eff_rank_per_alive` に alive=0 由来の NaN あり・発散ではない）。**本走の扱い（登録どおり回して ±2 を NOT_RUN にするか／lr 0.0025 の {c=0, ±2} 3 腕を追補として登録してから回すか）と §6 の Issa 予測は Issa 裁定待ち。** 前検査の記録は `results/_preflight_act_offset_0906/preflight.json`。

@@ -1,0 +1,210 @@
+experiment: act_offset_0906
+host_config: configs/gate_dial_0902.yaml
+output:
+  dir: results/_preflight_act_offset_0906/slimit
+  logs_tail_dir: results/_preflight_act_offset_0906/slimit/logs_tail
+common_overrides:
+  lr_main: 0.01
+  seeds:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  generator_offset: 0
+  omp_num_threads: 1
+activation:
+  leaky_off_0:
+    name: leaky_off_0
+    offset: 0.0
+    forward: leaky_relu(z; a)  (加算せず逐語)
+    derivative: 1 (z>0) / a (z<=0)
+    curvature: '0'
+    note: 'S-limit: leaky_relu と bit 一致。本走の参照腕'
+  leaky_off_m2:
+    name: leaky_off_m2
+    offset: -2.0
+    forward: leaky_relu(z; a) + c
+    derivative: leaky と同一
+    curvature: '0'
+  leaky_off_m0p5:
+    name: leaky_off_m0p5
+    offset: -0.5
+    forward: leaky_relu(z; a) + c
+    derivative: leaky と同一
+    curvature: '0'
+  leaky_off_p0p5:
+    name: leaky_off_p0p5
+    offset: 0.5
+    forward: leaky_relu(z; a) + c
+    derivative: leaky と同一
+    curvature: '0'
+  leaky_off_p2:
+    name: leaky_off_p2
+    offset: 2.0
+    forward: leaky_relu(z; a) + c
+    derivative: leaky と同一
+    curvature: '0'
+  elu_off_m1:
+    name: elu_off_m1
+    offset: -1.0
+    forward: elu(z; α) + c
+    derivative: elu と同一
+    curvature: elu と同一
+    note: 併記のみ・判定に入れない
+  elu_off_p1:
+    name: elu_off_p1
+    offset: 1.0
+    forward: elu(z; α) + c
+    derivative: elu と同一
+    curvature: elu と同一
+    note: 併記のみ・判定に入れない
+  leaky_relu:
+    name: leaky_relu
+record:
+  zmin_every: 1000
+  w_free_every: 10000
+  moments:
+  - m_phi2
+  - m_dphi2
+  - m_phidphi
+  - m_dphiddphi
+  moments_every: 10000
+  moments_dense_last_tasks: 20
+  payload_columns:
+  - init_hook
+  - init_hook_arg
+  - lr_used
+  - freeze_v
+  - batch_mode
+hooks: {}
+arm_template:
+  stage: 0
+  hidden:
+  - 100
+  centered_layers:
+  - 1
+  target_mu_norm: 3.041
+  target_dose: 12.16
+  u_star: null
+arms:
+- name: LRoff0_1216
+  family: leaky
+  activation: leaky_off_0
+  dial: 0.1
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  u_fr: null
+- name: LRoffm2_1216
+  family: leaky
+  activation: leaky_off_m2
+  dial: 0.1
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  u_fr: null
+- name: LRoffm0p5_1216
+  family: leaky
+  activation: leaky_off_m0p5
+  dial: 0.1
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  u_fr: null
+- name: LRoffp0p5_1216
+  family: leaky
+  activation: leaky_off_p0p5
+  dial: 0.1
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  u_fr: null
+- name: LRoffp2_1216
+  family: leaky
+  activation: leaky_off_p2
+  dial: 0.1
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  u_fr: null
+- name: Eoffm1_1216
+  family: elu
+  activation: elu_off_m1
+  dial: 1.0
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  u_fr: 13.8155
+- name: Eoffp1_1216
+  family: elu
+  activation: elu_off_p1
+  dial: 1.0
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  u_fr: 13.8155
+- name: LRleaky_1216
+  family: leaky
+  activation: leaky_relu
+  dial: 0.1
+  hook: null
+  total_steps: 5000000
+  checkpoints:
+  - 0
+  - 1000000
+  - 5000000
+  u_fr: null
+analysis:
+  task_period: 10000
+  tail_window_tasks:
+  - 451
+  - 500
+  settle_windows_tasks:
+  - - 301
+    - 350
+  - - 376
+    - 425
+  - - 451
+    - 500
+  alive_rule: layer1_denom (tail mean) > 0.25
+  bootstrap:
+    n: 2000
+    seed: 20260906
+    level: 0.95
+    unit: seed
+  reference_arm: LRoff0_1216
+  judged_arms:
+  - LRoffm2_1216
+  - LRoffm0p5_1216
+  - LRoffp0p5_1216
+  - LRoffp2_1216
+  bands:
+    dzmax_irrelevant: 0.3
+    dzbar_irrelevant: 0.5

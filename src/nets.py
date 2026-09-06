@@ -303,6 +303,23 @@ class VecMLPL:
     SNAKE_FLIP_ACTIVATIONS = ("snake1",) + tuple(SNAKE_AMP)
     ACTIVATIONS = ACTIVATIONS + SNAKE_FLIP_ACTIVATIONS
     WEIRD_FREQ_ACTIVATIONS = WEIRD_FREQ_ACTIVATIONS + SNAKE_FLIP_ACTIVATIONS
+    # φ に定数 c を足した 2 族 [act_offset_0906 §3]。φ′・φ″ は元の族と**同一**で、
+    # 変わるのは |φ| の偏り（E_支持[φ²] の最小点の位置）だけ。
+    #   * leaky_off_{c}: φ = leaky_relu(z; a) + c。act_alpha は傾き a
+    #     （[0,1] ガードは WEIRD_SLOPE_ACTIVATIONS で leaky と共有）。φ″ ≡ 0。
+    #     **c=0 は加算せず leaky_relu の式を逐語で返す**（`x + 0.0` は -0.0 の
+    #     符号だけ +0.0 に変え得るので、S-limit の bit 一致はこの書き方で担保する）
+    #   * elu_off_{c}: φ = elu(z; α) + c。act_alpha は α（≥0 ガード）。導関数は
+    #     `alpha_exp` 形のみ（`activation_plus_alpha` は φ+c を見るので使えない）
+    #   名前と定数は明示 dict（SNAKE_AMP と同じ流儀）。config の `offset` と S-const で
+    #   突き合わせる。既存の名前・式・タプルは 1 行も書き換えず、**足すだけ**。
+    LEAKY_OFFSET = {"leaky_off_m2": -2.0, "leaky_off_m0p5": -0.5,
+                    "leaky_off_0": 0.0, "leaky_off_p0p5": 0.5, "leaky_off_p2": 2.0}
+    ELU_OFFSET = {"elu_off_m1": -1.0, "elu_off_p1": 1.0}
+    ACT_OFFSET_ACTIVATIONS = tuple(LEAKY_OFFSET) + tuple(ELU_OFFSET)
+    ACTIVATIONS = ACTIVATIONS + ACT_OFFSET_ACTIVATIONS
+    WEIRD_SLOPE_ACTIVATIONS = WEIRD_SLOPE_ACTIVATIONS + tuple(LEAKY_OFFSET)
+    ZERO_CURVATURE_ACTIVATIONS = ZERO_CURVATURE_ACTIVATIONS + tuple(LEAKY_OFFSET)
 
     def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
                  act_grad_form="alpha_exp", wd_b=0.0):
@@ -386,6 +403,9 @@ class VecMLPL:
             # dial が 1.0 以外で渡ったら、名前は合っているのに別の関数を走らせて
             # いる（腕表の写し間違い）ので落とす（S-guard）。
             raise ValueError(f"{act} requires act_alpha == 1.0, got {act_alpha!r}")
+        if act in self.ELU_OFFSET and not float(act_alpha) >= 0.0:
+            # elu_off_* は elu と同じ α ガード [act_offset_0906 §3]（S-guard）。
+            raise ValueError(f"{act} alpha must be non-negative")
         if act_grad_form is not None:
             if act_grad_form not in self.GRAD_FORMS:
                 raise ValueError(f"unknown ELU derivative form {act_grad_form!r}")
@@ -505,6 +525,18 @@ class VecMLPL:
             return F.softplus(pre, beta=1.0)
         if self.act == "tanh_b":
             return torch.tanh(pre)
+        if self.act == "leaky_off_0":
+            # c=0 は加算せず "leaky_relu" 分岐と**同一の式**を返す [act_offset_0906 §3]
+            # （S-limit: bit 一致）。`+ 0.0` は -0.0 を +0.0 に変えるので書かない。
+            return torch.where(pre > 0, pre, self.act_alpha * pre)
+        if self.act in self.LEAKY_OFFSET:
+            # leaky_relu の式（上と同一）に定数 c を足す。φ′ は leaky と同一。
+            return (torch.where(pre > 0, pre, self.act_alpha * pre)
+                    + self.LEAKY_OFFSET[self.act])
+        if self.act in self.ELU_OFFSET:
+            # ELU の式（末尾の fallthrough と同一）に定数 c を足す。
+            return (torch.where(pre > 0, pre, self.act_alpha * torch.expm1(pre))
+                    + self.ELU_OFFSET[self.act])
         # expm1 keeps the small-|z| negative branch accurate; the positive
         # branch of `where` is selected before any overflow of expm1 matters.
         return torch.where(pre > 0, pre, self.act_alpha * torch.expm1(pre))
@@ -650,6 +682,14 @@ class VecMLPL:
         if self.act == "tanh_b":
             t = torch.tanh(pre)
             return 1.0 - t ** 2
+        if self.act in self.LEAKY_OFFSET:
+            # 定数 c は微分に入らない。"leaky_relu" 分岐と同一の式 [act_offset_0906 §3]。
+            return torch.where(pre > 0, torch.ones_like(pre),
+                               torch.full_like(pre, self.act_alpha))
+        if self.act in self.ELU_OFFSET:
+            # ELU の alpha_exp 形と同一の式（activation_plus_alpha は φ+c を見るので使わない）。
+            return torch.where(pre > 0, torch.ones_like(pre),
+                               self.act_alpha * torch.exp(pre))
         if self.act_grad_form == "activation_plus_alpha":
             return torch.where(pre > 0, torch.ones_like(a), a + self.act_alpha)
         return torch.where(pre > 0, torch.ones_like(pre),
@@ -688,6 +728,10 @@ class VecMLPL:
         if self.act in self.SNAKE_AMP:
             A = self.SNAKE_AMP[self.act]
             return 2.0 * self.act_alpha * A * torch.cos(2.0 * self.act_alpha * pre)
+        if self.act in self.ELU_OFFSET:
+            # φ″ は elu と同一 [act_offset_0906 §3]（leaky_off_* は ZERO_CURVATURE で 0）。
+            return torch.where(pre > 0, torch.zeros_like(pre),
+                               self.act_alpha * torch.exp(pre))
         raise NotImplementedError(f"act_curv is not registered for {self.act!r}")
 
     def params(self):
