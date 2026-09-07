@@ -60,10 +60,10 @@ analysis:
     pattern_like_max: 0.3
     j_carried_min: 0.7
   tol:
-    rank1_max: 1.0e-5              # S-rank1: 直交成分の割合
+    rank1_max: 1.0e-4              # S-rank1: 直交成分の割合（追補 1: float32 ログの床は最大 1.7e-5）
     rank1_mutant_min: 0.1          # 変異対照（u を 1 ビットずらす）はこれを超えること
     zbar_rel: 1.0e-5               # S-zbar: 3 分解の相対残差
     zbar_mutant_min: 1.0e-2        # 変異対照（m=0）はこれを超えること
-    j_rel: 1.0e-4                  # S-J: 3 項の和と実測 J の相対差
+    j_rel: 1.0e-2                  # S-J: 幾何 J と実測 J の相対差（追補 1: 実測は境界後 1 step の学習を含み下限 2.2e-4）
   s_null_pair: { WSref_1216: LRoff0_1216 }   # results/offset_grid_0906/logs/
   j_reference: results/boundary_dense_0907/logs   # S-J の照合先
