@@ -60,8 +60,11 @@ analysis:
     pattern_like_max: 0.3
     j_carried_min: 0.7
   tol:
-    rank1_max: 1.0e-4              # S-rank1: 直交成分の割合（追補 1: float32 ログの床は最大 1.7e-5）
-    rank1_mutant_min: 0.1          # 変異対照（u を 1 ビットずらす）はこれを超えること
+    # 追補 2: S-rank1 は「相対 r」でなく ρ = ‖Δw_⊥‖/(eps32·‖w_flip‖) で見る。
+    # r は 1/‖Δw‖ に比例してしまい、平行性でなく「どれだけ動いたか」を測る
+    # （preflight 実測: log-log 傾き −0.98/−1.02・⊥ の絶対値は 2.3e-6 で一定）。
+    rank1_rho_max: 100.0           # 記録雑音の 100 倍まで（preflight 実測の中央値 16・最大 63）
+    rank1_rho_mutant_min: 1000.0   # 変異対照（u を 1 ビットずらす）はこれを超えること
     zbar_rel: 1.0e-5               # S-zbar: 3 分解の相対残差
     zbar_mutant_min: 1.0e-2        # 変異対照（m=0）はこれを超えること
     j_rel: 1.0e-2                  # S-J: 幾何 J と実測 J の相対差（追補 1: 実測は境界後 1 step の学習を含み下限 2.2e-4）

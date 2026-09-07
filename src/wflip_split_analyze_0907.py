@@ -80,14 +80,25 @@ def _aligned(d: dict) -> dict:
 # ---------------------------------------------------------------------------
 # S 検査
 # ---------------------------------------------------------------------------
-def s_rank1(d: dict, target: float, *, mutant: bool = False) -> np.ndarray:
-    """タスク内 Δw_flip の u 直交成分の割合 r = ‖Δw_⊥‖/‖Δw‖（(タスク, ユニット)）。
+EPS32 = float(np.finfo(np.float32).eps)
+
+
+def s_rank1(d: dict, target: float, *, mutant: bool = False) -> dict:
+    """タスク内 Δw_flip の u 直交成分。(タスク, ユニット) の 2 通りで返す。
+
+    - `rho` = ‖Δw_⊥‖ / (eps₃₂·‖w_flip‖) …… **判定に使う**（追補 2）
+    - `rel` = ‖Δw_⊥‖ / ‖Δw‖ ………………… 参考（登録時の形）
+
+    `rel` は「ユニットがどれだけ動いたか」を測ってしまう: 直交残差の絶対値は
+    float32 の記録雑音で決まる定数なので、`rel` は 1/‖Δw‖ に比例する
+    （preflight 実測: log-log の傾き −0.98 / −1.02・‖Δw‖ が 69 倍動く間
+    ‖Δw_⊥‖ は 2.3e−6 で一定）。平行性そのものを測るのは `rho` の側。
 
     `mutant=True` では u の 1 ビット目を反転させた u′ を使う（変異対照）。
     タスク k の実効入力は「そのタスクの終端行に載っている flip_state」で決まる。
     """
     a = _aligned(d)
-    out = []
+    out, out_rho = [], []
     for n in range(len(a["j"]) - 1):
         j0, j1, i1 = a["j"][n], a["j"][n + 1], a["i"][n + 1]
         if int(a["step"][n + 1]) - int(a["step"][n]) != PERIOD:
@@ -103,9 +114,12 @@ def s_rank1(d: dict, target: float, *, mutant: bool = False) -> np.ndarray:
         # sqrt(‖dw‖² − (dw·û)²) は平行な入力で桁落ちし、相対誤差が √eps まで
         # 悪化する（float64 で 2e-8・float32 ログでは 3e-4）。
         perp = np.linalg.norm(dw - (dw @ uh)[:, None] * uh[None, :], axis=1)
+        wn = np.linalg.norm(d["wfl"][j1], axis=1)
         with np.errstate(invalid="ignore", divide="ignore"):
             out.append(np.where(nrm > 0, perp / nrm, np.nan))
-    return np.asarray(out, dtype=np.float64)
+            out_rho.append(np.where(wn > 0, perp / (EPS32 * wn), np.nan))
+    return dict(rho=np.asarray(out_rho, dtype=np.float64),
+                rel=np.asarray(out, dtype=np.float64))
 
 
 def s_zbar(d: dict, target: float, *, drop_m: bool = False) -> np.ndarray:
@@ -246,8 +260,12 @@ def analyze(logdir: Path, out: Path, ref_logdir: Path | None = None) -> dict:
                    terms=shares,
                    bit_plus_gamma=shares["bit"]["share"] + shares["gfl"]["share"]
                    + shares["gfr"]["share"]),
-            s_rank1=dict(value=float(np.nanmedian(np.concatenate([x.ravel() for x in R1]))),
-                         mutant=float(np.nanmedian(np.concatenate([x.ravel() for x in R1M])))),
+            s_rank1=dict(
+                rho=float(np.nanmedian(np.concatenate([x["rho"].ravel() for x in R1]))),
+                rho_max=float(np.nanmax(np.concatenate([x["rho"].ravel() for x in R1]))),
+                rho_mutant=float(np.nanmedian(np.concatenate([x["rho"].ravel() for x in R1M]))),
+                rel=float(np.nanmedian(np.concatenate([x["rel"].ravel() for x in R1]))),
+                rel_mutant=float(np.nanmedian(np.concatenate([x["rel"].ravel() for x in R1M])))),
             s_zbar=dict(value=float(np.nanmedian(np.concatenate([x.ravel() for x in ZB]))),
                         mutant=float(np.nanmedian(np.concatenate([x.ravel() for x in ZBM])))))
 
@@ -268,10 +286,10 @@ def analyze(logdir: Path, out: Path, ref_logdir: Path | None = None) -> dict:
     # ---- 判定 ---------------------------------------------------------------
     j = res["arms"].get(judged, {})
     checks = dict(
-        s_rank1=dict(value=j.get("s_rank1", {}).get("value"),
-                     mutant=j.get("s_rank1", {}).get("mutant"),
-                     pass_=bool(j and j["s_rank1"]["value"] < float(tol["rank1_max"])
-                                and j["s_rank1"]["mutant"] > float(tol["rank1_mutant_min"]))),
+        s_rank1=dict(rho=j.get("s_rank1", {}).get("rho"),
+                     rho_mutant=j.get("s_rank1", {}).get("rho_mutant"),
+                     pass_=bool(j and j["s_rank1"]["rho"] < float(tol["rank1_rho_max"])
+                                and j["s_rank1"]["rho_mutant"] > float(tol["rank1_rho_mutant_min"]))),
         s_zbar=dict(value=j.get("s_zbar", {}).get("value"),
                     mutant=j.get("s_zbar", {}).get("mutant"),
                     pass_=bool(j and j["s_zbar"]["value"] < float(tol["zbar_rel"])
@@ -285,7 +303,7 @@ def analyze(logdir: Path, out: Path, ref_logdir: Path | None = None) -> dict:
         res["J_SOURCE"] = "NOT_DETERMINED"
         res["reason"] = "judged arm missing"
         return _write(res, out)
-    if not checks["s_rank1"]["pass_"]:
+    if not checks["s_rank1"]["pass_"]:                     # 追補 2: ρ で見る
         res["WFLIP_ALIGN"] = "NOT_DETERMINED"
         res["J_SOURCE"] = "NOT_DETERMINED"
         res["reason"] = "S-rank1 failed: (G2) is broken, judgments withheld (spec §4)"
@@ -330,7 +348,7 @@ def _write(res: dict, out: Path) -> dict:
              f"- 第 2 `J_SOURCE` = **{res.get('J_SOURCE')}**", ""]
     if res.get("reason"):
         lines += [f"> {res['reason']}", ""]
-    lines += ["| 腕 | s (全 1 方向の寄与率) | CI | ‖Δw‖/‖w0‖ | E[J] | ビット項 | γ-flip | γ-free | S-rank1 | S-zbar |",
+    lines += ["| 腕 | s (全 1 方向の寄与率) | CI | ‖Δw‖/‖w0‖ | E[J] | ビット項 | γ-flip | γ-free | S-rank1 ρ | S-zbar |",
               "|---|---|---|---|---|---|---|---|---|---|"]
     for arm, a in res.get("arms", {}).items():
         t = a["J"]["terms"]
@@ -338,7 +356,7 @@ def _write(res: dict, out: Path) -> dict:
             f"| {arm} | {a['s']['point']:.4f} | [{a['s']['ci'][0]:.4f}, {a['s']['ci'][1]:.4f}] | "
             f"{a['dw_over_w0']:.3f} | {a['J']['measured']:+.5f} | {t['bit']['share']:+.2f} | "
             f"{t['gfl']['share']:+.2f} | {t['gfr']['share']:+.2f} | "
-            f"{a['s_rank1']['value']:.2e} (変異 {a['s_rank1']['mutant']:.2e}) | "
+            f"{a['s_rank1']['rho']:.1f} (変異 {a['s_rank1']['rho_mutant']:.3g}) | "
             f"{a['s_zbar']['value']:.2e} (変異 {a['s_zbar']['mutant']:.2e}) |")
     (out / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return res

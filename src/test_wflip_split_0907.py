@@ -119,31 +119,41 @@ def test_rank1_recovers_parallel_and_mutant_fails():
         wfl[n] = wfl[n - 1] + c * u[None, :]
     d = _fake(steps, wfl, flip)
     r = A.s_rank1(d, TARGET)
-    assert np.nanmax(r) < 1e-12, np.nanmax(r)      # 直接射影なら float64 で 1e-14 台
+    assert np.nanmax(r["rel"]) < 1e-12, np.nanmax(r["rel"])   # 直接射影なら float64 で 1e-14 台
     rm = A.s_rank1(d, TARGET, mutant=True)
-    assert np.nanmedian(rm) > 0.1, np.nanmedian(rm)
+    assert np.nanmedian(rm["rel"]) > 0.1, np.nanmedian(rm["rel"])
+    assert np.nanmedian(rm["rho"]) > 1e3, np.nanmedian(rm["rho"])
 
 
-def test_rank1_float32_floor_is_below_the_registered_tolerance():
-    """追補 1 の根拠: float32 でログした重みでも r が `rank1_max` を下回る。
+def test_rho_is_flat_in_step_size_but_rel_is_not():
+    """追補 2 の根拠。**厳密に平行**な増分を float32 に丸めて読み戻すと、
+    直交残差の絶対値は歩幅に依らない（＝丸めの雑音）ので
+      `rel` は 1/‖Δw‖ に比例し、`rho` は歩幅によらず一定。
+    判定に使えるのは `rho` の側だけ、ということを実測で固定する。
 
-    実走の規模（‖w_flip‖ ≈ 1.2・1 タスクの ‖Δw‖ ≈ 0.006 で比 ≈ 190）で、
-    **厳密に平行**な増分を float32 に丸めてから読み戻す。
+    ここで出る ρ ≈ 0.3 は**記録の丸めだけ**の床。実走ではさらに 1 タスク
+    10,000 step ぶんの float32 演算の丸めが乗る（preflight 実測 ρ ≈ 16）ので、
+    登録した閾値 100 はそちらに合わせてある。
     """
-    tol = float(load_config(str(W.CONFIG))["analysis"]["tol"]["rank1_max"])
+    tol = load_config(str(W.CONFIG))["analysis"]["tol"]
     rng = np.random.default_rng(11)
-    steps = [0, W.PERIOD]
     flip = np.zeros((2, 15))
     flip[0] = (rng.random(15) < 0.5).astype(float)
     flip[1] = flip[0].copy(); flip[1][6] = 1 - flip[1][6]
     u, _ = A.u_of(flip[1], TARGET)
-    w0 = rng.normal(scale=0.316, size=(200, 15))
-    w1 = w0 - 0.0022 * u[None, :]
+    w0 = rng.normal(scale=0.316, size=(400, 15))
     cast = lambda x: x.astype(np.float32).astype(np.float64)
-    wfl = np.stack([cast(w0), cast(w1)])
-    r = A.s_rank1(_fake(steps, wfl, flip), TARGET)
-    assert np.nanmax(r) < tol, (np.nanmedian(r), np.nanmax(r), tol)
-    assert np.nanmax(r) > 1e-7, np.nanmax(r)       # 床は 0 ではない（検査が空虚でない）
+    got = {}
+    for dc in (0.0005, 0.005, 0.05):                     # 歩幅を 100 倍振る
+        wfl = np.stack([cast(w0), cast(w0 - dc * u[None, :])])
+        r = A.s_rank1(_fake([0, W.PERIOD], wfl, flip), TARGET)
+        got[dc] = (float(np.nanmedian(r["rel"])), float(np.nanmedian(r["rho"])))
+    rels = [v[0] for v in got.values()]
+    rhos = [v[1] for v in got.values()]
+    assert max(rels) / min(rels) > 30, got               # rel は歩幅で 2 桁動く
+    assert max(rhos) / min(rhos) < 3, got                # rho はほぼ動かない
+    assert max(rhos) < float(tol["rank1_rho_max"]), got  # 記録雑音の 100 倍を超えない
+    assert min(rhos) > 0.1, got                          # 0 ではない（検査が空虚でない）
 
 
 def test_rank1_subtraction_form_loses_digits_on_mixed_coefficients():
@@ -178,7 +188,7 @@ def test_rank1_flags_a_genuinely_off_direction():
     wfl = np.zeros((2, 1, 15))
     wfl[1, 0] = 3.0 * uh + 4.0 * perp          # ⊥/全体 = 4/5
     d = _fake(steps, wfl, flip)
-    assert abs(float(A.s_rank1(d, TARGET)[0, 0]) - 0.8) < 1e-9
+    assert abs(float(A.s_rank1(d, TARGET)["rel"][0, 0]) - 0.8) < 1e-9
 
 
 # -------------------------------------------------------------- S-zbar
@@ -309,8 +319,8 @@ def test_flip_and_free_slices_are_disjoint_and_cover_the_input():
 
 
 # ------------------------------------------------------------- ラベル
-def _verdict(s_point, ci, dw_over_w0, bit, gfl, gfr, jmeas, jci, rank1=1e-9,
-             rank1_m=0.5, zbar=1e-9, zbar_m=0.5, rel_gap=0.0):
+def _verdict(s_point, ci, dw_over_w0, bit, gfl, gfr, jmeas, jci, rank1=16.0,
+             rank1_m=9.0e4, zbar=1e-9, zbar_m=0.5, rel_gap=0.0):
     return dict(s=dict(point=s_point, ci=list(ci)), dw_over_w0=dw_over_w0,
                 dw_norm=1.0, w0_norm=1.0, n_seeds=10,
                 J=dict(measured=jmeas, ci=list(jci), geometric=jmeas,
@@ -318,7 +328,7 @@ def _verdict(s_point, ci, dw_over_w0, bit, gfl, gfr, jmeas, jci, rank1=1e-9,
                        terms=dict(bit=dict(mean=bit * jmeas, share=bit),
                                   gfl=dict(mean=gfl * jmeas, share=gfl),
                                   gfr=dict(mean=gfr * jmeas, share=gfr))),
-                s_rank1=dict(value=rank1, mutant=rank1_m),
+                s_rank1=dict(rho=rank1, rho_mutant=rank1_m),
                 s_zbar=dict(value=zbar, mutant=zbar_m))
 
 
@@ -330,8 +340,8 @@ def _label(tmp_path, v):
     cfg = load_config(str(W.CONFIG))["analysis"]
     lab, floor, tol = cfg["labels"], cfg["floor"], cfg["tol"]
     j = v
-    if not (j["s_rank1"]["value"] < float(tol["rank1_max"])
-            and j["s_rank1"]["mutant"] > float(tol["rank1_mutant_min"])):
+    if not (j["s_rank1"]["rho"] < float(tol["rank1_rho_max"])
+            and j["s_rank1"]["rho_mutant"] > float(tol["rank1_rho_mutant_min"])):
         return "NOT_DETERMINED", "NOT_DETERMINED"
     lo, hi = j["s"]["ci"]
     if j["dw_over_w0"] < float(floor["dw_over_w0"]):
@@ -360,9 +370,9 @@ def test_label_rules(tmp_path):
     # CI が 0.3 を跨いで 0.7 に届かない → どのラベルにも収まらない
     assert _label(tmp_path, _verdict(0.4, (0.25, 0.65), 0.7, 1.0, 0.0, 0.0,
                                      0.008, (0.006, 0.010)))[0] == "NOT_DETERMINED"
-    # S-rank1 が落ちたら主判定を出さない
+    # S-rank1 が落ちたら主判定を出さない（ρ が記録雑音の 100 倍を超える）
     assert _label(tmp_path, _verdict(0.93, (0.88, 0.96), 0.7, 1.0, 0.0, 0.0,
-                                     0.008, (0.006, 0.010), rank1=1e-2))[0] == "NOT_DETERMINED"
+                                     0.008, (0.006, 0.010), rank1=500.0))[0] == "NOT_DETERMINED"
     # S-rank1 の変異対照が落ちない（＝検査が空虚）なら通さない
     assert _label(tmp_path, _verdict(0.93, (0.88, 0.96), 0.7, 1.0, 0.0, 0.0,
-                                     0.008, (0.006, 0.010), rank1_m=1e-3))[0] == "NOT_DETERMINED"
+                                     0.008, (0.006, 0.010), rank1_m=50.0))[0] == "NOT_DETERMINED"
