@@ -87,6 +87,16 @@ b の累積プロファイル B(τ) = E[b(t0+τ) − b(t0)]（τ ∈ 記録格�
 - 前検査 `results/_preflight_boundary_dense_0907/`（30k・S-null のバイト一致・格子の検査・恒等式）。
 - 本走 `results/boundary_dense_0907/`。生ログはギガファイル。
 
+## 8. 前検査の所見（本走の前に登録）
+
+30k 前検査 **PASS**（`results/_preflight_boundary_dense_0907/preflight.json`）。
+
+1. **S-null は通った**: `BDref_1216`（境界密・16 記録点）は `offset_grid_0906` の `LRoff0_1216`（標準格子・31 記録点）と **`state_hash_final` が 10 seed すべて一致**し、共有 step（タスク終端）の共通列も全てバイト一致。変異体の対（`BDa0p5_1216`）は 393 列で不一致。**記録格子を変えても軌道は 1 bit も動かない**ことを実測した。
+2. **`layer1_dzbar` は境界密格子では定義されない。** `EluRecorder` は dzbar を「直前の記録点がちょうど `interval`(=1000) step 前」のときだけ埋め、そうでなければ NaN を書く（`elu_swamp.py` の `adjacent` 条件）。境界密格子では隣接条件がほぼ成り立たないので、この列は 16 点中 15 点が NaN になる。
+   - **本走のログから dzbar を読んではいけない。** 判定に使うのは z̄ と b の差分だけ（§4 の J/B/A/N はすべて 2 点の差で定義してある）。
+   - 前検査の合否からもこの 1 列だけを外した（他の非有限・欠け・lr 不一致は落とす）。S-null の列比較からも外した（増分は記録格子の性質であって軌道の性質ではない）。除外が空虚でないことは変異体の対が担保する。
+3. `layer1_b` は `(記録点, 100)` で書けており、既存列は 1 つも欠けていない。
+
 ## Log
 
-- 2026-09-07 昼: spec + config を実装前に commit。
+- 2026-09-07 昼: spec + config を実装前に commit（`c6c13a7`）。実装（新規モジュール `src/boundary_dense_0907.py`・既存の runner/recorder は 1 行も書き換えず `EdgeRecorder` を継承）＋ 検査 11 本 → 30k 前検査 **PASS**（§8）。本走はそのまま投入。
