@@ -63,6 +63,58 @@ def load_seed(logdir: Path, arm: str, seed: int) -> dict | None:
             state_hash_final=str(z["state_hash_final"]))
 
 
+# S-null で比べない列（記録格子に依存する・`boundary_dense_0907` §8-2 と同じ理由）
+GRID_DEPENDENT_COLUMNS = ("layer1_dzbar",)
+
+
+def s_null_pair(logdir: Path, mine: str, ref_logdir: Path, theirs: str,
+                seeds) -> dict:
+    """学習が参照とビット一致か（追補 3）。
+
+    **`state_hash_final` は使えない**——本走は 2M step、参照 `LRoff0_1216` は 5M step
+    なので終端が違う。共通なのは (1) 1M step のチェックポイント `state_hash_1m` と
+    (2) **共有する記録 step における共通列**。両方を要求する（`final` 1 つより強い）。
+    `layer1_dzbar` は記録格子に依存するので除く。
+    """
+    rows = []
+    for s in seeds:
+        pm = Path(logdir) / f"{mine}_seed{s}.npz"
+        pr = Path(ref_logdir) / f"{theirs}_seed{s}.npz"
+        if not (pm.exists() and pr.exists()):
+            rows.append(dict(seed=int(s), pass_=False, reason="missing"))
+            continue
+        with np.load(pm, allow_pickle=True) as a, np.load(pr, allow_pickle=True) as b:
+            h = str(a["state_hash_1m"]) == str(b["state_hash_1m"])
+            sa = a["step"].astype(np.int64)
+            sb = b["step"].astype(np.int64)
+            shared = np.intersect1d(sa, sb)
+            ia = {int(v): i for i, v in enumerate(sa)}
+            ib = {int(v): i for i, v in enumerate(sb)}
+            ra = np.array([ia[int(v)] for v in shared], dtype=np.int64)
+            rb = np.array([ib[int(v)] for v in shared], dtype=np.int64)
+            mism, n_cmp = [], 0
+            for k in sorted(set(a.files) & set(b.files)):
+                if k in GRID_DEPENDENT_COLUMNS:
+                    continue
+                x, y = a[k], b[k]
+                if x.ndim == 0 or y.ndim == 0 or x.dtype != y.dtype:
+                    continue
+                if x.shape[0] != sa.size or y.shape[0] != sb.size:
+                    continue                      # step 軸を持たない列（w_free 等）
+                n_cmp += 1
+                xa = np.ascontiguousarray(x[ra])
+                yb = np.ascontiguousarray(y[rb])
+                if xa.shape != yb.shape or not np.array_equal(
+                        xa.view(np.uint8), yb.view(np.uint8)):
+                    mism.append(k)
+            rows.append(dict(seed=int(s), pass_=bool(h and not mism), hash_1m=bool(h),
+                             n_shared=int(shared.size), n_compared=int(n_cmp),
+                             mismatched=mism))
+    return dict(rows=rows, n=len(rows), match=sum(1 for r in rows if r["pass_"]),
+                pass_=bool(rows and all(r["pass_"] for r in rows)),
+                excluded=list(GRID_DEPENDENT_COLUMNS))
+
+
 def _aligned(d: dict) -> dict:
     """w_flip / w_free の記録行に、同じ step の本体行（zb, b, flip）を並べる。"""
     idx = {int(v): i for i, v in enumerate(d["step"])}
@@ -274,13 +326,8 @@ def analyze(logdir: Path, out: Path, ref_logdir: Path | None = None) -> dict:
     null = {}
     if ref_logdir is not None:
         for mine, theirs in pair.items():
-            ok = []
-            for s in seeds:
-                a = load_seed(logdir, mine, s)
-                b = load_seed(Path(ref_logdir), theirs, s)
-                ok.append(bool(a and b and a["state_hash_final"] == b["state_hash_final"]))
-            null[f"{mine}<->{theirs}"] = dict(n=len(ok), match=int(sum(ok)),
-                                              pass_=bool(ok and all(ok)))
+            null[f"{mine}<->{theirs}"] = s_null_pair(
+                logdir, mine, Path(ref_logdir), theirs, seeds)
     res["s_null"] = null
 
     # ---- 判定 ---------------------------------------------------------------
