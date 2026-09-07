@@ -43,7 +43,7 @@ def per_task(d: dict, window) -> dict:
     lo, hi = int(window[0]), int(window[1])
     taus = sorted({int(s) - t0 for t0 in (lo,) for s in d["step"]
                    if t0 < int(s) <= t0 + PERIOD} | {PERIOD})
-    J, Bv, A, N, prof, zx0, straddle = [], [], [], [], [], [], []
+    J, Bv, A, N, prof, aprof, zx0, straddle = [], [], [], [], [], [], [], []
     for t0 in range(lo, hi + 1, PERIOD):
         i0, i1, i2 = idx.get(t0), idx.get(t0 + 1), idx.get(t0 + PERIOD)
         if None in (i0, i1, i2):
@@ -57,9 +57,12 @@ def per_task(d: dict, window) -> dict:
         straddle.append((d["zx"][i0] > 0) & (d["zn"][i0] <= 0))
         prof.append([d["b"][idx[t0 + t]] - d["b"][i0] if (t0 + t) in idx else np.nan
                      for t in taus])
+        aprof.append([(d["zb"][idx[t0 + t]] - d["b"][idx[t0 + t]]) - g1
+                      if (t0 + t) in idx else np.nan for t in taus])
     f = lambda x: np.asarray(x, dtype=np.float64)
     return dict(J=f(J), B=f(Bv), A=f(A), N=f(N), taus=taus,
                 prof=np.asarray(prof, dtype=np.float64),
+                aprof=np.asarray(aprof, dtype=np.float64),
                 straddle=np.asarray(straddle), zmax0=f(zx0))
 
 
@@ -124,10 +127,12 @@ def analyze(logdir: Path, out: Path) -> dict:
                "GEOMETRY_CARRIED" if f_b <= float(lab["geometry_carried_max"]) else "MIXED")
     # 第 2 判定
     taus = pt[0]["taus"]
-    prof = np.concatenate([x["prof"].reshape(-1, len(taus)) for x in pt], axis=0)
-    curve = np.nanmean(prof, axis=0)
-    total = curve[taus.index(PERIOD)]
-    tot_p, tot_ci = boot([x["prof"][..., taus.index(PERIOD)] for x in pt],
+    itot = taus.index(PERIOD)
+    # prof は (タスク, τ, ユニット)。**reshape(-1, n_tau) は τ 軸とユニット軸を混ぜる**ので
+    # 使わない（2026-09-07 の実装バグ・第 2 判定だけが影響した）。τ 以外を潰す。
+    curve = np.nanmean(np.concatenate([x["prof"] for x in pt], axis=0), axis=(0, 2))
+    total = float(curve[itot])
+    tot_p, tot_ci = boot([x["prof"][:, itot, :] for x in pt],
                          np.random.default_rng(seed + 2), nboot)
     tau_half = None
     if np.isfinite(total) and total != 0:
@@ -139,13 +144,15 @@ def analyze(logdir: Path, out: Path) -> dict:
               "TRANSIENT" if tau_half <= int(lab["transient_max_tau"]) else
               "STEADY" if tau_half >= int(lab["steady_min_tau"]) else "INTERMEDIATE")
 
+    acurve = np.nanmean(np.concatenate([x["aprof"] for x in pt], axis=0), axis=(0, 2))
     res = dict(experiment="boundary_dense_0907", judged_arm=judged, window=window,
                n_boot=nboot, boot_seed=seed, floor=floor,
                SINK_CHANNEL=dict(label=channel, f_b=f_b, f_b_ci=f_b_ci,
                                  E_N=jr["N"], E_N_ci=jr["N_ci"], floor_ok=bool(n_ok)),
                SINK_TIMING=dict(label=timing, tau_half=tau_half,
                                 E_B_total=tot_p, E_B_total_ci=tot_ci,
-                                taus=taus, curve=[float(v) for v in curve]),
+                                taus=taus, curve=[float(v) for v in curve],
+                                a_curve=[float(v) for v in acurve]),
                arms=rows)
     out.mkdir(parents=True, exist_ok=True)
     (out / "verdict.json").write_text(json.dumps(res, indent=1, ensure_ascii=False, default=float),
@@ -167,7 +174,10 @@ def analyze(logdir: Path, out: Path) -> dict:
           "| τ | " + " | ".join(str(t) for t in taus) + " |",
           "|---|" + "---|" * len(taus),
           "| E[b(t0+τ)−b(t0)] | " + " | ".join(f"{v:+.5f}" for v in curve) + " |",
-          "| 総量に対する割合 | " + " | ".join(f"{v/total:.2f}" if total else "—" for v in curve) + " |"]
+          "| 総量に対する割合 | " + " | ".join(f"{v/total:.2f}" if total else "—" for v in curve) + " |",
+          "| E[A(τ)] = [z̄−b](t0+τ)−[z̄−b](t0+1) | " + " | ".join(f"{v:+.5f}" for v in acurve) + " |",
+          "| A の総量に対する割合 | " + " | ".join(f"{v/acurve[itot]:.2f}" if acurve[itot] else "—"
+                                                 for v in acurve) + " |"]
     (out / "summary.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     print("\n".join(L))
     return res
