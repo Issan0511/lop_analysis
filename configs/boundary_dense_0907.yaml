@@ -1,0 +1,55 @@
+# proj_004: boundary_dense_0907 — 沈下中のタスク境界まわりを対数格子で記録し、収支を J（幾何）/ B（バイアスの学習）/ A（w_flip の整列）に分ける。
+# 事前登録 spec: specs/spec_boundary_dense_0907.md（vault: 可塑性喪失/spec/境界密記録_spec_0907.md）
+# 宿主: edge_law_0905 の runner。**学習は 1 bit も変えない**——変えるのは記録格子と、新しい列 layer1_b だけ。
+# S-null: BDref_1216 の state_hash が offset_grid_0906 の LRoff0_1216 と一致すること（落ちたら本走は全部無効）。
+
+experiment: boundary_dense_0907
+host_config: configs/gate_dial_0902.yaml
+output:
+  dir: results/boundary_dense_0907
+  logs_tail_dir: results/boundary_dense_0907/logs_tail
+common_overrides:
+  lr_main: 0.01
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  generator_offset: 0
+  omp_num_threads: 1
+
+activation:
+  leaky_off_0:    { name: leaky_off_0,    offset: 0.0,  forward: 'leaky_relu(z; a)  (加算せず逐語)', derivative: '1 (z>0) / a (z<=0)', curvature: '0' }
+  leaky_off_m0p5: { name: leaky_off_m0p5, offset: -0.5, forward: 'leaky_relu(z; a) + c', derivative: 'leaky と同一', curvature: '0' }
+
+record:
+  zmin_every: 1000
+  w_free_every: 10000
+  moments: [m_phi2, m_dphi2, m_phidphi, m_dphiddphi]
+  moments_every: 10000
+  moments_dense_last_tasks: 20
+  payload_columns: [init_hook, init_hook_arg, lr_used, freeze_v, batch_mode]
+  # ---- 本走で足すのはこの 2 つだけ（spec §2）----
+  new_unit_columns: [b]            # ユニット別バイアス。z̄ = b + w_flip·x_flip の分解に要る
+  boundary_window: [100000, 1990000]
+  boundary_offsets: [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
+
+hooks:
+  v_freeze:   'v.mul_(value) then skip the v update in the training loop; logs freeze_v'
+  full_batch: 'exact 32-pattern gradient each step; logs batch_mode'
+
+arm_template: { stage: 0, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16, u_star: null }
+arms:
+  - { name: BDref_1216,      family: leaky, activation: leaky_off_0,    dial: 0.1, hook: null, total_steps: 2000000, checkpoints: [0, 1000000, 2000000], u_fr: null }
+  - { name: BDa0p5_1216,     family: leaky, activation: leaky_off_0,    dial: 0.5, hook: null, total_steps: 2000000, checkpoints: [0, 1000000, 2000000], u_fr: null }
+  - { name: BDoffm0p5_1216,  family: leaky, activation: leaky_off_m0p5, dial: 0.1, hook: null, total_steps: 2000000, checkpoints: [0, 1000000, 2000000], u_fr: null }
+  - { name: BDvf1_1216,      family: leaky, activation: leaky_off_0,    dial: 0.1, hook: { type: v_freeze, value: 1.0 },  total_steps: 2000000, checkpoints: [0, 1000000, 2000000], u_fr: null }
+  - { name: BDFB_1216,       family: leaky, activation: leaky_off_0,    dial: 0.1, hook: { type: full_batch, value: 1.0 }, total_steps: 2000000, checkpoints: [0, 1000000, 2000000], u_fr: null }
+
+analysis:
+  judged_arm: BDref_1216
+  window: [100000, 1990000]        # タスク 10〜199 の開始 step
+  boot: { n: 2000, seed: 20260907 }
+  floor: { net_per_task: 0.005 }   # |E[N]| がこれ未満なら NOT_DETERMINED（観測 0.0115/タスク の 43%）
+  labels:
+    bias_carried_min: 0.7
+    geometry_carried_max: 0.3
+    transient_max_tau: 100
+    steady_min_tau: 3000
+  s_null_pair: { BDref_1216: LRoff0_1216 }   # results/offset_grid_0906/logs/
