@@ -1,0 +1,676 @@
+{
+  "models": [
+    {
+      "label": "leaky100",
+      "checkpoint": "/home/issan/Projects/claude/proj_004_drift/results/p3_extend_0902/ckpts/LR_1216_step5000000.pt",
+      "checkpoint_sha256": "55e9a181b0d749884df34c86cd24e3dcd9481e30d707e626622e7524b92897c8",
+      "last_record": 2000,
+      "completed": true,
+      "failed_seed_arms": 0,
+      "target_units": [
+        [
+          15,
+          64,
+          77,
+          88,
+          90
+        ],
+        [
+          16,
+          45,
+          49,
+          57,
+          83
+        ],
+        [
+          4,
+          6,
+          10,
+          34,
+          67
+        ],
+        [
+          14,
+          19,
+          59,
+          72,
+          93
+        ],
+        [
+          22,
+          44,
+          55,
+          59,
+          82
+        ],
+        [
+          18,
+          33,
+          56,
+          63,
+          70
+        ],
+        [
+          19,
+          61,
+          74,
+          89,
+          98
+        ],
+        [
+          6,
+          47,
+          49,
+          51,
+          73
+        ],
+        [
+          20,
+          22,
+          30,
+          33,
+          92
+        ],
+        [
+          10,
+          12,
+          14,
+          71,
+          95
+        ]
+      ],
+      "sigma": [
+        1.7756812479137842,
+        1.788334146938704,
+        1.6976022212340247,
+        1.7429269679263095,
+        1.7843428176681888,
+        1.7250432396989752,
+        1.7428354890604603,
+        1.7872199851372779,
+        1.7985726236980977,
+        1.77519798038226
+      ],
+      "immediate_response_checks": [
+        {
+          "condition": "pulse_plus",
+          "b_error": 2.6645352591003757e-15,
+          "W_error": 1.0658141036401503e-14
+        },
+        {
+          "condition": "pulse_minus",
+          "b_error": 8.881784197001252e-16,
+          "W_error": 1.7763568394002505e-15
+        },
+        {
+          "condition": "alonec_sham",
+          "b_error": 0.0,
+          "W_error": 0.0
+        },
+        {
+          "condition": "alonec_plus",
+          "b_error": 2.6645352591003757e-15,
+          "W_error": 1.0658141036401503e-14
+        },
+        {
+          "condition": "alonec_minus",
+          "b_error": 8.881784197001252e-16,
+          "W_error": 1.7763568394002505e-15
+        },
+        {
+          "condition": "alone_sham",
+          "b_error": 0.0,
+          "W_error": 0.0
+        },
+        {
+          "condition": "alone_plus",
+          "b_error": 2.6645352591003757e-15,
+          "W_error": 1.0658141036401503e-14
+        },
+        {
+          "condition": "alone_minus",
+          "b_error": 8.881784197001252e-16,
+          "W_error": 1.7763568394002505e-15
+        }
+      ],
+      "activation": "leaky_relu",
+      "alpha": 0.1,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "width": 100
+    },
+    {
+      "label": "elu100",
+      "checkpoint": "/home/issan/Projects/claude/proj_004_drift/results/p3_extend_0902/ckpts/E_1216_step5000000.pt",
+      "checkpoint_sha256": "1505422f79f6a8241a8ed8f3b743221d14896f1235c3f2a38a78f27f2639bba4",
+      "last_record": 2000,
+      "completed": true,
+      "failed_seed_arms": 0,
+      "target_units": [
+        [
+          15,
+          64,
+          77,
+          88,
+          90
+        ],
+        [
+          16,
+          45,
+          49,
+          57,
+          83
+        ],
+        [
+          4,
+          6,
+          10,
+          34,
+          67
+        ],
+        [
+          14,
+          19,
+          59,
+          72,
+          93
+        ],
+        [
+          22,
+          44,
+          55,
+          59,
+          82
+        ],
+        [
+          18,
+          33,
+          56,
+          63,
+          70
+        ],
+        [
+          19,
+          61,
+          74,
+          89,
+          98
+        ],
+        [
+          6,
+          47,
+          49,
+          51,
+          73
+        ],
+        [
+          20,
+          22,
+          30,
+          33,
+          92
+        ],
+        [
+          10,
+          12,
+          14,
+          71,
+          95
+        ]
+      ],
+      "sigma": [
+        2.957380847025345,
+        2.95205660759854,
+        2.6544338502779405,
+        2.9155071308230793,
+        3.1557361342807204,
+        2.718386101533525,
+        2.7214755654951936,
+        3.0710873237854486,
+        2.8873290092675683,
+        2.961383545932321
+      ],
+      "immediate_response_checks": [
+        {
+          "condition": "pulse_plus",
+          "b_error": 8.881784197001252e-16,
+          "W_error": 1.7763568394002505e-15
+        },
+        {
+          "condition": "pulse_minus",
+          "b_error": 5.551115123125783e-17,
+          "W_error": 4.683753385137379e-17
+        },
+        {
+          "condition": "alonec_sham",
+          "b_error": 0.0,
+          "W_error": 0.0
+        },
+        {
+          "condition": "alonec_plus",
+          "b_error": 8.881784197001252e-16,
+          "W_error": 1.7763568394002505e-15
+        },
+        {
+          "condition": "alonec_minus",
+          "b_error": 5.551115123125783e-17,
+          "W_error": 4.683753385137379e-17
+        },
+        {
+          "condition": "alone_sham",
+          "b_error": 0.0,
+          "W_error": 0.0
+        },
+        {
+          "condition": "alone_plus",
+          "b_error": 8.881784197001252e-16,
+          "W_error": 1.7763568394002505e-15
+        },
+        {
+          "condition": "alone_minus",
+          "b_error": 5.551115123125783e-17,
+          "W_error": 4.683753385137379e-17
+        }
+      ],
+      "activation": "elu",
+      "alpha": 1.0,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "width": 100
+    },
+    {
+      "label": "snake075",
+      "checkpoint": "/home/issan/Projects/claude/snake_out_0904/results/_diag_w5_snake_0905/asweep_a075/ckpts/SN5_a1_step5000000.pt",
+      "checkpoint_sha256": "e9d1f48134712af2e71c09635b214dc5defd1f59a6ad55c07da0decde238e94f",
+      "last_record": 2000,
+      "completed": true,
+      "failed_seed_arms": 3,
+      "target_units": [
+        [
+          4
+        ],
+        [
+          2
+        ],
+        [
+          0
+        ],
+        [
+          3
+        ],
+        [
+          2
+        ],
+        [
+          1
+        ],
+        [
+          3
+        ],
+        [
+          2
+        ],
+        [
+          1
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          1
+        ],
+        [
+          0
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          0
+        ],
+        [
+          4
+        ],
+        [
+          2
+        ],
+        [
+          2
+        ],
+        [
+          0
+        ]
+      ],
+      "sigma": [
+        2.6816817983296524,
+        4.673993380999961,
+        3.491276527495568,
+        3.4919137811095964,
+        2.240757685925349,
+        3.2096069998220984,
+        2.9050463810172262,
+        2.37617090044605,
+        2.1844888054224394,
+        3.356359712999876,
+        2.4618738095846004,
+        2.955069439146201,
+        3.098651322401573,
+        3.845514565826165,
+        3.129291585220192,
+        3.588796443542677,
+        2.4304294665480928,
+        3.135316550363518,
+        2.633946610802363,
+        3.0782995034376937
+      ],
+      "immediate_response_checks": [
+        {
+          "condition": "pulse_plus",
+          "b_error": 1.4210854715202004e-14,
+          "W_error": 2.1316282072803006e-14
+        },
+        {
+          "condition": "pulse_minus",
+          "b_error": 1.4210854715202004e-14,
+          "W_error": 2.1316282072803006e-14
+        },
+        {
+          "condition": "alonec_sham",
+          "b_error": 0.0,
+          "W_error": 0.0
+        },
+        {
+          "condition": "alonec_plus",
+          "b_error": 1.4210854715202004e-14,
+          "W_error": 2.1316282072803006e-14
+        },
+        {
+          "condition": "alonec_minus",
+          "b_error": 1.4210854715202004e-14,
+          "W_error": 2.1316282072803006e-14
+        },
+        {
+          "condition": "alone_sham",
+          "b_error": 0.0,
+          "W_error": 0.0
+        },
+        {
+          "condition": "alone_plus",
+          "b_error": 1.4210854715202004e-14,
+          "W_error": 2.1316282072803006e-14
+        },
+        {
+          "condition": "alone_minus",
+          "b_error": 1.4210854715202004e-14,
+          "W_error": 2.1316282072803006e-14
+        }
+      ],
+      "activation": "snake",
+      "alpha": 0.75,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "width": 5
+    },
+    {
+      "label": "snake1",
+      "checkpoint": "/home/issan/Projects/claude/snake_out_0904/results/_diag_w5_snake_0905/asweep_a10/ckpts/SN5_a1_step5000000.pt",
+      "checkpoint_sha256": "3598d227672b77cae0994bb6d862afa58464803f1c9106d8b463f5a20080cc6c",
+      "last_record": 2000,
+      "completed": true,
+      "failed_seed_arms": 0,
+      "target_units": [
+        [
+          4
+        ],
+        [
+          2
+        ],
+        [
+          0
+        ],
+        [
+          3
+        ],
+        [
+          2
+        ],
+        [
+          1
+        ],
+        [
+          3
+        ],
+        [
+          2
+        ],
+        [
+          1
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          1
+        ],
+        [
+          0
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          0
+        ],
+        [
+          4
+        ],
+        [
+          2
+        ],
+        [
+          2
+        ],
+        [
+          0
+        ]
+      ],
+      "sigma": [
+        2.406043581110692,
+        2.938746733912923,
+        3.2869676632861835,
+        2.6061758452597856,
+        2.3038568986028007,
+        3.0056782528932144,
+        3.2932897444869593,
+        1.973346049271398,
+        3.245339725032399,
+        3.1691861678591366,
+        2.4560664133176595,
+        2.0768198801083395,
+        2.7243165358128842,
+        3.103894454588167,
+        1.9307038625471364,
+        2.2360221567061496,
+        2.6281507207202823,
+        2.495934256063355,
+        1.9755153968740018,
+        2.8474343475858594
+      ],
+      "immediate_response_checks": [
+        {
+          "condition": "pulse_plus",
+          "b_error": 1.4210854715202004e-14,
+          "W_error": 2.1316282072803006e-14
+        },
+        {
+          "condition": "pulse_minus",
+          "b_error": 1.4210854715202004e-14,
+          "W_error": 2.1316282072803006e-14
+        },
+        {
+          "condition": "alonec_sham",
+          "b_error": 0.0,
+          "W_error": 0.0
+        },
+        {
+          "condition": "alonec_plus",
+          "b_error": 1.4210854715202004e-14,
+          "W_error": 2.1316282072803006e-14
+        },
+        {
+          "condition": "alonec_minus",
+          "b_error": 1.4210854715202004e-14,
+          "W_error": 2.1316282072803006e-14
+        },
+        {
+          "condition": "alone_sham",
+          "b_error": 0.0,
+          "W_error": 0.0
+        },
+        {
+          "condition": "alone_plus",
+          "b_error": 1.4210854715202004e-14,
+          "W_error": 2.1316282072803006e-14
+        },
+        {
+          "condition": "alone_minus",
+          "b_error": 1.4210854715202004e-14,
+          "W_error": 2.1316282072803006e-14
+        }
+      ],
+      "activation": "snake",
+      "alpha": 1.0,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "width": 5
+    }
+  ],
+  "wall_seconds": 25.056590482010506,
+  "source_sha256": "f0e099bc32821cd08d60fca9a2572ae9fa31b2b525a68d42d5c99dca8a9e62a5",
+  "spec_sha256": "45281f227466fd2fe37b44615085210bb3de6eb604892ab1f7ca226feaecc2a3",
+  "code_sha256": "6e5ea1755e68e06a53eb7298d3dffc56cca0efee0d643902e4a52fbec130f64c",
+  "config": {
+    "run_id": "collective_target_only_0908",
+    "steps": 2000,
+    "record_steps": [
+      0,
+      1,
+      2,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500,
+      1000,
+      2000
+    ],
+    "selection_seed": 202609081754,
+    "bootstrap_seed": 202609081940,
+    "bootstrap_n": 5000,
+    "global_scale": 0.25,
+    "local_scale": 4,
+    "max_wall_seconds": 900,
+    "models": [
+      {
+        "label": "leaky100",
+        "path": "/home/issan/Projects/claude/proj_004_drift/results/p3_extend_0902/ckpts/LR_1216_step5000000.pt",
+        "logdir": "/home/issan/Projects/claude/proj_004_drift/results/p3_extend_0902/logs",
+        "arm": "LR_1216"
+      },
+      {
+        "label": "elu100",
+        "path": "/home/issan/Projects/claude/proj_004_drift/results/p3_extend_0902/ckpts/E_1216_step5000000.pt",
+        "logdir": "/home/issan/Projects/claude/proj_004_drift/results/p3_extend_0902/logs",
+        "arm": "E_1216"
+      },
+      {
+        "label": "snake075",
+        "path": "/home/issan/Projects/claude/snake_out_0904/results/_diag_w5_snake_0905/asweep_a075/ckpts/SN5_a1_step5000000.pt",
+        "logdir": "/home/issan/Projects/claude/snake_out_0904/results/_diag_w5_snake_0905/asweep_a075/logs",
+        "arm": "SN5_a1"
+      },
+      {
+        "label": "snake1",
+        "path": "/home/issan/Projects/claude/snake_out_0904/results/_diag_w5_snake_0905/asweep_a10/ckpts/SN5_a1_step5000000.pt",
+        "logdir": "/home/issan/Projects/claude/snake_out_0904/results/_diag_w5_snake_0905/asweep_a10/logs",
+        "arm": "SN5_a1"
+      }
+    ]
+  },
+  "dtype": "float64",
+  "mode": "frozen-support full-batch GD"
+}
