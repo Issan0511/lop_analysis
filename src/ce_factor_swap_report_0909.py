@@ -97,16 +97,21 @@ def main():
     replay_mutctl=c.get('replay_mutctl')))
  pd.DataFrame(vr).to_csv(OUT/'validation.csv',index=False)
  # ---- figures ----
- fig,ax=plt.subplots(2,2,figsize=(11,7),sharex=True)
+ fig,ax=plt.subplots(2,2,figsize=(12,7.5),sharex=True)
  for k,(a,i) in enumerate(ARMS):
   x=ax[k//2][k%2];c=course[(course.arm==a)&(course.iv==i)]
-  x.axhline(0,color='k',lw=.6)
-  x.plot(c.step,c.diag_net,label='diagnostic current CE',color='C0')
-  x.plot(c.step,c.train_current,label='training-batch current CE',color='C1',ls='--')
-  x.plot(c.step,c.diag_U,label='U (up)',color='C2',lw=.8)
-  x.plot(c.step,-c.diag_D,label='-D (down)',color='C3',lw=.8)
+  x.plot(c.step,c.diag_U,label='U (up-push)',color='C2',lw=1)
+  x.plot(c.step,-c.diag_D,label='-D (down-push)',color='C3',lw=1)
+  x.set_ylim(-.045,.045);x.set_ylabel('U, -D',fontsize=8)
+  tw=x.twinx();tw.axhline(0,color='k',lw=.6)
+  tw.plot(c.step,c.diag_net,label='net = U-D, diagnostic',color='C0',lw=1.6)
+  tw.plot(c.step,c.train_current,label='net, training batch',color='C1',ls='--',lw=1)
+  tw.plot(c.step,c.diag_frozenD,label='net, Adam scale frozen at 1',color='C4',ls=':',lw=1)
+  tw.set_ylim(-.010,.010);tw.set_ylabel('net (right axis)',fontsize=8)
   x.set_title(f'{a} {i}');x.set_xlabel('update after switch')
-  if k==0:x.legend(fontsize=7)
+  if k==0:
+   h1,l1=x.get_legend_handles_labels();h2,l2=tw.get_legend_handles_labels()
+   x.legend(h1+h2,l1+l2,fontsize=6.5,loc='upper right')
  fig.suptitle('ce_factor_swap_0909: per-update projected current-CE displacement (task21..40, boundary median, seed median)')
  fig.tight_layout()
  for e in ('png','pdf'):fig.savefig(OUT/f'course.{e}',dpi=140)
