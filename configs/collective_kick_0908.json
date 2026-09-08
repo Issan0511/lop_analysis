@@ -1,0 +1,50 @@
+{
+  "run_id": "collective_kick_0908",
+  "steps": 2000,
+  "record_steps": [
+    0,
+    1,
+    2,
+    5,
+    10,
+    20,
+    50,
+    100,
+    200,
+    500,
+    1000,
+    2000
+  ],
+  "selection_seed": 202609081754,
+  "bootstrap_seed": 202609081755,
+  "bootstrap_n": 5000,
+  "global_scale": 0.25,
+  "local_scale": 4,
+  "max_wall_seconds": 900,
+  "models": [
+    {
+      "label": "leaky100",
+      "path": "/home/issan/Projects/claude/proj_004_drift/results/p3_extend_0902/ckpts/LR_1216_step5000000.pt",
+      "logdir": "/home/issan/Projects/claude/proj_004_drift/results/p3_extend_0902/logs",
+      "arm": "LR_1216"
+    },
+    {
+      "label": "elu100",
+      "path": "/home/issan/Projects/claude/proj_004_drift/results/p3_extend_0902/ckpts/E_1216_step5000000.pt",
+      "logdir": "/home/issan/Projects/claude/proj_004_drift/results/p3_extend_0902/logs",
+      "arm": "E_1216"
+    },
+    {
+      "label": "snake075",
+      "path": "/home/issan/Projects/claude/snake_out_0904/results/_diag_w5_snake_0905/asweep_a075/ckpts/SN5_a1_step5000000.pt",
+      "logdir": "/home/issan/Projects/claude/snake_out_0904/results/_diag_w5_snake_0905/asweep_a075/logs",
+      "arm": "SN5_a1"
+    },
+    {
+      "label": "snake1",
+      "path": "/home/issan/Projects/claude/snake_out_0904/results/_diag_w5_snake_0905/asweep_a10/ckpts/SN5_a1_step5000000.pt",
+      "logdir": "/home/issan/Projects/claude/snake_out_0904/results/_diag_w5_snake_0905/asweep_a10/logs",
+      "arm": "SN5_a1"
+    }
+  ]
+}
