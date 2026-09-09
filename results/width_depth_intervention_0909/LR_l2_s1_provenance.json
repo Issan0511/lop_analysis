@@ -1,0 +1,96 @@
+{
+  "arm": "LR",
+  "iv": "l2",
+  "seed": 1,
+  "checks": {
+    "k0.7": {
+      "sigma2_identity": 1.5112752695835156e-09,
+      "sigma2_identity_mutctl": 1.9268557785918223,
+      "rowsum_rel": 3.994216751342957e-09,
+      "bias_diff": 0.0,
+      "centered_scale": 7.337639496007853e-09,
+      "centered_moved": 0.08262294534694245,
+      "exact_replay": 0.0,
+      "wall": 17.164348446007352
+    },
+    "k1.0": {
+      "exact_replay": 0.0,
+      "wall": 17.034318215039093
+    },
+    "k1.4": {
+      "sigma2_identity": 3.7088694016530736e-10,
+      "sigma2_identity_mutctl": 0.6373249071369682,
+      "rowsum_rel": 8.011120529926553e-09,
+      "bias_diff": 0.0,
+      "centered_scale": 1.4725109243052259e-08,
+      "centered_moved": 0.11016392700560745,
+      "exact_replay": 0.0,
+      "wall": 17.12098327302374
+    },
+    "bplus": {
+      "bias_shift_z": 3.6163988470505615e-12,
+      "bias_shift_mutctl": 0.0009697440896309639,
+      "sigma_unchanged": 0.0,
+      "W_unchanged": 0.0,
+      "db": 0.0969744093247357,
+      "exact_replay": 0.0,
+      "wall": 17.059625783993397
+    },
+    "bminus": {
+      "bias_shift_z": 7.679261393445103e-10,
+      "bias_shift_mutctl": 0.0009697448611735021,
+      "sigma_unchanged": 0.0,
+      "W_unchanged": 0.0,
+      "db": -0.0969744093247357,
+      "exact_replay": 0.0,
+      "wall": 17.159173170977738
+    }
+  },
+  "interventions": [
+    [
+      "k0.7",
+      "width",
+      0.7
+    ],
+    [
+      "k1.0",
+      "width",
+      1.0
+    ],
+    [
+      "k1.4",
+      "width",
+      1.4
+    ],
+    [
+      "bplus",
+      "bias",
+      0.3
+    ],
+    [
+      "bminus",
+      "bias",
+      -0.3
+    ]
+  ],
+  "meas": [
+    20,
+    100,
+    300,
+    625
+  ],
+  "nref": 8,
+  "ref_seed": 20260909,
+  "source_sha256": "91f491d2f0cd2459cbb03a122bd17de9275f1b0ef07fdf0847db77d356cc8be3",
+  "code_sha256": "1057c4abff8dc29a1ad855bb59c31af6e1b166e95f02fd3db17baa3b70e95d7b",
+  "spec_sha256": "0cf75ab1c318dbf02b053ba0c60c0fcd1ab64b41abad9507a9e1688774c39f41",
+  "host_sha256": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "wall_seconds": 85.61361760395812,
+  "scope": "CPU continuation from the saved task-20 state; not the original CUDA run"
+}
