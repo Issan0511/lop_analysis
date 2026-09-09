@@ -50,7 +50,10 @@ def per_seed(arm, seed):
     rows = read(arm, seed)
     ends = {c: series(rows, c) for c in CLAMPS}
     starts = {c: {r['task']: r['ce_probe'] for r in series(rows, c, 20)} for c in CLAMPS}
-    z20 = [r['zbar_inv'] for r in ends['ref'] if r['task'] == 20][0]
+    # the last task of the shared prefix (t20 in the real run, derived so the smoke
+    # with its earlier clamp_from also works)
+    t_pre = min(r['task'] for r in ends['wclamp']) - 1
+    z20 = [r['zbar_inv'] for r in ends['ref'] if r['task'] == t_pre][0]
     out = {}
     for c in CLAMPS:
         e = ends[c]
@@ -169,14 +172,25 @@ def main():
         row['g3_ok'] = ';'.join(''.join('1' if gate[c]['ok'][s] else '0' for s in SEEDS) for c in CLAMPS)
         verdicts.append(row)
         for s in SEEDS:
-            p = ROOT / 'results/width_sink_clamp_0909' / f'{arm}_none_s{s}_provenance.json'
+            p = OUT / f'{arm}_none_s{s}_provenance.json'
             if p.exists():
                 ck = json.loads(p.read_text())['checks']
                 validation.append(dict(arm=arm, seed=s, **{k: v for k, v in ck.items() if not isinstance(v, (dict, list))}))
     OUT.mkdir(parents=True, exist_ok=True)
-    G.B.csvwrite(OUT / 'seed_verdict.csv', seedrows)
-    G.B.csvwrite(OUT / 'verdict.csv', verdicts)
-    G.B.csvwrite(OUT / 'validation.csv', validation)
+
+    def write(name, rows):
+        # csvwrite takes its fieldnames from rows[0]; normalise so a key that only
+        # appears in a later row cannot raise after a 20-minute run.
+        if not rows:
+            print('no rows for', name)
+            return
+        keys = []
+        [keys.append(k) for r in rows for k in r if k not in keys]
+        G.B.csvwrite(OUT / name, [{k: r.get(k) for k in keys} for r in rows])
+
+    write('seed_verdict.csv', seedrows)
+    write('verdict.csv', verdicts)
+    write('validation.csv', validation)
     figure(per)
     summary(per, verdicts)
     for v in verdicts:
