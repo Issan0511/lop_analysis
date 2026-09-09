@@ -443,8 +443,13 @@ def run(arm, iv, seed, tasks=TASKS, clamp_from=CLAMP_FROM, out=OUT, controls=Tru
     for clamp in CLAMPS:
         p2, act2, adam2, gens2 = restore(snap, arm)
         e2 = {} if clamp == 'ref' else None
+        # `ck` is shared across the four branches so that every check is a running
+        # maximum over the whole run.  `pressure` is an ACCUMULATOR, not a maximum,
+        # so it has to be reset per branch and parked under its own key.
+        ck['pressure'] = 0.
         loop(p2, act2, adam2, gens2, mnist, probe, clamp_from, tasks, clamp, base, rows, units, ck,
              ends=e2, capture=(tasks,) if clamp == 'ref' else ())
+        ck[f'pressure_{clamp}'] = ck.pop('pressure', 0.)
         if clamp == 'ref':
             ends.update(e2)
         print('DONE', prefix, clamp, round(time.monotonic() - t0, 1), 's', flush=True)
