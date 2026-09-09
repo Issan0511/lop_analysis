@@ -74,7 +74,8 @@ def continuation(saved,arm,iv,mnist,px,refs,mu,kind,val,mutate=None,record=True)
  if kind=='bias':
   ck.update(bias_shift_z=max(abs(r1['zbar_inv']-r0['zbar_inv']-db),abs(r1['zbar_cur']-r0['zbar_cur']-db)),
    bias_shift_mutctl=abs(r1['zbar_inv']-r0['zbar_inv']-.99*db),
-   sigma_unchanged=max(abs(r1['sigma_inv']-r0['sigma_inv']),abs(r1['sigma_cur']-r0['sigma_cur'])),db=db)
+   sigma_unchanged=max(abs(r1['sigma_inv']-r0['sigma_inv']),abs(r1['sigma_cur']-r0['sigma_cur'])),
+   W_unchanged=float((p[0].double()-W_old).abs().max()),db=db)
  rows.append(dict(task=20,step=0,phase='pre',**r0));rows.append(dict(task=20,step=0,phase='post',**r1));units.append((20,u1))
  exact=0.
  for j,raw in enumerate(B):
@@ -125,7 +126,7 @@ def run(arm,iv,seed):
    assert ck['sigma2_identity']<1e-5 and ck['sigma2_identity_mutctl']>1e-2,ck
    assert ck['rowsum_rel']<1e-5 and ck['bias_diff']==0. and ck['centered_scale']<1e-6 and ck['centered_moved']>1e-3,ck
   if kind=='bias':
-   assert ck['bias_shift_z']<1e-6 and ck['bias_shift_mutctl']>1e-4 and ck['sigma_unchanged']==0.,ck
+   assert ck['bias_shift_z']<1e-6 and ck['bias_shift_mutctl']>1e-4 and ck['sigma_unchanged']<=1e-12 and ck['W_unchanged']==0.,ck
   for r in rows:r.update(arm=arm,iv=iv,seed=seed,intervention=name)
   allrows+=rows;checks[name]=ck;checks[name]['wall']=time.monotonic()-t0
   for t,u in units:
