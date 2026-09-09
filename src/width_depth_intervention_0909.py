@@ -68,7 +68,7 @@ def continuation(saved,arm,iv,mnist,px,refs,mu,kind,val,mutate=None,record=True)
   bad=np.mean([float((o+(1/val)*c+(1/val)**2*w).mean()) for o,c,w in dec])
   sig2=r1['sigma_inv']**2
   ck.update(sigma2_identity=abs(sig2-pred)/pred,sigma2_identity_mutctl=abs(sig2-bad)/pred,
-   rowsum_rel=float(((W.sum(1)-W_old.sum(1)).abs()/W_old.sum(1).abs().clamp(min=1e-3)).max()),
+   rowsum_rel=float(((W.sum(1)-W_old.sum(1)).abs()/W_old.abs().sum(1)).max()),
    bias_diff=float((p[1].double()-b_old).abs().max()),
    centered_scale=float((Wt-val*Wt_old).abs().max()),centered_moved=float((Wt-Wt_old).abs().max()))
  if kind=='bias':
@@ -124,7 +124,7 @@ def run(arm,iv,seed):
     assert ck['exact_replay_mutctl']>1e-4 and ck['measure_mutctl']>0,ck
   if kind=='width' and val!=1.0:
    assert ck['sigma2_identity']<1e-5 and ck['sigma2_identity_mutctl']>1e-2,ck
-   assert ck['rowsum_rel']<1e-5 and ck['bias_diff']==0. and ck['centered_scale']<1e-6 and ck['centered_moved']>1e-3,ck
+   assert ck['rowsum_rel']<1e-6 and ck['bias_diff']==0. and ck['centered_scale']<1e-6 and ck['centered_moved']>1e-3,ck
   if kind=='bias':
    assert ck['bias_shift_z']<1e-6 and ck['bias_shift_mutctl']>1e-4 and ck['sigma_unchanged']<=1e-12 and ck['W_unchanged']==0.,ck
   for r in rows:r.update(arm=arm,iv=iv,seed=seed,intervention=name)
