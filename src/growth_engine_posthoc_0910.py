@@ -33,7 +33,8 @@ def run(arm, seed=0):
     pidx = torch.randperm(len(mnist.test_x), generator=H.stream('boundary_probe', seed))[:512]
     px = mnist.test_x[pidx]
     p = H.init_params(seed, torch.device('cpu'))
-    act = C.make_act(arm)
+    LEAK = {'LR03': .3, 'LR001': .01}
+    act = (H.Activation('R', 'relu') if arm == 'R' else H.Activation('LRx', 'leaky', LEAK[arm]) if arm in LEAK else C.make_act(arm))
     adam = ([torch.zeros_like(q) for q in p], [torch.zeros_like(q) for q in p], [0])
     gp, gd, gb = H.stream('perm', seed), H.stream('data', seed), H.stream('batch', seed)
     steprows, unitrows, ends = [], [], {}
@@ -51,7 +52,7 @@ def run(arm, seed=0):
                 xpd = px[:, perm].double()
                 fossil = (xpd @ Wt0.T).var(0, unbiased=False)
                 z0 = xpd @ W0.T + p[1].double()
-            dm_acc = torch.zeros(100, dtype=torch.float64)
+            dm_acc = torch.zeros(100, dtype=torch.float64); dm_snap = {}
             dWt_acc = torch.zeros(100, 784, dtype=torch.float64)
             gpos_acc = torch.zeros(100, dtype=torch.float64); gneg_acc = torch.zeros(100, dtype=torch.float64)
         for step in range(625):
@@ -98,6 +99,11 @@ def run(arm, seed=0):
                         fr_grad=fr_grad, n_zero_grad_units=int((~ok).sum()),
                         align0=float((2 * (Wt0 * dWt).sum(1)).mean()),
                         sign_agree=float((torch.sign(dm) * torch.sign(-grow)).mean()),
+                        # Adam step ~ sign(g) per coordinate: does the row-mean step follow the
+                        # coordinate MAJORITY sign rather than the brightness-weighted row mean?
+                        majority=float(torch.sign(g).mean(1).mean()),
+                        sign_agree_maj=float((torch.sign(dm) * torch.sign(-torch.sign(g).mean(1))).mean()),
+                        frac_units_maj_vs_grow_disagree=float((torch.sign(torch.sign(g).mean(1)) != torch.sign(grow)).double().mean()),
                         grow_mean=float(grow.mean()), grow_pos=float(grow_pos.mean()),
                         grow_neg=float(grow_neg.mean()), side_identity=ident,
                         pos_frac=float(pos.mean()),
@@ -105,6 +111,8 @@ def run(arm, seed=0):
                         adam_ctrstep=float(dWt.norm(dim=1).mean()), grad_ctrstep=float((.001 * gt).norm(dim=1).mean()),
                         loss=float(loss)))
                     dm_acc += dm; dWt_acc += dWt; gpos_acc += grow_pos; gneg_acc += grow_neg
+                    if step + 1 in (20, 100):
+                        dm_snap[step + 1] = dm_acc.clone(); dm_snap[f'gp{step + 1}'] = gpos_acc.clone(); dm_snap[f'gn{step + 1}'] = gneg_acc.clone()
         if logged:
             with torch.no_grad():
                 Wd = p[0].detach().double(); Wt = Wd - Wd.mean(1, keepdim=True)
@@ -120,11 +128,17 @@ def run(arm, seed=0):
                                      dep_task=float(dep_task[i]), align_task=float(align_task[i]),
                                      dnorm2=float(dnorm2[i]), cos_task=float(cos_task[i]),
                                      gpos=float(gpos_acc[i]), gneg=float(gneg_acc[i]),
+                                     dm20=float(dm_snap[20][i]), dm100=float(dm_snap[100][i]),
+                                     gpos20=float(dm_snap['gp20'][i]), gneg20=float(dm_snap['gn20'][i]),
                                      split_identity=split_identity))
             print(arm, 'logged task', task, round(time.monotonic() - t0, 1), 's', flush=True)
     # non-invasiveness: the logged windows must still be on the committed trajectory
-    eg = np.load(ROOT / 'results/elu_growth_0909' / f'{arm}_none_s{seed}_units.npz')
-    worst = max(float(np.abs(ends[t] - eg['cnorm_i'][t - 1]).max()) for t in ends)
+    if arm in ('LR', 'SNA', 'ELU1'):
+        eg = np.load(ROOT / 'results/elu_growth_0909' / f'{arm}_none_s{seed}_units.npz')
+        worst = max(float(np.abs(ends[t] - eg['cnorm_i'][t - 1]).max()) for t in ends)
+    else:
+        eg = np.load(ROOT / 'results/leak_ladder_force_posthoc_0910' / f'{arm}_s{seed}_units.npz')
+        worst = max(float(np.abs(ends[t] - eg[f'ref_cnorm_i_t{t}']).max()) for t in ends)
     assert worst <= 1e-10, ('instrumentation moved the trajectory', worst)
     OUT.mkdir(parents=True, exist_ok=True)
     C.G.B.csvwrite(OUT / f'{arm}_s{seed}_steps.csv', steprows)
