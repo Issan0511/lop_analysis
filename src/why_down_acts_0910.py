@@ -74,6 +74,13 @@ def run(arm, seed=0, tasks=TASKS, out=OUT):
     # beyond[window, phase, (sum e*dphi*S over z<z_c, count)] -- the valley-only slice
     beyond = np.zeros((nW, 3, 2))
     force = np.zeros((nW, 3, 2, 2))              # window, phase, side, (sum dphi*e*S, n)
+    # The registered "negative side" is z <= 0, which for a valley activation MIXES
+    # the restoring shoulder (z_c, 0] -- where phi' is positive and reaches 0.5 at
+    # z=0, four times the largest inverted magnitude -- with the inverted region
+    # z < z_c where the mechanism actually lives.  The two carry opposite signs and
+    # comparable mass, so the z<=0 sum can come out either way for reasons that have
+    # nothing to do with the claim.  Split three ways and judge on the third bin.
+    force3 = np.zeros((nW, 3, 3, 2))             # window, phase, bin, (sum, n)
     # mutation control for ReLU's "exactly zero on the negative side": the same sum
     # with the gate shifted by 1e-12 must NOT be zero, so the zero is a property of
     # phi' and not of e or S being empty there.
@@ -128,6 +135,10 @@ def run(arm, seed=0, tasks=TASKS, out=OUT):
                         usum[:, s_, ph, 0] += (e * m).sum(0).numpy()
                         usum[:, s_, ph, 1] += (eS * m).sum(0).numpy()
                         usum[:, s_, ph, 2] += m.sum(0).numpy()
+                    zcut = zc if zc is not None else 0.
+                    bins = [z1 > 0, (z1 <= 0) & (z1 >= zcut), z1 < zcut]
+                    for bi, mb in enumerate(bins):
+                        force3[wi, ph, bi] += [float(feS[mb].sum()), float(mb.sum())]
                     if zc is not None:
                         mb = z1 < zc
                         beyond[wi, ph] += [float(feS[mb].sum()), float(mb.sum())]
@@ -163,6 +174,10 @@ def run(arm, seed=0, tasks=TASKS, out=OUT):
     ck['beyond_force_by_window_phase'] = beyond[:, :, 0].tolist()
     ck['beyond_count_by_window_phase'] = beyond[:, :, 1].tolist()
     ck['neg_side_force_gate_shifted'] = float(force_mut[:, 1:, 0].sum())
+    ck['force3_by_window_phase_bin'] = force3[:, :, :, 0].tolist()
+    ck['force3_counts'] = force3[:, :, :, 1].tolist()
+    ck['shoulder_force'] = float(force3[:, 1:, 1, 0].sum())     # z_c <= z <= 0
+    ck['inverted_force'] = float(force3[:, 1:, 2, 0].sum())     # z < z_c
     if arm == 'R':
         assert neg == 0., ('ReLU must contribute exactly zero on the negative side', neg)
         # Not vacuous: the SAME sum with phi' shifted by 1e-12 is non-zero, so the
@@ -175,6 +190,7 @@ def run(arm, seed=0, tasks=TASKS, out=OUT):
     np.save(out / f'{arm}_s{seed}_cells.npy', acc)
     np.save(out / f"{arm}_s{seed}_force.npy", force)
     np.save(out / f"{arm}_s{seed}_force_mut.npy", force_mut)
+    np.save(out / f"{arm}_s{seed}_force3.npy", force3)
     np.save(out / f'{arm}_s{seed}_beyond.npy', beyond)
     T.write_rows(out / f'{arm}_s{seed}_units.csv', list(unit.values()))
     wall = time.monotonic() - t0
@@ -187,7 +203,8 @@ def run(arm, seed=0, tasks=TASKS, out=OUT):
                 scope='sub-run D of spec_transport_holes_0910: the driver sign on the '
                       'negative side, for four activations.',
                 **T.provenance_base(mnist)))
-    print('FINISHED', arm, 'neg-side force', f'{neg:+.4g}',
+    print('FINISHED', arm, 'neg-side', f'{neg:+.4g}',
+          'shoulder', f"{ck['shoulder_force']:+.4g}", 'inverted', f"{ck['inverted_force']:+.4g}",
           'trajectory', ck['trajectory_maxabs'], round(wall, 1), 's', flush=True)
 
 

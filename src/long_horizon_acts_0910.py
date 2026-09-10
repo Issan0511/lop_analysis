@@ -97,11 +97,13 @@ def ctl_streams(arm, seed, mnist, n=5):
     training (not a dry draw, which would be trivially equal) makes this
     falsifiable: any arm-dependent consumption of a generator changes the hash."""
 
-    def digest(a, sd):
+    def digest(a, sd, extra_draw=False):
         p, act, adam, gens = _fresh(a, sd)
         gp, gd, gb = gens
         h = hashlib.sha256()
         for _ in range(n):
+            if extra_draw:      # stand-in for an arm that consumed a stream
+                torch.randperm(2, generator=gb)
             perm = torch.randperm(784, generator=gp)
             idx = H.stratified_draw(mnist, gd)
             order = torch.randperm(H.TASK_EXAMPLES, generator=gb)
@@ -125,10 +127,17 @@ def ctl_streams(arm, seed, mnist, n=5):
 
     mine, ref = digest(arm, seed), digest('LR', seed)
     other = digest('LR', seed + 1)
+    # The seed control only shows the digest depends on the seed.  What has to be
+    # excluded is an ARM that consumes one of the three streams, so the control
+    # that matters is a run which draws one extra value from `gb` per task: if the
+    # digest cannot see that, it cannot see an arm doing it either.
+    consumed = digest('LR', seed, extra_draw=True)
     assert mine == ref, ('the activation entered the RNG', arm, seed, mine, ref)
     assert ref != other, 'vacuous stream control: a different seed gave the same draws'
+    assert ref != consumed, \
+        'vacuous stream control: one extra draw from the batch stream did not change the digest'
     return dict(stream_tasks=n, stream_sha256=mine, stream_matches_LR=True,
-                stream_control_differs=True)
+                stream_control_seed_differs=True, stream_control_extra_draw_differs=True)
 
 
 def run(arm, seed, tasks=TASKS, out=OUT, controls=True):

@@ -280,7 +280,7 @@ def run(arm, seed, tasks=TASKS, clamp_from=CLAMP_FROM, out=OUT, controls=True):
 
     g1_check(arm, seed, units, ck, tasks)
     T.check_gates([r for r in rows if r['clamp'] == 'ref'], arm, ck)
-    _assert(ck, arm, tasks)
+    _assert(ck, arm, tasks, controls)
 
     for r in rows:
         r.update(arm=arm, iv='none', seed=seed)

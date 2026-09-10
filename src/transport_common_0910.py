@@ -77,14 +77,34 @@ def restore(snap, arm):
 
 
 # --------------------------------------------------------------- gate counters
+ZC_BAND = 1e-3          # how close to z_c a sign disagreement is allowed to be
+ZC_MUT = 0.05           # the wrong z_c the mutation control uses
+
+
 def gate_stats(p, act, probe, perm, arm):
     """dead_hard / dead_soft / sat keep their committed definitions so the leaky
     and ELU numbers stay comparable.  They threshold the SIGNED gate, so for a
     valley activation a unit past z_c (phi' down to -0.129 for GELU, -0.0998 for
     SiLU -- both bigger in magnitude than leaky's 0.1 floor) is counted 'dead'
-    while being MORE mobile than leaky, with the opposite sign.  The four new
-    counters separate that: immobile_units uses |phi'|, and gate_neg_frac /
-    inv_units / beyond_frac measure the inversion itself."""
+    while being MORE mobile than leaky, with the opposite sign.
+
+    The far side of the valley has TWO regimes, and float32 is where the second
+    one lives.  GELU's dphi = Phi(z) + z*phi(z) evaluates to exactly +0.0 for
+    float32 z <= -14.3439 (SiLU's at -90), so a unit that has escaped far enough
+    stops moving altogether.  That is not an artefact to be tolerated: it is the
+    end state the derivation predicts ("past the valley a unit escapes until
+    phi' -> 0 and freezes").  So it gets its own counter rather than being
+    silently folded into the inverted ones:
+
+        beyond_frac    z < z_c                     (the whole far side)
+        gate_neg_frac  phi' < 0                    (escaped AND still mobile)
+        frozen_frac    z < z_c and phi' >= 0       (escaped AND frozen)
+        inv_units      units >50% inverted
+        frozen_units   units >50% frozen past z_c
+        immobile_units |phi'| < 1e-6 on EVERY sample
+
+    zc_bad_lo / zc_bad_hi are the sign disagreements that underflow does NOT
+    explain; they are what actually tests the tabulated z_c (see check_gates)."""
     with torch.no_grad():
         z = probe.px[:, perm] @ p[0].detach().T + p[1].detach()
         g = act.dphi(z, 0) if isinstance(act, H.AdaptiveSnake) else act.dphi(z)
@@ -96,29 +116,61 @@ def gate_stats(p, act, probe, perm, arm):
                    gate_neg_frac=float((g < 0).float().mean()),
                    inv_units=int((((g < 0).float().mean(0)) > .5).sum()))
         zc = VA.ZC.get(arm)
-        out['beyond_frac'] = float((z < zc).float().mean()) if zc is not None else 0.
+        if zc is None:
+            out.update(beyond_frac=0., frozen_frac=0., frozen_units=0,
+                       zc_bad_lo=0, zc_bad_hi=0, zc_mut_fires=0)
+            return out
+        below, neg = z < zc, g < 0
+        frozen = below & ~neg
+        near = (z - zc).abs() <= ZC_BAND
+        out['beyond_frac'] = float(below.float().mean())
+        out['frozen_frac'] = float(frozen.float().mean())
+        out['frozen_units'] = int(((frozen.float().mean(0)) > .5).sum())
+        # a pair past z_c whose gate is not negative must be an exact underflow
+        # (or sit within ZC_BAND of the bottom); a pair before z_c must not be
+        # negative at all.  Both counts are 0 iff the tabulated z_c is right.
+        out['zc_bad_lo'] = int((below & ~neg & (g != 0) & ~near).sum())
+        out['zc_bad_hi'] = int((~below & neg & ~near).sum())
+        # in-run mutation control: the same test against a z_c that is wrong by
+        # ZC_MUT must find disagreements, otherwise the test above is vacuous
+        zw = zc + ZC_MUT
+        out['zc_mut_fires'] = int(((z < zw) & ~neg & (g != 0) & ((z - zw).abs() > ZC_BAND)).sum()
+                                  + ((z >= zw) & neg & ((z - zw).abs() > ZC_BAND)).sum())
     return out
 
 
 def check_gates(rows, arm, ck):
     """Falsifiable in BOTH directions: a valley arm must show inversion, a
-    non-valley arm must show exactly none.  Either half alone would be vacuous."""
+    non-valley arm must show exactly none.  Either half alone would be vacuous.
+
+    The z_c test is NOT "gate_neg_frac == beyond_frac".  That equality is false
+    in float32 once the deepest units underflow, and asserting it destroyed three
+    finished 400-task runs (see spec 追補 2).  What is tested instead is that
+    every sign disagreement is accounted for by underflow or by sitting within
+    ZC_BAND of the bottom -- with an in-run control showing a z_c wrong by
+    ZC_MUT would be caught."""
     neg = max(r['gate_neg_frac'] for r in rows)
     bey = max(r['beyond_frac'] for r in rows)
     inv = max(r['inv_units'] for r in rows)
-    ck.update(gate_neg_frac_max=neg, beyond_frac_max=bey, inv_units_max=inv)
+    ck.update(gate_neg_frac_max=neg, beyond_frac_max=bey, inv_units_max=inv,
+              frozen_frac_max=max(r['frozen_frac'] for r in rows),
+              frozen_units_max=max(r['frozen_units'] for r in rows),
+              zc_bad_lo_max=max(r['zc_bad_lo'] for r in rows),
+              zc_bad_hi_max=max(r['zc_bad_hi'] for r in rows),
+              zc_mut_fires_max=max(r['zc_mut_fires'] for r in rows))
     if arm in VALLEY_ARMS:
         assert neg > 0.05, (arm, 'valley arm never puts 5% of the probe past z_c', neg)
         assert bey > 0.05, (arm, 'valley arm never reaches beyond z_c', bey)
-        # phi'(z) < 0  <=>  z < z_c is an identity, so the two fractions must agree
-        # exactly.  This is what actually checks the tabulated z_c against the
-        # activation's own derivative on live data, task by task.
-        worst = max(abs(r['gate_neg_frac'] - r['beyond_frac']) for r in rows)
-        ck['gate_neg_vs_beyond_maxabs'] = worst
-        assert worst == 0., (arm, 'phi\'<0 and z<z_c disagree: z_c is wrong', worst)
+        assert ck['zc_bad_lo_max'] == 0 and ck['zc_bad_hi_max'] == 0, \
+            (arm, 'sign disagreement that underflow does not explain: z_c is wrong',
+             ck['zc_bad_lo_max'], ck['zc_bad_hi_max'])
+        assert ck['zc_mut_fires_max'] > 0, \
+            (arm, 'vacuous z_c test: a z_c wrong by %g would not be caught' % ZC_MUT)
     else:
-        assert neg == 0. and bey == 0. and inv == 0, \
-            (arm, 'non-valley arm shows a negative gate', neg, bey, inv)
+        # beyond_frac is a hard-coded 0 for a non-valley arm, so it is left out:
+        # asserting it would be 0. == 0.  neg and inv ARE reductions over phi'.
+        assert neg == 0. and inv == 0, \
+            (arm, 'non-valley arm shows a negative gate', neg, inv)
 
 
 def finite_guard(rows, tag):

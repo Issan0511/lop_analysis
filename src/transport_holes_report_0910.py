@@ -34,7 +34,11 @@ LATE, BASE = R.LATE, R.BASE
 A1_HI, A1_LO = 20, 10          # inv_units(t400) level  (registered, low-information)
 A1P_HI, A1P_LO = 15, 5         # inv_units(t400) - inv_units(t20)  (追補 1: the accumulation)
 FG_HI, FG_LO = 20, 5           # how much dclamp must reduce the counter to "drive" it
+A1PP_HI, A1PP_LO = 15, 3       # frozen_units(t400) - frozen_units(t20)  (追補 2)
 A2_TOL = 0.3                   # pt/100task, for VALLEY_FALLS_FASTER
+A3_TIE = 0.5                   # pt: cumulative losses closer than this are a tie
+LONG_REF = ROOT / 'results/long_horizon_0910'
+REF_ARMS = ['LR', 'ELU1', 'SNA']
 
 
 def rows_of(out, arm, seed, name='{arm}_none_s{seed}_rows.csv'):
@@ -53,16 +57,65 @@ def med(vals):
     return float(np.median(v)) if v else np.nan
 
 
-def agree3(vals, hi, lo, hi_label, lo_label, mid='PARTIAL'):
+def agree3(vals, hi, lo, hi_label, lo_label, mid='PARTIAL', harm_label=None):
     """3/3 agreement or nothing -- the house rule, with the effect-size floor
-    written into the call rather than left implicit."""
+    written into the call rather than left implicit.
+
+    The harm band is cut FIRST.  Without it, "the intervention made the counter
+    much worse" falls into the null label, which is the parent addendum's R3
+    defect: a reversal is an active finding, not an absence of one."""
     if any(not np.isfinite(v) for v in vals):
         return 'NOT_TESTABLE'
+    if harm_label is not None and all(v <= -abs(lo) for v in vals):
+        return harm_label
     if all(v >= hi for v in vals):
         return hi_label
-    if all(v <= lo for v in vals):
+    if all(-abs(lo) < v <= lo for v in vals):
         return lo_label
     return mid
+
+
+def _long_horizon_reference():
+    """LR / ELU1 / SNA late slope, cumulative loss and width from the committed
+    long_horizon_0910, read with THIS spec's LATE and BASE windows so A2 and A3
+    compare like with like."""
+    out = {}
+    for arm in REF_ARMS:
+        try:
+            rows = rows_of(LONG_REF, arm, 0)
+        except FileNotFoundError:
+            return {}
+        late = [r for r in rows if LATE[0] <= r['task'] <= LATE[1]]
+        if len(late) < 2:
+            return {}
+        t = np.array([r['task'] for r in late])
+        a = np.array([r['acc'] for r in late])
+        base = med([r['acc'] for r in rows if BASE[0] <= r['task'] <= BASE[1]])
+        out[arm] = dict(slope=float(np.polyfit(t, a, 1)[0]) * 100 * 100,
+                        cum=100 * (base - med([r['acc'] for r in late])),
+                        cnorm=late[-1]['cnorm'])
+    return out
+
+
+def _width_order(ref, arm, cum, cnorm):
+    """long_horizon_0910 found cumulative loss ordered by ||W~||.  Add this arm and
+    ask whether the ordering still holds over all the points.  A pair whose losses
+    are within A3_TIE pt is not counted either way."""
+    if not ref:
+        return 'NOT_TESTABLE'
+    pts = [(v['cnorm'], v['cum'], a) for a, v in ref.items()] + [(cnorm, cum, arm)]
+    if any(not np.isfinite(x) for p_ in pts for x in p_[:2]):
+        return 'NOT_TESTABLE'
+    bad = ties = 0
+    for i in range(len(pts)):
+        for j in range(i + 1, len(pts)):
+            dw = pts[i][0] - pts[j][0]
+            dl = pts[i][1] - pts[j][1]
+            if abs(dl) < A3_TIE:
+                ties += 1
+            elif dw * dl < 0:
+                bad += 1
+    return 'WIDTH_ORDER_HOLDS' if bad == 0 else 'WIDTH_ORDER_BREAKS'
 
 
 # --------------------------------------------------------------------- sub-run A
@@ -77,6 +130,10 @@ def report_A():
         inv = [per[s][-1]['inv_units'] for s in SEEDS]
         inv20 = [med([r['inv_units'] for r in per[s] if r['task'] == 20]) for s in SEEDS]
         dinv = [a - b for a, b in zip(inv, inv20)]
+        froz = [per[s][-1].get('frozen_units', np.nan) for s in SEEDS]
+        froz20 = [med([r.get('frozen_units', np.nan) for r in per[s] if r['task'] == 20])
+                  for s in SEEDS]
+        dfroz = [a - b for a, b in zip(froz, froz20)]
         dead = [per[s][-1]['dead_hard'] for s in SEEDS]
         immob = [per[s][-1]['immobile_units'] for s in SEEDS]
         beyond = [per[s][-1]['beyond_frac'] for s in SEEDS]
@@ -97,7 +154,30 @@ def report_A():
         # is near-decided before the run.  A1' measures the accumulation from the
         # branch point, which is what the derivation actually predicts.
         A1p = agree3(dinv, A1P_HI, A1P_LO, 'INVERSION_ACCUMULATES2', 'INVERSION_SATURATES2')
+        # 追補 2: inv_units is a count out of 100 that is already ~68 by t8, so
+        # A1' has a CEILING where A1 had a floor.  frozen_units starts at 0 and is
+        # the quantity the derivation actually names -- past the valley a unit
+        # escapes until phi' -> 0 and freezes.
+        A1pp = agree3(dfroz, A1PP_HI, A1PP_LO, 'ESCAPE_FREEZES', 'ESCAPE_DOES_NOT_FREEZE')
+        # A2: is the valley arm's late slope at least A2_TOL pt/100task MORE
+        # negative than ELU1's?  ELU1's own late slope comes from the committed
+        # long_horizon_0910, read with the same LATE window.
+        REF = _long_horizon_reference()
+        A2 = 'NOT_TESTABLE'
+        if REF and np.isfinite(REF['ELU1']['slope']) and all(np.isfinite(x) for x in slope):
+            d = [REF['ELU1']['slope'] - x for x in slope]      # >0 means the valley falls faster
+            A2 = agree3(d, A2_TOL, A2_TOL - 1e-12,
+                        'VALLEY_FALLS_FASTER', 'VALLEY_SAME_BAND')
+            if A2 == 'VALLEY_SAME_BAND' and not all(abs(x) < A2_TOL for x in d):
+                A2 = 'PARTIAL'
+        # A3: does "cumulative loss follows the order of ||W~||" survive the two
+        # extra points?  Five arms: LR, ELU1, SNA from long_horizon_0910 plus this one.
+        A3 = _width_order(REF, arm, med(cum), med([per[s][-1]['cnorm'] for s in SEEDS]))
         out.append(dict(arm=arm, A1_inversion=A1, A1p_accumulation=A1p,
+                        A1pp_freezing=A1pp, A2_slope=A2, A3_width_order=A3,
+                        frozen_units_t20=';'.join(f'{x:.0f}' for x in froz20),
+                        frozen_units_t400=';'.join(f'{x:.0f}' for x in froz),
+                        delta_frozen_units=';'.join(f'{x:+.0f}' for x in dfroz),
                         inv_units_t400=';'.join(f'{x:.0f}' for x in inv),
                         inv_units_t20=';'.join(f'{x:.0f}' for x in inv20),
                         delta_inv_units=';'.join(f'{x:+.0f}' for x in dinv),
@@ -179,12 +259,14 @@ def report_BC():
             El = 'NOT_TESTABLE_NO_WIDTH_EFFECT'
         elif any(not (np.isfinite(a) and np.isfinite(b)) for a, b in zip(rE, rB)):
             El = gated('NOT_SHOWN', 'wcap2')
+        elif all(a > b + .1 for a, b in zip(rE, rB)):
+            # tested FIRST: E is only reached when rho_wclamp >= 0.5, so b + 0.1 >
+            # 0.5b - 0.1 always and DOSE_GRADED would otherwise swallow this branch
+            El = 'CAP_BEATS_CLAMP'
         elif all(a >= .5 * b - .1 for a, b in zip(rE, rB)):
             El = 'DOSE_GRADED'
         elif all(a <= .2 * b for a, b in zip(rE, rB)):
             El = 'DOSE_THRESHOLD'
-        elif all(a > b + .1 for a, b in zip(rE, rB)):
-            El = 'CAP_BEATS_CLAMP'
         else:
             El = 'DOSE_PARTIAL'
 
@@ -198,9 +280,11 @@ def report_BC():
                 return e[-1][counter] if e else np.nan
             drop.append(last('ref') - last('dclamp'))
         if arm == 'R':
-            FG = agree3(drop, FG_HI, FG_LO, 'DEPTH_DRIVES_DEATH', 'DEATH_NOT_FROM_DEPTH')
+            FG = agree3(drop, FG_HI, FG_LO, 'DEPTH_DRIVES_DEATH', 'DEATH_NOT_FROM_DEPTH',
+                        harm_label='DEPTH_RAISES_DEATH')
         else:
-            FG = agree3(drop, FG_HI, FG_LO, 'DEPTH_DRIVES_INVERSION', 'INVERSION_NOT_FROM_DEPTH')
+            FG = agree3(drop, FG_HI, FG_LO, 'DEPTH_DRIVES_INVERSION', 'INVERSION_NOT_FROM_DEPTH',
+                        harm_label='DEPTH_RAISES_INVERSION')
         if not all(g4):
             FG = 'NOT_TESTABLE_DEPTH_NOT_HELD'
 
@@ -220,7 +304,7 @@ def report_BC():
                              g3=''.join('1' if all(g3[c]) else '0' for c in R.CLAMPS),
                              g4=''.join('1' if x else '0' for x in g4),
                              g5=''.join('1' if x else '0' for x in g5),
-                             arbitration=R.arbitrate(A, B)))
+                             joint=_joint(arm, A, B)))
         for s in SEEDS:
             for c in R.CLAMPS:
                 seedrows.append(dict(arm=arm, seed=s, clamp=c, **P[s][c]))
@@ -239,15 +323,23 @@ def report_D():
         f = np.array(ck['pos_side_force_by_window_phase'])           # window x phase
         n = np.array(ck['neg_side_force_by_window_phase'])
         cells = n[:, 1:]                                             # phases 21-100, 101-625
+        # 追補 2: the PRIMARY statistic for a valley arm is the inverted region
+        # z < z_c, not the registered z <= 0 -- the latter also contains the
+        # restoring shoulder (z_c, 0], whose gate is positive and up to 4x larger.
+        # The z <= 0 sum is kept as the registered secondary.
+        inv3 = np.array(ck.get('force3_by_window_phase_bin', []))
+        prim = inv3[:, 1:, 2] if inv3.size else cells
         if arm == 'R':
             lab = 'RELU_ZERO' if float(np.abs(cells).max()) == 0. else 'RELU_NONZERO_BUG'
-        elif (cells > 0).all():
-            lab = 'VALLEY_SIGN_FLIPS' if arm in ('GELU', 'SILU') else 'SIGN_SINKS'
-        elif (cells < 0).all():
-            lab = 'VALLEY_SIGN_HOLDS' if arm in ('GELU', 'SILU') else 'SIGN_LIFTS'
+        elif arm in ('GELU', 'SILU'):
+            lab = ('VALLEY_SIGN_FLIPS' if (prim > 0).all()
+                   else 'VALLEY_SIGN_HOLDS' if (prim < 0).all() else 'VALLEY_SIGN_MIXED')
         else:
-            lab = 'VALLEY_SIGN_MIXED'
+            lab = ('SIGN_SINKS' if (cells > 0).all()
+                   else 'SIGN_LIFTS' if (cells < 0).all() else 'SIGN_MIXED')
         out.append(dict(arm=arm, D_sign=lab,
+                        inverted_force=f"{ck.get('inverted_force', float('nan')):+.4g}",
+                        shoulder_force=f"{ck.get('shoulder_force', float('nan')):+.4g}",
                         neg_force_total=f'{float(cells.sum()):+.4g}',
                         neg_by_window_phase=';'.join(f'{x:+.3g}' for x in cells.ravel()),
                         pos_force_total=f'{float(f[:, 1:].sum()):+.4g}',
@@ -257,6 +349,27 @@ def report_D():
                         trajectory_maxabs=ck['trajectory_maxabs'],
                         trajectory_compared=ck['trajectory_compared']))
     return out
+
+
+def _joint(arm, A, B):
+    """This spec registered the SAME prediction from both people for every arm
+    (spec §5 and 追補 1), so the parent's ISSA_SINKING / CLAUDE_WIDTH table does not
+    apply -- reusing it would print a winner in a contest nobody entered.  Score the
+    JOINT prediction instead: R was predicted DEPTH_NO_EFFECT + WIDTH_REMOVES_LOSS,
+    the valley arms DEPTH_REMOVES_LOSS."""
+    if A.startswith('NOT_TESTABLE') or B.startswith('NOT_TESTABLE'):
+        return 'NOT_TESTABLE'
+    if arm == 'R':
+        want = (A == 'DEPTH_NO_EFFECT' and B == 'WIDTH_REMOVES_LOSS')
+        wrong = (A == 'DEPTH_REMOVES_LOSS')
+    else:
+        want = (A == 'DEPTH_REMOVES_LOSS')
+        wrong = (A in ('DEPTH_NO_EFFECT', 'DEPTH_HARMS'))
+    if want:
+        return 'BOTH_RIGHT'
+    if wrong:
+        return 'BOTH_WRONG'
+    return 'UNDECIDED'
 
 
 def md(rows, cols):
@@ -278,33 +391,43 @@ def main():
     S = ['# transport_holes_0910 summary', '',
          'spec `specs/spec_transport_holes_0910.md`（単独 commit）。V9 §11 の穴 1〜3 を箱 B で塞ぐ 4 副走。', '',
          '## 副走 A — 谷越え型の参照軌道 t1–400', '',
-         md(A, ['arm', 'A1_inversion', 'A1p_accumulation', 'inv_units_t20', 'inv_units_t400',
-                'delta_inv_units', 'dead_hard_t400', 'immobile_units_t400', 'beyond_frac_t400',
+         md(A, ['arm', 'A1_inversion', 'A1p_accumulation', 'A1pp_freezing', 'A2_slope',
+                'A3_width_order']), '',
+         md(A, ['arm', 'inv_units_t20', 'inv_units_t400', 'delta_inv_units',
+                'frozen_units_t20', 'frozen_units_t400', 'delta_frozen_units',
+                'dead_hard_t400', 'immobile_units_t400', 'beyond_frac_t400',
                 'slope_late', 'cum_loss_pt', 'cnorm_t400', 'zbar_t400']), '',
-         '`inv_units` = プローブ標本の 50% 超で φ′<0 のユニット数。`dead_hard` は符号付きゲートの counter なので'
-         '谷越え型では反転を死と読み違える（`immobile_units` が |φ′| で測った本当の不動）。', '',
+         '`inv_units` = プローブ標本の 50% 超で φ′<0 のユニット数（**上限 100 で t20 で既に飽和気味**）。'
+         '`frozen_units` = 谷の向こうに居てゲートが float32 で 0 に潰れたユニット数（**0 から始まる**・'
+         '導出が名指しする終状態）。`dead_hard` は符号付きゲートの counter なので谷越え型では反転を死と'
+         '読み違える。`immobile_units` は |φ′| で測った本当の不動。', '',
          '## 副走 B・C — クランプ', '',
          md(BC, ['arm', 'A_depth', 'B_width', 'C_dissoc', 'D_dissoc', 'E_dose', 'FG_counter',
-                 'arbitration']), '',
+                 'joint']), '',
          md(BC, ['arm', 'rho_dclamp', 'rho_wclamp', 'rho_wcap2', 'L_ref_pt',
                  'counter_drop_dclamp', 'g0', 'g3', 'g4', 'g5']), '',
          '## 副走 D — 駆動源の符号', '',
-         md(D, ['arm', 'D_sign', 'neg_force_total', 'neg_by_window_phase', 'pos_force_total',
-                'beyond_force', 'gate_shift_control', 'trajectory_maxabs']), '',
+         md(D, ['arm', 'D_sign', 'inverted_force', 'shoulder_force', 'neg_force_total',
+                'pos_force_total', 'gate_shift_control', 'trajectory_maxabs']), '',
+         md(D, ['arm', 'neg_by_window_phase', 'beyond_force']), '',
          '負側の Σφ′eS が正なら沈み、負なら浮き。ReLU は φ′(z≤0)=0 で厳密に 0（`gate_shift_control` が'
          '同じ和をゲート +1e−12 で取ったもので、0 でないことがこの 0 の非空虚性）。', '']
     (REPORT / 'summary.md').write_text('\n'.join(S))
     for v in A:
-        print('A', v['arm'], v['A1_inversion'], '|', v['A1p_accumulation'],
-              'inv t20->t400', v['inv_units_t20'], '->', v['inv_units_t400'],
-              'delta', v['delta_inv_units'])
+        print('A', v['arm'], v['A1_inversion'], '|', v['A1p_accumulation'], '|',
+              v['A1pp_freezing'], '|', v['A2_slope'], '|', v['A3_width_order'])
+        print('    inv t20->t400', v['inv_units_t20'], '->', v['inv_units_t400'],
+              'delta', v['delta_inv_units'],
+              '| frozen', v['frozen_units_t20'], '->', v['frozen_units_t400'],
+              'delta', v['delta_frozen_units'])
     for v in BC:
         print('BC', v['arm'], v['A_depth'], '|', v['B_width'], '|', v['C_dissoc'], '|',
-              v['E_dose'], '|', v['FG_counter'], '=>', v['arbitration'])
+              v['E_dose'], '|', v['FG_counter'], '=>', v['joint'])
         print('    rho d/w/cap:', v['rho_dclamp'], '/', v['rho_wclamp'], '/', v['rho_wcap2'],
               ' L_ref', v['L_ref_pt'], 'pt')
     for v in D:
-        print('D', v['arm'], v['D_sign'], v['neg_force_total'])
+        print('D', v['arm'], v['D_sign'], 'inverted', v['inverted_force'],
+              'shoulder', v['shoulder_force'], 'z<=0', v['neg_force_total'])
 
 
 if __name__ == '__main__':
