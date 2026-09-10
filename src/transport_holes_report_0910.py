@@ -83,6 +83,10 @@ def report_A():
         slope, cum = [], []
         for s in SEEDS:
             late = [r for r in per[s] if LATE[0] <= r['task'] <= LATE[1]]
+            if len(late) < 2:               # a run that stopped short: report, do not crash
+                slope.append(np.nan)
+                cum.append(np.nan)
+                continue
             t = np.array([r['task'] for r in late])
             a = np.array([r['acc'] for r in late])
             slope.append(float(np.polyfit(t, a, 1)[0]) * 100 * 100)
@@ -122,6 +126,12 @@ def report_BC():
             P = {s: R.per_seed(arm, s) for s in SEEDS}
         except FileNotFoundError as e:
             print('BC: missing', e)
+            continue
+        except (TypeError, ValueError) as e:
+            # R.per_seed fits a line over the late window; a run that stopped short
+            # gives an empty vector.  Report the arm as missing rather than crashing
+            # the whole judgment for the arms that did finish.
+            print('BC: incomplete', arm, e)
             continue
         testable = [P[s]['ref']['L_ref'] >= R.G0_MIN_LOSS for s in SEEDS]
         g3 = {c: [P[s][c]['ce_frac'] >= R.G3_CE_FRAC for s in SEEDS] for c in R.CLAMPS}
