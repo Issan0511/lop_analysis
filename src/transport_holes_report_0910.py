@@ -27,7 +27,10 @@ WHY_OUT = ROOT / 'results/why_down_acts_0910'
 REPORT = ROOT / 'results/transport_holes_0910'
 CLAMP_ARMS = ['R', 'GELU', 'SILU']
 LONG_ARMS = ['GELU', 'SILU']
-WHY_ARMS = ['R', 'ELU1', 'GELU', 'SILU']
+# LR is a validation arm, not a registered one: its `cells` array must reproduce
+# the committed why_down_posthoc_0910 exactly, which is what shows this module
+# measures the same decomposition the published result did.
+WHY_ARMS = ['R', 'LR', 'ELU1', 'GELU', 'SILU']
 SEEDS = [0, 1, 2]
 LATE, BASE = R.LATE, R.BASE
 
