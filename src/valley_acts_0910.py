@@ -9,8 +9,15 @@ restoring regime that leaky/ELU keep at every depth does not exist here.
   SiLU (beta=1):           phi = z*sigmoid(z),  phi' = s(1 + z(1-s))
 
 Valley bottoms (phi'=0), solved numerically once and asserted in _selftest:
-  GELU  z_c = -0.751791524...   phi(z_c) = -0.169484...
-  SiLU  z_c = -1.278464543...   phi(z_c) = -0.278464...
+  GELU  z_c = -0.751791524...   phi(z_c) = -0.169971207...
+  SiLU  z_c = -1.278464543...   phi(z_c) = -0.278464543... (= z_c + 1 exactly)
+
+The most negative the gate ever gets, past the valley bottom:
+  GELU  min phi' = -0.128904...   SiLU  min phi' = -0.099839...
+Both are LARGER in magnitude than leaky's floor a = 0.1, so a unit sitting past
+z_c is not immobile -- it is mobile with the WRONG sign.  Any counter that
+thresholds the signed gate (dead_hard / dead_soft / sat) therefore reads these
+units as "dead" when they are inverted; see _selftest's min_dphi entries.
 """
 import math
 import torch
@@ -86,9 +93,14 @@ def _selftest():
         # 5. the minimum of phi is AT zc
         i = int(a.phi(z).argmin())
         zmin = float(z[i])
+        # 6. how negative the gate gets past the valley -- the number that makes
+        #    dead_hard/dead_soft/sat the wrong counters for these arms
+        min_dphi = float(a.dphi(z[z > -8.0]).min())
         out[name] = dict(phi_vs_torch=dphi_max, dphi_vs_autograd=dgrad, dphi_at_zc=at_zc,
                          dphi_pos_right=pos_right, dphi_neg_left=neg_left,
-                         argmin_phi=zmin, zc=float(zc), phi_zc=float(a.phi(zc)))
+                         argmin_phi=zmin, zc=float(zc), phi_zc=float(a.phi(zc)),
+                         min_dphi=min_dphi)
+        assert min_dphi < -0.09, (name, 'gate never goes usefully negative', min_dphi)
         assert dphi_max < 1e-6, (name, 'phi disagrees with torch', dphi_max)
         assert dgrad < 1e-9, (name, 'dphi disagrees with autograd', dgrad)
         assert at_zc < 1e-8, (name, 'zc is not a root of dphi', at_zc)
