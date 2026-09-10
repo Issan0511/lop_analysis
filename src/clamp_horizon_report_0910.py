@@ -17,7 +17,9 @@ SEEDS = [0, 1, 2]
 LATE = (301, 400)
 BASE = (16, 20)
 G0_MIN_LOSS = 0.02          # 2.0 pt
-HI, LO = 0.5, 0.2           # rho thresholds
+HI, LO, HARM = 0.5, 0.2, -0.2      # rho bands (追補 1 R3)
+SLOPE_MIN = 0.3             # pt/100task: REMOVES must also decay more slowly (R4)
+D_SLOPE_MIN = 0.75          # D's second conjunct is the sigma slope ratio (R2)
 G3_CE_FRAC = 0.90
 G4_HOLD = 0.25
 G5_DEPTH_TOL = 1.0
@@ -56,8 +58,10 @@ def per_seed(arm, seed):
         late = [r for r in e if LATE[0] <= r['task'] <= LATE[1]]
         ce_ok = [1 for r in late if np.isfinite(r['ce20']) and r['ce20'] - r['ce_probe'] > 0]
         t = np.array([r['task'] for r in late]); a = np.array([r['acc'] for r in late])
+        sg = np.array([r['sigma_inv'] for r in late])
         out[c] = dict(acc_late=float(np.median(a)), acc_base=acc_base,
                       slope_late=float(np.polyfit(t, a, 1)[0]) * 100 * 100,
+                      slope_sigma_late=float(np.polyfit(t, sg, 1)[0]) * 100,
                       ce_frac=len(ce_ok) / max(1, len(late)),
                       zbar_late=win(e, 'zbar_inv', *LATE), z20=z20,
                       sigma_late=win(e, 'sigma_inv', *LATE), star_sd_late=win(e, 'star_sd', *LATE),
@@ -72,14 +76,21 @@ def per_seed(arm, seed):
     return out
 
 
-def rule_rho(x):
+def rule_rho(x, dslope):
+    """追補 1 R3/R4: harm band below -0.2, and REMOVES also needs a flatter decay."""
     if not np.isfinite(x):
         return None
-    return 'REMOVES' if x >= HI else ('NO_EFFECT' if x <= LO else 'PARTIAL')
+    if x <= HARM:
+        return 'HARMS'
+    if x <= LO:
+        return 'NO_EFFECT'
+    if x >= HI:
+        return 'REMOVES' if (np.isfinite(dslope) and dslope >= SLOPE_MIN) else 'LEVEL_SHIFT_ONLY'
+    return 'PARTIAL'
 
 
 def label3(vals, rule, flat='NOT_TESTABLE_NO_LOSS'):
-    got = [rule(v) for v in vals]
+    got = [rule(*v) if isinstance(v, tuple) else rule(v) for v in vals]
     if any(g is None for g in got):
         return flat
     return got[0] if len(set(got)) == 1 else 'MIXED'
@@ -95,55 +106,75 @@ def main():
         for s in SEEDS:
             for c in CLAMPS:
                 seedrows.append(dict(arm=arm, seed=s, clamp=c, **per[arm][s][c]))
-        R = lambda c, k: [per[arm][s][c][k] for s in SEEDS]
-        testable = [per[arm][s]['ref']['L_ref'] >= G0_MIN_LOSS for s in SEEDS]
-        g3 = {c: [per[arm][s][c]['ce_frac'] >= G3_CE_FRAC for s in SEEDS] for c in CLAMPS}
-        g4 = [abs(per[arm][s]['dclamp']['zbar_late'] - per[arm][s]['dclamp']['z20'])
-              < G4_HOLD * abs(per[arm][s]['ref']['zbar_late'] - per[arm][s]['ref']['z20']) for s in SEEDS]
-        g5 = [per[arm][s]['wclamp']['zbar_late'] <= per[arm][s]['ref']['zbar_late'] + G5_DEPTH_TOL for s in SEEDS]
+        P = per[arm]
+        testable = [P[s]['ref']['L_ref'] >= G0_MIN_LOSS for s in SEEDS]
+        g3 = {c: [P[s][c]['ce_frac'] >= G3_CE_FRAC for s in SEEDS] for c in CLAMPS}
+        g4 = [abs(P[s]['dclamp']['zbar_late'] - P[s]['dclamp']['z20'])
+              < G4_HOLD * abs(P[s]['ref']['zbar_late'] - P[s]['ref']['z20']) for s in SEEDS]
+        g5 = [P[s]['wclamp']['zbar_late'] <= P[s]['ref']['zbar_late'] + G5_DEPTH_TOL for s in SEEDS]
 
-        def rhos(c):
-            return [per[arm][s][c]['rho'] if (testable[s] and g3[c][s]) else np.nan for s in SEEDS]
+        def pairs(c):
+            """(rho, slope advantage over ref) per seed, NaN where the arm is not testable."""
+            out = []
+            for s in SEEDS:
+                ok = testable[s] and g3[c][s]
+                out.append((P[s][c]['rho'] if ok else np.nan,
+                            P[s][c]['slope_late'] - P[s]['ref']['slope_late'] if ok else np.nan))
+            return out
 
-        rA, rB, rE = rhos('dclamp'), rhos('wclamp'), rhos('wcap2')
-        A = label3(rA, rule_rho); B = label3(rB, rule_rho)
-        A = f'DEPTH_{A}' if A in ('REMOVES', 'NO_EFFECT', 'PARTIAL') else A
-        A = A.replace('DEPTH_REMOVES', 'DEPTH_REMOVES_LOSS')
-        B = f'WIDTH_{B}' if B in ('REMOVES', 'NO_EFFECT', 'PARTIAL') else B
-        B = B.replace('WIDTH_REMOVES', 'WIDTH_REMOVES_LOSS')
-        if not all(g3['dclamp']):
-            A = 'NOT_TESTABLE_LEARNING_BROKEN'
-        if not all(g3['wclamp']):
-            B = 'NOT_TESTABLE_LEARNING_BROKEN'
-        if not all(g4):
-            A = 'NOT_TESTABLE_DEPTH_NOT_HELD'
-        # C: width removes the loss WHILE sinking continues
-        if not all(g5):
-            Cl = 'NOT_TESTABLE_DEPTH_ALSO_STOPPED'
-        else:
-            Cl = 'WIDTH_WITHOUT_DEPTH' if all(np.isfinite(x) and x >= HI for x in rB) else 'NOT_SHOWN'
-        # D: depth removes the loss WHILE width grows
-        wr = [per[arm][s]['dclamp']['cnorm_late'] / per[arm][s]['ref']['cnorm_late'] for s in SEEDS]
-        Dl = 'DEPTH_WITHOUT_WIDTH' if (all(np.isfinite(x) and x >= HI for x in rA)
-                                       and all(w >= D_WIDTH_MIN for w in wr)) else 'NOT_SHOWN'
-        # E: dose
-        pairs = list(zip(rE, rB))
-        if any(not (np.isfinite(a) and np.isfinite(b)) for a, b in pairs):
-            El = 'NOT_TESTABLE_NO_LOSS'
-        elif all(-E_TOL <= a <= b + E_TOL for a, b in pairs):
-            El = 'WIDTH_DOSE_MONOTONE'
-        elif all(a > b + E_TOL for a, b in pairs):
+        pA, pB, pE = pairs('dclamp'), pairs('wclamp'), pairs('wcap2')
+        rA = [x[0] for x in pA]; rB = [x[0] for x in pB]; rE = [x[0] for x in pE]
+
+        def gated(base_label, arm_clamp, extra_gate=None, extra_name=None):
+            """追補 1 R5: gates invalidate labels in a fixed, pre-registered order."""
+            if not all(testable):
+                return 'NOT_TESTABLE_NO_LOSS'
+            if not all(g3[arm_clamp]):
+                return 'NOT_TESTABLE_LEARNING_BROKEN'
+            if extra_gate is not None and not all(extra_gate):
+                return extra_name
+            return base_label
+
+        A = label3(pA, rule_rho)
+        A = gated(f'DEPTH_{A}' if A in ('REMOVES', 'NO_EFFECT', 'PARTIAL', 'HARMS', 'LEVEL_SHIFT_ONLY') else A,
+                  'dclamp', g4, 'NOT_TESTABLE_DEPTH_NOT_HELD').replace('DEPTH_REMOVES', 'DEPTH_REMOVES_LOSS')
+        B = label3(pB, rule_rho)
+        B = gated(f'WIDTH_{B}' if B in ('REMOVES', 'NO_EFFECT', 'PARTIAL', 'HARMS', 'LEVEL_SHIFT_ONLY') else B,
+                  'wclamp').replace('WIDTH_REMOVES', 'WIDTH_REMOVES_LOSS')
+        # C: width removes the loss WHILE sinking continues (needs B's gates plus G5)
+        Cbase = 'WIDTH_WITHOUT_DEPTH' if all(rule_rho(*x) == 'REMOVES' for x in pB) else 'NOT_SHOWN'
+        Cl = gated(Cbase, 'wclamp', g5, 'NOT_TESTABLE_DEPTH_ALSO_STOPPED')
+        # D: depth removes the loss WHILE the width still grows (sigma slope ratio, R2)
+        sr = [P[s]['dclamp']['slope_sigma_late'] / P[s]['ref']['slope_sigma_late']
+              if P[s]['ref']['slope_sigma_late'] not in (0, None) else np.nan for s in SEEDS]
+        Dbase = 'DEPTH_WITHOUT_WIDTH' if (all(rule_rho(*x) == 'REMOVES' for x in pA)
+                                          and all(np.isfinite(x) and x >= D_SLOPE_MIN for x in sr)) else 'NOT_SHOWN'
+        Dl = gated(Dbase, 'dclamp', g4, 'NOT_TESTABLE_DEPTH_NOT_HELD')
+        # E: dose, only testable if width removed the loss at all (R6)
+        if B != 'WIDTH_REMOVES_LOSS':
+            El = 'NOT_TESTABLE_NO_WIDTH_EFFECT'
+        elif any(not (np.isfinite(a) and np.isfinite(b)) for a, b in zip(rE, rB)):
+            El = gated('NOT_SHOWN', 'wcap2')
+        elif all(a >= .5 * b - .1 for a, b in zip(rE, rB)):
+            El = 'DOSE_GRADED'
+        elif all(a <= .2 * b for a, b in zip(rE, rB)):
+            El = 'DOSE_THRESHOLD'
+        elif all(a > b + .1 for a, b in zip(rE, rB)):
             El = 'CAP_BEATS_CLAMP'
         else:
             El = 'DOSE_PARTIAL'
         j = lambda v, f='{:+.3f}': ';'.join(f.format(x) if np.isfinite(x) else 'NA' for x in v)
         verdicts.append(dict(arm=arm, A_depth=A, B_width=B, C_dissoc=Cl, D_dissoc=Dl, E_dose=El,
                              rho_dclamp=j(rA), rho_wclamp=j(rB), rho_wcap2=j(rE),
-                             L_ref_pt=j([100 * per[arm][s]['ref']['L_ref'] for s in SEEDS], '{:.2f}'),
-                             acc_base=j([per[arm][s]['ref']['acc_base'] for s in SEEDS], '{:.4f}'),
-                             zbar_late=';'.join(f"{per[arm][s]['ref']['zbar_late']:+.2f}/{per[arm][s]['wclamp']['zbar_late']:+.2f}/{per[arm][s]['dclamp']['zbar_late']:+.2f}" for s in SEEDS),
-                             cnorm_ratio_dclamp=j(wr), g3=''.join('1' if all(g3[c]) else '0' for c in CLAMPS),
-                             g4=''.join('1' if x else '0' for x in g4), g5=''.join('1' if x else '0' for x in g5)))
+                             dslope_dclamp=j([x[1] for x in pA], '{:+.2f}'),
+                             dslope_wclamp=j([x[1] for x in pB], '{:+.2f}'),
+                             sigma_slope_ratio_dclamp=j(sr),
+                             L_ref_pt=j([100 * P[s]['ref']['L_ref'] for s in SEEDS], '{:.2f}'),
+                             acc_base=j([P[s]['ref']['acc_base'] for s in SEEDS], '{:.4f}'),
+                             zbar_late=';'.join(f"{P[s]['ref']['zbar_late']:+.2f}/{P[s]['wclamp']['zbar_late']:+.2f}/{P[s]['dclamp']['zbar_late']:+.2f}" for s in SEEDS),
+                             g3=''.join('1' if all(g3[c]) else '0' for c in CLAMPS),
+                             g4=''.join('1' if x else '0' for x in g4), g5=''.join('1' if x else '0' for x in g5),
+                             arbitration=arbitrate(A, B)))
     OUT.mkdir(parents=True, exist_ok=True)
     for name, rr in [('seed_verdict.csv', seedrows), ('verdict.csv', verdicts)]:
         if rr:
@@ -151,8 +182,24 @@ def main():
             G.B.csvwrite(OUT / name, [{k: r.get(k) for k in keys} for r in rr])
     summary(per, verdicts); figure(per)
     for v in verdicts:
-        print(v['arm'], v['A_depth'], '|', v['B_width'], '|', v['C_dissoc'], '|', v['D_dissoc'], '|', v['E_dose'])
-        print('   rho d/w/cap:', v['rho_dclamp'], '/', v['rho_wclamp'], '/', v['rho_wcap2'], '  L_ref', v['L_ref_pt'], 'pt')
+        print(v['arm'], v['A_depth'], '|', v['B_width'], '|', v['C_dissoc'], '|', v['D_dissoc'], '|', v['E_dose'], '=>', v['arbitration'])
+        print('   rho d/w/cap:', v['rho_dclamp'], '/', v['rho_wclamp'], '/', v['rho_wcap2'],
+              '  Δslope d/w:', v['dslope_dclamp'], '/', v['dslope_wclamp'], '  L_ref', v['L_ref_pt'], 'pt')
+
+
+def arbitrate(A, B):
+    """追補 1 R7: conditional, decided before the results were read."""
+    aR, bR = A == 'DEPTH_REMOVES_LOSS', B == 'WIDTH_REMOVES_LOSS'
+    aNull, bNull = A in ('DEPTH_NO_EFFECT', 'DEPTH_HARMS'), B in ('WIDTH_NO_EFFECT', 'WIDTH_HARMS')
+    if aR and not bR:
+        return 'ISSA_SINKING'
+    if aNull and bR:
+        return 'CLAUDE_WIDTH'
+    if aR and bR:
+        return 'BOTH_WRONG_NOT_SEPARABLE'
+    if aNull and bNull:
+        return 'BOTH_WRONG_CAUSE_OUTSIDE_LAYER1'
+    return 'UNDECIDED'
 
 
 def md(rows, cols):
