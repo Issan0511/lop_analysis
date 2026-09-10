@@ -117,11 +117,13 @@ def check_dphi(arm):
     clearly detectable.  ELUF additionally: continuity of phi at ln a."""
     act = make_act(arm)
     z = torch.linspace(-6, 6, 241, dtype=torch.float64)
+    if isinstance(act, H.AdaptiveSnake):          # per-unit alpha: evaluate on a (241, 100) grid
+        z = z[:, None].expand(241, 100).contiguous()
     zg = z.clone().requires_grad_(True)
     ph = act.phi(zg, 0) if isinstance(act, H.AdaptiveSnake) else act.phi(zg)
     d1 = torch.autograd.grad(ph.sum(), zg)[0]
     e = float((dphi_of(act, z) - d1).abs().max())
-    other = H.Activation('m', 'snake', .6) if arm not in ('SN06',) else H.Activation('m', 'leaky', .1)
+    other = H.Activation('m', 'snake', .6) if arm not in ('SN06', 'SNA') else H.Activation('m', 'leaky', .1)
     m = float((other.dphi(z) - d1).abs().max())
     out = dict(g2_dphi=e, g2_dphi_mutctl=m)
     if arm == 'ELUF':
