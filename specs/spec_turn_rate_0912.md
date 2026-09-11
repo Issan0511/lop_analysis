@@ -32,6 +32,8 @@ $$\omega \;=\; \lvert\Delta\theta_i\rvert \;\approx\; \frac{\lVert\Delta\tilde W
 
 6 腕 × 3 seed = **18 走**。
 
+**分岐点の設計（実装時に修正・走る前）**: **t1–20 は全腕が参照の lr = 1e−3 で走り**、そこから枝分かれする。クランプの高さは**全腕共通**の $\kappa\cdot c_{\rm ref}$（$c_{\rm ref}$ は参照腕の t20 ノルム）で、lr は t21 から腕ごとの値になる。当初は各腕が自分の t20 ノルムを基準にする設計だったが、**lr を下げると t20 のノルムも小さくなり κ と lr が独立でなくなる**（スモークで `W1h` の ω 比が 0.50 でなく 0.76 になって露見）。この修正で $\omega\propto \mathrm{lr}/\kappa$ が設計どおりになり、**全腕の t1–20 が参照を bit 再現する**ので G1 も強くなる。
+
 **決定的な対**: 遅い対 `W1h` 対 `W2`（長さ 2 倍違い・ω 同じ）、速い対 `W1d` 対 `W05`（長さ 2 倍違い・ω 同じ）。
 
 **新しい測定**（late 窓 t61–120・毎更新・ユニット別）:
@@ -64,12 +66,19 @@ $$\omega \;=\; \lvert\Delta\theta_i\rvert \;\approx\; \frac{\lVert\Delta\tilde W
 
 **K3 正味の回転角のほうが良い指標か**: Spearman(Θ_task, L) を K2 と併記。|Spearman(Θ_task)| が |Spearman(ω_step)| より 0.2 以上大きい → `NET_TURN_BETTER`／0.2 以上小さい → `STEP_RATE_BETTER`／他 `K3_TIE`。
 
+**K4 ω を効かせた後に長さは残るか**（**実装時に追加・走る前・データ無し**。K0.4 の対の ω 一致が厳密でなくても答えが出る形）:
+5 つのクランプ腕 × 3 seed = 15 点で、**実測の** $\log_2\omega$ に L を最小二乗で当てはめ、その残差と $\log_2\lVert\tilde W_i\rVert$ の Spearman を取る。
+- |Spearman| ≤ 0.3 → **`LENGTH_ADDS_NOTHING`**（長さは ω を通してしか効かない）
+- ≥ 0.6 → **`LENGTH_ADDS_BEYOND_OMEGA`**（長さそのものが残る）
+- 他 → `K4_PARTIAL`
+**Claude の予測: `LENGTH_ADDS_NOTHING`。**（K1 と同じ賭け・1 点）
+
 **可検定性**: 発散した腕seed は `DIVERGED`。late 窓のタスク内 CE 改善が 90% 未満なら `LEARNING_BROKEN` として判定から外す（`W1d` は lr 2 倍、`W05` は κ 0.5 なので要注意）。
 
 ## 4. 進捗ゲートと変異対照
 
-- **G1**: `N0` は `elu_growth_0909/LR` と maxabs ≤ 1e−10、**`W1` は `grad_coherence_0911/N0w` と per-unit で 0.0**（κ と lr を可変にしても既定値の腕が動いていない証拠）。件数ガード付き。変異対照は初期値 +1e−3 で 1e−8 超。
-- **G2 角度の恒等式**: $\cos\Delta\theta_i$ が [−1, 1]、$\lVert\tilde W_i\rVert$ 一定の腕では $\lVert\Delta\tilde W_i\rVert^2 = 2\lVert\tilde W_i\rVert^2(1-\cos\Delta\theta_i)$ を相対 1e−8 で満たす（クランプが効いている腕でのみ厳密）。Θ_task の望遠鏡和（開始と終端の直接の角度に一致）1e−8。
+- **G1**: **全腕の t1–20 が `elu_growth_0909/LR` と maxabs ≤ 1e−10**（共通の分岐点）。`N0` は t1–120 の全体で、**`W1` は `grad_coherence_0911/N0w` と per-unit で 0.0**（κ と lr を可変にしても既定値の腕が動いていない証拠）。件数ガード付き。変異対照は初期値 +1e−3 で 1e−8 超。
+- **G2 角度の検査**（実装時に形を変更・走る前）: $\cos\Delta\theta_i \in [-1,1]$ を厳密に満たす。**報告する角度そのものを 2 通りで突き合わせる**: 内積経由 $\theta^{\rm dot}=\arccos$ と、小角で数値的に安定な弦経由 $\theta^{\rm chord}=2\arcsin\!\big(\lVert\hat a-\hat b\rVert/2\big)$（**先に正規化する**ので、ノルムが育つ無クランプ腕でも成り立つ） が相対 **1e−6** で一致。（当初は弦の恒等式 $\lVert\Delta\tilde W\rVert^2=2\lVert\tilde W\rVert^2(1-\cos)$ を相対 1e−8 で課したが、$\theta\sim3\times10^{-3}$ rad では $\lVert\Delta\tilde W\rVert^2$ の計算に桁落ちが入り、相対誤差が $\varepsilon_{64}/\theta^2$ のオーダーで出る。スモークの実測 1.12e−8 はこの下界どおりで、**装置ではなく私の許容値が誤っていた**。角度同士の突き合わせは桁落ちを含まない。）Θ_task ≤ Σ|Δθ| の球面三角不等式を 1e−8 で満たす。
 - **G3 クランプの実効性**: §3 K0.1 のとおり。
 - **G4 lr**: 各腕の lr が設計値に相対 1e−12 で一致。κ は `base['c']` の定数倍として作り、**committed の `apply_clamp` は編集しない**。
 - 時間上限 1800 s / 走。
