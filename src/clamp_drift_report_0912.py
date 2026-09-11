@@ -109,7 +109,7 @@ def main():
             lines.append(f"- **J3（射影は何を消すか）**: 消した量のうち勾配方向の割合 = {V['J3_share']} → `{V['J3']}`")
         # ---- J4 descriptive ordering
         if len(arms) >= 4:
-            Ls = [float(np.median([L(x, s) for s in SEEDS])) for x in arms]
+            Ls = [float(np.median([L(x, s) for s in SEEDS if (x, s) in D])) for x in arms]
             V['J4_spearman_drift_L'] = R.spearman([med(x, 'drift2_net') for x in arms], Ls)
             V['J4_spearman_N_L'] = R.spearman([med(x, 'cnorm') for x in arms], Ls)
             V['J4_spearman_rho_L'] = R.spearman([med(x, 'rho_mean') for x in arms], Ls)
