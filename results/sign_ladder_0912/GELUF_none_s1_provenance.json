@@ -1,0 +1,79 @@
+{
+ "arm": "GELUF",
+ "iv": "none",
+ "seed": 1,
+ "tasks": 400,
+ "meas": [
+  625
+ ],
+ "scope": "sign ladder on the deep-side gate of GELU; spec_sign_ladder_0912.md",
+ "checks": {
+  "selftest": {
+   "zc": -0.7517915239,
+   "phi_c": -0.16997120747990369,
+   "phi_at_zc": -0.16997120747990369,
+   "GELUF": {
+    "phi_vs_gelu_above": 0.0,
+    "gate_vs_gelu_above": 0.0,
+    "dphi_vs_autograd": 2.220446049250313e-16,
+    "min_gate": 0.0,
+    "jump_phi_at_zc": 2.7755575615628914e-17,
+    "jump_gate_at_zc": 7.739122398486842e-10,
+    "identity": 0.0,
+    "identity_is": "max|gate| below z_c (must be 0)",
+    "float32_min_gate": 0.0
+   },
+   "GELUA": {
+    "phi_vs_gelu_above": 0.0,
+    "gate_vs_gelu_above": 0.0,
+    "dphi_vs_autograd": 2.220446049250313e-16,
+    "min_gate": 1.5352491831445597e-42,
+    "jump_phi_at_zc": 2.7755575615628914e-17,
+    "jump_gate_at_zc": 6.848365485812025e-10,
+    "identity": 0.0,
+    "identity_is": "max| |gate| - |GELU gate| | (must be 0)",
+    "float32_min_gate": 1.4901161193847656e-08
+   },
+   "float32_sign_flips_in_raw_gelu": 1,
+   "gates": {
+    "z=-1.5": {
+     "GELU": -0.12746919222997954,
+     "GELUF": 0.0,
+     "GELUA": 0.12746919222997954
+    },
+    "z=-4.0": {
+     "GELU": -0.0005036496612264215,
+     "GELUF": 0.0,
+     "GELUA": 0.0005036496612264215
+    }
+   }
+  },
+  "controls_run": false,
+  "c6_var_rel": 4.2818036173626735e-15,
+  "c6_mean_abs": 1.4210854715202004e-14,
+  "gate_neg_frac_max": 0.0,
+  "beyond_frac_max": 0.0,
+  "inv_units_max": 0,
+  "frozen_frac_max": 0.0,
+  "frozen_units_max": 0,
+  "zc_bad_lo_max": 0,
+  "zc_bad_hi_max": 0,
+  "zc_mut_fires_max": 0
+ },
+ "code_sha256": "9be7c6dba335d6fae4f41a217705141effcb6ea92847786afe39c7f3cd589587",
+ "wall_seconds": 267.538123180042,
+ "data_sha256": {
+  "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+  "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+  "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+  "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+ },
+ "spec_sha256": "088b1eae3f25cf336f96c6c6f0aa6282aba92e2ba0187d944fc9ebf4c47c6095",
+ "common_sha256": "8968317d38b05685d393996d5915ccec87c45a805a2ba1bb7d67ea99a64abc20",
+ "base_sha256": "728a43af073275ada32d53c1c81776cd9e6bf1b58509335ab5ca784f02428422",
+ "host_sha256": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+ "valley_sha256": "bf0254861be5f6cf98d0a08ac6c711410d61477558dd3ee19d8623d049b233e0",
+ "torch_version": "2.13.0+cu130",
+ "numpy_version": "2.5.2",
+ "data_dir": "/home/issan/Projects/claude/proj_004_drift/data/mnist"
+}
