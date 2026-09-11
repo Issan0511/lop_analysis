@@ -78,7 +78,10 @@ class Acc:
   B=X.shape[0]
   K=X@X.T                                            # (B,B) Gram
   gw2=(gW1*gW1).sum(1)                               # ground truth, (100,)
-  den=gw2.clamp(min=1e-300)
+  # Relative to the largest unit gradient of the step: a dead unit has gw2==0 in
+  # float32 while the float64 reconstruction is tiny-but-nonzero, which makes a
+  # per-unit denominator explode.  The layer scale is the honest reference.
+  den=gw2.max().clamp(min=1e-300)
   d=e*p                                              # dL/dz1
   g2=(p*p).mean(0)                                   # gate power
   e2=(e*e).sum(0)                                    # error power
