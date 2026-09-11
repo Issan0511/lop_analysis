@@ -19,20 +19,22 @@ def per_seed(arm, seed):
     rows = R.read_rows(OUT / f'{arm}_s{seed}_rows.csv')
     prov = json.load(open(OUT / f'{arm}_s{seed}_provenance.json'))
     ck = prov['checks']
-    b = R.win(rows, 'acc', *BASE)
-    l = R.win(rows, 'acc', *LATE)
+    cl = ck['clamp']          # every row of this arm carries its own clamp label
+    W = lambda k, lo, hi: R.win(rows, k, lo, hi, clamp=cl)
+    b = W('acc', *BASE)
+    l = W('acc', *LATE)
     late = [r for r in rows if LATE[0] <= r['task'] <= LATE[1]]
     t = np.array([r['task'] for r in late]); a = np.array([r['acc'] for r in late])
     ce = [r for r in rows if LATE[0] <= r['task'] <= LATE[1] and np.isfinite(r.get('ce20', np.nan))]
     return dict(arm=arm, seed=seed, lr=ck['lr'], c=ck['noise_c'], clamp=ck['clamp'],
-                L=(b - l) * 100, acc_base=b, level=l, acc1=R.win(rows, 'acc', *FIRST),
+                L=(b - l) * 100, acc_base=b, level=l, acc1=W('acc', *FIRST),
                 slope=float(np.polyfit(t, a, 1)[0]) * 100 * 100,
-                kap2=R.win(rows, 'kap2', *LATE), S2=R.win(rows, 'S2', *LATE),
-                rho=R.win(rows, 'rho_mean', *LATE), graw2=R.win(rows, 'graw2', *LATE),
-                N=R.win(rows, 'cnorm', *LATE), Cov=R.win(rows, 'cov', *LATE),
-                Gbar=R.win(rows, 'gbar', *LATE), zbar=R.win(rows, 'zbar_inv', *LATE),
-                sigma=R.win(rows, 'sigma_inv', *LATE), pos=R.win(rows, 'pos_frac', *LATE),
-                dead=R.win(rows, 'hard_dead', *LATE), w2col=R.win(rows, 'w2col', *LATE),
+                kap2=W('kap2', *LATE), S2=W('S2', *LATE),
+                rho=W('rho_mean', *LATE), graw2=W('graw2', *LATE),
+                N=W('cnorm', *LATE), Cov=W('cov', *LATE),
+                Gbar=W('gbar', *LATE), zbar=W('zbar_inv', *LATE),
+                sigma=W('sigma_inv', *LATE), pos=W('pos_frac', *LATE),
+                dead=W('hard_dead', *LATE), w2col=W('w2col', *LATE),
                 ce_frac=float(np.mean([r['ce20'] - r['ce_probe'] > 0 for r in ce])) if ce else np.nan,
                 g1=ck.get('g1_units_maxabs'), g1n=ck.get('g1_units_compared'),
                 g2m=ck.get('g2_mean_rel'), g2v=ck.get('g2_var_rel'), inj_lo=ck.get('g3_inj_lo'),
@@ -174,6 +176,38 @@ def main():
         V['E7'] = ('GENERALISES_TO_SNAKE' if (np.sign(Ds) == np.sign(D) and abs(Ds) >= 0.3 * abs(D))
                    else 'LEAKY_SPECIFIC' if abs(Ds) <= 0.3 * abs(D) else 'E7_PARTIAL')
         lines.append(f"- **E7**: Snake の損傷 = **{Ds:+.2f} pt**（leaky は {D:+.2f}） → `{V['E7']}`")
+    # ---------------------------------------------------------------- post-hoc
+    # E0 gates E1-E3 by registration.  Their quantities are still worth printing, so they
+    # go here under an explicit 事後 heading; the registered labels above are untouched.
+    lines.append('\n## 2. 事後・未登録（E0 のゲートで登録判定が出なかった量）\n')
+    if all(ok(a) for a in DOSE):
+        d20 = float(np.median([get('N2', s, 'L') - get('N0', s, 'L') for s in SEEDS]))
+        up = all(get('N0', s, 'L') < get('N05', s, 'L') < get('N1', s, 'L') < get('N2', s, 'L') for s in SEEDS)
+        ds = float(np.median([get('N2', s, 'slope') - get('N0', s, 'slope') for s in SEEDS]))
+        da = float(np.median([get('N2', s, 'acc1') - get('N0', s, 'acc1') for s in SEEDS])) * 100
+        rN = float(np.median([get('N2', s, 'N') / get('N0', s, 'N') for s in SEEDS]))
+        rR = float(np.median([get('N2', s, 'rho') / get('N0', s, 'rho') for s in SEEDS]))
+        V['post_E1_dL'] = d20; V['post_E1_monotone'] = up
+        V['post_E2_dslope'] = ds; V['post_E2_dacc1'] = da
+        V['post_E3_N_ratio'] = rN; V['post_rho_ratio'] = rR
+        lines.append(f"- E1 相当: L(N2) − L(N0) = **{d20:+.2f} pt**、seed 別 {[round(get('N2',s,'L')-get('N0',s,'L'),2) for s in SEEDS]}、4 点単調増 **{up}**")
+        lines.append(f"- E2 相当: Δslope = {ds:+.2f} pt/100task、Δacc(t1–5) = {da:+.2f} pt")
+        lines.append(f"- E3 相当: N(N2)/N(N0) = **{rN:.3f}**、ρ(N2)/ρ(N0) = **{rR:.3f}**")
+    # does the loss follow width or path persistence, across BOTH dials on the W1 gradient?
+    w1arms = [a for a in ('N0', 'N05', 'N1', 'N2', 'LRh', 'LRq') if ok(a)]
+    if len(w1arms) >= 5:
+        Ls = [med(a, 'L') for a in w1arms]
+        V['post_spearman_rho_L'] = R.spearman([med(a, 'rho') for a in w1arms], Ls)
+        V['post_spearman_N_L'] = R.spearman([med(a, 'N') for a in w1arms], Ls)
+        V['post_spearman_kap2_L'] = R.spearman([med(a, 'kap2') for a in w1arms], Ls)
+        V['post_spearman_S2_L'] = R.spearman([med(a, 'S2') for a in w1arms], Ls)
+        lines.append(f"\n**第 1 層の勾配に対する 2 つのダイヤル（ノイズ・lr）を合わせた {len(w1arms)} 腕で、損失は何に従うか**（事後・seed 中央値の Spearman）\n")
+        lines.append('| 量 | Spearman vs L |\n|---|---:|')
+        for k, lab in (('rho', 'ρ（タスク内の経路持続）'), ('N', '‖W̃ᵢ‖（幅）'), ('kap2', 'κ2（正規化歩幅）'), ('S2', 'S²（歩幅の予算）')):
+            lines.append(f"| {lab} | {V[f'post_spearman_{k}_L']:+.2f} |")
+        lines.append('\n| arm | ρ | N | L |\n|---|---:|---:|---:|')
+        for a in sorted(w1arms, key=lambda x: -med(x, 'rho')):
+            lines.append(f"| {a} | {med(a,'rho'):.1f} | {med(a,'N'):.2f} | {med(a,'L'):.2f} |")
     if missing:
         lines.append(f"\n**missing**: {missing}")
     (OUT / 'summary.md').write_text('\n'.join(lines) + '\n')
