@@ -109,10 +109,16 @@ class Acc:
   # floor destroys log-additivity: log gw2 and sum(log factors) get clamped to
   # different places.  Average the logs only over units where every factor is
   # strictly positive, and record how many units that keeps.
-  ok=(gw2>0)&(g2>0)&(e2>0)&(xi>0)&(R>0)
+  # The float64 product is MORE accurate than autograd's float32 ||grad W1_i||^2,
+  # which cancels catastrophically on units far below the layer scale.  So the
+  # decomposition is anchored on the product; `ident` validates it against autograd
+  # at the layer scale.  Units where any factor is exactly zero (ELU's underflowed
+  # gate) have no logarithm and are dropped, with the kept fraction recorded.
+  prod=g2*e2*xi*R
+  ok=(g2>0)&(e2>0)&(xi>0)&(R>0)
   s.alive+=float(ok.double().mean())
   if bool(ok.any()):
-   for k,v in (('gw2',gw2),('g2',g2),('e2',e2),('xi',xi),('R',R)):
+   for k,v in (('gw2',prod),('g2',g2),('e2',e2),('xi',xi),('R',R)):
     s.sum[k]+=float(v[ok].log().mean())
    s.nlog+=1
   s.n+=1
