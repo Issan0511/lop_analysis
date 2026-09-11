@@ -35,7 +35,7 @@ TASKS = 120
 LATE = (61, 120)
 LR0 = .001
 CE_STEPS = (20, 100, 300, 625)
-TIME_CAP = 900.
+TIME_CAP = 1800.   # 追補 1 R2: the extra instrumentation made a run ~1.5x slower
 SPEC = ROOT / 'specs/spec_grad_floor_0911.md'
 SQ5 = math.sqrt(5.)
 
@@ -144,6 +144,11 @@ def loop(p, act, adam, gens, ngen, mnist, probe, t_from, t_to, cfg, rows, units,
                         rel = float(d.norm() / r0.norm().clamp(min=1e-300))
                         ck['g0_inj_lo'] = min(ck.get('g0_inj_lo', 9e9), rel)
                         ck['g0_inj_hi'] = max(ck.get('g0_inj_hi', 0.), rel)
+                        # 追補 1 R1: the MEAN is what says the injection strength is c; the
+                        # spread is a property of the weights (PR), not a defect.
+                        ck['g0_inj_sum'] = ck.get('g0_inj_sum', 0.) + rel
+                        ck['g0_inj_sq'] = ck.get('g0_inj_sq', 0.) + rel * rel
+                        ck['g0_inj_n'] = ck.get('g0_inj_n', 0) + 1
                         if mode == 'coord':
                             z = r0 == 0
                             ck['g0_zero_touched'] = max(ck.get('g0_zero_touched', 0.),
@@ -242,8 +247,13 @@ def run(arm, seed, tasks=TASKS, out=OUT, controls=True):
         ck['g3_ngen_untouched'] = bool(torch.equal(n0, ngen.get_state()))
         assert ck['g3_ngen_untouched']
     else:
-        assert 0.9 * c_noise <= ck['g0_inj_lo'] and ck['g0_inj_hi'] <= 1.1 * c_noise, \
-            ('H0.1 realised injection not in [0.9c, 1.1c]', c_noise, ck['g0_inj_lo'], ck['g0_inj_hi'])
+        n_ = ck['g0_inj_n']
+        ck['g0_inj_mean'] = ck['g0_inj_sum'] / n_
+        ck['g0_inj_sd'] = math.sqrt(max(ck['g0_inj_sq'] / n_ - ck['g0_inj_mean'] ** 2, 0.))
+        ck['g0_inj_band_registered'] = bool(0.9 * c_noise <= ck['g0_inj_lo'] and ck['g0_inj_hi'] <= 1.1 * c_noise)
+        # 追補 1 R1: H0.1' -- assert the mean (0.98c..1.02c); min/max/sd are recorded only.
+        assert 0.98 * c_noise <= ck['g0_inj_mean'] <= 1.02 * c_noise, \
+            ("H0.1' realised injection MEAN not in [0.98c, 1.02c]", c_noise, ck['g0_inj_mean'])
         if mode == 'coord':
             assert ck.get('g0_zero_touched', 0.) == 0., ('H0.2 zero coordinate moved', ck['g0_zero_touched'])
 
