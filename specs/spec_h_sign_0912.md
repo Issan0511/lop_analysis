@@ -1,0 +1,130 @@
+# spec_h_sign_0912 — 斉次性を狙って破り、幅が誤差を経由せずに動くかを見る
+
+## 0. 位置づけ
+
+[[gradient_factors_0910]] で、幅の成長速度の腕差は**誤差の強さ e2**が並べ（観測・介入で符号一致、12 腕の残差 sd 0.070）、ゲート因子 g2 は 385 倍動いても Adam に消されて効かないことが分かった。
+
+問い: **活性化は e2 以外の経路で幅を動かせるか。**
+
+帳簿 $\Delta\lVert\widetilde W\rVert^2 = D^2 - 2cDN$ で e2 が効くのは $D^2$ 側。残る候補が 2 つある（事後・`gradient_factors_0910` §4 の続き）:
+
+- **c（侵食）** は e2 と独立（参照 8 腕で Spearman +0.12）、範囲 1.63 倍、SN02 の天井低下の 40% を担う
+- **斉次性の破れが作る径方向力。** Euler 恒等式 $E=\langle\nabla W_1,W_1\rangle+\langle\nabla b_1,b_1\rangle-\langle\nabla W_2,W_2\rangle=\sum_{s,i}(\partial L/\partial a_1)\,h(z)$、$h=z\varphi'-\varphi$。**leaky・ReLU・線形は $h\equiv0$ で $E\equiv0$（定理）**。実測: SN06 **+0.0054**、SN02 +0.0005、SN15 +0.0003、ELU1 **−0.0031**、leaky 4 腕 −0.00000。内向きが強い順に幅が小さい（SN06 が最強で最小）。
+
+私は φ′ の汎関数で 3 回外し、理由は「ユニットごとの定数倍は Adam が消す」だった。**$E$ はその論法に当たらない**: $E\ne0$ は損失が (W1·κ, W2/κ) の対称方向に勾配を持つことで、これは方向であって尺度ではない。Adam は方向を消さない。
+
+ただし E と c の対応は Snake 3 腕では見えない（SN02 は c 最大で E は小、SN06 は E 最大で c は LR +6%）。**どの項を通るかは測る側に置く。**
+
+## 1. 介入
+
+leaky $a=0.1$ に、**正側だけ**に小さな二次項を足す:
+
+$$\varphi_\varepsilon(z)=\begin{cases}z+\varepsilon z^2 & z>0\\ 0.1\,z & z\le0\end{cases},\qquad
+\varphi'_\varepsilon=\begin{cases}1+2\varepsilon z\\0.1\end{cases},\qquad
+h_\varepsilon(z)=\begin{cases}\varepsilon z^2 & z>0\\ 0 & z\le0\end{cases}$$
+
+- **h の符号 = ε の符号**、値は解析的
+- 正側に置く理由: ゲートの相対変化が $2\varepsilon z$ で、負側に置いた場合（$2\varepsilon z/0.1$）の 1/10。$z=3$・$\varepsilon=0.03$ で +18%
+- 負側は leaky のまま → 沈下側の力学に手を触れない
+- $\varepsilon=0$ で leaky に厳密に戻る
+
+| 腕 | ε | h(z=3) | φ′(z=3) |
+|---|---:|---:|---:|
+| `HM03` | −0.03 | −0.27 | 0.82 |
+| `HM01` | −0.01 | −0.09 | 0.94 |
+| `H00` | 0 | 0 | 1.00 — **`LR` とビット一致でなければならない** |
+| `HP01` | +0.01 | +0.09 | 1.06 |
+| `HP03` | +0.03 | +0.27 | 1.18 |
+| `HP10` | +0.10 | +0.90 | 1.60 — 極端腕、ゲート保持の対象外 |
+
+ε<0 の腕は $z>1/(2|\varepsilon|)$（HM03 で 16.7、5σ 超）で非単調になるが実用上到達しない。
+
+6 腕 × 3 seed = **18 走 × 120 タスク**。同 seed の全腕は初期値・置換列・抽出・バッチ順を共有。host は編集しない。
+
+## 2. 測定量
+
+`gradient_factors_0910` の機構をそのまま使う（e2・g2・ξ・R・graw・ρ・S²・D²・cos・σ・z̄・acc、TRACK = 20,30,…,120 の全 625 歩）。追加:
+
+- **E, r_W1b1, r_W2, r_scale**（`gate_scale_invariance_0909` と同定義、4096 標本、E_TASKS = 20,40,…,120 の終端）
+- **E_pred = Σ e·h_ε**（Euler 恒等式の右辺、h は解析式）
+- **層別の径方向ドリフト**（各タスクの適用済み増分、中心化なし）: $\langle\Delta W_1,W_1\rangle/\lVert W_1\rVert^2$ と $\langle\Delta W_2,W_2\rangle/\lVert W_2\rVert^2$
+- **w2col** = W2 の列ノルム平均（e2 のゲージ分離のため）
+- **c = −cos**、**N\* = D/2c**
+
+判定は t = 100, 120 × 3 seed。「ゲート保持 5 腕」= `HP10` を除く 5 腕。
+
+## 3. 事前登録の予測と判定
+
+### V1 `E_SIGN` — 狙った符号の力が立つか
+E/r_scale（`HP03`・`HM03`）。
+- `FOLLOWS_H` … E(HP03) ≥ +5e−4 かつ E(HM03) ≤ −5e−4
+- `OPPOSES_H` … E(HP03) ≤ −5e−4 かつ E(HM03) ≥ +5e−4
+- `NO_FORCE` … どちらかで |E| < 5e−4
+- `MIXED` … その他
+
+**予測: `FOLLOWS_H`。** 根拠: Snake は z≈±1 で h>0 かつ E>0（同符号）。ELU は深い負側で h>0 かつ E<0（逆符号）。本介入の h は正側で、Snake 側の領域に近い。閾値 5e−4 は leaky の 0 と Snake 最小 3e−4 の間。
+
+### V2 `WIDTH_RESPONDS` — 幅は ε に応答するか
+ゲート保持 5 腕の N120。gap = N120(HP03) − N120(HM03)。seed sd ≈ 0.05。
+- `INWARD_SHRINKS` … Spearman(ε, N120) ≤ −0.8 かつ gap ≤ −0.3
+- `NO_RESPONSE` … |gap| < 0.15
+- `OUTWARD_SHRINKS` … Spearman ≥ +0.8 かつ gap ≥ +0.3
+- `PARTIAL` … その他
+
+**予測: `INWARD_SHRINKS`。**
+
+### V3 `LOCUS` — 帳簿のどの項で動くか（**機構の本体**）
+ゲート保持 5 腕で Spearman(ε, c) と Spearman(ε, ρ)。
+- `VIA_EROSION` … Spearman(ε, c) ≥ +0.8 かつ |Spearman(ε, ρ)| < 0.5
+- `VIA_INJECTION` … Spearman(ε, ρ) ≤ −0.8 かつ |Spearman(ε, c)| < 0.5
+- `BOTH` … 両方が閾値を超える
+- `NEITHER` … その他
+
+**予測: `VIA_EROSION`。** 根拠: E は W の方向に沿った力で、タスク内の歩の整列（ρ）ではなく累積 W̃ への向き（c）に効くはず。**確信は低い**（Snake 3 腕で E と c が対応していない）。
+
+### V4 `GATE_HELD` — 介入はゲートを動かしていないか
+g2(HP03)/g2(H00) と g2(HM03)/g2(H00)。
+- `HELD` … 両方 [0.8, 1.25]
+- `MOVED` … その他
+
+**予測: `HELD`。** `HP10` は対象外で g2 比を報告のみ。
+
+### V5 `E2_DIRECTION` — 誤差の経路と切り離せるか（**e2 説の直接検定**）
+ゲート保持 5 腕で Spearman(ε, e2) と Spearman(ε, e2·N²)。
+- `E2_OPPOSITE` … Spearman(ε, e2) ≥ +0.5 かつ V2 が `INWARD_SHRINKS`（e2 は上がるのに幅は下がる）
+- `E2_ALIGNED` … Spearman(ε, e2) ≤ −0.5（e2 も下がる＝e2 経由と区別できない）
+- `E2_FLAT` … |Spearman(ε, e2)| < 0.5
+- `NA` … V2 が `INWARD_SHRINKS` でない
+
+**予測: `E2_OPPOSITE`。** 根拠: E>0 は層 1 を縮め層 2 を伸ばす方向。e2 = ‖W2ᵀδ2‖² は W2 と一緒に**上がる**。幅が下がって e2 が上がれば、e2 は幅の唯一のレバーではない。ゲージ不変形 e2·N² は κ が相殺して平坦（|Spearman| < 0.5）と予測。
+
+### V6 `ACCURACY` — 内向きの力は精度を食うか
+acc(HP03) − acc(H00)、pt。
+- `FREE` … ≥ −0.3
+- `COSTS` … ≤ −1.0
+- `SMALL_COST` … その他
+
+**予測: `FREE`。** 根拠: 幹が幅なら幅が小さい方が悪くならない。SN02 は幅 18% 小で精度 +1.4 pt。
+
+## 4. 検査（すべて変異対照つき）
+
+| # | 検査 | 合格 | 変異対照 |
+|---|---|---|---|
+| G1 | `H00` が committed checkpoint 42 点を再現 | maxabs **0.0** | init +1e−3 → ≥1e−4 |
+| B0 | `H00` が `LR`（`H.Activation` leaky）と全 120 タスクで一致 | maxabs **0.0** | `HP01` と比較 → ≥1e−3 |
+| C1 | φ′_ε が autograd と一致 | ≤1e−14 | 別 ε の φ′ → ≥1e−2 |
+| C2 | h_ε 解析式 = z·(autograd φ′) − φ | ≤1e−14 | ELU の h → ≥0.1 |
+| C3 | Euler: E = E_pred（float32 宿主） | 相対 ≤1e−3 | ELU の h で E_pred → ≥1e−2 |
+| C4 | `H00` の e2・ρ・graw が `gradient_factors_0910` の `LR` と一致 | **0.0** | 別タスク → ≥1e−2 |
+| C5 | 4 因子の積 = autograd（`gradient_factors_0910` と同じ） | 相対 ≤1e−3 | ゲート除去 → ≥1e−2 |
+| C6 | 測定の非侵襲 | **0.0** | measure 時 +1e−9 → >0 |
+| C7 | `H00` の E/r_scale が厳密 0（h≡0） | ≤1e−9 | `HP01` → ≥1e−4 |
+
+## 5. 限界（事前に宣言）
+
+- ε の 5 水準は 1 族。h の形（$z^2$・正側）を変えていないので「h の符号」以上の一般性は主張しない。
+- E は終端 6 点の生勾配。c は 625 歩を Adam が処理した後の累積。両者の対応は V3 で初めて測る。
+- e2 は「出力誤差 × W2 の大きさ」の積のまま。V5 の `E2_OPPOSITE` が出ても、e2 の何が動いたか（W2 か δ2 か）は w2col でしか追えない。
+- `HP10` はゲートが 60% 動くので単独では解釈しない。効果の存在確認と単調性の延長のためだけに置く。
+- 120 タスクは天井の手前。SGD 対照なし。
+- 私は φ′ の汎関数で 3 回外している。本 spec は φ′ でなく h だが、4 回目である。
