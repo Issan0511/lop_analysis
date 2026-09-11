@@ -84,7 +84,10 @@ def main():
             all(1.7 <= med(x, 'omega_step') / oref <= 2.3 for x in ('W1d', 'W05')))
     pr = {f'{p}/{q}': med(p, 'omega_step') / med(q, 'omega_step') for p, q in PAIRS}
     p_ok = all(abs(v - 1) < 0.15 for v in pr.values())
-    V['K0'] = 'MANIPULATION_OK' if (g1_ok and n_ok and o_ok and p_ok and not broken) else 'NOT_TESTABLE'
+    core = g1_ok and n_ok and o_ok and not broken
+    V['K0'] = 'MANIPULATION_OK' if core else 'NOT_TESTABLE'          # gates K2-K4
+    V['K0_pairs'] = 'PAIRS_MATCHED' if p_ok else 'PAIRS_NOT_MATCHED'  # gates K1 only
+    V['K0_strict'] = 'MANIPULATION_OK' if (core and p_ok) else 'NOT_TESTABLE'
     V['K0_parts'] = f'G1={g1_ok} norms={n_ok} omega={o_ok} pairs={p_ok} broken={broken}'
     V['K0_pair_omega_ratio'] = {k: round(v, 3) for k, v in pr.items()}
     lines.append('\n### K0 操作の実測（seed 中央値）\n\n| arm | κ | ‖W̃ᵢ‖ | W1 比 | ω [rad/更新] | W1 比 | 設計比 |\n|---|---:|---:|---:|---:|---:|---:|')
@@ -116,9 +119,12 @@ def main():
         ds = [L('W1h', s) - L('W2', s) for s in SEEDS]
         df = [L('W1d', s) - L('W05', s) for s in SEEDS]
         V['K1_d_slow'] = [round(x, 2) for x in ds]; V['K1_d_fast'] = [round(x, 2) for x in df]
-        V['K1'] = ('OMEGA_EXPLAINS_WIDTH' if all(abs(x) < .3 for x in ds + df)
-                   else 'OMEGA_FAILS' if any(abs(x) >= .7 for x in ds + df) else 'K1_PARTIAL')
-        lines.append(f"\n- **K1（決定的）**: 遅い対 L(W1h)−L(W2) = {V['K1_d_slow']}、速い対 L(W1d)−L(W05) = {V['K1_d_fast']} pt → `{V['K1']}`")
+        lab = ('OMEGA_EXPLAINS_WIDTH' if all(abs(x) < .3 for x in ds + df)
+               else 'OMEGA_FAILS' if any(abs(x) >= .7 for x in ds + df) else 'K1_PARTIAL')
+        V['K1'] = lab if p_ok else 'NOT_TESTABLE (pairs not omega-matched)'
+        V['K1_posthoc_label'] = lab
+        lines.append(f"\n- **K1（決定的）**: 遅い対 L(W1h)−L(W2) = {V['K1_d_slow']}、速い対 L(W1d)−L(W05) = {V['K1_d_fast']} pt → `{V['K1']}`"
+                     + ('' if p_ok else f"（対の ω が揃っていないので登録上は判定できない。事後のラベルは `{lab}`）"))
         cl = [x for x in CLAMPED if ok(x)]
         V['K2_spearman'] = R.spearman([med(x, 'omega_step') for x in cl], [mL(x) for x in cl])
         V['K2'] = ('OMEGA_ORDERS' if V['K2_spearman'] <= -.8
