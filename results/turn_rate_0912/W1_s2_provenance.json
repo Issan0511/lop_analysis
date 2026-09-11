@@ -1,0 +1,54 @@
+{
+ "arm": "W1",
+ "seed": 2,
+ "tasks": 120,
+ "clamp_from": 21,
+ "cfg": {
+  "kappa": 1.0,
+  "lr": 0.001
+ },
+ "late": [
+  61,
+  120
+ ],
+ "checks": {
+  "g2_dphi": 0.0,
+  "g2_dphi_mutctl": 1.8996188400141854,
+  "kappa": 1.0,
+  "lr": 0.001,
+  "lr_rel_err": 0.0,
+  "c6_var_rel": 3.510476935787975e-15,
+  "c6_mean_abs": 3.552713678800501e-15,
+  "kappa_applied": 1.0,
+  "f32_rowmean_bound_t20": 1.523809637868721e-08,
+  "ctl_skip_c3_cnorm_rel": 0.00042007561494001043,
+  "ctl_rowscale_c3_m_absdiff": 3.6870039552088646e-05,
+  "ctl_tail_clamp_tail_absdiff": 0.00010000169277191162,
+  "f32_rowmean_bound": 1.630371714525411e-08,
+  "c3_m_absdiff": 2.5216390364679597e-09,
+  "clamp_tail_absdiff": 0.0,
+  "c3_cnorm_rel": 2.9253245332920482e-08,
+  "g2_cos_range": 0.0,
+  "g2_angle_rel": 6.228421166376195e-08,
+  "g2_triangle": 0.0,
+  "g2_tot_ident": 8.326672684688674e-16,
+  "g1_anchor": "grad_coherence_0911/N0w",
+  "g1_units_maxabs": 0.0,
+  "g1_units_compared": 1920,
+  "g1_units_expected": null
+ },
+ "spec_sha256": "e9ef17b966d444f6e717050415035908f450e2b829dc4a72ac97bfb71749efa9",
+ "code_sha256": "c74ddb9bdab8612f42a8ba4d836337a43204317aa41433b46b2df71d61d11022",
+ "clamp_horizon_sha256": "8effc4a5d5d1caa6b46cc71ebd314bc8d096587f2c9ec952987c696b1851600d",
+ "base_sha256": "728a43af073275ada32d53c1c81776cd9e6bf1b58509335ab5ca784f02428422",
+ "host_sha256": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+ "data_sha256": {
+  "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+  "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+  "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+  "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+ },
+ "torch_version": "2.13.0+cu130",
+ "wall_seconds": 438.4826550569851,
+ "scope": "CPU; clamp height kappa x t20 norm, per-arm lr, per-update turn angle"
+}
