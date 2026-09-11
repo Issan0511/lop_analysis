@@ -40,6 +40,24 @@ def per_seed(arm, seed):
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--src', default=None, help='results directory (default: the real run)')
+    ap.add_argument('--partial', action='store_true',
+                    help='aggregate even though runs are missing. WITHOUT this the module refuses, '
+                         'so that a "dry run" of the aggregator cannot silently read judgment '
+                         'quantities off a half-finished run (2026-09-11 の開示).')
+    a = ap.parse_args()
+    global OUT
+    if a.src:
+        OUT = Path(a.src)
+    have = {f.name.replace('_rows.csv', '') for f in OUT.glob('*_rows.csv')}
+    want = {f'{arm}_s{s}' for arm in ARMS for s in SEEDS}
+    gap = sorted(want - have)
+    if gap and not a.partial:
+        print(f'REFUSING: {len(gap)}/{len(want)} runs missing ({gap[:6]}{"..." if len(gap) > 6 else ""}).')
+        print('Pass --partial only if you accept reading judgment quantities off an incomplete run.')
+        raise SystemExit(2)
     seedrows, missing = [], []
     for arm in ARMS:
         for s in SEEDS:
