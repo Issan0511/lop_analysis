@@ -66,7 +66,10 @@ class GELUFloor:
         return self._g.phi(torch.clamp(z, min=ZC))
 
     def dphi(self, z):
-        return torch.where(z >= ZC, self._g.dphi(z), torch.zeros_like(z))
+        # clamp: in float32 GELU's phi' is negative at points just ABOVE z_c
+        # (it changes sign there), which would make this "non-valley" arm show a
+        # negative gate.  See spec 追補 1.
+        return torch.where(z >= ZC, self._g.dphi(z).clamp(min=0.), torch.zeros_like(z))
 
 
 class GELUAbs:
@@ -83,8 +86,10 @@ class GELUAbs:
         return torch.where(z >= ZC, g, 2.0 * PHI_C - g)
 
     def dphi(self, z):
-        d = self._g.dphi(z)
-        return torch.where(z >= ZC, d, -d)
+        # |phi'| everywhere: identical to phi' above z_c (where phi' >= 0) and to
+        # -phi' below it.  Written as abs() rather than a branch so that float32's
+        # sign flip at z_c cannot leak a negative gate.  See spec 追補 1.
+        return self._g.dphi(z).abs()
 
 
 LADDER = {'GELU': VA.GELU, 'GELUF': GELUFloor, 'GELUA': GELUAbs}
@@ -143,7 +148,19 @@ def _selftest():
         if name == 'GELUA':          # the |gate| identity must not be trivially true
             assert float((a.dphi(zb) - base.dphi(zb)).abs()) > 1e-3, \
                 'vacuous |gate| identity: GELUA gate equals GELU gate at z=-1.5'
-    # 6. the three arms must actually differ on the far side
+    # 6. float32: the gate must not go negative THERE either, and the guard must
+    #    not be vacuous -- raw GELU phi' really does flip sign near z_c in float32
+    z32 = torch.linspace(-1.2, -0.3, 2000001, dtype=torch.float32)
+    raw32 = base.dphi(z32)
+    flips = int(((z32 >= ZC) & (raw32 < 0)).sum() + ((z32 < ZC) & (raw32 > 0)).sum())
+    assert flips > 0, 'vacuous float32 guard: GELU phi-prime does not flip sign near z_c in float32'
+    out['float32_sign_flips_in_raw_gelu'] = flips
+    for name, cls in [('GELUF', GELUFloor), ('GELUA', GELUAbs)]:
+        m32 = float(cls().dphi(z32).min())
+        out[name]['float32_min_gate'] = m32
+        assert m32 >= 0., (name, 'float32 gate goes negative near z_c', m32)
+
+    # 7. the three arms must actually differ on the far side
     gates = {}
     for zv in (-1.5, -4.0):
         zb = torch.tensor([zv], dtype=torch.float64)
