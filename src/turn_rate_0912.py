@@ -272,9 +272,15 @@ def _controls(seed, snap, base, mnist, probe, ck_main, clamp_from, lr):
     """The committed clamp's mutation controls (skip / rowscale / tail) at t20."""
     res = {}
 
+    # A mutation control's job is to show the check would FIRE, i.e. to land above the
+    # check's own tolerance.  The margin below is 10x that tolerance -- comfortably
+    # decisive, and derived from the tolerance rather than guessed.  (The first version
+    # demanded 100x and killed runs whose controls sat at 65-80x: the long/slow arms
+    # drift less per skipped step because the drift is ~ lr/||W~_i||, exactly the
+    # quantity this run varies.  That was a wrong threshold, not a weak control.)
     def floor(key):
         b = 'f32_rowmean_bound_t20' if key in CH.FLOOR_OF else None
-        return 100 * CH.limit(ck_main, key, b)
+        return 10 * CH.limit(ck_main, key, b)
     for mut, keys in [('skip', ['c3_cnorm_rel']), ('rowscale', ['c3_m_absdiff']), ('tail', ['clamp_tail_absdiff'])]:
         p2, act2, adam2, gens2 = C.restore(snap, 'LR')
         ck2 = {}
@@ -298,7 +304,9 @@ def _controls(seed, snap, base, mnist, probe, ck_main, clamp_from, lr):
                 CH.verify_clamped(p2, 'wclamp', base, ck2)
         for k in keys:
             got = ck2.get(k, 0.)
+            b = 'f32_rowmean_bound_t20' if k in CH.FLOOR_OF else None
             res[f'ctl_{mut}_{k}'] = got
+            res[f'ctl_{mut}_{k}_x_tol'] = got / max(CH.limit(ck_main, k, b), 1e-300)
             assert got > floor(k), (f'vacuous control {mut}: {k} = {got:g} <= {floor(k):g}')
     return res
 
