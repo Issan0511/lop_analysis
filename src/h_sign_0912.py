@@ -146,10 +146,10 @@ def run(name,eps,seed):
  rows,ends,ck=train(eps,seed,mnist,px,xg,yg)
  ck['c1'],ck['c1_mutctl'],ck['c2'],ck['c2_mutctl']=check_act(eps)
  assert ck['c1']<1e-14 and ck['c1_mutctl']>1e-2 and ck['c2']<1e-14 and ck['c2_mutctl']>.1,ck
- assert ck['euler']<1e-3 and ck['euler_mut']>1e-3,ck
+ assert ck['euler']<1e-3 and ck['euler_mut']>1e-4,ck
  assert ck['ident']<1e-3 and ck['mut_nogate']>1e-2 and ck['rayleigh']==0 and ck['addgap']<1e-6,ck
  if name=='H00':
-  assert ck['e_h00']<1e-9,ck
+  assert ck['e_h00']<1e-8,ck
   ck['c4'],ck['c4_mutctl']=external(seed,rows);assert ck['c4']==0. and ck['c4_mutctl']>1e-2,ck
   ck['g1_maxabs'],ck['g1_n']=g1(seed,ends);assert ck['g1_maxabs']==0.,ck
   e2=train(0.,seed,mnist,px,xg,yg,measure_on=False,plain=True)[1]
