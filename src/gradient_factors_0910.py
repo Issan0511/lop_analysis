@@ -73,7 +73,7 @@ class Acc:
  def __init__(s):
   s.sum={k:0. for k in s.KEYS};s.n=0
   s.graw=0.;s.phi2=0.
-  s.ident=0.;s.mut_nogate=0.;s.mut_fwd=0.;s.rayleigh=0
+  s.ident=0.;s.mut_nogate=0.;s.mut_fwd=0.;s.rayleigh=0;s.alive=0.;s.nlog=0
  def add(s,X,e,p,gW1,pf,ctl):
   B=X.shape[0]
   K=X@X.T                                            # (B,B) Gram
@@ -105,12 +105,22 @@ class Acc:
    qf=(df*df).sum(0);dfh=df/qf.sqrt().clamp(min=1e-300)
    Rf=((dfh.T@K)*dfh.T).sum(1)
    s.mut_fwd=max(s.mut_fwd,float(((g2f*e2*xif*Rf-gw2).abs()/den).max()))
-  for k,v in (('gw2',gw2),('g2',g2),('e2',e2),('xi',xi),('R',R)):
-   s.sum[k]+=float(v.clamp(min=1e-300).log().mean())
+  # Clamping a dead unit (phi'=e^z underflows to 0 in float32, so gw2==0 too) to a
+  # floor destroys log-additivity: log gw2 and sum(log factors) get clamped to
+  # different places.  Average the logs only over units where every factor is
+  # strictly positive, and record how many units that keeps.
+  ok=(gw2>0)&(g2>0)&(e2>0)&(xi>0)&(R>0)
+  s.alive+=float(ok.double().mean())
+  if bool(ok.any()):
+   for k,v in (('gw2',gw2),('g2',g2),('e2',e2),('xi',xi),('R',R)):
+    s.sum[k]+=float(v[ok].log().mean())
+   s.nlog+=1
   s.n+=1
  def finish(s):
-  o={k:float(np.exp(s.sum[k]/s.n)) for k in s.KEYS}
-  o['graw']=s.graw/s.n;o['phi2_batch']=s.phi2/s.n
+  o={k:float(np.exp(s.sum[k]/max(s.nlog,1))) for k in s.KEYS}
+  o['graw']=s.graw/s.n;o['phi2_batch']=s.phi2/s.n;o['alive']=s.alive/s.n
+  # log-additivity of the decomposition, on the kept units
+  o['addgap']=abs(np.log(o['gw2'])-sum(np.log(o[k]) for k in ('g2','e2','xi','R')))
   return o
 
 def train(kind,p,seed,mnist,px,mutate=None,measure_on=True):
@@ -121,7 +131,7 @@ def train(kind,p,seed,mnist,px,mutate=None,measure_on=True):
  adam=([torch.zeros_like(q) for q in par],[torch.zeros_like(q) for q in par],[0])
  C=lambda W:(W.double()-W.double().mean(1,keepdim=True))
  prev=C(par[0]).clone();rows=[];ends={}
- ck=dict(ident=0.,mut_nogate=float('inf'),mut_fwd=float('inf'),rayleigh=0)
+ ck=dict(ident=0.,mut_nogate=float('inf'),mut_fwd=float('inf'),rayleigh=0,addgap=0.,alive_min=1.)
  for task in range(1,NTASK+1):
   perm=torch.randperm(784,generator=gp)
   di=H.stratified_draw(mnist,gd);order=torch.randperm(H.TASK_EXAMPLES,generator=gb)
@@ -164,7 +174,8 @@ def train(kind,p,seed,mnist,px,mutate=None,measure_on=True):
     ck['ident']=max(ck['ident'],A.ident)
     ck['mut_nogate']=min(ck['mut_nogate'],A.mut_nogate)
     ck['mut_fwd']=min(ck['mut_fwd'],A.mut_fwd)
-    ck['rayleigh']+=A.rayleigh
+    ck['rayleigh']+=A.rayleigh;ck['addgap']=max(ck['addgap'],r['addgap'])
+    ck['alive_min']=min(ck['alive_min'],r['alive'])
     s2=float(S2.mean());d2=float((tot*tot).sum(1).mean())
     z=px.double()[:,perm]@par[0].double().T+par[1].double()
     pb=act.dphi(z.float()).double();pfw=dphi_fwd(act,z.float()).double()
@@ -211,7 +222,8 @@ def run(name,kind,p,seed):
  assert ck['dphi']<1e-14 and ck['dphi_mutctl']>0.5,ck
  assert ck['ident']<1e-3,ck
  assert ck['mut_nogate']>1e-2,ck          # dropping the gate must break the identity
- assert ck['rayleigh']==0,ck              # R stays inside the spectrum of K
+ assert ck['rayleigh']==0,ck
+ assert ck['addgap']<1e-6,ck   # exp/log round trip, not clamping              # R stays inside the spectrum of K
  if kind=='bwd' and p!=.1:
   assert ck['fwd_gap']>1e-3 and ck['mut_fwd']>1e-3,ck   # the backward really differs
  ck['c4'],ck['c4_mutctl']=external(name,seed,rows)

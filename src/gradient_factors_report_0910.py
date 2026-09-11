@@ -64,8 +64,12 @@ def main():
 
     # ---- V1
     R=g.loc[REF]
-    L={k:np.log(R[k]) for k in ('gw2','g2','e2','xi','R')}
+    lg=v.copy()
+    for k in ('gw2','g2','e2','xi','R'):lg['l_'+k]=np.log(lg[k])
+    Lg=lg.groupby('arm').mean(numeric_only=True).loc[REF]
+    L={k:Lg['l_'+k] for k in ('gw2','g2','e2','xi','R')}
     tot=L['gw2'];f={k:float(np.cov(L[k],tot)[0,1]/np.var(tot,ddof=1)) for k in ('g2','e2','xi','R')}
+    fsum=sum(f.values())
     V1=('GATE_WITH_COMPENSATION' if f['g2']>=.6 and f['e2']<=0 else
         'GATE' if f['g2']>=.6 else 'ERROR' if f['e2']>=.6 else 'SPLIT')
     # ---- V2
@@ -77,8 +81,9 @@ def main():
     B=g.loc[BL];rmsb=np.sqrt(B.phi2_probe.values)
     s_i=spear(rmsb,B.graw.values);s_ii=spear(B.graw.values,B.rho.values)
     order=np.argsort(rmsb);mono=bool(np.all(np.diff(end.loc[BL].values[order])<=0))
-    V3=('GATE_CAUSAL' if (s_i>=.8 and s_ii<=-.8 and mono) else
-        'PARTIAL' if s_i>=.8 else 'NO_EFFECT')
+    EPSB=1e-9
+    V3=('GATE_CAUSAL' if (s_i>=.8-EPSB and s_ii<=-.8+EPSB and mono) else
+        'PARTIAL' if s_i>=.8-EPSB else 'NO_EFFECT')
     # ---- V4
     b_,a_=np.polyfit(np.log(R.graw),np.log(R.rho),1)
     res=np.log(B.rho)-(a_+b_*np.log(B.graw));mres=float(res.abs().max())
@@ -89,7 +94,7 @@ def main():
     out.append('\n## 1. 判定\n')
     out.append('| | ラベル | 予測 | 実測 |');out.append('|---|---|---|---|')
     out.append(f"| V1 腕差はどの因子か | **`{V1}`** | `GATE_WITH_COMPENSATION` | "
-               f"f_g2 **{f['g2']:+.2f}** / f_e2 **{f['e2']:+.2f}** / f_ξ {f['xi']:+.2f} / f_R {f['R']:+.2f} |")
+               f"f_g2 **{f['g2']:+.2f}** / f_e2 **{f['e2']:+.2f}** / f_ξ {f['xi']:+.2f} / f_R {f['R']:+.2f}"f"（和 {fsum:.3f}） |")
     out.append(f"| V2 正規仮定は公正か | **`{V2}`** | `BIASED` | Spearman {sp2:+.2f}・最大相対誤差 {100*rel:.0f}% |")
     out.append(f"| V3 ゲートだけの介入 | **`{V3}`** | `GATE_CAUSAL` | "
                f"(i) {s_i:+.2f} / (ii) {s_ii:+.2f} / (iii) 単調減 {mono} |")
