@@ -255,7 +255,7 @@ def ctl_streams(arm, seed, mnist, n=5):
     """The activation must not enter the RNG.  Same digest-over-real-training
     construction as sub-run A, with the same extra-draw control."""
     def digest(a, sd, extra_draw=False):
-        p, act, adam, gens = _fresh(a, sd) if a in LADDER else (None,) * 4
+        p, act, adam, gens = _fresh(a, sd) if a in ARMS else (None,) * 4
         if p is None:
             p = H.init_params(sd, torch.device('cpu')); act = T.make_act(a)
             adam = ([torch.zeros_like(q) for q in p], [torch.zeros_like(q) for q in p], [0])
