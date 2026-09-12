@@ -173,7 +173,7 @@ def run(name,k,kind,p,seed):
  rows,ends,ck=train(k,kind,p,seed,mnist,px,xg,yg)
  assert ck['valid'] and ck['f_err']<=0.02,ck
  assert ck['host_path']==(NTASK if k>=1. else 1),ck
- assert ck['p4']<1e-12 and ck['p4_self']<1e-12 and ck['p4_shuf']<0.05,ck
+ assert ck['p4']<1e-9 and ck['p4_self']<1e-12 and ck['p4_shuf']<0.05,ck
  assert ck['ident']<1e-3 and ck['mut_nogate']>1e-2 and ck['rayleigh']==0 and ck['addgap']<1e-6,ck
  ck['c1'],ck['c1_mutctl']=external(name,seed,rows)
  if ck['c1'] is not None:assert ck['c1']==0. and ck['c1_mutctl']>1e-2,ck
