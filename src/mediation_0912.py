@@ -32,7 +32,7 @@ ACTS = ['GELU', 'GELUA']
 CLAMPS = ['ref', 'wclamp', 'dclamp']
 TASKS = 400
 CLAMP_FROM = 21
-TIME_CAP = 5400.
+TIME_CAP = 9000.          # 追補 3: GELUA+wclamp の 1 枝が 2635 s。上限は書き出しの後に走る
 
 
 def restore(snap, arm):
