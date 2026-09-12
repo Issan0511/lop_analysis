@@ -46,68 +46,79 @@ from src import transport_common_0910 as T
 H = C.H
 ROOT = C.ROOT
 OUT = ROOT / 'results/sign_ladder_0912'
-ARMS = ['GELU', 'GELUF', 'GELUA']
+ARMS = ['GELU', 'GELUF', 'GELUA', 'SILU', 'SILUF', 'SILUA']
 TASKS = 400
 TIME_CAP = 2400.
 
-ZC = VA.ZC['GELU']                       # -0.7517915239
-PHI_C = -0.16997120747990369             # phi(ZC), asserted in _selftest
+# base -> (class, z_c, phi(z_c)).  phi(z_c) is tabulated and asserted in _selftest;
+# for SiLU it is exactly z_c + 1 (valley_acts_0910 docstring).
+BASES = {'GELU': (VA.GELU, VA.ZC['GELU'], -0.16997120747990369),
+         'SILU': (VA.SiLU, VA.ZC['SILU'], -0.27846454276107385)}
+ZC = VA.ZC['GELU']          # kept so the GELU ladder's code path is unchanged
 
 
-class GELUFloor:
-    """GELU above z_c, flat at phi(z_c) below it.  Gate is exactly 0 past the valley."""
-    kind = 'gelu_floor'
+class _Floor:
+    """base above z_c, flat at phi(z_c) below it.  Gate is exactly 0 past the valley."""
 
-    def __init__(self, param=1.0):
-        self.param = float(param); self.name = 'GELUF'
-        self._g = VA.GELU()
+    def __init__(self, base):
+        cls, self.zc, self.phi_c = BASES[base]
+        self._g = cls(); self.base = base
+        self.name = base + 'F'; self.kind = self._g.kind + '_floor'; self.param = 1.0
 
     def phi(self, z):
-        return self._g.phi(torch.clamp(z, min=ZC))
+        return self._g.phi(torch.clamp(z, min=self.zc))
 
     def dphi(self, z):
-        # clamp: in float32 GELU's phi' is negative at points just ABOVE z_c
-        # (it changes sign there), which would make this "non-valley" arm show a
+        # clamp: in float32 the base's phi' can be negative just ABOVE z_c (it
+        # changes sign there), which would make this "non-valley" arm show a
         # negative gate.  See spec 追補 1.
-        return torch.where(z >= ZC, self._g.dphi(z).clamp(min=0.), torch.zeros_like(z))
+        return torch.where(z >= self.zc, self._g.dphi(z).clamp(min=0.), torch.zeros_like(z))
 
 
-class GELUAbs:
-    """GELU above z_c, reflected about y = phi(z_c) below it.  |gate| == GELU's
+class _Abs:
+    """base above z_c, reflected about y = phi(z_c) below it.  |gate| == the base's
     at every z; only the sign on the far side differs."""
-    kind = 'gelu_abs'
 
-    def __init__(self, param=1.0):
-        self.param = float(param); self.name = 'GELUA'
-        self._g = VA.GELU()
+    def __init__(self, base):
+        cls, self.zc, self.phi_c = BASES[base]
+        self._g = cls(); self.base = base
+        self.name = base + 'A'; self.kind = self._g.kind + '_abs'; self.param = 1.0
 
     def phi(self, z):
         g = self._g.phi(z)
-        return torch.where(z >= ZC, g, 2.0 * PHI_C - g)
+        return torch.where(z >= self.zc, g, 2.0 * self.phi_c - g)
 
     def dphi(self, z):
-        # |phi'| everywhere: identical to phi' above z_c (where phi' >= 0) and to
-        # -phi' below it.  Written as abs() rather than a branch so that float32's
-        # sign flip at z_c cannot leak a negative gate.  See spec 追補 1.
+        # |phi'| everywhere: phi' above z_c (where phi' >= 0), -phi' below it.
+        # abs() rather than a branch so float32's sign flip at z_c cannot leak a
+        # negative gate.  See spec 追補 1.
         return self._g.dphi(z).abs()
 
 
-LADDER = {'GELU': VA.GELU, 'GELUF': GELUFloor, 'GELUA': GELUAbs}
+def base_of(arm):
+    return arm[:-1] if arm not in BASES else arm
 
 
 def make_act(arm):
-    return LADDER[arm]()
+    if arm in BASES:
+        return BASES[arm][0]()
+    return (_Floor if arm.endswith('F') else _Abs)(base_of(arm))
 
 
-def _selftest():
+def _selftest(bases=('GELU', 'SILU')):
     """Checks that can fail, each with a mutation control."""
+    return {b: _selftest_base(b) for b in bases}
+
+
+def _selftest_base(b):
     z = torch.linspace(-14, 6, 200001, dtype=torch.float64)
-    base = VA.GELU()
+    cls_b, ZC, PHI_C = BASES[b]
+    base = cls_b()
     above, below = z >= ZC, z < ZC
     out = {'zc': ZC, 'phi_c': PHI_C, 'phi_at_zc': float(base.phi(torch.tensor(ZC, dtype=torch.float64)))}
-    assert abs(out['phi_at_zc'] - PHI_C) < 1e-12, ('PHI_C wrong', out['phi_at_zc'])
-    for name, cls in [('GELUF', GELUFloor), ('GELUA', GELUAbs)]:
-        a = cls()
+    assert abs(out['phi_at_zc'] - PHI_C) < 1e-12, (b, 'PHI_C wrong', out['phi_at_zc'])
+    for name, cls in [(b + 'F', _Floor), (b + 'A', _Abs)]:
+        a = cls(b)
         # 1. identical to GELU above z_c (this is what "everything else held fixed" means)
         d_above = float((a.phi(z[above]) - base.phi(z[above])).abs().max())
         g_above = float((a.dphi(z[above]) - base.dphi(z[above])).abs().max())
@@ -122,7 +133,7 @@ def _selftest():
         jump_phi = float((a.phi(e)[0] - a.phi(e)[1]).abs())
         jump_gate = float((a.dphi(e)[0] - a.dphi(e)[1]).abs())
         # 5. arm-specific identity
-        if name == 'GELUF':
+        if name.endswith('F'):
             ident = float(a.dphi(z[below]).abs().max())            # gate == 0 below
             ident_name = 'max|gate| below z_c (must be 0)'
         else:
@@ -138,46 +149,49 @@ def _selftest():
         assert jump_phi < 1e-8 and jump_gate < 1e-8, (name, 'discontinuous at z_c', jump_phi, jump_gate)
         assert ident < 1e-12, (name, ident_name, ident)
         # mutation controls: each check must be able to fail
-        zb = torch.tensor([-1.5], dtype=torch.float64)     # near GELU's most reversed point
-        assert float(base.dphi(zb)) < -0.1, 'vacuous: GELU is not reversed at z=-1.5'
-        assert float(base.dphi(torch.tensor([-4.0], dtype=torch.float64))) < 0., \
-            'vacuous: GELU is not still reversed at z=-4'
+        zb = torch.tensor([ZC - 0.75], dtype=torch.float64)   # near the most reversed point
+        assert float(base.dphi(zb)) < -0.09, (b, 'vacuous: base not reversed below z_c')
+        assert float(base.dphi(torch.tensor([ZC - 3.0], dtype=torch.float64))) < 0., \
+            (b, 'vacuous: base not still reversed 3 below z_c')
         assert float(a.dphi(zb)) >= 0., (name, 'vacuous sign check')
-        bad = cls(); bad_phi = bad.phi(zb) + 1e-3
+        bad = cls(b); bad_phi = bad.phi(zb) + 1e-3
         assert float((bad_phi - a.phi(zb)).abs()) > 1e-6, 'vacuous: perturbed phi compares equal'
-        if name == 'GELUA':          # the |gate| identity must not be trivially true
+        if name.endswith('A'):       # the |gate| identity must not be trivially true
             assert float((a.dphi(zb) - base.dphi(zb)).abs()) > 1e-3, \
-                'vacuous |gate| identity: GELUA gate equals GELU gate at z=-1.5'
+                'vacuous |gate| identity: abs arm gate equals the base gate'
     # 6. float32: the gate must not go negative THERE either, and the guard must
     #    not be vacuous -- raw GELU phi' really does flip sign near z_c in float32
-    z32 = torch.linspace(-1.2, -0.3, 2000001, dtype=torch.float32)
+    z32 = torch.linspace(ZC - 0.45, ZC + 0.45, 2000001, dtype=torch.float32)
     raw32 = base.dphi(z32)
     flips = int(((z32 >= ZC) & (raw32 < 0)).sum() + ((z32 < ZC) & (raw32 > 0)).sum())
-    assert flips > 0, 'vacuous float32 guard: GELU phi-prime does not flip sign near z_c in float32'
-    out['float32_sign_flips_in_raw_gelu'] = flips
-    for name, cls in [('GELUF', GELUFloor), ('GELUA', GELUAbs)]:
-        m32 = float(cls().dphi(z32).min())
+    # The guard is DEMONSTRATED only where the raw base really flips sign in
+    # float32 (GELU does; SiLU does not in this grid).  Recording the count keeps
+    # that distinction visible instead of implying both were exercised.
+    out['float32_sign_flips_in_raw_base'] = flips
+    out['float32_guard_demonstrated'] = flips > 0
+    for name, cls in [(b + 'F', _Floor), (b + 'A', _Abs)]:
+        m32 = float(cls(b).dphi(z32).min())
         out[name]['float32_min_gate'] = m32
         assert m32 >= 0., (name, 'float32 gate goes negative near z_c', m32)
 
     # 7. the three arms must actually differ on the far side
     gates = {}
-    for zv in (-1.5, -4.0):
-        zb = torch.tensor([zv], dtype=torch.float64)
-        g = {k: float(make_act(k).dphi(zb)) for k in ARMS}
-        assert g['GELU'] < 0 < g['GELUA'] and g['GELUF'] == 0., ('ladder collapsed', zv, g)
-        gates[f'z={zv}'] = g
+    for dz in (0.75, 3.0):
+        zb = torch.tensor([ZC - dz], dtype=torch.float64)
+        g = {k: float(make_act(k).dphi(zb)) for k in (b, b + 'F', b + 'A')}
+        assert g[b] < 0 < g[b + 'A'] and g[b + 'F'] == 0., ('ladder collapsed', b, dz, g)
+        gates['z=zc-%g' % dz] = g
     out['gates'] = gates
     return out
 
 
-def past_zc(p, act, probe, perm):
+def past_zc(p, act, probe, perm, arm='GELU'):
     """beyond_frac / inv_units in T.gate_stats are hard-coded 0 for an arm that
     valley_acts does not tabulate, so the depth counter the ladder needs is
     recomputed here against GELU's z_c for all three arms alike."""
     with torch.no_grad():
         z = probe.px[:, perm] @ p[0].detach().T + p[1].detach()
-        below = z < ZC
+        below = z < BASES[base_of(arm)][1]
         return dict(past_zc_frac=float(below.float().mean()),
                     past_zc_units=int(((below.float().mean(0)) > .5).sum()))
 
@@ -210,7 +224,7 @@ def _train(arm, p, act, adam, gens, mnist, probe, t_to, rows, units, ck, measure
     def measure(p_, act_, probe_, perm, want_acc=False, mnist_=None, ck_=None, mut_decomp=False):
         r, u = orig_measure(p_, act_, probe_, perm, want_acc, mnist_, ck_, mut_decomp)
         r.update(T.gate_stats(p_, act_, probe_, perm, arm))
-        r.update(past_zc(p_, act_, probe_, perm))
+        r.update(past_zc(p_, act_, probe_, perm, arm))
         return r, u
     try:
         C.MEAS = [625]
@@ -296,7 +310,7 @@ def run(arm, seed, tasks=TASKS, out=OUT, controls=True):
     _train(arm, p, act, adam, gens, mnist, probe, tasks, rows, units, ck)
     T.finite_guard(rows, f'{arm}_s{seed}')
     T.check_gates(rows, arm, ck)
-    if arm == 'GELU':                                   # G1: bit identity with sub-run A
+    if arm in BASES:                                    # G1: bit identity with sub-run A
         worst, n = T.g1_ref_units(arm, seed, units, 1, tasks, ck)
         assert n == len(T.UNIT_KEYS) * tasks, ('G1 compared the wrong number of keys', n)
         assert worst == 0., ('G1 failed: this host does not reproduce sub-run A', worst)
@@ -323,12 +337,13 @@ def main():
     ap.add_argument('--jobs', type=int, default=3)
     ap.add_argument('--smoke', action='store_true')
     ap.add_argument('--selftest', action='store_true')
+    ap.add_argument('--arms', default=None)
     ap.add_argument('--no-controls', dest='controls', action='store_false')
     a = ap.parse_args()
     if a.selftest:
         print(json.dumps(_selftest(), indent=1)); return
     if a.smoke:
-        for arm in ARMS:
+        for arm in (a.arms.split(',') if a.arms else ARMS):
             run(arm, 0, tasks=8, out=ROOT / 'results/_smoke_sign_ladder_0912', controls=False)
         return
     if a.all:
@@ -338,7 +353,8 @@ def main():
                 cmd.append('--no-controls')
             subprocess.run(cmd, check=True)
         with concurrent.futures.ThreadPoolExecutor(max_workers=a.jobs) as pool:
-            for _ in pool.map(job, [(arm, s) for arm in ARMS for s in range(3)]):
+            todo = a.arms.split(',') if a.arms else ARMS
+            for _ in pool.map(job, [(arm, s) for arm in todo for s in range(3)]):
                 pass
         return
     run(a.arm, a.seed, controls=a.controls)
