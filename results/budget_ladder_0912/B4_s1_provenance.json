@@ -1,0 +1,51 @@
+{
+ "arm": "B4",
+ "seed": 1,
+ "tasks": 120,
+ "cfg": {
+  "act": "LR",
+  "budget": 2500,
+  "lr": 0.001
+ },
+ "late": [
+  61,
+  120
+ ],
+ "checks": {
+  "g2_dphi": 0.0,
+  "g2_dphi_mutctl": 1.8996188400141854,
+  "act": "LR",
+  "budget": 2500,
+  "lr": 0.001,
+  "policy_override": "def fixed_budget(policy, cn, cn20, theta_star):\n    \"\"\"Replacement for turn_budget_0912.n_steps_for: the policy IS the budget.\"\"\"\n    return int(policy)\n",
+  "g4_pool_set_ok": true,
+  "c6_var_rel": 3.8575426946730734e-15,
+  "c6_mean_abs": 1.4210854715202004e-14,
+  "g2_cos_range": 0.0,
+  "g2_angle_rel": 7.707645840295719e-08,
+  "g2_tot_ident": 3.219646771412954e-15,
+  "g2_triangle": 0.0,
+  "g4_streams_intact": true,
+  "u0_steps_exact": true,
+  "cost": 4.0,
+  "g1_anchor": "none (budget != 625)",
+  "g1_units_maxabs": null,
+  "g1_units_compared": 0,
+  "g1_units_expected": 0
+ },
+ "spec_sha256": "f3c51c3af87d3fb7faa22127d5050e5e875cef32e7c554db22d6f3cced5cf726",
+ "code_sha256": "6f7bf78df41b6d25398c4cca5bc64f9e12c4d0a1cbd766c54309bb0b7986ffda",
+ "turn_budget_sha256": "ef53a473ff68ea1e92c526a5b0ce2f2eaa051b7b39be62b203efe40e32164fa2",
+ "gate_shape_sha256": "0b3d40f62fc3317ded3b2687340dd7d64cd1e04f92befebb05173725732c2901",
+ "base_sha256": "728a43af073275ada32d53c1c81776cd9e6bf1b58509335ab5ca784f02428422",
+ "host_sha256": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+ "data_sha256": {
+  "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+  "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+  "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+  "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+ },
+ "torch_version": "2.13.0+cu130",
+ "wall_seconds": 730.1302307000151,
+ "scope": "CPU; fixed per-task update budget from t1, same 10000-example pool reshuffled"
+}
