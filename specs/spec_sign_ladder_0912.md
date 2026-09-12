@@ -168,3 +168,55 @@ code_sha256 のまま据え置く。GELU 腕の軌道は G1（lab の committed 
 GELU では生の φ′ が float32 で符号を跨ぐ（z_c ±0.45 の 2e6 点格子で 1 点）のでガードは
 **実証済み**。SiLU では同じ格子で 0 点なので、SiLU 側のガードは**予防的**（自己検査に
 `float32_guard_demonstrated` として記録し、実証済みと書かない）。
+
+---
+
+## 追補 3（2026-09-12・媒介の分離を事前登録）
+
+GELU/SiLU とも `VALLEY_CAUSAL` で、反転は L を 2.4〜3.1 pt 動かす。だが介入は幅と深さも
+動かす（GELU: cnorm 9.13 → 14.25、z̄ −6.89 → −3.67）。**その 3 pt は幅経由か・深さ経由か・
+直接か。**
+
+### 設計: 分岐点で活性化も切り替える
+
+`clamp_horizon` の機構をそのまま使い、**t1–20 を GELU で共通に走らせてから** t21 で
+(活性化 × クランプ) に分岐する。こうすると 6 枝の**基準状態 `base` とスナップショットが
+厳密に同一**になり、クランプ目標も同一になる。
+
+枝 = {`GELU`, `GELUA`} × {`ref`, `wclamp`（‖W̃ᵢ‖ を t20 に固定）, `dclamp`（行平均を固定）}、
+seed 0–2、t400 まで。
+
+### 判定
+
+gap(c) = L(GELU, c) − L(GELUA, c)。3 seed の平均で:
+
+- `gap_wclamp ≥ 0.7·gap_ref` かつ `gap_dclamp ≥ 0.7·gap_ref` → **`DIRECT`**（どちらの経路も担っていない）
+- `gap_wclamp ≤ 0.3·gap_ref` → **`WIDTH_MEDIATED`**
+- `gap_dclamp ≤ 0.3·gap_ref` → **`DEPTH_MEDIATED`**
+- 両方 ≤ 0.3 → **`BOTH_MEDIATED`** ／ 他 → `PARTIAL`
+
+### ゲート
+
+- **GM0**: gap_ref ≥ 1.5 pt（媒介すべき効果が存在する）
+- **GM1**: (GELU, ref) 枝が committed `long_horizon_acts_0910/GELU_none_s*` を t1–400 で
+  maxabs 0.0 再現（件数も記録）
+- **GM2（操作チェック・対照つき）**: wclamp 枝の cnorm(late) が base の ±5% 以内、**かつ**
+  ref 枝の cnorm(late) が base の 1.5 倍以上（対照が無ければ空虚）
+- **GM3**: 2 つの wclamp 枝どうしの cnorm(late) が互いに 5% 以内（媒介変数が両腕で揃って
+  いなければ媒介の検定にならない）。dclamp については行平均で同じ検査
+- クランプの不変量（`c3_m_absdiff`・`c5_sd_rel`・`c5_cnorm_rel` 等）は CH.TOL の上限で assert
+
+### 記名予測
+
+**Claude: `DIRECT`（55%）。しかも `gap_wclamp > gap_ref` を予測する（30%）。**
+理由: 反転を消した腕は cnorm が**大きい**のに損失が**小さい**（14.25 対 9.13 で L 4.62 対 7.68）。
+ω 則は「‖W̃‖ が大きいほど損失が大きい」なので、幅の経路は観測された効果と**逆向き**に
+効いている。幅を固定すれば逆向きの打ち消しが消えて gap は広がるはず。
+深さは `ρ_dclamp` が GELU で +0.27 あるので、gap_dclamp は gap_ref の 7〜9 割と読む。
+次点 `PARTIAL` 30%・`DEPTH_MEDIATED` 10%・`WIDTH_MEDIATED` 5%。
+
+### 限界（走る前に明記）
+
+クランプの変異対照の全バッテリ（`_controls`）は再実行しない。クランプのコードは committed
+のものをそのまま使い、不変量は走行中に記録して上限で assert する。GM2 の ref 対照が
+「クランプが実際に効いている」ことの対照を兼ねる。
