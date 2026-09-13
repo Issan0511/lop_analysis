@@ -1,0 +1,72 @@
+{
+ "arm": "SNA",
+ "iv": "none",
+ "seed": 0,
+ "tasks": 100,
+ "clamp_from": 21,
+ "clamps": [
+  "ref",
+  "wclamp",
+  "mclamp",
+  "dclamp"
+ ],
+ "meas": [
+  20,
+  300,
+  625
+ ],
+ "nref": 8,
+ "ref_seed": 20260909,
+ "checks": {
+  "decompose_crosscheck": 6.245004513516506e-17,
+  "c6_var_rel": 4.5086212565296944e-15,
+  "c6_mean_abs": 3.552713678800501e-15,
+  "base_sigma_m": 0.007349707142407799,
+  "base_mbar0": -0.007000556352044271,
+  "base_cnorm_mean": 3.1212668100016834,
+  "pressure_ref": 0.0,
+  "f32_rowmean_bound": 2.153047344906242e-08,
+  "c3_m_absdiff": 1.6078381404049935e-09,
+  "clamp_tail_absdiff": 0.0,
+  "c3_cnorm_rel": 2.9772921932047268e-08,
+  "pressure_wclamp": 1.4524593455152024,
+  "c4_mbar_absdiff": 6.760561034602208e-10,
+  "c4_cnorm_rel": 1.1808918514444496e-08,
+  "c4_sd_rel": 1.663168286855031e-07,
+  "pressure_mclamp": 6.608107455457341,
+  "c5_sd_rel": 9.268094512682081e-09,
+  "c5_cnorm_rel": 1.9414801547916012e-08,
+  "c5_mbar_abs": 4.025766401662134e-09,
+  "pressure_dclamp": 0.049434154904754994,
+  "g1_exact": true,
+  "g1_npz_maxabs": 0.0,
+  "g1_units_maxabs": 8.881784197001252e-16,
+  "ctl_wclamp_skip_c3_cnorm_rel": 0.0003835720018772034,
+  "ctl_wclamp_rowscale_c3_m_absdiff": 2.983865859426671e-05,
+  "ctl_mclamp_inv_c4_sd_rel": 0.9999771494877907,
+  "ctl_mclamp_rowscale_c4_cnorm_rel": 0.008550578449116827,
+  "ctl_dclamp_p90_c5_mbar_abs": 8.86543323475996e-06,
+  "ctl_dclamp_rowscale_c5_cnorm_rel": 0.01114912394709265,
+  "ctl_c6_var_rel": 0.012433316220021307,
+  "ctl_c6_mean_abs": 0.023631145299841005,
+  "ctl_decompose": 0.013663430156038991,
+  "ctl_g1_init": 0.00011149092319345799,
+  "ctl_g1_measure": 7.371981312065401e-07
+ },
+ "g1": [
+  "True",
+  "0.0",
+  "8.881784197001252e-16"
+ ],
+ "spec_sha256": "f44eeb72b226121ebe4d42941fa9723d05b167fac8f8947522040dc611e47a2d",
+ "code_sha256": "728a43af073275ada32d53c1c81776cd9e6bf1b58509335ab5ca784f02428422",
+ "host_sha256": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+ "data_sha256": {
+  "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+  "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+  "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+  "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+ },
+ "wall_seconds": 230.29746120003983,
+ "scope": "CPU training from init; ref reproduces the committed trajectory"
+}

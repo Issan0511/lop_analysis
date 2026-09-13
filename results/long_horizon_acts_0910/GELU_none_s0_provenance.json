@@ -1,0 +1,72 @@
+{
+ "arm": "GELU",
+ "iv": "none",
+ "seed": 0,
+ "tasks": 400,
+ "meas": [
+  625
+ ],
+ "no_committed_reference": true,
+ "scope": "sub-run A of spec_transport_holes_0910: first box-B trajectory for a valley activation. There is no committed reference to reproduce, so there is NO G1 here; \u00a73.1 controls stand in its place.",
+ "checks": {
+  "selftest": {
+   "GELU": {
+    "phi_vs_torch": 8.881784197001252e-16,
+    "dphi_vs_autograd": 2.220446049250313e-16,
+    "dphi_at_zc": 3.4241828816838904e-10,
+    "dphi_pos_right": true,
+    "dphi_neg_left": true,
+    "argmin_phi": -0.7518000000000005,
+    "zc": -0.7517915239,
+    "phi_zc": -0.16997120747990369,
+    "min_dphi": -0.12890414514697743
+   },
+   "SILU": {
+    "phi_vs_torch": 8.881784197001252e-16,
+    "dphi_vs_autograd": 2.220446049250313e-16,
+    "dphi_at_zc": 8.47858106060342e-12,
+    "dphi_pos_right": true,
+    "dphi_neg_left": true,
+    "argmin_phi": -1.2784800000000005,
+    "zc": -1.2784645428,
+    "phi_zc": -0.27846454276107385,
+    "min_dphi": -0.09983932011520055
+   }
+  },
+  "controls_run": true,
+  "noninvasive_tasks": 60,
+  "noninvasive_maxabs": 0.0,
+  "noninvasive_control": 1.2497276067733765,
+  "stream_tasks": 5,
+  "stream_sha256": "412446e522b800a533356a46b91334919c9acbed664f6e8769c83f9bbe3e7cdd",
+  "stream_matches_LR": true,
+  "stream_control_seed_differs": true,
+  "stream_control_extra_draw_differs": true,
+  "c6_var_rel": 5.000908158486964e-15,
+  "c6_mean_abs": 8.881784197001252e-15,
+  "gate_neg_frac_max": 0.8439257740974426,
+  "beyond_frac_max": 0.8858789205551147,
+  "inv_units_max": 89,
+  "frozen_frac_max": 0.12128905951976776,
+  "frozen_units_max": 6,
+  "zc_bad_lo_max": 0,
+  "zc_bad_hi_max": 0,
+  "zc_mut_fires_max": 545
+ },
+ "code_sha256": "68eb1b39aa9412e6520a78e99bbe8acca8486cb9cbd869d4b95d21e9f14956d7",
+ "wall_seconds": 335.0940105150221,
+ "data_sha256": {
+  "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+  "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+  "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+  "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+ },
+ "spec_sha256": "088b1eae3f25cf336f96c6c6f0aa6282aba92e2ba0187d944fc9ebf4c47c6095",
+ "common_sha256": "8968317d38b05685d393996d5915ccec87c45a805a2ba1bb7d67ea99a64abc20",
+ "base_sha256": "728a43af073275ada32d53c1c81776cd9e6bf1b58509335ab5ca784f02428422",
+ "host_sha256": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+ "valley_sha256": "bf0254861be5f6cf98d0a08ac6c711410d61477558dd3ee19d8623d049b233e0",
+ "torch_version": "2.12.0+cu126",
+ "numpy_version": "2.4.6",
+ "data_dir": "/home/i_nakatsuka/Projects/lop_analysis/.claude/worktrees/collective_kick_0908/data/mnist"
+}

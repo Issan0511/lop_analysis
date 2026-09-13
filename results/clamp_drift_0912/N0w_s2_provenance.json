@@ -1,0 +1,55 @@
+{
+ "arm": "N0w",
+ "seed": 2,
+ "tasks": 120,
+ "clamp_from": 21,
+ "cfg": {
+  "c": 0.0,
+  "clamp": "wclamp",
+  "lr": 0.001
+ },
+ "late": [
+  61,
+  120
+ ],
+ "checks": {
+  "g2_dphi": 0.0,
+  "g2_dphi_mutctl": 1.8996188400141854,
+  "noise_c": 0.0,
+  "clamp": "wclamp",
+  "lr": 0.001,
+  "c6_var_rel": 3.510476935787975e-15,
+  "c6_mean_abs": 3.552713678800501e-15,
+  "f32_rowmean_bound_t20": 1.523809637868721e-08,
+  "ctl_skip_c3_cnorm_rel": 0.00042007561494001043,
+  "ctl_rowscale_c3_m_absdiff": 3.6870039552088646e-05,
+  "ctl_tail_clamp_tail_absdiff": 0.00010000169277191162,
+  "f32_rowmean_bound": 1.630371714525411e-08,
+  "c3_m_absdiff": 2.5216390364679597e-09,
+  "clamp_tail_absdiff": 0.0,
+  "c3_cnorm_rel": 2.9253245332920482e-08,
+  "g2_ident": 1.5306449671714594e-15,
+  "g2_tot_ident": 8.326672684688674e-16,
+  "g4_streams_intact": true,
+  "g4_ngen_untouched": true,
+  "g1_anchor": "grad_coherence_0911/N0w",
+  "g1_units_maxabs": 0.0,
+  "g1_units_compared": 1920,
+  "g1_units_expected": null
+ },
+ "spec_sha256": "ed9ee42e2e21b7959d32faff0dab9ae26385a387c51b9a41f0575ff1c41d8cb5",
+ "code_sha256": "e6fc3c1694349aa2e2cf1c9fb1eb7b0c51afdd1f821c1719f6c45ad0d7464bbc",
+ "grad_coherence_sha256": "64099038d073dda8e10bf77ccf0abafde6d8142eaee609a2fd5c9ad30d5e62b0",
+ "clamp_horizon_sha256": "8effc4a5d5d1caa6b46cc71ebd314bc8d096587f2c9ec952987c696b1851600d",
+ "base_sha256": "728a43af073275ada32d53c1c81776cd9e6bf1b58509335ab5ca784f02428422",
+ "host_sha256": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+ "data_sha256": {
+  "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+  "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+  "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+  "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+ },
+ "torch_version": "2.13.0+cu130",
+ "wall_seconds": 268.14762795204297,
+ "scope": "CPU; drift2 split before/after the width-clamp projection"
+}
