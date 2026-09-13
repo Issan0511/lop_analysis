@@ -121,7 +121,10 @@ class Launcher:
         self.last_dm = self.clock()
 
     def allowed_new(self, mem, swap):
-        if (not self.mut.get('ignore_swap')) and swap < self.rss_peak:
+        # addendum 1: stale swap pages do not refill without swapoff, so SwapFree alone blocked all starts
+        # for an hour with MemAvailable at 16-20 GiB.  The swap guard applies only when MemAvailable is
+        # itself below the resume bound 2 RSS_peak + dM_desk (the same arithmetic as the watch).
+        if (not self.mut.get('ignore_swap')) and swap < self.rss_peak and mem < 2 * self.rss_peak + self.dM:
             return 0
         headroom = sum(max(0, self.rss_peak - rss_kb(r['proc'].pid)) for r in self.running)
         by_mem = math.floor((mem - self.dM - headroom) / self.rss_peak)
@@ -293,8 +296,14 @@ def selftest():
         st['mem'] = int(1.2 * G); L.last_stop = -1e12; out['a3'] = L.watch_once(); time.sleep(0.2)
         st['mem'] = int(2.6 * G); out['a4'] = L.watch_once(); time.sleep(0.2)
         out['resumed'] = all(proc_state(r['proc'].pid) != 'T' for r in L.running)
-        st['swap'] = int(0.5 * G); st['mem'] = 13 * G
-        out['start_blocked_by_swap'] = L.allowed_new(st['mem'], st['swap']) == 0
+        for r in L.running:
+            try:
+                os.kill(r['proc'].pid, signal.SIGCONT); r['proc'].kill(); r['proc'].wait()
+            except ProcessLookupError:
+                pass
+        L.running, L.stop_order = [], []
+        out['start_blocked_by_swap'] = L.allowed_new(int(2.2 * G), int(0.5 * G)) == 0
+        out['swap_ignored_when_mem_ample'] = L.allowed_new(13 * G, int(0.5 * G)) >= 1
         for r in L.running:
             try:
                 os.kill(r['proc'].pid, signal.SIGCONT); r['proc'].kill(); r['proc'].wait()
@@ -306,7 +315,8 @@ def selftest():
     cases.append(dict(name='sigstop_newest_below_bound1', ok=o['a1'] == 'stop' and o['stopped_pid_is_newest'] and o['oldest_running']))
     cases.append(dict(name='sigterm_newest_below_rss_peak', ok=o['a2'] == 'term' and o['newest_terminated'] and o['others_alive']))
     cases.append(dict(name='sigcont_at_resume_bound', ok=o['a3'] == 'stop' and o['a4'] == 'cont' and o['resumed']))
-    cases.append(dict(name='swap_blocks_start', ok=o['start_blocked_by_swap']))
+    cases.append(dict(name='swap_blocks_start_when_mem_low', ok=o['start_blocked_by_swap']))
+    cases.append(dict(name='stale_swap_does_not_block_when_mem_ample', ok=o['swap_ignored_when_mem_ample']))
     L, st = mk()
     L.rss_peak = 20 * G
     cases.append(dict(name='refuse_rss20GiB_P0', ok=L.allowed_new(13 * G, 4 * G) == 0))
