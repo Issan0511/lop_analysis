@@ -1,0 +1,49 @@
+# snake_phase_mnist_0914 config (registered with spec; constants generated in float64 from formulas)
+run_id: snake_phase_mnist_0914
+spec: specs/spec_snake_phase_mnist_0914.md
+box: gate_shape_0911 protocol (784-100-100-10, CE, batch 16, 625 updates/task, Adam lr 1e-3 b1 .9 b2 .999 eps 1e-8, moments carried, no reg, CPU float32 1 thread)
+tasks: 120
+seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+alpha: 0.6
+constants:
+  formula_s: "theta/(2*alpha) + k*pi/alpha"
+  formula_K: "(cos(theta) - 1 - theta)/(2*alpha) - k*pi/alpha"
+  peak_k0:   {theta: pi/2,  k: 0,  s: 1.3089969389957472, K: -2.1423302723290805}
+  peak_km1:  {theta: pi/2,  k: -1, s: -3.9269908169872414, K: 3.0936574836539084}
+  valley_k0: {theta: -pi/2, k: 0,  s: -1.3089969389957472, K: 0.4756636056624139}
+  pi_over_alpha: 5.235987755982989
+arms:
+  N06:     {act: phase_snake, theta: 0,     q: 0.0,  init_map: none}
+  P06:     {act: phase_snake, theta: +pi/2, q: 0.0,  init_map: none}
+  V06:     {act: phase_snake, theta: -pi/2, q: 0.0,  init_map: none}
+  P06c:    {act: phase_snake, theta: 0,     q: -2.1423302723290805,  init_map: "comp(q)"}
+  P06c_k1: {act: phase_snake, theta: 0,     q: 3.0936574836539084, init_map: "comp(q)"}
+  P06i:    {act: phase_snake, theta: 0,     q: 0.0,  init_map: "to_phase(s_P, K_P)"}
+  V06c:    {act: phase_snake, theta: 0,     q: 0.4756636056624139,  init_map: "comp(q)"}
+  V06i:    {act: phase_snake, theta: 0,     q: 0.0,  init_map: "to_phase(s_V, K_V)"}
+  SNA:     {act: adaptive_phase_snake, theta: 0,     c: 0.6, beta: 0.01, init_map: none}
+  SNAP:    {act: adaptive_phase_snake, theta: +pi/2, c: 0.6, beta: 0.01, init_map: none}
+  SNAV:    {act: adaptive_phase_snake, theta: -pi/2, c: 0.6, beta: 0.01, init_map: none}
+  SNAi_P:  {act: adaptive_phase_snake, theta: 0,     c: 0.6, beta: 0.01, init_map: "to_phase(s_P, K_P) at alpha=.6"}
+  SNAi_V:  {act: adaptive_phase_snake, theta: 0,     c: 0.6, beta: 0.01, init_map: "to_phase(s_V, K_V) at alpha=.6"}
+  LIN:     {act: host_LIN, init_map: none}
+  LR:      {act: offset_leaky, a: 0.1, q: 0.0, init_map: none}
+  LR_qKp:  {act: offset_leaky, a: 0.1, q: -2.1423302723290805,  init_map: "comp(q)"}
+  LR_qKpn: {act: offset_leaky, a: 0.1, q: 2.1423302723290805, init_map: "comp(q)"}
+anchors: {N06: SN06, SNA: SNA, LR: LR, LIN: LIN, source: results/gate_shape_0911, seeds: [0,1,2]}
+fresh_probe_tasks: [1, 16, 17, 18, 19, 20, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120]
+snapshots: [20, 60, 120]
+probe_images: 512
+windows: {base: [16, 30], late: [101, 120], L_compat_base: [16, 20]}
+families:
+  F1:  {m: 6, contrasts: {C1: [P06, N06], C2: [V06, N06], C3: [P06c, N06], C4: [P06i, N06], C5: [V06c, N06], C6: [V06i, N06]}}
+  F1x: {m: 3, contrasts: {I_P: "(P06-P06i)-(P06c-N06)", I_V: "(V06-V06i)-(V06c-N06)", B_P: [P06c_k1, P06c]}}
+  F2:  {m: 4, contrasts: {C7: [SNAP, SNA], C8: [SNAV, SNA], C7s: [SNAP, SNAi_P], C8s: [SNAV, SNAi_V]}}
+  F3:  {m: 2, contrasts: {C9: [LR_qKp, LR], C9n: [LR_qKpn, LR]}}
+  CT1: {m: 4, contrasts: [C1, C2, C7, C8], layers: [1, 2], margin_log: 0.09877}
+resolution_pairs: [[N06, LIN], [LR, LIN]]
+testable: {fixed: [N06, LIN], leaky: [LR, LIN]}
+alpha_test: 0.05
+n_min_formula: "ceil(log2(2*m/0.05))"
+broken_rule: "count(t in 101..120: ce20 < ce0) < 15"
+signflip: {exact_enumeration_max_n: 20, ci_grid_pt: 0.001}
