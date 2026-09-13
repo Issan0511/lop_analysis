@@ -27,8 +27,11 @@ def restored(base,cp):
  for k,v in cp["net"].items():st["net"].params()[k].copy_(v)
  st["net"].set_activation(cp["activation"],cp["act_alpha"],"alpha_exp")
  st["activation"]=cp["activation"];st["act_alpha"]=cp["act_alpha"];st["arm"]=cp["arm"]
- st["running_mean"]=cp["running_mean"].clone()
- st["layer_means"]=[v.clone() if v is not None else None for v in cp["layer_means"]]
+ st["running_mean"].copy_(cp["running_mean"])
+ for li,v in enumerate(cp["layer_means"]):
+  if v is not None:st["layer_means"][li].copy_(v)
+  else:assert st["layer_means"][li] is None
+ assert st["running_mean"].data_ptr()==st["layer_means"][0].data_ptr()
  st["centered_layers"]=cp["centered_layers"][:];st["runs"]=copy.deepcopy(cp["runs"])
  return st
 def trace(st,cp):

@@ -157,7 +157,7 @@ def main():
  fig.suptitle("New learning: 10 seeds, ALL units, common SGD lr=.005; median and IQR")
  fig.savefig(OUT/"learning_trajectories.png",dpi=150);fig.savefig(OUT/"learning_trajectories.pdf");plt.close(fig)
  out=["# 零点復元と重み収縮：新しいSGD学習実験 0913","",
- f"登録主判定: **{label}**。集計完了{len(CFG['arms'])}条件・各10seed・500task・共通lr=.005。",f"peak/normalの幾何平均free成長比: {verdict['geometric_growth_ratio_peak_over_normal']:.6g}、log差CI={interval}。",f"peak集団の初期からの収縮: **{verdict['population_shrinkage']}**。","",
+ f"登録主判定: **{verdict['primary']}**。集計完了{len(CFG['arms'])}条件・各10seed・500task・共通lr=.005。",f"peak/normalの幾何平均free成長比: {verdict['geometric_growth_ratio_peak_over_normal']:.6g}、log差CI={interval}。",f"peak集団の初期からの収縮: **{verdict['population_shrinkage']}**。","",
  ("**途中集計: 完走した条件のみ。残りの条件は実行中。**" if args.available else "全条件の最終集計。"),
  "主比較以外は探索。free重みは入力末尾5bit、全WやMNIST中心化Wと区別。","",
  "## late task451–500、全unit、seed平均","",

@@ -128,15 +128,16 @@ def measure(path,check_only=False):
  check("width_displacement",zwide,z+.05*radius[None]*feature,checks)
  return records,checks
 def main():
- ap=argparse.ArgumentParser();ap.add_argument("--check-only",action="store_true");args=ap.parse_args()
- out=RESULTS/"mechanism";out.mkdir(parents=True,exist_ok=True)
+ ap=argparse.ArgumentParser();ap.add_argument("--check-only",action="store_true");ap.add_argument("--available",action="store_true");args=ap.parse_args()
+ out=RESULTS/("mechanism_partial" if args.available else "mechanism");out.mkdir(parents=True,exist_ok=True)
  cfg=json.loads((ROOT/"configs/zero_attraction_learning_0913.yaml").read_text())
  allchecks={};seedrows=[]
  for arm in cfg["arms"]:
+  if args.available and not (DATA/"arm_status"/f"{arm['name']}_done.json").exists():continue
   for step in [0,200000,1000000,5000000]:
    if args.check_only and (arm["name"]!="SN_peak_q0" or step!=0):continue
    p=DATA/"ckpts"/f"{arm['name']}_step{step}.pt"
-   rows,checks=measure(p)
+   rows,checks=measure(p,check_only=args.check_only)
    if not args.check_only:
     writecsv(out/f"{arm['name']}_step{step}_units.csv",rows)
     for seed in range(10):
