@@ -216,4 +216,5 @@ float の許容幅は「正しい実装が取りうる丸め誤差の上限」�
   - (a) に当たる非平行の壊し方として **M3a′（ノルムを tensor 全体でなく行ごとに取る）を追加**した
   - **M9c** は「b2 を隣の b1 の p0 に対して記録する」（形が同じ隣の tensor は b1 だけ）
   - S-cost の 1 run の見積もりは「16 本同時に測った 1 タスク × 100 epoch の壁時計 × 4 × 50 ＋ 起動 5 秒」（1 タスク分の評価も 4 倍に数える保守側）。キューは 16 枠・launch と同じ順で模擬する
-- 2026-09-13 20:30 JST（本走前）: 検査一式の 1 回目で **S-smoke だけ FAIL**。理由は検査側の数え間違いで、shell の task 0 の行数を「12」と期待していたが、正しくは 2 活性化 × 2 seed × 6 tensor = **24**。その回の記録でも 24 行すべてが厳密に 0（`results/_checks_shell_l2_rlmnist_0913/checks_run1_FAILED_smoke_rowcount_miscount.json` に保存）。期待行数を 24 に直し、「全行が厳密に 0」の条件は変えずに一式を最初から走らせ直す。S1–S10 と S-cost はこの回もすべて PASS・mutation 全検出
+- 2026-09-13 20:24 JST（本走前）: 検査一式の 1 回目（20:21–20:24）で **S-smoke だけ FAIL**。理由は検査側の数え間違いで、shell の task 0 の行数を「12」と期待していたが、正しくは 2 活性化 × 2 seed × 6 tensor = **24**。その回の記録でも 24 行すべてが厳密に 0（`results/_checks_shell_l2_rlmnist_0913/checks_run1_FAILED_smoke_rowcount_miscount.json` に保存）。期待行数を 24 に直し、「全行が厳密に 0」の条件は変えずに一式を最初から走らせ直す。S1–S10 と S-cost はこの回もすべて PASS・mutation 全検出
+- 2026-09-13 20:30 JST（本走中・結果は誰も見ていない）: 上の行の時刻は、実装 commit `4fc2bba` では時計を見ずに「20:30」と書いていた。`checks.json` の started_at/finished_at（1 回目 20:21:27–20:23:58、2 回目 20:24:47–20:27:17 JST）に合わせて「20:24」に直した。検査 2 回目は all_pass（mutation 24/24 検出・S-cost の見積もり 2.78 h）。**本走は 2026-09-13 20:28:27 JST に `4fc2bba` から 16 並列で投入**
