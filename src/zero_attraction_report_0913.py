@@ -135,6 +135,7 @@ def main():
  for a,b in pairs:
   if a not in trajectories or b not in trajectories:continue
   d=np.log(values(a))-np.log(values(b));lo,hi=ci(d)
+   if (a,b)==pairs[0]:lo,hi=interval
   comparisons.append({"arm":a,"reference":b,"log_growth_difference":float(d.mean()),"ci_low":lo,"ci_high":hi,"negative_seeds":int((d<0).sum()),"tier":"PRIMARY" if (a,b)==pairs[0] else "EXPLORATORY"})
  writecsv("comparisons.csv",comparisons);writecsv("seed_summary.csv",rows);writecsv("group_summary.csv",groups);writecsv("task_ledger.csv",ledgers)
  np.savez_compressed(OUT/"summary_trajectories.npz",**trajectories)
