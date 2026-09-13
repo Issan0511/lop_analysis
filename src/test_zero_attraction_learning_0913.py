@@ -8,6 +8,10 @@ ROOT=Path(__file__).resolve().parents[1]
 CFG=ROOT/"configs/zero_attraction_learning_0913.yaml"
 torch.set_num_threads(1)
 class ZeroAttractionTests(unittest.TestCase):
+ def setUp(self):
+  self.old_config=e.CONFIG;self.old_table=e._TABLE
+ def tearDown(self):
+  e.CONFIG=self.old_config;e._TABLE=self.old_table
  def net(self,act,alpha=1.):
   return VecMLPL(1,[3],2,torch.Generator().manual_seed(1),"cpu",act=act,act_alpha=alpha)
  def test_derivatives_and_curvature(self):
@@ -79,5 +83,5 @@ class ZeroAttractionTests(unittest.TestCase):
    return g,selfg
   a,sa=calc(0.);b,sb=calc(.5)
   torch.testing.assert_close(a,b,atol=1e-14,rtol=1e-14)
-  self.assertGreater(float(torch.norm(sa-sb)),.01)
+  self.assertGreater(float(torch.norm(sa-sb).detach()),.01)
 if __name__=="__main__":unittest.main()
