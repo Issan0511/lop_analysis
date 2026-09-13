@@ -1,0 +1,149 @@
+{
+  "arm": "SNA",
+  "iv": "none",
+  "seed": 1,
+  "checks": {
+    "FRESH": {
+      "exact_replay": 0.0,
+      "identity": 5.689893001203927e-15,
+      "identity_mutctl": 1.1680245919517085,
+      "perm_matches_saved": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "wall": 11.546582587005105
+    },
+    "CYCLE1": {
+      "exact_replay": 0.0,
+      "identity": 5.495603971894525e-15,
+      "identity_mutctl": 0.6550774799470684,
+      "perm_matches_saved": [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "wall": 15.936582444002852
+    },
+    "CYCLE2": {
+      "exact_replay": 0.0,
+      "identity": 4.718447854656915e-15,
+      "identity_mutctl": 0.6632733728648856,
+      "perm_matches_saved": [
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "wall": 11.348693627980538
+    },
+    "CYCLE5": {
+      "exact_replay": 0.0,
+      "identity": 6.661338147750939e-15,
+      "identity_mutctl": 0.9888992421180742,
+      "perm_matches_saved": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "wall": 11.44915816601133
+    }
+  },
+  "conds": [
+    [
+      "FRESH",
+      0
+    ],
+    [
+      "CYCLE1",
+      1
+    ],
+    [
+      "CYCLE2",
+      2
+    ],
+    [
+      "CYCLE5",
+      5
+    ]
+  ],
+  "source_sha256": "6b326a9689fdda4463366b5cbd1201c08a3d38b008eb1d530afe63bff35d62df",
+  "code_sha256": "023e00787c9c6f03f9735b2ab2899e20872b9468d99c14c7eb70df973fce8117",
+  "spec_sha256": "81cc4ef325f897f9f78ccb52a00fca1970db5f768f6d3bce4d7d823e5ad9e2aa",
+  "host_sha256": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "wall_seconds": 50.33561152301263,
+  "scope": "CPU continuation from the saved task-20 state with cycled permutations; not the original CUDA run"
+}
