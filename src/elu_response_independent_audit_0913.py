@@ -245,7 +245,7 @@ def synthetic_sign_stable_finite_difference(result):
             pp = [q.detach() + sign * eps * d for q, d in zip(p, direction)]
             return loss_accuracy(forward(pp, x, anchor0, anchor1, delta, branch)[-1], y)[0]
         numeric = (objective(1) - objective(-1)) / (2 * eps)
-        rel = float((numeric - analytic).abs() / analytic.abs().clamp_min(1e-12))
+        rel = float(((numeric - analytic).abs() / analytic.abs().clamp_min(1e-12)).detach())
         args = []
         for sign in (-1, 0, 1):
             pp = [q.detach() + sign * eps * d for q, d in zip(p, direction)]
@@ -295,11 +295,21 @@ def audit_dense_outcomes(result):
             raise FileNotFoundError(path)
     provenance = json.loads(provenance_path.read_text())
     validation = json.loads(validation_path.read_text())
+    run_config = json.loads((OUT / "run_config.json").read_text())
     assert provenance.get("status") == "COMPLETE", provenance.get("status")
     assert validation.get("status") == "PASS", validation.get("status")
     assert provenance.get("prereg_commit") == EXPECTED["prereg_commit"]
     assert provenance.get("spec_sha256") == EXPECTED["spec_sha256"]
     assert provenance.get("engine_sha256") == EXPECTED["engine_sha256"]
+    runner_path = ROOT / "src/elu_response_anchor_0913.py"
+    assert provenance.get("runner_sha256") == sha(runner_path)
+    assert run_config.get("runner_sha256") == provenance.get("runner_sha256")
+    assert run_config.get("launch_commit") == provenance.get("launch_commit")
+    assert run_config.get("models") == provenance.get("models")
+    for name, digest in validation.get("result_sha256", {}).items():
+        assert sha(OUT / name) == digest, name
+    for name, digest in provenance.get("result_sha256", {}).items():
+        assert sha(OUT / name) == digest, name
     rows = csv_rows(rows_path)
     expected_grid = {(seed, branch, task, step) for seed in range(3) for branch in BRANCHES
                      for task in TASKS for step in (0,1,2,5,10,20,25,50,75,150,375,750,1500,3000,6000)}
@@ -330,133 +340,268 @@ def audit_dense_outcomes(result):
     verdict = classify(gains)
     write_csv(OUT / "independent_primary.csv", audit_rows)
     # Compare the separately written aggregation outputs when present.
-    report_error = None
-    if (OUT / "contrasts.csv").exists() and (OUT / "verdict.csv").exists():
-        contrast_rows = csv_rows(OUT / "contrasts.csv")
-        reported = [r for r in contrast_rows if r["metric"] == "online_ce_task21"]
-        assert len(reported) == 3
-        report_error = max(abs(float(next(r for r in reported if int(r["seed"]) == seed)["A_minus_B"]) - gains[seed]) for seed in range(3))
-        assert report_error < 1e-12, report_error
-        verdict_rows = csv_rows(OUT / "verdict.csv")
-        vr = next(r for r in verdict_rows if r["metric"] == "online_ce_task21" and r["contrast"] == "A_minus_B")
-        assert vr["pilot_label"] == verdict
-        assert max(abs(float(vr[k]) - v) for k, v in zip(("mean", "sd", "ci95_low", "ci95_high"), (mean, sd, low, high))) < 1e-12
+    contrast_rows = csv_rows(OUT / "contrasts.csv")
+    reported = [r for r in contrast_rows if r["metric"] == "online_ce_task21"]
+    assert len(reported) == 3
+    report_error = max(abs(float(next(r for r in reported if int(r["seed"]) == seed)["A_minus_B"]) - gains[seed]) for seed in range(3))
+    assert report_error < 1e-12, report_error
+    verdict_rows = csv_rows(OUT / "verdict.csv")
+    vr = next(r for r in verdict_rows if r["metric"] == "online_ce_task21" and r["contrast"] == "A_minus_B")
+    assert vr["pilot_label"] == verdict
+    assert max(abs(float(vr[k]) - v) for k, v in zip(("mean", "sd", "ci95_low", "ci95_high"), (mean, sd, low, high))) < 1e-12
     result["outcomes"] = dict(status="PASS", dense_shape=list(online_ce.shape), full_probe_rows=len(rows),
                               task21_A_minus_B=gains, mean=mean, sd=sd, ci95=[low, high],
                               pilot_label=verdict, aggregation_maxabs=report_error,
                               accumulation="NumPy float64 mean over every one of 6000 saved pre-update CE values")
-    result["run_source_sha256"] = {p.name: sha(p) for p in (learning, rows_path, provenance_path, validation_path)}
+    result["run_source_sha256"] = {p.name: sha(p) for p in (learning, rows_path, provenance_path, validation_path,
+                                                               OUT / "run_config.json", runner_path,
+                                                               OUT / "contrasts.csv", OUT / "verdict.csv")}
     return provenance
 
 
-def state_key(task, step):
-    return f"task{task}_step{step}"
+def continued_schedules(checkpoint):
+    generators = {}
+    for role, states in checkpoint["rng_states"].items():
+        generators[role] = {}
+        for seed, state in states.items():
+            generator = torch.Generator(); generator.set_state(state)
+            generators[role][int(seed)] = generator
+    schedules = {}
+    for task in TASKS:
+        orders = {seed: torch.stack([torch.randperm(1200, generator=generators["env_batch_0913"][seed])
+                                     for _ in range(80)]).reshape(6000, 16) for seed in range(3)}
+        permutations = {seed: torch.randperm(784, generator=generators["env_perm_0913"][seed]) for seed in range(3)}
+        labels = {seed: torch.randint(10, (1200,), generator=generators["env_labels_0913"][seed]) for seed in range(3)}
+        hashes = {"task": task}
+        hashes.update({f"order_s{s}": arrsha(orders[s]) for s in range(3)})
+        hashes.update({f"perm_s{s}": arrsha(permutations[s]) for s in range(3)})
+        hashes.update({f"labels_s{s}": arrsha(labels[s]) for s in range(3)})
+        schedules[task] = dict(orders=orders, permutations=permutations, labels=labels, hashes=hashes)
+    return schedules
 
 
-def normalize_states(raw):
-    if isinstance(raw, dict) and "states" in raw:
-        raw = raw["states"]
-    if isinstance(raw, list):
-        return {state_key(int(x["task"]), int(x["step"])): x for x in raw}
-    if not isinstance(raw, dict):
-        raise TypeError("diagnostic states must be a dict or list")
-    return raw
+def forward_batched(p, x, anchor0, anchor1, delta, models):
+    z1 = torch.bmm(x, p[0].transpose(1, 2)) + p[1][:, None, :]
+    a1 = activ(z1)
+    z2 = torch.bmm(a1, p[2].transpose(1, 2)) + p[3][:, None, :]
+    d = delta[:, None, :]
+    live0, live1 = activ(z2), activ(z2 + d)
+    F = torch.tensor([fk(m["branch"])[0] for m in models], device=x.device)[:, None, None]
+    K = torch.tensor([fk(m["branch"])[1] for m in models], device=x.device)[:, None, None]
+    cell = torch.where(F, torch.where(K, live1, anchor1 + (live0 - anchor0)),
+                       torch.where(K, anchor0 + (live1 - anchor1), live0))
+    a2 = torch.where(d.ne(0), cell, live0)
+    logits = torch.bmm(a2, p[4].transpose(1, 2)) + p[5][:, None, :]
+    return z1, a1, z2, a2, logits, K
 
 
-def get_list(state, *names):
-    for name in names:
-        if name in state:
-            value = state[name]
-            return list(value) if isinstance(value, (tuple, list)) else value
-    raise KeyError(f"none of {names} in state keys {sorted(state)}")
+def gradients_batched(p, x, y, anchor0, anchor1, delta, models):
+    z1, a1, z2, a2, logits, K = forward_batched(p, x, anchor0, anchor1, delta, models)
+    g3 = (logits.softmax(-1) - y) / x.shape[1]
+    g2 = torch.bmm(g3, p[4]) * gate(z2 + torch.where(K, delta[:, None, :], 0))
+    g1 = torch.bmm(g2, p[2]) * gate(z1)
+    gradients = [torch.bmm(g1.transpose(1, 2), x), g1.sum(1),
+                 torch.bmm(g2.transpose(1, 2), a1), g2.sum(1),
+                 torch.bmm(g3.transpose(1, 2), a2), g3.sum(1)]
+    ce = (logits.logsumexp(-1) - (logits * y).sum(-1)).mean(-1)
+    acc = (logits.argmax(-1) == y.argmax(-1)).to(logits.dtype).mean(-1)
+    return gradients, ce, acc
 
 
-def branch_state(state, model_i, names):
-    value = get_list(state, *names)
-    return [torch.as_tensor(q[model_i]).cpu() for q in value]
+def adam_batched(p, m, v, t, gradients, reference, models):
+    nt = torch.as_tensor(t, dtype=p[0].dtype, device=p[0].device) + 1
+    c1, c2 = 1 - torch.pow(0.9, nt), 1 - torch.pow(0.999, nt)
+    nm = [0.9 * a + 0.1 * g for a, g in zip(m, gradients)]
+    nv = [0.999 * a + 0.001 * g.square() for a, g in zip(v, gradients)]
+    denominator = [(a / c2).sqrt() + 1e-8 for a in nv]
+    predicted = [-0.001 * (a / c1) / d for a, d in zip(nm, denominator)]
+    np_ = [a + d for a, d in zip(p, predicted)]
+    frozen = torch.tensor([fk(m_["branch"])[2] for m_ in models], device=p[0].device)
+    np_[0] = torch.where(frozen[:, None, None], reference[0], np_[0])
+    np_[1] = torch.where(frozen[:, None], reference[1], np_[1])
+    current = [0.1 * g / c1 for g in gradients]; history = [0.9 * a / c1 for a in m]
+    return dict(parameters=np_, adam_m=nm, adam_v=nv, t=nt, denominator=denominator,
+                predicted_update=predicted, parameter_delta=[a - b for a, b in zip(np_, p)],
+                current_gradient_numerator=current, history_numerator=history,
+                decomposition_error=[(a + b) - n / c1 for a, b, n in zip(current, history, nm)],
+                moment_m_delta=[a - b for a, b in zip(nm, m)], moment_v_delta=[a - b for a, b in zip(nv, v)])
 
 
-def audit_saved_states(checkpoint, selections, images, result):
-    """Audit runner-provided complete state/diagnostic archive.
-
-    Expected archive: diagnostic_states.pt with either a ``states`` mapping or
-    direct mapping from ``task{T}_step{U}`` to dictionaries.  Each dictionary
-    contains model metadata, parameters/adam_m/adam_v/t, frozen_reference,
-    batch_x/batch_y (or x/y), anchor0/anchor1/delta, and a saved ``diagnostic``
-    dictionary using the engine diagnose_step field names.
-    """
-    path = OUT / "diagnostic_states.pt"
-    if not path.exists():
-        raise FileNotFoundError(path)
-    archive = torch.load(path, map_location="cpu", weights_only=False)
-    states = normalize_states(archive)
-    expected = {state_key(task, step) for task in TASKS for step in STATE_STEPS}
-    assert set(states) == expected, (sorted(states), sorted(expected))
-    freeze_maxabs = 0.0; diag_errors = {}; replay_errors = {}; initial_state_errors = {}
-    source_by_seed = {}
+@torch.no_grad()
+def audit_anchor_cache(checkpoint, selections, images, result, device):
+    path = OUT / "anchor_cache.pt"
+    cache = torch.load(path, map_location="cpu", weights_only=False)
+    models = cache["models"]
+    assert [(m["seed"], m["branch"]) for m in models] == [(s, b) for s in range(3) for b in BRANCHES]
+    expected_ids = torch.tensor([selections[m["seed"]]["target20"] for m in models])
+    assert torch.equal(cache["selected_ids"], expected_ids)
     for seed in range(3):
         idx = source_model_index(checkpoint["models"], seed)
-        source_by_seed[seed] = {
-            "parameters": [q[idx].cpu() for q in checkpoint["parameters"]],
-            "adam_m": [q[idx].cpu() for q in checkpoint["adam_m"]],
-            "adam_v": [q[idx].cpu() for q in checkpoint["adam_v"]],
-        }
-    for key in sorted(expected):
-        state = states[key]
-        models = state["models"]
-        assert [(m["seed"], m["branch"]) for m in models] == [(s, b) for s in range(3) for b in BRANCHES]
-        task, step = int(state["task"]), int(state["step"])
-        assert key == state_key(task, step)
-        t = int(torch.as_tensor(state["t"]))
-        assert t == 120000 + (task - 21) * 6000 + step, (key, t)
-        for model_i, model in enumerate(models):
-            seed, branch = int(model["seed"]), model["branch"]
-            p = branch_state(state, model_i, ("parameters", "p"))
-            m = branch_state(state, model_i, ("adam_m", "m"))
-            v = branch_state(state, model_i, ("adam_v", "v"))
-            reference = branch_state(state, model_i, ("frozen_reference",))
-            if branch in ("AF", "BF"):
-                freeze_maxabs = max(freeze_maxabs, maxabs(p[0], reference[0]), maxabs(p[1], reference[1]))
+        assert np.array_equal(cache["source_subset"][seed], checkpoint["subset"][seed])
+        for key, source_key in (("source_parameters_by_seed", "parameters"), ("source_adam_m_by_seed", "adam_m"),
+                                ("source_adam_v_by_seed", "adam_v")):
+            assert maxabs_lists(cache[key][seed], [q[idx] for q in checkpoint[source_key]]) == 0
+    p = [torch.stack([cache["source_parameters_by_seed"][m["seed"]][k] for m in models]).to(device) for k in range(6)]
+    x = torch.stack([torch.from_numpy(images[np.asarray(checkpoint["subset"][m["seed"]])]) for m in models]).to(device)
+    z1 = torch.bmm(x, p[0].transpose(1, 2)) + p[1][:, None, :]
+    z2 = torch.bmm(activ(z1), p[2].transpose(1, 2)) + p[3][:, None, :]
+    source_z2 = cache["source_z2"].to(device); delta = cache["delta"].to(device)
+    z_error = maxabs(z2, source_z2)
+    assert z_error <= 2e-4, z_error
+    base_error = maxabs(activ(source_z2), cache["anchor_base"].to(device))
+    shift_error = maxabs(activ(source_z2 + delta[:, None, :]), cache["anchor_shift"].to(device))
+    assert base_error == 0 and shift_error == 0
+    hashes = {name: arrsha(cache[key]) for name, key in (("anchor_z2", "source_z2"), ("anchor_base", "anchor_base"),
+                                                                     ("anchor_shift", "anchor_shift"), ("delta", "delta"))}
+    assert hashes == cache["anchor_sha256"], (hashes, cache["anchor_sha256"])
+    result["anchor_cache"] = dict(status="PASS", source_z2_recompute_maxabs=z_error,
+                                  base_formula_maxabs=base_error, shift_formula_maxabs=shift_error,
+                                  cache_sha256=sha(path), immutable_hashes=hashes)
+    result["run_source_sha256"][path.name] = sha(path)
+    return cache, models
+
+
+@torch.no_grad()
+def audit_saved_states(checkpoint, selections, images, result):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    cache, models = audit_anchor_cache(checkpoint, selections, images, result, device)
+    schedules = continued_schedules(checkpoint)
+    replay_dir = OUT / "replay"; manifest_path = OUT / "replay_manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    assert manifest["status"] == "COMPLETE" and manifest["expected_files"] == 25
+    expected_names = {f"task{task}_step{step:04d}.pt" for task in TASKS for step in STATE_STEPS}
+    assert set(manifest["files"]) == expected_names
+    for name, digest in manifest["files"].items():
+        assert sha(replay_dir / name) == digest
+    states = {(task, step): torch.load(replay_dir / f"task{task}_step{step:04d}.pt", map_location="cpu", weights_only=False)
+              for task in TASKS for step in STATE_STEPS}
+    raw_x = {seed: torch.from_numpy(images[np.asarray(checkpoint["subset"][seed])]) for seed in range(3)}
+    references = [torch.stack([cache["source_parameters_by_seed"][m["seed"]][k] for m in models]).to(device) for k in range(6)]
+    delta = cache["delta"].to(device); anchor0_full = cache["anchor_base"].to(device); anchor1_full = cache["anchor_shift"].to(device)
+    initial_p = [q.to(device) for q in states[21, 0]["state"]["parameters"]]
+    full_x = torch.stack([raw_x[m["seed"]] for m in models]).to(device)
+    initial_outputs = forward_batched(initial_p, full_x, anchor0_full, anchor1_full, delta, models)
+    model_index = {(m["seed"], m["branch"]): i for i, m in enumerate(models)}
+    initial_pair_errors = {}
+    for seed in range(3):
+        for left, right in (("A", "B"), ("C", "D"), ("AF", "BF")):
+            a, b = model_index[seed, left], model_index[seed, right]
+            initial_pair_errors[f"s{seed}_{left}_{right}_features"] = maxabs(initial_outputs[3][a], initial_outputs[3][b])
+            initial_pair_errors[f"s{seed}_{left}_{right}_logits"] = maxabs(initial_outputs[4][a], initial_outputs[4][b])
+    assert max(initial_pair_errors.values()) == 0, initial_pair_errors
+    unselected_error = 0.0
+    for j in range(len(models)):
+        mask = delta[j].eq(0)
+        unselected_error = max(unselected_error, maxabs(initial_outputs[3][j, :, mask], activ(initial_outputs[2][j, :, mask])))
+    assert unselected_error == 0
+    freeze_error = 0.0; initial_error = 0.0; diagnostic_error = {}; replay_error = {}; boundary_error = {}
+    for task in TASKS:
+        schedule = schedules[task]
+        for step in STATE_STEPS:
+            artifact = states[task, step]; state = artifact["state"]; diag = artifact["diagnostic"]
+            assert artifact["task"] == task and artifact["step"] == step and tuple(artifact["parameter_names"]) == PARAM_NAMES
+            position = step if step < 6000 else 5999
+            expected_role = "next_scheduled_batch" if step < 6000 else "retrospective_final_batch"
+            assert artifact["diagnostic_batch_position_zero_based"] == position and artifact["diagnostic_batch_role"] == expected_role
+            expected_indices = torch.stack([schedule["orders"][m["seed"]][position] for m in models])
+            assert torch.equal(artifact["diagnostic_batch_indices"], expected_indices)
+            t = int(state["t"]); assert t == 120000 + (task - 21) * 6000 + step
+            p = [q.to(device) for q in state["parameters"]]; m = [q.to(device) for q in state["adam_m"]]; v = [q.to(device) for q in state["adam_v"]]
+            frozen = torch.tensor([fk(m_["branch"])[2] for m_ in models], device=device)
+            freeze_error = max(freeze_error, maxabs(p[0][frozen], references[0][frozen]), maxabs(p[1][frozen], references[1][frozen]))
             if task == 21 and step == 0:
-                initial_state_errors[f"s{seed}_{branch}_parameters"] = maxabs_lists(p, source_by_seed[seed]["parameters"])
-                initial_state_errors[f"s{seed}_{branch}_adam_m"] = maxabs_lists(m, source_by_seed[seed]["adam_m"])
-                initial_state_errors[f"s{seed}_{branch}_adam_v"] = maxabs_lists(v, source_by_seed[seed]["adam_v"])
-            x = torch.as_tensor(state.get("batch_x", state.get("x")))[model_i].cpu()
-            y = torch.as_tensor(state.get("batch_y", state.get("y")))[model_i].cpu()
-            a0 = torch.as_tensor(state["anchor0"])[model_i].cpu()
-            a1 = torch.as_tensor(state["anchor1"])[model_i].cpu()
-            delta = torch.as_tensor(state["delta"])[model_i].cpu()
-            gradients, ce, acc = independent_gradients(p, x, y, a0, a1, delta, branch)
-            own = one_adam_step(p, m, v, t, gradients, reference, fk(branch)[2])
-            saved = state["diagnostic"]
-            def saved_branch(name):
-                value = saved[name]
-                if isinstance(value, (list, tuple)):
-                    return [torch.as_tensor(q[model_i]).cpu() for q in value]
-                return torch.as_tensor(value)[model_i].cpu()
+                initial_error = max(initial_error, maxabs_lists(p, references))
+                initial_error = max(initial_error, maxabs_lists(m, [torch.stack([cache["source_adam_m_by_seed"][mo["seed"]][k] for mo in models]).to(device) for k in range(6)]))
+                initial_error = max(initial_error, maxabs_lists(v, [torch.stack([cache["source_adam_v_by_seed"][mo["seed"]][k] for mo in models]).to(device) for k in range(6)]))
+            indices = expected_indices.to(device)
+            x = torch.stack([raw_x[mo["seed"]][expected_indices[j]] for j, mo in enumerate(models)]).to(device)
+            labels = torch.stack([schedule["labels"][mo["seed"]][expected_indices[j]] for j, mo in enumerate(models)]).to(device)
+            y = torch.nn.functional.one_hot(labels, 10).float()
+            mid = torch.arange(len(models), device=device)[:, None]
+            a0, a1 = anchor0_full[mid, indices], anchor1_full[mid, indices]
+            gradients, ce, acc = gradients_batched(p, x, y, a0, a1, delta, models)
+            own = adam_batched(p, m, v, t, gradients, references, models)
             checks = {
-                "gradients": maxabs_lists(gradients, saved_branch("gradients")),
-                "current_gradient_numerator": maxabs_lists(own["current_gradient_numerator"], saved_branch("current_gradient_numerator")),
-                "history_numerator": maxabs_lists(own["history_numerator"], saved_branch("history_numerator")),
-                "denominator": maxabs_lists(own["denominator"], saved_branch("denominator")),
-                "predicted_update": maxabs_lists(own["predicted_update"], saved_branch("predicted_update")),
-                "parameter_delta": maxabs_lists(own["parameter_delta"], saved_branch("parameter_delta")),
-                "ce": maxabs(ce, saved_branch("ce")), "acc": maxabs(acc, saved_branch("acc")),
+                "gradients": maxabs_lists(gradients, [q.to(device) for q in diag["gradients"]]),
+                "current": maxabs_lists(own["current_gradient_numerator"], [q.to(device) for q in diag["current_gradient_numerator"]]),
+                "history": maxabs_lists(own["history_numerator"], [q.to(device) for q in diag["history_numerator"]]),
+                "decomposition": maxabs_lists(own["decomposition_error"], [q.to(device) for q in diag["decomposition_error"]]),
+                "denominator": maxabs_lists(own["denominator"], [q.to(device) for q in diag["denominator"]]),
+                "predicted": maxabs_lists(own["predicted_update"], [q.to(device) for q in diag["predicted_update"]]),
+                "realized": maxabs_lists(own["parameter_delta"], [q.to(device) for q in diag["parameter_delta"]]),
+                "moment_m_delta": maxabs_lists(own["moment_m_delta"], [q.to(device) for q in diag["moment_m_delta"]]),
+                "moment_v_delta": maxabs_lists(own["moment_v_delta"], [q.to(device) for q in diag["moment_v_delta"]]),
+                "ce": maxabs(ce, diag["ce"].to(device)), "acc": maxabs(acc, diag["acc"].to(device)),
+                "next_t": maxabs(own["t"], diag["next_t"].to(device)),
             }
-            diag_errors[f"{key}_s{seed}_{branch}"] = max(checks.values())
-            assert checks["gradients"] <= 2e-5 and max(checks.values()) <= 5e-5, (key, seed, branch, checks)
-            # The task21 step0 -> step1 pair is a separately saved actual-step oracle.
-            if task == 21 and step == 0:
-                next_state = states[state_key(21, 1)]
-                actual_next = branch_state(next_state, model_i, ("parameters", "p"))
-                replay_errors[f"s{seed}_{branch}"] = maxabs_lists(own["parameters"], actual_next)
-                assert replay_errors[f"s{seed}_{branch}"] <= 5e-5
-    assert freeze_maxabs == 0, freeze_maxabs
-    assert max(initial_state_errors.values()) == 0, initial_state_errors
-    result["saved_states"] = dict(status="PASS", state_count=len(states), diagnostic_cases=len(diag_errors),
-                                  diagnostic_maxabs=max(diag_errors.values()), task21_step0_to_1_replay_maxabs=max(replay_errors.values()),
-                                  frozen_W1_b1_maxabs=freeze_maxabs, initial_source_state_maxabs=max(initial_state_errors.values()),
-                                  checked_steps=list(STATE_STEPS), checked_tasks=list(TASKS))
+            diagnostic_error[f"t{task}_u{step}"] = max(checks.values())
+            assert checks["gradients"] <= 2e-5 and max(checks.values()) <= 5e-5, (task, step, checks)
+            if step == 0:
+                next_p = [q.to(device) for q in states[task, 1]["state"]["parameters"]]
+                replay_error[f"t{task}"] = maxabs_lists(own["parameters"], next_p)
+                assert replay_error[f"t{task}"] <= 5e-5
+        if task < 25:
+            left, right = states[task, 6000]["state"], states[task + 1, 0]["state"]
+            boundary_error[f"t{task}_to_{task+1}"] = max(maxabs_lists(left[k], right[k]) for k in ("parameters", "adam_m", "adam_v"))
+            assert boundary_error[f"t{task}_to_{task+1}"] == 0
+    assert freeze_error == 0 and initial_error == 0
+    final_checkpoint = torch.load(OUT / "checkpoint.pt", map_location="cpu", weights_only=False)
+    final_state = states[25, 6000]["state"]
+    final_error = max(maxabs_lists(final_checkpoint[k], final_state[k]) for k in ("parameters", "adam_m", "adam_v"))
+    assert final_error == 0 and int(final_checkpoint["t"]) == 150000 and int(final_state["t"]) == 150000
+    assert final_checkpoint["anchor_sha256"] == cache["anchor_sha256"]
+    result["saved_states"] = dict(status="PASS", state_count=len(states), diagnostic_batches=len(diagnostic_error),
+                                  diagnostic_maxabs=max(diagnostic_error.values()), per_task_step0_to_1_replay_maxabs=max(replay_error.values()),
+                                  boundary_continuity_maxabs=max(boundary_error.values()), frozen_W1_b1_maxabs=freeze_error,
+                                  initial_source_state_maxabs=initial_error, checked_steps=list(STATE_STEPS), checked_tasks=list(TASKS),
+                                  initial_within_F_feature_logit_maxabs=max(initial_pair_errors.values()),
+                                  initial_unselected_activation_maxabs=unselected_error, final_checkpoint_state_maxabs=final_error,
+                                  replay_manifest_sha256=sha(manifest_path), checkpoint_sha256=sha(OUT / "checkpoint.pt"))
+    result["run_source_sha256"][manifest_path.name] = sha(manifest_path)
+    result["run_source_sha256"]["checkpoint.pt"] = sha(OUT / "checkpoint.pt")
+
+
+def audit_units(result):
+    path = OUT / "units.npz"
+    required = {
+        "z2_mean", "z2_std", "effective_argument_mean", "effective_argument_std", "response_gate_mean", "q_lowgate",
+        "actual_activation_mean", "actual_activation_std", "actual_activation_varying_fraction",
+        "W1_row_norm", "W1_centered_row_norm", "W2_row_norm", "W2_centered_row_norm", "W2_column_norm",
+        "W3_row_norm", "W3_column_norm", "interval_delta_z2_mean", "interval_delta_z2_std",
+        "interval_delta_actual_activation_mean", "interval_delta_actual_activation_std",
+        "interval_delta_logits_mean", "interval_delta_logits_std",
+    }
+    with np.load(path, allow_pickle=False) as z:
+        assert np.array_equal(z["tasks"], np.asarray(TASKS))
+        assert np.array_equal(z["steps"], np.asarray((0,1,2,5,10,20,25,50,75,150,375,750,1500,3000,6000)))
+        assert list(zip(z["model_seed"].astype(int), z["model_branch"].astype(str))) == [(s, b) for s in range(3) for b in BRANCHES]
+        assert required.issubset(z.files), sorted(required - set(z.files))
+        numeric = [key for key in z.files if key not in ("model_branch",)]
+        assert all(np.isfinite(z[key]).all() for key in numeric)
+        assert ((z["q_lowgate"] >= 0) & (z["q_lowgate"] <= 1)).all()
+        assert ((z["actual_activation_varying_fraction"] >= 0) & (z["actual_activation_varying_fraction"] <= 1)).all()
+        selected = z["selected_unit_id"].astype(np.int64)
+        mask = z["selected_mask"].astype(bool)
+        assert mask.shape == (18, 100) and np.all(mask.sum(1) == 20)
+        assert all(np.array_equal(np.flatnonzero(mask[j]), np.sort(selected[j])) for j in range(18))
+        gather = selected[None, None, :, :]
+        gather_error = 0.0; gathered = 0
+        for key in z.files:
+            if not key.startswith("target_"):
+                continue
+            source = key[len("target_"):]
+            if source in z.files and z[source].ndim == 4 and z[source].shape[-1] == 100:
+                expected = np.take_along_axis(z[source], gather, axis=-1)
+                gather_error = max(gather_error, float(np.max(np.abs(z[key] - expected))))
+                gathered += 1
+        assert gathered >= 20 and gather_error == 0
+        step0 = np.where(z["steps"] == 0)[0]
+        interval_keys = [key for key in z.files if key.startswith("interval_") and key != "interval_defined"]
+        interval_zero_maxabs = max(float(np.max(np.abs(z[key][:, step0]))) for key in interval_keys)
+        assert interval_zero_maxabs == 0
+        result["mechanism_archive"] = dict(status="PASS", sha256=sha(path), finite_array_count=len(numeric),
+                                            target_gather_arrays=gathered, target_gather_maxabs=gather_error,
+                                            step0_interval_maxabs=interval_zero_maxabs)
     result["run_source_sha256"][path.name] = sha(path)
 
 
@@ -489,6 +634,7 @@ def main():
         provenance = audit_dense_outcomes(result)
         audit_rng(provenance, result)
         audit_saved_states(checkpoint, selections, images, result)
+        audit_units(result)
         result["status"] = "PASS"
         path = OUT / "independent_audit.json"
     OUT.mkdir(parents=True, exist_ok=True)

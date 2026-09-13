@@ -1,0 +1,238 @@
+{
+  "status": "PASS",
+  "audit_code_sha256": "9bd058c9a3dcef3a70eab84a6df8f11ddddca3afa2b28a99544861fa840e573a",
+  "independence": "No imports from response engine, runner, or report; direct formulas and float64 aggregation.",
+  "source_sha256": {
+    "spec": "332ed37ce9d2a561e58eff98e9fca21c1ed3b5f4a34ba9df221cd62802d27dea",
+    "engine": "7bc3581312aa47a8e48de386452be42f7f65b24ba0ae71554bae3d8a1934f88c",
+    "engine_validator": "f4123566823d5bf8c9de3f3eb9e55cce3565636fd809e2ed4c0ae79354edade3",
+    "initial_validator": "90d7684ed765afef954e46e6aff67f6081f0d769876cf013c1027a0e3ec6cd2c",
+    "initial_validation": "76e99413e3b5ec78803dd46c074a6616b7034c48a78174203cd5b66e07b78a25",
+    "source_checkpoint": "4b62bad9ad48a8940d81e9d709c4d987abc74eb2dec7d0b563cbad19f4d2f0c9",
+    "source_selections": "4e561bae77f004679f2c81ac6b8b13e832a637c802371adc1213dbc34fc119f7",
+    "source_units": "4876dce6b0ba76593479b616e4c2b5762ccea7e724cbbbf241f17833998295ba",
+    "source_rng": "b35fbf1747687a8bfc16653e2aec9da68819d36d12e417a1e10e3cf69dc06efb"
+  },
+  "initial_output_validation": {
+    "status": "PASS",
+    "full_maxabs": 0.0,
+    "batch_maxabs": 0.00015282630920410156,
+    "optimizer_updates": 0
+  },
+  "source_cohort": {
+    "0": {
+      "target20": [
+        11,
+        77,
+        96,
+        63,
+        45,
+        69,
+        81,
+        84,
+        72,
+        73,
+        59,
+        14,
+        61,
+        3,
+        51,
+        42,
+        95,
+        99,
+        48,
+        78
+      ],
+      "delta_maxabs": 1.52587890625e-05,
+      "past_q_min": 0.996666669845581,
+      "past_tasks": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ]
+    },
+    "1": {
+      "target20": [
+        60,
+        46,
+        13,
+        32,
+        30,
+        15,
+        44,
+        72,
+        96,
+        52,
+        8,
+        62,
+        80,
+        75,
+        51,
+        11,
+        18,
+        10,
+        93,
+        43
+      ],
+      "delta_maxabs": 1.52587890625e-05,
+      "past_q_min": 0.9891666769981384,
+      "past_tasks": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ]
+    },
+    "2": {
+      "target20": [
+        3,
+        56,
+        99,
+        19,
+        91,
+        95,
+        38,
+        75,
+        53,
+        40,
+        5,
+        44,
+        4,
+        23,
+        22,
+        9,
+        49,
+        89,
+        93,
+        43
+      ],
+      "delta_maxabs": 1.52587890625e-05,
+      "past_q_min": 0.9900000095367432,
+      "past_tasks": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ]
+    }
+  },
+  "synthetic_finite_difference": {
+    "status": "PASS",
+    "relative_error": {
+      "A": 6.723450280790146e-10,
+      "B": 6.900004823755495e-07,
+      "C": 3.90766293683809e-09,
+      "D": 5.640487705052739e-08
+    },
+    "minimum_argument_abs": {
+      "A": 1.5945039602966706,
+      "B": 1.595876806191845,
+      "C": 1.5962045321574063,
+      "D": 1.598069524615763
+    },
+    "note": "All z1, z2, and z2+delta values under both perturbations remain over 1 from zero."
+  },
+  "outcomes": {
+    "status": "PASS",
+    "dense_shape": [
+      5,
+      18,
+      6000
+    ],
+    "full_probe_rows": 1350,
+    "task21_A_minus_B": [
+      1.3261828400070468,
+      1.4174294878418245,
+      1.3608590399697422
+    ],
+    "mean": 1.3681571226062044,
+    "sd": 0.04605902943937771,
+    "ci95": [
+      1.2537401506049246,
+      1.4825740946074841
+    ],
+    "pilot_label": "DIRECTIONAL_RESPONSE_SUPPORT",
+    "aggregation_maxabs": 0.0,
+    "accumulation": "NumPy float64 mean over every one of 6000 saved pre-update CE values"
+  },
+  "run_source_sha256": {
+    "learning.npz": "be8c1feb08429f67c7e1fa6eb952edadee6342f4442abfe89f4e252856fbe21d",
+    "rows.csv": "fad9b8f8f776d701f2c34406bebf762b5d3882203eb9bd13b2f01927c929e2a9",
+    "provenance.json": "cbc22c00f88eface3f403be162d4b307a1ad8f107d01679a634c5070d41bc7b1",
+    "validation.json": "fcec93c1ba714b9855574a76488c63ded6b030a4af312ea4037fc00d094689d0",
+    "run_config.json": "4b6e62649988cb90546c09a2457d376e6b5238bb420e5af1db1f0d4662ac478e",
+    "elu_response_anchor_0913.py": "ccda2f500db44c94f03c5d48f9c4a0e7abadb47eb8a818e19819465a3347db08",
+    "contrasts.csv": "dbabdc4273784a5bc7fc2c099935faf9475798f0145a4a8785e4af271c8c777a",
+    "verdict.csv": "5fa583d0542cbb1d9bea3550865807e1ab395c93cd09e6c0ea26f426fd237e71",
+    "anchor_cache.pt": "49f17bb9d80c8e1f53ec842d7437fb9fc183fcae08a3f294bf1a6717724e17fd",
+    "replay_manifest.json": "53b93c0320ee9dddaedabb91fb59c327d35824d16a5d8e52d0173899719143d5",
+    "checkpoint.pt": "4f084cb4ba2ebf53e41ececc96e19647302673dcd78d56f9919942407f93590c",
+    "units.npz": "6d150d6fe10fa9360ad09ddf08d56d213715e6d7e9e94289471b9d4b3b4fc6db"
+  },
+  "rng": {
+    "status": "PASS",
+    "tasks": [
+      21,
+      22,
+      23,
+      24,
+      25
+    ],
+    "exact_source_hash_rows": true,
+    "source_rng_sha256": "b35fbf1747687a8bfc16653e2aec9da68819d36d12e417a1e10e3cf69dc06efb"
+  },
+  "anchor_cache": {
+    "status": "PASS",
+    "source_z2_recompute_maxabs": 0.0,
+    "base_formula_maxabs": 0.0,
+    "shift_formula_maxabs": 0.0,
+    "cache_sha256": "49f17bb9d80c8e1f53ec842d7437fb9fc183fcae08a3f294bf1a6717724e17fd",
+    "immutable_hashes": {
+      "anchor_z2": "99cd544c3341c708d61018e837f85520fe477fccdc4ae921376df82fca283943",
+      "anchor_base": "d3bb58cdc98d5013a551697e82d521d6d2f38bc297ee7654e184d121f6c89e8e",
+      "anchor_shift": "6885284a2db6bbe5aff1f232f8c1aa82151f3e489cfde12698f18f0b4415da00",
+      "delta": "8a7df13199dfda6ba2273a52ed3626cdacc5124c951d9281d809ccb0eeb90962"
+    }
+  },
+  "saved_states": {
+    "status": "PASS",
+    "state_count": 25,
+    "diagnostic_batches": 25,
+    "diagnostic_maxabs": 4.76837158203125e-07,
+    "per_task_step0_to_1_replay_maxabs": 1.1920928955078125e-07,
+    "boundary_continuity_maxabs": 0.0,
+    "frozen_W1_b1_maxabs": 0.0,
+    "initial_source_state_maxabs": 0.0,
+    "checked_steps": [
+      0,
+      1,
+      20,
+      75,
+      6000
+    ],
+    "checked_tasks": [
+      21,
+      22,
+      23,
+      24,
+      25
+    ],
+    "initial_within_F_feature_logit_maxabs": 0.0,
+    "initial_unselected_activation_maxabs": 0.0,
+    "final_checkpoint_state_maxabs": 0.0,
+    "replay_manifest_sha256": "53b93c0320ee9dddaedabb91fb59c327d35824d16a5d8e52d0173899719143d5",
+    "checkpoint_sha256": "4f084cb4ba2ebf53e41ececc96e19647302673dcd78d56f9919942407f93590c"
+  },
+  "mechanism_archive": {
+    "status": "PASS",
+    "sha256": "6d150d6fe10fa9360ad09ddf08d56d213715e6d7e9e94289471b9d4b3b4fc6db",
+    "finite_array_count": 64,
+    "target_gather_arrays": 23,
+    "target_gather_maxabs": 0.0,
+    "step0_interval_maxabs": 0.0
+  }
+}
