@@ -156,8 +156,8 @@ def main():
    x=trajectories[name][:,:,col];med=np.median(x,axis=0);lo,hi=np.quantile(x,[.25,.75],axis=0)
    label=name.replace("SN_","").replace("LR_","").replace("_q0","")
    ax.plot(np.arange(501),med,label=label,lw=1.5);ax.fill_between(np.arange(501),lo,hi,alpha=.12)
-   if col==6:ax.set_yscale("symlog",linthresh=1e-12)
-   ax.set_title(title);ax.set_xlabel("Task endpoint");ax.legend(fontsize=8);ax.grid(alpha=.18)
+  if col==6:ax.set_yscale("symlog",linthresh=1e-12)
+  ax.set_title(title);ax.set_xlabel("Task endpoint");ax.legend(fontsize=8);ax.grid(alpha=.18)
  fig.suptitle("New learning: 10 seeds, ALL units, common SGD lr=.005; median and IQR")
  fig.savefig(OUT/"learning_trajectories.png",dpi=150);fig.savefig(OUT/"learning_trajectories.pdf");plt.close(fig)
  out=["# 零点復元と重み収縮：新しいSGD学習実験 0913","",

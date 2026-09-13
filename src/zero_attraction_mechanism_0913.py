@@ -132,11 +132,23 @@ def main():
  out=RESULTS/("mechanism_partial" if args.available else "mechanism");out.mkdir(parents=True,exist_ok=True)
  cfg=json.loads((ROOT/"configs/zero_attraction_learning_0913.yaml").read_text())
  allchecks={};seedrows=[]
+ previous=RESULTS/"mechanism_partial"
+ prevchecks=json.loads((previous/"verification.json").read_text()).get("checks",{}) if (previous/"verification.json").exists() and not args.available and not args.check_only else {}
+ prevrows=list(csv.DictReader((previous/"seed_summary.csv").open())) if prevchecks else []
  for arm in cfg["arms"]:
   if args.available and not (DATA/"arm_status"/f"{arm['name']}_done.json").exists():continue
   for step in [0,200000,1000000,5000000]:
    if args.check_only and (arm["name"]!="SN_peak_q0" or step!=0):continue
    p=DATA/"ckpts"/f"{arm['name']}_step{step}.pt"
+   key=f"{arm['name']}_{step}"
+   if key in prevchecks:
+    import shutil
+    src=previous/f"{arm['name']}_step{step}_units.csv"
+    shutil.copy2(src,out/src.name)
+    seedrows.extend({k:(v if k in ["arm","kind"] else (None if v=="" else float(v))) for k,v in row.items()} for row in prevrows if row["arm"]==arm["name"] and int(row["step"])==step)
+    allchecks[key]=prevchecks[key]
+    print("REUSE VERIFIED PROBE",arm["name"],step,flush=True)
+    continue
    rows,checks=measure(p,check_only=args.check_only)
    if not args.check_only:
     writecsv(out/f"{arm['name']}_step{step}_units.csv",rows)
