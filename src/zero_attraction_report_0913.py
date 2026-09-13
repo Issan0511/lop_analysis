@@ -45,7 +45,8 @@ def main():
   names={a["name"] for a in CFG["arms"]}
   if not {"SN_peak_q0","SN_normal_q0"}<=names:
    print("Primary pair is not complete yet.");return
-  OUT=DATA/"partial_analysis";OUT.mkdir(exist_ok=True)
+  OUT=OUT/"partial_analysis";OUT.mkdir(exist_ok=True)
+ OUT.mkdir(parents=True,exist_ok=True)
  rows=[];groups=[];ledgers=[];sources=[];trajectories={};checks={};rawstats={}
  bits=np.array(list(itertools.product([-.5,.5],repeat=5)))
  def verify(k,a,b,atol=1e-6,rtol=1e-5):
