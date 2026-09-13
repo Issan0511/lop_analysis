@@ -1,0 +1,425 @@
+{
+  "experiment": "zero_attraction_learning_0913",
+  "host_config": "configs/gate_dial_0902.yaml",
+  "output": {
+    "dir": "results/zero_attraction_learning_0913",
+    "logs_tail_dir": "results/zero_attraction_learning_0913/logs_tail"
+  },
+  "common_overrides": {
+    "lr_main": 0.005,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "generator_offset": 0,
+    "omp_num_threads": 1
+  },
+  "activation": {
+    "snake_normal_m05_0913": {
+      "name": "snake_normal_m05_0913",
+      "phase": "normal",
+      "offset": -0.5
+    },
+    "snake": {
+      "name": "snake",
+      "phase": "normal",
+      "offset": 0
+    },
+    "snake_normal_p05_0913": {
+      "name": "snake_normal_p05_0913",
+      "phase": "normal",
+      "offset": 0.5
+    },
+    "snake_peak_m05_0913": {
+      "name": "snake_peak_m05_0913",
+      "phase": "peak",
+      "offset": -0.5
+    },
+    "snake_peak_0_0913": {
+      "name": "snake_peak_0_0913",
+      "phase": "peak",
+      "offset": 0
+    },
+    "snake_peak_p05_0913": {
+      "name": "snake_peak_p05_0913",
+      "phase": "peak",
+      "offset": 0.5
+    },
+    "snake_valley_m05_0913": {
+      "name": "snake_valley_m05_0913",
+      "phase": "valley",
+      "offset": -0.5
+    },
+    "snake_valley_0_0913": {
+      "name": "snake_valley_0_0913",
+      "phase": "valley",
+      "offset": 0
+    },
+    "snake_valley_p05_0913": {
+      "name": "snake_valley_p05_0913",
+      "phase": "valley",
+      "offset": 0.5
+    },
+    "leaky_off_m0p5": {
+      "name": "leaky_off_m0p5",
+      "offset": -0.5
+    },
+    "leaky_off_0": {
+      "name": "leaky_off_0",
+      "offset": 0
+    },
+    "leaky_off_p0p5": {
+      "name": "leaky_off_p0p5",
+      "offset": 0.5
+    },
+    "leaky_relu": {
+      "name": "leaky_relu"
+    }
+  },
+  "record": {
+    "zmin_every": 1000,
+    "w_free_every": 10000,
+    "moments": [
+      "m_phi2",
+      "m_dphi2",
+      "m_phidphi",
+      "m_dphiddphi"
+    ],
+    "moments_every": 10000,
+    "moments_dense_last_tasks": 20,
+    "payload_columns": [
+      "init_hook",
+      "init_hook_arg",
+      "lr_used",
+      "freeze_v",
+      "batch_mode"
+    ]
+  },
+  "hooks": {},
+  "arm_template": {
+    "stage": 0,
+    "hidden": [
+      100
+    ],
+    "centered_layers": [
+      1
+    ],
+    "target_mu_norm": 3.041,
+    "target_dose": 12.16,
+    "u_star": null
+  },
+  "arms": [
+    {
+      "name": "SN_normal_qm05",
+      "family": "snake",
+      "activation": "snake_normal_m05_0913",
+      "dial": 1,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "SN_normal_q0",
+      "family": "snake",
+      "activation": "snake",
+      "dial": 1,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "SN_normal_qp05",
+      "family": "snake",
+      "activation": "snake_normal_p05_0913",
+      "dial": 1,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "SN_peak_qm05",
+      "family": "snake",
+      "activation": "snake_peak_m05_0913",
+      "dial": 1,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "SN_peak_q0",
+      "family": "snake",
+      "activation": "snake_peak_0_0913",
+      "dial": 1,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "SN_peak_qp05",
+      "family": "snake",
+      "activation": "snake_peak_p05_0913",
+      "dial": 1,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "SN_valley_qm05",
+      "family": "snake",
+      "activation": "snake_valley_m05_0913",
+      "dial": 1,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "SN_valley_q0",
+      "family": "snake",
+      "activation": "snake_valley_0_0913",
+      "dial": 1,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "SN_valley_qp05",
+      "family": "snake",
+      "activation": "snake_valley_p05_0913",
+      "dial": 1,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "LR_a0p1_qm05",
+      "family": "leaky",
+      "activation": "leaky_off_m0p5",
+      "dial": 0.1,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "LR_a0p1_q0",
+      "family": "leaky",
+      "activation": "leaky_off_0",
+      "dial": 0.1,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "LR_a0p1_qp05",
+      "family": "leaky",
+      "activation": "leaky_off_p0p5",
+      "dial": 0.1,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "LR_a0p3_qm05",
+      "family": "leaky",
+      "activation": "leaky_off_m0p5",
+      "dial": 0.3,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "LR_a0p3_q0",
+      "family": "leaky",
+      "activation": "leaky_off_0",
+      "dial": 0.3,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "LR_a0p3_qp05",
+      "family": "leaky",
+      "activation": "leaky_off_p0p5",
+      "dial": 0.3,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "LR_a0p7_qm05",
+      "family": "leaky",
+      "activation": "leaky_off_m0p5",
+      "dial": 0.7,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "LR_a0p7_q0",
+      "family": "leaky",
+      "activation": "leaky_off_0",
+      "dial": 0.7,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "LR_a0p7_qp05",
+      "family": "leaky",
+      "activation": "leaky_off_p0p5",
+      "dial": 0.7,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    },
+    {
+      "name": "LIN_q0",
+      "family": "leaky",
+      "activation": "leaky_relu",
+      "dial": 1,
+      "hook": null,
+      "total_steps": 5000000,
+      "checkpoints": [
+        0,
+        200000,
+        1000000,
+        5000000
+      ],
+      "u_fr": null
+    }
+  ],
+  "analysis": {
+    "task_period": 10000,
+    "early": [
+      2,
+      20
+    ],
+    "middle": [
+      21,
+      100
+    ],
+    "late": [
+      451,
+      500
+    ],
+    "primary": [
+      "SN_peak_q0",
+      "SN_normal_q0"
+    ]
+  }
+}
