@@ -16,5 +16,7 @@
       "passed": false
     }
   ],
-  "resolution": "Use uniform0to1 inputs and allclass0 labels for CPU-to-GPU one-step check, avoiding cancellation around zero gradients. All criteria unchanged. Independent gradient correctness remains below tolerance. The preflight does not imply bitwise CPU-GPU training equivalence."
+  "resolution": "Use uniform0to1 inputs and allclass0 labels for CPU-to-GPU one-step check, avoiding cancellation around zero gradients. All criteria unchanged. Independent gradient correctness remains below tolerance. The preflight does not imply bitwise CPU-GPU training equivalence.",
+  "interim_resolution_superseded": true,
+  "final_resolution": "Historical initializer reciprocal-multiply expression restored exactly; random-label original parameter tolerance2e-5 passes at1.4397315680980682e-5. See validation.json and prereg QA addendum. Allclass0 probe retained only as interim supplementary check; no threshold relaxed."
 }
