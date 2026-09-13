@@ -140,20 +140,24 @@ def main():
  np.savez_compressed(OUT/"summary_trajectories.npz",**trajectories)
  (OUT/"analysis_verification.json").write_text(json.dumps({"status":"PASS","max_abs_errors":checks,"n_arms":len(CFG["arms"]),"n_logs":len(CFG["arms"])*10,"source_files":sources,"analysis_sha256":sha(Path(__file__))},indent=2))
  # Scientific trajectories: median and interquartile range across seed-level summaries.
- fig,axs=plt.subplots(2,3,figsize=(14,8),constrained_layout=True)
+ fig,axs=plt.subplots(3,3,figsize=(14,11),constrained_layout=True)
  sets=[(["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],1,"Snake phase: free-weight RMS"),
        (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],3,"Snake phase: mean preactivation"),
        (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],5,"Snake phase: readout RMS"),
        (["LR_a0p1_q0","LR_a0p3_q0","LR_a0p7_q0","LIN_q0"],1,"Leaky slope: free-weight RMS"),
        (["LR_a0p1_qm05","LR_a0p1_q0","LR_a0p1_qp05"],1,"Leaky a=.1 offsets: free-weight RMS"),
-       (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],6,"Snake phase: exact MSE")]
+       (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],6,"Snake phase: exact MSE"),
+        (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],8,"Fraction of means within root +/- 0.1"),
+        (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],4,"RMS distance of unit means to root"),
+        (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],2,"Full incoming-weight RMS")]
  for ax,(names,col,title) in zip(axs.flat,sets):
   for name in names:
    if name not in trajectories:continue
    x=trajectories[name][:,:,col];med=np.median(x,axis=0);lo,hi=np.quantile(x,[.25,.75],axis=0)
    label=name.replace("SN_","").replace("LR_","").replace("_q0","")
    ax.plot(np.arange(501),med,label=label,lw=1.5);ax.fill_between(np.arange(501),lo,hi,alpha=.12)
-  ax.set_title(title);ax.set_xlabel("Task endpoint");ax.legend(fontsize=8);ax.grid(alpha=.18)
+   if col==6:ax.set_yscale("symlog",linthresh=1e-12)
+   ax.set_title(title);ax.set_xlabel("Task endpoint");ax.legend(fontsize=8);ax.grid(alpha=.18)
  fig.suptitle("New learning: 10 seeds, ALL units, common SGD lr=.005; median and IQR")
  fig.savefig(OUT/"learning_trajectories.png",dpi=150);fig.savefig(OUT/"learning_trajectories.pdf");plt.close(fig)
  out=["# 零点復元と重み収縮：新しいSGD学習実験 0913","",

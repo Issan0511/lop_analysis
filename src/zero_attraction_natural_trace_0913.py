@@ -1,6 +1,6 @@
 """Reconstruct input RNG and replay registered task21/task101 SGD ledgers."""
 from pathlib import Path
-import copy,csv,hashlib,json,time
+import argparse,copy,csv,hashlib,json,time
 import numpy as np
 import torch
 from src import edge_law_0905 as e
@@ -88,6 +88,9 @@ def writecsv(path,rows):
  with path.open("w",newline="") as f:
   w=csv.DictWriter(f,fieldnames=list(rows[0]),lineterminator="\n");w.writeheader();w.writerows(rows)
 def main():
+ ap=argparse.ArgumentParser();ap.add_argument("--available",action="store_true");args=ap.parse_args()
+ names=[n for n in NAMES if not args.available or (DATA/"arm_status"/f"{n}_done.json").exists()]
+ code_sha=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
  OUT.mkdir(parents=True,exist_ok=True)
  e.CONFIG=ROOT/"configs/zero_attraction_learning_0913.yaml";e._TABLE=None
  cfg=e.build_cfg();base=e.setup_arm_dial(cfg,e._arm(cfg,"SN_normal_q0"),"cpu")
@@ -95,15 +98,22 @@ def main():
  for start in [200000,1000000]:
   while base["env"].t<start:base["env"].step()
   print("RNG reconstructed",start,flush=True)
-  for name in NAMES:
+  for name in names:
    path=DATA/"ckpts"/f"{name}_step{start}.pt";cp=torch.load(path,map_location="cpu",weights_only=True)
-   st=restored(base,cp);rows,checks,exact,raw=trace(st,cp)
+   cache=OUT/f"{name}_task{start//10000+1}_cache.json"
+   saved=json.loads(cache.read_text()) if cache.exists() else {}
+   if saved.get("code_sha256")==code_sha:
+    rows=saved["rows"];checks=saved["checks"];exact=saved["exact"]
+    print("REUSE VERIFIED TRACE",name,start,flush=True)
+   else:
+    st=restored(base,cp);rows,checks,exact,raw=trace(st,cp)
+    np.savez_compressed(OUT/f"{name}_task{start//10000+1}.npz",**{f"{s}_{k}":v for s,vs in raw.items() for k,v in vs.items()})
+    cache.write_text(json.dumps({"code_sha256":code_sha,"rows":rows,"checks":checks,"exact":exact}))
    allrows.extend(rows);allchecks[f"{name}_{start}"]={"max_abs_errors":checks,"free_weights_byte_exact":exact}
-   np.savez_compressed(OUT/f"{name}_task{start//10000+1}.npz",**{f"{s}_{k}":v for s,vs in raw.items() for k,v in vs.items()})
    print("TRACE PASS",name,start,"byte_exact",exact,flush=True)
  writecsv(OUT/"unit_ledger.csv",allrows)
  summary=[]
- for name in NAMES:
+ for name in names:
   for task in [21,101]:
    for updates in sorted(MILESTONES):
     for seed in range(10):
@@ -114,10 +124,10 @@ def main():
       if k not in sr and k not in ["unit"]:sr[k]=float(np.mean([r[k] for r in rr])) if k!="c" else float(np.nanmean([r[k] for r in rr]))
      sr["undefined_c_count"]=int(sum(not np.isfinite(r["c"]) for r in rr));summary.append(sr)
  writecsv(OUT/"seed_ledger.csv",summary)
- (OUT/"verification.json").write_text(json.dumps({"status":"PASS","checks":allchecks,"elapsed_seconds":time.monotonic()-started},indent=2))
+ (OUT/"verification.json").write_text(json.dumps({"status":"PASS","n_arms":len(names),"code_sha256":code_sha,"checks":allchecks,"elapsed_seconds":time.monotonic()-started},indent=2))
  out=["# 自己項からtask侵食角まで：追加解析 0913","","task21/101、各10000更新の自然軌道再生。全unit・10seedの平均。","cND=I_self+I_rest+I_round+K。G=Q-2(I_self+I_rest+I_round)。","大きなself/restが相殺する場合、各項の大きさだけで原因を決めない。","",
  "|arm|task|I_self|I_rest|I_round|K|cND|Q|G|","|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
- for name in NAMES:
+ for name in names:
   for task in [21,101]:
    rr=[r for r in summary if r["arm"]==name and r["task"]==task and r["updates"]==10000]
    out.append(f"|{name}|{task}|"+"|".join(f"{np.mean([r[k] for r in rr]):.7g}" for k in ["I_self","I_rest","I_round","K","cND","Q","G"])+"|")
