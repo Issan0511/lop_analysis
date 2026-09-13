@@ -49,7 +49,7 @@ def main():
           G20=v['A']-v['C20'],deep_update_benefit=deep,lift_update_benefit=lift,R20=lift-deep,
           Grandom=v['A']-v['RC20'],Rrandom=(v['RD20']-v['RC20'])-(v['RB20']-v['A']),
           G5=v['A']-v['C5'],G10=v['A']-v['C10'],
-          update_benefit5=v['D5']-v['C5'],update_benefit10=v['D10']-v['C10'])
+          dose_train_minus_freeze5=v['C5']-v['D5'],dose_train_minus_freeze10=v['C10']-v['D10'])
       out['R_target_minus_random']=out['R20']-out['Rrandom'];out['G_target_minus_random']=out['G20']-out['Grandom'];contrasts.append(out)
     eligible=all(pools[env,T,layer,s]>=5 for s in range(3))
     c=[r for r in contrasts if r['env']==env and r['checkpoint']==T and r['layer']==layer and r['metric']=='first_auc']
@@ -57,9 +57,10 @@ def main():
     elif all(r['R20']>.01 and r['G20']>.01 for r in c):label='DIRECTIONAL_RESCUE_AND_UPDATE_SUPPORT'
     elif all(r['G20']>.01 for r in c):label='RESCUE_WITHOUT_SELECTIVE_UPDATE_SUPPORT'
     else:label='INCONCLUSIVE'
+    if (env,T,layer)!=('RL',20,2):label='SECONDARY_NOT_CLASSIFIED'
     for metric in ['first_auc','all_auc','first_end_ce','all_end_ce','first_end_acc','all_end_acc']:
      cc=[r for r in contrasts if r['env']==env and r['checkpoint']==T and r['layer']==layer and r['metric']==metric]
-     for name in ['R20','G20','deep_update_benefit','lift_update_benefit','Rrandom','Grandom','R_target_minus_random','G_target_minus_random','G5','G10','update_benefit5','update_benefit10']:
+     for name in ['R20','G20','deep_update_benefit','lift_update_benefit','Rrandom','Grandom','R_target_minus_random','G_target_minus_random','G5','G10','dose_train_minus_freeze5','dose_train_minus_freeze10']:
       vv=[next(r[name] for r in cc if r['seed']==s) for s in range(3)]
       mu,sd,lo,hi=interval(vv)
       verdict.append(dict(env=env,checkpoint=T,layer=layer,metric=metric,contrast=name,seed0=vv[0],seed1=vv[1],seed2=vv[2],
@@ -95,6 +96,7 @@ def main():
  'Primary: RL, layer2, checkpoint20, up to20 persistent units, first subsequent task.',
  'R=(D-C)-(B-A); G=A-C, with A deep/train, B deep/frozen, C lifted/train, D lifted/frozen. Positive is restoration/benefit for cost metrics.',
  'CE area is divided by6000; accuracy contrast units are percentage points. Every timepoint is retained including the immediate lift shock.',
+ 'Dose primitive Ck-Dk is reported literally as dose_train_minus_freeze: negative cost means permitting updates helps. It is not a matched depth-by-update interaction.',
  '',
  '|Environment|Checkpoint|Layer|Pool sizes|R mean [95% CI]|G mean [95% CI]|Pilot label|',
  '|---|---:|---:|---|---|---|---|']
