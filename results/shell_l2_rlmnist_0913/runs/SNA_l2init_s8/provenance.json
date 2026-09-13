@@ -1,0 +1,97 @@
+{
+  "run_id": "shell_l2_rlmnist_0913",
+  "git_hash": "b6a333a833aff0d6a52f1b3f0f2c349219f72b2e",
+  "git_dirty_code": false,
+  "argv": [
+    "src/shell_l2_rlmnist_0913.py",
+    "--act",
+    "SNA",
+    "--reg",
+    "l2init:1e-3",
+    "--seeds",
+    "8",
+    "--tasks",
+    "50",
+    "--epochs",
+    "400",
+    "--lr",
+    "0.001",
+    "--c",
+    "0.6",
+    "--beta",
+    "0.01",
+    "--threads",
+    "1",
+    "--out",
+    "results/shell_l2_rlmnist_0913/runs/SNA_l2init_s8"
+  ],
+  "hostname": "claude-shell0913",
+  "platform": "Linux-7.0.0-1011-gcp-x86_64-with-glibc2.39",
+  "python": "3.12.14",
+  "torch": "2.13.0+cpu",
+  "numpy": "2.5.1",
+  "torch_num_threads": 1,
+  "env_threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "act": "SNA",
+  "reg": "l2init",
+  "lam": 0.001,
+  "seeds": [
+    8
+  ],
+  "lr": 0.001,
+  "optimizer": "adam",
+  "n_tasks": 50,
+  "epochs_per_task": 400,
+  "batch": 16,
+  "steps_per_task": 30000,
+  "n_images": 1200,
+  "dims": [
+    784,
+    100,
+    100,
+    10
+  ],
+  "sna_c": 0.6,
+  "sna_beta": 0.01,
+  "shell_eps2": 1e-12,
+  "lam_ref_logged_penalties": 0.001,
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "subset_sha256_sorted": {
+    "8": "1ee16bf2f6c573cd7ae2a544ffb86b9ac7bb8325688f9ded9d9c5ce989470723"
+  },
+  "code_sha256": {
+    "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+  },
+  "device": "cpu",
+  "runs": {
+    "8": {
+      "init_sha256": "2fba432a86da176ae0216e7b48fc9436b4bc44ae84eaf76d494025e420862f71",
+      "subset_idx_sha256": "4b1dc807a1b9f0534881d5388e96d2a6dd959ab986731fd132bbe567646930d4",
+      "labels_sha256": "94fa4d3cfeed52efd603acd4a9edca853e5b1b381e3cd041d141d81a58890071",
+      "batch_sha256": "ddfa951fef4bcfb21852c3d4760acbf2e0682af610af411efe45dd827a5cf276",
+      "final_state_sha256": "078c4fcd3cd7a7b0234ce6a52a19c3d92a4fa331aff1955b8da60cd0b9aab89f",
+      "tasks_completed": 50,
+      "wall_clock_s": 1713.4492778778076,
+      "divergence": {
+        "diverged": false,
+        "task": null,
+        "step": null,
+        "seed": 8,
+        "act": "SNA",
+        "reg": "l2init:1e-3"
+      }
+    }
+  },
+  "wall_clock_s": 1713.744285583496,
+  "divergences": []
+}
