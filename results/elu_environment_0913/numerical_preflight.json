@@ -1,0 +1,20 @@
+{
+  "status": "Initial synthetic numerical probes retained; no MNIST training occurred",
+  "attempts": [
+    {
+      "input": "normal std0.4",
+      "labels": "iid uniform classes",
+      "gradient_maxabs": 2.2351741790771484e-08,
+      "parameter_maxabs": 2.4951063096523285e-05,
+      "passed": false
+    },
+    {
+      "input": "uniform0to1",
+      "labels": "iid uniform classes",
+      "gradient_maxabs": 1.862645149230957e-08,
+      "parameter_maxabs": 4.535354673862457e-05,
+      "passed": false
+    }
+  ],
+  "resolution": "Use uniform0to1 inputs and allclass0 labels for CPU-to-GPU one-step check, avoiding cancellation around zero gradients. All criteria unchanged. Independent gradient correctness remains below tolerance. The preflight does not imply bitwise CPU-GPU training equivalence."
+}
