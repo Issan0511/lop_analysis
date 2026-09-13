@@ -1,6 +1,6 @@
 """Registered fixed-checkpoint local perturbations; scalar MSE loss E[delta^2]."""
 from pathlib import Path
-import argparse,csv,hashlib,itertools,json
+import argparse,ast,csv,hashlib,itertools,json
 import numpy as np
 import torch
 from src.nets import VecMLPL
@@ -134,6 +134,12 @@ def main():
  allchecks={};seedrows=[]
  previous=RESULTS/"mechanism_partial"
  prevchecks=json.loads((previous/"verification.json").read_text()).get("checks",{}) if (previous/"verification.json").exists() and not args.available and not args.check_only else {}
+ if prevchecks:
+  prior=ast.parse((previous/"tested_probe_source.py").read_text());current=ast.parse(Path(__file__).read_text())
+  for name in ["arr","check","checkpoint","root","measure"]:
+   a=next(n for n in prior.body if isinstance(n,ast.FunctionDef) and n.name==name)
+   b=next(n for n in current.body if isinstance(n,ast.FunctionDef) and n.name==name)
+   assert ast.dump(a)==ast.dump(b),f"Cached probe function changed: {name}"
  prevrows=list(csv.DictReader((previous/"seed_summary.csv").open())) if prevchecks else []
  for arm in cfg["arms"]:
   if args.available and not (DATA/"arm_status"/f"{arm['name']}_done.json").exists():continue
