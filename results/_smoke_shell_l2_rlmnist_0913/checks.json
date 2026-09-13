@@ -1,0 +1,1204 @@
+{
+  "run_id": "shell_l2_rlmnist_0913",
+  "started_at": "2026-09-13T11:24:47.559248+00:00",
+  "git_head": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+  "code_sha256": {
+    "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+    "analysis/shell_l2_rlmnist_0913/verdict.py": "9fcf6d8efb4f8d656683df2c7c3388bccae0fe16e472e1fe0313c264ebabbb58",
+    "analysis/shell_l2_rlmnist_0913/checks.py": "64831029f3938869dac85a3ed73457578521f7f49e9bc7d8904b22a2e0ea7f0d"
+  },
+  "torch": "2.13.0+cpu",
+  "threads": 1,
+  "eps32": 1.1920928955078125e-07,
+  "eps64": 2.220446049250313e-16,
+  "S1_S-identical": {
+    "title": "S1 8 arms: bit-identical init, 1200 images, labels, batch orders",
+    "threshold_derivation": "bit equality",
+    "pass": true,
+    "failed_items": [],
+    "per_arm": {
+      "seed0|R|none": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|R|l2:1e-3": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|R|l2init:1e-3": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|R|shell:1e-3": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|SNA|none": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|SNA|l2:1e-3": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|SNA|l2init:1e-3": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|SNA|shell:1e-3": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|distinct_across_8_arms": 1,
+      "seed1|R|none": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|R|l2:1e-3": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|R|l2init:1e-3": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|R|shell:1e-3": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|SNA|none": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|SNA|l2:1e-3": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|SNA|l2init:1e-3": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|SNA|shell:1e-3": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|distinct_across_8_arms": 1
+    },
+    "seeds": [
+      0,
+      1
+    ],
+    "tasks": 3,
+    "epochs": 2,
+    "mutations": [
+      {
+        "mutation": "M1a: shell arm draws one extra batch permutation before task 1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tasks": 3,
+          "epochs": 2,
+          "failed_items": [
+            "seed0|R|shell:1e-3|orders",
+            "seed0|SNA|shell:1e-3|orders",
+            "seed0: 2 distinct stream sets across the 8 arms",
+            "seed1|R|shell:1e-3|orders",
+            "seed1|SNA|shell:1e-3|orders",
+            "seed1: 2 distinct stream sets across the 8 arms"
+          ]
+        }
+      },
+      {
+        "mutation": "M1b: l2 arm's init moved by 1 ulp in one element",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tasks": 3,
+          "epochs": 2,
+          "failed_items": [
+            "seed0|R|l2:1e-3|init",
+            "seed0|SNA|l2:1e-3|init",
+            "seed0: 2 distinct stream sets across the 8 arms",
+            "seed1|R|l2:1e-3|init",
+            "seed1|SNA|l2:1e-3|init",
+            "seed1: 2 distinct stream sets across the 8 arms"
+          ]
+        }
+      },
+      {
+        "mutation": "M1c: SNA arms advance the label stream by one task before task 1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tasks": 3,
+          "epochs": 2,
+          "failed_items": [
+            "seed0|SNA|none|labels",
+            "seed0|SNA|l2:1e-3|labels",
+            "seed0|SNA|l2init:1e-3|labels",
+            "seed0|SNA|shell:1e-3|labels",
+            "seed0: 2 distinct stream sets across the 8 arms",
+            "seed1|SNA|none|labels",
+            "seed1|SNA|l2:1e-3|labels",
+            "seed1|SNA|l2init:1e-3|labels"
+          ]
+        }
+      },
+      {
+        "mutation": "M1d: l2init arm draws its 1200 images from seed+1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tasks": 3,
+          "epochs": 2,
+          "failed_items": [
+            "seed0|R|l2init:1e-3|subset",
+            "seed0|SNA|l2init:1e-3|subset",
+            "seed0: 2 distinct stream sets across the 8 arms",
+            "seed1|R|l2init:1e-3|subset",
+            "seed1|SNA|l2init:1e-3|subset",
+            "seed1: 2 distinct stream sets across the 8 arms"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 43.2
+  },
+  "all_pass": true,
+  "S2_S-shell-zero-init": {
+    "title": "S2 shell penalty and gradient exactly 0 at init",
+    "threshold_derivation": "exact zero (same function, same bits)",
+    "pass": true,
+    "failed_items": [],
+    "per_run": {
+      "R|seed0": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "R|seed1": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "R|seed2": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "R|seed3": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "R|seed4": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "R|seed5": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "R|seed6": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "R|seed7": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "R|seed8": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "R|seed9": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "SNA|seed0": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "SNA|seed1": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "SNA|seed2": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "SNA|seed3": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "SNA|seed4": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "SNA|seed5": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "SNA|seed6": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "SNA|seed7": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "SNA|seed8": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      },
+      "SNA|seed9": {
+        "loss": 0.0,
+        "max_abs_grad": 0.0
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M2: shell anchor (r0) taken from the init of seed+1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R|seed0: loss=7.310e-06 max|g|=3.725e-05",
+            "R|seed1: loss=7.940e-06 max|g|=2.088e-05",
+            "R|seed2: loss=4.046e-06 max|g|=4.383e-05",
+            "R|seed3: loss=1.012e-06 max|g|=2.129e-05",
+            "R|seed4: loss=5.637e-06 max|g|=4.172e-05",
+            "R|seed5: loss=4.868e-06 max|g|=1.548e-05",
+            "R|seed6: loss=2.828e-06 max|g|=3.444e-05",
+            "R|seed7: loss=2.896e-06 max|g|=1.110e-05"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 5.0
+  },
+  "S3_S-shell-grad-parallel": {
+    "title": "S3 raw shell gradient parallel to each tensor, per-tensor coefficient 2*lam",
+    "threshold_derivation": "Parallelism: every gradient element is (upstream scalar) * p_i with k correctly rounded elementwise\n    multiplies (k = 1: p*p backs off as g*p_i twice and the two copies add exactly to 2*g*p_i).  Errors in\n    the scalar are common to all elements and cannot tilt g away from p.  With ratios taken in float64,\n    max/min of g_i/p_i <= (1 + k*eps_d/2)/(1 - k*eps_d/2) -> spread <= k*eps_d*(1 + k*eps_d) + 4*eps64. || Coefficient: a float64 sum of N non-negative terms is within (N+1)/2*eps of its exact value, the norm\n    within half that plus eps; the difference ||p|| - r0 amplifies absolute errors by (n + r0)/|n - r0|; the\n    fsum reference and the scalar ops add a few eps.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "a|seed0|W1": {
+        "spread": 2.7105054312137843e-16,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 5.421010862427571e-16,
+        "tol_coef": 8.704659215652634e-11,
+        "coef": 0.00039999999999999655,
+        "coef_analytic": 0.00039999999999999633
+      },
+      "a|seed0|b1": {
+        "spread": 0.0,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 0.0,
+        "tol_coef": 1.1612932837868105e-13,
+        "coef": -0.0004999999999842064,
+        "coef_analytic": -0.0004999999999842064
+      },
+      "a|seed0|W2": {
+        "spread": 4.3368086899422105e-16,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 0.0,
+        "tol_coef": 1.1107337272165237e-11,
+        "coef": -0.0004999999999999778,
+        "coef_analytic": -0.0004999999999999778
+      },
+      "a|seed0|b2": {
+        "spread": 2.7105054312200133e-16,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 0.0,
+        "tol_coef": 1.1612932837605517e-13,
+        "coef": 0.0003999999999990773,
+        "coef_analytic": 0.0003999999999990773
+      },
+      "a|seed0|W3": {
+        "spread": 2.710505431214361e-16,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 4.0657581468215434e-16,
+        "tol_coef": 1.1153300505386794e-12,
+        "coef": 0.00039999999999991144,
+        "coef_analytic": 0.0003999999999999113
+      },
+      "a|seed0|b3": {
+        "spread": 0.0,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 0.0,
+        "tol_coef": 1.6209256159930895e-14,
+        "coef": -0.0004999999999825221,
+        "coef_analytic": -0.0004999999999825221
+      },
+      "a|seed1|W1": {
+        "spread": 2.7105054312137887e-16,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 0.0,
+        "tol_coef": 8.704659215652643e-11,
+        "coef": 0.0003999999999999959,
+        "coef_analytic": 0.0003999999999999959
+      },
+      "a|seed1|b1": {
+        "spread": 0.0,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 6.50521303511879e-16,
+        "tol_coef": 1.1612932837868502e-13,
+        "coef": -0.0004999999999841851,
+        "coef_analytic": -0.0004999999999841848
+      },
+      "a|seed1|W2": {
+        "spread": 0.0,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 0.0,
+        "tol_coef": 1.1107337272165266e-11,
+        "coef": -0.000499999999999976,
+        "coef_analytic": -0.000499999999999976
+      },
+      "a|seed1|b2": {
+        "spread": 2.7105054312194493e-16,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 0.0,
+        "tol_coef": 1.1612932837603136e-13,
+        "coef": 0.0003999999999991606,
+        "coef_analytic": 0.0003999999999991606
+      },
+      "a|seed1|W3": {
+        "spread": 2.710505431214364e-16,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 6.776263578035915e-16,
+        "tol_coef": 1.1153300505386807e-12,
+        "coef": 0.000399999999999911,
+        "coef_analytic": 0.00039999999999991074
+      },
+      "a|seed1|b3": {
+        "spread": 0.0,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 0.0,
+        "tol_coef": 1.62092561601436e-14,
+        "coef": -0.0004999999999733113,
+        "coef_analytic": -0.0004999999999733113
+      },
+      "a|seed2|W1": {
+        "spread": 2.710505431213787e-16,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 1.084202172485516e-15,
+        "tol_coef": 8.704659215652648e-11,
+        "coef": 0.0003999999999999961,
+        "coef_analytic": 0.0003999999999999957
+      },
+      "a|seed2|b1": {
+        "spread": 0.0,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 0.0,
+        "tol_coef": 1.1612932837907495e-13,
+        "coef": -0.0004999999999820534,
+        "coef_analytic": -0.0004999999999820534
+      },
+      "a|seed2|W2": {
+        "spread": 4.33680868994222e-16,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 1.0842021724855537e-15,
+        "tol_coef": 1.1107337272165245e-11,
+        "coef": -0.0004999999999999767,
+        "coef_analytic": -0.0004999999999999772
+      },
+      "a|seed2|b2": {
+        "spread": 2.710505431218746e-16,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 0.0,
+        "tol_coef": 1.1612932837600168e-13,
+        "coef": 0.00039999999999926433,
+        "coef_analytic": 0.00039999999999926433
+      },
+      "a|seed2|W3": {
+        "spread": 2.710505431214339e-16,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 4.06575814682151e-16,
+        "tol_coef": 1.11533005053867e-12,
+        "coef": 0.00039999999999991475,
+        "coef_analytic": 0.0003999999999999146
+      },
+      "a|seed2|b3": {
+        "spread": 0.0,
+        "tol_par": 1.1102230246251565e-15,
+        "coef_rel_err": 0.0,
+        "tol_coef": 1.6209256160301805e-14,
+        "coef": -0.0004999999999664603,
+        "coef_analytic": -0.0004999999999664603
+      },
+      "b|R|W1": {
+        "spread": 1.1865168950802264e-07,
+        "tol_par": 1.1920930464981438e-07,
+        "coef": 5.4095675292202734e-05
+      },
+      "b|R|b1": {
+        "spread": 9.643670567581604e-08,
+        "tol_par": 1.1920930464981438e-07,
+        "coef": 5.793210223068624e-05
+      },
+      "b|R|W2": {
+        "spread": 1.171698493494424e-07,
+        "tol_par": 1.1920930464981438e-07,
+        "coef": 1.450262425148122e-05
+      },
+      "b|R|b2": {
+        "spread": 1.0495617052919936e-07,
+        "tol_par": 1.1920930464981438e-07,
+        "coef": 1.1719258556835482e-05
+      },
+      "b|R|W3": {
+        "spread": 1.110458143970145e-07,
+        "tol_par": 1.1920930464981438e-07,
+        "coef": 6.956393924462432e-05
+      },
+      "b|R|b3": {
+        "spread": 8.335425337238762e-08,
+        "tol_par": 1.1920930464981438e-07,
+        "coef": -0.00024224464048823837
+      },
+      "b|R|runner_grad_equals_function_grad": true,
+      "b|SNA|W1": {
+        "spread": 1.18566612813162e-07,
+        "tol_par": 1.1920930464981438e-07,
+        "coef": 0.00018857092076071045
+      },
+      "b|SNA|b1": {
+        "spread": 9.893026047964199e-08,
+        "tol_par": 1.1920930464981438e-07,
+        "coef": 0.00016258143419395344
+      },
+      "b|SNA|W2": {
+        "spread": 1.1782639269977617e-07,
+        "tol_par": 1.1920930464981438e-07,
+        "coef": 2.2607531718537326e-05
+      },
+      "b|SNA|b2": {
+        "spread": 9.737839586509827e-08,
+        "tol_par": 1.1920930464981438e-07,
+        "coef": 5.52616230633397e-08
+      },
+      "b|SNA|W3": {
+        "spread": 1.1677981794720837e-07,
+        "tol_par": 1.1920930464981438e-07,
+        "coef": -0.00011035606431565725
+      },
+      "b|SNA|b3": {
+        "spread": 7.338635482265312e-08,
+        "tol_par": 1.1920930464981438e-07,
+        "coef": -0.0001510552686225248
+      },
+      "b|SNA|runner_grad_equals_function_grad": true
+    },
+    "mutations": [
+      {
+        "mutation": "M3a: the loop adds the l2init gradient 2*lam*(p - p0) in place of the shell gradient",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "b|R|W1: not parallel (spread inf > 1.192e-07)",
+            "b|R|b1: not parallel (spread 2.559e+02 > 1.192e-07)",
+            "b|R|W2: not parallel (spread 3.041e+06 > 1.192e-07)",
+            "b|R|b2: not parallel (spread 1.260e+05 > 1.192e-07)",
+            "b|R|W3: not parallel (spread 2.103e+03 > 1.192e-07)",
+            "b|R|b3: not parallel (spread 1.104e+03 > 1.192e-07)",
+            "b|R: the runner's raw shell gradient is not shell_penalty's gradient",
+            "b|SNA|W1: not parallel (spread inf > 1.192e-07)"
+          ]
+        }
+      },
+      {
+        "mutation": "M3a': shell norm taken per row (dim=-1) instead of per tensor",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "a|seed0|W1: not parallel (spread 2.618e-01 > 1.110e-15)",
+            "a|seed0|W1: coefficient rel err 2.019e-03 > 8.705e-11",
+            "a|seed0|W2: not parallel (spread 1.006e+00 > 1.110e-15)",
+            "a|seed0|W2: coefficient rel err 1.072e-02 > 1.111e-11",
+            "a|seed0|W3: not parallel (spread 6.664e-01 > 1.110e-15)",
+            "a|seed0|W3: coefficient rel err 4.890e-02 > 1.115e-12",
+            "a|seed1|W1: not parallel (spread 3.823e-01 > 1.110e-15)",
+            "a|seed1|W1: coefficient rel err 2.152e-03 > 8.705e-11"
+          ]
+        }
+      },
+      {
+        "mutation": "M3b: one norm over all tensors concatenated",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "a|seed0|W1: coefficient rel err 7.187e-01 > 8.705e-11",
+            "a|seed0|b1: coefficient rel err 1.225e+00 > 1.161e-13",
+            "a|seed0|W2: coefficient rel err 1.225e+00 > 1.111e-11",
+            "a|seed0|b2: coefficient rel err 7.187e-01 > 1.161e-13",
+            "a|seed0|W3: coefficient rel err 7.187e-01 > 1.115e-12",
+            "a|seed0|b3: coefficient rel err 1.225e+00 > 1.621e-14",
+            "a|seed1|W1: coefficient rel err 7.052e-01 > 8.705e-11",
+            "a|seed1|b1: coefficient rel err 1.236e+00 > 1.161e-13"
+          ]
+        }
+      },
+      {
+        "mutation": "M3c: penalty in the lam/2 convention",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "a|seed0|W1: coefficient rel err 5.000e-01 > 8.705e-11",
+            "a|seed0|b1: coefficient rel err 5.000e-01 > 1.161e-13",
+            "a|seed0|W2: coefficient rel err 5.000e-01 > 1.111e-11",
+            "a|seed0|b2: coefficient rel err 5.000e-01 > 1.161e-13",
+            "a|seed0|W3: coefficient rel err 5.000e-01 > 1.115e-12",
+            "a|seed0|b3: coefficient rel err 5.000e-01 > 1.621e-14",
+            "a|seed1|W1: coefficient rel err 5.000e-01 > 8.705e-11",
+            "a|seed1|b1: coefficient rel err 5.000e-01 > 1.161e-13"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 4.7
+  },
+  "S4_S-l2-unchanged": {
+    "title": "S4 new runner == untouched 0906 runner for none/l2/l2init",
+    "threshold_derivation": "bit equality",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "blob|src/pmnist_0905.py": true,
+      "blob|src/pmnist_rlmnist_0906.py": true,
+      "R|none": {
+        "weights_equal_each_task": true,
+        "n_task_ends": 3,
+        "metric_columns_compared": 20,
+        "differing_columns": []
+      },
+      "R|l2:1e-3": {
+        "weights_equal_each_task": true,
+        "n_task_ends": 3,
+        "metric_columns_compared": 20,
+        "differing_columns": []
+      },
+      "R|l2init:1e-3": {
+        "weights_equal_each_task": true,
+        "n_task_ends": 3,
+        "metric_columns_compared": 20,
+        "differing_columns": []
+      },
+      "SNA|none": {
+        "weights_equal_each_task": true,
+        "n_task_ends": 3,
+        "metric_columns_compared": 30,
+        "differing_columns": []
+      },
+      "SNA|l2:1e-3": {
+        "weights_equal_each_task": true,
+        "n_task_ends": 3,
+        "metric_columns_compared": 30,
+        "differing_columns": []
+      },
+      "SNA|l2init:1e-3": {
+        "weights_equal_each_task": true,
+        "n_task_ends": 3,
+        "metric_columns_compared": 30,
+        "differing_columns": []
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M4a: l2/l2init gradient coefficient 2.0 -> 1.0 in the new runner",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R|l2:1e-3: weights_equal=False differing=['acc', 'dead_frac_l1', 'dead_frac_l2', 'eff_rank_l1', 'eff_rank_l2']",
+            "R|l2init:1e-3: weights_equal=False differing=['acc', 'dead_frac_l1', 'dead_frac_l2', 'eff_rank_l1', 'eff_rank_l2']",
+            "SNA|l2:1e-3: weights_equal=False differing=['acc', 'alpha_clip_frac_l1', 'alpha_clip_frac_l2', 'alpha_max_l1', 'alpha_max_l2']",
+            "SNA|l2init:1e-3: weights_equal=False differing=['acc', 'alpha_clip_frac_l2', 'alpha_max_l1', 'alpha_max_l2', 'alpha_med_l1']"
+          ]
+        }
+      },
+      {
+        "mutation": "M4b: l2init anchor p0 aliases the live weights (detach without clone)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R|l2init:1e-3: weights_equal=False differing=['acc', 'dead_frac_l1', 'dead_frac_l2', 'eff_rank_l1', 'eff_rank_l2']",
+            "SNA|l2init:1e-3: weights_equal=False differing=['acc', 'alpha_clip_frac_l2', 'alpha_max_l1', 'alpha_max_l2', 'alpha_med_l1']"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 25.7
+  },
+  "S5_S-repro": {
+    "title": "S5 S-repro: same arm/seed twice in separate processes -> identical CSVs and state",
+    "threshold_derivation": "byte/bit equality (determinism claim)",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "R": {
+        "per_task.csv": true,
+        "layer_metrics.csv": true,
+        "final_state_sha256": true,
+        "per_task_sha256": "3ef2138397330fc2",
+        "state_sha256": "c392a241a7810834"
+      },
+      "SNA": {
+        "per_task.csv": true,
+        "layer_metrics.csv": true,
+        "final_state_sha256": true,
+        "per_task_sha256": "84838200ac922526",
+        "state_sha256": "06063555eaa9f532"
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M5: batch stream seeded from time.time_ns()",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R|per_task.csv",
+            "R|layer_metrics.csv",
+            "R|final_state_sha256",
+            "SNA|per_task.csv",
+            "SNA|layer_metrics.csv",
+            "SNA|final_state_sha256"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 27.4
+  },
+  "S6_S-zero0-rule": {
+    "title": "S6 p0 == 0 tensors: lam*||p||^2, finite at p = 0",
+    "threshold_derivation": "A tensor whose anchor is identically 0: the term is lam*sum p^2 (value within (N+2)*eps64 relative:\n    one fsum-vs-torch sum), its gradient is 2*lam*p (parallel within tol_par(eps64), coefficient within the\n    same bound since no sum enters the gradient), and value and gradients stay finite at p = 0 -- for the\n    zero-anchor tensor and for a non-zero-anchor tensor -- in float64 and float32.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "zero_flags": [
+        true,
+        false
+      ],
+      "value_rel_err": 0.0,
+      "tol_value": 2.2248869413488137e-13,
+      "grad_spread": 0.0,
+      "grad_coef_rel_err": 0.0,
+      "tol_par": 1.1102230246251565e-15,
+      "finite_at_p0_float64": true,
+      "finite_at_p0_float32": true
+    },
+    "mutations": [
+      {
+        "mutation": "M6a: the p0 == 0 term is dropped (T = 0)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "zero-anchor value rel err 1.000e+00 > 2.225e-13",
+            "zero-anchor gradient not 2*lam*p (spread inf, coef err 1.000e+00)"
+          ]
+        }
+      },
+      {
+        "mutation": "M6b: eps^2 = 0 (sqrt backward is 0/0 at p = 0)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "non-finite value or gradient at p = 0 (torch.float64)",
+            "non-finite value or gradient at p = 0 (torch.float32)"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.0
+  },
+  "S7_S-eps-inert": {
+    "title": "S7 eps^2 changes no bit of the init norms",
+    "threshold_derivation": "float32 sqrt(S + eps^2) is bit-identical to sqrt(S) for all 6 init tensors of seeds 0-9.\n    Threshold: bit equality (spec 2.3: guaranteed for S > eps^2 * 2**25; min S at init is 0.021).",
+    "pass": true,
+    "failed_items": [],
+    "n_tensors": 60,
+    "min_sum_sq_at_init": 0.020964160561561584,
+    "inert_above": 3.3554432e-05,
+    "mutations": [
+      {
+        "mutation": "M7: eps^2 = 1e-4",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_tensors": 60,
+          "min_sum_sq_at_init": 0.020964160561561584,
+          "inert_above": 3.3554432e-05,
+          "failed_items": [
+            "seed0|W1",
+            "seed0|b1",
+            "seed0|W2",
+            "seed0|b2",
+            "seed0|W3",
+            "seed0|b3",
+            "seed1|W1",
+            "seed1|b1"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.0
+  },
+  "S8_S-shell-wiring": {
+    "title": "S8 hand replay of the shell update == runner",
+    "threshold_derivation": "bit equality",
+    "pass": true,
+    "failed_items": [],
+    "replay_bit_identical": true,
+    "differs_from_none": true,
+    "steps": 75,
+    "mutations": [
+      {
+        "mutation": "M8a: the runner does not add the shell gradient",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "replay_bit_identical": false,
+          "differs_from_none": false,
+          "steps": 75,
+          "failed_items": [
+            "hand replay of the shell update != runner weights",
+            "shell arm weights == none arm weights (regulariser had no effect)"
+          ]
+        }
+      },
+      {
+        "mutation": "M8b: the runner subtracts the shell gradient",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "replay_bit_identical": false,
+          "differs_from_none": true,
+          "steps": 75,
+          "failed_items": [
+            "hand replay of the shell update != runner weights"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.9
+  },
+  "S9_S-log": {
+    "title": "S9 logged norms / cos / penalties == independent recomputation",
+    "threshold_derivation": "Independent numpy / math.fsum recomputation and the per-quantity rounding tolerance of two float64\n    routes (torch sums vs fsum): a sum of N same-sign terms is within N*eps relative; the dot product can\n    cancel, so its absolute bound uses sum|a*b|; pen_shell and pen_angular contain differences, so their\n    bounds are absolute.",
+    "pass": true,
+    "failed_items": [],
+    "worst_err_over_tol": {
+      "none|sq_norm": 0.028374766152057748,
+      "none|norm": 0.0005354485653350306,
+      "none|norm0": 8.854113633503528e-06,
+      "none|norm_ratio": 0.0004834593178229422,
+      "none|cos_w0": 0.0016559120299903024,
+      "none|dist_w0": 0.034046524657763776,
+      "none|pen_l2": 0.007042450111541388,
+      "none|pen_l2init": 0.04075192410720879,
+      "none|pen_shell": 0.0002698170557634816,
+      "none|pen_angular": 0.0015314354988531416,
+      "none|reg_loss": 0.0,
+      "l2:1e-3|sq_norm": 0.005115884549883998,
+      "l2:1e-3|norm": 0.0006559714956304878,
+      "l2:1e-3|norm0": 8.854113633503528e-06,
+      "l2:1e-3|norm_ratio": 0.00029614005183707865,
+      "l2:1e-3|cos_w0": 0.0003622006873147897,
+      "l2:1e-3|dist_w0": 0.007939873411123581,
+      "l2:1e-3|pen_l2": 0.004995981005746091,
+      "l2:1e-3|pen_l2init": 0.006648917672601622,
+      "l2:1e-3|pen_shell": 0.00027973249243901875,
+      "l2:1e-3|pen_angular": 0.0003639088312877271,
+      "l2:1e-3|reg_loss": 0.004995981005746091,
+      "l2init:1e-3|sq_norm": 0.054915768989567744,
+      "l2init:1e-3|norm": 0.03905685634415541,
+      "l2init:1e-3|norm0": 8.854113633503528e-06,
+      "l2init:1e-3|norm_ratio": 0.03133489618637603,
+      "l2init:1e-3|cos_w0": 0.009479260325725977,
+      "l2init:1e-3|dist_w0": 0.007114892850964308,
+      "l2init:1e-3|pen_l2": 0.053628680653874744,
+      "l2init:1e-3|pen_l2init": 0.005339007451480396,
+      "l2init:1e-3|pen_shell": 0.01820603794235787,
+      "l2init:1e-3|pen_angular": 0.008231205363739915,
+      "l2init:1e-3|reg_loss": 0.005339007451480396,
+      "shell:1e-3|sq_norm": 0.006137833678587509,
+      "shell:1e-3|norm": 8.854113633503528e-06,
+      "shell:1e-3|norm0": 8.854113633503528e-06,
+      "shell:1e-3|norm_ratio": 0.0,
+      "shell:1e-3|cos_w0": 0.0003306878306878306,
+      "shell:1e-3|dist_w0": 0.0007393601641045364,
+      "shell:1e-3|pen_l2": 0.005993978201745614,
+      "shell:1e-3|pen_l2init": 0.008181758595745792,
+      "shell:1e-3|pen_shell": 4.426667671962692e-06,
+      "shell:1e-3|pen_angular": 0.00032981530343007914,
+      "shell:1e-3|reg_loss": 4.426667671962692e-06
+    },
+    "mutations": [
+      {
+        "mutation": "M9a: norm_ratio logged as ||p0||/||p||",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "none|task1|W1|norm_ratio: |0.90916342354 - 1.09991226451| > 3.830e-11",
+            "none|task1|b1|norm_ratio: |0.969568777255 - 1.03138634768| > 4.947e-14",
+            "none|task1|W2|norm_ratio: |0.98124892437 - 1.01910939739| > 4.529e-12",
+            "none|task1|b2|norm_ratio: |0.986115991643 - 1.01407948809| > 4.864e-14",
+            "none|task1|W3|norm_ratio: |0.974653984731 - 1.026005142| > 4.593e-13",
+            "none|task1|b3|norm_ratio: |1.02372718389 - 0.976822747049| > 7.808e-15",
+            "none|task2|W1|norm_ratio: |0.85025868133 - 1.17611266072| > 4.095e-11",
+            "none|task2|b1|norm_ratio: |0.942326133618 - 1.06120372165| > 5.090e-14"
+          ]
+        }
+      },
+      {
+        "mutation": "M9b: pen_l2init logged with lam/2",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "none|task1|W1|pen_l2init: |0.00330817351473 - 0.00661634702946| > 1.152e-13",
+            "none|task1|b1|pen_l2init: |3.32573685788e-06 - 6.65147371575e-06| > 1.595e-19",
+            "none|task1|W2|pen_l2init: |0.000541879709178 - 0.00108375941836| > 2.408e-15",
+            "none|task1|b2|pen_l2init: |4.98744604566e-06 - 9.97489209131e-06| > 2.392e-19",
+            "none|task1|W3|pen_l2init: |8.9999869708e-05 - 0.000179999739416| > 4.029e-17",
+            "none|task1|b3|pen_l2init: |3.74254957843e-07 - 7.48509915685e-07| > 2.992e-21",
+            "none|task2|W1|pen_l2init: |0.0061478940012 - 0.0122957880024| > 2.141e-13",
+            "none|task2|b1|pen_l2init: |4.23877755836e-06 - 8.47755511671e-06| > 2.033e-19"
+          ]
+        }
+      },
+      {
+        "mutation": "M9c: b2 is logged against the neighbouring tensor's anchor (b1's p0)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "none|task0|b2|norm0: |0.210997272722 - 0.558694325563| > 1.340e-14",
+            "none|task0|b2|norm_ratio: |2.64787463059 - 1| > 4.796e-14",
+            "none|task0|b2|cos_w0: |-0.0943886682442 - 1| > 7.194e-14",
+            "none|task0|b2|dist_w0: |0.615558960052 - 0| > 0.000e+00",
+            "none|task0|b2|pen_l2init: |0.000378912833301 - 0| > 0.000e+00",
+            "none|task0|b2|pen_shell: |0.000120893240554 - 0| > 7.180e-31",
+            "none|task0|b2|pen_angular: |0.000258019592746 - 0| > 4.602e-17",
+            "none|task1|b2|norm0: |0.210997272722 - 0.558694325563| > 1.340e-14"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 6.1
+  },
+  "S10_S-verdict-synthetic": {
+    "title": "S10 verdict script returns the known label on synthetic shards",
+    "threshold_derivation": "equality of label and reason code",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "A|R": {
+        "want": [
+          "A",
+          ""
+        ],
+        "got": [
+          "A",
+          ""
+        ],
+        "d2_ci95": [
+          -0.0022900000000000255,
+          -0.0017300000000000982
+        ]
+      },
+      "A|SNA": {
+        "want": [
+          "A",
+          ""
+        ],
+        "got": [
+          "A",
+          ""
+        ],
+        "d2_ci95": [
+          -0.0022899999999999253,
+          -0.0017400000000000527
+        ]
+      },
+      "B|R": {
+        "want": [
+          "B",
+          ""
+        ],
+        "got": [
+          "B",
+          ""
+        ],
+        "d2_ci95": [
+          -0.012290000000000167,
+          -0.011730000000000018
+        ]
+      },
+      "B|SNA": {
+        "want": [
+          "B",
+          ""
+        ],
+        "got": [
+          "B",
+          ""
+        ],
+        "d2_ci95": [
+          -0.012290000000000089,
+          -0.011739999999999928
+        ]
+      },
+      "C|R": {
+        "want": [
+          "C",
+          ""
+        ],
+        "got": [
+          "C",
+          ""
+        ],
+        "d2_ci95": [
+          0.011709999999999877,
+          0.012269999999999937
+        ]
+      },
+      "C|SNA": {
+        "want": [
+          "C",
+          ""
+        ],
+        "got": [
+          "C",
+          ""
+        ],
+        "d2_ci95": [
+          0.01171000000000002,
+          0.012260000000000038
+        ]
+      },
+      "D_NORM_MATCH_FAIL|R": {
+        "want": [
+          "D",
+          "NORM_MATCH_FAIL"
+        ],
+        "got": [
+          "D",
+          "NORM_MATCH_FAIL"
+        ],
+        "d2_ci95": [
+          -0.0022900000000000255,
+          -0.0017300000000000982
+        ]
+      },
+      "D_NORM_MATCH_FAIL|SNA": {
+        "want": [
+          "D",
+          "NORM_MATCH_FAIL"
+        ],
+        "got": [
+          "D",
+          "NORM_MATCH_FAIL"
+        ],
+        "d2_ci95": [
+          -0.0022899999999999253,
+          -0.0017400000000000527
+        ]
+      },
+      "D_CI_AMBIGUOUS|R": {
+        "want": [
+          "D",
+          "CI_AMBIGUOUS"
+        ],
+        "got": [
+          "D",
+          "CI_AMBIGUOUS"
+        ],
+        "d2_ci95": [
+          -0.005719999999999959,
+          -0.0042799999999999835
+        ]
+      },
+      "D_CI_AMBIGUOUS|SNA": {
+        "want": [
+          "D",
+          "CI_AMBIGUOUS"
+        ],
+        "got": [
+          "D",
+          "CI_AMBIGUOUS"
+        ],
+        "d2_ci95": [
+          -0.005719999999999959,
+          -0.0042799999999999835
+        ]
+      },
+      "D_EQUIV_GAIN_UNRESOLVED|R": {
+        "want": [
+          "D",
+          "EQUIV_GAIN_UNRESOLVED"
+        ],
+        "got": [
+          "D",
+          "EQUIV_GAIN_UNRESOLVED"
+        ],
+        "d2_ci95": [
+          -0.0007900000000000019,
+          -0.00023000000000005237
+        ]
+      },
+      "D_EQUIV_GAIN_UNRESOLVED|SNA": {
+        "want": [
+          "D",
+          "EQUIV_GAIN_UNRESOLVED"
+        ],
+        "got": [
+          "D",
+          "EQUIV_GAIN_UNRESOLVED"
+        ],
+        "d2_ci95": [
+          -0.000789999999999913,
+          -0.00023999999999998466
+        ]
+      },
+      "D_INCOMPLETE|R": {
+        "want": [
+          "D",
+          "INCOMPLETE"
+        ],
+        "got": [
+          "D",
+          "INCOMPLETE"
+        ],
+        "d2_ci95": [
+          -0.0023333333333333977,
+          -0.0017111111111113297
+        ]
+      },
+      "D_INCOMPLETE|SNA": {
+        "want": [
+          "D",
+          "INCOMPLETE"
+        ],
+        "got": [
+          "D",
+          "INCOMPLETE"
+        ],
+        "d2_ci95": [
+          -0.0023333333333332863,
+          -0.0017111111111112558
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M10a: window shifted to tasks 30-49",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "A|R: got ('B', '') want ('A', '')",
+            "A|SNA: got ('B', '') want ('A', '')",
+            "C|R: got ('B', '') want ('C', '')",
+            "C|SNA: got ('B', '') want ('C', '')",
+            "D_CI_AMBIGUOUS|R: got ('B', '') want ('D', 'CI_AMBIGUOUS')",
+            "D_CI_AMBIGUOUS|SNA: got ('B', '') want ('D', 'CI_AMBIGUOUS')",
+            "D_EQUIV_GAIN_UNRESOLVED|R: got ('B', '') want ('D', 'EQUIV_GAIN_UNRESOLVED')",
+            "D_EQUIV_GAIN_UNRESOLVED|SNA: got ('B', '') want ('D', 'EQUIV_GAIN_UNRESOLVED')"
+          ]
+        }
+      },
+      {
+        "mutation": "M10b: d2 taken as l2init - shell",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "B|R: got ('C', '') want ('B', '')",
+            "B|SNA: got ('C', '') want ('B', '')",
+            "C|R: got ('B', '') want ('C', '')",
+            "C|SNA: got ('B', '') want ('C', '')"
+          ]
+        }
+      },
+      {
+        "mutation": "M10c: norm-match guard judged on the biases",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "A|R: got ('D', 'NORM_MATCH_FAIL') want ('A', '')",
+            "A|SNA: got ('D', 'NORM_MATCH_FAIL') want ('A', '')",
+            "D_NORM_MATCH_FAIL|R: got ('A', '') want ('D', 'NORM_MATCH_FAIL')",
+            "D_NORM_MATCH_FAIL|SNA: got ('A', '') want ('D', 'NORM_MATCH_FAIL')"
+          ]
+        }
+      },
+      {
+        "mutation": "M10d: equivalence band 0.05",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "A|R: got ('D', 'EQUIV_GAIN_UNRESOLVED') want ('A', '')",
+            "A|SNA: got ('D', 'EQUIV_GAIN_UNRESOLVED') want ('A', '')",
+            "B|R: got ('D', 'EQUIV_GAIN_UNRESOLVED') want ('B', '')",
+            "B|SNA: got ('D', 'EQUIV_GAIN_UNRESOLVED') want ('B', '')",
+            "C|R: got ('D', 'EQUIV_GAIN_UNRESOLVED') want ('C', '')",
+            "C|SNA: got ('D', 'EQUIV_GAIN_UNRESOLVED') want ('C', '')",
+            "D_CI_AMBIGUOUS|R: got ('D', 'EQUIV_GAIN_UNRESOLVED') want ('D', 'CI_AMBIGUOUS')",
+            "D_CI_AMBIGUOUS|SNA: got ('D', 'EQUIV_GAIN_UNRESOLVED') want ('D', 'CI_AMBIGUOUS')"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 18.6
+  }
+}
