@@ -323,6 +323,22 @@ class VecMLPL:
     ACTIVATIONS = ACTIVATIONS + ACT_OFFSET_ACTIVATIONS
     WEIRD_SLOPE_ACTIVATIONS = WEIRD_SLOPE_ACTIVATIONS + tuple(LEAKY_OFFSET)
     ZERO_CURVATURE_ACTIVATIONS = ZERO_CURVATURE_ACTIVATIONS + tuple(LEAKY_OFFSET)
+    # 折れ目を幅 s で滑らかにした leaky [smooth_kink_0907 §2]。
+    #   φ = a z + (1-a) s softplus(z/s) / φ' = a + (1-a) σ(z/s) / φ'' = (1-a) σ(1-σ)/s
+    #   s→0 で leaky に一致（|φ - leaky| ≤ (1-a) s log2）。act_alpha は傾き a で、
+    #   [0,1] ガードは WEIRD_SLOPE_ACTIVATIONS で leaky と共有する。**φ'' は 0 でない**
+    #   ので ZERO_CURVATURE_ACTIVATIONS には入れない（act_curv に分岐を書く）。
+    #   名前と幅は明示 dict（SNAKE_AMP / LEAKY_OFFSET と同じ流儀）。config の
+    #   `smooth` と S-const で突き合わせる。既存の名前・式・タプルは書き換えない。
+    SMOOTH_LEAKY = {"smleaky_s0p01": 0.01, "smleaky_s0p03": 0.03,
+                    "smleaky_s0p1": 0.1, "smleaky_s0p3": 0.3,
+                    "smleaky_s1": 1.0,
+                    # 追補 1: a=0.5・s=2（s/W = 1.3）で支持の幅を跨ぐ点を取る。
+                    # a=0.1 の s=3 は 30k 前検査で 10/10 発散（λ ≈ 700 > 2/lr = 200）。
+                    "smleaky_s2": 2.0,
+                    "smleaky_s3": 3.0}
+    ACTIVATIONS = ACTIVATIONS + tuple(SMOOTH_LEAKY)
+    WEIRD_SLOPE_ACTIVATIONS = WEIRD_SLOPE_ACTIVATIONS + tuple(SMOOTH_LEAKY)
 
     def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
                  act_grad_form="alpha_exp", wd_b=0.0):
@@ -540,6 +556,17 @@ class VecMLPL:
             # ELU の式（末尾の fallthrough と同一）に定数 c を足す。
             return (torch.where(pre > 0, pre, self.act_alpha * torch.expm1(pre))
                     + self.ELU_OFFSET[self.act])
+        if self.act in self.SMOOTH_LEAKY:
+            # φ = a z + (1-a) s softplus(z/s) を **leaky + 隆起**の形で書く
+            # [smooth_kink_0907 §2]: s·softplus(z/s) = max(z,0) + s·log1p(e^{-|z|/s})
+            # なので φ = leaky_relu(z; a) + (1-a)·s·log1p(e^{-|z|/s})。この形なら
+            #   * 隆起は常に ≥ 0（|z| ≫ s で exp が 0 に落ち、加算が恒等になる）
+            #   * F.softplus の threshold(=20) が入れる ~s·e^{-20} の段差が無い
+            #     （段差があると φ' と中心差分が 1e-5 ずれる・S-fd が落ちる）
+            w = self.SMOOTH_LEAKY[self.act]
+            return (torch.where(pre > 0, pre, self.act_alpha * pre)
+                    + (1.0 - self.act_alpha) * w
+                    * torch.log1p(torch.exp(-pre.abs() / w)))
         # expm1 keeps the small-|z| negative branch accurate; the positive
         # branch of `where` is selected before any overflow of expm1 matters.
         return torch.where(pre > 0, pre, self.act_alpha * torch.expm1(pre))
@@ -693,6 +720,11 @@ class VecMLPL:
             # ELU の alpha_exp 形と同一の式（activation_plus_alpha は φ+c を見るので使わない）。
             return torch.where(pre > 0, torch.ones_like(pre),
                                self.act_alpha * torch.exp(pre))
+        if self.act in self.SMOOTH_LEAKY:
+            # φ' = a + (1-a) σ(z/s) [smooth_kink_0907 §2]。a から 1 へ幅 s で渡る。
+            w = self.SMOOTH_LEAKY[self.act]
+            return (self.act_alpha
+                    + (1.0 - self.act_alpha) * torch.sigmoid(pre / w))
         if self.act_grad_form == "activation_plus_alpha":
             return torch.where(pre > 0, torch.ones_like(a), a + self.act_alpha)
         return torch.where(pre > 0, torch.ones_like(pre),
@@ -735,6 +767,11 @@ class VecMLPL:
             # φ″ は elu と同一 [act_offset_0906 §3]（leaky_off_* は ZERO_CURVATURE で 0）。
             return torch.where(pre > 0, torch.zeros_like(pre),
                                self.act_alpha * torch.exp(pre))
+        if self.act in self.SMOOTH_LEAKY:
+            # φ″ = (1-a) σ(z/s)(1-σ(z/s)) / s [smooth_kink_0907 §2]。s→0 でデルタに寄る。
+            w = self.SMOOTH_LEAKY[self.act]
+            sig = torch.sigmoid(pre / w)
+            return (1.0 - self.act_alpha) * sig * (1.0 - sig) / w
         raise NotImplementedError(f"act_curv is not registered for {self.act!r}")
 
     def params(self):

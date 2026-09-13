@@ -1,0 +1,926 @@
+{
+ "experiment": "boundary_dense_0907",
+ "steps": 30000,
+ "config": "/home/i_nakatsuka/Projects/lop_analysis/.claude/worktrees/act_offset_0906/configs/boundary_dense_0907.yaml",
+ "git_head": "c6c13a76f551ed6c67d8db13d86112b615a7bdc9",
+ "runs": [
+  {
+   "status": "COMPLETE",
+   "elapsed_sec": 4.826152324676514,
+   "n_probes": 16,
+   "arm": "BDref_1216",
+   "total_steps": 30000,
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "wall_sec": 4.871786594390869,
+   "hook": null,
+   "git_head": "c6c13a76f551ed6c67d8db13d86112b615a7bdc9",
+   "grid": {
+    "window": [
+     20000,
+     20000
+    ],
+    "offsets": [
+     1,
+     2,
+     5,
+     10,
+     20,
+     50,
+     100,
+     200,
+     500,
+     1000,
+     2000,
+     5000
+    ]
+   }
+  },
+  {
+   "status": "COMPLETE",
+   "elapsed_sec": 4.870040655136108,
+   "n_probes": 16,
+   "arm": "BDa0p5_1216",
+   "total_steps": 30000,
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "wall_sec": 4.914863348007202,
+   "hook": null,
+   "git_head": "c6c13a76f551ed6c67d8db13d86112b615a7bdc9",
+   "grid": {
+    "window": [
+     20000,
+     20000
+    ],
+    "offsets": [
+     1,
+     2,
+     5,
+     10,
+     20,
+     50,
+     100,
+     200,
+     500,
+     1000,
+     2000,
+     5000
+    ]
+   }
+  },
+  {
+   "status": "COMPLETE",
+   "elapsed_sec": 4.994232177734375,
+   "n_probes": 16,
+   "arm": "BDoffm0p5_1216",
+   "total_steps": 30000,
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "wall_sec": 5.037335634231567,
+   "hook": null,
+   "git_head": "c6c13a76f551ed6c67d8db13d86112b615a7bdc9",
+   "grid": {
+    "window": [
+     20000,
+     20000
+    ],
+    "offsets": [
+     1,
+     2,
+     5,
+     10,
+     20,
+     50,
+     100,
+     200,
+     500,
+     1000,
+     2000,
+     5000
+    ]
+   }
+  },
+  {
+   "status": "COMPLETE",
+   "elapsed_sec": 4.96181583404541,
+   "n_probes": 16,
+   "arm": "BDvf1_1216",
+   "total_steps": 30000,
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "wall_sec": 5.002881288528442,
+   "hook": {
+    "type": "v_freeze",
+    "value": 1.0
+   },
+   "git_head": "c6c13a76f551ed6c67d8db13d86112b615a7bdc9",
+   "grid": {
+    "window": [
+     20000,
+     20000
+    ],
+    "offsets": [
+     1,
+     2,
+     5,
+     10,
+     20,
+     50,
+     100,
+     200,
+     500,
+     1000,
+     2000,
+     5000
+    ]
+   }
+  },
+  {
+   "status": "COMPLETE",
+   "elapsed_sec": 20.849552631378174,
+   "n_probes": 16,
+   "arm": "BDFB_1216",
+   "total_steps": 30000,
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "wall_sec": 20.890771627426147,
+   "hook": {
+    "type": "full_batch",
+    "value": 1.0
+   },
+   "git_head": "c6c13a76f551ed6c67d8db13d86112b615a7bdc9",
+   "grid": {
+    "window": [
+     20000,
+     20000
+    ],
+    "offsets": [
+     1,
+     2,
+     5,
+     10,
+     20,
+     50,
+     100,
+     200,
+     500,
+     1000,
+     2000,
+     5000
+    ]
+   }
+  }
+ ],
+ "checks": [
+  {
+   "check": "short_run",
+   "diverged": false,
+   "arm": "BDref_1216",
+   "pass_": true,
+   "raw_pass": false,
+   "grid_dependent_nan": [
+    "layer1_dzbar"
+   ],
+   "finite_lr": {
+    "pass_": false,
+    "arm": "BDref_1216",
+    "rows": [
+     {
+      "seed": 0,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 1,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 2,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 3,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 4,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 5,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 6,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 7,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 8,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 9,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     }
+    ]
+   }
+  },
+  {
+   "check": "short_run",
+   "diverged": false,
+   "arm": "BDa0p5_1216",
+   "pass_": true,
+   "raw_pass": false,
+   "grid_dependent_nan": [
+    "layer1_dzbar"
+   ],
+   "finite_lr": {
+    "pass_": false,
+    "arm": "BDa0p5_1216",
+    "rows": [
+     {
+      "seed": 0,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 1,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 2,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 3,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 4,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 5,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 6,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 7,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 8,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 9,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     }
+    ]
+   }
+  },
+  {
+   "check": "short_run",
+   "diverged": false,
+   "arm": "BDoffm0p5_1216",
+   "pass_": true,
+   "raw_pass": false,
+   "grid_dependent_nan": [
+    "layer1_dzbar"
+   ],
+   "finite_lr": {
+    "pass_": false,
+    "arm": "BDoffm0p5_1216",
+    "rows": [
+     {
+      "seed": 0,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 1,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 2,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 3,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 4,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 5,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 6,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 7,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 8,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 9,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     }
+    ]
+   }
+  },
+  {
+   "check": "short_run",
+   "diverged": false,
+   "arm": "BDvf1_1216",
+   "pass_": true,
+   "raw_pass": false,
+   "grid_dependent_nan": [
+    "layer1_dzbar"
+   ],
+   "finite_lr": {
+    "pass_": false,
+    "arm": "BDvf1_1216",
+    "rows": [
+     {
+      "seed": 0,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 1,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 2,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 3,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 4,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 5,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 6,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 7,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 8,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 9,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     }
+    ]
+   }
+  },
+  {
+   "check": "short_run",
+   "diverged": false,
+   "arm": "BDFB_1216",
+   "pass_": true,
+   "raw_pass": false,
+   "grid_dependent_nan": [
+    "layer1_dzbar"
+   ],
+   "finite_lr": {
+    "pass_": false,
+    "arm": "BDFB_1216",
+    "rows": [
+     {
+      "seed": 0,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 1,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 2,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 3,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 4,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 5,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 6,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 7,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 8,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     },
+     {
+      "seed": 9,
+      "nonfinite": [
+       "layer1_dzbar"
+      ],
+      "missing": [],
+      "lr_used": 0.01,
+      "last_step": 30000,
+      "ok": false
+     }
+    ]
+   }
+  },
+  {
+   "check": "S-grid",
+   "pass_": true,
+   "arm": "BDref_1216",
+   "n_probes": 16,
+   "n_dense": 12,
+   "want_head": [
+    0,
+    10000,
+    20000,
+    20001,
+    20002,
+    20005,
+    20010,
+    20020
+   ]
+  },
+  {
+   "check": "S-col",
+   "pass_": true,
+   "has_b": true,
+   "missing": [],
+   "b_shape": [
+    16,
+    100
+   ]
+  },
+  {
+   "pass_": true,
+   "arm": "BDref_1216",
+   "other": "LRoff0_1216",
+   "rows": [
+    {
+     "seed": 0,
+     "state_hash_equal": true,
+     "n_shared": 7,
+     "mismatched": [],
+     "n_mismatched": 0
+    },
+    {
+     "seed": 1,
+     "state_hash_equal": true,
+     "n_shared": 7,
+     "mismatched": [],
+     "n_mismatched": 0
+    },
+    {
+     "seed": 2,
+     "state_hash_equal": true,
+     "n_shared": 7,
+     "mismatched": [],
+     "n_mismatched": 0
+    },
+    {
+     "seed": 3,
+     "state_hash_equal": true,
+     "n_shared": 7,
+     "mismatched": [],
+     "n_mismatched": 0
+    },
+    {
+     "seed": 4,
+     "state_hash_equal": true,
+     "n_shared": 7,
+     "mismatched": [],
+     "n_mismatched": 0
+    },
+    {
+     "seed": 5,
+     "state_hash_equal": true,
+     "n_shared": 7,
+     "mismatched": [],
+     "n_mismatched": 0
+    },
+    {
+     "seed": 6,
+     "state_hash_equal": true,
+     "n_shared": 7,
+     "mismatched": [],
+     "n_mismatched": 0
+    },
+    {
+     "seed": 7,
+     "state_hash_equal": true,
+     "n_shared": 7,
+     "mismatched": [],
+     "n_mismatched": 0
+    },
+    {
+     "seed": 8,
+     "state_hash_equal": true,
+     "n_shared": 7,
+     "mismatched": [],
+     "n_mismatched": 0
+    },
+    {
+     "seed": 9,
+     "state_hash_equal": true,
+     "n_shared": 7,
+     "mismatched": [],
+     "n_mismatched": 0
+    }
+   ],
+   "n_mismatched_total": 0,
+   "state_hash_all_equal": true,
+   "check": "S-null"
+  },
+  {
+   "check": "S-null-mutant",
+   "arm": "BDa0p5_1216",
+   "pass_": true,
+   "n_mismatched_total": 393,
+   "state_hash_all_equal": false
+  }
+ ],
+ "diverged_arms": [],
+ "expected_divergent": [],
+ "unexpected_failures": [],
+ "missing_expected_divergence": [],
+ "all_checks_pass": true,
+ "pass_": true
+}
