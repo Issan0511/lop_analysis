@@ -160,6 +160,7 @@ th{font-weight:600;color:var(--muted);font-size:12px}
 th:nth-child(-n+3),td:nth-child(-n+3){text-align:left}
 tr:last-child td{border-bottom:none}
 td.reg.l2{color:var(--l2)}td.reg.l2init{color:var(--l2init)}td.reg.shell{color:var(--shell)}
+.tabs{display:flex;gap:8px;border-bottom:1px solid var(--rule);flex-wrap:wrap}.tabin{position:absolute;opacity:0;pointer-events:none}.tab{cursor:pointer;padding:8px 16px 9px;border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;font-weight:600;font-size:16px;color:var(--muted);display:inline-flex;gap:8px;align-items:baseline;margin-bottom:-1px}.tab .tabsub{font-weight:400;font-size:12px}.tab:hover{color:var(--ink)}.tabin:checked+.tab{color:var(--ink);background:var(--panel);border-color:var(--rule)}.tabin:focus-visible+.tab{outline:2px solid var(--l2init);outline-offset:2px}.pane{display:none;flex-direction:column;gap:36px}.wrap:has(#tab-R:checked) #pane-R,.wrap:has(#tab-SNA:checked) #pane-SNA{display:flex}
 .note{font-size:13px;color:var(--muted);max-width:75ch;display:flex;flex-direction:column;gap:6px}
 @media (max-width:760px){.grid3{grid-template-columns:minmax(0,1fr)}h1{font-size:23px}}
 """
@@ -197,9 +198,15 @@ def main() -> None:
          '<div class="legend"><span><i class="sw l2"></i>l2（0 へ引く）</span>'
          '<span><i class="sw l2init"></i>l2init（p0 へ引く）</span><span><i class="sw shell"></i>shell（半径を ‖p0‖ へ引く）</span>'
          '<span class="muted">破線 = 初期値（×1）　灰帯 = 窓 31–50</span></div></header>']
+    # one tab per activation (CSS-only radio tabs; R open on load)
+    H.append('<div class="tabs" role="tablist">')
+    for i, (act, actname) in enumerate(ACTS):
+        H.append(f'<input type="radio" name="act" id="tab-{act}" class="tabin"{" checked" if i == 0 else ""}>'
+                 f'<label for="tab-{act}" class="tab" role="tab">{act}<span class="tabsub">{actname}</span></label>')
+    H.append('</div>')
     for act, actname in ACTS:
         sub = w[w.act == act]
-        H.append(f'<section><h2>{act}（{actname}）</h2>')
+        H.append(f'<div class="pane" id="pane-{act}" role="tabpanel"><section><h2>{act}（{actname}）</h2>')
         H.append('<div class="rowlab">窓内の分布（縦軸はパネルごとにデータに合わせている）</div><div class="grid3">')
         for tensor, shape in WEIGHTS:
             win = sub[(sub.tensor == tensor) & sub.task.between(*WIN)]
@@ -213,15 +220,15 @@ def main() -> None:
             H.append(f'<div class="panel"><div class="cap"><h3>{tensor}</h3><span class="mono">‖W‖/‖W0‖</span></div>'
                      f'{traj_panel(t_sub, tensor, ymax)}</div>')
         H.append('</div></section>')
-    H.append('<section><h2>窓内の分位点</h2><div class="tablewrap"><table><thead><tr>'
-             '<th>act</th><th>tensor</th><th>reg</th><th>‖W0‖</th><th>最小</th><th>25%</th><th>中央値</th><th>75%</th><th>最大</th>'
-             '<th>‖W‖ 中央値</th></tr></thead><tbody>')
-    for rw in rows:
-        H.append(f'<tr><td>{rw["act"]}</td><td>{rw["tensor"]}</td><td class="reg {rw["reg"]}">{rw["reg"]}</td>'
-                 f'<td class="num">{rw["norm0_median"]:.3f}</td>'
-                 + "".join(f'<td class="num">×{rw[f"ratio_{k}"]:.3f}</td>' for k in ("min", "q25", "median", "q75", "max"))
-                 + f'<td class="num">{rw["norm_median"]:.3f}</td></tr>')
-    H.append('</tbody></table></div></section>')
+        H.append(f'<section><h2>{act} の窓内分位点（‖W‖/‖W0‖）</h2><div class="tablewrap"><table><thead><tr>'
+                 '<th>tensor</th><th>reg</th><th>‖W0‖</th><th>最小</th><th>25%</th><th>中央値</th><th>75%</th><th>最大</th>'
+                 '<th>‖W‖ 中央値</th></tr></thead><tbody>')
+        for rw in (r for r in rows if r["act"] == act):
+            H.append(f'<tr><td>{rw["tensor"]}</td><td class="reg {rw["reg"]}">{rw["reg"]}</td>'
+                     f'<td class="num">{rw["norm0_median"]:.3f}</td>'
+                     + "".join(f'<td class="num">×{rw[f"ratio_{k}"]:.3f}</td>' for k in ("min", "q25", "median", "q75", "max"))
+                     + f'<td class="num">{rw["norm_median"]:.3f}</td></tr>')
+        H.append('</tbody></table></div></section></div>')
     H.append('<div class="note"><p>数値の出所: <span class="mono">results/shell_l2_rlmnist_0913/layer_metrics.csv</span>'
              '（タスク末の float32 重みから float64 で再計算したテンソルのノルム）。分位点は同じフォルダの '
              '<span class="mono">wnorm_quantiles.csv</span>。</p>'
