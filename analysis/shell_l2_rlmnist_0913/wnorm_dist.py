@@ -41,11 +41,11 @@ def fmt(v: float) -> str:
     return f"{v:.2f}" if abs(v) < 10 else f"{v:.1f}"
 
 
-def dist_panel(win: pd.DataFrame, tensor: str) -> str:
+def dist_panel(win: pd.DataFrame, tensor: str, regs=REGS) -> str:
     """Box (quartiles, whiskers = min/max) plus the 200 seed x task values as a jittered strip."""
     W, Hh = 300, 220
     L, R, T, B = 44, 10, 12, 30
-    vals = {r: win[win.reg == r].norm_ratio.to_numpy(float) for r in REGS}
+    vals = {r: win[win.reg == r].norm_ratio.to_numpy(float) for r in regs}
     lo = min(v.min() for v in vals.values())
     hi = max(v.max() for v in vals.values())
     pad = (hi - lo) * 0.08
@@ -55,13 +55,13 @@ def dist_panel(win: pd.DataFrame, tensor: str) -> str:
     def y(v):
         return T + (y1 - v) / (y1 - y0) * (Hh - T - B)
 
-    band = (W - L - R) / len(REGS)
+    band = (W - L - R) / len(regs)
     s = [f'<svg viewBox="0 0 {W} {Hh}" role="img" aria-label="{tensor} の ‖W‖/‖W0‖ 分布">']
     for t in ticks:
         s.append(f'<line class="grid" x1="{L}" x2="{W - R}" y1="{y(t):.1f}" y2="{y(t):.1f}"/>'
                  f'<text class="tick" x="{L - 6}" y="{y(t) + 3.5:.1f}" text-anchor="end">{fmt(t)}</text>')
     rng = np.random.default_rng(13)
-    for i, r in enumerate(REGS):
+    for i, r in enumerate(regs):
         v = np.sort(vals[r])
         cx = L + band * (i + 0.5)
         q1, med, q3 = np.percentile(v, [25, 50, 75])
@@ -111,13 +111,47 @@ def traj_panel(sub: pd.DataFrame, tensor: str, ymax: float) -> str:
     return "".join(s)
 
 
+def traj_log_panel(sub: pd.DataFrame, tensor: str, regs) -> str:
+    """Same as traj_panel but on a log axis, so a 30x arm and the ~2x arms stay readable together."""
+    W, Hh = 300, 200
+    L, R, T, B = 44, 10, 12, 30
+    hi = float(sub[sub.reg.isin(regs)].norm_ratio.max()) * 1.15
+    ticks = [t for t in (1, 2, 5, 10, 20, 50, 100) if t <= hi]
+    lmax = math.log10(max(hi, ticks[-1]))
+
+    def x(t):
+        return L + t / 50 * (W - L - R)
+
+    def y(v):
+        return T + (lmax - math.log10(max(v, 1e-3))) / lmax * (Hh - T - B)
+
+    s = [f'<svg viewBox="0 0 {W} {Hh}" role="img" aria-label="{tensor} の ‖W‖/‖W0‖ のタスク推移（対数軸）">',
+         f'<rect class="win" x="{x(WIN[0]):.1f}" y="{T}" width="{x(WIN[1]) - x(WIN[0]):.1f}" height="{Hh - T - B}"/>']
+    for t in ticks:
+        s.append(f'<line class="grid" x1="{L}" x2="{W - R}" y1="{y(t):.1f}" y2="{y(t):.1f}"/>'
+                 f'<text class="tick" x="{L - 6}" y="{y(t) + 3.5:.1f}" text-anchor="end">×{t}</text>')
+    for t in (0, 10, 20, 30, 40, 50):
+        s.append(f'<text class="tick" x="{x(t):.1f}" y="{Hh - 14}" text-anchor="middle">{t}</text>')
+    s.append(f'<text class="tick" x="{W - R}" y="{Hh - 2}" text-anchor="end">タスク</text>')
+    for r in regs:
+        g = sub[sub.reg == r].groupby("task").norm_ratio
+        med, mn, mx = g.median(), g.min(), g.max()
+        ts = med.index.to_numpy()
+        up = " ".join(f"{x(t):.1f},{y(v):.1f}" for t, v in zip(ts, mx))
+        dn = " ".join(f"{x(t):.1f},{y(v):.1f}" for t, v in zip(ts[::-1], mn.to_numpy()[::-1]))
+        s.append(f'<polygon class="band {r}" points="{up} {dn}"/>')
+        s.append(f'<polyline class="line {r}" points="{" ".join(f"{x(t):.1f},{y(v):.1f}" for t, v in zip(ts, med))}"/>')
+    s.append("</svg>")
+    return "".join(s)
+
+
 CSS = """
 :root{--ground:#f5f7f8;--panel:#ffffff;--ink:#1c2631;--muted:#5a6773;--rule:#d6dde3;--win:#e9eef2;
---l2:#b4532a;--l2init:#2f66a8;--shell:#2d8467;}
+--l2:#b4532a;--l2init:#2f66a8;--shell:#2d8467;--none:#6a4f9c;}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ground:#11161b;--panel:#171e25;--ink:#e2e8ed;
---muted:#95a2ad;--rule:#2b3640;--win:#1d262e;--l2:#e08a5e;--l2init:#72a4df;--shell:#5fc19c;}}
+--muted:#95a2ad;--rule:#2b3640;--win:#1d262e;--l2:#e08a5e;--l2init:#72a4df;--shell:#5fc19c;--none:#b39ae6;}}
 :root[data-theme="dark"]{--ground:#11161b;--panel:#171e25;--ink:#e2e8ed;--muted:#95a2ad;--rule:#2b3640;--win:#1d262e;
---l2:#e08a5e;--l2init:#72a4df;--shell:#5fc19c;}
+--l2:#e08a5e;--l2init:#72a4df;--shell:#5fc19c;--none:#b39ae6;}
 *{box-sizing:border-box}
 body{background:var(--ground);color:var(--ink);font-family:"IBM Plex Sans JP","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
 font-size:15px;line-height:1.7;margin:0;padding-inline:20px;padding-block:32px 56px}
@@ -152,7 +186,7 @@ svg{width:100%;height:auto;display:block}
 .win{fill:var(--win)}
 .ref{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3;opacity:.6}
 .band{fill-opacity:.16;stroke:none}.band.l2{fill:var(--l2)}.band.l2init{fill:var(--l2init)}.band.shell{fill:var(--shell)}
-.line{fill:none;stroke-width:1.8}.line.l2{stroke:var(--l2)}.line.l2init{stroke:var(--l2init)}.line.shell{stroke:var(--shell)}
+.line{fill:none;stroke-width:1.8}.line.l2{stroke:var(--l2)}.line.l2init{stroke:var(--l2init)}.line.shell{stroke:var(--shell)}.line.none{stroke:var(--none);stroke-width:2.2}.band.none{fill:var(--none)}.pt.none{fill:var(--none)}.box.none{fill:var(--none);stroke:var(--none)}.xlab.none{fill:var(--none)}td.reg.none{color:var(--none)}.sw.none{background:var(--none)}.lede{max-width:72ch;font-size:14px}
 .tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--panel)}
 table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
 th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--rule);white-space:nowrap}
@@ -168,13 +202,13 @@ td.reg.l2{color:var(--l2)}td.reg.l2init{color:var(--l2init)}td.reg.shell{color:v
 
 def main() -> None:
     lm = pd.read_csv(SRC)
-    w = lm[lm.tensor.isin([t for t, _ in WEIGHTS]) & lm.reg.isin(REGS)]
+    w = lm[lm.tensor.isin([t for t, _ in WEIGHTS]) & lm.reg.isin(REGS + ("none",))]
     OUT.mkdir(parents=True, exist_ok=True)
 
     rows = []
     for act, _ in ACTS:
         for tensor, _ in WEIGHTS:
-            for r in REGS:
+            for r in (REGS + ("none",) if act == "SNA" else REGS):
                 x = w[(w.act == act) & (w.tensor == tensor) & (w.reg == r) & w.task.between(*WIN)]
                 q = np.percentile(x.norm_ratio, [0, 25, 50, 75, 100])
                 qa = np.percentile(x.norm, [0, 25, 50, 75, 100])
@@ -216,10 +250,26 @@ def main() -> None:
         H.append('</div><div class="rowlab">タスク推移（縦軸は 0 から）</div><div class="grid3">')
         for tensor, shape in WEIGHTS:
             t_sub = sub[sub.tensor == tensor]
-            ymax = float(t_sub.norm_ratio.max()) * 1.05
+            ymax = float(t_sub[t_sub.reg.isin(REGS)].norm_ratio.max()) * 1.05
             H.append(f'<div class="panel"><div class="cap"><h3>{tensor}</h3><span class="mono">‖W‖/‖W0‖</span></div>'
                      f'{traj_panel(t_sub, tensor, ymax)}</div>')
         H.append('</div></section>')
+        if act == "SNA":
+            H.append('<section><h2>SNA 正則化なし（none）</h2>'
+                     '<p class="lede muted">同じ適応 Snake を正則化なしで走らせた腕。記憶精度は 1.000 で崩落はしない。'
+                     '上段は none だけの窓内分布（縦軸はパネルごと）、下段は none（紫・太線）を正則化 3 腕と同じ<b>対数軸</b>に重ねた推移。</p>'
+                     '<div class="legend"><span><i class="sw none"></i>none（正則化なし）</span><span><i class="sw l2"></i>l2</span>'
+                     '<span><i class="sw l2init"></i>l2init</span><span><i class="sw shell"></i>shell</span></div>'
+                     '<div class="rowlab">窓内の分布（none のみ）</div><div class="grid3">')
+            for tensor, shape in WEIGHTS:
+                win = sub[(sub.tensor == tensor) & sub.task.between(*WIN)]
+                H.append(f'<div class="panel"><div class="cap"><h3>{tensor}</h3><span class="mono">{shape} · ‖W0‖≈{float(win.norm0.median()):.2f}</span></div>'
+                         f'{dist_panel(win, tensor, regs=("none",))}</div>')
+            H.append('</div><div class="rowlab">タスク推移（対数軸・none と正則化 3 腕）</div><div class="grid3">')
+            for tensor, shape in WEIGHTS:
+                H.append(f'<div class="panel"><div class="cap"><h3>{tensor}</h3><span class="mono">‖W‖/‖W0‖ · log</span></div>'
+                         f'{traj_log_panel(sub[sub.tensor == tensor], tensor, ("none",) + REGS)}</div>')
+            H.append('</div></section>')
         H.append(f'<section><h2>{act} の窓内分位点（‖W‖/‖W0‖）</h2><div class="tablewrap"><table><thead><tr>'
                  '<th>tensor</th><th>reg</th><th>‖W0‖</th><th>最小</th><th>25%</th><th>中央値</th><th>75%</th><th>最大</th>'
                  '<th>‖W‖ 中央値</th></tr></thead><tbody>')
