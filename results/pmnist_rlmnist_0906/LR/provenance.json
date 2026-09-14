@@ -1,0 +1,66 @@
+{
+  "run_id": "pmnist_rlmnist_0906",
+  "git_hash": "ff3befe218b050850d6e0c783e80d66b36778e0b",
+  "arms": [
+    "LR"
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "lrs": [
+    0.001
+  ],
+  "n_tasks": 50,
+  "epochs_per_task": 400,
+  "batch": 16,
+  "steps_per_task": 30000,
+  "n_images": 1200,
+  "dims": [
+    784,
+    100,
+    100,
+    10
+  ],
+  "n_classes": 10,
+  "sna_c": 0.6,
+  "sna_beta": 0.01,
+  "intervention": "none",
+  "optimizer": "adam",
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "subset_sha256": {
+    "0": "11411ac14aee613b8d2b24352b50a1953bb733225e3a50886432fb7aa0b259ff",
+    "1": "0954aaf502e85865ce51f536f965d7fb4be1476bc5130ca3e2918ceaf0d93140",
+    "2": "ebe39edfd0a742fe4aa4b44456204304eb73f8f6c6ba40bf91d47ba4dff51ce5",
+    "3": "65bc9035159ed5430af77505c2678425409884e266cc395530783392f61fe558",
+    "4": "0d8d9006703f04847740335ec4bb3d934f465c3573433f1fcb8fe6bd1f15cf5c",
+    "5": "d523a23af794890d2352376046c2ddb7c63d0f2e9d8c5f81796134df3d026221",
+    "6": "4733f1b21e66586fb6a1c450d699f028962ef37dc80e3fb343aff151114e28a9",
+    "7": "0de4992400a6b8f9fc3f83556e48478f6094930a2b31c8cbe3a6dc4f1f0343c5",
+    "8": "1ee16bf2f6c573cd7ae2a544ffb86b9ac7bb8325688f9ded9d9c5ce989470723",
+    "9": "b84ecd622ebc2586b4002708abb3644633b5bbc9f61af94bf9fecace837b1ad1"
+  },
+  "rng_roles": [
+    "rl_subset",
+    "rl_labels",
+    "rl_batch",
+    "init"
+  ],
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "wall_clock_s": 41538.4261701107,
+  "divergences": []
+}

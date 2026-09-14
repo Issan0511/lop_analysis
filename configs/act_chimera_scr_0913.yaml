@@ -1,0 +1,114 @@
+# proj_004: act_chimera_0913 — SCR condA（箱 A）の腕表（spec_act_chimera_0913 §2.4）
+# 事前登録 spec: specs/spec_act_chimera_0913.md
+# 宿主: configs/gate_dial_0902.yaml（edge_law_0905.build_cfg が読む）。腕表・activation マップ・出力先を
+#   edge_law_0905 の形式で置き、runner は src/act_chimera_scr_0913.py（edge_law_0905 の runner を写す。
+#   起動時に edge_law_0905.CONFIG をこのファイルに、_TABLE を None にする・§2.4 経路 3）。
+# この config は 1 回だけ commit する（退避枝の 12 行も今ここに登録する・§2.4「退避枝の中身」）。
+# 実装はこの腕表を逐語で消費し、書き換えない。
+
+experiment: act_chimera_0913
+host_config: configs/gate_dial_0902.yaml
+edge_law_config: configs/edge_law_0905.yaml           # 親 2 行（chLR_1216 / chE_1216）の逐語の出所（:57-58）
+output:
+  dir: results/act_chimera_0913/scr                    # 主走（lr 0.01・5M）
+  dir_lr0p005: results/act_chimera_0913/scr_lr0p005    # 退避枝（lr 0.005・10M）。--outdir で明示して起動する
+  smoke_dir: results/_smoke_act_chimera_0913/scr       # スモーク（本走と分ける・spec 冒頭）
+common_overrides:                                      # edge_law_0905.yaml:12-16 と逐語で同じ
+  lr_main: 0.01
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  generator_offset: 0
+  omp_num_threads: 1
+
+# 活性化（§1.2・§1.3）。leaky_relu / elu は edge_law_0905.yaml:20-21 と逐語（build_cfg は name だけ読む）。
+# キメラ・分離腕は src/act_chimera_0913.py の ChimeraMLPL が act_fn / act_grad / act_curv を持つ
+# （src/nets.py の bytes は変えない・§2.4 実装経路）。dial は leaky の傾き a = 0.1 を書く規約
+# （ChimeraMLPL.set_activation が dial == 0.1 を assert する）。
+activation:
+  leaky_relu:      { name: leaky_relu }
+  elu:             { name: elu, derivative_form: alpha_exp }
+  SMAXH: { name: SMAXH, dial_must_be: 0.1, box: '(1, 0.1)',   forward: 'where(z>0, z, where(z>=LNA, expm1(zc), 0.1*(z-LNA)+(0.1-1.)))', derivative: 'where(z>0, 1, clamp(exp(zc), min=0.1))',   curvature: 'e^z (z_c<z<0); 0 (z<z_c)', instance: 'GS.ELUFloor(0.1) と bit 一致（S7・S13b）' }
+  SMINH: { name: SMINH, dial_must_be: 0.1, box: '(0.1, sat)', forward: 'where(z>0, z, where(z>=LNA, 0.1*z, exp(z.clamp(max=LNA)) - C_SMINH))', derivative: 'where(z>0, 1, clamp(exp(zc), max=0.1))', curvature: '0 (z_c<z<0); e^z (z<z_c)' }
+  VMIN:  { name: VMIN,  dial_must_be: 0.1, box: '(1, 0.1)',   forward: 'where(z>0, z, where(z>=ZV, expm1(z.clamp(ZV,0.)), 0.1*z))', derivative: 'where(z>0, 1, where(z>=ZV, exp(z.clamp(ZV,0.)), 0.1))', curvature: 'e^z (z_v<z<0); 0 (z<z_v)' }
+  VMAX:  { name: VMAX,  dial_must_be: 0.1, box: '(0.1, sat)', forward: 'where(z>0, z, where(z>=ZV, 0.1*z, expm1(z.clamp(max=ZV))))', derivative: 'where(z>0, 1, where(z>=ZV, 0.1, exp(z.clamp(max=ZV))))', curvature: '0 (z_v<z<0); e^z (z<z_v)' }
+  SMAXS: { name: SMAXS, dial_must_be: 0.1, box: '(1, 0.1)',   forward: 'where(z>0, z, 0.1*zc + 0.9*expm1(zc))', derivative: 'where(z>0, 1, 0.1 + 0.9*exp(zc))', curvature: '0.9 e^z' }
+  SMINS: { name: SMINS, dial_must_be: 0.1, box: '(0.1, sat)', forward: 'where(z>0, z, 0.1*softplus(zc - LNA) + C_SMINS)', derivative: 'where(z>0, 1, 0.1*sigmoid(zc - LNA))', curvature: '0.1 s (1-s), s = sigmoid(z - z_c)' }
+  # 分離腕（§1.5）: act_fn = φ_fwd、act_grad = φ′_bwd（学習に使う）、act_curv = φ″_bwd。勾配流ではない（発散しうる・救済しない）
+  GN: { name: GN, dial_must_be: 0.1, forward: phi_LR,    derivative: dphi_SMAXH, curvature: ddphi_SMAXH, separates: 'near simple effect LR->SMAXH, gate only' }
+  FN: { name: FN, dial_must_be: 0.1, forward: phi_SMAXH, derivative: dphi_LR,    curvature: ddphi_LR,    separates: 'near simple effect LR->SMAXH, forward value only' }
+  GD: { name: GD, dial_must_be: 0.1, forward: phi_ELU1,  derivative: dphi_SMAXH, curvature: ddphi_SMAXH, separates: 'deep simple effect ELU1->SMAXH, gate only' }
+  FD: { name: FD, dial_must_be: 0.1, forward: phi_SMAXH, derivative: dphi_ELU1,  curvature: ddphi_ELU1,  separates: 'deep simple effect ELU1->SMAXH, forward value only' }
+  autograd: false                                     # SCR は解析的な act_grad で学習する（nets.py:576・§1.3）
+  consumes_rng: false
+
+# 腕（§2.4「腕」）。edge_law_0905.yaml:55 の arm_template を逐語で使う（1 層・幅 100・centered [1]・用量 12.16・10 seed）。
+arm_template: { stage: 0, hidden: [100], centered_layers: [1], target_mu_norm: 3.041, target_dose: 12.16, u_star: null }
+# u_fr（φ′ < 1e-6 の凍結深さ）: ELU1・SMINH・VMAX・SMINS で 13.8155、LR・SMAXH・SMAXS・VMIN で null
+# （VMIN の帯内最小ゲート 4.5e-5 > 1e-6）。分離腕は学習が見る φ′_bwd で決める: GN・GD（SMAXH）・FN（LR）は null、FD（ELU1）は 13.8155。
+arms:
+  # --- 主走 12 腕（lr 0.01・5M・checkpoints [0, 1M, 5M]）。親 2 行は LRnull_1216 / Enull_1216（edge_law_0905.yaml:57-58）と family・activation・dial・checkpoints まで逐語（G1-SCR の錨）
+  - { name: chLR_1216,    family: leaky,   activation: leaky_relu, dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }      # parent (0.1, 0.1); G1-SCR vs LRnull_1216
+  - { name: chE_1216,     family: elu,     activation: elu,        dial: 1.0, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.8155 }   # parent (1, sat); G1-SCR vs Enull_1216
+  - { name: chSMAXH_1216, family: chimera, activation: SMAXH,      dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }      # H big (1, 0.1)
+  - { name: chSMINH_1216, family: chimera, activation: SMINH,      dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.8155 }   # H small (0.1, sat)
+  - { name: chVMIN_1216,  family: chimera, activation: VMIN,       dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }      # V big (1, 0.1); report only in SCR (§4 D5b)
+  - { name: chVMAX_1216,  family: chimera, activation: VMAX,       dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.8155 }   # V small (0.1, sat)
+  - { name: chSMAXS_1216, family: chimera, activation: SMAXS,      dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }      # S big (1, 0.1)
+  - { name: chSMINS_1216, family: chimera, activation: SMINS,      dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.8155 }   # S small (0.1, sat)
+  - { name: chGN_1216,    family: chimera, activation: GN,         dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }      # split: phi_LR fwd / dphi_SMAXH bwd
+  - { name: chFN_1216,    family: chimera, activation: FN,         dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }      # split: phi_SMAXH fwd / dphi_LR bwd
+  - { name: chGD_1216,    family: chimera, activation: GD,         dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: null }      # split: phi_ELU1 fwd / dphi_SMAXH bwd
+  - { name: chFD_1216,    family: chimera, activation: FD,         dial: 0.1, hook: null, total_steps: 5000000, checkpoints: [0, 1000000, 5000000], u_fr: 13.8155 }   # split: phi_SMAXH fwd / dphi_ELU1 bwd
+  # --- 退避枝 12 行（§2.4「安定余裕と lr の退避枝」）。主 8 腕のいずれかが NUMERIC_DIVERGENCE か NEAR_EOS のときだけ、
+  #     --outdir results/act_chimera_0913/scr_lr0p005 を明示して 12 腕すべてを回す。hook・total_steps・checkpoints は
+  #     edge_law の LRlr0p005_1216 / Elr0p005_1216（edge_law_0905.yaml:82,84）と同じ（η·step を lr 0.01 × 5M に揃える）。
+  - { name: chLR_lr0p005_1216,    family: leaky,   activation: leaky_relu, dial: 0.1, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: null }      # anchor: LRlr0p005_1216
+  - { name: chE_lr0p005_1216,     family: elu,     activation: elu,        dial: 1.0, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: 13.8155 }   # anchor: Elr0p005_1216
+  - { name: chSMAXH_lr0p005_1216, family: chimera, activation: SMAXH,      dial: 0.1, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: null }
+  - { name: chSMINH_lr0p005_1216, family: chimera, activation: SMINH,      dial: 0.1, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: 13.8155 }
+  - { name: chVMIN_lr0p005_1216,  family: chimera, activation: VMIN,       dial: 0.1, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: null }
+  - { name: chVMAX_lr0p005_1216,  family: chimera, activation: VMAX,       dial: 0.1, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: 13.8155 }
+  - { name: chSMAXS_lr0p005_1216, family: chimera, activation: SMAXS,      dial: 0.1, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: null }
+  - { name: chSMINS_lr0p005_1216, family: chimera, activation: SMINS,      dial: 0.1, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: 13.8155 }
+  - { name: chGN_lr0p005_1216,    family: chimera, activation: GN,         dial: 0.1, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: null }
+  - { name: chFN_lr0p005_1216,    family: chimera, activation: FN,         dial: 0.1, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: null }
+  - { name: chGD_lr0p005_1216,    family: chimera, activation: GD,         dial: 0.1, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: null }
+  - { name: chFD_lr0p005_1216,    family: chimera, activation: FD,         dial: 0.1, hook: { type: lr, value: 0.005 }, total_steps: 10000000, checkpoints: [0, 1000000, 5000000, 10000000], u_fr: 13.8155 }
+
+# G1-SCR（§2.4・§6）: 親 2 腕を edge_law の null 腕と s_null の規則で照合する。参照は proj_004_drift で未追跡
+# （git に無い）ので絶対パスで置き、sha256 を provenance に記録する。ref_arm / ref_dir は必ず明示で渡す。
+g1:
+  reference_logs: /home/issan/Projects/claude/proj_004_drift/results/edge_law_0905/logs
+  reference_ckpts: /home/issan/Projects/claude/proj_004_drift/results/edge_law_0905/ckpts
+  pairs:
+    chLR_1216: LRnull_1216
+    chE_1216: Enull_1216
+    chLR_lr0p005_1216: LRlr0p005_1216
+    chE_lr0p005_1216: Elr0p005_1216
+  n_records: { "5000000": 5001, "10000000": 10001 }   # s_null は共通の記録数に切り詰めるので別に assert する（§2.4）
+  reference_git_head: 2a3c0abc76baf42efeaf6790173b806cae422a14   # edge_law の null ログを作った nets.py の commit（arm_status/LRnull_1216_done.json）
+
+smoke:                                                 # §6 スモーク: 全 12 腕 × 30k step
+  steps: 30000
+  n_records: 31                                        # 30k / lop_every 1000 + 1
+  generator_offset_control: 1                          # 変異対照: unfit[:31] が参照と不一致になること
+
+rss_probe:                                             # §2.4「RSS」: 自前の rss_probe（子は本モジュールで起こす）
+  arms: [chLR_1216, chSMINS_1216, chGD_1216]           # 親・キメラ・分離腕の各経路から 1 つ。外挿したピークの最大を使う
+  steps: 50000
+  headroom: 1.5                                        # edge_law の RSS_HEADROOM（J = floor(MemAvailable/(1.5*peak)) - 1 は launcher・§7）
+
+# 判定器・読み出しの定数（§2.4「窓」・§3.4 SCR・§8 スキーマ）
+analysis:
+  task_period: 10000
+  unfit_floor: 1.0e-16                                 # gate_dose_0830 で較正済み。再較正しない
+  alive_denom: 0.25                                    # edge_law_analyze_0905.ALIVE_DENOM（relax_rate の生きているユニット版）
+  windows:
+    "5000000":  { lop: [491, 500], mech: [451, 500], onset_1m: [91, 100], early: [2, 11] }
+    "10000000": { lop: [991, 1000], mech: [951, 1000], onset_1m: [91, 100], early: [2, 11] }
+  stability:                                           # §2.4「安定余裕」: lr·λ/2 < 1 が二次形式の上の SGD の安定条件
+    eos_threshold: 1.0
+    lam_out: 'λ_max(2·E_x[φφᵀ]) at each task end, 32-pattern exact support, float64, z = zbar + w_free·(x_free − 0.5)'
+    lam_full: 'power iteration on the Jacobian of the exact 32-pattern gradient field at the ckpts (main arms: the Hessian; split arms: the surrogate-field Jacobian)'
+    power_iter_max: 2000
+    power_iter_rtol: 1.0e-10
+  relax_rate: 'per series: OLS of dzbar[k] on zmax[k-1] − median_t zmax[k(t)] over units × tasks in mech window; relax_rate = −slope; step[k]−step[k−1] == 1000 asserted'
