@@ -1,0 +1,94 @@
+{
+  "run_id": "l2split_rlmnist_0914",
+  "git_hash": "8ffccead3f9eab8aeab37f3ab1d06601f95bf468",
+  "git_dirty_code": false,
+  "argv": [
+    "src/l2split_rlmnist_0914.py",
+    "--act",
+    "LR",
+    "--arm",
+    "l2rest",
+    "--seeds",
+    "6",
+    "--tasks",
+    "50",
+    "--epochs",
+    "400",
+    "--lr",
+    "0.001",
+    "--threads",
+    "1",
+    "--out",
+    "results/l2split_rlmnist_0914/runs/LR_l2rest_s6"
+  ],
+  "hostname": "white-san",
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+  "python": "3.12.3",
+  "torch": "2.13.0+cu130",
+  "numpy": "2.5.2",
+  "torch_num_threads": 1,
+  "env_threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "act": "LR",
+  "arm": "l2rest",
+  "lam": 0.001,
+  "seeds": [
+    6
+  ],
+  "lr": 0.001,
+  "optimizer": "adam",
+  "n_tasks": 50,
+  "epochs_per_task": 400,
+  "batch": 16,
+  "steps_per_task": 30000,
+  "n_images": 1200,
+  "dims": [
+    784,
+    100,
+    100,
+    10
+  ],
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "code_sha256": {
+    "src/l2split_rlmnist_0914.py": "ac0d226d55ea4bd57246eccf373b80193713c0e409449c8182eb0a203763e82e",
+    "src/wcap_rlmnist_0914.py": "7a914832fd1739b6217a3ff7991d61909d6f9f50dedc1981d5b7b99e9a4f88b5",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9"
+  },
+  "device": "cpu",
+  "runs": {
+    "6": {
+      "init_sha256": "8b84df07033f2a10bf8b2ebda86c487767ef8d3e338776191ee85cc2ed92d5ab",
+      "subset_idx_sha256": "b90d0854a1048d59c500b70d9dcd6f57212d0b3546959ca5c4093a4b066a19a4",
+      "labels_sha256": "0cfff9704a577e9830da7162a3d7958eeaa573e1001a3bf2fccb2f4c9e860a06",
+      "batch_sha256": "8e1d3901a4ab3aa929ca221d9ae973dffb951d555d62142d3334bc162e131687",
+      "final_state_sha256": "a078eceba60b452e5758f454df4db9d8e4c354b054f804d3f3575d0b144ff30c",
+      "init_centered": {
+        "wt_med_l1": 0.5749797788086513,
+        "wt_med_l2": 0.5723116894318347
+      },
+      "task1_end_state_sha256": "b284b52294bc90aa8b8af8f44661466d9391eec11d579fd17fea2a0219925b2c",
+      "tasks_completed": 50,
+      "wall_clock_s": 849.4839417934418,
+      "divergence": {
+        "diverged": false,
+        "task": null,
+        "step": null,
+        "seed": 6,
+        "act": "LR",
+        "arm": "l2rest"
+      }
+    }
+  },
+  "wall_clock_s": 849.7358305454254,
+  "peak_rss_kb": 1071716,
+  "divergences": []
+}
