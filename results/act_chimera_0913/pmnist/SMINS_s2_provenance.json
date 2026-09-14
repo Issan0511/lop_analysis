@@ -1,0 +1,499 @@
+{
+ "run_id": "act_chimera_0913",
+ "env": "pmnist",
+ "arm": "SMINS",
+ "act": "SMINS",
+ "twin": null,
+ "seed": 2,
+ "tasks": 120,
+ "tasks_completed": 120,
+ "status": "COMPLETE",
+ "lr": 0.001,
+ "e_tasks": [
+  20,
+  40,
+  60,
+  80,
+  100,
+  120
+ ],
+ "theta": 0.25,
+ "n_probe": 512,
+ "ngrad": 4096,
+ "ref_seed": 20260909,
+ "inject_inf_after": null,
+ "registered_horizon": true,
+ "committed_code": {
+  "committed": [
+   "src/act_chimera_0913.py",
+   "src/act_chimera_pmnist_0913.py",
+   "specs/spec_act_chimera_0913.md"
+  ],
+  "pass_": true
+ },
+ "checks_passed": true,
+ "failed_checks": [],
+ "checks": {
+  "s11": {
+   "pass_": true,
+   "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+   },
+   "data_dir": "/home/issan/Projects/claude/proj_004_drift/data/mnist"
+  },
+  "c6_var_rel": 3.736922047657801e-15,
+  "c6_mean_abs": 5.329070518200751e-15,
+  "status": "COMPLETE",
+  "first_nonfinite_task": null,
+  "tasks_completed": 120,
+  "anchored": false,
+  "g3_ident_max": 8.557043962298394e-14,
+  "g3_pass": true,
+  "g1_pm": {
+   "anchor": null,
+   "note": "no committed anchor (new activation)"
+  },
+  "g1_eg": {
+   "anchor": null,
+   "note": "no committed anchor (new activation)"
+  },
+  "s12_mob_sum_maxdiff": 1.1102230246251565e-16,
+  "s12_band_sum_maxdiff": 3.3306690738754696e-16,
+  "s12_band_sum_maxratio": 0.001953125,
+  "s12_ctl_dropB2_maxdiff": 0.059103515624999936,
+  "s12_ctl_dropB2_demonstrable": true,
+  "wtnorm_vs_cnorm_maxdiff": 0.0,
+  "mob_sum_vs_gbar_i_maxdiff": 1.3877787807814457e-17,
+  "s12_in_run": {
+   "tol": 1.1368683772161603e-13,
+   "tol_band": "n_inputs*eps64*max(1,max|v|)",
+   "identities_pass": true,
+   "ctl_demonstrated": true,
+   "ctl_fails": true,
+   "pass_": true
+  },
+  "identity": {
+   "evaluated": true,
+   "e_tasks": [
+    20,
+    40,
+    60,
+    80,
+    100,
+    120
+   ],
+   "identity_rel": 7.697820878273694e-10,
+   "identity_mutctl": 0.009139928856176805,
+   "wrong_h": "ELU1",
+   "ctl_demonstrated": true
+  },
+  "s9": {
+   "pass_": true,
+   "twin": null,
+   "loop": {
+    "init": "e4b42a3d50c1c10cf342ab3e975bccd897d3e2feb9001143e97e7337f2ff4870",
+    "t1": {
+     "perm": "d55cb0170c149982bd83dd4136df0b124b67ff3314e1d27a5ef63b63bac44235",
+     "idx": "7bebcc097f59aef664b7eaf6705ace5f99e0e8ba1cb396ade602160d9e4dfff2",
+     "order": "c25d133cd3ada9a7fdd4c8656666441fb3fe0221b70deea84231601d55359ea6"
+    },
+    "t2": {
+     "perm": "bd01a6c1ea3e0c5877128c8c0c7beed5b5ed9d33eb2d7bf59a390ad1b131424b",
+     "idx": "f8b35f85393747f027e980bc42e3b3c439ba717e3a2543536e432468f9a48dc9",
+     "order": "55f62022f04d1555db61e8c6dbf2ebda1139ea7fd49a677e3daa9c8effd0352a"
+    },
+    "t3": {
+     "perm": "83719a7705c719aa765f6db4faee152025dbb4a0bd94b6253f2ad4fe1a98cfb8",
+     "idx": "381181a77d5d29a3278461ccf8c1f31a45438347cd3b0bff01de169128ee1736",
+     "order": "15f057e5b8ccc3daf3f1dcd8079b12113faca169c0bedf8ba44df80e1e0edc2c"
+    },
+    "probe_idx": "5f7aa4b3b83e86d437d7cfcb81133929eae13d75fe44dfa4e36a06052e90a194"
+   },
+   "standalone_init": "e4b42a3d50c1c10cf342ab3e975bccd897d3e2feb9001143e97e7337f2ff4870"
+  },
+  "failed_checks": [],
+  "readout_within_budget": true
+ },
+ "git_hash": "a592a4aa6978dc3b5c3d715e4104e993afca1b20",
+ "git_branch": "claude/act_chimera_0913",
+ "git_dirty_tracked": [],
+ "git_dirty_src": [],
+ "band_predicate_dtype": "float64 copy of the float32 forward z (box B / RL); float64 reconstructed z (SCR)",
+ "fn_mom_axes": {
+  "funcs": [
+   "LR",
+   "ELU1",
+   "SMAXH",
+   "SMINH",
+   "VMIN",
+   "VMAX",
+   "SMAXS",
+   "SMINS"
+  ],
+  "bands": [
+   "B0",
+   "B1",
+   "B2",
+   "B3"
+  ],
+  "moments": [
+   "dphi",
+   "phi",
+   "h"
+  ],
+  "shape": "(T, layer, func, band, moment)"
+ },
+ "spec_sha256": "1151dfac6e71d907c306689bfdf49d0f4beeab7797f0aeaed45c9735935422af",
+ "code_sha256": "0fe7d6d61b36ff03486f2795068c8ce65439abd7bf88ad3cbfed9c707c78cfe7",
+ "act_sha256": "df47bb3868168e2abae41500ce1c332f029f20b0b303648090ffadeff5ccf542",
+ "host_sha256": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+ "gs_sha256": "0b3d40f62fc3317ded3b2687340dd7d64cd1e04f92befebb05173725732c2901",
+ "base_sha256": "728a43af073275ada32d53c1c81776cd9e6bf1b58509335ab5ca784f02428422",
+ "elu_sha256": "65385b18847bbb77d7512f33095b1d6b30c2325ef0ce20e6b51c143c1f40e883",
+ "common_sha256": "8968317d38b05685d393996d5915ccec87c45a805a2ba1bb7d67ea99a64abc20",
+ "data_sha256": {
+  "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+  "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+  "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+  "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+ },
+ "data_dir": "/home/issan/Projects/claude/proj_004_drift/data/mnist",
+ "env_executable": "/usr/bin/python3",
+ "env_torch": "2.13.0+cu130",
+ "env_numpy": "2.5.2",
+ "env_hostname": "white-san",
+ "env_cpu": "Intel(R) Core(TM) i7-14700K",
+ "env_gpu": "NVIDIA GeForce RTX 5060 Ti",
+ "env_device": "cpu",
+ "env_python": "3.12.3",
+ "wall_seconds": 129.85988469503354,
+ "peak_rss_kib": 1142816,
+ "other_sessions_before": {
+  "python_processes": [
+   {
+    "pid": 1825,
+    "rss_kib": 27016,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn github_mcp_server:app --host 127.0.0.1 --port 8001"
+   },
+   {
+    "pid": 1829,
+    "rss_kib": 13360,
+    "cmd": "/usr/bin/python3 -m uvicorn mcp_server:app --host 127.0.0.1 --port 8005"
+   },
+   {
+    "pid": 1831,
+    "rss_kib": 124596,
+    "cmd": "/usr/bin/python3 -m uvicorn server.main:app --host 127.0.0.1 --port 8002"
+   },
+   {
+    "pid": 1832,
+    "rss_kib": 25320,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 0.0.0.0 --port 8003"
+   },
+   {
+    "pid": 1834,
+    "rss_kib": 26640,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn server.main:app --host 0.0.0.0 --port 8004"
+   },
+   {
+    "pid": 1835,
+    "rss_kib": 27336,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn mcp_server:app --host 0.0.0.0 --port 8000"
+   },
+   {
+    "pid": 1839,
+    "rss_kib": 8736,
+    "cmd": "/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal"
+   },
+   {
+    "pid": 1982,
+    "rss_kib": 50860,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 127.0.0.1 --port 8006 --no-access-log"
+   },
+   {
+    "pid": 1983,
+    "rss_kib": 33596,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 127.0.0.1 --port 8007 --no-access-log"
+   },
+   {
+    "pid": 1323816,
+    "rss_kib": 11092,
+    "cmd": "/usr/bin/python3 /usr/bin/gnome-terminal --wait"
+   },
+   {
+    "pid": 1935471,
+    "rss_kib": 910816,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm ref --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_ref_s0"
+   },
+   {
+    "pid": 1935877,
+    "rss_kib": 910920,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2 --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2_s0"
+   },
+   {
+    "pid": 1936602,
+    "rss_kib": 910716,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2 --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2_s0"
+   },
+   {
+    "pid": 1937507,
+    "rss_kib": 911060,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2rest --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2rest_s0"
+   },
+   {
+    "pid": 1941816,
+    "rss_kib": 910544,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2wt --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2wt_s0"
+   },
+   {
+    "pid": 1942530,
+    "rss_kib": 910192,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2rest --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2rest_s0"
+   },
+   {
+    "pid": 1943179,
+    "rss_kib": 3932,
+    "cmd": "/bin/bash -c source /home/issan/.claude/shell-snapshots/snapshot-bash-1789308911471-2c7xeu.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd ~/Projects/claude/wt/act_chimera_0913 "
+   },
+   {
+    "pid": 1943181,
+    "rss_kib": 18988,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env pmnist"
+   },
+   {
+    "pid": 1944452,
+    "rss_kib": 3876,
+    "cmd": "/bin/bash -c source /home/issan/.claude/shell-snapshots/snapshot-bash-1789308911471-2c7xeu.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until timeout 40 gcloud compute ssh chime"
+   },
+   {
+    "pid": 1945636,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_SMAXS_s0.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm SMAXS --seed 0 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1945637,
+    "rss_kib": 1085860,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm SMAXS --seed 0 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1945639,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_SMAXS_s1.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm SMAXS --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1945640,
+    "rss_kib": 1116388,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm SMAXS --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1945759,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_SMAXS_s2.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm SMAXS --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1945760,
+    "rss_kib": 1108736,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm SMAXS --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1945940,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_SMINS_s0.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm SMINS --seed 0 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1945941,
+    "rss_kib": 1022556,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm SMINS --seed 0 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1946069,
+    "rss_kib": 1556,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_SMINS_s1.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm SMINS --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1946070,
+    "rss_kib": 983348,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm SMINS --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1946181,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_SMINS_s2.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm SMINS --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   }
+  ],
+  "nvidia_smi_compute": "4429, 130 MiB\n5176, 139 MiB\n14982, 118 MiB\n6104, 6 MiB\n1070592, 46 MiB",
+  "load1": 13.16357421875,
+  "meminfo_kib": {
+   "MemAvailable": 12991548,
+   "SwapFree": 297896
+  },
+  "time": "2026-09-14T10:34:48"
+ },
+ "other_sessions_after": {
+  "python_processes": [
+   {
+    "pid": 1825,
+    "rss_kib": 27016,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn github_mcp_server:app --host 127.0.0.1 --port 8001"
+   },
+   {
+    "pid": 1829,
+    "rss_kib": 13360,
+    "cmd": "/usr/bin/python3 -m uvicorn mcp_server:app --host 127.0.0.1 --port 8005"
+   },
+   {
+    "pid": 1831,
+    "rss_kib": 124600,
+    "cmd": "/usr/bin/python3 -m uvicorn server.main:app --host 127.0.0.1 --port 8002"
+   },
+   {
+    "pid": 1832,
+    "rss_kib": 25320,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 0.0.0.0 --port 8003"
+   },
+   {
+    "pid": 1834,
+    "rss_kib": 26640,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn server.main:app --host 0.0.0.0 --port 8004"
+   },
+   {
+    "pid": 1835,
+    "rss_kib": 27336,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn mcp_server:app --host 0.0.0.0 --port 8000"
+   },
+   {
+    "pid": 1839,
+    "rss_kib": 8736,
+    "cmd": "/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal"
+   },
+   {
+    "pid": 1982,
+    "rss_kib": 50860,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 127.0.0.1 --port 8006 --no-access-log"
+   },
+   {
+    "pid": 1983,
+    "rss_kib": 33596,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 127.0.0.1 --port 8007 --no-access-log"
+   },
+   {
+    "pid": 1323816,
+    "rss_kib": 11092,
+    "cmd": "/usr/bin/python3 /usr/bin/gnome-terminal --wait"
+   },
+   {
+    "pid": 1935471,
+    "rss_kib": 910840,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm ref --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_ref_s0"
+   },
+   {
+    "pid": 1935877,
+    "rss_kib": 910928,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2 --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2_s0"
+   },
+   {
+    "pid": 1936602,
+    "rss_kib": 910740,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2 --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2_s0"
+   },
+   {
+    "pid": 1937507,
+    "rss_kib": 911096,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2rest --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2rest_s0"
+   },
+   {
+    "pid": 1941816,
+    "rss_kib": 910620,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2wt --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2wt_s0"
+   },
+   {
+    "pid": 1942530,
+    "rss_kib": 910244,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2rest --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2rest_s0"
+   },
+   {
+    "pid": 1943179,
+    "rss_kib": 3932,
+    "cmd": "/bin/bash -c source /home/issan/.claude/shell-snapshots/snapshot-bash-1789308911471-2c7xeu.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd ~/Projects/claude/wt/act_chimera_0913 "
+   },
+   {
+    "pid": 1943181,
+    "rss_kib": 19048,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env pmnist"
+   },
+   {
+    "pid": 1944452,
+    "rss_kib": 3876,
+    "cmd": "/bin/bash -c source /home/issan/.claude/shell-snapshots/snapshot-bash-1789308911471-2c7xeu.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until timeout 40 gcloud compute ssh chime"
+   },
+   {
+    "pid": 1946181,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_SMINS_s2.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm SMINS --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1946351,
+    "rss_kib": 1556,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_GN_s0.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm GN --seed 0 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1946352,
+    "rss_kib": 1145276,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm GN --seed 0 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1946470,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_GN_s1.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm GN --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1946471,
+    "rss_kib": 1145228,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm GN --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1946688,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_GN_s2.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm GN --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1946689,
+    "rss_kib": 1022716,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm GN --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1946797,
+    "rss_kib": 1548,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_FN_s0.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm FN --seed 0 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1946798,
+    "rss_kib": 1143348,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm FN --seed 0 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1946907,
+    "rss_kib": 1556,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_FN_s1.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm FN --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1946908,
+    "rss_kib": 1050400,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm FN --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   }
+  ],
+  "nvidia_smi_compute": "4429, 130 MiB\n5176, 139 MiB\n14982, 118 MiB\n6104, 6 MiB\n1070592, 46 MiB",
+  "load1": 12.57373046875,
+  "meminfo_kib": {
+   "MemAvailable": 12422244,
+   "SwapFree": 298872
+  },
+  "time": "2026-09-14T10:36:58"
+ },
+ "units_bytes": 1501875,
+ "readout_bytes": 2907422,
+ "scope": "CPU training from init (GS.train copied verbatim + P1-P6); LR/ELU1/SMAXH reproduce gate_shape_0911 bit for bit"
+}

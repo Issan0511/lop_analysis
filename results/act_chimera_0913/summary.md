@@ -1,0 +1,464 @@
+# act_chimera_0913 — verdict
+
+windows: Windows(pm_base=(16, 20), pm_late=(101, 120), pm_issa_base=(2, 6), pm_issa_late=(116, 120), pm_tasks=120, rl_win=(31, 50), rl_early=(1, 10), rl_tasks=50, scr_win=(491, 500), scr_win_1m=(91, 100), scr_tail=(451, 500), scr_tasks=500, e_ident_tasks=(20, 40, 60, 80, 100, 120))
+
+| env | family | layer | item | label | note |
+|---|---|---|---|---|---|
+| pmnist | H | all | D_PAR | `PARENTS_ELU_BETTER_A_ONLY` | L=PARENTS_UNRESOLVED | A=PARENTS_ELU_BETTER |
+| pmnist | H | all | D1 | `BIG_BEATS_BOTH` | L=BIG_BEATS_BOTH | A=BIG_BEATS_BOTH |
+| pmnist | H | all | D2 | `SMALL_EQUALS_ELU1` | L=SMALL_EQUALS_ELU1 | A=SMALL_EQUALS_ELU1 |
+| pmnist | H | all | D3_N | `HELPS` | L=HELPS | A=HELPS |
+| pmnist | H | all | D3_D | `CO_PRIMARY_CONFLICT(L=HELPS, A=INERT)` | L=HELPS | A=INERT |
+| pmnist | H | all | D3_I | `SUPERADDITIVE` | L=SUPERADDITIVE | A=SUPERADDITIVE |
+| pmnist | H | all | D3_HEADING | `FACTORIAL_OTHER(N=HELPS, D=CO_PRIMARY_CONFLICT(L=HELPS, A=INERT))` | L=BOTH_FACTORS_HELP | A=NEAR_ONLY |
+| pmnist | H | all | HYPOTHESIS | `CANCELLATION_REFUTED(SMINH_ONLY)` | L=CANCELLATION_REFUTED | A=CANCELLATION_REFUTED | L:simple effect sE is EQ or reversed | A:simple effect sL,sE is EQ or reversed |
+| pmnist | H | all | N_DEEP | `NOT_APPLICABLE` | L=NOT_APPLICABLE | A=NOT_APPLICABLE |
+| pmnist | H | all | WINDOW_DEPENDENT_D3_HEADING | `WINDOW_DEPENDENT` | main=FACTORIAL_OTHER(N=HELPS, D=CO_PRIMARY_CONFLICT(L=HELPS, A=INERT)) issa=FACTORIAL_OTHER(N=HELPS_A_ONLY, D=INERT) |
+| pmnist | V | all | D_PAR | `PARENTS_ELU_BETTER_A_ONLY` | L=PARENTS_UNRESOLVED | A=PARENTS_ELU_BETTER |
+| pmnist | V | all | D1 | `NOT_TESTABLE_JOINT_UNVISITED` | L=NOT_TESTABLE_JOINT_UNVISITED | A=NOT_TESTABLE_JOINT_UNVISITED |
+| pmnist | V | all | D2 | `NOT_TESTABLE_JOINT_UNVISITED` | L=NOT_TESTABLE_JOINT_UNVISITED | A=NOT_TESTABLE_JOINT_UNVISITED |
+| pmnist | V | all | D3_N | `HELPS(WEAK_DOSE)_A_ONLY` | L=NOT_TESTABLE_NO_CONTRAST | A=HELPS(WEAK_DOSE) |
+| pmnist | V | all | D3_D | `NOT_TESTABLE_JOINT_UNVISITED` | L=NOT_TESTABLE_JOINT_UNVISITED | A=NOT_TESTABLE_JOINT_UNVISITED |
+| pmnist | V | all | D3_I | `NOT_TESTABLE_WEAK_MANIPULATION` | L=INTERACTION_UNRESOLVED | A=NOT_TESTABLE_WEAK_MANIPULATION |
+| pmnist | V | all | D3_HEADING | `FACTORIAL_OTHER(N=HELPS(WEAK_DOSE)_A_ONLY, D=NOT_TESTABLE_JOINT_UNVISITED)` | L=FACTORIAL_OTHER(N=NOT_TESTABLE_NO_CONTRAST, D=NOT_TESTABLE_JOINT_UNVISITED) | A=FACTORIAL_OTHER(N=HELPS(WEAK_DOSE), D=NOT_TESTABLE_JOINT_UNVISITED) |
+| pmnist | V | all | HYPOTHESIS | `CANCELLATION_UNRESOLVED` | L=CANCELLATION_UNRESOLVED | A=CANCELLATION_UNRESOLVED |  |
+| pmnist | V | all | N_DEEP | `NOT_APPLICABLE` | L=NOT_APPLICABLE | A=NOT_APPLICABLE |
+| pmnist | S | all | D_PAR | `PARENTS_ELU_BETTER_A_ONLY` | L=PARENTS_UNRESOLVED | A=PARENTS_ELU_BETTER |
+| pmnist | S | all | D1 | `BIG_BEATS_BOTH` | L=BIG_BEATS_BOTH | A=BIG_BEATS_BOTH |
+| pmnist | S | all | D2 | `CO_PRIMARY_CONFLICT(L=SMALL_EQUALS_BOTH, A=SMALL_EQUALS_ELU1)` | L=SMALL_EQUALS_BOTH | A=SMALL_EQUALS_ELU1 |
+| pmnist | S | all | D3_N | `HELPS` | L=HELPS | A=HELPS |
+| pmnist | S | all | D3_D | `HELPS(WEAK_DOSE)_L_ONLY` | L=HELPS(WEAK_DOSE) | A=UNRESOLVED |
+| pmnist | S | all | D3_I | `SUPERADDITIVE(WEAK_DOSE)` | L=SUPERADDITIVE(WEAK_DOSE) | A=SUPERADDITIVE |
+| pmnist | S | all | D3_HEADING | `FACTORIAL_OTHER(N=HELPS, D=HELPS(WEAK_DOSE)_L_ONLY)` | L=BOTH_FACTORS_HELP | A=FACTORIAL_OTHER(N=HELPS, D=UNRESOLVED) |
+| pmnist | S | all | HYPOTHESIS | `CANCELLATION_REFUTED` | L=CANCELLATION_REFUTED | A=CANCELLATION_REFUTED | L:simple effect sL,sE is EQ or reversed | A:simple effect sE is EQ or reversed |
+| pmnist | S | all | N_DEEP | `NOT_APPLICABLE` | L=NOT_APPLICABLE | A=NOT_APPLICABLE |
+| pmnist | S | all | WINDOW_DEPENDENT_D3_HEADING | `WINDOW_DEPENDENT` | main=FACTORIAL_OTHER(N=HELPS, D=HELPS(WEAK_DOSE)_L_ONLY) issa=FACTORIAL_OTHER(N=HELPS, D=UNRESOLVED) |
+| pmnist | H | all | D5A_N | `N_CHANNEL_UNRESOLVED` | G=MOVES F=OTHER(DIR-) | L: G=MOVES F=OTHER(DIR-) | A: G=MOVES F=OTHER(DIR-) |
+| pmnist | H | all | D5A_D | `D_CHANNEL_UNRESOLVED(NOT_TESTABLE_NO_SIMPLE_EFFECT)` | G=NOT_TESTABLE_NO_SIMPLE_EFFECT F=STAYS_L_ONLY | L: G=OTHER(UNRES) F=STAYS | A: G=NOT_TESTABLE_NO_SIMPLE_EFFECT F=NOT_TESTABLE_NO_SIMPLE_EFFECT |
+| pmnist | V | all | D5B_N | `REPORT_ONLY_V` | NOT_TESTABLE_COLLINEAR (box B near, §0.4-8) |
+| pmnist | V | all | D5B_D | `REPORT_ONLY_V` | NOT_TESTABLE_COLLINEAR (box B near, §0.4-8) |
+| pmnist | H+S | all | D4 | `BOX_CONSISTENCY_UNRESOLVED` | N=CONSISTENT D=UNRESOLVED |
+| pmnist | H | 1 | D6_SMAXH | `SMAXH_BELOW_LEAKY_LINE_A_ONLY` | L=SMAXH_LINE_UNRESOLVED | A=SMAXH_BELOW_LEAKY_LINE | s0:LR02<SMAXH<LR03 lam=0.18 G=0.362; s1:LR02<SMAXH<LR03 lam=0.01 G=0.336; s2:LR02<SMAXH<LR03 lam=0.11 G=0.3 |
+| pmnist | H | 1 | D6_SMINH | `SMINH_BELOW_LEAKY_LINE_A_ONLY` | L=SMINH_LINE_UNRESOLVED | A=SMINH_BELOW_LEAKY_LINE | s0:LR<SMINH<LR02 lam=0.11 G=0.257; s1:LR001<SMINH<LR lam=0.87 G=0.234; s2:LR001<SMINH<LR lam=0.49 G=0.206;  |
+| pmnist | H | 1 | D6 | `GATE_WORTH_UNRESOLVED` | SMAXH=SMAXH_BELOW_LEAKY_LINE_A_ONLY SMINH=SMINH_BELOW_LEAKY_LINE_A_ONLY |
+| pmnist | S | 1 | D6_SMAXS | `SMAXS_BELOW_LEAKY_LINE_A_ONLY` | L=SMAXS_LINE_UNRESOLVED | A=SMAXS_BELOW_LEAKY_LINE | s0:LR02<SMAXS<LR03 lam=0.52 G=0.397; s1:LR02<SMAXS<LR03 lam=0.46 G=0.386; s2:LR02<SMAXS<LR03 lam=0.29 G=0.3 |
+| pmnist | S | 1 | D6_SMINS | `SMINS_ON_LEAKY_LINE_L_ONLY` | L=SMINS_ON_LEAKY_LINE | A=SMINS_LINE_UNRESOLVED | s0:LR001<SMINS<LR lam=0.66 G=0.238; s1:LR<SMINS<LR02 lam=0.02 G=0.245; s2:LR<SMINS<LR02 lam=0.15 G=0.236; s0:L |
+| pmnist | S | 1 | D6 | `GATE_WORTH_UNRESOLVED` | SMAXS=SMAXS_BELOW_LEAKY_LINE_A_ONLY SMINS=SMINS_ON_LEAKY_LINE_L_ONLY |
+| pmnist | H | 0 | D7_NEAR_BAND_SINKING | `NEAR_BAND_SINKING_UNRESOLVED(M_SE_ONLY)` | c1=UNRES c2=DIR- guard=True twins=4 live_pairs=12 sigma2_bin={0: 0.000301756721925785, 1: None, 2: None} sigma2_all=0.00012190988829362845 pairs_bin={0: 12, 1:  |
+| pmnist | H | 1 | D7_NEAR_BAND_SINKING | `NOT_DETERMINED_DEGENERATE_SERIES` | s0: NaN in stratified series |
+| pmnist | H | 0 | D7_NEAR_BAND_STEP | `NEAR_BAND_STEP_MIXED(M_SE_ONLY)` | c1=DIR- c2=DIR+ guard=True twins=4 live_pairs=12 sigma2_bin={0: 0.0, 1: None, 2: None} sigma2_all=0.0 pairs_bin={0: 12, 1: 0, 2: 0} |
+| pmnist | H | 1 | D7_NEAR_BAND_STEP | `NOT_DETERMINED_DEGENERATE_SERIES` | s0: NaN in stratified series |
+| pmnist | H | 0 | D7_NEAR_BAND_ADAM | `NEAR_BAND_ADAM_UNRESOLVED(M_SE_ONLY)` | c1=DIR+ c2=UNRES guard=True twins=4 live_pairs=12 sigma2_bin={0: 0.0, 1: None, 2: None} sigma2_all=0.0 pairs_bin={0: 12, 1: 0, 2: 0} |
+| pmnist | H | 1 | D7_NEAR_BAND_ADAM | `NOT_DETERMINED_DEGENERATE_SERIES` | s0: NaN in stratified series |
+| pmnist | H | 0 | D7_DEEP_BAND_VELOCITY | `DEEP_BAND_VELOCITY_UNRESOLVED` | c1=DIR+ c2=UNRES guard=True twins=4 live_pairs=12 sigma2_bin={0: 0.0, 1: 0.00010600188466322728, 2: 0.0} sigma2_all=0.0 pairs_bin={0: 12, 1: 12, 2: 12} |
+| pmnist | H | 1 | D7_DEEP_BAND_VELOCITY | `DEEP_BAND_VELOCITY_UNRESOLVED` | c1=DIR+ c2=UNRES guard=True twins=4 live_pairs=12 sigma2_bin={0: 0.0, 1: 0.0, 2: 0.0} sigma2_all=0.0 pairs_bin={0: 5, 1: 12, 2: 12} |
+| pmnist | H | 0 | D7_DEEP_BAND_RETURN | `DEEP_BAND_RETURN_UNRESOLVED` | c1=UNRES c2=DIR- guard=True twins=4 live_pairs=12 sigma2_bin={0: 0.0, 1: 0.0, 2: 1.6458194120427764e-05} sigma2_all=1.6954911396410846e-05 pairs_bin={0: 12, 1:  |
+| pmnist | H | 1 | D7_DEEP_BAND_RETURN | `DEEP_BAND_RETURN_UNRESOLVED` | c1=DIR+ c2=UNRES guard=True twins=4 live_pairs=12 sigma2_bin={0: 3.514457777311665e-06, 1: 0.0, 2: 0.0} sigma2_all=1.451435803863685e-05 pairs_bin={0: 5, 1: 12, |
+| scr | H | 1 | D_PAR | `PARENTS_UNRESOLVED` | E<LR 7/10 |
+| scr | H | 1 | D1 | `BIG_UNRESOLVED` |  |
+| scr | H | 1 | D2 | `SMALL_BELOW_BOTH` |  |
+| scr | H | 1 | D3_N | `HELPS` |  |
+| scr | H | 1 | D3_D | `HELPS` |  |
+| scr | H | 1 | D3_I | `SUBADDITIVE` |  |
+| scr | H | 1 | D3_HEADING | `BOTH_FACTORS_HELP` |  |
+| scr | H | 1 | HYPOTHESIS | `CANCELLATION_UNRESOLVED` |  |
+| scr | H | 1 | D4 | `NOT_APPLICABLE_SCR` |  |
+| scr | H | 1 | D6 | `NOT_APPLICABLE_SCR` |  |
+| scr | V | 1 | D_PAR | `PARENTS_UNRESOLVED` | E<LR 7/10 |
+| scr | V | 1 | D1 | `BIG_UNRESOLVED` |  |
+| scr | V | 1 | D2 | `SMALL_UNRESOLVED` |  |
+| scr | V | 1 | D3_N | `UNRESOLVED` |  |
+| scr | V | 1 | D3_D | `UNRESOLVED` |  |
+| scr | V | 1 | D3_I | `INTERACTION_UNRESOLVED` |  |
+| scr | V | 1 | D3_HEADING | `FACTORIAL_OTHER(N=UNRESOLVED, D=UNRESOLVED)` |  |
+| scr | V | 1 | HYPOTHESIS | `CANCELLATION_UNRESOLVED` |  |
+| scr | V | 1 | D4 | `NOT_APPLICABLE_SCR` |  |
+| scr | V | 1 | D6 | `NOT_APPLICABLE_SCR` |  |
+| scr | S | 1 | D_PAR | `PARENTS_UNRESOLVED` | E<LR 7/10 |
+| scr | S | 1 | D1 | `BIG_UNRESOLVED` |  |
+| scr | S | 1 | D2 | `SMALL_BELOW_BOTH` |  |
+| scr | S | 1 | D3_N | `HELPS` |  |
+| scr | S | 1 | D3_D | `HELPS` |  |
+| scr | S | 1 | D3_I | `SUBADDITIVE` |  |
+| scr | S | 1 | D3_HEADING | `BOTH_FACTORS_HELP` |  |
+| scr | S | 1 | HYPOTHESIS | `CANCELLATION_UNRESOLVED` |  |
+| scr | S | 1 | D4 | `NOT_APPLICABLE_SCR` |  |
+| scr | S | 1 | D6 | `NOT_APPLICABLE_SCR` |  |
+| scr | H | 1 | D5A_N | `NOT_TESTABLE_NO_SIMPLE_EFFECT` |  |
+| scr | H | 1 | D5A_D | `NOT_DETERMINED_NUMERIC_DIVERGENCE` |  |
+| scr | H | 1 | D7_DEEP_RELAX | `DEEP_RELAX_UNRESOLVED` | c1=UNRES c2=UNRES |
+| scr | all | 1 | LR_FALLBACK_TRIGGER | `NO_TRIGGER` | trigger= undetermined= |
+| scr | H | 1 | WIN1M_D_PAR | `PARENTS_UNRESOLVED` | E<LR 4/10 |
+| scr | H | 1 | WIN1M_D1 | `BIG_BEATS_BOTH` |  |
+| scr | H | 1 | WIN1M_D2 | `SMALL_BELOW_BOTH` |  |
+| scr | H | 1 | WIN1M_D3_N | `HELPS` |  |
+| scr | H | 1 | WIN1M_D3_D | `HELPS` |  |
+| scr | H | 1 | WIN1M_D3_I | `INTERACTION_UNRESOLVED` |  |
+| scr | H | 1 | WIN1M_D3_HEADING | `BOTH_FACTORS_HELP` |  |
+| scr | H | 1 | WIN1M_HYPOTHESIS | `CANCELLATION_DIRECTIONAL_SUPPORT` |  |
+| scr | V | 1 | WIN1M_D_PAR | `PARENTS_UNRESOLVED` | E<LR 4/10 |
+| scr | V | 1 | WIN1M_D1 | `BIG_UNRESOLVED` |  |
+| scr | V | 1 | WIN1M_D2 | `SMALL_UNRESOLVED` |  |
+| scr | V | 1 | WIN1M_D3_N | `UNRESOLVED` |  |
+| scr | V | 1 | WIN1M_D3_D | `UNRESOLVED` |  |
+| scr | V | 1 | WIN1M_D3_I | `INTERACTION_UNRESOLVED` |  |
+| scr | V | 1 | WIN1M_D3_HEADING | `FACTORIAL_OTHER(N=UNRESOLVED, D=UNRESOLVED)` |  |
+| scr | V | 1 | WIN1M_HYPOTHESIS | `CANCELLATION_UNRESOLVED` |  |
+| scr | S | 1 | WIN1M_D_PAR | `PARENTS_UNRESOLVED` | E<LR 4/10 |
+| scr | S | 1 | WIN1M_D1 | `BIG_UNRESOLVED` |  |
+| scr | S | 1 | WIN1M_D2 | `SMALL_BELOW_BOTH` |  |
+| scr | S | 1 | WIN1M_D3_N | `HELPS` |  |
+| scr | S | 1 | WIN1M_D3_D | `HELPS` |  |
+| scr | S | 1 | WIN1M_D3_I | `SUBADDITIVE` |  |
+| scr | S | 1 | WIN1M_D3_HEADING | `BOTH_FACTORS_HELP` |  |
+| scr | S | 1 | WIN1M_HYPOTHESIS | `CANCELLATION_UNRESOLVED` |  |
+| scr | H | 1 | WIN1M_D5A_N | `N_GATE_DIRECTIONAL` | G=MOVES F=STAYS |
+| scr | H | 1 | WIN1M_D5A_D | `NOT_DETERMINED_NUMERIC_DIVERGENCE` |  |
+| scr | H | 1 | SUB_D_PAR | `PARENTS_ELU_BETTER` | E<LR 10/10 |
+| scr | H | 1 | SUB_D1 | `BIG_BEATS_BOTH` |  |
+| scr | H | 1 | SUB_D2 | `SMALL_BELOW_BOTH` |  |
+| scr | H | 1 | SUB_D3_N | `HELPS` |  |
+| scr | H | 1 | SUB_D3_D | `HELPS` |  |
+| scr | H | 1 | SUB_D3_I | `SUBADDITIVE` |  |
+| scr | H | 1 | SUB_D3_HEADING | `BOTH_FACTORS_HELP` |  |
+| scr | H | 1 | SUB_HYPOTHESIS | `CANCELLATION_DIRECTIONAL_SUPPORT` |  |
+| scr | V | 1 | SUB_D_PAR | `PARENTS_ELU_BETTER` | E<LR 10/10 |
+| scr | V | 1 | SUB_D1 | `BIG_BETWEEN` |  |
+| scr | V | 1 | SUB_D2 | `SMALL_BELOW_BOTH` |  |
+| scr | V | 1 | SUB_D3_N | `HELPS` |  |
+| scr | V | 1 | SUB_D3_D | `UNRESOLVED` |  |
+| scr | V | 1 | SUB_D3_I | `SUBADDITIVE` |  |
+| scr | V | 1 | SUB_D3_HEADING | `FACTORIAL_OTHER(N=HELPS, D=UNRESOLVED)` |  |
+| scr | V | 1 | SUB_HYPOTHESIS | `CANCELLATION_DIRECTIONAL_AGAINST` |  |
+| scr | S | 1 | SUB_D_PAR | `PARENTS_ELU_BETTER` | E<LR 10/10 |
+| scr | S | 1 | SUB_D1 | `BIG_BEATS_BOTH` |  |
+| scr | S | 1 | SUB_D2 | `SMALL_BELOW_BOTH` |  |
+| scr | S | 1 | SUB_D3_N | `HELPS` |  |
+| scr | S | 1 | SUB_D3_D | `HELPS` |  |
+| scr | S | 1 | SUB_D3_I | `INTERACTION_UNRESOLVED` |  |
+| scr | S | 1 | SUB_D3_HEADING | `BOTH_FACTORS_HELP` |  |
+| scr | S | 1 | SUB_HYPOTHESIS | `CANCELLATION_DIRECTIONAL_SUPPORT` |  |
+| scr | H | 1 | SUB_D5A_N | `N_BOTH_DIRECTIONAL` | G=MOVES F=MOVES |
+| scr | H | 1 | SUB_D5A_D | `NOT_DETERMINED_NUMERIC_DIVERGENCE` |  |
+| scr | H | 1 | ZBAR_D_PAR | `PARENTS_LR_BETTER` | E<LR 0/10 |
+| scr | H | 1 | ZBAR_D1 | `BIG_BEATS_BOTH` |  |
+| scr | H | 1 | ZBAR_D2 | `SMALL_BELOW_BOTH` |  |
+| scr | H | 1 | ZBAR_D3_N | `HELPS` |  |
+| scr | H | 1 | ZBAR_D3_D | `HELPS` |  |
+| scr | H | 1 | ZBAR_D3_I | `SUBADDITIVE` |  |
+| scr | H | 1 | ZBAR_D3_HEADING | `BOTH_FACTORS_HELP` |  |
+| scr | H | 1 | ZBAR_HYPOTHESIS | `CANCELLATION_DIRECTIONAL_SUPPORT` |  |
+| scr | V | 1 | ZBAR_D_PAR | `PARENTS_LR_BETTER` | E<LR 0/10 |
+| scr | V | 1 | ZBAR_D1 | `BIG_BEATS_BOTH` |  |
+| scr | V | 1 | ZBAR_D2 | `SMALL_UNRESOLVED` |  |
+| scr | V | 1 | ZBAR_D3_N | `UNRESOLVED` |  |
+| scr | V | 1 | ZBAR_D3_D | `HELPS` |  |
+| scr | V | 1 | ZBAR_D3_I | `SUPERADDITIVE` |  |
+| scr | V | 1 | ZBAR_D3_HEADING | `FACTORIAL_OTHER(N=UNRESOLVED, D=HELPS)` |  |
+| scr | V | 1 | ZBAR_HYPOTHESIS | `CANCELLATION_DIRECTIONAL_AGAINST` |  |
+| scr | S | 1 | ZBAR_D_PAR | `PARENTS_LR_BETTER` | E<LR 0/10 |
+| scr | S | 1 | ZBAR_D1 | `BIG_BEATS_BOTH` |  |
+| scr | S | 1 | ZBAR_D2 | `SMALL_BELOW_BOTH` |  |
+| scr | S | 1 | ZBAR_D3_N | `HELPS` |  |
+| scr | S | 1 | ZBAR_D3_D | `HELPS` |  |
+| scr | S | 1 | ZBAR_D3_I | `SUBADDITIVE` |  |
+| scr | S | 1 | ZBAR_D3_HEADING | `BOTH_FACTORS_HELP` |  |
+| scr | S | 1 | ZBAR_HYPOTHESIS | `CANCELLATION_DIRECTIONAL_SUPPORT` |  |
+| scr | H | 1 | ZBAR_D5A_N | `N_BOTH_DIRECTIONAL` | G=MOVES F=MOVES |
+| scr | H | 1 | ZBAR_D5A_D | `NOT_DETERMINED_NUMERIC_DIVERGENCE` |  |
+| rlmnist | H | all | D_PAR | `PARENTS_LR_ABOVE_FLOOR_ARM` | PT=PARENTS_LR_ABOVE_FLOOR_ARM | LOGIT=PARENTS_LR_ABOVE_FLOOR_ARM |
+| rlmnist | H | all | D1 | `NOT_TESTABLE_WEAK_MANIPULATION` | PT=NOT_TESTABLE_WEAK_MANIPULATION | LOGIT=NOT_TESTABLE_WEAK_MANIPULATION |
+| rlmnist | H | all | D2 | `NOT_TESTABLE_FLOOR` | PT=NOT_TESTABLE_FLOOR | LOGIT=NOT_TESTABLE_FLOOR |
+| rlmnist | H | all | D3_N | `NOT_TESTABLE_FLOOR` | PT=NOT_TESTABLE_FLOOR | LOGIT=NOT_TESTABLE_FLOOR |
+| rlmnist | H | all | D3_D | `NOT_TESTABLE_FLOOR` | PT=NOT_TESTABLE_FLOOR | LOGIT=NOT_TESTABLE_FLOOR |
+| rlmnist | H | all | D3_I | `NOT_TESTABLE_FLOOR` | PT=NOT_TESTABLE_FLOOR | LOGIT=NOT_TESTABLE_FLOOR |
+| rlmnist | H | all | D3_HEADING | `DEEP_DOMINATES_FLOOR` | PT=DEEP_DOMINATES_FLOOR | LOGIT=DEEP_DOMINATES_FLOOR |
+| rlmnist | H | all | HYPOTHESIS | `CANCELLATION_NOT_TESTABLE_RL_FLOOR` | PT=CANCELLATION_NOT_TESTABLE_RL_FLOOR | LOGIT=CANCELLATION_NOT_TESTABLE_RL_FLOOR |  |
+| rlmnist | H | all | N_DEEP | `NOT_TESTABLE_WEAK_MANIPULATION` | PT=NOT_TESTABLE_WEAK_MANIPULATION | LOGIT=NOT_TESTABLE_WEAK_MANIPULATION |
+| rlmnist | V | all | D1 | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | V | all | D2 | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | V | all | D3_N | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | V | all | D3_D | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | V | all | D3_I | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | V | all | D3_HEADING | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | V | all | HYPOTHESIS | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | S | all | D1 | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | S | all | D2 | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | S | all | D3_N | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | S | all | D3_D | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | S | all | D3_I | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | S | all | D3_HEADING | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | S | all | HYPOTHESIS | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | H | all | D5A_N | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | H | all | D5A_D | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | H+S | all | D4 | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | V | all | D5B_N | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | V | all | D5B_D | `NOT_DETERMINED_STAGE2_NOT_RUN` |  |
+| rlmnist | H | 0 | D7_NEAR_BAND_SINKING | `NOT_TESTABLE_NO_COMMON_BIN` | s0: no common bin |
+| rlmnist | H | 1 | D7_NEAR_BAND_SINKING | `NOT_TESTABLE_NO_COMMON_BIN` | s0: no common bin |
+| rlmnist | H | 0 | D7_NEAR_BAND_STEP | `NOT_TESTABLE_NO_COMMON_BIN` | s0: no common bin |
+| rlmnist | H | 1 | D7_NEAR_BAND_STEP | `NOT_TESTABLE_NO_COMMON_BIN` | s0: no common bin |
+| rlmnist | H | 0 | D7_NEAR_BAND_ADAM | `NOT_TESTABLE_NO_COMMON_BIN` | s0: no common bin |
+| rlmnist | H | 1 | D7_NEAR_BAND_ADAM | `NOT_TESTABLE_NO_COMMON_BIN` | s0: no common bin |
+| rlmnist | H | 0 | D7_DEEP_BAND_VELOCITY | `DEEP_BAND_VELOCITY_DOWN(M_SE_ONLY)` | c1=DIR- c2=DIR- guard=True twins=1 live_pairs=3 sigma2_bin={0: None, 1: None, 2: 0.0} sigma2_all=0.0 pairs_bin={0: 0, 1: 0, 2: 3} |
+| rlmnist | H | 1 | D7_DEEP_BAND_VELOCITY | `DEEP_BAND_VELOCITY_MIXED` | c1=DIR+ c2=EQ guard=True twins=1 live_pairs=3 sigma2_bin={0: None, 1: None, 2: 0.0} sigma2_all=0.0 pairs_bin={0: 0, 1: 0, 2: 3} |
+| rlmnist | H | 0 | D7_DEEP_BAND_RETURN | `NOT_DETERMINED_DEGENERATE_SERIES` | s0: sd = 0 in the window |
+| rlmnist | H | 1 | D7_DEEP_BAND_RETURN | `DEEP_BAND_RETURN_UNRESOLVED` | c1=DIR+ c2=UNRES guard=True twins=1 live_pairs=3 sigma2_bin={0: None, 1: None, 2: 0.0} sigma2_all=0.0 pairs_bin={0: 0, 1: 0, 2: 3} |
+| all | H | all | D8 | `CROSS_ENV_NOT_DETERMINED` | N: pmnist=HELPS,scr=HELPS | D: scr=HELPS |
+| pmnist | H | all | D9 | `LR_ROBUSTNESS_NOT_DETERMINED` | lrs=[0.001] |
+
+## D0 / status / twins
+
+| env | family | layer | item | label | note |
+|---|---|---|---|---|---|
+| pmnist | twins | all | SIGMA_ARM_L | `SIGMA_TRAJ_OK` | clipped (mean(c_tw^2 - SE_tw^2) = -0.03704 <= 0 -> sigma2 = 0) n_live_pairs=12 sigma2=0.0 |
+| pmnist | twins | all | SIGMA_ARM_A | `SIGMA_TRAJ_OK` | n_live_pairs=12 sigma2=0.0031922055586469573 |
+| pmnist | twins | LRtw0_s0 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t16 n_compared=120  |
+| pmnist | twins | LRtw0_s1 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t16 n_compared=120  |
+| pmnist | twins | LRtw0_s2 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t16 n_compared=120  |
+| pmnist | twins | LRtw1_s0 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t16 n_compared=120  |
+| pmnist | twins | LRtw1_s1 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t16 n_compared=120  |
+| pmnist | twins | LRtw1_s2 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t16 n_compared=120  |
+| pmnist | twins | LRtw2_s0 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t16 n_compared=120  |
+| pmnist | twins | LRtw2_s1 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t16 n_compared=120  |
+| pmnist | twins | LRtw2_s2 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t16 n_compared=120  |
+| pmnist | twins | LRtw3_s0 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t16 n_compared=120  |
+| pmnist | twins | LRtw3_s1 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t16 n_compared=120  |
+| pmnist | twins | LRtw3_s2 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t16 n_compared=120  |
+| pmnist | arm | LR_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LR_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LR_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | ELU1_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | ELU1_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | ELU1_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | SMAXH_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | SMAXH_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | SMAXH_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | SMINH_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | SMINH_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | SMINH_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | VMIN_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | VMIN_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | VMIN_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | VMAX_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | VMAX_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | VMAX_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | SMAXS_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | SMAXS_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | SMAXS_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | SMINS_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | SMINS_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | SMINS_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | GN_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | GN_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | GN_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | FN_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | FN_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | FN_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | GD_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | GD_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | GD_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | FD_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | FD_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | FD_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LR02_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LR02_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LR02_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LRtw0_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LRtw0_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LRtw0_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LRtw1_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LRtw1_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LRtw1_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LRtw2_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LRtw2_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LRtw2_s2 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LRtw3_s0 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LRtw3_s1 | STATUS | `COMPLETE` |  |
+| pmnist | arm | LRtw3_s2 | STATUS | `COMPLETE` |  |
+| pmnist | H | 0 | D0_N_L | `MANIPULATION_OK` | gamma=0.04807 se=0.000479 ref=0.05071 rho=0.948 rho_min=0.178 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 1 | D0_N_L | `MANIPULATION_OK` | gamma=0.03572 se=0.00101 ref=0.04514 rho=0.791 rho_min=0.178 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 0 | D0_D_L | `MANIPULATION_OK` | gamma=0.05352 se=0.000329 ref=0.05004 rho=1.07 rho_min=0.352 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 1 | D0_D_L | `MANIPULATION_OK` | gamma=0.0607 se=0.000842 ref=0.06137 rho=0.989 rho_min=0.352 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 0 | D0_sE_L | `MANIPULATION_OK` | gamma=0.0457 se=0.000597 ref=0.05071 rho=0.901 rho_min=0.304 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 1 | D0_sE_L | `MANIPULATION_OK` | gamma=0.02647 se=0.00138 ref=0.04514 rho=0.586 rho_min=0.304 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 0 | D0_sL_L | `MANIPULATION_OK` | gamma=0.05511 se=0.000362 ref=0.05004 rho=1.1 rho_min=0.474 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 1 | D0_sL_L | `MANIPULATION_OK` | gamma=0.06054 se=0.000797 ref=0.06137 rho=0.986 rho_min=0.474 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 0 | D0_Lb_L | `MANIPULATION_OK` | gamma=0.05071 se=0.00052 ref=0.05071 rho=1 rho_min=0.304 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 1 | D0_Lb_L | `MANIPULATION_OK` | gamma=0.04514 se=0.000658 ref=0.04514 rho=1 rho_min=0.304 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 0 | D0_Eb_L | `MANIPULATION_OK` | gamma=0.05004 se=0.000407 ref=0.05004 rho=1 rho_min=0.534 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 1 | D0_Eb_L | `MANIPULATION_OK` | gamma=0.06137 se=0.000751 ref=0.06137 rho=1 rho_min=0.534 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | any | D0_I_L | `MANIPULATION_OK` | rho_N=0.948 rho_D=1.07 rho_min_I=0.403 |
+| pmnist | H | any | D0_N_L | `MANIPULATION_OK` | rho=0.948 rho_min=0.178 |
+| pmnist | H | any | D0_D_L | `MANIPULATION_OK` | rho=1.07 rho_min=0.352 |
+| pmnist | H | 0 | D0_N_A | `MANIPULATION_OK` | gamma=0.04807 se=0.000479 ref=0.05071 rho=0.948 rho_min=0.167 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 1 | D0_N_A | `MANIPULATION_OK` | gamma=0.03572 se=0.00101 ref=0.04514 rho=0.791 rho_min=0.167 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 0 | D0_D_A | `MANIPULATION_OK` | gamma=0.05352 se=0.000329 ref=0.05004 rho=1.07 rho_min=0.34 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 1 | D0_D_A | `MANIPULATION_OK` | gamma=0.0607 se=0.000842 ref=0.06137 rho=0.989 rho_min=0.34 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 0 | D0_sE_A | `MANIPULATION_OK` | gamma=0.0457 se=0.000597 ref=0.05071 rho=0.901 rho_min=0.274 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 1 | D0_sE_A | `MANIPULATION_OK` | gamma=0.02647 se=0.00138 ref=0.04514 rho=0.586 rho_min=0.274 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 0 | D0_sL_A | `MANIPULATION_OK` | gamma=0.05511 se=0.000362 ref=0.05004 rho=1.1 rho_min=0.577 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 1 | D0_sL_A | `MANIPULATION_OK` | gamma=0.06054 se=0.000797 ref=0.06137 rho=0.986 rho_min=0.577 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 0 | D0_Lb_A | `MANIPULATION_OK` | gamma=0.05071 se=0.00052 ref=0.05071 rho=1 rho_min=0.226 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 1 | D0_Lb_A | `MANIPULATION_OK` | gamma=0.04514 se=0.000658 ref=0.04514 rho=1 rho_min=0.226 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 0 | D0_Eb_A | `MANIPULATION_OK` | gamma=0.05004 se=0.000407 ref=0.05004 rho=1 rho_min=0.51 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | 1 | D0_Eb_A | `MANIPULATION_OK` | gamma=0.06137 se=0.000751 ref=0.06137 rho=1 rho_min=0.51 (anchor: 2m(judged)/|K_X|) |
+| pmnist | H | any | D0_I_A | `MANIPULATION_OK` | rho_N=0.948 rho_D=1.07 rho_min_I=0.369 |
+| pmnist | H | any | D0_N_A | `MANIPULATION_OK` | rho=0.948 rho_min=0.167 |
+| pmnist | H | any | D0_D_A | `MANIPULATION_OK` | rho=1.07 rho_min=0.34 |
+| pmnist | V | 0 | D0_N_L | `NOT_TESTABLE_NO_CONTRAST` | gamma=-0.001881 se=0.000448 ref=0.04807 rho=-0.0391 rho_min=0.371 (box B H same contrast) |
+| pmnist | V | 1 | D0_N_L | `NOT_TESTABLE_NO_CONTRAST` | gamma=-0.006349 se=0.000554 ref=0.03572 rho=-0.178 rho_min=0.371 (box B H same contrast) |
+| pmnist | V | 0 | D0_D_L | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.01179 se=0.000376 ref=0.05352 rho=0.22 rho_min=1.26 (box B H same contrast) |
+| pmnist | V | 1 | D0_D_L | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.01674 se=0.000748 ref=0.0607 rho=0.276 rho_min=1.26 (box B H same contrast) |
+| pmnist | V | 0 | D0_sE_L | `NOT_TESTABLE_NO_CONTRAST` | gamma=-0.001589 se=0.000884 ref=0.0457 rho=-0.0348 rho_min=1 (box B H same contrast) |
+| pmnist | V | 1 | D0_sE_L | `NOT_TESTABLE_NO_CONTRAST` | gamma=-0.006339 se=0.000805 ref=0.02647 rho=-0.239 rho_min=1 (box B H same contrast) |
+| pmnist | V | 0 | D0_sL_L | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.008898 se=0.000182 ref=0.05511 rho=0.161 rho_min=1 (box B H same contrast) |
+| pmnist | V | 1 | D0_sL_L | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.007087 se=0.00039 ref=0.06054 rho=0.117 rho_min=1 (box B H same contrast) |
+| pmnist | V | 0 | D0_Lb_L | `NOT_TESTABLE_NO_CONTRAST` | gamma=-0.001798 se=0.000475 ref=0.05071 rho=-0.0355 rho_min=0.304 (box B H same contrast) |
+| pmnist | V | 1 | D0_Lb_L | `NOT_TESTABLE_NO_CONTRAST` | gamma=-0.006591 se=0.000823 ref=0.04514 rho=-0.146 rho_min=0.304 (box B H same contrast) |
+| pmnist | V | 0 | D0_Eb_L | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.01531 se=0.000321 ref=0.05004 rho=0.306 rho_min=0.534 (box B H same contrast) |
+| pmnist | V | 1 | D0_Eb_L | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.02778 se=0.00132 ref=0.06137 rho=0.453 rho_min=0.534 (box B H same contrast) |
+| pmnist | V | any | D0_I_L | `NOT_TESTABLE_WEAK_MANIPULATION` | rho_N=-0.0391 rho_D=0.276 rho_min_I=1.26 |
+| pmnist | V | any | D0_N_L | `NOT_TESTABLE_NO_CONTRAST` | rho=-0.0391 rho_min=0.371 |
+| pmnist | V | any | D0_D_L | `NOT_TESTABLE_JOINT_UNVISITED` | rho=0.276 rho_min=1.26 |
+| pmnist | V | 0 | D0_N_A | `NOT_TESTABLE_NO_CONTRAST` | gamma=-0.001881 se=0.000448 ref=0.04807 rho=-0.0391 rho_min=0.361 (box B H same contrast) |
+| pmnist | V | 1 | D0_N_A | `NOT_TESTABLE_NO_CONTRAST` | gamma=-0.006349 se=0.000554 ref=0.03572 rho=-0.178 rho_min=0.361 (box B H same contrast) |
+| pmnist | V | 0 | D0_D_A | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.01179 se=0.000376 ref=0.05352 rho=0.22 rho_min=1 (box B H same contrast) |
+| pmnist | V | 1 | D0_D_A | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.01674 se=0.000748 ref=0.0607 rho=0.276 rho_min=1 (box B H same contrast) |
+| pmnist | V | 0 | D0_sE_A | `NOT_TESTABLE_NO_CONTRAST` | gamma=-0.001589 se=0.000884 ref=0.0457 rho=-0.0348 rho_min=1 (box B H same contrast) |
+| pmnist | V | 1 | D0_sE_A | `NOT_TESTABLE_NO_CONTRAST` | gamma=-0.006339 se=0.000805 ref=0.02647 rho=-0.239 rho_min=1 (box B H same contrast) |
+| pmnist | V | 0 | D0_sL_A | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.008898 se=0.000182 ref=0.05511 rho=0.161 rho_min=0.679 (box B H same contrast) |
+| pmnist | V | 1 | D0_sL_A | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.007087 se=0.00039 ref=0.06054 rho=0.117 rho_min=0.679 (box B H same contrast) |
+| pmnist | V | 0 | D0_Lb_A | `NOT_TESTABLE_NO_CONTRAST` | gamma=-0.001798 se=0.000475 ref=0.05071 rho=-0.0355 rho_min=0.226 (box B H same contrast) |
+| pmnist | V | 1 | D0_Lb_A | `NOT_TESTABLE_NO_CONTRAST` | gamma=-0.006591 se=0.000823 ref=0.04514 rho=-0.146 rho_min=0.226 (box B H same contrast) |
+| pmnist | V | 0 | D0_Eb_A | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.01531 se=0.000321 ref=0.05004 rho=0.306 rho_min=0.51 (box B H same contrast) |
+| pmnist | V | 1 | D0_Eb_A | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.02778 se=0.00132 ref=0.06137 rho=0.453 rho_min=0.51 (box B H same contrast) |
+| pmnist | V | any | D0_I_A | `NOT_TESTABLE_WEAK_MANIPULATION` | rho_N=-0.0391 rho_D=0.276 rho_min_I=1 |
+| pmnist | V | any | D0_N_A | `NOT_TESTABLE_NO_CONTRAST` | rho=-0.0391 rho_min=0.361 |
+| pmnist | V | any | D0_D_A | `NOT_TESTABLE_JOINT_UNVISITED` | rho=0.276 rho_min=1 |
+| pmnist | S | 0 | D0_N_L | `MANIPULATION_OK` | gamma=0.06426 se=0.000438 ref=0.04807 rho=1.34 rho_min=0.371 (box B H same contrast) |
+| pmnist | S | 1 | D0_N_L | `MANIPULATION_OK` | gamma=0.04424 se=0.00103 ref=0.03572 rho=1.24 rho_min=0.371 (box B H same contrast) |
+| pmnist | S | 0 | D0_D_L | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.06611 se=0.000214 ref=0.05352 rho=1.24 rho_min=1.26 (box B H same contrast) |
+| pmnist | S | 1 | D0_D_L | `NOT_TESTABLE_JOINT_UNVISITED` | gamma=0.07175 se=0.000362 ref=0.0607 rho=1.18 rho_min=1.26 (box B H same contrast) |
+| pmnist | S | 0 | D0_sE_L | `MANIPULATION_OK` | gamma=0.05323 se=0.000519 ref=0.0457 rho=1.16 rho_min=1 (box B H same contrast) |
+| pmnist | S | 1 | D0_sE_L | `MANIPULATION_OK` | gamma=0.02758 se=0.000934 ref=0.02647 rho=1.04 rho_min=1 (box B H same contrast) |
+| pmnist | S | 0 | D0_sL_L | `MANIPULATION_OK` | gamma=0.06125 se=0.000285 ref=0.05511 rho=1.11 rho_min=1 (box B H same contrast) |
+| pmnist | S | 1 | D0_sL_L | `MANIPULATION_OK` | gamma=0.0679 se=0.000657 ref=0.06054 rho=1.12 rho_min=1 (box B H same contrast) |
+| pmnist | S | 0 | D0_Lb_L | `MANIPULATION_OK` | gamma=0.07583 se=0.000514 ref=0.05071 rho=1.5 rho_min=0.304 (box B H same contrast) |
+| pmnist | S | 1 | D0_Lb_L | `MANIPULATION_OK` | gamma=0.06348 se=0.000886 ref=0.04514 rho=1.41 rho_min=0.304 (box B H same contrast) |
+| pmnist | S | 0 | D0_Eb_L | `MANIPULATION_OK` | gamma=0.07134 se=0.00026 ref=0.05004 rho=1.43 rho_min=0.534 (box B H same contrast) |
+| pmnist | S | 1 | D0_Eb_L | `MANIPULATION_OK` | gamma=0.07573 se=0.00029 ref=0.06137 rho=1.23 rho_min=0.534 (box B H same contrast) |
+| pmnist | S | any | D0_I_L | `NOT_TESTABLE_WEAK_MANIPULATION` | rho_N=1.34 rho_D=1.24 rho_min_I=1.26 |
+| pmnist | S | any | D0_N_L | `MANIPULATION_OK` | rho=1.34 rho_min=0.371 |
+| pmnist | S | any | D0_D_L | `NOT_TESTABLE_JOINT_UNVISITED` | rho=1.24 rho_min=1.26 |
+| pmnist | S | 0 | D0_N_A | `MANIPULATION_OK` | gamma=0.06426 se=0.000438 ref=0.04807 rho=1.34 rho_min=0.361 (box B H same contrast) |
+| pmnist | S | 1 | D0_N_A | `MANIPULATION_OK` | gamma=0.04424 se=0.00103 ref=0.03572 rho=1.24 rho_min=0.361 (box B H same contrast) |
+| pmnist | S | 0 | D0_D_A | `MANIPULATION_OK` | gamma=0.06611 se=0.000214 ref=0.05352 rho=1.24 rho_min=1 (box B H same contrast) |
+| pmnist | S | 1 | D0_D_A | `MANIPULATION_OK` | gamma=0.07175 se=0.000362 ref=0.0607 rho=1.18 rho_min=1 (box B H same contrast) |
+| pmnist | S | 0 | D0_sE_A | `MANIPULATION_OK` | gamma=0.05323 se=0.000519 ref=0.0457 rho=1.16 rho_min=1 (box B H same contrast) |
+| pmnist | S | 1 | D0_sE_A | `MANIPULATION_OK` | gamma=0.02758 se=0.000934 ref=0.02647 rho=1.04 rho_min=1 (box B H same contrast) |
+| pmnist | S | 0 | D0_sL_A | `MANIPULATION_OK` | gamma=0.06125 se=0.000285 ref=0.05511 rho=1.11 rho_min=0.679 (box B H same contrast) |
+| pmnist | S | 1 | D0_sL_A | `MANIPULATION_OK` | gamma=0.0679 se=0.000657 ref=0.06054 rho=1.12 rho_min=0.679 (box B H same contrast) |
+| pmnist | S | 0 | D0_Lb_A | `MANIPULATION_OK` | gamma=0.07583 se=0.000514 ref=0.05071 rho=1.5 rho_min=0.226 (box B H same contrast) |
+| pmnist | S | 1 | D0_Lb_A | `MANIPULATION_OK` | gamma=0.06348 se=0.000886 ref=0.04514 rho=1.41 rho_min=0.226 (box B H same contrast) |
+| pmnist | S | 0 | D0_Eb_A | `MANIPULATION_OK` | gamma=0.07134 se=0.00026 ref=0.05004 rho=1.43 rho_min=0.51 (box B H same contrast) |
+| pmnist | S | 1 | D0_Eb_A | `MANIPULATION_OK` | gamma=0.07573 se=0.00029 ref=0.06137 rho=1.23 rho_min=0.51 (box B H same contrast) |
+| pmnist | S | any | D0_I_A | `MANIPULATION_OK` | rho_N=1.34 rho_D=1.24 rho_min_I=1 |
+| pmnist | S | any | D0_N_A | `MANIPULATION_OK` | rho=1.34 rho_min=0.361 |
+| pmnist | S | any | D0_D_A | `MANIPULATION_OK` | rho=1.24 rho_min=1 |
+| pmnist | H | 0 | D5A_N_GATE_G_L | `MANIPULATION_OK` | val=0.06964 ref=0.05915 rho=1.18 rho_min=0.429 exist=True |
+| pmnist | H | 1 | D5A_N_GATE_G_L | `MANIPULATION_OK` | val=0.04446 ref=0.0441 rho=1.01 rho_min=0.429 exist=True |
+| pmnist | H | 0 | D5A_N_GATE_F_L | `MANIPULATION_OK` | val=-0.6096 ref=-0.493 rho=1.24 rho_min=0.549 exist=True |
+| pmnist | H | 1 | D5A_N_GATE_F_L | `MANIPULATION_OK` | val=-0.5846 ref=-0.4997 rho=1.17 rho_min=0.549 exist=True |
+| pmnist | H | 0 | D5A_N_GATE_G_A | `MANIPULATION_OK` | val=0.06964 ref=0.05915 rho=1.18 rho_min=0.267 exist=True |
+| pmnist | H | 1 | D5A_N_GATE_G_A | `MANIPULATION_OK` | val=0.04446 ref=0.0441 rho=1.01 rho_min=0.267 exist=True |
+| pmnist | H | 0 | D5A_N_GATE_F_A | `MANIPULATION_OK` | val=-0.6096 ref=-0.493 rho=1.24 rho_min=0.267 exist=True |
+| pmnist | H | 1 | D5A_N_GATE_F_A | `MANIPULATION_OK` | val=-0.5846 ref=-0.4997 rho=1.17 rho_min=0.267 exist=True |
+| pmnist | H | 0 | D5A_D_GATE_G_L | `MANIPULATION_OK` | val=0.05115 ref=0.04565 rho=1.12 rho_min=0.426 exist=True |
+| pmnist | H | 1 | D5A_D_GATE_G_L | `MANIPULATION_OK` | val=0.05235 ref=0.05258 rho=0.996 rho_min=0.426 exist=True |
+| pmnist | H | 0 | D5A_D_GATE_F_L | `MANIPULATION_OK` | val=-0.1919 ref=-0.1384 rho=1.39 rho_min=0.511 exist=True |
+| pmnist | H | 1 | D5A_D_GATE_F_L | `MANIPULATION_OK` | val=-0.5382 ref=-0.1897 rho=2.84 rho_min=0.511 exist=True |
+| scr | H | 1 | D0_N | `MANIPULATION_OK` | gamma=0.1123 n_mass_ok=10/10 |
+| scr | H | 1 | D0_D | `MANIPULATION_OK` | gamma=0.06055 n_mass_ok=10/10 |
+| scr | V | 1 | D0_N | `MANIPULATION_OK` | gamma=0.05976 n_mass_ok=10/10 |
+| scr | V | 1 | D0_D | `MANIPULATION_OK` | gamma=0.009785 n_mass_ok=10/10 |
+| scr | S | 1 | D0_N | `MANIPULATION_OK` | gamma=0.1314 n_mass_ok=10/10 |
+| scr | S | 1 | D0_D | `MANIPULATION_OK` | gamma=0.06799 n_mass_ok=10/10 |
+| scr | arm | LR | SCR_STATUS | `COMPLETE` | n_records=[5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001] margin_out_max=0.169 |
+| scr | arm | ELU1 | SCR_STATUS | `COMPLETE` | n_records=[5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001] margin_out_max=0.704 |
+| scr | arm | SMAXH | SCR_STATUS | `COMPLETE` | n_records=[5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001] margin_out_max=0.373 |
+| scr | arm | SMINH | SCR_STATUS | `COMPLETE` | n_records=[5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001] margin_out_max=0.109 |
+| scr | arm | VMIN | SCR_STATUS | `COMPLETE` | n_records=[5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001] margin_out_max=0.549 |
+| scr | arm | VMAX | SCR_STATUS | `COMPLETE` | n_records=[5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001] margin_out_max=0.333 |
+| scr | arm | SMAXS | SCR_STATUS | `COMPLETE` | n_records=[5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001] margin_out_max=0.374 |
+| scr | arm | SMINS | SCR_STATUS | `COMPLETE` | n_records=[5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001] margin_out_max=0.0771 |
+| scr | arm | GN | SCR_STATUS | `COMPLETE` | n_records=[5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001] margin_out_max=0.208 |
+| scr | arm | FN | SCR_STATUS | `COMPLETE` | n_records=[5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001] margin_out_max=0.395 |
+| scr | arm | GD | SCR_STATUS | `COMPLETE` | n_records=[5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001, 5001] margin_out_max=0.366 |
+| scr | arm | FD | SCR_STATUS | `NUMERIC_DIVERGENCE` | n_records=None |
+| scr | all | 1 | LAM_FULL_SOURCE | `PRESENT` | /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr/readout_chLR_1216.npz |
+| rlmnist | twins | all | SIGMA_ARM_PT | `SIGMA_TRAJ_OK` | clipped (mean(c_tw^2 - SE_tw^2) = -0.07531 <= 0 -> sigma2 = 0) n_live_pairs=3 sigma2=0.0 |
+| rlmnist | twins | all | SIGMA_ARM_LOGIT | `SIGMA_TRAJ_OK` | clipped (mean(c_tw^2 - SE_tw^2) = -0.0003104 <= 0 -> sigma2 = 0) n_live_pairs=3 sigma2=0.0 |
+| rlmnist | twins | LRtw0_s0 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t31 n_compared=50  |
+| rlmnist | twins | LRtw0_s1 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t31 n_compared=50  |
+| rlmnist | twins | LRtw0_s2 | TWIN_LIVE | `TWIN_LIVE` | twin_live_task=1 window_start=t31 n_compared=50  |
+| rlmnist | arm | LR_s0 | STATUS | `COMPLETE` | AT_FLOOR=False F=0.11450 thr=0.11524 |
+| rlmnist | arm | LR_s0 | AT_FLOOR | `ABOVE_FLOOR` |  |
+| rlmnist | arm | LR_s1 | STATUS | `COMPLETE` | AT_FLOOR=False F=0.11400 thr=0.11474 |
+| rlmnist | arm | LR_s1 | AT_FLOOR | `ABOVE_FLOOR` |  |
+| rlmnist | arm | LR_s2 | STATUS | `COMPLETE` | AT_FLOOR=False F=0.11383 thr=0.11458 |
+| rlmnist | arm | LR_s2 | AT_FLOOR | `ABOVE_FLOOR` |  |
+| rlmnist | arm | ELU1_s0 | STATUS | `COMPLETE` | AT_FLOOR=True F=0.11450 thr=0.11524 |
+| rlmnist | arm | ELU1_s0 | AT_FLOOR | `AT_FLOOR` |  |
+| rlmnist | arm | ELU1_s1 | STATUS | `COMPLETE` | AT_FLOOR=True F=0.11400 thr=0.11474 |
+| rlmnist | arm | ELU1_s1 | AT_FLOOR | `AT_FLOOR` |  |
+| rlmnist | arm | ELU1_s2 | STATUS | `COMPLETE` | AT_FLOOR=True F=0.11383 thr=0.11458 |
+| rlmnist | arm | ELU1_s2 | AT_FLOOR | `AT_FLOOR` |  |
+| rlmnist | arm | SMAXH_s0 | STATUS | `COMPLETE` | AT_FLOOR=False F=0.11450 thr=0.11524 |
+| rlmnist | arm | SMAXH_s0 | AT_FLOOR | `ABOVE_FLOOR` |  |
+| rlmnist | arm | SMAXH_s1 | STATUS | `COMPLETE` | AT_FLOOR=False F=0.11400 thr=0.11474 |
+| rlmnist | arm | SMAXH_s1 | AT_FLOOR | `ABOVE_FLOOR` |  |
+| rlmnist | arm | SMAXH_s2 | STATUS | `COMPLETE` | AT_FLOOR=False F=0.11383 thr=0.11458 |
+| rlmnist | arm | SMAXH_s2 | AT_FLOOR | `ABOVE_FLOOR` |  |
+| rlmnist | arm | SMINH_s0 | STATUS | `COMPLETE` | AT_FLOOR=True F=0.11450 thr=0.11524 |
+| rlmnist | arm | SMINH_s0 | AT_FLOOR | `AT_FLOOR` |  |
+| rlmnist | arm | SMINH_s1 | STATUS | `COMPLETE` | AT_FLOOR=True F=0.11400 thr=0.11474 |
+| rlmnist | arm | SMINH_s1 | AT_FLOOR | `AT_FLOOR` |  |
+| rlmnist | arm | SMINH_s2 | STATUS | `COMPLETE` | AT_FLOOR=True F=0.11383 thr=0.11458 |
+| rlmnist | arm | SMINH_s2 | AT_FLOOR | `AT_FLOOR` |  |
+| rlmnist | arm | LRtw0_s0 | STATUS | `COMPLETE` | AT_FLOOR=False F=0.11450 thr=0.11524 |
+| rlmnist | arm | LRtw0_s0 | AT_FLOOR | `ABOVE_FLOOR` |  |
+| rlmnist | arm | LRtw0_s1 | STATUS | `COMPLETE` | AT_FLOOR=False F=0.11400 thr=0.11474 |
+| rlmnist | arm | LRtw0_s1 | AT_FLOOR | `ABOVE_FLOOR` |  |
+| rlmnist | arm | LRtw0_s2 | STATUS | `COMPLETE` | AT_FLOOR=False F=0.11383 thr=0.11458 |
+| rlmnist | arm | LRtw0_s2 | AT_FLOOR | `ABOVE_FLOOR` |  |
+| rlmnist | H | 0 | D0_N_PT | `NOT_TESTABLE_WEAK_MANIPULATION` | gamma=0.009596 se=0.000359 ref=0.04807 rho=0.2 rho_min=0.371 (box B H same contrast) |
+| rlmnist | H | 1 | D0_N_PT | `NOT_TESTABLE_WEAK_MANIPULATION` | gamma=0.00341 se=0.000168 ref=0.03572 rho=0.0955 rho_min=0.371 (box B H same contrast) |
+| rlmnist | H | 0 | D0_D_PT | `MANIPULATION_OK` | gamma=0.08164 se=0.000415 ref=0.05352 rho=1.53 rho_min=1.26 (box B H same contrast) |
+| rlmnist | H | 1 | D0_D_PT | `MANIPULATION_OK` | gamma=0.09635 se=0.000183 ref=0.0607 rho=1.59 rho_min=1.26 (box B H same contrast) |
+| rlmnist | H | 0 | D0_sE_PT | `NOT_TESTABLE_WEAK_MANIPULATION` | gamma=0.011 se=0.000171 ref=0.0457 rho=0.241 rho_min=1 (box B H same contrast) |
+| rlmnist | H | 1 | D0_sE_PT | `NOT_TESTABLE_NO_CONTRAST` | gamma=6.716e-08 se=6.72e-08 ref=0.02647 rho=2.54e-06 rho_min=1 (box B H same contrast) |
+| rlmnist | H | 0 | D0_sL_PT | `MANIPULATION_OK` | gamma=0.08246 se=0.000516 ref=0.05511 rho=1.5 rho_min=1 (box B H same contrast) |
+| rlmnist | H | 1 | D0_sL_PT | `MANIPULATION_OK` | gamma=0.09674 se=0.000171 ref=0.06054 rho=1.6 rho_min=1 (box B H same contrast) |
+| rlmnist | H | 0 | D0_Lb_PT | `NOT_TESTABLE_WEAK_MANIPULATION` | gamma=0.008192 se=0.000308 ref=0.05071 rho=0.162 rho_min=0.304 (box B H same contrast) |
+| rlmnist | H | 1 | D0_Lb_PT | `NOT_TESTABLE_WEAK_MANIPULATION` | gamma=0.00682 se=0.000336 ref=0.04514 rho=0.151 rho_min=0.304 (box B H same contrast) |
+| rlmnist | H | 0 | D0_Eb_PT | `MANIPULATION_OK` | gamma=0.08081 se=0.00031 ref=0.05004 rho=1.61 rho_min=0.534 (box B H same contrast) |
+| rlmnist | H | 1 | D0_Eb_PT | `MANIPULATION_OK` | gamma=0.09597 se=0.000332 ref=0.06137 rho=1.56 rho_min=0.534 (box B H same contrast) |
+| rlmnist | H | any | D0_I_PT | `NOT_TESTABLE_WEAK_MANIPULATION` | rho_N=0.2 rho_D=1.59 rho_min_I=1.26 |
+| rlmnist | H | any | D0_N_PT | `NOT_TESTABLE_WEAK_MANIPULATION` | rho=0.2 rho_min=0.371 |
+| rlmnist | H | any | D0_D_PT | `MANIPULATION_OK` | rho=1.59 rho_min=1.26 |
+| rlmnist | H | 0 | D0_N_LOGIT | `NOT_TESTABLE_WEAK_MANIPULATION` | gamma=0.009596 se=0.000359 ref=0.04807 rho=0.2 rho_min=0.371 (box B H same contrast) |
+| rlmnist | H | 1 | D0_N_LOGIT | `NOT_TESTABLE_WEAK_MANIPULATION` | gamma=0.00341 se=0.000168 ref=0.03572 rho=0.0955 rho_min=0.371 (box B H same contrast) |
+| rlmnist | H | 0 | D0_D_LOGIT | `MANIPULATION_OK` | gamma=0.08164 se=0.000415 ref=0.05352 rho=1.53 rho_min=1.26 (box B H same contrast) |
+| rlmnist | H | 1 | D0_D_LOGIT | `MANIPULATION_OK` | gamma=0.09635 se=0.000183 ref=0.0607 rho=1.59 rho_min=1.26 (box B H same contrast) |
+| rlmnist | H | 0 | D0_sE_LOGIT | `NOT_TESTABLE_WEAK_MANIPULATION` | gamma=0.011 se=0.000171 ref=0.0457 rho=0.241 rho_min=1 (box B H same contrast) |
+| rlmnist | H | 1 | D0_sE_LOGIT | `NOT_TESTABLE_NO_CONTRAST` | gamma=6.716e-08 se=6.72e-08 ref=0.02647 rho=2.54e-06 rho_min=1 (box B H same contrast) |
+| rlmnist | H | 0 | D0_sL_LOGIT | `MANIPULATION_OK` | gamma=0.08246 se=0.000516 ref=0.05511 rho=1.5 rho_min=1 (box B H same contrast) |
+| rlmnist | H | 1 | D0_sL_LOGIT | `MANIPULATION_OK` | gamma=0.09674 se=0.000171 ref=0.06054 rho=1.6 rho_min=1 (box B H same contrast) |
+| rlmnist | H | 0 | D0_Lb_LOGIT | `NOT_TESTABLE_WEAK_MANIPULATION` | gamma=0.008192 se=0.000308 ref=0.05071 rho=0.162 rho_min=0.304 (box B H same contrast) |
+| rlmnist | H | 1 | D0_Lb_LOGIT | `NOT_TESTABLE_WEAK_MANIPULATION` | gamma=0.00682 se=0.000336 ref=0.04514 rho=0.151 rho_min=0.304 (box B H same contrast) |
+| rlmnist | H | 0 | D0_Eb_LOGIT | `MANIPULATION_OK` | gamma=0.08081 se=0.00031 ref=0.05004 rho=1.61 rho_min=0.534 (box B H same contrast) |
+| rlmnist | H | 1 | D0_Eb_LOGIT | `MANIPULATION_OK` | gamma=0.09597 se=0.000332 ref=0.06137 rho=1.56 rho_min=0.534 (box B H same contrast) |
+| rlmnist | H | any | D0_I_LOGIT | `NOT_TESTABLE_WEAK_MANIPULATION` | rho_N=0.2 rho_D=1.59 rho_min_I=1.26 |
+| rlmnist | H | any | D0_N_LOGIT | `NOT_TESTABLE_WEAK_MANIPULATION` | rho=0.2 rho_min=0.371 |
+| rlmnist | H | any | D0_D_LOGIT | `MANIPULATION_OK` | rho=1.59 rho_min=1.26 |

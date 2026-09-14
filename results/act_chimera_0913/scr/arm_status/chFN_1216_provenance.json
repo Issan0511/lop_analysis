@@ -1,0 +1,606 @@
+{
+  "run_id": "act_chimera_0913",
+  "env": "scr",
+  "arm": "chFN_1216",
+  "family": "chimera",
+  "activation": "FN",
+  "act_name": "FN",
+  "dial": 0.1,
+  "u_fr": null,
+  "hook": null,
+  "lr": 0.01,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "total_steps": 5000000,
+  "registered_total_steps": 5000000,
+  "checkpoints": [
+    0,
+    1000000,
+    5000000
+  ],
+  "generator_offset": 0,
+  "shortened": false,
+  "outdir": "/home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr",
+  "status": "COMPLETE",
+  "row_family": "main",
+  "git_hash": "a592a4aa6978dc3b5c3d715e4104e993afca1b20",
+  "git_dirty_src": [],
+  "config": "/home/issan/Projects/claude/wt/act_chimera_0913/configs/act_chimera_scr_0913.yaml",
+  "spec": "/home/issan/Projects/claude/wt/act_chimera_0913/specs/spec_act_chimera_0913.md",
+  "sha256": {
+    "src/act_chimera_scr_0913.py": "59c79b0fe9d802cb8125e19f314c306a76ca4055f9c37e34b68e996abdcbe381",
+    "src/act_chimera_0913.py": "df47bb3868168e2abae41500ce1c332f029f20b0b303648090ffadeff5ccf542",
+    "src/nets.py": "d8adfbf809ac777f290d6467c4098146ca7dc538fe548ed36c3640d4c82b795b",
+    "src/edge_law_0905.py": "37bf459419bda8b669fef62149139472468beffec211dbc63419f0355161eb0e",
+    "src/gate_dial_0902.py": "53400483f1386312e3e58e472e9750ae2db020d92e6e7de132c8357dc3933723",
+    "src/gate_dose.py": "43fcf57c404c0a8a287d88b68cedad7390d4c8c4bd00d756dd807f682d47443c",
+    "src/weird_act_0903.py": "ff8356fed2485826434538ff392660000b4eabe9e9a03b9c879202c30f43d849",
+    "src/elu_swamp.py": "ee7955524065adc7cb170ddf56119f747fdafbe7a201ddf99cf7b1e1b05a749c",
+    "src/dose_const_5m.py": "93346c9d73bcd4b661e199f6bbc178768d624a91bd8c48f4c8f8cd31f7688bc4",
+    "src/mlp2_phase0.py": "21dd7a37e4d97a74f646b3e518e289c81f82e25fca28334355af7bf8204ea18a",
+    "src/mlp2_phase0b.py": "be375500d49f3677487567f980782f74d64703f6cbc031ae4c5a28cd002b1837",
+    "src/mlp2_phase1.py": "53c1f6beee30620f892b45ac8750cf08a718e128efdbb032152d3d0fb5f2dd3e",
+    "src/envs.py": "4d00b501b6aa3ed75a3ff273a61090d1388359f148cf08888e94173bcb2cf3c5",
+    "src/ratchet_log.py": "3cb18ef65ff7f4b8ffbfd1e0eb7f74213acb5c094b0e3a5c769a2f1e205ade2f",
+    "configs/act_chimera_scr_0913.yaml": "6fe133c6b392e474af79481cd1a64a77adce35268b19ebb9c0872ca8753f04d1",
+    "configs/edge_law_0905.yaml": "9ea4940b3dce41c83e9b5218e9cf37411462671bd92f425160fe31ffe9d0feb9",
+    "configs/gate_dial_0902.yaml": "8981207008ea3999c14c29c5f13690970a0f59957ef81bf824e176a8563c3abf",
+    "specs/spec_act_chimera_0913.md": "1151dfac6e71d907c306689bfdf49d0f4beeab7797f0aeaed45c9735935422af"
+  },
+  "reference_npz_sha256": {},
+  "interpreter": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+  "torch": "2.13.0+cu130",
+  "numpy": "2.5.1",
+  "env_matches_reference": true,
+  "band_predicate_dtype": "float64 copy of the float32 forward z (box B / RL); float64 reconstructed z (SCR)",
+  "machine": {
+    "hostname": "white-san",
+    "cpu": "Intel(R) Core(TM) i7-14700K",
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "device": "cpu",
+    "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39"
+  },
+  "started_at": "2026-09-14T10:46:30+0900",
+  "wall_sec": 1558.956146478653,
+  "peak_rss_kib": 821880,
+  "omp_num_threads": "1",
+  "torch_num_threads": 1,
+  "other_processes_before": {
+    "ps": [
+      {
+        "pid": 1825,
+        "ppid": 1,
+        "etimes": 950768,
+        "rss_kib": 27016,
+        "args": "/usr/bin/python3 /home/issan/.local/bin/uvicorn github_mcp_server:app --host 127.0.0.1 --port 8001"
+      },
+      {
+        "pid": 1829,
+        "ppid": 1,
+        "etimes": 950768,
+        "rss_kib": 13360,
+        "args": "/usr/bin/python3 -m uvicorn mcp_server:app --host 127.0.0.1 --port 8005"
+      },
+      {
+        "pid": 1831,
+        "ppid": 1,
+        "etimes": 950768,
+        "rss_kib": 125232,
+        "args": "/usr/bin/python3 -m uvicorn server.main:app --host 127.0.0.1 --port 8002"
+      },
+      {
+        "pid": 1832,
+        "ppid": 1,
+        "etimes": 950768,
+        "rss_kib": 25320,
+        "args": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 0.0.0.0 --port 8003"
+      },
+      {
+        "pid": 1834,
+        "ppid": 1,
+        "etimes": 950768,
+        "rss_kib": 26640,
+        "args": "/usr/bin/python3 /home/issan/.local/bin/uvicorn server.main:app --host 0.0.0.0 --port 8004"
+      },
+      {
+        "pid": 1835,
+        "ppid": 1,
+        "etimes": 950768,
+        "rss_kib": 27336,
+        "args": "/usr/bin/python3 /home/issan/.local/bin/uvicorn mcp_server:app --host 0.0.0.0 --port 8000"
+      },
+      {
+        "pid": 1839,
+        "ppid": 1,
+        "etimes": 950768,
+        "rss_kib": 8736,
+        "args": "/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal"
+      },
+      {
+        "pid": 1982,
+        "ppid": 1851,
+        "etimes": 950768,
+        "rss_kib": 50860,
+        "args": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 127.0.0.1 --port 8006 --no-access-log"
+      },
+      {
+        "pid": 1983,
+        "ppid": 1851,
+        "etimes": 950768,
+        "rss_kib": 33596,
+        "args": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 127.0.0.1 --port 8007 --no-access-log"
+      },
+      {
+        "pid": 1323816,
+        "ppid": 1851,
+        "etimes": 307694,
+        "rss_kib": 11092,
+        "args": "/usr/bin/python3 /usr/bin/gnome-terminal --wait"
+      },
+      {
+        "pid": 1935471,
+        "ppid": 1935457,
+        "etimes": 2708,
+        "rss_kib": 910916,
+        "args": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm ref --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_ref_s0"
+      },
+      {
+        "pid": 1935877,
+        "ppid": 1935458,
+        "etimes": 2683,
+        "rss_kib": 910972,
+        "args": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2 --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2_s0"
+      },
+      {
+        "pid": 1936602,
+        "ppid": 1935460,
+        "etimes": 2633,
+        "rss_kib": 910852,
+        "args": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2 --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2_s0"
+      },
+      {
+        "pid": 1942530,
+        "ppid": 1942526,
+        "etimes": 1205,
+        "rss_kib": 910532,
+        "args": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2rest --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2rest_s0"
+      },
+      {
+        "pid": 1944452,
+        "ppid": 1706499,
+        "etimes": 959,
+        "rss_kib": 3876,
+        "args": "/bin/bash -c source /home/issan/.claude/shell-snapshots/snapshot-bash-1789308911471-2c7xeu.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until timeout 40 gcloud compute ssh chime"
+      },
+      {
+        "pid": 1948569,
+        "ppid": 1948565,
+        "etimes": 335,
+        "rss_kib": 910820,
+        "args": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2wt --seeds 1 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2wt_s1"
+      },
+      {
+        "pid": 1950188,
+        "ppid": 1950184,
+        "etimes": 102,
+        "rss_kib": 910656,
+        "args": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2rest --seeds 1 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2rest_s1"
+      },
+      {
+        "pid": 1950689,
+        "ppid": 1706499,
+        "etimes": 2,
+        "rss_kib": 3956,
+        "args": "/bin/bash -c source /home/issan/.claude/shell-snapshots/snapshot-bash-1789308911471-2c7xeu.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd ~/Projects/claude/wt/act_chimera_0913 "
+      },
+      {
+        "pid": 1950691,
+        "ppid": 1950689,
+        "etimes": 2,
+        "rss_kib": 18776,
+        "args": "/usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env scr"
+      },
+      {
+        "pid": 1950721,
+        "ppid": 1950691,
+        "etimes": 2,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chLR_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chLR_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/a"
+      },
+      {
+        "pid": 1950722,
+        "ppid": 1950721,
+        "etimes": 2,
+        "rss_kib": 528552,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chLR_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950723,
+        "ppid": 1950691,
+        "etimes": 2,
+        "rss_kib": 1556,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chE_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chE_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act"
+      },
+      {
+        "pid": 1950724,
+        "ppid": 1950723,
+        "etimes": 2,
+        "rss_kib": 528408,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chE_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950725,
+        "ppid": 1950691,
+        "etimes": 1,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chSMAXH_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMAXH_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/res"
+      },
+      {
+        "pid": 1950726,
+        "ppid": 1950725,
+        "etimes": 1,
+        "rss_kib": 528608,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMAXH_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950727,
+        "ppid": 1950691,
+        "etimes": 1,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chSMINH_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMINH_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/res"
+      },
+      {
+        "pid": 1950728,
+        "ppid": 1950727,
+        "etimes": 1,
+        "rss_kib": 529052,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMINH_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950729,
+        "ppid": 1950691,
+        "etimes": 1,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chVMIN_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chVMIN_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/resul"
+      },
+      {
+        "pid": 1950730,
+        "ppid": 1950729,
+        "etimes": 1,
+        "rss_kib": 528420,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chVMIN_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950731,
+        "ppid": 1950691,
+        "etimes": 1,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chVMAX_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chVMAX_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/resul"
+      },
+      {
+        "pid": 1950732,
+        "ppid": 1950731,
+        "etimes": 1,
+        "rss_kib": 528580,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chVMAX_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950733,
+        "ppid": 1950691,
+        "etimes": 1,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chSMAXS_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMAXS_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/res"
+      },
+      {
+        "pid": 1950734,
+        "ppid": 1950733,
+        "etimes": 1,
+        "rss_kib": 528352,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMAXS_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950736,
+        "ppid": 1950691,
+        "etimes": 1,
+        "rss_kib": 1548,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chSMINS_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMINS_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/res"
+      },
+      {
+        "pid": 1950737,
+        "ppid": 1950736,
+        "etimes": 1,
+        "rss_kib": 523128,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMINS_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950738,
+        "ppid": 1950691,
+        "etimes": 1,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chGN_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chGN_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/a"
+      },
+      {
+        "pid": 1950739,
+        "ppid": 1950738,
+        "etimes": 1,
+        "rss_kib": 528236,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chGN_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950740,
+        "ppid": 1950691,
+        "etimes": 1,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chFN_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chFN_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/a"
+      }
+    ],
+    "nvidia_smi_compute": "4429, /usr/libexec/gnome-remote-desktop-daemon, 130 MiB\n5176, /usr/lib/claude-desktop/claude-desktop --type=gpu-process --ozone-platform=wayland --render-node-override=/dev/dri/renderD128 --crashpad-handler-pid=4975 --enable-crash-reporter=f06714d1-8988-4aab-8fa4-317ccdd52203?no_channel --user-data-dir=/home/issan/.config/Claude --gpu-preferences=UAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAAAQAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAYAAAAAAAAABgAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAA --shared-files --field-trial-handle=3?i?14440265844280700105?5689739189683830084?262144 --enable-features=DocumentPolicyIncludeJSCallStacksInCrashReports?GlobalShortcutsPortal?GlobalShortcutsPortalPreferredTrigger?IsolatesPriorityUseProcessPriority?PdfUseShowSaveFilePicker --disable-features=DropInputEventsWhilePaintHolding?LocalNetworkAccessChecks?ScreenAIOCREnabled?SpareRendererForSitePerProcess?TraceSiteInstanceGetProcessCreation --variations-seed-version --pseudonymization-salt-handle=7?i?8001596301194018277?12795605572726764898?4 --trace-process-track-uuid=3190708988185955192 --disable-logging, 139 MiB\n14982, /usr/lib/slack/slack --type=gpu-process --ozone-platform=wayland --render-node-override=/dev/dri/renderD128 --crashpad-handler-pid=14965 --enable-crash-reporter=cf8849fd-26d8-4bbf-8d8b-8b935afa4de3?no_channel --user-data-dir=/home/issan/.config/Slack --gpu-preferences=WAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAAQAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --shared-files --field-trial-handle=3?i?1340820332589502767?11166300844323573890?262144 --enable-features=DocumentPolicyIncludeJSCallStacksInCrashReports?GlobalShortcutsPortalPreferredTrigger?PdfUseShowSaveFilePicker?WebRTCPipeWireCapturer --disable-features=AllowAggressiveThrottlingWithWebSocket?CalculateNativeWinOcclusion?DropInputEventsWhilePaintHolding?EnableWatermarkView?EnumerateDevicesRelaxedCache?HardwareMediaKeyHandling?IntensiveWakeUpThrottling?LocalNetworkAccessChecks?LogJsConsoleMessages?PostQuantumKyber?RequestInitiatorSiteLockEnfocement?ScreenAIOCREnabled?SkipEmptyDisplayHotplugEvent?SpareRendererForSitePerProcess?TraceSiteInstanceGetProcessCreation?WebRtcHideLocalIpsWithMdns?WinRetrieveSuggestionsOnlyOnDemand --variations-seed-version --pseudonymization-salt-handle=7?i?3223167453511124143?7157313234177531013?4 --trace-process-track-uuid=3190708988185955192, 118 MiB\n6104, /snap/snapd-desktop-integration/391/usr/bin/snapd-desktop-integration, 6 MiB\n1070592, /opt/google/chrome/chrome --type=gpu-process --ozone-platform=wayland --render-node-override=/dev/dri/renderD128 --crashpad-handler-pid=1070553 --enable-crash-reporter=? --change-stack-guard-on-fork=enable --gpu-preferences=YAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAASAAAAAAAAAABAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAMAAAAAQAAAAAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --shared-files --metrics-shmem-handle=4?i?2907377424836962783?16904638253078725851?262144 --field-trial-handle=3?i?13881461293232341463?13123545306268742637?262144 --disable-features=EyeDropper --variations-seed-version=20260908-170052.476000-production --pseudonymization-salt-handle=7?i?8419581343793059386?8361690080241017933?4 --trace-process-track-uuid=3190708988185955192, 46 MiB"
+  },
+  "other_processes_after": {
+    "ps": [
+      {
+        "pid": 1825,
+        "ppid": 1,
+        "etimes": 952327,
+        "rss_kib": 27016,
+        "args": "/usr/bin/python3 /home/issan/.local/bin/uvicorn github_mcp_server:app --host 127.0.0.1 --port 8001"
+      },
+      {
+        "pid": 1829,
+        "ppid": 1,
+        "etimes": 952327,
+        "rss_kib": 13360,
+        "args": "/usr/bin/python3 -m uvicorn mcp_server:app --host 127.0.0.1 --port 8005"
+      },
+      {
+        "pid": 1831,
+        "ppid": 1,
+        "etimes": 952327,
+        "rss_kib": 127156,
+        "args": "/usr/bin/python3 -m uvicorn server.main:app --host 127.0.0.1 --port 8002"
+      },
+      {
+        "pid": 1832,
+        "ppid": 1,
+        "etimes": 952327,
+        "rss_kib": 25320,
+        "args": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 0.0.0.0 --port 8003"
+      },
+      {
+        "pid": 1834,
+        "ppid": 1,
+        "etimes": 952327,
+        "rss_kib": 26640,
+        "args": "/usr/bin/python3 /home/issan/.local/bin/uvicorn server.main:app --host 0.0.0.0 --port 8004"
+      },
+      {
+        "pid": 1835,
+        "ppid": 1,
+        "etimes": 952327,
+        "rss_kib": 27336,
+        "args": "/usr/bin/python3 /home/issan/.local/bin/uvicorn mcp_server:app --host 0.0.0.0 --port 8000"
+      },
+      {
+        "pid": 1839,
+        "ppid": 1,
+        "etimes": 952327,
+        "rss_kib": 8736,
+        "args": "/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal"
+      },
+      {
+        "pid": 1982,
+        "ppid": 1851,
+        "etimes": 952327,
+        "rss_kib": 50860,
+        "args": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 127.0.0.1 --port 8006 --no-access-log"
+      },
+      {
+        "pid": 1983,
+        "ppid": 1851,
+        "etimes": 952327,
+        "rss_kib": 33596,
+        "args": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 127.0.0.1 --port 8007 --no-access-log"
+      },
+      {
+        "pid": 1323816,
+        "ppid": 1851,
+        "etimes": 309253,
+        "rss_kib": 11092,
+        "args": "/usr/bin/python3 /usr/bin/gnome-terminal --wait"
+      },
+      {
+        "pid": 1944452,
+        "ppid": 1706499,
+        "etimes": 2518,
+        "rss_kib": 3876,
+        "args": "/bin/bash -c source /home/issan/.claude/shell-snapshots/snapshot-bash-1789308911471-2c7xeu.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until timeout 40 gcloud compute ssh chime"
+      },
+      {
+        "pid": 1950188,
+        "ppid": 1950184,
+        "etimes": 1661,
+        "rss_kib": 911104,
+        "args": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2rest --seeds 1 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2rest_s1"
+      },
+      {
+        "pid": 1950689,
+        "ppid": 1706499,
+        "etimes": 1561,
+        "rss_kib": 3956,
+        "args": "/bin/bash -c source /home/issan/.claude/shell-snapshots/snapshot-bash-1789308911471-2c7xeu.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd ~/Projects/claude/wt/act_chimera_0913 "
+      },
+      {
+        "pid": 1950691,
+        "ppid": 1950689,
+        "etimes": 1561,
+        "rss_kib": 18960,
+        "args": "/usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env scr"
+      },
+      {
+        "pid": 1950723,
+        "ppid": 1950691,
+        "etimes": 1561,
+        "rss_kib": 1556,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chE_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chE_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act"
+      },
+      {
+        "pid": 1950724,
+        "ppid": 1950723,
+        "etimes": 1561,
+        "rss_kib": 680596,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chE_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950725,
+        "ppid": 1950691,
+        "etimes": 1560,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chSMAXH_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMAXH_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/res"
+      },
+      {
+        "pid": 1950726,
+        "ppid": 1950725,
+        "etimes": 1560,
+        "rss_kib": 725560,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMAXH_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950729,
+        "ppid": 1950691,
+        "etimes": 1560,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chVMIN_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chVMIN_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/resul"
+      },
+      {
+        "pid": 1950730,
+        "ppid": 1950729,
+        "etimes": 1560,
+        "rss_kib": 671200,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chVMIN_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950733,
+        "ppid": 1950691,
+        "etimes": 1560,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chSMAXS_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMAXS_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/res"
+      },
+      {
+        "pid": 1950734,
+        "ppid": 1950733,
+        "etimes": 1560,
+        "rss_kib": 733192,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMAXS_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950736,
+        "ppid": 1950691,
+        "etimes": 1560,
+        "rss_kib": 1548,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chSMINS_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMINS_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/res"
+      },
+      {
+        "pid": 1950737,
+        "ppid": 1950736,
+        "etimes": 1560,
+        "rss_kib": 800844,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chSMINS_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950738,
+        "ppid": 1950691,
+        "etimes": 1560,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chGN_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chGN_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/a"
+      },
+      {
+        "pid": 1950739,
+        "ppid": 1950738,
+        "etimes": 1560,
+        "rss_kib": 799668,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chGN_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1950740,
+        "ppid": 1950691,
+        "etimes": 1560,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chFN_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chFN_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/a"
+      },
+      {
+        "pid": 1954432,
+        "ppid": 1954428,
+        "etimes": 644,
+        "rss_kib": 910456,
+        "args": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2rest --seeds 1 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2rest_s1"
+      },
+      {
+        "pid": 1955229,
+        "ppid": 1955225,
+        "etimes": 424,
+        "rss_kib": 910952,
+        "args": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2wt --seeds 2 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2wt_s2"
+      },
+      {
+        "pid": 1956158,
+        "ppid": 1956154,
+        "etimes": 190,
+        "rss_kib": 910536,
+        "args": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2rest --seeds 2 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2rest_s2"
+      },
+      {
+        "pid": 1956397,
+        "ppid": 1956393,
+        "etimes": 136,
+        "rss_kib": 910468,
+        "args": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2wt --seeds 2 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2wt_s2"
+      },
+      {
+        "pid": 1956536,
+        "ppid": 1950691,
+        "etimes": 105,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chGD_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chGD_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/a"
+      },
+      {
+        "pid": 1956537,
+        "ppid": 1956536,
+        "etimes": 105,
+        "rss_kib": 562212,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chGD_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1956538,
+        "ppid": 1950691,
+        "etimes": 104,
+        "rss_kib": 1552,
+        "args": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-scr_scr_chFD_1216.time /home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chFD_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/a"
+      },
+      {
+        "pid": 1956539,
+        "ppid": 1956538,
+        "etimes": 104,
+        "rss_kib": 561696,
+        "args": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m src.act_chimera_scr_0913 --arm chFD_1216 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/scr"
+      },
+      {
+        "pid": 1956607,
+        "ppid": 1956603,
+        "etimes": 100,
+        "rss_kib": 910432,
+        "args": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2rest --seeds 2 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2rest_s2"
+      }
+    ],
+    "nvidia_smi_compute": "4429, /usr/libexec/gnome-remote-desktop-daemon, 130 MiB\n5176, /usr/lib/claude-desktop/claude-desktop --type=gpu-process --ozone-platform=wayland --render-node-override=/dev/dri/renderD128 --crashpad-handler-pid=4975 --enable-crash-reporter=f06714d1-8988-4aab-8fa4-317ccdd52203?no_channel --user-data-dir=/home/issan/.config/Claude --gpu-preferences=UAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAAAQAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAYAAAAAAAAABgAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAA --shared-files --field-trial-handle=3?i?14440265844280700105?5689739189683830084?262144 --enable-features=DocumentPolicyIncludeJSCallStacksInCrashReports?GlobalShortcutsPortal?GlobalShortcutsPortalPreferredTrigger?IsolatesPriorityUseProcessPriority?PdfUseShowSaveFilePicker --disable-features=DropInputEventsWhilePaintHolding?LocalNetworkAccessChecks?ScreenAIOCREnabled?SpareRendererForSitePerProcess?TraceSiteInstanceGetProcessCreation --variations-seed-version --pseudonymization-salt-handle=7?i?8001596301194018277?12795605572726764898?4 --trace-process-track-uuid=3190708988185955192 --disable-logging, 139 MiB\n14982, /usr/lib/slack/slack --type=gpu-process --ozone-platform=wayland --render-node-override=/dev/dri/renderD128 --crashpad-handler-pid=14965 --enable-crash-reporter=cf8849fd-26d8-4bbf-8d8b-8b935afa4de3?no_channel --user-data-dir=/home/issan/.config/Slack --gpu-preferences=WAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAAQAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --shared-files --field-trial-handle=3?i?1340820332589502767?11166300844323573890?262144 --enable-features=DocumentPolicyIncludeJSCallStacksInCrashReports?GlobalShortcutsPortalPreferredTrigger?PdfUseShowSaveFilePicker?WebRTCPipeWireCapturer --disable-features=AllowAggressiveThrottlingWithWebSocket?CalculateNativeWinOcclusion?DropInputEventsWhilePaintHolding?EnableWatermarkView?EnumerateDevicesRelaxedCache?HardwareMediaKeyHandling?IntensiveWakeUpThrottling?LocalNetworkAccessChecks?LogJsConsoleMessages?PostQuantumKyber?RequestInitiatorSiteLockEnfocement?ScreenAIOCREnabled?SkipEmptyDisplayHotplugEvent?SpareRendererForSitePerProcess?TraceSiteInstanceGetProcessCreation?WebRtcHideLocalIpsWithMdns?WinRetrieveSuggestionsOnlyOnDemand --variations-seed-version --pseudonymization-salt-handle=7?i?3223167453511124143?7157313234177531013?4 --trace-process-track-uuid=3190708988185955192, 118 MiB\n6104, /snap/snapd-desktop-integration/391/usr/bin/snapd-desktop-integration, 6 MiB\n1070592, /opt/google/chrome/chrome --type=gpu-process --ozone-platform=wayland --render-node-override=/dev/dri/renderD128 --crashpad-handler-pid=1070553 --enable-crash-reporter=? --change-stack-guard-on-fork=enable --gpu-preferences=YAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAASAAAAAAAAAABAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAMAAAAAQAAAAAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --shared-files --metrics-shmem-handle=4?i?2907377424836962783?16904638253078725851?262144 --field-trial-handle=3?i?13881461293232341463?13123545306268742637?262144 --disable-features=EyeDropper --variations-seed-version=20260908-170052.476000-production --pseudonymization-salt-handle=7?i?8419581343793059386?8361690080241017933?4 --trace-process-track-uuid=3190708988185955192, 46 MiB"
+  }
+}

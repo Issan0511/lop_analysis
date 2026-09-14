@@ -1,0 +1,323 @@
+{
+  "run_id": "act_chimera_0913",
+  "env": "rlmnist",
+  "arm": "ELU1",
+  "activation": "ELU1",
+  "act_kind": "elu",
+  "twin": null,
+  "seed": 0,
+  "lr": 0.001,
+  "n_tasks": 50,
+  "epochs_per_task": 400,
+  "steps_per_task": 30000,
+  "batch": 16,
+  "n_images": 1200,
+  "dims": [
+    784,
+    100,
+    100,
+    10
+  ],
+  "optimizer": "adam",
+  "status": "COMPLETE",
+  "n_rows": 50,
+  "divergence": null,
+  "removed_stale_divergence_json": false,
+  "git_hash": "a592a4aa6978dc3b5c3d715e4104e993afca1b20",
+  "git_dirty_src": [],
+  "spec_sha256": "1151dfac6e71d907c306689bfdf49d0f4beeab7797f0aeaed45c9735935422af",
+  "checks_passed": true,
+  "failed_checks": [],
+  "band_predicate_dtype": "float64 copy of the float32 forward z (box B / RL); float64 reconstructed z (SCR)",
+  "fn_mom_axes": {
+    "funcs": [
+      "LR",
+      "ELU1",
+      "SMAXH",
+      "SMINH",
+      "VMIN",
+      "VMAX",
+      "SMAXS",
+      "SMINS"
+    ],
+    "bands": [
+      "B0",
+      "B1",
+      "B2",
+      "B3"
+    ],
+    "moments": [
+      "dphi",
+      "phi",
+      "h"
+    ],
+    "shape": "(T, layer, func, band, moment)"
+  },
+  "code_sha256": {
+    "src/act_chimera_0913.py": "df47bb3868168e2abae41500ce1c332f029f20b0b303648090ffadeff5ccf542",
+    "src/act_chimera_rlmnist_0913.py": "61e6ef49169c90815a8f58bb5b2ddf60a40da68a8e79b47cdcca86561030ee68",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "results/pmnist_rlmnist_0906/LR/per_task.csv": "3d67114c2962c441efb458dd7891eaff71e07b86cab58ea6825000b9b3006817",
+    "results/pmnist_rlmnist_0906/LR/provenance.json": "69f4ef6ff7770742352630731b435aae7cc83976ed5ed15fccd78525d3797149",
+    "results/pmnist_rlmnist_0906/R/per_task.csv": "7a1903614e589d525f1c7637e1c3154aaad7be07d4e9f384f58366c1d9021158",
+    "results/pmnist_rlmnist_0906/R/provenance.json": "45e4866c6c58490384f991d9332f256ad89a9152dd2cb095c8f21eaed3a219f4",
+    "analysis/pmnist_0905/verdict_rlmnist.py": "d555f23ad80e44b9bd276db4aee093d125f23fb0c690b60b7caf932d9aebc977"
+  },
+  "data_dir": "/home/issan/Projects/claude/proj_004_drift/data/mnist",
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "subset_sha256": "11411ac14aee613b8d2b24352b50a1953bb733225e3a50886432fb7aa0b259ff",
+  "rng_roles": [
+    "rl_subset",
+    "rl_labels",
+    "rl_batch",
+    "init"
+  ],
+  "interpreter": {
+    "executable": "/usr/bin/python3",
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.2"
+  },
+  "threads": 1,
+  "machine": {
+    "hostname": "chimera-rl0914",
+    "cpu": "AMD EPYC 7B13",
+    "gpu": null,
+    "device": "cpu",
+    "platform": "Linux-7.0.0-1011-gcp-x86_64-with-glibc2.39",
+    "pid": 9344
+  },
+  "wall_clock_s": 2882.938436985016,
+  "task_wall_s": [
+    33.10636854171753,
+    65.87850189208984,
+    98.45621395111084,
+    130.84045314788818,
+    163.26838850975037,
+    195.7470977306366,
+    228.51154851913452,
+    261.4842665195465,
+    294.78141736984253,
+    328.9189717769623,
+    364.91537380218506,
+    404.37100052833557,
+    447.4958746433258,
+    492.719717502594,
+    538.4234235286713,
+    583.5203883647919,
+    629.9923062324524,
+    676.4866111278534,
+    724.6350681781769,
+    775.6524271965027,
+    826.4870932102203,
+    877.3559899330139,
+    931.1793255805969,
+    995.0087020397186,
+    1066.227213859558,
+    1138.689817905426,
+    1211.2546100616455,
+    1283.8248450756073,
+    1356.3896679878235,
+    1429.0390470027924,
+    1501.6766407489777,
+    1574.3938932418823,
+    1647.1383230686188,
+    1719.9298391342163,
+    1792.7320716381073,
+    1865.3270981311798,
+    1937.835381269455,
+    2010.5220007896423,
+    2083.208424091339,
+    2155.9059574604034,
+    2228.5448224544525,
+    2301.266964197159,
+    2374.0360174179077,
+    2446.73016500473,
+    2519.367652654648,
+    2591.9814352989197,
+    2664.6834964752197,
+    2737.375221014023,
+    2810.0158054828644,
+    2882.6332280635834
+  ],
+  "steps_per_s": 520.3575624525876,
+  "peak_rss_kib": 1089168,
+  "gpu_max_memory_allocated": null,
+  "gpu_max_memory_reserved": null,
+  "other_processes_before": [
+    "1028 20724    4233 /usr/bin/python3 /usr/bin/networkd-dispatcher --run-startup-triggers",
+    "1220 22944    4233 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal",
+    "9305  3536       2 bash -c cd ~/lop_analysis && git rev-parse HEAD && nohup /usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env rlmnist --device cpu --parallel 15 --rss-peak-gib 1.02 > ~/stag",
+    "9306  2108       2 bash -c cd ~/lop_analysis && git rev-parse HEAD && nohup /usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env rlmnist --device cpu --parallel 15 --rss-peak-gib 1.02 > ~/stag",
+    "9309 20152       2 /usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env rlmnist --device cpu --parallel 15 --rss-peak-gib 1.02",
+    "9337  1560       2 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_LR_s0_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LR --seed 0 --de",
+    "9338 913924      2 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LR --seed 0 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "9339  1560       2 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_LR_s1_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LR --seed 1 --de",
+    "9340 906712      2 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LR --seed 1 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "9341  1564       2 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_LR_s2_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LR --seed 2 --de",
+    "9342 914076      2 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LR --seed 2 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "9343  1560       2 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_ELU1_s0_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm ELU1 --seed 0 ",
+    "9345  1556       2 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_ELU1_s1_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm ELU1 --seed 1 ",
+    "9346 785752      2 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm ELU1 --seed 1 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "9347  1560       2 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_ELU1_s2_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm ELU1 --seed 2 ",
+    "9348 744468      2 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm ELU1 --seed 2 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "9349  1548       2 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_SMAXH_s0_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMAXH --seed ",
+    "9350 697008      2 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMAXH --seed 0 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "9351  1560       2 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_SMAXH_s1_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMAXH --seed ",
+    "9352 681704      2 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMAXH --seed 1 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist"
+  ],
+  "other_processes_after": [
+    "1028 20724    7116 /usr/bin/python3 /usr/bin/networkd-dispatcher --run-startup-triggers",
+    "1220 22944    7115 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal",
+    "9306  2108    2885 bash -c cd ~/lop_analysis && git rev-parse HEAD && nohup /usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env rlmnist --device cpu --parallel 15 --rss-peak-gib 1.02 > ~/stag",
+    "9309 20668    2885 /usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env rlmnist --device cpu --parallel 15 --rss-peak-gib 1.02",
+    "9343  1560    2884 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_ELU1_s0_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm ELU1 --seed 0 ",
+    "9345  1556    2884 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_ELU1_s1_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm ELU1 --seed 1 ",
+    "9346 950760   2884 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm ELU1 --seed 1 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "14096  1560    1414 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_SMAXH_s2_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMAXH --seed",
+    "14097 951052   1414 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMAXH --seed 2 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "14098  1560    1414 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_SMINH_s0_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed",
+    "14099 950664   1414 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed 0 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "14100  1560    1413 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_SMINH_s1_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed",
+    "14101 952480   1413 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed 1 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "15066  1560    1128 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_SMINH_s2_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed",
+    "15067 950780   1128 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed 2 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "15086  1560    1123 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_LRtw0_s0_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LRtw0 --seed",
+    "15087 951260   1123 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LRtw0 --seed 0 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "18637  1556      42 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_LRtw0_s1_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LRtw0 --seed",
+    "18638 942848     42 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LRtw0 --seed 1 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist"
+  ],
+  "nvidia_smi_before": "nvidia-smi failed: FileNotFoundError(2, 'No such file or directory')",
+  "nvidia_smi_after": "nvidia-smi failed: FileNotFoundError(2, 'No such file or directory')",
+  "readout_shapes": {
+    "fn_mom": [
+      50,
+      2,
+      8,
+      4,
+      3
+    ],
+    "occ_start": [
+      50,
+      2,
+      100,
+      4
+    ],
+    "occ_end": [
+      50,
+      2,
+      100,
+      4
+    ],
+    "mob_band": [
+      50,
+      2,
+      100,
+      4
+    ],
+    "pabs1": [
+      50,
+      2,
+      100
+    ],
+    "zbar_start": [
+      50,
+      2,
+      100
+    ],
+    "zbar_end": [
+      50,
+      2,
+      100
+    ],
+    "depth_vel": [
+      50,
+      2,
+      100
+    ],
+    "step_num": [
+      50,
+      2,
+      100
+    ],
+    "wt_norm": [
+      50,
+      2,
+      100
+    ],
+    "mu_comp": [
+      50,
+      100
+    ],
+    "adam_ratio": [
+      50,
+      2,
+      100
+    ],
+    "adam_epsfrac": [
+      50,
+      2,
+      100
+    ],
+    "gbar_l2": [
+      50,
+      100
+    ],
+    "mu_phi1": [
+      50,
+      100
+    ],
+    "param_sha": [
+      50
+    ]
+  },
+  "readout_file": "readout_s0.npz",
+  "endpoints": {
+    "Y_pt": -10.017989583333334,
+    "Y_logit": 2.1956561342743672,
+    "online_mean": 0.10017989583333334,
+    "n": 20,
+    "F_seed": 0.11449999999999998,
+    "floor_threshold": 0.11524496766201833,
+    "at_floor": true
+  },
+  "checks": {
+    "carry7_sha256": {
+      "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+      "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+      "results/pmnist_rlmnist_0906/LR/per_task.csv": "3d67114c2962c441efb458dd7891eaff71e07b86cab58ea6825000b9b3006817",
+      "results/pmnist_rlmnist_0906/LR/provenance.json": "69f4ef6ff7770742352630731b435aae7cc83976ed5ed15fccd78525d3797149",
+      "results/pmnist_rlmnist_0906/R/per_task.csv": "7a1903614e589d525f1c7637e1c3154aaad7be07d4e9f384f58366c1d9021158",
+      "results/pmnist_rlmnist_0906/R/provenance.json": "45e4866c6c58490384f991d9332f256ad89a9152dd2cb095c8f21eaed3a219f4",
+      "analysis/pmnist_0905/verdict_rlmnist.py": "d555f23ad80e44b9bd276db4aee093d125f23fb0c690b60b7caf932d9aebc977"
+    },
+    "data_sha256_matches_0906": true,
+    "interpreter": {
+      "executable": "/usr/bin/python3",
+      "torch": "2.13.0+cu130",
+      "numpy": "2.5.2"
+    },
+    "rng_state_sha_t1_3": [
+      "e157b14a946c018c287b888fe9a3b7f1806bf266fa1d32182d2fa43a54c13018",
+      "c75b9a589b4b71006d6c3f236c4dcd3775f690b014b91f2f7f3a105a775e6473",
+      "c64a9e37bb7ff58505d11f8cf150f166eff167bdf2085141d096839a7b12c0be"
+    ],
+    "mu_zero_count": 0
+  },
+  "window": [
+    31,
+    50
+  ],
+  "floor": {
+    "sd": 0.00026,
+    "family": 24,
+    "z": 2.8652602385321333,
+    "margin": 0.0007449676620183545,
+    "F_seed": 0.11449999999999998
+  }
+}

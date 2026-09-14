@@ -1,0 +1,403 @@
+{
+  "run_id": "act_chimera_0913",
+  "env": "rlmnist",
+  "arm": "LRtw0",
+  "activation": "LR",
+  "act_kind": "leaky",
+  "twin": 0,
+  "seed": 2,
+  "lr": 0.001,
+  "n_tasks": 50,
+  "epochs_per_task": 400,
+  "steps_per_task": 30000,
+  "batch": 16,
+  "n_images": 1200,
+  "dims": [
+    784,
+    100,
+    100,
+    10
+  ],
+  "optimizer": "adam",
+  "status": "COMPLETE",
+  "n_rows": 50,
+  "divergence": null,
+  "removed_stale_divergence_json": false,
+  "git_hash": "a592a4aa6978dc3b5c3d715e4104e993afca1b20",
+  "git_dirty_src": [],
+  "spec_sha256": "1151dfac6e71d907c306689bfdf49d0f4beeab7797f0aeaed45c9735935422af",
+  "checks_passed": true,
+  "failed_checks": [],
+  "band_predicate_dtype": "float64 copy of the float32 forward z (box B / RL); float64 reconstructed z (SCR)",
+  "fn_mom_axes": {
+    "funcs": [
+      "LR",
+      "ELU1",
+      "SMAXH",
+      "SMINH",
+      "VMIN",
+      "VMAX",
+      "SMAXS",
+      "SMINS"
+    ],
+    "bands": [
+      "B0",
+      "B1",
+      "B2",
+      "B3"
+    ],
+    "moments": [
+      "dphi",
+      "phi",
+      "h"
+    ],
+    "shape": "(T, layer, func, band, moment)"
+  },
+  "code_sha256": {
+    "src/act_chimera_0913.py": "df47bb3868168e2abae41500ce1c332f029f20b0b303648090ffadeff5ccf542",
+    "src/act_chimera_rlmnist_0913.py": "61e6ef49169c90815a8f58bb5b2ddf60a40da68a8e79b47cdcca86561030ee68",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "results/pmnist_rlmnist_0906/LR/per_task.csv": "3d67114c2962c441efb458dd7891eaff71e07b86cab58ea6825000b9b3006817",
+    "results/pmnist_rlmnist_0906/LR/provenance.json": "69f4ef6ff7770742352630731b435aae7cc83976ed5ed15fccd78525d3797149",
+    "results/pmnist_rlmnist_0906/R/per_task.csv": "7a1903614e589d525f1c7637e1c3154aaad7be07d4e9f384f58366c1d9021158",
+    "results/pmnist_rlmnist_0906/R/provenance.json": "45e4866c6c58490384f991d9332f256ad89a9152dd2cb095c8f21eaed3a219f4",
+    "analysis/pmnist_0905/verdict_rlmnist.py": "d555f23ad80e44b9bd276db4aee093d125f23fb0c690b60b7caf932d9aebc977"
+  },
+  "data_dir": "/home/issan/Projects/claude/proj_004_drift/data/mnist",
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "subset_sha256": "ebe39edfd0a742fe4aa4b44456204304eb73f8f6c6ba40bf91d47ba4dff51ce5",
+  "rng_roles": [
+    "rl_subset",
+    "rl_labels",
+    "rl_batch",
+    "init"
+  ],
+  "interpreter": {
+    "executable": "/usr/bin/python3",
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.2"
+  },
+  "threads": 1,
+  "machine": {
+    "hostname": "chimera-rl0914",
+    "cpu": "AMD EPYC 7B13",
+    "gpu": null,
+    "device": "cpu",
+    "platform": "Linux-7.0.0-1011-gcp-x86_64-with-glibc2.39",
+    "pid": 18819
+  },
+  "wall_clock_s": 1455.733391046524,
+  "task_wall_s": [
+    29.791550159454346,
+    59.421703815460205,
+    88.90207362174988,
+    118.24633884429932,
+    147.45958638191223,
+    176.56355714797974,
+    205.75669932365417,
+    234.85986971855164,
+    263.83159136772156,
+    292.9904842376709,
+    322.0923340320587,
+    351.248117685318,
+    380.33853363990784,
+    409.5648880004883,
+    438.6657154560089,
+    467.71955370903015,
+    496.80975222587585,
+    526.0293259620667,
+    555.1507804393768,
+    584.2232072353363,
+    613.3852708339691,
+    642.409496307373,
+    671.4099197387695,
+    700.3389339447021,
+    729.3897392749786,
+    758.3015661239624,
+    787.2294363975525,
+    816.2293894290924,
+    845.1882238388062,
+    874.1418342590332,
+    903.1631457805634,
+    932.1803574562073,
+    961.2311656475067,
+    990.1717343330383,
+    1019.1895263195038,
+    1048.1592574119568,
+    1077.176903963089,
+    1106.2582576274872,
+    1135.4461815357208,
+    1164.6437559127808,
+    1193.8577823638916,
+    1223.062194108963,
+    1252.2443540096283,
+    1281.34743142128,
+    1310.4017579555511,
+    1339.374944448471,
+    1368.4143075942993,
+    1397.3875379562378,
+    1426.3881402015686,
+    1455.4291961193085
+  ],
+  "steps_per_s": 1030.6238214813425,
+  "peak_rss_kib": 1097080,
+  "gpu_max_memory_allocated": null,
+  "gpu_max_memory_reserved": null,
+  "other_processes_before": [
+    "1028 20724    7120 /usr/bin/python3 /usr/bin/networkd-dispatcher --run-startup-triggers",
+    "1220 22944    7120 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal",
+    "9306  2108    2889 bash -c cd ~/lop_analysis && git rev-parse HEAD && nohup /usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env rlmnist --device cpu --parallel 15 --rss-peak-gib 1.02 > ~/stag",
+    "9309 20668    2889 /usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env rlmnist --device cpu --parallel 15 --rss-peak-gib 1.02",
+    "9345  1556    2889 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_ELU1_s1_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm ELU1 --seed 1 ",
+    "9346 950760   2889 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm ELU1 --seed 1 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "14096  1560    1418 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_SMAXH_s2_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMAXH --seed",
+    "14097 951052   1418 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMAXH --seed 2 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "14098  1560    1418 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_SMINH_s0_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed",
+    "14099 950664   1418 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed 0 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "14100  1560    1418 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_SMINH_s1_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed",
+    "14101 952480   1418 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed 1 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "15066  1560    1133 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_SMINH_s2_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed",
+    "15067 950780   1133 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed 2 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "15086  1560    1128 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_LRtw0_s0_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LRtw0 --seed",
+    "15087 951260   1128 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LRtw0 --seed 0 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "18637  1556      47 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_LRtw0_s1_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LRtw0 --seed",
+    "18638 942848     47 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LRtw0 --seed 1 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "18818  1560       2 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_LRtw0_s2_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LRtw0 --seed"
+  ],
+  "other_processes_after": [
+    "1028 20724    8576 /usr/bin/python3 /usr/bin/networkd-dispatcher --run-startup-triggers",
+    "1220 22944    8575 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal",
+    "9306  2108    4345 bash -c cd ~/lop_analysis && git rev-parse HEAD && nohup /usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env rlmnist --device cpu --parallel 15 --rss-peak-gib 1.02 > ~/stag",
+    "9309 20688    4345 /usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env rlmnist --device cpu --parallel 15 --rss-peak-gib 1.02",
+    "15066  1560    2588 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_SMINH_s2_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed",
+    "15067 951880   2588 /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm SMINH --seed 2 --device cpu --outdir /home/issan/lop_analysis/results/act_chimera_0913/rlmnist",
+    "18818  1560    1457 /usr/bin/time -v -o /home/issan/lop_analysis/results/act_chimera_0913/launch/stage1-rlmnist_rl_LRtw0_s2_cpu.time /usr/bin/python3 -m src.act_chimera_rlmnist_0913 --arm LRtw0 --seed"
+  ],
+  "nvidia_smi_before": "nvidia-smi failed: FileNotFoundError(2, 'No such file or directory')",
+  "nvidia_smi_after": "nvidia-smi failed: FileNotFoundError(2, 'No such file or directory')",
+  "readout_shapes": {
+    "fn_mom": [
+      50,
+      2,
+      8,
+      4,
+      3
+    ],
+    "occ_start": [
+      50,
+      2,
+      100,
+      4
+    ],
+    "occ_end": [
+      50,
+      2,
+      100,
+      4
+    ],
+    "mob_band": [
+      50,
+      2,
+      100,
+      4
+    ],
+    "pabs1": [
+      50,
+      2,
+      100
+    ],
+    "zbar_start": [
+      50,
+      2,
+      100
+    ],
+    "zbar_end": [
+      50,
+      2,
+      100
+    ],
+    "depth_vel": [
+      50,
+      2,
+      100
+    ],
+    "step_num": [
+      50,
+      2,
+      100
+    ],
+    "wt_norm": [
+      50,
+      2,
+      100
+    ],
+    "mu_comp": [
+      50,
+      100
+    ],
+    "adam_ratio": [
+      50,
+      2,
+      100
+    ],
+    "adam_epsfrac": [
+      50,
+      2,
+      100
+    ],
+    "gbar_l2": [
+      50,
+      100
+    ],
+    "mu_phi1": [
+      50,
+      100
+    ],
+    "param_sha": [
+      50
+    ]
+  },
+  "readout_file": "readout_s2.npz",
+  "endpoints": {
+    "Y_pt": -79.74432291666668,
+    "Y_logit": -1.3714467321452708,
+    "online_mean": 0.7974432291666668,
+    "n": 20,
+    "F_seed": 0.11383333333333334,
+    "floor_threshold": 0.1145783009953517,
+    "at_floor": false
+  },
+  "checks": {
+    "carry7_sha256": {
+      "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+      "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+      "results/pmnist_rlmnist_0906/LR/per_task.csv": "3d67114c2962c441efb458dd7891eaff71e07b86cab58ea6825000b9b3006817",
+      "results/pmnist_rlmnist_0906/LR/provenance.json": "69f4ef6ff7770742352630731b435aae7cc83976ed5ed15fccd78525d3797149",
+      "results/pmnist_rlmnist_0906/R/per_task.csv": "7a1903614e589d525f1c7637e1c3154aaad7be07d4e9f384f58366c1d9021158",
+      "results/pmnist_rlmnist_0906/R/provenance.json": "45e4866c6c58490384f991d9332f256ad89a9152dd2cb095c8f21eaed3a219f4",
+      "analysis/pmnist_0905/verdict_rlmnist.py": "d555f23ad80e44b9bd276db4aee093d125f23fb0c690b60b7caf932d9aebc977"
+    },
+    "data_sha256_matches_0906": true,
+    "interpreter": {
+      "executable": "/usr/bin/python3",
+      "torch": "2.13.0+cu130",
+      "numpy": "2.5.2"
+    },
+    "rng_state_sha_t1_3": [
+      "a7ef12a8636ff5136c150201bcf63d8715186e4f3413880af65ee19833030097",
+      "1114deccfcdd608ce09fdd7746c4f6aa4d8b4c65e52aa0fa4711f64b4468b218",
+      "968e4e71c5e4995436e2e4f62d2f3aa8578412fc02d8cbc3d0c624dfb1524474"
+    ],
+    "mu_zero_count": 0,
+    "s18": {
+      "n_diff": 1,
+      "where": [
+        [
+          1,
+          [
+            0
+          ]
+        ]
+      ],
+      "index": "b1[0]",
+      "old": 0.034806933254003525,
+      "new": 0.03480793163180351,
+      "expected_new": 0.03480793163180351,
+      "target": 0.034807933254003526,
+      "registered_delta": 1e-06,
+      "realised_delta": 9.98377799987793e-07,
+      "expected_realised_delta": 9.98377799987793e-07,
+      "n_ulps": 268,
+      "ulp_at_old": 3.725290298461914e-09,
+      "nearest": true,
+      "exact_step": true,
+      "init_sha_excl_b1k_equal": true,
+      "pass_": true,
+      "ctl_zero_perturbation": {
+        "n_diff": 0,
+        "pass_": false,
+        "fails_as_required": true
+      },
+      "init_sha256": "05be8c8338a68387b64358bd6b675a50718e4a21818b56b03c456115762c7683"
+    },
+    "s18b": {
+      "excluded": "params[1][k] = b1[k] set to 0 in a CPU copy before sha256",
+      "ks": [
+        0
+      ],
+      "sha_excl_b1": {
+        "0": [
+          "c56c0280b259195f8d02cf4e98082eb39fa91f93d85323c2bdc4b1c0f17878eb",
+          "abf74c36be96182bf722e9e3c3cf0f4a6ede3b7fb70bc7134485aaf6a00f6452",
+          "0d461a649d0e95b4d08613bde62be905fa639b1a28db2bd97914923989626e98",
+          "7d905dc05f2599a54f46971b651b46bb1d75e3a9e75f8b18d6011517e4676646",
+          "fbcbbeee20b79326a2c6a764e31da025cbf09f2dac393657c2f05aa962783aee",
+          "0d3b06b66bf890f667da8c381d1210c65225d25fa5e24968a4be2918258aede9",
+          "4e5b1d843937c361434072a2b4ae1b83c3c2e02c13f3bcfa62ac466764fc790b",
+          "7232be5ea2d230a8bcf6f76f79e830e51885f9722b6f8ad8beb36f5813af0cf9",
+          "35338b9f6e3d8f0882d996e129a6ca8aa6565fd36d8dbe65e43524ef1f28eeb8",
+          "7b1d14b940ae3dc36419d2749cdbcc83e3f24ec395449702993935fed63b289d",
+          "0c55213fa77e492133fc2cdaf54858e8fc277d0732ef27303bd18d723869574c",
+          "20158831337e474c55718f6792e3330db9e34aec6f9d22dbb7a7d40f3517dadb",
+          "e9f0d9f4612a1a08929b715709f3e7d8d0200788e6ca82fbf0a7d98832819fa9",
+          "07ee8cfa132de0b03aa62e30f0b0214ebf272278eab21b015e8ff6449e69b033",
+          "6fcfba84d537cc66b1f63166a9ceb75b24bfa484e0cef50a43e2bba477c5a175",
+          "a492d20e9eaf098b07925cd0a5ce450b11e6f6a41730472e74e6487fa7c0f5be",
+          "1a4a39a162dcf32fcc97e3da69b3a24e137a2102b7974a8542e7c1d62f192dd1",
+          "a3c5a0b90d4fcccbcfa612c4d9f04ea7b0e803f6ee84335e02be02f9a6536e95",
+          "11195b2798f8da33f42ed5e6dd69ecf711e492dc14f5536d414c6ded02192712",
+          "d415d13f807510baf04620676f45f5b245720d89747f983f4634d372a4e23f61",
+          "30aaac7a667323a827f081878c96ffe990d35ee202f51751c8e97bb47a28148d",
+          "b918239ba7590dba454708b8c61604c005600d8e7fc7e177f767f699eb01cfaa",
+          "cd3aa2aa1ae828bbd3fdc615630de3669d0a8bab66f950b949026b07224574c1",
+          "ecf79b8aebca6b7235ee76678ff4701907754c87870f688bfe61d8ad684af641",
+          "90e044ae92f7bbe33541e1bfb9f5970cf50abc4cbd2308281910c219de926c8d",
+          "847b1b4653ddb6eefcb969c2093dc37b7ae08543af87814e43670d700f8924e2",
+          "044e652db9f879a116860bd5e158c35b559c999056c127f87ef5c32a048ef67a",
+          "4b9f0e5f4fa6e0e9343dbde1e9a9e4075ed144bcf3bd00c7f086ab181d286992",
+          "3d825ba3cce7de8b730ae344589f0eb962b0314fc461db7eb3172ea72cbb337f",
+          "197092f4b64a47d8632854496ffcbc2d67560e6a12fb2ef6dd9bead89810658f",
+          "9e9c2999e464c019cc36e02ab0c34b0bd0a3ee3d5ab1a9b97a9240b9db5cbcce",
+          "60c0b69e6a01b50f7fb5c2ae9628c3fdf4b8c736fcac82c95456525e99e11fe4",
+          "f6c27772e1d23d9fce4bd91ca24bacdf1f29f799860e1b2394557a21f6d088a0",
+          "249703d671074900821e26af9088637dc36eaf57c9bc9d1dd8ec5ea5645028fd",
+          "0494bfe69804194601ad3a0b255557086309459778098b960231b040e1b75852",
+          "b9b744e765cdb7efa4f43e74f7f10cdb5b4d255b36b8f4aaad47d4f75d72c2ff",
+          "ac3a368002180a63c7631fa5e28d27765d0691646325f8741174615db888ca00",
+          "f468eb8b1c6152f4572413a8e075b1478b0ff2eab30e583a0ae119ad983db838",
+          "0f8d5c9e0b9239dcd7394b47d85c407c98ae8c6ca452c8909bef053dd54dfb8e",
+          "98c8d3e55f299a4bcd37d172dc5028880ac7b9ddd9ccf6b15363ccfac5dccf54",
+          "057da8ec83f7522e48cb454197ddbbd7b21bee0f5049d545f2573cfd854ffdb1",
+          "eceb25aba7e2964dd24443673081165febfa7551061abae6210e6ea26834be59",
+          "ff5a3acce583274723a91b1947e0dcdb8dd03a4aa678342f1c3840f160dfe991",
+          "23c82f8131237b1c919114ff7ac07dbeb1b8bf31f58b6ac58524d4c3b71f6456",
+          "248d44ec531392317cc25dd506f4476b0a15d7fa049cca22067065c1546cf214",
+          "1f698e052d7e76a396710dced86c474e48ee2b3ae307ae697186d029d09ca84a",
+          "9eacd47fffb4c987faf44b739a00d9080d7754bdeb9f3f3140c2ab7b065bb195",
+          "8c71199b8ca3a775aa780a515f9f18d050896989b2933eac1ee6d1bff6d65e9a",
+          "25cc5119ea67351406d5e9e94022077e8cfad87cd2e709793de41aaa8ef11aab",
+          "b720b4d784ebc52f65a76c83bfb2d81ec230689335825ec470660ac044041299"
+        ]
+      },
+      "n_tasks": 50,
+      "rule": "twin_live_task = first task where the twin differs from same-seed LR; a twin not live by the window start (t31) is excluded from sigma_traj"
+    }
+  },
+  "window": [
+    31,
+    50
+  ],
+  "floor": {
+    "sd": 0.00026,
+    "family": 24,
+    "z": 2.8652602385321333,
+    "margin": 0.0007449676620183545,
+    "F_seed": 0.11383333333333334
+  }
+}

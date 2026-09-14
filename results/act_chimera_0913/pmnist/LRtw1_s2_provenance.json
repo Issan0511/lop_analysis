@@ -1,0 +1,655 @@
+{
+ "run_id": "act_chimera_0913",
+ "env": "pmnist",
+ "arm": "LRtw1",
+ "act": "LR",
+ "twin": 1,
+ "seed": 2,
+ "tasks": 120,
+ "tasks_completed": 120,
+ "status": "COMPLETE",
+ "lr": 0.001,
+ "e_tasks": [
+  20,
+  40,
+  60,
+  80,
+  100,
+  120
+ ],
+ "theta": 0.25,
+ "n_probe": 512,
+ "ngrad": 4096,
+ "ref_seed": 20260909,
+ "inject_inf_after": null,
+ "registered_horizon": true,
+ "committed_code": {
+  "committed": [
+   "src/act_chimera_0913.py",
+   "src/act_chimera_pmnist_0913.py",
+   "specs/spec_act_chimera_0913.md"
+  ],
+  "pass_": true
+ },
+ "checks_passed": true,
+ "failed_checks": [],
+ "checks": {
+  "s11": {
+   "pass_": true,
+   "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+   },
+   "data_dir": "/home/issan/Projects/claude/proj_004_drift/data/mnist"
+  },
+  "c6_var_rel": 4.146484911295188e-15,
+  "c6_mean_abs": 5.329070518200751e-15,
+  "status": "COMPLETE",
+  "first_nonfinite_task": null,
+  "tasks_completed": 120,
+  "anchored": false,
+  "g3_ident_max": 1.2348455591393304e-13,
+  "g3_pass": true,
+  "g1_pm": {
+   "anchor": null,
+   "note": "twin (init b1[k] differs by +1e-6)"
+  },
+  "g1_eg": {
+   "anchor": null,
+   "note": "twin (init b1[k] differs by +1e-6)"
+  },
+  "s12_mob_sum_maxdiff": 0.0,
+  "s12_band_sum_maxdiff": 3.3306690738754696e-16,
+  "s12_band_sum_maxratio": 0.001953125,
+  "s12_ctl_dropB2_maxdiff": 0.06694140625000003,
+  "s12_ctl_dropB2_demonstrable": true,
+  "wtnorm_vs_cnorm_maxdiff": 0.0,
+  "mob_sum_vs_gbar_i_maxdiff": 0.0,
+  "s12_in_run": {
+   "tol": 1.1368683772161603e-13,
+   "tol_band": "n_inputs*eps64*max(1,max|v|)",
+   "identities_pass": true,
+   "ctl_demonstrated": true,
+   "ctl_fails": true,
+   "pass_": true
+  },
+  "identity": {
+   "evaluated": true,
+   "e_tasks": [
+    20,
+    40,
+    60,
+    80,
+    100,
+    120
+   ],
+   "identity_rel": 1.0043744718687356e-09,
+   "identity_mutctl": 0.015290951926352709,
+   "wrong_h": "ELU1",
+   "leaky_zero": 1.0043744718687356e-09,
+   "ctl_demonstrated": true
+  },
+  "s9": {
+   "pass_": true,
+   "twin": 1,
+   "loop": {
+    "init": "beecf4a4d0154c3f6e4c21f97066267184e757396fc159f9ad704d5f1fd042e4",
+    "t1": {
+     "perm": "d55cb0170c149982bd83dd4136df0b124b67ff3314e1d27a5ef63b63bac44235",
+     "idx": "7bebcc097f59aef664b7eaf6705ace5f99e0e8ba1cb396ade602160d9e4dfff2",
+     "order": "c25d133cd3ada9a7fdd4c8656666441fb3fe0221b70deea84231601d55359ea6"
+    },
+    "t2": {
+     "perm": "bd01a6c1ea3e0c5877128c8c0c7beed5b5ed9d33eb2d7bf59a390ad1b131424b",
+     "idx": "f8b35f85393747f027e980bc42e3b3c439ba717e3a2543536e432468f9a48dc9",
+     "order": "55f62022f04d1555db61e8c6dbf2ebda1139ea7fd49a677e3daa9c8effd0352a"
+    },
+    "t3": {
+     "perm": "83719a7705c719aa765f6db4faee152025dbb4a0bd94b6253f2ad4fe1a98cfb8",
+     "idx": "381181a77d5d29a3278461ccf8c1f31a45438347cd3b0bff01de169128ee1736",
+     "order": "15f057e5b8ccc3daf3f1dcd8079b12113faca169c0bedf8ba44df80e1e0edc2c"
+    },
+    "probe_idx": "5f7aa4b3b83e86d437d7cfcb81133929eae13d75fe44dfa4e36a06052e90a194"
+   },
+   "standalone_init": "e4b42a3d50c1c10cf342ab3e975bccd897d3e2feb9001143e97e7337f2ff4870"
+  },
+  "s18": {
+   "n_diff": 1,
+   "where": [
+    [
+     1,
+     [
+      1
+     ]
+    ]
+   ],
+   "index": "b1[1]",
+   "old": 0.03316032141447067,
+   "new": 0.03316131979227066,
+   "expected_new": 0.03316131979227066,
+   "target": 0.033161321414470674,
+   "registered_delta": 1e-06,
+   "realised_delta": 9.98377799987793e-07,
+   "expected_realised_delta": 9.98377799987793e-07,
+   "n_ulps": 268,
+   "ulp_at_old": 3.725290298461914e-09,
+   "nearest": true,
+   "exact_step": true,
+   "init_sha_excl_b1k_equal": true,
+   "pass_": true,
+   "perturbed_init_sha": "beecf4a4d0154c3f6e4c21f97066267184e757396fc159f9ad704d5f1fd042e4",
+   "loop_init_sha": "beecf4a4d0154c3f6e4c21f97066267184e757396fc159f9ad704d5f1fd042e4",
+   "tied_to_run": true,
+   "ctl_zero_perturbation": {
+    "n_diff": 0,
+    "pass_": false,
+    "fails_as_required": true
+   }
+  },
+  "s18b": {
+   "excluded": "params[1][k] = b1[k] set to 0 in a CPU copy before sha256",
+   "ks": [
+    1
+   ],
+   "sha_excl_b1": {
+    "1": [
+     "0ddf59a65c4cdb1c77542275e33203cfe61b99f651919711eaaadb9b3c3e8266",
+     "520e6914d719a3de007ec6095c79c8f6e7b5f297f41fd9b588e01c75762deab9",
+     "798ceb90cb70319366d7c3b29dabfe547ac32453c5b15af1ef77ac04a3f89ba1",
+     "5727704c9b38af8d97a92caaa7e51453780ed89bf1cd9a2326695f6f9bd0ae3c",
+     "6f0403dc256aeb570e58e4d0b1b9bebde68621201715fda010fa21155bd88651",
+     "267b87075f8ebcfb328194459d8c5755a2ed6fb08edc3942e95814cee287bce4",
+     "89d560d63e96fe0ccee3d80fc13fcf9318bc728e9148221e83aacbc50ed560b3",
+     "f9f2cbecb99235fb6e07a3f800a3e7af7aaecc9402ead44329e60674a1920423",
+     "0fa85380268c11f1697f0c66c38cdf3e6d85c0f2078e8ab6c5eab7eac02f63c1",
+     "0be19a1de7a266d62b39775dd8cb9f7a56ce989acadabf5a10be62e11bbd7278",
+     "bb48b35bc9f33218570b48030f9cd66bcaa0878ceb7400e15a09aeccc765a46e",
+     "7dfa7d3c22f7485b4a47b383e4cb761fc5654e5a86a10c4d61f2d5cc94dc6be0",
+     "2ce7a6f04f82893d5444e5568f04b698dde361ecd36c1f5b411b50aef0861f70",
+     "4ef1431da1c60195f42d9d15663cb57e7646ef7a69b75c635d2b346af73a3fa1",
+     "38bf827c2728539d142367229517c972fa0ee9850a0e4cb86dcfee440b158352",
+     "88a4dea1776a970515f9180a6bf9aa4d2e7da474f064b6cafcfec50c18a2a1bd",
+     "032bcd63820ecdde1c3380622e4ab924e2bcd52b4e377529e7083a330ee6fb84",
+     "413f0f1a072fc610be186b6999183e464d34340b9cc614655dc02f346c8f2de3",
+     "75bbbdb56dcf6f7acd1cbc5ac61ecacd1b93e1766f2ff428ac4d9bafa9008a72",
+     "8f77374e6293d0f190e219ae0a9970742ad463ffacc0963ed4342b291ad5f5d4",
+     "8c519689eb41083e078fe471068514040aa7355f93810d765d1d2b4cc7987e3f",
+     "cfe29658cd78509e7626a3f74b67bde9a7a112419c59a352e53c5f721562578f",
+     "09e6a74d5742fd62f45ca40ae83b3bc579c7edadfac15d6b2e04f53c1a9eb305",
+     "f7a3f857f216dda9c02239ac4d37c672ccaa1983cce1c4286680c9549cd19979",
+     "c35b3ec4d5509013095dc40d9b185215fa6bc8e6c7d597e6d5b69e09b663bb03",
+     "5bb683520a3e7e1361ae20573fc6035e3a259630935dbaf4faf8c86db40a3415",
+     "0b2d35b51aafea86a305528c0a4fb31025d468229c24d621a1a014fa1c615c2d",
+     "d7e14db2f9b6a35e90463f3d040354484397d1abe75ac7a17b28b637b27ef054",
+     "ea77dab09ba42180b609235d0af40a368cf8bdf69798fdb6ff9719d3d23487c7",
+     "78757979a3d3dc479ba9b6765f65da429a34861f6d33abd379aecf78fbbd3f7f",
+     "d1f1804c66ddc2799494659da38eaac071099dc430a54f763098314ad7bde91c",
+     "54a33d0da5c00a226203ffa8599b60341daf34324503bdfc4c4fdde0df7a3498",
+     "8ae901831758b761e7673bb18ffa4774e00e888522e2b9169b04df2686b6a22f",
+     "1c2fd71312483342b9916642139c9a60193c9443c6da46b5f41b830d03c066de",
+     "81401edc529d1c5e5f4ea30ae2ce6f096dbf0cf209df9692e01699565cbe5339",
+     "88a0661c3f6d8f1a5b2d60e0bfd9ea78a061c1c1211a647e04d8a1e50666efdf",
+     "b7532a41e61bae1a3715297db29a16a4833501583dbbb661f5af19595a1e5737",
+     "13675256d6c9d861433134f993fbc3bdf97a06ac35f6eed0285d2db1d58b6e0e",
+     "306b19ea35a039a89442076de6fbeb34713223d73182ed061647260ff19334da",
+     "79f126ed252d40280bc60d57bfb167c1f5983b539509db1d58eaa5f5bacb5990",
+     "a9d5e6e2101dc851d2e29c5490f2c968cd7b1f3b764d525819263e3e940dfbd1",
+     "af8fac44eb1bfbb6715ae1bfc6db1fba971baa2afb24ac4522d0a9ca0620639d",
+     "14b4c7340891fa174ae2ed22638c111e1d89643f7cc317cf272c2825f87f6974",
+     "0801f9179f36f3c8bf8cd0b671e65282e7b31dba7d1c434fe85076b8bd19b5e8",
+     "6d15464475de9e48e01f932365a5cfa2a78b53ae6e5eeca10a312435209a8fcc",
+     "ff5a6eaa331e3c73ba86f89ca1a92d49279648702079369c73d4795940310bc8",
+     "0448c7a27525b1953b4fb043398fceb5176448c690a7ee34e3cfa910b78877dc",
+     "3410bac16539e6d34cbbd8358cd183d195d8e13a5e204fe2e8bd1537d595d305",
+     "35cea3f4ee6c2e2e5a44ec9cc4544f96c15330ca7634fcc419284e5f107a5ba9",
+     "60b20013443c08a51884ece8b928b48f65fe68b3fbe742e47dd5e649ffbb1ad9",
+     "cde098c507412b621d100e079d6b44b9308dd47794cc96f31c5f421deb9a3e49",
+     "423f9c0e38a2abeb959502b9da21253a942dd3d496e3596656af3729772de4e1",
+     "06c1855179139361b793eca8c96a654e9e7d07cf9067282899917e325eb6e07a",
+     "7233491a4b75c52f122ba334fb112bf04293132e58f5a9283ac5ab788c45d276",
+     "9328f23b907e18f3c7d3c5b62bf1dbe6e16b7758498e9e0c39f59dd4b0057560",
+     "577e8671d176fb62c25f5124f15e84b931ef4c9fdc701f805a218495512f155a",
+     "425debd6d6b7554747692b86d1b0fc7196be9d7589c29d80151d21f14cb29f25",
+     "d969db681dd9866acd04b540c1540c4b3ab7dbe933a57c72f3951d4db52f6b30",
+     "0426dec208cdb946e8f98ab7fee38f137d8f66056a8c9b197b550fd2ce9ead9d",
+     "2dd7b805d4abe6c4887245ad20dbbbb0042ace790164f6c2f51f9e6e7a80eec6",
+     "42973426ef68d099265c78084796a4db457b3c06bc2702a2d068a2c7c1403dc6",
+     "024c7b5fa0279d6618039e039c891d952888fdc4a9751e56d60ad4670093c322",
+     "e1160f379ff60f51b335019011ff62b7c591cafceb1631766f3a4cc983383413",
+     "5fa1329c25adf79ca76ff8283543b65d8ed2a55b936e6169b07f63fb3afc9988",
+     "58d2ef00cbf1d89af2bb319af10f153c374ff44085d536e3018d454abaad03ae",
+     "53f14c2ffcd27d8037831cbfe1644e820dfbb9da7b851bba7c631b3ac18ea0a4",
+     "18aba6b72c623386cc378b609e7f7280f5ad3dc1de7473159e4b665531b8736f",
+     "bb0c14a705f3de43c48016296482296b6aecad046e961786724ff72798dd53a9",
+     "5991002d95b511d4ff2e7e19b22310f8f21a9ddb00d2f8e20d3b50341cb5b4e5",
+     "886e02ba01567a407c819b42542828f0dea427dc2494b2487c38f2067d763ccf",
+     "07c4b75fe9e3b84f6f69ea068ab6ca8aacf008f98b7ece113a86c2823c6c1703",
+     "26588f43920005f80d857fc2a0d93dc093b15e29a6b7973b7e629241210ca5f8",
+     "654d061dd178baf6729c9fc8a960a3815c28c3fd914c10aeefeb4341ff77e817",
+     "2eb796530deb1410f6cf17a098b016c8a06666f40b08a83675604d66963caacf",
+     "f0a0a91cdd8731efb3dd479715cdd03dfb8b0f1a611a4322545324511ba3386b",
+     "624ac7000277f94c4e38d75bb438d1bac48ec49b7bc7fd28f803e75ef9bfcf0c",
+     "4980a84322953b1abef776f846f263487f7c4d84b0edd66ba8cbe89c36481ca9",
+     "17a0bbb365055ed7a53ef8c73b5cc3c0b5343c0f650b88d7726b207ce45e51d8",
+     "ecee65cb11f9a135fdc76c0d74f8791e98514129ece79dfed3d399106fc3309a",
+     "60e15fe3df0fac6a052b721650bb813925d22488308f21fe234105f4a7be97fe",
+     "77a2393d18a3231ef7c2006130eafcdcc8bba72c560eca61ce8afc1a4506fdec",
+     "c1b1f3aa473a96a9ab4d96bde1bc309a5d24502b36eaca0300b3e6bab4553523",
+     "f3824660cdaa3b0a58365c0a11c5a9f1be856b78f1f7bb23846a49b13a664fd1",
+     "3f1b08e96491706d9ff51caf5a637ebcff2c23cbfb6f2af37e00d3db9c6bf9d3",
+     "a3b8082053588d3f70a2a4c0727a5ca47cecf4dca66bf476dc0b4ca30f498936",
+     "e6a65c965bc6e7d755df23fc3d1695666df390ac60e5f0576e0dafcc09cf8c9b",
+     "23b7629a899d602cae94cb3313f8a05279418c90c5f0b4e83ac8ad02a750cd10",
+     "e40639d6175f0f895ab64a44f99ad9fabb50e2271416e66fedf03aa3c710fa25",
+     "e0210993c4c3013d6a77edcd04488e4bad37ebdf61eee08f90d360db28a61a8e",
+     "25442f7cb58083ecce0f2a724eee5060c00a83562e874a532f2fcdf5589b781a",
+     "145f5d0a7678dc6ee208d0bb36ee4bc791b32d3dbc41dcced738e2dc384ca60b",
+     "29cf0399cf610c79b1f30f0ae6722adee54efb2db48324680e42400b5a03fb32",
+     "302c10d37576c1d0834509d4d3e0c962120157fc64444fd050cc3d4cb7b01f01",
+     "c80ce2ce802b852f6cbcd92826624bb2cbaa3aefd1999ccd1b2d81e0e163154f",
+     "3dc1d80cc9852c451ec1e7d607a1971c0493223a088dc0baabddef5591ff2c58",
+     "6d023fd7651b139c833cd43cd11bd3262fa041a63ef38fee1bde5899f33ebad7",
+     "1755413be5f642751c6a34ba7f5ff4d34028c452c9456d71e6a83a1659d4b1a6",
+     "5328acac8de5a14b06297e5b1025512204caba64d382cc77014293fec781f841",
+     "24ebc95480ce2509b73635c76dfc328820dd34ca519b88ca21d9a06ba227f548",
+     "c1891414f5907a91cc14bd3c35e7840736cf0483173279af669a79fb9c3d9ba1",
+     "31adb29529359276a61262964bf49c3d95646380a3034673f2de0de9f7e07a56",
+     "a9121cbbea242f487ac60dad7d89ac3603acc2ab1001d3823cfac921abc24aef",
+     "ceabd2466150bbdfc5f434675a1f4c2cbb18a5806440681f639153de79cc3887",
+     "2fc901d8537a1cb7c4aabe21a077a8541e2ef445542ab80d9896ad9d5946b96d",
+     "70453055158f456190de926d7cecc9b717235d90dfb9efcd436d85b4fe28bfc7",
+     "48d8d7c93de2cfddccbbd76b5d6b97a6592775e19c336f3706727827861cbc33",
+     "f28c26f8cf28dc8795e23533308473468712ade961389fa2f563a1fd6e26db28",
+     "b5f502a161acaebe88562a65376912de86ceb14429adf6c9e2d6745ce5b050e1",
+     "02ea6080f176fc9e020a6714095f01dd859ee0489d3ae230e1a29b14a47e7af0",
+     "d5dc0ae418a75eb722147dee6818135bd7a7769b10423459bae82886abdda7f5",
+     "c5e8c2a0e4b9b9e2eb4701809c28b7c8152772481dee1ac9b0779de7a971377d",
+     "36bbfcd213a784a2789c88436378e77f8b9c28f34ffdd21de2aab5408ebc826a",
+     "9c693f7b26dae08ec1548bb40f15425d52027ef6eeaccdf129990da909fe1fd0",
+     "04423c056ee064c8d4ee52adf00282e3a69941d9364f8165638f069871f91ece",
+     "e76b005f2a057fb52f880feb3f495ded805e0677ad3f0cbd186a2b1fda10b103",
+     "3efb52e66d7e6e010a7a57b0b7d0a4eb77139d7ecdd773457800b97e560c5689",
+     "7f12870b7946b8c5fc0cb7676c8e75da4b06463a30e9fae78a49356612167ad4",
+     "665d19e0dd48cd8b4c6e902c820f9097f89fbec85bf3b6d5870880ad4316f3e5",
+     "5e81b25eaf73c80785c8e6cbdc4321e8a51e323cd97d4edc793aa8cf5220362d",
+     "7673537be6e37a8696bc09adbbf5f058ed006f4154f9016aadd8d73fab855c52"
+    ]
+   },
+   "n_tasks": 120,
+   "rule": "twin_live_task = first task where the twin differs from same-seed LR; a twin not live by the window start (t16) is excluded from sigma_traj"
+  },
+  "failed_checks": [],
+  "readout_within_budget": true
+ },
+ "git_hash": "a592a4aa6978dc3b5c3d715e4104e993afca1b20",
+ "git_branch": "claude/act_chimera_0913",
+ "git_dirty_tracked": [],
+ "git_dirty_src": [],
+ "band_predicate_dtype": "float64 copy of the float32 forward z (box B / RL); float64 reconstructed z (SCR)",
+ "fn_mom_axes": {
+  "funcs": [
+   "LR",
+   "ELU1",
+   "SMAXH",
+   "SMINH",
+   "VMIN",
+   "VMAX",
+   "SMAXS",
+   "SMINS"
+  ],
+  "bands": [
+   "B0",
+   "B1",
+   "B2",
+   "B3"
+  ],
+  "moments": [
+   "dphi",
+   "phi",
+   "h"
+  ],
+  "shape": "(T, layer, func, band, moment)"
+ },
+ "spec_sha256": "1151dfac6e71d907c306689bfdf49d0f4beeab7797f0aeaed45c9735935422af",
+ "code_sha256": "0fe7d6d61b36ff03486f2795068c8ce65439abd7bf88ad3cbfed9c707c78cfe7",
+ "act_sha256": "df47bb3868168e2abae41500ce1c332f029f20b0b303648090ffadeff5ccf542",
+ "host_sha256": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+ "gs_sha256": "0b3d40f62fc3317ded3b2687340dd7d64cd1e04f92befebb05173725732c2901",
+ "base_sha256": "728a43af073275ada32d53c1c81776cd9e6bf1b58509335ab5ca784f02428422",
+ "elu_sha256": "65385b18847bbb77d7512f33095b1d6b30c2325ef0ce20e6b51c143c1f40e883",
+ "common_sha256": "8968317d38b05685d393996d5915ccec87c45a805a2ba1bb7d67ea99a64abc20",
+ "data_sha256": {
+  "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+  "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+  "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+  "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+ },
+ "data_dir": "/home/issan/Projects/claude/proj_004_drift/data/mnist",
+ "env_executable": "/usr/bin/python3",
+ "env_torch": "2.13.0+cu130",
+ "env_numpy": "2.5.2",
+ "env_hostname": "white-san",
+ "env_cpu": "Intel(R) Core(TM) i7-14700K",
+ "env_gpu": "NVIDIA GeForce RTX 5060 Ti",
+ "env_device": "cpu",
+ "env_python": "3.12.3",
+ "wall_seconds": 114.68183951196261,
+ "peak_rss_kib": 1142248,
+ "other_sessions_before": {
+  "python_processes": [
+   {
+    "pid": 1825,
+    "rss_kib": 27016,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn github_mcp_server:app --host 127.0.0.1 --port 8001"
+   },
+   {
+    "pid": 1829,
+    "rss_kib": 13360,
+    "cmd": "/usr/bin/python3 -m uvicorn mcp_server:app --host 127.0.0.1 --port 8005"
+   },
+   {
+    "pid": 1831,
+    "rss_kib": 125232,
+    "cmd": "/usr/bin/python3 -m uvicorn server.main:app --host 127.0.0.1 --port 8002"
+   },
+   {
+    "pid": 1832,
+    "rss_kib": 25320,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 0.0.0.0 --port 8003"
+   },
+   {
+    "pid": 1834,
+    "rss_kib": 26640,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn server.main:app --host 0.0.0.0 --port 8004"
+   },
+   {
+    "pid": 1835,
+    "rss_kib": 27336,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn mcp_server:app --host 0.0.0.0 --port 8000"
+   },
+   {
+    "pid": 1839,
+    "rss_kib": 8736,
+    "cmd": "/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal"
+   },
+   {
+    "pid": 1982,
+    "rss_kib": 50860,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 127.0.0.1 --port 8006 --no-access-log"
+   },
+   {
+    "pid": 1983,
+    "rss_kib": 33596,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 127.0.0.1 --port 8007 --no-access-log"
+   },
+   {
+    "pid": 1323816,
+    "rss_kib": 11092,
+    "cmd": "/usr/bin/python3 /usr/bin/gnome-terminal --wait"
+   },
+   {
+    "pid": 1935471,
+    "rss_kib": 910884,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm ref --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_ref_s0"
+   },
+   {
+    "pid": 1935877,
+    "rss_kib": 910948,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2 --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2_s0"
+   },
+   {
+    "pid": 1936602,
+    "rss_kib": 910796,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2 --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2_s0"
+   },
+   {
+    "pid": 1937507,
+    "rss_kib": 911200,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2rest --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2rest_s0"
+   },
+   {
+    "pid": 1942530,
+    "rss_kib": 910392,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2rest --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2rest_s0"
+   },
+   {
+    "pid": 1943179,
+    "rss_kib": 3932,
+    "cmd": "/bin/bash -c source /home/issan/.claude/shell-snapshots/snapshot-bash-1789308911471-2c7xeu.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd ~/Projects/claude/wt/act_chimera_0913 "
+   },
+   {
+    "pid": 1943181,
+    "rss_kib": 19348,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env pmnist"
+   },
+   {
+    "pid": 1944452,
+    "rss_kib": 3876,
+    "cmd": "/bin/bash -c source /home/issan/.claude/shell-snapshots/snapshot-bash-1789308911471-2c7xeu.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until timeout 40 gcloud compute ssh chime"
+   },
+   {
+    "pid": 1948268,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_LR02_s1.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LR02 --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1948269,
+    "rss_kib": 1017388,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LR02 --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1948569,
+    "rss_kib": 910668,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2wt --seeds 1 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2wt_s1"
+   },
+   {
+    "pid": 1948572,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_LRtw0_s1.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw0 --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1948573,
+    "rss_kib": 1082596,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw0 --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1948768,
+    "rss_kib": 1556,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_LRtw0_s2.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw0 --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1948769,
+    "rss_kib": 1108676,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw0 --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1948880,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_LRtw1_s0.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw1 --seed 0 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1948881,
+    "rss_kib": 1021080,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw1 --seed 0 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1949062,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_LRtw1_s1.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw1 --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1949063,
+    "rss_kib": 988968,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw1 --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1949172,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_LRtw1_s2.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw1 --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   }
+  ],
+  "nvidia_smi_compute": "4429, 130 MiB\n5176, 139 MiB\n14982, 118 MiB\n6104, 6 MiB\n1070592, 46 MiB",
+  "load1": 12.56640625,
+  "meminfo_kib": {
+   "MemAvailable": 12655108,
+   "SwapFree": 314768
+  },
+  "time": "2026-09-14T10:42:24"
+ },
+ "other_sessions_after": {
+  "python_processes": [
+   {
+    "pid": 1825,
+    "rss_kib": 27016,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn github_mcp_server:app --host 127.0.0.1 --port 8001"
+   },
+   {
+    "pid": 1829,
+    "rss_kib": 13360,
+    "cmd": "/usr/bin/python3 -m uvicorn mcp_server:app --host 127.0.0.1 --port 8005"
+   },
+   {
+    "pid": 1831,
+    "rss_kib": 125232,
+    "cmd": "/usr/bin/python3 -m uvicorn server.main:app --host 127.0.0.1 --port 8002"
+   },
+   {
+    "pid": 1832,
+    "rss_kib": 25320,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 0.0.0.0 --port 8003"
+   },
+   {
+    "pid": 1834,
+    "rss_kib": 26640,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn server.main:app --host 0.0.0.0 --port 8004"
+   },
+   {
+    "pid": 1835,
+    "rss_kib": 27336,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn mcp_server:app --host 0.0.0.0 --port 8000"
+   },
+   {
+    "pid": 1839,
+    "rss_kib": 8736,
+    "cmd": "/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal"
+   },
+   {
+    "pid": 1982,
+    "rss_kib": 50860,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 127.0.0.1 --port 8006 --no-access-log"
+   },
+   {
+    "pid": 1983,
+    "rss_kib": 33596,
+    "cmd": "/usr/bin/python3 /home/issan/.local/bin/uvicorn obsidian_mcp_server:app --host 127.0.0.1 --port 8007 --no-access-log"
+   },
+   {
+    "pid": 1323816,
+    "rss_kib": 11092,
+    "cmd": "/usr/bin/python3 /usr/bin/gnome-terminal --wait"
+   },
+   {
+    "pid": 1935471,
+    "rss_kib": 910896,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm ref --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_ref_s0"
+   },
+   {
+    "pid": 1935877,
+    "rss_kib": 910948,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2 --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2_s0"
+   },
+   {
+    "pid": 1936602,
+    "rss_kib": 910816,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2 --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2_s0"
+   },
+   {
+    "pid": 1937507,
+    "rss_kib": 911232,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2rest --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2rest_s0"
+   },
+   {
+    "pid": 1942530,
+    "rss_kib": 910452,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act LR --arm l2rest --seeds 0 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/LR_l2rest_s0"
+   },
+   {
+    "pid": 1943179,
+    "rss_kib": 3932,
+    "cmd": "/bin/bash -c source /home/issan/.claude/shell-snapshots/snapshot-bash-1789308911471-2c7xeu.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'cd ~/Projects/claude/wt/act_chimera_0913 "
+   },
+   {
+    "pid": 1943181,
+    "rss_kib": 19416,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_launch_0913 stage1 --env pmnist"
+   },
+   {
+    "pid": 1944452,
+    "rss_kib": 3876,
+    "cmd": "/bin/bash -c source /home/issan/.claude/shell-snapshots/snapshot-bash-1789308911471-2c7xeu.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'until timeout 40 gcloud compute ssh chime"
+   },
+   {
+    "pid": 1948569,
+    "rss_kib": 910744,
+    "cmd": "/usr/bin/python3 src/l2split_rlmnist_0914.py --act R --arm l2wt --seeds 1 --tasks 50 --epochs 400 --lr 0.001 --threads 1 --out results/l2split_rlmnist_0914/runs/R_l2wt_s1"
+   },
+   {
+    "pid": 1949172,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_LRtw1_s2.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw1 --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1949711,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_LRtw2_s2.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw2 --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1949712,
+    "rss_kib": 1104236,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw2 --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1949920,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_LRtw3_s0.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw3 --seed 0 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1949921,
+    "rss_kib": 919604,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw3 --seed 0 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1949922,
+    "rss_kib": 1548,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_LRtw3_s1.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw3 --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1949923,
+    "rss_kib": 644148,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw3 --seed 1 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1949924,
+    "rss_kib": 1552,
+    "cmd": "/usr/bin/time -v -o /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/launch/stage1-pmnist_pm_LRtw3_s2.time /usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw3 --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   },
+   {
+    "pid": 1949925,
+    "rss_kib": 663168,
+    "cmd": "/usr/bin/python3 -m src.act_chimera_pmnist_0913 --arm LRtw3 --seed 2 --outdir /home/issan/Projects/claude/wt/act_chimera_0913/results/act_chimera_0913/pmnist"
+   }
+  ],
+  "nvidia_smi_compute": "4429, 130 MiB\n5176, 139 MiB\n14982, 118 MiB\n6104, 6 MiB\n1070592, 46 MiB",
+  "load1": 12.30615234375,
+  "meminfo_kib": {
+   "MemAvailable": 14323000,
+   "SwapFree": 317920
+  },
+  "time": "2026-09-14T10:44:19"
+ },
+ "units_bytes": 1332415,
+ "readout_bytes": 2907422,
+ "scope": "CPU training from init (GS.train copied verbatim + P1-P6); LR/ELU1/SMAXH reproduce gate_shape_0911 bit for bit"
+}
