@@ -1,0 +1,97 @@
+{
+  "run_id": "shell_l2_rlmnist_0913",
+  "git_hash": "9fefe03cdf54fbb7e7e53933f9eaa930667330fc",
+  "git_dirty_code": false,
+  "argv": [
+    "src/shell_l2_rlmnist_0913.py",
+    "--act",
+    "R",
+    "--reg",
+    "l2:1e-3",
+    "--seeds",
+    "2",
+    "--tasks",
+    "50",
+    "--epochs",
+    "400",
+    "--lr",
+    "0.001",
+    "--c",
+    "0.6",
+    "--beta",
+    "0.01",
+    "--threads",
+    "1",
+    "--out",
+    "results/shell_l2_rlmnist_0913/runs/R_l2_s2"
+  ],
+  "hostname": "claude-shell0913",
+  "platform": "Linux-7.0.0-1011-gcp-x86_64-with-glibc2.39",
+  "python": "3.12.14",
+  "torch": "2.13.0+cpu",
+  "numpy": "2.5.1",
+  "torch_num_threads": 1,
+  "env_threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "act": "R",
+  "reg": "l2",
+  "lam": 0.001,
+  "seeds": [
+    2
+  ],
+  "lr": 0.001,
+  "optimizer": "adam",
+  "n_tasks": 50,
+  "epochs_per_task": 400,
+  "batch": 16,
+  "steps_per_task": 30000,
+  "n_images": 1200,
+  "dims": [
+    784,
+    100,
+    100,
+    10
+  ],
+  "sna_c": 0.6,
+  "sna_beta": 0.01,
+  "shell_eps2": 1e-12,
+  "lam_ref_logged_penalties": 0.001,
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "subset_sha256_sorted": {
+    "2": "ebe39edfd0a742fe4aa4b44456204304eb73f8f6c6ba40bf91d47ba4dff51ce5"
+  },
+  "code_sha256": {
+    "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+  },
+  "device": "cpu",
+  "runs": {
+    "2": {
+      "init_sha256": "e4b42a3d50c1c10cf342ab3e975bccd897d3e2feb9001143e97e7337f2ff4870",
+      "subset_idx_sha256": "c97b55a1a358a20db5b905d4a37a17a6d17377922d183933ee7a24bdb95ead96",
+      "labels_sha256": "24e162b9721c43fa07a1063cdabb843c18f31125a88683b82b63edf428d32482",
+      "batch_sha256": "e719c16f606a47055c58e28092fa53fe48ec9f59b0e1eaeece548ec6439acdc8",
+      "final_state_sha256": "6702647e8d179cd98614e9cd6462f06e22c0eead02452818825ff0d496d33866",
+      "tasks_completed": 50,
+      "wall_clock_s": 1832.359771490097,
+      "divergence": {
+        "diverged": false,
+        "task": null,
+        "step": null,
+        "seed": 2,
+        "act": "R",
+        "reg": "l2:1e-3"
+      }
+    }
+  },
+  "wall_clock_s": 1832.6542990207672,
+  "divergences": []
+}

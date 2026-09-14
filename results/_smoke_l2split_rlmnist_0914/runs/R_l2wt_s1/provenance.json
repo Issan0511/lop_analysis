@@ -1,0 +1,90 @@
+{
+  "run_id": "l2split_rlmnist_0914",
+  "git_hash": "e0a3db519683dd0450f11a69127ce07ab7251a93",
+  "git_dirty_code": false,
+  "argv": [
+    "/home/issan/Projects/claude/wt/l2split_rlmnist_0914/src/l2split_rlmnist_0914.py",
+    "--act",
+    "R",
+    "--arm",
+    "l2wt",
+    "--seeds",
+    "1",
+    "--tasks",
+    "2",
+    "--epochs",
+    "3",
+    "--out",
+    "/home/issan/Projects/claude/wt/l2split_rlmnist_0914/results/_smoke_l2split_rlmnist_0914/runs/R_l2wt_s1"
+  ],
+  "hostname": "white-san",
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+  "python": "3.12.3",
+  "torch": "2.13.0+cu130",
+  "numpy": "2.5.2",
+  "torch_num_threads": 1,
+  "env_threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "act": "R",
+  "arm": "l2wt",
+  "lam": 0.001,
+  "seeds": [
+    1
+  ],
+  "lr": 0.001,
+  "optimizer": "adam",
+  "n_tasks": 2,
+  "epochs_per_task": 3,
+  "batch": 16,
+  "steps_per_task": 225,
+  "n_images": 1200,
+  "dims": [
+    784,
+    100,
+    100,
+    10
+  ],
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "code_sha256": {
+    "src/l2split_rlmnist_0914.py": "ac0d226d55ea4bd57246eccf373b80193713c0e409449c8182eb0a203763e82e",
+    "src/wcap_rlmnist_0914.py": "7a914832fd1739b6217a3ff7991d61909d6f9f50dedc1981d5b7b99e9a4f88b5",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9"
+  },
+  "device": "cpu",
+  "runs": {
+    "1": {
+      "init_sha256": "5b6594fcfb4b834d1750aeaebad41e8353b2dc04e53a3017060b7cab85c2e799",
+      "subset_idx_sha256": "57cf2a389a621d824fbd5a31f7b4e96febd28721db5b876a834a4caa680e2980",
+      "labels_sha256": "e342038e89a929067602af8a0f24121966e47fd8cf2a67ea22b334021483b5f0",
+      "batch_sha256": "c0dc5c082da83bd3f7982fee07d8c92fb40bc07ced925135af8d81599679fc32",
+      "final_state_sha256": "b652fe13af085f8d220997781d4f3733e96277ec2632a4e1db2a12c211b22f66",
+      "init_centered": {
+        "wt_med_l1": 0.5763134327704261,
+        "wt_med_l2": 0.5708818359811652
+      },
+      "task1_end_state_sha256": "49b196b5c2cf26f53fe9125ecad696e8b2bebd99b965cb0b41cf9d084edd39fc",
+      "tasks_completed": 2,
+      "wall_clock_s": 0.33496856689453125,
+      "divergence": {
+        "diverged": false,
+        "task": null,
+        "step": null,
+        "seed": 1,
+        "act": "R",
+        "arm": "l2wt"
+      }
+    }
+  },
+  "wall_clock_s": 0.8158578872680664,
+  "peak_rss_kb": 1098816,
+  "divergences": []
+}

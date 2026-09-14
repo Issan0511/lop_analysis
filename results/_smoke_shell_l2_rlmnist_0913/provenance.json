@@ -1,0 +1,1055 @@
+{
+  "run_id": "shell_l2_rlmnist_0913",
+  "generated_at": "2026-09-13T11:27:03+0000",
+  "src": "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs",
+  "git": {
+    "head": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+    "branch": "exp/shell_l2_rlmnist_0913",
+    "code_status": "?? analysis/shell_l2_rlmnist_0913/\n?? src/shell_l2_rlmnist_0913.py"
+  },
+  "environment": {
+    "hostname": "claude-shell0913",
+    "uname_a": "Linux claude-shell0913 7.0.0-1011-gcp #11~24.04.1-Ubuntu SMP PREEMPT Tue Aug 11 20:14:48 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+    "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  32\nOn-line CPU(s) list:                     0-31\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7B13\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      16\nSocket(s):                               1\nStepping:                                0\nBogoMIPS:                                6099.99\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext ssbd ibrs ibpb stibp vmmcall fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 clzero xsaveerptr arat umip vaes vpclmulqdq rdpid fsrm\nHypervisor vendor:                       KVM\nVirtualization type:                     full\nL1d cache:                               512 KiB (16 instances)\nL1i cache:                               512 KiB (16 instances)\nL2 cache:                                8 MiB (16 instances)\nL3 cache:                                128 MiB (4 instances)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-31\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Mitigation; Safe RET\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; IBPB conditional; IBRS_FW; STIBP conditional; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Mitigation; Clear CPU buffers\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected",
+    "uv_pip_freeze": "filelock==3.32.3\nfsspec==2026.7.0\njinja2==3.1.6\nmarkupsafe==3.0.3\nmpmath==1.3.0\nnetworkx==3.6.1\nnumpy==2.5.1\npandas==3.0.5\npython-dateutil==2.9.0.post0\nsetuptools==78.1.0\nsix==1.17.0\nsympy==1.14.0\ntorch==2.13.0+cpu\ntyping-extensions==4.16.0",
+    "python": "3.12.14",
+    "packages": {
+      "torch": "2.13.0+cpu",
+      "numpy": "2.5.1",
+      "pandas": "3.0.5"
+    },
+    "gcp_instance": {
+      "name": "claude-shell0913",
+      "machine-type": "projects/755296020486/machineTypes/c2d-standard-32",
+      "zone": "projects/755296020486/zones/asia-northeast1-b"
+    }
+  },
+  "spec": "specs/spec_shell_l2_rlmnist_0913.md",
+  "judgement": {
+    "window": [
+      31,
+      50
+    ],
+    "delta": 0.005,
+    "n_boot": 10000,
+    "rng_seed": 20260913,
+    "guard": [
+      0.9,
+      1.1
+    ],
+    "guard_tensors": [
+      "W1",
+      "W2",
+      "W3"
+    ]
+  },
+  "missing": [
+    "R_none_s2",
+    "R_none_s3",
+    "R_none_s4",
+    "R_none_s5",
+    "R_none_s6",
+    "R_none_s7",
+    "R_none_s8",
+    "R_none_s9",
+    "R_l2_s2",
+    "R_l2_s3",
+    "R_l2_s4",
+    "R_l2_s5",
+    "R_l2_s6",
+    "R_l2_s7",
+    "R_l2_s8",
+    "R_l2_s9",
+    "R_l2init_s2",
+    "R_l2init_s3",
+    "R_l2init_s4",
+    "R_l2init_s5",
+    "R_l2init_s6",
+    "R_l2init_s7",
+    "R_l2init_s8",
+    "R_l2init_s9",
+    "R_shell_s2",
+    "R_shell_s3",
+    "R_shell_s4",
+    "R_shell_s5",
+    "R_shell_s6",
+    "R_shell_s7",
+    "R_shell_s8",
+    "R_shell_s9",
+    "SNA_none_s2",
+    "SNA_none_s3",
+    "SNA_none_s4",
+    "SNA_none_s5",
+    "SNA_none_s6",
+    "SNA_none_s7",
+    "SNA_none_s8",
+    "SNA_none_s9",
+    "SNA_l2_s2",
+    "SNA_l2_s3",
+    "SNA_l2_s4",
+    "SNA_l2_s5",
+    "SNA_l2_s6",
+    "SNA_l2_s7",
+    "SNA_l2_s8",
+    "SNA_l2_s9",
+    "SNA_l2init_s2",
+    "SNA_l2init_s3",
+    "SNA_l2init_s4",
+    "SNA_l2init_s5",
+    "SNA_l2init_s6",
+    "SNA_l2init_s7",
+    "SNA_l2init_s8",
+    "SNA_l2init_s9",
+    "SNA_shell_s2",
+    "SNA_shell_s3",
+    "SNA_shell_s4",
+    "SNA_shell_s5",
+    "SNA_shell_s6",
+    "SNA_shell_s7",
+    "SNA_shell_s8",
+    "SNA_shell_s9"
+  ],
+  "shards": {
+    "R_none_s0": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "R",
+        "--reg",
+        "none",
+        "--seeds",
+        "0",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/R_none_s0"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 0.7791738510131836,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "0": {
+          "init_sha256": "db3b2a259bccf3fd5e51f215fa39cd38557b635a3b69decbd17c251061cba032",
+          "subset_idx_sha256": "a3db797d119725f6ca00162eb86d3512b5301a6cbe960647ae6eeb587d17a72b",
+          "labels_sha256": "e5fb67cef4eed1bd34bdad13c6db71785019a95ec738b1dd927ec98feb3739ab",
+          "batch_sha256": "2f4466073f4248f09670bab375ab3e6cad2ed8da161384fba9e6ccf3c7308a0d",
+          "final_state_sha256": "42174dea322baf4d18ec1469dde730ef34e4b05c56219a5ef89789e01bfc43f4",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.4364957809448242,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 0,
+            "act": "R",
+            "reg": "none"
+          }
+        }
+      }
+    },
+    "R_none_s1": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "R",
+        "--reg",
+        "none",
+        "--seeds",
+        "1",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/R_none_s1"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 0.8003461360931396,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "1": {
+          "init_sha256": "5b6594fcfb4b834d1750aeaebad41e8353b2dc04e53a3017060b7cab85c2e799",
+          "subset_idx_sha256": "57cf2a389a621d824fbd5a31f7b4e96febd28721db5b876a834a4caa680e2980",
+          "labels_sha256": "e342038e89a929067602af8a0f24121966e47fd8cf2a67ea22b334021483b5f0",
+          "batch_sha256": "c0dc5c082da83bd3f7982fee07d8c92fb40bc07ced925135af8d81599679fc32",
+          "final_state_sha256": "76928222a08d3e8754d8bed27df3157e00aa15711ceadaa8cfcd9f2847e31d9a",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.4390223026275635,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 1,
+            "act": "R",
+            "reg": "none"
+          }
+        }
+      }
+    },
+    "R_l2_s0": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "R",
+        "--reg",
+        "l2:1e-3",
+        "--seeds",
+        "0",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/R_l2_s0"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 0.8166313171386719,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "0": {
+          "init_sha256": "db3b2a259bccf3fd5e51f215fa39cd38557b635a3b69decbd17c251061cba032",
+          "subset_idx_sha256": "a3db797d119725f6ca00162eb86d3512b5301a6cbe960647ae6eeb587d17a72b",
+          "labels_sha256": "e5fb67cef4eed1bd34bdad13c6db71785019a95ec738b1dd927ec98feb3739ab",
+          "batch_sha256": "2f4466073f4248f09670bab375ab3e6cad2ed8da161384fba9e6ccf3c7308a0d",
+          "final_state_sha256": "bc3aa1d7a882d704cb371510159612afcb322ab11bcf367e4ed010ce07421463",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.4403517246246338,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 0,
+            "act": "R",
+            "reg": "l2:1e-3"
+          }
+        }
+      }
+    },
+    "R_l2_s1": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "R",
+        "--reg",
+        "l2:1e-3",
+        "--seeds",
+        "1",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/R_l2_s1"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 0.7908709049224854,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "1": {
+          "init_sha256": "5b6594fcfb4b834d1750aeaebad41e8353b2dc04e53a3017060b7cab85c2e799",
+          "subset_idx_sha256": "57cf2a389a621d824fbd5a31f7b4e96febd28721db5b876a834a4caa680e2980",
+          "labels_sha256": "e342038e89a929067602af8a0f24121966e47fd8cf2a67ea22b334021483b5f0",
+          "batch_sha256": "c0dc5c082da83bd3f7982fee07d8c92fb40bc07ced925135af8d81599679fc32",
+          "final_state_sha256": "f63a02da3db28a9446aecbaee52feb6a76d24996eb8c3c8d9fe35088c3845d4f",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.4428889751434326,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 1,
+            "act": "R",
+            "reg": "l2:1e-3"
+          }
+        }
+      }
+    },
+    "R_l2init_s0": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "R",
+        "--reg",
+        "l2init:1e-3",
+        "--seeds",
+        "0",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/R_l2init_s0"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 0.8300938606262207,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "0": {
+          "init_sha256": "db3b2a259bccf3fd5e51f215fa39cd38557b635a3b69decbd17c251061cba032",
+          "subset_idx_sha256": "a3db797d119725f6ca00162eb86d3512b5301a6cbe960647ae6eeb587d17a72b",
+          "labels_sha256": "e5fb67cef4eed1bd34bdad13c6db71785019a95ec738b1dd927ec98feb3739ab",
+          "batch_sha256": "2f4466073f4248f09670bab375ab3e6cad2ed8da161384fba9e6ccf3c7308a0d",
+          "final_state_sha256": "5a18684c76815570a54378631600adeee35c9988e26706292cf4ce67531f8833",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.472210168838501,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 0,
+            "act": "R",
+            "reg": "l2init:1e-3"
+          }
+        }
+      }
+    },
+    "R_l2init_s1": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "R",
+        "--reg",
+        "l2init:1e-3",
+        "--seeds",
+        "1",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/R_l2init_s1"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 0.8049235343933105,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "1": {
+          "init_sha256": "5b6594fcfb4b834d1750aeaebad41e8353b2dc04e53a3017060b7cab85c2e799",
+          "subset_idx_sha256": "57cf2a389a621d824fbd5a31f7b4e96febd28721db5b876a834a4caa680e2980",
+          "labels_sha256": "e342038e89a929067602af8a0f24121966e47fd8cf2a67ea22b334021483b5f0",
+          "batch_sha256": "c0dc5c082da83bd3f7982fee07d8c92fb40bc07ced925135af8d81599679fc32",
+          "final_state_sha256": "31669fa59a15cd8e21d343e43726af849e246d8f1375d2e40199df7b81d4d6e1",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.48534488677978516,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 1,
+            "act": "R",
+            "reg": "l2init:1e-3"
+          }
+        }
+      }
+    },
+    "R_shell_s0": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "R",
+        "--reg",
+        "shell:1e-3",
+        "--seeds",
+        "0",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/R_shell_s0"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 1.0355756282806396,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "0": {
+          "init_sha256": "db3b2a259bccf3fd5e51f215fa39cd38557b635a3b69decbd17c251061cba032",
+          "subset_idx_sha256": "a3db797d119725f6ca00162eb86d3512b5301a6cbe960647ae6eeb587d17a72b",
+          "labels_sha256": "e5fb67cef4eed1bd34bdad13c6db71785019a95ec738b1dd927ec98feb3739ab",
+          "batch_sha256": "2f4466073f4248f09670bab375ab3e6cad2ed8da161384fba9e6ccf3c7308a0d",
+          "final_state_sha256": "a74914b5b7a90ec5dc452771f6f0cc7d87619ced5e3792e2884d83bc74118308",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.6755831241607666,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 0,
+            "act": "R",
+            "reg": "shell:1e-3"
+          }
+        }
+      }
+    },
+    "R_shell_s1": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "R",
+        "--reg",
+        "shell:1e-3",
+        "--seeds",
+        "1",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/R_shell_s1"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 1.0068979263305664,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "1": {
+          "init_sha256": "5b6594fcfb4b834d1750aeaebad41e8353b2dc04e53a3017060b7cab85c2e799",
+          "subset_idx_sha256": "57cf2a389a621d824fbd5a31f7b4e96febd28721db5b876a834a4caa680e2980",
+          "labels_sha256": "e342038e89a929067602af8a0f24121966e47fd8cf2a67ea22b334021483b5f0",
+          "batch_sha256": "c0dc5c082da83bd3f7982fee07d8c92fb40bc07ced925135af8d81599679fc32",
+          "final_state_sha256": "c63fe28e8bb16aa2fcb435ede1708075b3200bfe681ed50da6ead1bbef004028",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.6663942337036133,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 1,
+            "act": "R",
+            "reg": "shell:1e-3"
+          }
+        }
+      }
+    },
+    "SNA_none_s0": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "SNA",
+        "--reg",
+        "none",
+        "--seeds",
+        "0",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/SNA_none_s0"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 0.8778693675994873,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "0": {
+          "init_sha256": "db3b2a259bccf3fd5e51f215fa39cd38557b635a3b69decbd17c251061cba032",
+          "subset_idx_sha256": "a3db797d119725f6ca00162eb86d3512b5301a6cbe960647ae6eeb587d17a72b",
+          "labels_sha256": "e5fb67cef4eed1bd34bdad13c6db71785019a95ec738b1dd927ec98feb3739ab",
+          "batch_sha256": "2f4466073f4248f09670bab375ab3e6cad2ed8da161384fba9e6ccf3c7308a0d",
+          "final_state_sha256": "1d496814f5f24d9705e521101de8f7833da6900d0c2c0e15b529bea5086d2996",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.5045790672302246,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 0,
+            "act": "SNA",
+            "reg": "none"
+          }
+        }
+      }
+    },
+    "SNA_none_s1": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "SNA",
+        "--reg",
+        "none",
+        "--seeds",
+        "1",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/SNA_none_s1"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 0.8652517795562744,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "1": {
+          "init_sha256": "5b6594fcfb4b834d1750aeaebad41e8353b2dc04e53a3017060b7cab85c2e799",
+          "subset_idx_sha256": "57cf2a389a621d824fbd5a31f7b4e96febd28721db5b876a834a4caa680e2980",
+          "labels_sha256": "e342038e89a929067602af8a0f24121966e47fd8cf2a67ea22b334021483b5f0",
+          "batch_sha256": "c0dc5c082da83bd3f7982fee07d8c92fb40bc07ced925135af8d81599679fc32",
+          "final_state_sha256": "28c84bbff343770c6e1cc7108e843373b3446603b7a57e67395ceca7f57268ef",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.5096707344055176,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 1,
+            "act": "SNA",
+            "reg": "none"
+          }
+        }
+      }
+    },
+    "SNA_l2_s0": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "SNA",
+        "--reg",
+        "l2:1e-3",
+        "--seeds",
+        "0",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/SNA_l2_s0"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 0.8825304508209229,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "0": {
+          "init_sha256": "db3b2a259bccf3fd5e51f215fa39cd38557b635a3b69decbd17c251061cba032",
+          "subset_idx_sha256": "a3db797d119725f6ca00162eb86d3512b5301a6cbe960647ae6eeb587d17a72b",
+          "labels_sha256": "e5fb67cef4eed1bd34bdad13c6db71785019a95ec738b1dd927ec98feb3739ab",
+          "batch_sha256": "2f4466073f4248f09670bab375ab3e6cad2ed8da161384fba9e6ccf3c7308a0d",
+          "final_state_sha256": "a826645a1fefc18f749c5d4904fdd8d79d8811465589daae15e0f2dccb7b8f1b",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.5284414291381836,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 0,
+            "act": "SNA",
+            "reg": "l2:1e-3"
+          }
+        }
+      }
+    },
+    "SNA_l2_s1": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "SNA",
+        "--reg",
+        "l2:1e-3",
+        "--seeds",
+        "1",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/SNA_l2_s1"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 0.9046463966369629,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "1": {
+          "init_sha256": "5b6594fcfb4b834d1750aeaebad41e8353b2dc04e53a3017060b7cab85c2e799",
+          "subset_idx_sha256": "57cf2a389a621d824fbd5a31f7b4e96febd28721db5b876a834a4caa680e2980",
+          "labels_sha256": "e342038e89a929067602af8a0f24121966e47fd8cf2a67ea22b334021483b5f0",
+          "batch_sha256": "c0dc5c082da83bd3f7982fee07d8c92fb40bc07ced925135af8d81599679fc32",
+          "final_state_sha256": "273adb6201bf7c3ec476006ed64abd68ef35881110a1c4bd50fa68328d36546c",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.5416476726531982,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 1,
+            "act": "SNA",
+            "reg": "l2:1e-3"
+          }
+        }
+      }
+    },
+    "SNA_l2init_s0": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "SNA",
+        "--reg",
+        "l2init:1e-3",
+        "--seeds",
+        "0",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/SNA_l2init_s0"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 0.8971450328826904,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "0": {
+          "init_sha256": "db3b2a259bccf3fd5e51f215fa39cd38557b635a3b69decbd17c251061cba032",
+          "subset_idx_sha256": "a3db797d119725f6ca00162eb86d3512b5301a6cbe960647ae6eeb587d17a72b",
+          "labels_sha256": "e5fb67cef4eed1bd34bdad13c6db71785019a95ec738b1dd927ec98feb3739ab",
+          "batch_sha256": "2f4466073f4248f09670bab375ab3e6cad2ed8da161384fba9e6ccf3c7308a0d",
+          "final_state_sha256": "1b324b47a8ffa25db48a21602871c0eef67d0f6bfb6906f383c5ee9373e034c8",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.5649545192718506,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 0,
+            "act": "SNA",
+            "reg": "l2init:1e-3"
+          }
+        }
+      }
+    },
+    "SNA_l2init_s1": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "SNA",
+        "--reg",
+        "l2init:1e-3",
+        "--seeds",
+        "1",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/SNA_l2init_s1"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 0.8994736671447754,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "1": {
+          "init_sha256": "5b6594fcfb4b834d1750aeaebad41e8353b2dc04e53a3017060b7cab85c2e799",
+          "subset_idx_sha256": "57cf2a389a621d824fbd5a31f7b4e96febd28721db5b876a834a4caa680e2980",
+          "labels_sha256": "e342038e89a929067602af8a0f24121966e47fd8cf2a67ea22b334021483b5f0",
+          "batch_sha256": "c0dc5c082da83bd3f7982fee07d8c92fb40bc07ced925135af8d81599679fc32",
+          "final_state_sha256": "628394c9a500a551dec88c5ad23d6031fdcec6b54a7ebd5899143a7b1b89d448",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.5522918701171875,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 1,
+            "act": "SNA",
+            "reg": "l2init:1e-3"
+          }
+        }
+      }
+    },
+    "SNA_shell_s0": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "SNA",
+        "--reg",
+        "shell:1e-3",
+        "--seeds",
+        "0",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/SNA_shell_s0"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 1.1022827625274658,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "0": {
+          "init_sha256": "db3b2a259bccf3fd5e51f215fa39cd38557b635a3b69decbd17c251061cba032",
+          "subset_idx_sha256": "a3db797d119725f6ca00162eb86d3512b5301a6cbe960647ae6eeb587d17a72b",
+          "labels_sha256": "e5fb67cef4eed1bd34bdad13c6db71785019a95ec738b1dd927ec98feb3739ab",
+          "batch_sha256": "2f4466073f4248f09670bab375ab3e6cad2ed8da161384fba9e6ccf3c7308a0d",
+          "final_state_sha256": "ef818c5973674fd6f6df6ee5686fcca978fa2d309ff67f8bac3ff70d344eb4fc",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.7844574451446533,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 0,
+            "act": "SNA",
+            "reg": "shell:1e-3"
+          }
+        }
+      }
+    },
+    "SNA_shell_s1": {
+      "git_hash": "f83d2469aeeb42a264752cb4a14a058fb02d5bc7",
+      "git_dirty_code": true,
+      "argv": [
+        "/home/issan/lop_analysis/src/shell_l2_rlmnist_0913.py",
+        "--act",
+        "SNA",
+        "--reg",
+        "shell:1e-3",
+        "--seeds",
+        "1",
+        "--tasks",
+        "2",
+        "--epochs",
+        "3",
+        "--out",
+        "/home/issan/lop_analysis/results/_smoke_shell_l2_rlmnist_0913/runs/SNA_shell_s1"
+      ],
+      "hostname": "claude-shell0913",
+      "torch": "2.13.0+cpu",
+      "torch_num_threads": 1,
+      "env_threads": {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      },
+      "wall_clock_s": 1.118497371673584,
+      "divergences": [],
+      "code_sha256": {
+        "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+      },
+      "data_sha256": {
+        "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+      },
+      "runs": {
+        "1": {
+          "init_sha256": "5b6594fcfb4b834d1750aeaebad41e8353b2dc04e53a3017060b7cab85c2e799",
+          "subset_idx_sha256": "57cf2a389a621d824fbd5a31f7b4e96febd28721db5b876a834a4caa680e2980",
+          "labels_sha256": "e342038e89a929067602af8a0f24121966e47fd8cf2a67ea22b334021483b5f0",
+          "batch_sha256": "c0dc5c082da83bd3f7982fee07d8c92fb40bc07ced925135af8d81599679fc32",
+          "final_state_sha256": "078bca9511eeb9903e95679b61145956722c83d9d3236da5a6c06264dd261b1f",
+          "tasks_completed": 2,
+          "wall_clock_s": 0.7446243762969971,
+          "divergence": {
+            "diverged": false,
+            "task": null,
+            "step": null,
+            "seed": 1,
+            "act": "SNA",
+            "reg": "shell:1e-3"
+          }
+        }
+      }
+    }
+  },
+  "checks_sha256": "5deabb2c9a28f4df822992e7cad17a7472f8e28f703104fd4b32d5c13cc9d1d3",
+  "labels": {
+    "R": {
+      "label": "D",
+      "reason": "INCOMPLETE",
+      "label_bonf": "D"
+    },
+    "SNA": {
+      "label": "D",
+      "reason": "INCOMPLETE",
+      "label_bonf": "D"
+    }
+  }
+}

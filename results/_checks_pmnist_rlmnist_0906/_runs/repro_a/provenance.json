@@ -1,0 +1,48 @@
+{
+  "run_id": "pmnist_rlmnist_0906",
+  "git_hash": "1368c05c2cf0e7b3d6fafe1a10c9f1de20ce62ce",
+  "arms": [
+    "R"
+  ],
+  "seeds": [
+    0
+  ],
+  "lrs": [
+    0.001
+  ],
+  "n_tasks": 2,
+  "epochs_per_task": 2,
+  "batch": 16,
+  "steps_per_task": 150,
+  "n_images": 1200,
+  "dims": [
+    784,
+    100,
+    100,
+    10
+  ],
+  "n_classes": 10,
+  "sna_c": 0.6,
+  "sna_beta": 0.01,
+  "intervention": "none",
+  "optimizer": "adam",
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "subset_sha256": {
+    "0": "11411ac14aee613b8d2b24352b50a1953bb733225e3a50886432fb7aa0b259ff"
+  },
+  "rng_roles": [
+    "rl_subset",
+    "rl_labels",
+    "rl_batch",
+    "init"
+  ],
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "wall_clock_s": 0.7642183303833008,
+  "divergences": []
+}

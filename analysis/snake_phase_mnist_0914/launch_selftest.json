@@ -1,0 +1,55 @@
+{
+ "all_pass": true,
+ "cases": [
+  {
+   "name": "sigstop_newest_below_bound1",
+   "ok": true
+  },
+  {
+   "name": "sigterm_newest_below_rss_peak",
+   "ok": true
+  },
+  {
+   "name": "sigcont_at_resume_bound",
+   "ok": true
+  },
+  {
+   "name": "swap_blocks_start_when_mem_low",
+   "ok": true
+  },
+  {
+   "name": "stale_swap_does_not_block_when_mem_ample",
+   "ok": true
+  },
+  {
+   "name": "refuse_rss20GiB_P0",
+   "ok": true
+  },
+  {
+   "name": "allows_start_normal",
+   "ok": true
+  },
+  {
+   "name": "refuse_smoke_row",
+   "ok": true
+  },
+  {
+   "name": "delta_m_desk",
+   "ok": true
+  }
+ ],
+ "mutations": [
+  {
+   "name": "swap_comparison_ops",
+   "detected": true
+  },
+  {
+   "name": "stop_oldest",
+   "detected": true
+  },
+  {
+   "name": "ignore_swap",
+   "detected": true
+  }
+ ]
+}

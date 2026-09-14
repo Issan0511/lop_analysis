@@ -1,0 +1,89 @@
+{
+  "S-subset": {
+    "pass": true,
+    "unique": true,
+    "in_range": true,
+    "arm_indep_regen": true,
+    "arm_indep_in_run": true,
+    "same_every_task": true,
+    "n_images": 1200,
+    "n_tasks_probed": 3,
+    "seed0_sorted_sha256": "11411ac14aee613b"
+  },
+  "S-labels": {
+    "pass": true,
+    "n_tasks": 50,
+    "chi2_max": 18.633333333333336,
+    "chi2_p_min": 0.028497504503523393,
+    "chi2_p_min_task": 24,
+    "pairwise_agreement_mean": 0.10047142857142857,
+    "pairwise_agreement_range": [
+      0.0725,
+      0.12916666666666668
+    ],
+    "n_pairs": 1225,
+    "arm_identical_regen": true,
+    "arm_identical_in_run": true
+  },
+  "S-init": {
+    "pass": true,
+    "shapes": [
+      [
+        100,
+        784
+      ],
+      [
+        100
+      ],
+      [
+        100,
+        100
+      ],
+      [
+        100
+      ],
+      [
+        10,
+        100
+      ],
+      [
+        10
+      ]
+    ],
+    "sha256": "db3b2a259bccf3fd"
+  },
+  "S-online": {
+    "pass": true,
+    "n_steps": 75,
+    "logged_online_acc": 0.10333333333333333,
+    "hook_mean": 0.10333333333333333,
+    "manual_replay_mean": 0.10333333333333333,
+    "manual_batches_bit_identical": true,
+    "first_batch_acc": 0.1875,
+    "max_abs_diff": 0.0
+  },
+  "S-repro": {
+    "pass": true,
+    "bytes": 759,
+    "n_rows": 2,
+    "sha256": "ddeb7316b8de3fb8"
+  },
+  "S-cost": {
+    "pass": true,
+    "arm": "SNA",
+    "tasks_timed": 2,
+    "epochs": 400,
+    "steps_per_task": 30000,
+    "run_s": 47.2,
+    "wall_s_incl_startup": 48.96095156669617,
+    "s_per_task": 23.6,
+    "ms_per_step": 0.7866666666666666,
+    "hours_70_runs_1proc": 22.944444444444443,
+    "device": "cuda"
+  },
+  "S-act/S-detach/S-clip": {
+    "pass": true,
+    "note": "covered by analysis/pmnist_0905/checks_adapt.py; same H.AdaptiveSnake, same act.update(z1,z2) call site"
+  },
+  "all_pass": true
+}

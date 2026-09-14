@@ -1,0 +1,99 @@
+{
+  "run_id": "wcap_rlmnist_0914",
+  "git_hash": "184b92e567aa9c5d6d6eb9bcb1ce40310b21f923",
+  "git_dirty_code": false,
+  "argv": [
+    "src/wcap_rlmnist_0914.py",
+    "--act",
+    "R",
+    "--arm",
+    "ref",
+    "--seeds",
+    "1",
+    "--tasks",
+    "50",
+    "--epochs",
+    "400",
+    "--lr",
+    "0.001",
+    "--threads",
+    "1",
+    "--out",
+    "results/wcap_rlmnist_0914/runs/R_ref_s1"
+  ],
+  "hostname": "white-san",
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+  "python": "3.12.3",
+  "torch": "2.13.0+cu130",
+  "numpy": "2.5.2",
+  "torch_num_threads": 1,
+  "env_threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "act": "R",
+  "arm": "ref",
+  "lam": 0.0,
+  "cap_mult": 2.0,
+  "cap_start_task": null,
+  "seeds": [
+    1
+  ],
+  "lr": 0.001,
+  "optimizer": "adam",
+  "n_tasks": 50,
+  "epochs_per_task": 400,
+  "batch": 16,
+  "steps_per_task": 30000,
+  "n_images": 1200,
+  "dims": [
+    784,
+    100,
+    100,
+    10
+  ],
+  "rel_tol": 0.0001,
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "subset_sha256_sorted": {
+    "1": "0954aaf502e85865ce51f536f965d7fb4be1476bc5130ca3e2918ceaf0d93140"
+  },
+  "code_sha256": {
+    "src/wcap_rlmnist_0914.py": "7a914832fd1739b6217a3ff7991d61909d6f9f50dedc1981d5b7b99e9a4f88b5",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9"
+  },
+  "device": "cpu",
+  "runs": {
+    "1": {
+      "init_sha256": "5b6594fcfb4b834d1750aeaebad41e8353b2dc04e53a3017060b7cab85c2e799",
+      "subset_idx_sha256": "57cf2a389a621d824fbd5a31f7b4e96febd28721db5b876a834a4caa680e2980",
+      "labels_sha256": "1f1b8b8f00838271c1f1aa036e903675b29a770f1397f63ff0852eb7ac2b3b28",
+      "batch_sha256": "688790c4533343aebd5d55622244909a7e66fbed4db81b3892110672e724493d",
+      "final_state_sha256": "08a6f49e32d5feb14d216cf7e11a28d8c75333e561fc49cf9adf7fb9945c1958",
+      "init_centered": {
+        "wt_med_l1": 0.5763134327704261,
+        "wt_med_l2": 0.5708818359811652
+      },
+      "task1_end_state_sha256": "e9a7b4769072b633784c414bc70a94d9888521a72b69d410760dc4726bc08dfe",
+      "tasks_completed": 50,
+      "wall_clock_s": 4006.1863379478455,
+      "divergence": {
+        "diverged": false,
+        "task": null,
+        "step": null,
+        "seed": 1,
+        "act": "R",
+        "arm": "ref"
+      }
+    }
+  },
+  "wall_clock_s": 4006.5785822868347,
+  "peak_rss_kb": 1068808,
+  "divergences": []
+}

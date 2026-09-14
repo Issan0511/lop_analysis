@@ -1,0 +1,99 @@
+{
+  "run_id": "wcap_rlmnist_0914",
+  "git_hash": "184b92e567aa9c5d6d6eb9bcb1ce40310b21f923",
+  "git_dirty_code": false,
+  "argv": [
+    "src/wcap_rlmnist_0914.py",
+    "--act",
+    "LR",
+    "--arm",
+    "l2init",
+    "--seeds",
+    "9",
+    "--tasks",
+    "50",
+    "--epochs",
+    "400",
+    "--lr",
+    "0.001",
+    "--threads",
+    "1",
+    "--out",
+    "results/wcap_rlmnist_0914/runs/LR_l2init_s9"
+  ],
+  "hostname": "white-san",
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.39",
+  "python": "3.12.3",
+  "torch": "2.13.0+cu130",
+  "numpy": "2.5.2",
+  "torch_num_threads": 1,
+  "env_threads": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1"
+  },
+  "act": "LR",
+  "arm": "l2init",
+  "lam": 0.001,
+  "cap_mult": 2.0,
+  "cap_start_task": null,
+  "seeds": [
+    9
+  ],
+  "lr": 0.001,
+  "optimizer": "adam",
+  "n_tasks": 50,
+  "epochs_per_task": 400,
+  "batch": 16,
+  "steps_per_task": 30000,
+  "n_images": 1200,
+  "dims": [
+    784,
+    100,
+    100,
+    10
+  ],
+  "rel_tol": 0.0001,
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "subset_sha256_sorted": {
+    "9": "b84ecd622ebc2586b4002708abb3644633b5bbc9f61af94bf9fecace837b1ad1"
+  },
+  "code_sha256": {
+    "src/wcap_rlmnist_0914.py": "7a914832fd1739b6217a3ff7991d61909d6f9f50dedc1981d5b7b99e9a4f88b5",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9"
+  },
+  "device": "cpu",
+  "runs": {
+    "9": {
+      "init_sha256": "5d7dca2a1a19457d5b81f0ee591f72503ff986dee6cae28f3b55b71ed44ed992",
+      "subset_idx_sha256": "6a523dc782b2860f9b987338435b82bb171e6c5726c0a97f9588f898ac47d568",
+      "labels_sha256": "e3010c751e47885515f8d26941cb780a33d58e2f9d4c283f09dc5a0fd0bea2ab",
+      "batch_sha256": "0331f2ae50da83fc83f57202f42990d7962ae4083fb3eac7ff09a5d4b162ba4d",
+      "final_state_sha256": "34d1552dbc2e14f9902b2eeafe5da72d050ba3839735de0e3bfe6e16652541f1",
+      "init_centered": {
+        "wt_med_l1": 0.5769811553971588,
+        "wt_med_l2": 0.5725142535353305
+      },
+      "task1_end_state_sha256": "56a17b712be8a80a30f74cf82d1ad97a0005e6f20ddca4cb4b4e09b648c7f82d",
+      "tasks_completed": 50,
+      "wall_clock_s": 2361.090992450714,
+      "divergence": {
+        "diverged": false,
+        "task": null,
+        "step": null,
+        "seed": 9,
+        "act": "LR",
+        "arm": "l2init"
+      }
+    }
+  },
+  "wall_clock_s": 2361.426074028015,
+  "peak_rss_kb": 1068808,
+  "divergences": []
+}
