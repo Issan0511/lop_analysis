@@ -1,0 +1,91 @@
+{
+ "all_pass": true,
+ "cases": [
+  {
+   "name": "G_C1_L1_suppressed",
+   "got": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "name": "X_C1_L1_negative",
+   "got": "X_NEGATIVE",
+   "expected": "X_NEGATIVE",
+   "ok": true
+  },
+  {
+   "name": "X_C1_L1_sign_reversed",
+   "got": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "name": "X_C1_L2_equivalent",
+   "got": "X_EQUIVALENT",
+   "expected": "X_EQUIVALENT",
+   "ok": true
+  },
+  {
+   "name": "X_C1_L2_not_reversed",
+   "got": false,
+   "expected": false,
+   "ok": true
+  },
+  {
+   "name": "F_P06_L1_present",
+   "got": "FORK_PRESENT",
+   "expected": "FORK_PRESENT",
+   "ok": true
+  },
+  {
+   "name": "F_V06_L1_inconclusive_no_excess",
+   "got": "FORK_INCONCLUSIVE",
+   "expected": "FORK_INCONCLUSIVE",
+   "ok": true
+  },
+  {
+   "name": "F_LIN_L1_absent",
+   "got": "FORK_ABSENT",
+   "expected": "FORK_ABSENT",
+   "ok": true
+  },
+  {
+   "name": "E_testable",
+   "got": true,
+   "expected": true,
+   "ok": true
+  },
+  {
+   "name": "E_C1_less",
+   "got": "LESS_DECLINE",
+   "expected": "LESS_DECLINE",
+   "ok": true
+  },
+  {
+   "name": "fork_stats_strict",
+   "got": 0.5,
+   "expected": 0.5,
+   "ok": true
+  },
+  {
+   "name": "Phi",
+   "got": 0.5,
+   "expected": 0.5,
+   "ok": true
+  }
+ ],
+ "mutations": [
+  {
+   "name": "swap_arms",
+   "detected": true
+  },
+  {
+   "name": "unpair_adam_reference",
+   "detected": true
+  },
+  {
+   "name": "fork_tolerance",
+   "detected": true
+  }
+ ]
+}
