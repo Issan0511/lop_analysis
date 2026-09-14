@@ -1,0 +1,709 @@
+{
+  "run_id": "l2split_rlmnist_0914",
+  "started_at": "2026-09-14T09:45:48.866662+09:00",
+  "git_head": "e0a3db519683dd0450f11a69127ce07ab7251a93",
+  "code_sha256": {
+    "src/l2split_rlmnist_0914.py": "ac0d226d55ea4bd57246eccf373b80193713c0e409449c8182eb0a203763e82e",
+    "analysis/l2split_rlmnist_0914/verdict.py": "1cda8e2c491ae8f5a0e7d76b1052fcca741fc1a72a5e1a9c08e1173f38bd2717",
+    "analysis/l2split_rlmnist_0914/checks.py": "443d1f5c2541ded45be5cb8dcee9f81c260640a5f999965a73d9b3a160955dc1"
+  },
+  "torch": "2.13.0+cu130",
+  "threads": 1,
+  "S1_S-identical": {
+    "title": "S1 streams identical across arms",
+    "threshold_derivation": "bit equality",
+    "pass": true,
+    "failed_items": [],
+    "per_arm": {
+      "seed0|R|ref": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|R|l2": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|R|l2wt": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|R|l2rest": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|LR|ref": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|LR|l2": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|LR|l2wt": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed0|LR|l2rest": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|R|ref": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|R|l2": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|R|l2wt": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|R|l2rest": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|LR|ref": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|LR|l2": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|LR|l2wt": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      },
+      "seed1|LR|l2rest": {
+        "init": true,
+        "subset": true,
+        "labels": true,
+        "orders": true
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M1a: l2wt draws one extra batch permutation per epoch",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "seed0|R|l2wt|orders",
+            "seed0|LR|l2wt|orders",
+            "seed0: 2 distinct stream sets",
+            "seed1|R|l2wt|orders",
+            "seed1|LR|l2wt|orders",
+            "seed1: 2 distinct stream sets"
+          ]
+        }
+      },
+      {
+        "mutation": "M1b: l2rest's init moved by 1 ulp in one element",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "seed0|R|l2rest|init",
+            "seed0|LR|l2rest|init",
+            "seed0: 2 distinct stream sets",
+            "seed1|R|l2rest|init",
+            "seed1|LR|l2rest|init",
+            "seed1: 2 distinct stream sets"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 12.3
+  },
+  "all_pass": true,
+  "S2_S-grad": {
+    "title": "S2 decomposed gradients: centered / row-constant / sum to 2 lam theta",
+    "threshold_derivation": "extra_grad on the _s2_cases.  tau_i = 4 eps32 2 lam max_j |W_ij| per row (rounding of subtracting /\n    adding the row mean and of the coefficient touches each element at most ~3 eps32 max|W_i|).\n    (i) l2wt row sums |sum_j g_ij| <= d tau_i; (ii) l2rest's W part identical within each row; (iii) elementwise\n    |g_wt + g_rest - 2 lam theta| <= tau_i on W1/W2 and exact equality on b1/b2/W3/b3; (iv) l2wt adds nothing to\n    b1/b2/W3/b3 (None); (v) float64 references 2 lam (W - m) and 2 lam m within tau_i elementwise.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "random": {
+        "0": {
+          "i_rowsum": true,
+          "ii_const": true,
+          "iii_sum": true,
+          "v_float64": true
+        },
+        "1": {
+          "iv_wt_none": true,
+          "iii_rest_exact": true
+        },
+        "2": {
+          "i_rowsum": true,
+          "ii_const": true,
+          "iii_sum": true,
+          "v_float64": true
+        },
+        "3": {
+          "iv_wt_none": true,
+          "iii_rest_exact": true
+        },
+        "4": {
+          "iv_wt_none": true,
+          "iii_rest_exact": true
+        },
+        "5": {
+          "iv_wt_none": true,
+          "iii_rest_exact": true
+        }
+      },
+      "LR_ref_task1": {
+        "0": {
+          "i_rowsum": true,
+          "ii_const": true,
+          "iii_sum": true,
+          "v_float64": true
+        },
+        "1": {
+          "iv_wt_none": true,
+          "iii_rest_exact": true
+        },
+        "2": {
+          "i_rowsum": true,
+          "ii_const": true,
+          "iii_sum": true,
+          "v_float64": true
+        },
+        "3": {
+          "iv_wt_none": true,
+          "iii_rest_exact": true
+        },
+        "4": {
+          "iv_wt_none": true,
+          "iii_rest_exact": true
+        },
+        "5": {
+          "iv_wt_none": true,
+          "iii_rest_exact": true
+        }
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M2a: l2wt without centering (2 lam W)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "random|tensor0|i_rowsum",
+            "random|tensor0|iii_sum",
+            "random|tensor0|v_float64",
+            "random|tensor2|i_rowsum",
+            "random|tensor2|iii_sum",
+            "random|tensor2|v_float64",
+            "LR_ref_task1|tensor0|i_rowsum",
+            "LR_ref_task1|tensor0|iii_sum"
+          ]
+        }
+      },
+      {
+        "mutation": "M2b: l2wt centers columns (dim=0)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "random|tensor0|i_rowsum",
+            "random|tensor0|iii_sum",
+            "random|tensor0|v_float64",
+            "random|tensor2|i_rowsum",
+            "random|tensor2|iii_sum",
+            "random|tensor2|v_float64",
+            "LR_ref_task1|tensor0|i_rowsum",
+            "LR_ref_task1|tensor0|iii_sum"
+          ]
+        }
+      },
+      {
+        "mutation": "M2c: l2rest drops W3",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "random|tensor4|iii_rest_exact",
+            "LR_ref_task1|tensor4|iii_rest_exact"
+          ]
+        }
+      },
+      {
+        "mutation": "M2d: l2wt coefficient lam instead of 2 lam",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "random|tensor0|iii_sum",
+            "random|tensor0|v_float64",
+            "random|tensor2|iii_sum",
+            "random|tensor2|v_float64",
+            "LR_ref_task1|tensor0|iii_sum",
+            "LR_ref_task1|tensor0|v_float64",
+            "LR_ref_task1|tensor2|iii_sum",
+            "LR_ref_task1|tensor2|v_float64"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 1.0
+  },
+  "S3_S-wiring": {
+    "title": "S3 hand replay of l2wt / l2rest steps == runner",
+    "threshold_derivation": "bit equality",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "R|l2wt|(1,120)": {
+        "params": true,
+        "m": true,
+        "v": true,
+        "tc": true
+      },
+      "R|l2wt|(2,200)": {
+        "params": true,
+        "m": true,
+        "v": true,
+        "tc": true
+      },
+      "LR|l2rest|(1,120)": {
+        "params": true,
+        "m": true,
+        "v": true,
+        "tc": true
+      },
+      "LR|l2rest|(2,200)": {
+        "params": true,
+        "m": true,
+        "v": true,
+        "tc": true
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M3a: decay subtracted from the weights after Adam instead of added to the gradient",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R|l2wt|(1,120)|params",
+            "R|l2wt|(1,120)|m",
+            "R|l2wt|(1,120)|v",
+            "R|l2wt|(2,200)|params",
+            "R|l2wt|(2,200)|m",
+            "R|l2wt|(2,200)|v",
+            "LR|l2rest|(1,120)|params",
+            "LR|l2rest|(1,120)|m"
+          ]
+        }
+      },
+      {
+        "mutation": "M3b: l2wt also decays W3",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R|l2wt|(1,120)|params",
+            "R|l2wt|(1,120)|m",
+            "R|l2wt|(1,120)|v",
+            "R|l2wt|(2,200)|params",
+            "R|l2wt|(2,200)|m",
+            "R|l2wt|(2,200)|v"
+          ]
+        }
+      },
+      {
+        "mutation": "M3c: l2rest drops the hidden biases",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "LR|l2rest|(1,120)|params",
+            "LR|l2rest|(1,120)|m",
+            "LR|l2rest|(1,120)|v",
+            "LR|l2rest|(2,200)|params",
+            "LR|l2rest|(2,200)|m",
+            "LR|l2rest|(2,200)|v"
+          ]
+        }
+      },
+      {
+        "mutation": "M3d: l2wt and l2rest branches swapped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R|l2wt|(1,120)|params",
+            "R|l2wt|(1,120)|m",
+            "R|l2wt|(1,120)|v",
+            "R|l2wt|(2,200)|params",
+            "R|l2wt|(2,200)|m",
+            "R|l2wt|(2,200)|v",
+            "LR|l2rest|(1,120)|params",
+            "LR|l2rest|(1,120)|m"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 2.6
+  },
+  "S4_S-baseline": {
+    "title": "S4 ref / l2 == untouched wcap runner; blobs unchanged",
+    "threshold_derivation": "bit equality",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "blob|src/pmnist_0905.py": true,
+      "blob|src/pmnist_rlmnist_0906.py": true,
+      "blob|src/shell_l2_rlmnist_0913.py": true,
+      "blob|src/wcap_rlmnist_0914.py": true,
+      "R|ref": {
+        "weights_equal": true,
+        "columns": 46,
+        "differing": []
+      },
+      "R|l2": {
+        "weights_equal": true,
+        "columns": 46,
+        "differing": []
+      },
+      "LR|ref": {
+        "weights_equal": true,
+        "columns": 46,
+        "differing": []
+      },
+      "LR|l2": {
+        "weights_equal": true,
+        "columns": 46,
+        "differing": []
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M4a: l2 coefficient 2.0 -> 1.0",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R|l2: weights_equal=False differing=['acc', 'b_med_l1', 'b_med_l2', 'dead_frac_l1', 'dead_frac_l2']",
+            "LR|l2: weights_equal=False differing=['acc', 'b_med_l1', 'b_med_l2', 'eff_rank_l1', 'eff_rank_l2']"
+          ]
+        }
+      },
+      {
+        "mutation": "M4b: ref also gets the l2wt decay",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R|ref: weights_equal=False differing=['acc', 'b_med_l1', 'b_med_l2', 'dead_frac_l1', 'dead_frac_l2']",
+            "LR|ref: weights_equal=False differing=['acc', 'b_med_l1', 'b_med_l2', 'eff_rank_l1', 'eff_rank_l2']"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 8.8
+  },
+  "S5_S-repro": {
+    "title": "S5 S-repro: same arm/seed twice in separate processes",
+    "threshold_derivation": "bit equality",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "R|l2wt": {
+        "per_task.csv": true,
+        "layer_metrics.csv": true,
+        "units.npz": true,
+        "final_state_sha256": true,
+        "task1_end_state_sha256": true
+      },
+      "LR|l2rest": {
+        "per_task.csv": true,
+        "layer_metrics.csv": true,
+        "units.npz": true,
+        "final_state_sha256": true,
+        "task1_end_state_sha256": true
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M5: batch stream seeded from time.time_ns()",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R|l2wt|per_task.csv",
+            "R|l2wt|layer_metrics.csv",
+            "R|l2wt|units.npz",
+            "R|l2wt|final_state_sha256",
+            "R|l2wt|task1_end_state_sha256",
+            "LR|l2rest|per_task.csv",
+            "LR|l2rest|layer_metrics.csv",
+            "LR|l2rest|units.npz"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 16.2
+  },
+  "S6_S-log": {
+    "title": "S6 penalty columns == independent recomputation",
+    "threshold_derivation": "R l2wt, LR l2rest and LR ref, seed 0, 3 tasks x 3 epochs: pen_wt_total and pen_rest_total equal an\n    independent numpy float64 recomputation from the captured task-end weights (relative TOL_LOG), their sum\n    equals the 0913 layer rows' pen_l2 sum, and reg_loss is the arm's own penalty (ref: 0).",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "R|l2wt": [],
+      "LR|l2rest": [],
+      "LR|ref": []
+    },
+    "mutations": [
+      {
+        "mutation": "M6a: pen_wt uncentered",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R|l2wt|t1|pen_wt_total|0.0217888571072002 vs 0.020112343393675916",
+            "R|l2wt|t1|identity",
+            "R|l2wt|t2|pen_wt_total|0.017603434495447174 vs 0.015707659996488793",
+            "LR|l2rest|t1|pen_wt_total|0.09574262288973956 vs 0.09556334852348246",
+            "LR|l2rest|t1|identity",
+            "LR|l2rest|t2|pen_wt_total|0.11846146215436176 vs 0.11827280561867845",
+            "LR|ref|t1|pen_wt_total|0.09437571411963198 vs 0.093586659836824",
+            "LR|ref|t1|identity"
+          ]
+        }
+      },
+      {
+        "mutation": "M6b: pen_rest drops b3",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R|l2wt|t1|pen_rest_total|0.005592211355065277 vs 0.005629869441030903",
+            "R|l2wt|t1|identity",
+            "R|l2wt|t2|pen_rest_total|0.006099006966215973 vs 0.006128928135283782",
+            "LR|l2rest|t1|pen_rest_total|0.003525429725433883 vs 0.00356423865889144",
+            "LR|l2rest|t1|identity",
+            "LR|l2rest|t2|pen_rest_total|0.003458106763880385 vs 0.0034928752367036735",
+            "LR|ref|t1|pen_rest_total|0.004965748655051717 vs 0.0050047453459049155",
+            "LR|ref|t1|identity"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 3.3
+  },
+  "S7_S-verdict": {
+    "title": "S7 verdict / reuse on synthetic shard trees",
+    "threshold_derivation": "label/pattern equality; estimates 1e-9",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "wt_suffices_R_either_LR": {
+        "reuse": "REUSE_OK",
+        "patterns": {
+          "R": "WT_SUFFICES",
+          "LR": "EITHER_SUFFICES"
+        },
+        "labels": {
+          "R_l2wt": "SUFFICIENT",
+          "R_l2rest": "NOT_LEVER",
+          "LR_l2wt": "SUFFICIENT",
+          "LR_l2rest": "SUFFICIENT"
+        },
+        "bad": []
+      },
+      "rest_suffices_R_mixed_LR": {
+        "reuse": "REUSE_OK",
+        "patterns": {
+          "R": "REST_SUFFICES",
+          "LR": "MIXED"
+        },
+        "labels": {
+          "R_l2wt": "NOT_LEVER",
+          "R_l2rest": "SUFFICIENT",
+          "LR_l2wt": "PARTIAL",
+          "LR_l2rest": "PARTIAL"
+        },
+        "bad": []
+      },
+      "both_needed_R_harmful_LR": {
+        "reuse": "REUSE_OK",
+        "patterns": {
+          "R": "BOTH_NEEDED",
+          "LR": "WT_SUFFICES"
+        },
+        "labels": {
+          "R_l2wt": "NOT_LEVER",
+          "R_l2rest": "NOT_LEVER",
+          "LR_l2wt": "SUFFICIENT+HARMFUL",
+          "LR_l2rest": "NOT_LEVER"
+        },
+        "bad": []
+      },
+      "late_window_and_dead_guard": {
+        "reuse": "REUSE_OK",
+        "patterns": {
+          "R": "EITHER_SUFFICES",
+          "LR": "EITHER_SUFFICES"
+        },
+        "labels": {
+          "R_l2wt": "SUFFICIENT",
+          "R_l2rest": "SUFFICIENT+HARMFUL",
+          "LR_l2wt": "SUFFICIENT",
+          "LR_l2rest": "SUFFICIENT"
+        },
+        "bad": []
+      },
+      "weak_kappa": {
+        "reuse": "REUSE_OK",
+        "patterns": {
+          "R": "MIXED",
+          "LR": "EITHER_SUFFICES"
+        },
+        "labels": {
+          "R_l2wt": "WEAK_MANIPULATION",
+          "R_l2rest": "SUFFICIENT",
+          "LR_l2wt": "SUFFICIENT",
+          "LR_l2rest": "SUFFICIENT"
+        },
+        "bad": []
+      },
+      "incomplete": {
+        "reuse": "REUSE_OK",
+        "patterns": {
+          "R": "MIXED",
+          "LR": "MIXED"
+        },
+        "labels": {
+          "R_l2wt": "INCOMPLETE",
+          "R_l2rest": "INCOMPLETE",
+          "LR_l2wt": "INCOMPLETE",
+          "LR_l2rest": "INCOMPLETE"
+        },
+        "bad": []
+      },
+      "hash_break": {
+        "reuse": "REUSE_OK",
+        "patterns": {
+          "R": "WT_SUFFICES",
+          "LR": "EITHER_SUFFICES"
+        },
+        "labels": {
+          "R_l2wt": "SUFFICIENT",
+          "R_l2rest": "NOT_LEVER",
+          "LR_l2wt": "SUFFICIENT",
+          "LR_l2rest": "SUFFICIENT"
+        },
+        "bad": []
+      },
+      "reuse_mismatch_final_only": {
+        "reuse": "REUSE_MISMATCH",
+        "patterns": {
+          "R": "WT_SUFFICES",
+          "LR": "EITHER_SUFFICES"
+        },
+        "labels": {
+          "R_l2wt": "SUFFICIENT",
+          "R_l2rest": "NOT_LEVER",
+          "LR_l2wt": "SUFFICIENT",
+          "LR_l2rest": "SUFFICIENT"
+        },
+        "bad": []
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M7a: window 41-50",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "late_window_and_dead_guard|label R_l2wt: PARTIAL != SUFFICIENT",
+            "late_window_and_dead_guard|rho|R_l2wt: 0.84 != 0.92"
+          ]
+        }
+      },
+      {
+        "mutation": "M7b: rho without 1 -",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "wt_suffices_R_either_LR|rho|R_l2wt: 0.050000000000000114 != 0.95",
+            "both_needed_R_harmful_LR|pattern R: MIXED != BOTH_NEEDED",
+            "late_window_and_dead_guard|rho|R_l2wt: 0.08000000000000007 != 0.92"
+          ]
+        }
+      },
+      {
+        "mutation": "M7c: side-effect inequality reversed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "wt_suffices_R_either_LR|label R_l2wt: SUFFICIENT+HARMFUL != SUFFICIENT",
+            "wt_suffices_R_either_LR|label R_l2rest: NOT_LEVER+HARMFUL != NOT_LEVER",
+            "rest_suffices_R_mixed_LR|label LR_l2wt: PARTIAL+HARMFUL != PARTIAL",
+            "both_needed_R_harmful_LR|label LR_l2wt: SUFFICIENT != SUFFICIENT+HARMFUL",
+            "both_needed_R_harmful_LR|label LR_l2rest: NOT_LEVER+HARMFUL != NOT_LEVER",
+            "late_window_and_dead_guard|label R_l2wt: SUFFICIENT+HARMFUL != SUFFICIENT",
+            "weak_kappa|label R_l2wt: WEAK_MANIPULATION+HARMFUL != WEAK_MANIPULATION"
+          ]
+        }
+      },
+      {
+        "mutation": "M7d: reuse judged on the task-1 hash only",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "reuse_mismatch_final_only|reuse REUSE_OK != REUSE_MISMATCH",
+            "reuse_mismatch_final_only|ref loaded from /home/issan/Projects/claude/wt/l2split_rlmnist_0914/results/_checks_l2split_rlmnist_0914/_synth/reuse_mismatch_final_only/reuse_src/R_ref_s0 despite mismatch"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 14.8
+  }
+}
