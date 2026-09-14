@@ -1,0 +1,17 @@
+# sgd_bridge_mnist_0914 config (registered with spec)
+run_id: sgd_bridge_mnist_0914
+spec: specs/spec_sgd_bridge_mnist_0914.md
+box: gate_shape_0911 / snake_phase_mnist_0914 box B with the optimizer replaced
+optimizer: {kind: sgd, lr: 0.02, epochs_per_task: 4, updates_per_task: 2500, rule: "p -= lr * g; same 625-batch order re-walked 4 times (H.run_one optimizer='sgd', epochs=4)"}
+tasks: 120
+seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+arms: [N06, P06, V06, LIN, LR]      # definitions: src/snake_phase_acts_0914.py, no init map
+fresh_probe_tasks: [1, 16, 17, 18, 19, 20, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120]
+snapshots: [20, 60, 120]
+windows: {base: [16, 30], late: [101, 120]}
+families:
+  G:  {m: 4, contrasts: {C1: [P06, N06], C2: [V06, N06]}, layers: [1, 2], margin_log: 0.09877}
+  X:  {m: 4, contrasts: {C1: [P06, N06], C2: [V06, N06]}, layers: [1, 2], margin_log: 0.09877, adam_reference: results/sgd_bridge_mnist_0914/adam_reference.json}
+  FS: {m: 2, contrasts: {C1: [P06, N06], C2: [V06, N06]}}
+fork: {shrink: "cnorm_t120^2 < cnorm_t0^2 (strict)", threshold: 0.01, excess: "f - Phi(-mu/sigma) of log(c120/c0) across units"}
+pilot: {seeds: [100, 101, 102], tasks: 40, fallback_lr: 0.01}
