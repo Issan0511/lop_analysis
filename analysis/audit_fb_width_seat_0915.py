@@ -43,7 +43,7 @@ def audit(logdir):
                 raise ValueError(f"Missing raw log: {path}; divergence must be audited explicitly")
             with np.load(path, allow_pickle=False) as log:
                 step, zbar, zmax = log["step"], log["layer1_zbar"], log["layer1_zmax"]
-                if not np.isfinite(zbar).all() or not np.isfinite(zmax).all():
+                if bool(log.get("numeric_divergence", False)) or not np.isfinite(zbar).all() or not np.isfinite(zmax).all():
                     excluded.append(seed)
                     continue
                 early = aggregate(step, zbar, 251, 300)
@@ -64,8 +64,8 @@ def audit(logdir):
                     "max_norm_relative_error": float(np.max(np.abs(norm[post] / base - 1))),
                 }
         arm_stats[arm] = {"excluded_seeds": excluded,
-                          "delta_zbar": bootstrap([v["delta_zbar"] for v in rows[arm].values()]),
-                          "late_zmax": bootstrap([v["late_zmax"] for v in rows[arm].values()])}
+                          "delta_zbar": bootstrap([v["delta_zbar"] for v in rows[arm].values()]) if rows[arm] else None,
+                          "late_zmax": bootstrap([v["late_zmax"] for v in rows[arm].values()]) if rows[arm] else None}
     a, b = "LRwf21_1216", "FB21LRwf21_1216"
     paired = sorted(rows[a].keys() & rows[b].keys())
     q1 = bootstrap([rows[a][s]["late_zmax"] - rows[b][s]["late_zmax"] for s in paired])
