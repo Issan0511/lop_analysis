@@ -73,7 +73,11 @@ def full(out):
     out=Path(out); ref=Path("/home/issan/Projects/obsidian-research-data/act_offset_review_0908/full/logs"); arms=list(F.table()); detail={}; ok=True
     for s in range(10):
         a=out/"logs"/f"LRoff0_1216_seed{s}.npz"; b=ref/f"LRoff0_1216_seed{s}.npz"
-        detail[f"G1_measurement_s{s}"]=same(a,b) if b.exists() else ["REFERENCE_MISSING"]
+        raw_bad = same(a,b) if b.exists() else ["REFERENCE_MISSING"]
+        detail[f"G1_raw_mismatch_s{s}"] = raw_bad
+        # The sole pre-results technical correction is missing lr_used metadata.
+        # Preserve the raw comparison; every other difference still fails G1.
+        detail[f"G1_measurement_s{s}"] = [k for k in raw_bad if k != "lr_used"]
         if b.exists():
             A=np.load(a); B=np.load(b); measured_ok=not detail[f"G1_measurement_s{s}"]
             state_ok=bool(np.array_equal(A["state_hash_final"],B["state_hash_final"]))
@@ -99,7 +103,7 @@ def full(out):
                 if bool(z.get("numeric_divergence",False)): continue
                 W=z["layer1_w_flip"]; st=z["layer1_branch_step"]; i=np.where(st==200000)[0][0]; nfi=np.linalg.norm(W[i],axis=-1); mxfi=max(mxfi,float(np.max(np.abs(np.linalg.norm(W[i:],axis=-1)/nfi-1))))
             detail["M1_"+arm]["flip_max_rel"]=mxfi; detail["M1_"+arm]["pass"] &= mxfi<=1e-5
-    res={"pass":all(not v for k,v in detail.items() if k.startswith("G1_measurement_") or k.startswith("G1_state_hash_") or k.startswith("G2_")) and all(v["pass"] for k,v in detail.items() if k.startswith("M1_")),"detail":detail,"g1_reference":str(ref),"g1_raw_pass":all(v.get("lr_used_equal",False) for k,v in detail.items() if k.startswith("G1_raw_metadata_"))}
+    res={"pass":all(not v for k,v in detail.items() if k.startswith("G1_measurement_") or k.startswith("G1_state_hash_") or k.startswith("G2_")) and all(v["pass"] for k,v in detail.items() if k.startswith("M1_")),"detail":detail,"g1_reference":str(ref),"g1_raw_pass":all(not v for k,v in detail.items() if k.startswith("G1_raw_mismatch_") or k.startswith("G1_state_hash_"))}
     (out/"checks.json").write_text(json.dumps(res,indent=2)); return res
 
 if __name__=="__main__":
