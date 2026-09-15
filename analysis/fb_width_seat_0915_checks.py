@@ -74,6 +74,8 @@ def full(out):
     for s in range(10):
         a=out/"logs"/f"LRoff0_1216_seed{s}.npz"; b=ref/f"LRoff0_1216_seed{s}.npz"
         detail[f"G1_s{s}"]=same(a,b) if b.exists() else ["ENV_CHANGED"]
+        if b.exists():
+            A=np.load(a); B=np.load(b); detail[f"G1_raw_metadata_s{s}"]={"lr_used_equal":bool(np.array_equal(A["lr_used"],B["lr_used"],equal_nan=True)),"run_lr_used":float(A["lr_used"]),"reference_lr_used":float(B["lr_used"]),"classification":"metadata_only"}
     for arm in arms[1:]:
         for s in range(10):
             p=out/"logs"/f"{arm}_seed{s}.npz"; q=out/"logs"/f"LRoff0_1216_seed{s}.npz"; z=np.load(p); mask=z["step"]<=200000
