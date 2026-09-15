@@ -138,7 +138,8 @@ def _arm_report(logs):
     rng = np.random.default_rng(SEED)
     neg, unfit, dead = [], [], []
     nb = np.zeros(33, dtype=np.int64)
-    kappa_t20, kappa_late, kappa_bound = [], [], []
+    kappa_t20, kappa_late = [], []
+    shape_signed, shape_abs_typical, shape_abs_mean, shape_abs_max = [], [], [], []
     for z in logs:
         zm = _at_steps(z["layer1_zmax"], z["step"], TASK_STEPS,
                        "layer1_zmax")
@@ -158,11 +159,16 @@ def _arm_report(logs):
             n = np.linalg.norm(a, axis=-1)
             return np.divide(np.abs(a).sum(-1), n,
                              out=np.full_like(n, np.nan), where=n != 0)
-        k20, kl = kap(w20), np.nanmean(kap(wl), axis=0)
+        k20, kt = kap(w20), kap(wl)
         kappa_t20.append(float(np.nanmedian(k20)))
-        kappa_late.append(float(np.nanmedian(kl)))
-        # Signed shape contribution and its magnitude bound are both retained.
-        kappa_bound.append(float(np.nanmedian(.5 * (kl - k20) * n20)))
+        kappa_late.append(float(np.nanmean(np.nanmedian(kt, axis=1))))
+        contribution = .5 * (kt - k20[None, :]) * n20[None, :]
+        # The registered aggregate follows the main task->unit order.  Absolute
+        # summaries describe typical size; max is the literal per-unit bound.
+        shape_signed.append(float(np.nanmean(np.nanmedian(contribution, axis=1))))
+        shape_abs_typical.append(float(np.nanmean(np.nanmedian(np.abs(contribution), axis=1))))
+        shape_abs_mean.append(float(np.nanmean(np.abs(contribution))))
+        shape_abs_max.append(float(np.nanmax(np.abs(contribution))))
     total = int(nb.sum())
     return {
         "all_negative_fraction": _mean_ci(neg, rng),
@@ -178,10 +184,14 @@ def _arm_report(logs):
         "kappa": {"t20": _mean_ci(kappa_t20, rng),
                   "late": _mean_ci(kappa_late, rng),
                   "delta": _mean_ci(np.asarray(kappa_late)-kappa_t20, rng),
-                  "zbar_shape_term_half_delta_kappa_n":
-                      _mean_ci(kappa_bound, rng),
-                  "zbar_shape_abs_upper_bound":
-                      _mean_ci(np.abs(kappa_bound), rng)},
+                  "zbar_shape_signed_registered_aggregate":
+                      _mean_ci(shape_signed, rng),
+                  "zbar_shape_abs_typical_task_median":
+                      _mean_ci(shape_abs_typical, rng),
+                  "zbar_shape_abs_mean_all_unit_tasks":
+                      _mean_ci(shape_abs_mean, rng),
+                  "zbar_shape_abs_max_unit_task_upper_bound":
+                      _mean_ci(shape_abs_max, rng)},
         "k_on_delta_prime": _group_k_on(logs),
     }
 
@@ -238,8 +248,12 @@ def compute_report(logs_by_arm: Mapping[str, Sequence[Mapping[str, np.ndarray]]]
         "free_delta_zmax": _paired(logs_by_arm, FREE_PAIR),
         "sensitivity": {
             "reverse_q1": _paired(logs_by_arm, FIXED_PAIR, reverse=True),
-            "reverse_q2": _paired(logs_by_arm, FIXED_PAIR, "layer1_zbar",
-                                  reverse=True, change=True),
+            "reverse_q2_fixed": _paired(logs_by_arm, FIXED_PAIR,
+                                         "layer1_zbar", reverse=True,
+                                         change=True),
+            "reverse_q2_free": _paired(logs_by_arm, FREE_PAIR,
+                                        "layer1_zbar", reverse=True,
+                                        change=True),
             "alive_q1_denom_gt_0p25": _paired(logs_by_arm, FIXED_PAIR,
                                                alive=True),
         },
