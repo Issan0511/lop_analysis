@@ -8,6 +8,7 @@ from src import fb_width_seat_0915 as F
 SKIP={"arm","run_id","state_hash_final","init_hook","init_hook_arg","batch_mode",
       "layer1_branch_step","layer1_w_flip","layer1_w_flip_norm","layer1_n_band",
       "layer1_k_on","layer1_unit_all_negative","projection_zero_free","projection_zero_flip"}
+SKIP.update({"numeric_divergence","divergence_events"})
 
 def same(a,b,mask=None):
     A=np.load(a); B=np.load(b); bad=[]
@@ -49,6 +50,12 @@ def smoke(out):
     F.project_rows(st,nf); after=[st["net"].Ws[0][...,F.FLIP],st["net"].bs[0],st["net"].v,st["net"].c,st["running_mean"]]
     side=all(torch.equal(a,b) for a,b in zip(before,after)); rel=float(torch.max(torch.abs(F._norm(st["net"].Ws[0],F.FREE)/nf-1)))
     checks["S_clamp_unit"]={"pass":side and rel<=1e-6,"side_effect_free":side,"max_rel":rel}
+    # Divergence mutation: host detector fires, only bad seed is quarantined.
+    cfgd=F.build_cfg(); cfgd["common"]["seeds"]=[0,1]; sd=F.setup_arm_dial(cfgd,F._arm(cfgd,"LRwf21_1216"),"cpu"); rd=F.BranchRecorder([0],sd)
+    good0=sd["net"].Ws[0][0].clone()
+    with torch.no_grad(): sd["net"].Ws[0][1,0,0]=float("nan")
+    rd(sd,0); div_ok=(sd.get("divergent_seed_indices")=={1} and torch.equal(good0,sd["net"].Ws[0][0]) and torch.isfinite(sd["net"].Ws[0][1]).all())
+    checks["S_divergence_seed_isolation"]={"pass":bool(div_ok),"indices":sorted(sd.get("divergent_seed_indices",set()))}
     # Mutations each get their own short run and must violate its target invariant.
     for mut in ("project_flip","moving_reference","late_switch"):
         d=out/("mut_"+mut); F.run_single_arm("LRwf21_1216",40000,d,[0],mutate=mut,switch_step=20000)
@@ -58,7 +65,7 @@ def smoke(out):
         else:
             j=np.where(zm["layer1_w_free_step"]==30000)[0][0]; detected=float(np.max(np.abs(np.linalg.norm(zm["layer1_w_free"][j],axis=-1)/n-1)))>1e-6
         checks["mutation_"+mut]={"detected":bool(detected)}
-    ok=(checks["S_noop"]["pass"] and checks["S_clamp"]["pass"] and checks["S_clamp_unit"]["pass"] and all(not v for v in checks["S_prefix"].values())
+    ok=(checks["S_noop"]["pass"] and checks["S_clamp"]["pass"] and checks["S_clamp_unit"]["pass"] and checks["S_divergence_seed_isolation"]["pass"] and all(not v for v in checks["S_prefix"].values())
         and all(not v for v in checks["S_flip"].values()) and all(checks["mutation_"+m]["detected"] for m in ("project_flip","moving_reference","late_switch")))
     res={"pass":bool(ok),"checks":checks}; (out/"g0.json").write_text(json.dumps(res,indent=2)); return res
 
@@ -74,13 +81,17 @@ def full(out):
     for arm in ("LRwf21_1216","FB21LRwf21_1216","LRwi21_1216","FB21LRwi21_1216"):
         mx=0.; zeros=0
         for s in range(10):
-            z=np.load(out/"logs"/f"{arm}_seed{s}.npz"); W=z["layer1_w_free"]; i=np.where(z["layer1_w_free_step"]==200000)[0][0]; n=np.linalg.norm(W[i],axis=-1)
+            z=np.load(out/"logs"/f"{arm}_seed{s}.npz");
+            if bool(z.get("numeric_divergence",False)): continue
+            W=z["layer1_w_free"]; i=np.where(z["layer1_w_free_step"]==200000)[0][0]; n=np.linalg.norm(W[i],axis=-1)
             mx=max(mx,float(np.max(np.abs(np.linalg.norm(W[i:],axis=-1)/n-1)))); zeros+=int(z["projection_zero_free"])
         detail["M1_"+arm]={"max_rel":mx,"zero_skips":zeros,"pass":mx<=1e-5}
         if "wi21" in arm:
             mxfi=0.
             for s in range(10):
-                z=np.load(out/"logs"/f"{arm}_seed{s}.npz"); W=z["layer1_w_flip"]; st=z["layer1_branch_step"]; i=np.where(st==200000)[0][0]; nfi=np.linalg.norm(W[i],axis=-1); mxfi=max(mxfi,float(np.max(np.abs(np.linalg.norm(W[i:],axis=-1)/nfi-1))))
+                z=np.load(out/"logs"/f"{arm}_seed{s}.npz");
+                if bool(z.get("numeric_divergence",False)): continue
+                W=z["layer1_w_flip"]; st=z["layer1_branch_step"]; i=np.where(st==200000)[0][0]; nfi=np.linalg.norm(W[i],axis=-1); mxfi=max(mxfi,float(np.max(np.abs(np.linalg.norm(W[i:],axis=-1)/nfi-1))))
             detail["M1_"+arm]["flip_max_rel"]=mxfi; detail["M1_"+arm]["pass"] &= mxfi<=1e-5
     res={"pass":all(not v for k,v in detail.items() if k.startswith("G1_") or k.startswith("G2_")) and all(v["pass"] for k,v in detail.items() if k.startswith("M1_")),"detail":detail,"g1_reference":str(ref)}
     (out/"checks.json").write_text(json.dumps(res,indent=2)); return res

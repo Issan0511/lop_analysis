@@ -18,6 +18,7 @@ from .gate_dose import forward_gate, save_checkpoint_gate
 from .elu_swamp import grads_centered_elu
 from .ratchet_log import full_support_ro
 from .mlp2_phase0 import require_omp
+from .mlp2_phase1 import NumericDivergenceError
 
 EXPERIMENT = "fb_width_seat_0915"
 CONFIG = Path(ROOT) / "configs/fb_width_seat_0915.yaml"
@@ -52,16 +53,16 @@ def _norm(W, sl): return torch.linalg.vector_norm(W[..., sl], dim=-1)
 def project_rows(st, ref_free, ref_flip=None, *, mutate=None):
     """Project rows in-place; return zero-denominator counts and side-effect evidence."""
     W = st["net"].Ws[0]
-    zf = 0; zi = 0
+    zf = torch.zeros(W.shape[0],dtype=torch.int64,device=W.device); zi = zf.clone()
     with torch.no_grad():
         cur = _norm(W, FREE)
         if mutate == "moving_reference": ref_free = cur.clone()
-        good = cur != 0; zf = int((~good).sum())
+        good = cur != 0; zf = (~good).sum(dim=1)
         Wf = W[..., FREE]
         Wf[good] *= (ref_free[good] / cur[good])[..., None]
         if ref_flip is not None or mutate == "project_flip":
             target = ref_flip
-            curi = _norm(W, FLIP); goodi = curi != 0; zi = int((~goodi).sum())
+            curi = _norm(W, FLIP); goodi = curi != 0; zi = (~goodi).sum(dim=1)
             Wi = W[..., FLIP]; Wi[goodi] *= (target[goodi] / curi[goodi])[..., None]
     return zf, zi
 
@@ -86,7 +87,24 @@ class BranchRecorder(E.EdgeRecorder):
                        ("w_flip_norm","n_band","k_on","unit_all_negative")}
         self.w_flip = np.empty((n,R,H,15), np.float32)
     def __call__(self, st, step):
-        super().__call__(st, step)
+        try:
+            super().__call__(st, step)
+        except NumericDivergenceError as exc:
+            # Seeds are independent along tensor dimension 0.  Preserve the host
+            # detector, quarantine only nonfinite seed slices, and let finite
+            # streams continue unchanged (spec: exclude divergent seeds).
+            bad=set()
+            tensors=list(st["net"].Ws)+list(st["net"].bs)+[st["net"].v,st["net"].c]
+            for t in tensors:
+                flat=torch.isfinite(t).reshape(t.shape[0],-1).all(1)
+                bad.update(torch.where(~flat)[0].cpu().tolist())
+            if not bad: raise
+            st.setdefault("divergent_seed_indices",set()).update(bad)
+            st.setdefault("divergence_events",[]).append(dict(exc.event))
+            with torch.no_grad():
+                for t in tensors:
+                    for ri in bad: t[ri].zero_()
+            super().__call__(st, step)
         j = self.branch_index.get(int(step))
         if j is None: return
         m = support_metrics(st); W = st["net"].Ws[0]
@@ -103,8 +121,10 @@ def write_logs(out, arm, st, rec):
         payload["layer1_branch_step"] = rec.branch_steps
         payload["layer1_w_flip"] = rec.w_flip[:,ri]
         for k,v in rec.branch.items(): payload["layer1_"+k] = v[:,ri]
-        payload["projection_zero_free"] = np.int64(st.get("projection_zero_free",0))
-        payload["projection_zero_flip"] = np.int64(st.get("projection_zero_flip",0))
+        payload["projection_zero_free"] = np.int64(st.get("projection_zero_free",np.zeros(st["R"],int))[ri])
+        payload["projection_zero_flip"] = np.int64(st.get("projection_zero_flip",np.zeros(st["R"],int))[ri])
+        payload["numeric_divergence"] = np.bool_(ri in st.get("divergent_seed_indices",set()))
+        payload["divergence_events"] = np.array(json.dumps(st.get("divergence_events",[]),sort_keys=True))
         np.savez_compressed(p, **payload)
     return paths
 
@@ -114,7 +134,7 @@ def train_branch(st, rec, probes, total, out, checkpoints, hook, mutate=None):
     if mutate == "late_switch": switch += PERIOD
     ps=set(map(int,probes)); cs=set(map(int,checkpoints)); net,env,teacher=st["net"],st["env"],st["teacher"]
     ref_free=ref_flip=None; started=time.time()
-    st["projection_zero_free"]=st["projection_zero_flip"]=0
+    st["projection_zero_free"]=np.zeros(st["R"],dtype=np.int64); st["projection_zero_flip"]=np.zeros(st["R"],dtype=np.int64)
     for step in range(total):
         if step in cs: save_checkpoint_gate(st, arm=st["arm"], step=step, outdir=out)
         if step in ps: rec(st,step)
@@ -132,7 +152,7 @@ def train_branch(st, rec, probes, total, out, checkpoints, hook, mutate=None):
         net.sgd_step_layers(st["lr"],*grads)
         if step >= switch and clamp != "none":
             a,b=project_rows(st,ref_free,ref_flip if (clamp=="free_flip" or mutate=="project_flip") else None,mutate=mutate)
-            st["projection_zero_free"]+=a; st["projection_zero_flip"]+=b
+            st["projection_zero_free"]+=a.cpu().numpy(); st["projection_zero_flip"]+=b.cpu().numpy()
     if total in ps: rec(st,total)
     if total in cs: save_checkpoint_gate(st,st["arm"],total,out)
     return time.time()-started
@@ -156,8 +176,8 @@ def run_single_arm(arm, steps=None, outdir=None, seeds=None, mutate=None, switch
         elapsed=train_branch(st,rec,probes,total,out,cps,hook,mutate)
     write_logs(out,arm,st,rec)
     status=dict(status="COMPLETE",arm=arm,seeds=use,total_steps=total,elapsed_sec=elapsed,
-                wall_sec=time.time()-t,projection_zero_free=st.get("projection_zero_free",0),
-                projection_zero_flip=st.get("projection_zero_flip",0),git_head=subprocess.check_output(["git","rev-parse","HEAD"],text=True,cwd=ROOT).strip())
+                wall_sec=time.time()-t,projection_zero_free=np.asarray(st.get("projection_zero_free",[])).tolist(),
+                projection_zero_flip=np.asarray(st.get("projection_zero_flip",[])).tolist(),divergent_seed_indices=sorted(st.get("divergent_seed_indices",set())),git_head=subprocess.check_output(["git","rev-parse","HEAD"],text=True,cwd=ROOT).strip())
     p=out/"arm_status"/f"{arm}_done.json"; p.parent.mkdir(parents=True,exist_ok=True); p.write_text(json.dumps(status,indent=2))
     return status
 
