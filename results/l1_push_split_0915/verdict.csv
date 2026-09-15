@@ -1,0 +1,13 @@
+section,verdict,value,detail,arm
+G1,BIT_IDENTICAL,0.0,"{""cnorm_max"": 0.0, ""cnorm_values"": 720000, ""rows_max"": 0.0, ""rows_values"": 14400, ""eval_stats_max"": {""gate_mean_l1"": 2.384185791015625e-07, ""gate_mean_l2"": 2.384185791015625e-07, ""gate_rms_l1"": 1.7881393432617188e-07, ""gate_rms_l2"": 1.7881393432617188e-07, ""lowgate_l1"": 0.0, ""lowgate_l2"": 0.0, ""nearzero_l1"": 0.0, ""nearzero_l2"": 0.0, ""neggate_l1"": 0.0, ""neggate_l2"": 0.0, ""tinygate_l1"": 0.0, ""tinygate_l2"": 0.0, ""zmean_l1"": 9.1552734375e-05, ""zmean_l2"": 0.000244140625, ""zstd_l1"": 3.0517578125e-05, ""zstd_l2"": 6.103515625e-05}}",
+G2,CLOSED,,"{""exceed_D"": 0, ""exceed_F"": 0, ""total"": 4800000, ""max_ratio_D"": 0.016863739117980003, ""max_ratio_F"": 0.011471801437437534}",
+Q1,V_UP,,+0.4681 +0.336 +0.569,GELU
+Q2,SINK_BY_B,,B B B,GELU
+Q1,V_DOWN,,-0.2815 -0.2969 -0.5787,SILU
+Q2,SINK_BY_B,,B B B,SILU
+Q3,Q3_NOT_APPLICABLE,,"{""L_push"": null, ""L_res"": null}",
+Q1_F_report,V_DOWN,,-0.03027 -0.06153 -0.03344,GELU
+Q2_F_report,SINK_BY_B,,B B B,GELU
+Q1_F_report,V_DOWN,,-0.07519 -0.07499 -0.298,SILU
+Q2_F_report,SINK_BY_B,,B B B,SILU
+Q3_F_report,Q3_NOT_APPLICABLE,,"{""L_push"": null, ""L_res"": null}",

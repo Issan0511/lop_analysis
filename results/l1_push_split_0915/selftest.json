@@ -1,0 +1,155 @@
+{
+ "LR": {
+  "phi_vs_kernel_f64": 0.0,
+  "gate_vs_autograd_f64": 0.0,
+  "mutation_phi": 0.001000000000000334,
+  "mutation_gate": 0.0010009999999998076,
+  "phi_vs_kernel_f32_report_only": 0.0,
+  "min_gate_f64": 0.1
+ },
+ "ELU1": {
+  "phi_vs_kernel_f64": 0.0,
+  "gate_vs_autograd_f64": 1.1102230246251565e-16,
+  "mutation_phi": 0.001000000000000334,
+  "mutation_gate": 0.0010009999999998076,
+  "phi_vs_kernel_f32_report_only": 0.0,
+  "min_gate_f64": 4.248354255291589e-18
+ },
+ "R": {
+  "phi_vs_kernel_f64": 0.0,
+  "gate_vs_autograd_f64": 0.0,
+  "mutation_phi": 0.001000000000000334,
+  "mutation_gate": 0.0010009999999998076,
+  "phi_vs_kernel_f32_report_only": 0.0,
+  "min_gate_f64": 0.0
+ },
+ "GELU": {
+  "phi_vs_kernel_f64": 1.7763568394002505e-15,
+  "gate_vs_autograd_f64": 2.220446049250313e-16,
+  "mutation_phi": 0.0010000000000012221,
+  "mutation_gate": 0.0011299041451289238,
+  "phi_vs_kernel_f32_report_only": 4.76837158203125e-07,
+  "min_gate_f64": -0.12890414495135386
+ },
+ "SILU": {
+  "phi_vs_kernel_f64": 1.7763568394002505e-15,
+  "gate_vs_autograd_f64": 2.220446049250313e-16,
+  "mutation_phi": 0.0010000000000012221,
+  "mutation_gate": 0.001100839320121283,
+  "phi_vs_kernel_f32_report_only": 9.5367431640625e-07,
+  "min_gate_f64": -0.09983932006525938
+ },
+ "backprop_vs_autograd_f64": 1.1102230246251565e-16,
+ "backprop_mutation_gelu_sign": 0.27080812580575175,
+ "layer2_negative_gate_share_in_check": {
+  "LR": 0.0,
+  "ELU1": 0.0,
+  "R": 0.0,
+  "GELU": 0.264375,
+  "SILU": 0.126875
+ },
+ "instrumentation": {
+  "closure": {
+   "ratioD": 0.0010200597815000268,
+   "ratioF": 0.0037651639116314008,
+   "partition_exact": true,
+   "occ_min_gelu_silu": [
+    0.1382,
+    0.14832916666666668,
+    0.7134708333333334,
+    0.18160833333333334,
+    0.2761458333333333,
+    0.5422458333333333
+   ],
+   "v_exercised": 200
+  },
+  "mutations": {
+   "no_bias": {
+    "ratioD": 2029998548.8255348,
+    "ratioF": 0.0037651639116314008,
+    "partition_exact": true,
+    "occ_min_gelu_silu": [
+     0.1382,
+     0.14832916666666668,
+     0.7134708333333334,
+     0.18160833333333334,
+     0.2761458333333333,
+     0.5422458333333333
+    ],
+    "v_exercised": 200
+   },
+   "no_c1": {
+    "ratioD": 384501739900.49976,
+    "ratioF": 0.0037651639116314008,
+    "partition_exact": true,
+    "occ_min_gelu_silu": [
+     0.1382,
+     0.14832916666666668,
+     0.7134708333333334,
+     0.18160833333333334,
+     0.2761458333333333,
+     0.5422458333333333
+    ],
+    "v_exercised": 200
+   },
+   "stale_mu": {
+    "ratioD": 402473361.4691871,
+    "ratioF": 0.0037651639116314008,
+    "partition_exact": true,
+    "occ_min_gelu_silu": [
+     0.1382,
+     0.14832916666666668,
+     0.7134708333333334,
+     0.18160833333333334,
+     0.2761458333333333,
+     0.5422458333333333
+    ],
+    "v_exercised": 200
+   },
+   "stale_v": {
+    "ratioD": 1732150751775.767,
+    "ratioF": 0.0037651639116314008,
+    "partition_exact": true,
+    "occ_min_gelu_silu": [
+     0.1382,
+     0.14832916666666668,
+     0.7134708333333334,
+     0.18160833333333334,
+     0.2761458333333333,
+     0.5422458333333333
+    ],
+    "v_exercised": 200
+   },
+   "gap": {
+    "ratioD": 757038060775.8125,
+    "ratioF": 40425464239.45557,
+    "partition_exact": false,
+    "occ_min_gelu_silu": [
+     0.1382,
+     0.14832916666666668,
+     0.6885875,
+     0.18160833333333334,
+     0.2761458333333333,
+     0.5169583333333333
+    ],
+    "v_exercised": 198
+   },
+   "abs_phi": {
+    "ratioD": 0.0010200597815000268,
+    "ratioF": 1635460368752.9338,
+    "partition_exact": true,
+    "occ_min_gelu_silu": [
+     0.1382,
+     0.14832916666666668,
+     0.7134708333333334,
+     0.18160833333333334,
+     0.2761458333333333,
+     0.5422458333333333
+    ],
+    "v_exercised": 200
+   }
+  },
+  "training_bit_identical": true,
+  "training_mutation_inplace_detected": true
+ }
+}
