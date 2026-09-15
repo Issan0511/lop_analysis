@@ -5,7 +5,8 @@ the first chunk after the label switch (200 updates for t<=10, 100 for t>=11)?
   (1) cumulative Δz̄ at chunk edges by start position;
   (2) the same units split by whether they crossed the valley within the first chunk, with the P/B/V
       decomposition of first chunk and rest, per-unit coherence |Δz̄|/Σ|Δz̄|, sample occupancy, raw force R/I;
-  (3) V-units by start depth: Adam bias denominator per update and coherence.
+  (3) V-units by start depth: Adam bias denominator per update and coherence;
+  (4) signed P/B/V sums by start depth: first chunk, rest, task total (t2-10).
 Reads logs/chunks.npy (falls back to the backup path in backup_manifest.json).
     python3 -m analysis.l1_push_split_0915_prevalley
 """
@@ -106,11 +107,25 @@ def table3(D):
                      f"{U['first'][m].mean():+.2f} / {U['rest'][m].mean():+.2f}|{coh(U['first'][m],U['tv1'][m]):.2f} / {coh(U['rest'][m],U['tvr'][m]):.2f}|{U['tvr'][m].sum()/U['nr'][m].sum():.1e}|")
     return M+[""]
 
+def table4(D):
+    """Signed P/B/V sums by task-start depth: first chunk (200 updates), rest, and the task total (t2-10)."""
+    M=["## 4. 開始時の深さ別: 切替直後・残り・タスク全体の符号付き寄与（RL・t2–10）","",
+       "unit-task あたりの平均。切替直後 = 最初の 200 更新。全体 = 切替直後 + 残り。局面で見ると谷の奥のユニットは P −・B +・V −、タスクの和で見ると B −・V +（残りの往復が相殺）。","",
+       "|活性化|d₀ = z̄−z_c|unit-task|切替直後 P/B/V|計|残り P/B/V|計|全体 P/B/V|計|","|---|---|---:|---|---:|---|---:|---|---:|"]
+    for act,seeds,slab in (("GELU",(0,1,2),"s0–2"),("SILU",(2,),"s2"),("SILU",(0,1),"s0–1")):
+        U,zc,_=collect(D,act,seeds,2,10);d0=U["d0"]
+        for lo,hi in ((0,np.inf),(-3,0),(-6,-3),(-12,-6),(-np.inf,-12)):
+            m=(d0>=lo)&(d0<hi)
+            if m.sum()==0:continue
+            f=U["firstg"][m].mean(0);r=U["restg"][m].mean(0);t=f+r
+            M.append(f"|{act} {slab}|[{lo:g},{hi:g})|{int(m.sum())}|{pbv(f)}|{f.sum():+.2f}|{pbv(r)}|{r.sum():+.2f}|{pbv(t)}|{t.sum():+.2f}|")
+    return M+[""]
+
 def main():
     D=Data(OUT)
     M=["# l1_push_split_0915 事後（登録外）: 谷の手前から始まるユニットの正味は切替直後で済むか","",
        "RL の腕。開始時の位置はタスク開始時の z̄（GELU z_c=−0.75・SiLU z_c=−1.28、谷の無い活性化は 0 と名目 −1 で分ける）。最初の区切り = 切替直後の 200 更新（t≤10）／100 更新（t≥11）。",""]
-    M+=table1(D)+table2(D)+table3(D)
+    M+=table1(D)+table2(D)+table3(D)+table4(D)
     (OUT/"posthoc_prevalley_0915.md").write_text("\n".join(M)+"\n",encoding="utf-8");print("\n".join(M))
 
 if __name__=="__main__":main()
