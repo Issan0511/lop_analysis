@@ -7,7 +7,9 @@ ARMS=["LRoff0_1216","LRwf21_1216","FB21LRoff0_1216","FB21LRwf21_1216","LRwi21_12
 FIXED=["LRwf21_1216","FB21LRwf21_1216"]
 
 def boot(x, rng, n=2000):
-    x=np.asarray(x,float); est=float(x.mean()); b=np.mean(x[rng.integers(0,len(x),(n,len(x)))],axis=1)
+    x=np.asarray(x,float)
+    if len(x)==0:return float("nan"),[float("nan"),float("nan")]
+    est=float(x.mean()); b=np.mean(x[rng.integers(0,len(x),(n,len(x)))],axis=1)
     return est,[float(v) for v in np.quantile(b,[.025,.975])]
 def win(z,key,a,b,reverse=False,alive=False):
     step=z["step"]; take=np.isin(step,np.arange(a,b+1)*10000)
@@ -61,31 +63,8 @@ def compute(out):
         rows.append(dict(arm=a,q2_est=vals[a]["q2_ci"][0],q2_lo=vals[a]["q2_ci"][1][0],q2_hi=vals[a]["q2_ci"][1][1],growth=vals[a]["growth_ci"][0],growth_lo=vals[a]["growth_ci"][1][0],growth_hi=vals[a]["growth_ci"][1][1]))
     if not checks.get("pass"):
         q1=q2="NOT_DETERMINED"; q2_reason="G1_G2_OR_M1_FAILED"
-    # Registered report-only summaries and sensitivity analyses.
-    report={}
-    for arm in ARMS:
-        neg=[]; vabs=[]; wflip=[]; strict=[]; unfit=[]
-        for s in valid[arm]:
-            z=load(out,arm,s); take=np.isin(z["step"],np.arange(451,501)*10000)
-            neg.append(float(np.mean(z["layer1_zmax"][take]<0))); vabs.append(float(np.mean(np.abs(z["layer1_v_unit"][take])))); wflip.append(float(np.mean(z["layer1_w_flip_norm"][-50:])))
-            strict.append(float(np.mean(z["layer1_strict_dead"][take]))); unfit.append(float(np.mean(z["unfit"][take])))
-        # n_band distribution is pooled only for report; no inferential label.
-        nb=[]
-        for s in valid[arm]: nb.extend(load(out,arm,s)["layer1_n_band"][-50:].astype(int).ravel().tolist())
-        report[arm]=dict(all_negative_fraction=boot(neg,rng),abs_v=boot(vabs,rng),w_flip_norm=boot(wflip,rng),strict_dead=boot(strict,rng),unfit=boot(unfit,rng),n_band_counts={str(k):int(nb.count(k)) for k in sorted(set(nb))},kappa_t20_to_late=vals[arm]["kappa"])
-    sensitivity={}
-    for reverse,alive,name in ((True,False,"reverse_aggregation"),(False,True,"alive_q1")):
-        ds=[]
-        for s in pair: ds.append(win(load(out,FIXED[0],s),"layer1_zmax",451,500,reverse,alive)-win(load(out,FIXED[1],s),"layer1_zmax",451,500,reverse,alive))
-        sensitivity[name]=boot(ds,rng)
-    diag_pair=sorted(set(valid[ARMS[4]])&set(valid[ARMS[5]])); diag=[win(load(out,ARMS[4],s),"layer1_zmax",451,500)-win(load(out,ARMS[5],s),"layer1_zmax",451,500) for s in diag_pair]
-    free_pair=sorted(set(valid[ARMS[0]])&set(valid[ARMS[2]])); free=[win(load(out,ARMS[0],s),"layer1_zmax",451,500)-win(load(out,ARMS[2],s),"layer1_zmax",451,500) for s in free_pair]
-    report["comparisons"]={"diagnostic_delta_zmax":boot(diag,rng),"free_delta_zmax":boot(free,rng),"sensitivity":sensitivity}
-    try:
-        from analysis.fb_width_seat_0915_report import report_from_directory
-        report.update(report_from_directory(out))
-    except ImportError:
-        report["supplement_status"]="REPORT_MODULE_MISSING"
+    from analysis.fb_width_seat_0915_report import report_from_directory
+    report=report_from_directory(out)
     return dict(Q1=q1,Q1_est=q1est,Q1_CI=q1ci,Q2=q2,Q2_reason=q2_reason,M2=m2,M2_per_seed={a:[x>=1.5 for x in vals[a]["growth"]] for a in (ARMS[0],ARMS[2])},M2_rule="mean of available finite preregistered seed-level growth ratios >= 1.5",arm_Q2=armq,rows=rows,raw=vals,report_only=report,checks=checks,missing=missing,nonfinite=nonfinite)
 def synthetic_selftest():
     rng=np.random.default_rng(20260915); same=boot(np.zeros(10),rng)[1]; lift=boot(np.ones(10),rng)[1]
