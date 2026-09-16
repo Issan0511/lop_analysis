@@ -20,6 +20,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import pandas as pd
 import resource
 import subprocess
 import sys
@@ -658,6 +659,233 @@ def s_cost() -> None:
           f"{c['peak_rss_gib_max']:.2f} GiB, MemAvailable {avail0:.1f} GiB)", flush=True)
 
 
+
+# --------------------------------------------------------------------------
+# S8: the verdict script on synthetic shards (analysis/mucap_el_0916/verdict.py)
+# --------------------------------------------------------------------------
+
+VERDICT = REPO / "analysis" / "mucap_el_0916" / "verdict.py"
+TOL_EST = 1e-9       # designed estimates are exact up to float64 sums over <= 150 x 100 terms
+# The synthetic shards are laid out with the REGISTERED constants (spec 3.1 / 4.1), never with the
+# module's: a mutated window would otherwise move the designed effect along with it and hide itself.
+REG_T, REG_SPT, REG_WIN = 150, 6000, (51, 150)
+T_TABLE = {(0.975, 9): 2.262157, (0.9875, 9): 2.685011, (0.975, 7): 2.364624, (0.95, 9): 1.833113}
+TOL_T = 1e-6         # the published table's 6 decimals
+
+
+def _centered(rng, n, sd):
+    x = rng.normal(0.0, 1.0, n)
+    x = x - x.mean()
+    return x / x.std(ddof=1) * sd if sd > 0 else np.zeros(n)
+
+
+def synth_shards(V, scen: dict) -> dict:
+    """4 arms x 10 seeds x 150 tasks with designed deltas.  For endpoint ep, arm a and seed s the
+    main-window delta is  r[ep] + m[ep][s] + eff[a][ep] + n[a][ep][s]  (m shared by all arms of a
+    seed, n centred per arm, zero for ref), so the paired difference has mean eff exactly; the
+    formation windows carry r + m only.  Every task also has a step-0 row of garbage, the first
+    layer's d has a nan unit on seed 0, and cap_both's unit 0 carries a +tail in the main window."""
+    rng = np.random.default_rng(scen.get("rng", 916))
+    T, NU, SEEDS = REG_T, 100, tuple(range(10))
+    r = scen.get("r", {"E1": -0.6, "E2": -2.0})
+    m = {ep: _centered(rng, len(SEEDS), scen.get("seed_sd", 0.2)) for ep in ("E1", "E2")}
+    m_ref = {ep: _centered(rng, len(SEEDS), scen.get("ref_sd", 0.05)) for ep in ("E1", "E2")}
+    eff = scen["eff"]
+    noise = scen.get("noise", {})
+    tail = scen.get("tail", 0.0)
+    dyadic = scen.get("dyadic", False)            # exact binary fractions: SD = 0 must come out as 0
+    pattern = np.zeros(NU) if dyadic else (np.arange(NU) - 49.5) * 1e-3
+    U_pat = np.full((T, NU), 2.0)
+    for i in range(10):
+        U_pat[59:, i] = -1.0                              # absorbed from task 60
+    for i in range(10, 20):
+        for t in range(31, 150, 2):
+            U_pat[t - 1, i] = -1.0                        # flickers on odd tasks 31-149
+    shards = {}
+    for a in ("ref", "cap_par", "cap_perp", "cap_both"):
+        n = {ep: (np.zeros(len(SEEDS)) if a == "ref" else
+                  _centered(rng, len(SEEDS), noise.get(a, {}).get(ep, 0.02))) for ep in ("E1", "E2")}
+        for si, s in enumerate(SEEDS):
+            rows_task, rows_step, E1, E2, Z = [], [], [], [], []
+            for t in range(1, T + 1):
+                for step in (0, REG_SPT):
+                    rows_task.append(t)
+                    rows_step.append(step)
+                    if step == 0:
+                        E1.append(np.full(NU, 9.0)); E2.append(np.full(NU, 9.0)); Z.append(np.full(NU, 9.0))
+                        continue
+                    lv = {}
+                    for ep in ("E1", "E2"):
+                        if dyadic:
+                            base = 0.5 if ep == "E1" else 0.0
+                        else:
+                            base = 0.7 + 0.01 * si if ep == "E1" else 0.1 * si
+                        if t == 1:
+                            lv[ep] = base
+                        elif REG_WIN[0] <= t <= REG_WIN[1]:
+                            dm = m_ref[ep][si] if a == "ref" else 0.0
+                            lv[ep] = base + r[ep] + m[ep][si] + dm + eff.get(a, {}).get(ep, 0.0) + n[ep][si]
+                            if a == "ref":
+                                lv[ep] = base + r[ep] + m[ep][si] + m_ref[ep][si]
+                        else:
+                            lv[ep] = base + r[ep] + m[ep][si]
+                    e1 = lv["E1"] + pattern
+                    if a == "cap_both" and REG_WIN[0] <= t <= REG_WIN[1]:
+                        e1 = e1.copy(); e1[0] += tail
+                    e2 = np.full(NU, lv["E2"])
+                    if si == 0:
+                        e2[99] = np.nan
+                    E1.append(e1); E2.append(e2); Z.append(np.full(NU, -lv["E2"]))
+            k = len(rows_task)
+            U = np.concatenate([[np.full(NU, 9.0), U_pat[t - 1]] for t in range(1, T + 1)])
+            units = {"task": np.array(rows_task, float), "step": np.array(rows_step, float),
+                     "gate_mean_l1": np.stack(E1), "d_l1": np.stack(E2), "zbar_l1": np.stack(Z),
+                     "pplus_l1": np.stack(E1) * 0.5, "gate_mean_l2": np.stack(E1), "d_l2": np.stack(E2),
+                     "U_l1": U}
+            for key in ("K_l1", "sigma_l1", "b1", "q_l1", "v_norm_l1", "eps_frac_l1"):
+                units[key] = np.ones((k, NU))
+            online = scen.get("online", {}).get(a, 0.80)
+            pt = pd.DataFrame({"task": np.arange(1, T + 1),
+                               "online_acc": [0.82] + [online] * (T - 1),
+                               "rows_par": [0] + [5 if a in ("cap_par", "cap_both") else 0] * (T - 1),
+                               "rows_perp": [0] + [5 if a in ("cap_perp", "cap_both") else 0] * (T - 1)})
+            for (ia, it) in scen.get("idle", ()):
+                if ia == a:
+                    pt.loc[pt.task == it, "rows_perp"] = 0
+            hs = {kk: f"h{s}" for kk in V.STREAM_KEYS}
+            if s in scen.get("break", ()) and a == "cap_perp":
+                hs["batch_sha256"] = "broken"
+            prov = {"git_hash": "synthetic", "per_seed": {str(s): {**hs, "tasks_completed": T,
+                                                                   "divergence": {"diverged": False}}}}
+            ledger = {"task": np.arange(1, T + 1)}
+            for part in ("adam", "proj"):
+                for comp in ("q", "v2", "m", "wt2"):
+                    for term in ("align", "sq"):
+                        ledger[f"{part}_{comp}_{term}"] = np.zeros((T, NU))
+            shards[(a, s)] = {"units": units, "per_task": pt, "prov": prov, "ledger": ledger}
+    return shards
+
+
+BASE_EFF = {"cap_par": {"E1": 0.3, "E2": 1.5}, "cap_perp": {"E1": -0.1, "E2": -3.0},
+            "cap_both": {"E1": 0.2, "E2": 1.0}}
+_BORDER = 2.45 * 0.05 / np.sqrt(10)          # t = 2.45: inside (t_.975,9 = 2.262, t_.9875,9 = 2.685)
+S8_SCENARIOS = [
+    # name, scenario, expected labels, expected values
+    ("designed", {"eff": BASE_EFF, "tail": 5.0, "online": {"cap_both": 0.70, "cap_par": 0.79}},
+     {"main": "BOTH_HELD", "cap_par": "BOTH_HELD", "cap_perp": "CAP_DEEPENS", "cap_both_95": "BOTH_HELD"},
+     {"main_E1": 0.2 + 5.0 / 100, "main_E2": 1.0, "n_valid": 10,
+      "absorb|ref|frac_absorbed": 0.10, "absorb|ref|median_absorb_task": 60.0,
+      "absorb|ref|n_censored": 90.0, "absorb|ref|frac_neg_at_end": 0.10,
+      "absorb|ref|frac_ever_neg": 0.20, "absorb|ref|mean_reentries": 6.0,
+      "impaired|cap_both": True, "impaired|cap_par": False, "impaired|cap_perp": False}),
+    ("borderline", {"eff": {**BASE_EFF, "cap_both": {"E1": _BORDER, "E2": _BORDER}},
+                    "noise": {"cap_both": {"E1": 0.05, "E2": 0.05}}, "ref_sd": 0.0},
+     {"main": "UNRESOLVED", "cap_both_95": "BOTH_HELD"}, {"main_E1": _BORDER}),
+    ("response_only", {"eff": {**BASE_EFF, "cap_both": {"E1": 0.2, "E2": 0.0}},
+                       "noise": {"cap_both": {"E1": 0.02, "E2": 0.3}}},
+     {"main": "RESPONSE_ONLY"}, {"main_E2": 0.0}),
+    ("no_phenomenon", {"eff": BASE_EFF, "r": {"E1": 0.0, "E2": 0.0}},
+     {"main": "INAPPLICABLE", "cap_par": "INAPPLICABLE"}, {}),
+    ("cap_idle", {"eff": BASE_EFF, "idle": (("cap_both", 100),)},
+     {"main": "INAPPLICABLE", "cap_par": "BOTH_HELD"}, {}),
+    ("broken_streams", {"eff": BASE_EFF, "break": (7, 8, 9)},
+     {"main": "INAPPLICABLE"}, {"n_valid": 7}),
+    ("degenerate", {"eff": {**BASE_EFF, "cap_par": {"E1": 0.25, "E2": 1.5}}, "dyadic": True,
+                    "r": {"E1": -0.5, "E2": -2.0}, "seed_sd": 0.0, "ref_sd": 0.0,
+                    "noise": {"cap_par": {"E1": 0.0, "E2": 0.0}}},
+     {"cap_par": "BOTH_HELD"}, {"cap_par_E1_degenerate": True}),
+    # seeds differ a lot but every arm shares that difference: only a paired comparison sees the effect
+    ("paired_matters", {"eff": {**BASE_EFF, "cap_both": {"E1": 0.25, "E2": 0.3}}, "seed_sd": 1.0,
+                        "r": {"E1": -3.0, "E2": -6.0}},
+     {"main": "BOTH_HELD"}, {"main_E1": 0.25, "main_E2": 0.3}),
+]
+
+
+def _pick(res: dict, key: str):
+    if key == "n_valid":
+        return len(res["valid_seeds"])
+    if key.startswith("main_"):
+        ep = key.split("_")[1]
+        return next(r["mean"] for r in res["rows"] if r["role"] == "main" and r["endpoint"] == ep)
+    if key == "cap_par_E1_degenerate":
+        return next(r["degenerate"] for r in res["rows"]
+                    if r["arm"] == "cap_par" and r["endpoint"] == "E1" and r["level"] == 0.95)
+    if key.startswith("absorb|"):
+        _, arm, q = key.split("|")
+        return next(r["mean"] for r in res["secondary"] if r["arm"] == arm and r["quantity"] == f"absorb_{q}")
+    if key.startswith("impaired|"):
+        return res["impaired"][key.split("|")[1]]["flag"]
+    raise KeyError(key)
+
+
+def s8(V) -> dict:
+    """verdict.analyze on the S8 scenarios: every designed label and estimate must come out as
+    written (estimates within TOL_EST, flags exactly), and t_quantile must reproduce the published
+    Student-t table within TOL_T.  Tolerances: TOL_EST, TOL_T."""
+    failed, per = [], {}
+    tq = {f"{p}|{df}": V.t_quantile(p, df) for (p, df) in T_TABLE}
+    bad_t = [f"t({p},{df}) = {tq[f'{p}|{df}']:.6f} want {w}" for (p, df), w in T_TABLE.items()
+             if abs(tq[f"{p}|{df}"] - w) > TOL_T]
+    per["t_table"] = {"got": tq, "bad": bad_t}
+    failed += bad_t
+    for name, scen, want_labels, want_vals in S8_SCENARIOS:
+        res = V.analyze(synth_shards(V, scen))
+        bad = [f"{k}: got {res['labels'].get(k)} want {w}" for k, w in want_labels.items()
+               if res["labels"].get(k) != w]
+        for k, w in want_vals.items():
+            try:
+                g = _pick(res, k)
+            except (KeyError, StopIteration) as e:
+                bad.append(f"{k}: missing ({e!r})")
+                continue
+            if isinstance(w, bool):
+                ok = g is w or g == w
+            else:
+                ok = g is not None and np.isfinite(g) and abs(float(g) - w) <= TOL_EST
+            if not ok:
+                bad.append(f"{k}: got {g} want {w}")
+        per[name] = {"labels": res["labels"], "bad": bad}
+        failed += [f"{name}|{b}" for b in bad]
+    return {"pass": not failed, "failed_items": failed, "detail": per}
+
+
+V_WIN = "MAIN_WIN = (51, 150)                        # spec 4.1\n"
+V_E2 = 'ENDPOINTS = {"E1": "gate_mean_l1", "E2": "d_l1"}\n'
+V_LEVEL = "MAIN_LEVEL = 0.975                          # two-sided, two main endpoints (Bonferroni)\n"
+V_B = '    B_ok = A_ok and all(b["hi"] < 0 for b in B.values())\n'
+V_PAIR = '        return deltas(arm, ep, win) - deltas("ref", ep, win)\n'
+V_UMEAN = '    return (float(v[~bad].mean()) if (~bad).any() else float("nan")), int(bad.sum())\n'
+V_RUN = "ABSORB_RUN = 5                              # spec 4.2-1: consecutive task ends with U < 0\n"
+V_CENSOR = "    times = [x for x in first_run if x is not None]\n"
+V_CAPPED = 'CAPPED = {"cap_par": ("rows_par",), "cap_perp": ("rows_perp",), "cap_both": ("rows_par", "rows_perp")}\n'
+V_STREAMS = "    if len(set(infos.values())) != 1:\n"
+V_ENDS = "    return {int(t[i]): int(i) for i in np.where(s == SPT)[0]}\n"
+V_IMP = "            hits += f_arm < f_ref - (1.0 - f_ref)\n"
+V_TCDF = "    return 1.0 - tail if t > 0 else tail\n"
+S8_MUT = [
+    ("M8a: main window 2-10", [(V_WIN, "MAIN_WIN = (2, 10)\n")]),
+    ("M8b: E2 reads zbar instead of d", [(V_E2, 'ENDPOINTS = {"E1": "gate_mean_l1", "E2": "zbar_l1"}\n')]),
+    ("M8c: main label at 95% (Bonferroni dropped)", [(V_LEVEL, "MAIN_LEVEL = 0.95\n")]),
+    ("M8d: ref's phenomenon never required", [(V_B, "    B_ok = A_ok\n")]),
+    ("M8e: the pairing broken (ref in reverse seed order)",
+     [(V_PAIR, '        return deltas(arm, ep, win) - deltas("ref", ep, win)[::-1]\n')]),
+    ("M8f: unit median instead of the arithmetic mean",
+     [(V_UMEAN, '    return (float(np.median(v[~bad])) if (~bad).any() else float("nan")), int(bad.sum())\n')]),
+    ("M8g: absorption on the first U < 0 (no 5-task run)", [(V_RUN, "ABSORB_RUN = 1\n")]),
+    ("M8h: censored units given task 151",
+     [(V_CENSOR, "    times = [x if x is not None else 151 for x in first_run]\n")]),
+    ("M8i: cap_both's applicability looks at the parallel rows only",
+     [(V_CAPPED, 'CAPPED = {"cap_par": ("rows_par",), "cap_perp": ("rows_perp",), "cap_both": ("rows_par",)}\n')]),
+    ("M8j: the cross-arm stream check switched off", [(V_STREAMS, "    if False:\n")]),
+    ("M8k: a task's first row taken as its end point",
+     [(V_ENDS, "    return {int(t[i]): int(i) for i in reversed(range(len(t)))}\n")]),
+    ("M8l: IMPAIRED against ref's early fit itself (its own loss not subtracted)",
+     [(V_IMP, "            hits += f_arm < f_ref\n")]),
+    ("M8m: nan units not dropped from the unit mean",
+     [(V_UMEAN, '    return float(v.mean()), int(bad.sum())\n')]),
+    ("M8n: the t CDF's tails swapped", [(V_TCDF, "    return tail if t > 0 else 1.0 - tail\n")]),
+]
+
 # --------------------------------------------------------------------------
 
 CHECKS = {
@@ -674,6 +902,8 @@ CHECKS = {
     "S6_S-ledger": ("S6 the per-update books close against the task's end points", s6, S6_MUT, s6.__doc__,
                     RUNNER),
     "S7_S-repro": ("S7 the same call twice gives the same bits", s7, S7_MUT, s7.__doc__, RUNNER),
+    "S8_S-verdict": ("S8 the verdict returns the designed labels and estimates on synthetic shards", s8,
+                     S8_MUT, s8.__doc__, VERDICT),
 }
 
 
@@ -690,6 +920,7 @@ def main() -> None:
                     "spec": "specs/spec_mucap_el_0916.md",
                     "prereg_commit": load(RUNNER).PREREG_COMMIT,
                     "code_sha256": {"src/mucap_el_0916.py": hashlib.sha256(CAPS.read_bytes()).hexdigest(),
+                                    "analysis/mucap_el_0916/verdict.py": hashlib.sha256(VERDICT.read_bytes()).hexdigest(),
                                     "src/mucap_el_run_0916.py": hashlib.sha256(RUNNER.read_bytes()).hexdigest(),
                                     "analysis/mucap_el_0916/checks.py":
                                         hashlib.sha256(Path(__file__).read_bytes()).hexdigest()},
