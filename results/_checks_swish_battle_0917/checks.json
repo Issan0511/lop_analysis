@@ -1,5 +1,5 @@
 {
- "device": "cpu",
+ "device": "cuda",
  "torch": "2.13.0+cu130",
  "git_hash": "ff1b516f70b73ed75841836dd42d0db5cc99004f",
  "git_dirty_code": false,
@@ -110,24 +110,45 @@
  },
  "S-wiring": {
   "mlp": {
-   "V_moved_min": 0.7579803466796875,
+   "V_moved_min": 0.7579804062843323,
    "alpha_W_minus_c": 0.0,
    "logits_equal": true,
    "memo_acc": 0.1808333396911621,
    "recomputed_acc": 0.1808333396911621,
-   "mutation_logit_diff": 0.011903077363967896,
+   "mutation_logit_diff": 0.01190328598022461,
    "clip_frac": 0.0,
    "pass": true
   },
   "cnn": {
-   "V_moved_min": 0.7726373076438904,
+   "V_moved_min": 0.7727072834968567,
    "alpha_W_minus_c": 0.0,
    "logits_equal": true,
-   "memo_acc": 0.13083332777023315,
-   "recomputed_acc": 0.13083332777023315,
-   "mutation_logit_diff": 0.0031680241227149963,
+   "memo_acc": 0.11500000208616257,
+   "recomputed_acc": 0.11500000208616257,
+   "mutation_logit_diff": 0.002535298466682434,
    "clip_frac": 0.0,
    "pass": true
+  },
+  "pass": true
+ },
+ "S-reuse": {
+  "cnn_SNA": {
+   "columns": 63,
+   "mismatched": [],
+   "power_mismatched": 41,
+   "seconds": 124.16413044929504
+  },
+  "cnn_LR": {
+   "columns": 43,
+   "mismatched": [],
+   "power_mismatched": 28,
+   "seconds": 100.90854072570801
+  },
+  "mlp_SNA": {
+   "columns": 35,
+   "mismatched": [],
+   "power_mismatched": 20,
+   "seconds": 89.29762887954712
   },
   "pass": true
  },
