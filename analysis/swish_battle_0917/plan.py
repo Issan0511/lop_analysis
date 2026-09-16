@@ -2,17 +2,18 @@
 """Write the job plan for launch.py (spec §3).  The live copy under _launch/ is re-read by
 the launcher every cycle, so the caps can be edited while it runs.
 
-cnn (cuda): SNAc3, SWA1, SW1, SWA3 interleaved by seed, then SW3 (lowest priority).
+cnn (cuda): SNAc3 first (addendum 3: label A needs only it), then SWA1, SW1, SWA3,
+            SWA1u, SWA3u, SW3 interleaved by seed.
 mlp (cpu, 1 thread): all nine arms interleaved by seed.
-rss_gb is the measured peak (cnn cuda 2.03 GB, mlp cpu 1.05 GB) rounded up.
+rss_gb is the measured peak (cnn cuda 2.2 GB over a full run, mlp cpu 1.05 GB) rounded up.
 """
 import argparse
 import json
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-CNN_CORE = ("SNAc3", "SWA1", "SW1", "SWA3")
-CNN_LAST = ("SW3",)
+CNN_FIRST = ("SNAc3",)                                  # addendum 3: label A first
+CNN_SWISH = ("SWA1", "SW1", "SWA3", "SWA1u", "SWA3u", "SW3")
 MLP = ("SWA1", "SW1", "SWA3", "SW3", "SNA", "LR", "SNAc3", "SN3", "SN06")
 MLP_U = ("SWA1u", "SWA3u")
 
@@ -25,10 +26,10 @@ def main():
     ap.add_argument("--out", default=str(REPO / "results/swish_battle_0917/_launch/plan.json"))
     ap.add_argument("--force", action="store_true")
     a = ap.parse_args()
-    cnn = [dict(box="cnn", arm=x, seed=s, device="cuda", threads=1, rss_gb=2.1)
-           for s in range(10) for x in CNN_CORE]
-    cnn += [dict(box="cnn", arm=x, seed=s, device="cuda", threads=1, rss_gb=2.1)
-            for x in CNN_LAST for s in range(10)]
+    cnn = [dict(box="cnn", arm=x, seed=s, device="cuda", threads=1, rss_gb=2.2)
+           for x in CNN_FIRST for s in range(10)]
+    cnn += [dict(box="cnn", arm=x, seed=s, device="cuda", threads=1, rss_gb=2.2)
+            for s in range(10) for x in CNN_SWISH]
     mlp = [dict(box="mlp", arm=x, seed=s, device="cpu", threads=1, rss_gb=1.1)
            for s in range(10) for x in MLP]
     # spec addendum 2: floor-lowered adaptive Swish, after the registered mlp arms

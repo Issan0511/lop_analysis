@@ -29,7 +29,7 @@ WIN, EARLY, LATE = (31, 50), (1, 10), (41, 50)
 SEEDS = list(range(10))
 N_TASKS = 50
 SITES = {"mlp": ("l1", "l2"), "cnn": ("c1", "c2", "f1", "f2")}
-NEW = {"cnn": ("SNAc3", "SWA1", "SW1", "SWA3", "SW3"),
+NEW = {"cnn": ("SNAc3", "SWA1", "SW1", "SWA3", "SW3", "SWA1u", "SWA3u"),   # u: addendum 3
        "mlp": ("LR", "SNA", "SN06", "SN3", "SNAc3", "SW1", "SW3", "SWA1", "SWA3",
                "SWA1u", "SWA3u")}                    # u: spec addendum 2
 REF = {"cnn": (Path("/home/issan/Projects/claude/proj_004_drift/results/rlcifar_cnn_0908"),
@@ -45,7 +45,9 @@ PAIRS = {
     "cnn": [("SNAc3", "SNA"), ("SNAc3", "SN3"), ("SN3", "SNA"), ("SN06", "SNA"),
             ("SWA1", "SW1"), ("SWA3", "SW3"), ("SWA1", "SWA3"),
             ("SWA1", "SNA"), ("SWA3", "SNA"), ("SWA1", "LR"), ("SWA3", "LR"),
-            ("SW1", "LR"), ("SW3", "LR"), ("SW1", "R")],
+            ("SW1", "LR"), ("SW3", "LR"), ("SW1", "R"),
+            ("SWA1u", "SWA1"), ("SWA3u", "SWA3"), ("SWA1u", "SW1"), ("SWA3u", "SW3"),
+            ("SWA1u", "SWA3u"), ("SWA1u", "SNA"), ("SWA3u", "SNA"), ("SWA1u", "LR"), ("SWA3u", "LR")],
     "mlp": [("SWA1", "SW1"), ("SWA3", "SW3"), ("SWA1", "SWA3"),
             ("SWA1", "SNA"), ("SWA3", "SNA"), ("SWA1", "LR"), ("SWA3", "LR"),
             ("SNAc3", "SNA"), ("SN3", "SNA"), ("SN06", "SNA"), ("SW1", "LR"), ("SW3", "LR"),
@@ -72,9 +74,9 @@ def sign(diff):
     return pos, n, p
 
 
-def load(box: str, src: Path, allow_partial: bool):
+def load(box: str, src: Path, allow_partial: bool, arms=None):
     parts, files, missing = [], {}, []
-    for arm in NEW[box]:
+    for arm in (arms or NEW[box]):
         for s in SEEDS:
             d = src / box / arm / f"seed{s}"
             f, pv = d / "per_task.csv", d / "provenance.json"
@@ -302,15 +304,54 @@ def write(box, d, files, refs, missing, src):
     print(txt)
 
 
+def only_a(src: Path, allow_partial: bool):
+    """Addendum 3: label A needs SNAc3 and the references only; nothing else is read."""
+    d, files, refs, missing = load("cnn", src, allow_partial, arms=("SNAc3",))
+    d = d[d.arm.isin(["SNAc3", "SNA", "SN3", "SN06"])]
+    V = {a: arm_row(d, "cnn", a) for a in ("SNAc3", "SNA", "SN3", "SN06")}
+    P = {k: pair(d, *k) for k in (("SNAc3", "SNA"), ("SNAc3", "SN3"), ("SN3", "SNA"))}
+    a, g = P[("SNAc3", "SNA")], P[("SN3", "SNA")]
+    q = a["mean"] / g["mean"]
+    lab = ("WORSE" if a["sig_loss"] else "ADAPTATION_COST" if not a["sig_win"] else
+           "C_VALUE" if q >= 0.5 else "PARTIAL")
+    S = SITES["cnn"]
+    o = ["# swish_battle_0917 — cnn 判定 A（追補 3 の先読み、SNAc3 と参照だけ）\n",
+         "| 腕 | n | 窓 | 早期 | 低下 |" + "".join(f" mob {s} |" for s in S) + "".join(f" 2α·z̄ {s} |" for s in S) + "".join(f" α {s} |" for s in S),
+         "|" + "---|" * (5 + 3 * len(S))]
+    for k, v in V.items():
+        o.append(f"| {k} | {v['n_full']} | {fmt(v['onl'])} ± {fmt(v['onl_sd'])} | {fmt(v['early'])} | {fmt(v['drop'], '+.4f')} |"
+                 + "".join(f" {fmt(v[f'mob_{s}'], '.2f')} |" for s in S)
+                 + "".join(f" {fmt(v[f'garg_{s}'], '.2f')} |" for s in S)
+                 + "".join(f" {fmt(v.get(f'alpha_{s}'), '.3f')} |" for s in S))
+    o += ["\n| a − b | 平均 ± SE | a の勝ち | p |", "|---|---|---|---|"]
+    for k, p in P.items():
+        o.append(f"| {k[0]} − {k[1]} | {p['mean']:+.4f} ± {p['se']:.4f} | {p['wins']}/{p['n']} | {p['p']:.4f} |")
+    o += [f"\n- **A_SNAc3** = `{lab}`（q = {q:.3f}）"]
+    txt = "\n".join(o) + "\n"
+    (src / "summary_cnn_A.md").write_text(txt)
+    (src / "verdict_cnn_A.json").write_text(json.dumps(
+        {"label": lab, "q": q, "pairs": {f"{x}-{y}": p for (x, y), p in P.items()}, "arms": V,
+         "refs": refs, "runs": {k: {kk: f[kk] for kk in ("git_hash", "git_dirty_code", "device", "tasks_completed")}
+                                for k, f in files.items()}, "src_trees": src_trees(files)},
+        indent=1, default=float))
+    print(txt)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--box", required=True, choices=("mlp", "cnn"))
+    ap.add_argument("--only-a", action="store_true", help="cnn label A from SNAc3 + references (addendum 3)")
     ap.add_argument("--src", default=str(OUT))
     ap.add_argument("--allow-partial", action="store_true")
     a = ap.parse_args()
     src = Path(a.src)
     if a.allow_partial and src.resolve() == OUT.resolve():
         raise SystemExit("--allow-partial is for smoke directories only")
+    if a.only_a:
+        if a.box != "cnn":
+            raise SystemExit("--only-a is the cnn label A")
+        only_a(src, a.allow_partial)
+        return
     d, files, refs, missing = load(a.box, src, a.allow_partial)
     write(a.box, d, files, refs, missing, src)
 
