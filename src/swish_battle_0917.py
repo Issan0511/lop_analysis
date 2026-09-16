@@ -221,6 +221,7 @@ def git_state() -> dict:
 
 
 def cmd_run(a) -> None:
+    gs = git_state()                  # the code this run starts with, not HEAD at its end
     device = H.setup(a.device)
     torch.set_num_threads(a.threads)
     out = Path(a.out) if a.out else OUT / a.box / a.arm / f"seed{a.seed}"
@@ -234,7 +235,7 @@ def cmd_run(a) -> None:
     H.write_csv(out / "per_task.csv", rows)
     done = len([r for r in rows if r.get("memo_acc") == r.get("memo_acc") and "memo_acc" in r])
     prov = {"run_id": EXPERIMENT, "box": a.box, "arm": a.arm, "seed": a.seed,
-            **git_state(),
+            **gs,
             "host": {"mlp": "src/pmnist_rlmnist_0906.py", "cnn": "src/rlcifar_cnn_0908.py"}[a.box],
             "act": describe(a.box, a.arm), "lr": LR, "optimizer": "adam", "tasks": a.tasks,
             "epochs_per_task": a.epochs, "tasks_completed": done, "divergence": div,
