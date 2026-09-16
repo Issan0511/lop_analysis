@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Emit one line per event worth acting on (for a Monitor): a FAILED run, a box finishing,
+"""Emit one line per event worth acting on (for a Monitor): a FAILED run, a box (or the cnn
+SNAc3 arm, addendum 3) finishing,
 the launcher exiting or dying, MemAvailable under 4 GB, and the other session's mucap
 jobs ending (room to raise the caps).  Polls every 60 s."""
 import json
@@ -10,11 +11,24 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "results" / "swish_battle_0917"
 EV = OUT / "_launch" / "events.jsonl"
-TOTAL = {"mlp": 90, "cnn": 50}
+PLAN = OUT / "_launch" / "plan.json"
+# groups whose completion is worth a message: whole boxes, and cnn SNAc3 (label A, addendum 3)
+GROUPS = {"mlp": ("mlp", None), "cnn": ("cnn", None), "cnn_SNAc3": ("cnn", "SNAc3")}
 
 
-def n_done(box):
-    return len(list((OUT / box).glob("*/seed*/provenance.json"))) if (OUT / box).exists() else 0
+def planned(group):
+    box, arm = GROUPS[group]
+    jobs = json.loads(PLAN.read_text())["jobs"]
+    return [j for j in jobs if j["box"] == box and (arm is None or j["arm"] == arm)]
+
+
+def n_done(group):
+    return sum((OUT / j["box"] / j["arm"] / f"seed{j['seed']}" / "provenance.json").exists()
+               for j in planned(group))
+
+
+def total(group):
+    return len(planned(group))
 
 
 def mem_gb():
@@ -45,11 +59,11 @@ def launcher_alive():
 
 
 seen = EV.stat().st_size if EV.exists() else 0
-reported = {b: n_done(b) >= TOTAL[b] for b in TOTAL}
+reported = {g: n_done(g) >= total(g) for g in GROUPS}
 low = False
 others = other_jobs()
 dead_reported = False
-print(f"watch start {time.strftime('%T')}: mlp {n_done('mlp')}/90 cnn {n_done('cnn')}/50 "
+print(f"watch start {time.strftime('%T')}: " + " ".join(f"{g} {n_done(g)}/{total(g)}" for g in GROUPS) + " "
       f"mem {mem_gb():.1f}G other_jobs {others}", flush=True)
 while True:
     if EV.exists() and EV.stat().st_size > seen:
@@ -64,10 +78,10 @@ while True:
                 continue
             if e.get("ev") in ("FAILED", "launcher_exit"):
                 print(f"{e['t']} {e['ev']} {e.get('job', '')} {e.get('failed', '')}", flush=True)
-    for b in TOTAL:
-        if not reported[b] and n_done(b) >= TOTAL[b]:
-            reported[b] = True
-            print(f"{time.strftime('%T')} BOX_DONE {b} {n_done(b)}/{TOTAL[b]}", flush=True)
+    for g in GROUPS:
+        if not reported[g] and n_done(g) >= total(g):     # totals follow the live plan
+            reported[g] = True
+            print(f"{time.strftime('%T')} GROUP_DONE {g} {n_done(g)}/{total(g)}", flush=True)
     m = mem_gb()
     if m < 4 and not low:
         low = True
@@ -80,5 +94,5 @@ while True:
     others = o
     if not launcher_alive() and not dead_reported and not all(reported.values()):
         dead_reported = True
-        print(f"{time.strftime('%T')} LAUNCHER_GONE mlp {n_done('mlp')}/90 cnn {n_done('cnn')}/50", flush=True)
+        print(f"{time.strftime('%T')} LAUNCHER_GONE " + " ".join(f"{g} {n_done(g)}/{total(g)}" for g in GROUPS), flush=True)
     time.sleep(60)
