@@ -1,0 +1,66 @@
+{
+  "experiment": "mucap_el_0916",
+  "spec": "specs/spec_mucap_el_0916.md",
+  "prereg_commit": "feb41ff6409f2e1aa2a8a145b9a0421fd24925a8",
+  "spec_sha256": "cd628f57ef5aba99fd0e4a17833b0e7c675ba5aa9705a3b26db9b1b4e0b36808",
+  "git_hash": "01524e08f81b40dba765cfdb3fb110faa4c2c71f",
+  "git_dirty_code": false,
+  "hostname": "white-san",
+  "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+  "torch": "2.13.0+cu130",
+  "python": "3.12.3",
+  "device": "cpu",
+  "threads": 1,
+  "arm": "cap_both",
+  "seeds": [
+    4
+  ],
+  "lr": 0.001,
+  "n_tasks": 150,
+  "epochs_per_task": 80,
+  "batch": 16,
+  "steps_per_task": 6000,
+  "n_images": 1200,
+  "act1": "ELU1",
+  "act2": "LR",
+  "cap_layer": 0,
+  "ledger": true,
+  "code_sha256": {
+    "src/mucap_el_run_0916.py": "f86c54a0cab96dfc1d7caa3bed928e3618b86c2382bc4a6e882f79a85926bcab",
+    "src/mucap_el_0916.py": "4f337bfa9aff872fce30a3b880cd57cf552034e30ae77edd04d8de812633e67a",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/elu_growth_0909.py": "65385b18847bbb77d7512f33095b1d6b30c2325ef0ce20e6b51c143c1f40e883"
+  },
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "per_seed": {
+    "4": {
+      "init_sha256": "043c2fd8f02ea0787cbb8d59cda5ccbf8ad96585cc26c517d230081c94ed7414",
+      "subset_idx_sha256": "809414b85dd8059f4781e6e6f463be8136a984663e9f231a6dc5ed9e5ab78fde",
+      "mu1_norm": 5.933536473104752,
+      "cos_mu1_to_uniform": 0.6193865118625449,
+      "task1_end_state_sha256": "2d7c072e2176dca4b036469a800dfcc2870c5c65d5b2bb1d09264278c1fb12fc",
+      "zero_q_cap_rows": 0,
+      "zero_v_cap_rows": 0,
+      "labels_sha256": "766da5962d72268e785f2b5ff2eb9edb92af3d57543a58730f53af726975d8e5",
+      "batch_sha256": "ef160ee07812683914001bc6dc771fd427777149451334c2d72cbdac17e7c906",
+      "final_state_sha256": "6c3b7d385f2b7edc17a83b4ccb84f6771d835b1b7e7dfc993c2cac079d4c4e9b",
+      "tasks_completed": 150,
+      "wall_clock_s": 1690.9064886569977,
+      "divergence": {
+        "diverged": false,
+        "task": null,
+        "step": null,
+        "seed": 4,
+        "arm": "cap_both"
+      }
+    }
+  },
+  "wall_clock_s": 1691.1634547710419,
+  "peak_rss_kb": 1075756
+}
