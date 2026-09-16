@@ -11,9 +11,12 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def load(src, tag):
-    d = np.load(src / "logs" / f"diag_{tag}.npz")
-    l = np.load(src / "logs" / f"ledger_{tag}.npz")
-    w = np.load(src / "logs" / f"w2_{tag}.npz")
+    d = dict(np.load(src / "logs" / f"diag_{tag}.npz"))
+    l = dict(np.load(src / "logs" / f"ledger_{tag}.npz"))
+    w = dict(np.load(src / "logs" / f"w2_{tag}.npz"))
+    # consecutive intervals k: point k -> point k+1, so a window from point a to point b is cum[b] - cum[a]
+    assert np.array_equal(l["i0"], np.arange(len(l["i0"]))) and np.array_equal(l["i1"], l["i0"] + 1)
+    l["cum"] = {k[2:]: np.concatenate([np.zeros_like(l[k][:1]), np.cumsum(l[k], 0)]) for k in l if k.startswith("l_")}
     prov = json.loads((src / f"provenance_{tag}.json").read_text())
     with open(src / f"taskend_{tag}.csv", newline="") as f:
         te = list(csv.DictReader(f))
@@ -66,9 +69,7 @@ def end_point(pts, task):
 
 def window_sums(L, pts, i0p, i1p):
     """sum of every per-unit ledger field over the intervals between point i0p and point i1p."""
-    i0 = L["i0"]
-    sel = (i0 >= i0p) & (L["i1"] <= i1p)
-    return {k[2:]: L[k][sel].sum(0) for k in L.files if k.startswith("l_")}
+    return {k: v[i1p] - v[i0p] for k, v in L["cum"].items()}
 
 
 def events_for(D, j, pts, thr_eps=0.5):
