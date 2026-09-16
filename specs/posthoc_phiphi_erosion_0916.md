@@ -59,3 +59,12 @@ analysis/phiphi_erosion_0916/にスクリプト、results/phiphi_erosion_0916/�
 verdict.csv、seed別指標、source/provenanceと図。大きい個体CSVは
 /home/issan/Projects/obsidian-research-data/phiphi_erosion_0916/へ保存。
 元データのSHA256を記録。解析の限界を結果と同時に示す。
+
+## 追補（初回PM集計後・condA閾値評価前）
+
+ユーザーの「分布全体の積分」を、入力密度付きの和だけに限定しない感度解析を追加。
+区間積分Q=∫[zmin,zmax]φφ′ dz=(φ(zmax)²−φ(zmin)²)/2と、その区間幅で割った値、
+絶対値積分を評価する。Leakyは単調なので絶対値積分も零点で分けて厳密計算できる。
+またユーザーの「増分→侵食」の区別に合わせ、正味幅変化だけでなくタスク単位の
+2w·Δwと全重みノルム変化も補助の目的変数にする。時系列更新ごとの整列項の和とは区別。
+補助解析であり、最初の主解析を差し替えない。単一閾値・線形比例の評価seedは共通。
