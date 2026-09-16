@@ -65,6 +65,9 @@ DENSE = (0, 75, 375, 1500, 3000, 6000)      # updates into a task, diagnosed for
 TEST_TASKS = (1, 10, 50, 100, 150)          # design 10.6: the test set, never mixed with the train max
 CAP_LAYER = 0                               # W1 in the host's [W1, b1, W2, b2, W3, b3]
 LOWGATE = 0.05                              # design's low-response mark, as in layer_chimera_rl_0914
+# mucap_ee_0917 runs the same box with ELU on the second hidden layer too (run_one(act2_name="ELU1")).
+# act2_name=None is this file's own EL box and reproduces the 0916 run bit for bit (its checks S0).
+ACT2 = {"LR": H.ARMS["LR"], "ELU1": EG.ELU(1.0)}
 
 
 def arm_caps(arm: str) -> tuple[bool, bool]:
@@ -107,6 +110,11 @@ def unit_arrays(params, x, act1, act2, e1_64) -> dict[str, np.ndarray]:
     out["s2_mean"] = np.array([float(S2.mean())])
     out["s2_sd"] = np.array([float(S2.std(unbiased=False))])
     out["mu2_norm"] = np.array([mu2])
+    # sd over the images of the first layer's output along its own mean direction: the second layer's
+    # wall constant is c2 = ||mu2|| / this (l2_wall_0916).  Added for mucap_ee_0917; reads a1 only.
+    out["mu2_proj_sd"] = np.array([float((a1.double() @ e2_64).std(unbiased=False))
+                                   if e2_64 is not None else float("nan")])
+    out["a1mean_l1"] = a1.double().mean(0).numpy()    # mu2 itself, per first-layer unit (0917)
     for li, (z, act, k, e64) in enumerate(((z1, act1, 0, e1_64), (z2, act2, 2, e2_64)), start=1):
         z64 = z.double()
         g = act.dphi(z).double()
@@ -214,11 +222,15 @@ def new_ledger(rows: int) -> dict:
 
 def run_one(arm_s: str, seed: int, lr: float, n_tasks: int, mnist: H.Mnist, device: torch.device,
             epochs: int = EPOCHS, ledger: bool = True, debug: dict | None = None,
-            progress: bool = False):
+            progress: bool = False, act2_name: str | None = None):
     """debug (checks only): init, subset, labels, batch orders, the task-1-end state and, at the
-    (task, step) pairs in debug['capture'], the state before and after that single update."""
+    (task, step) pairs in debug['capture'], the state before and after that single update.
+    act2_name: None = leaky 0.1 on the second hidden layer (this experiment); a key of ACT2 replaces it
+    (mucap_ee_0917 passes "ELU1")."""
     t_start = time.time()
     act1, act2 = EG.ELU(1.0), H.ARMS["LR"]
+    if act2_name is not None:
+        act2 = ACT2[act2_name]
     params = H.init_params(seed, device)               # host init: bit-identical per seed
     do_par, do_perp = arm_caps(arm_s)
     capture = debug.get("capture", ()) if debug is not None else ()
@@ -337,10 +349,16 @@ def run_one(arm_s: str, seed: int, lr: float, n_tasks: int, mnist: H.Mnist, devi
             info["zero_v_cap_rows"] = int((v_cap == 0).sum())
         if spt not in dense:
             snap(t, spt)
-        mt = RL.evaluate_rl(params, x, y, act1)        # act1 only sets the reported per-layer gates
+        # memo_acc on the trained net itself.  Until 0917 this line was RL.evaluate_rl(params, x, y, act1),
+        # whose H.forward applies act1 to BOTH hidden layers: the 0916 EL shards' memo_acc is the
+        # accuracy of an ELU->ELU copy of the ELU->leaky net, not of the net (online_acc was right).
+        with torch.no_grad():
+            memo = float((forward2(params, x, act1, act2)[4].argmax(1) == y).float().mean())
         u = unit_arrays(params, x, act1, act2, e1_64)
         rows.append({"arm": arm_s, "seed": seed, "task": t, "online_acc": float(acc_sum) / spt,
-                     "memo_acc": mt["acc"], "cap_on": int(cap_on), **proj,
+                     "memo_acc": memo, "cap_on": int(cap_on), **proj,
+                     # the best constant predictor's accuracy on this task's labels (the floor, 0917)
+                     "major_frac": float(torch.bincount(y, minlength=10).max()) / N_IMAGES,
                      **{f"med_{k}": float(np.nanmedian(v)) for k, v in u.items() if v.size == 100}})
         if acc is not None:
             led_rows.append({"arm": arm_s, "seed": seed, "task": t,
