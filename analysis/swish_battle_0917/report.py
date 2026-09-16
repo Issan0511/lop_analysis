@@ -213,6 +213,18 @@ def fmt(v, f=".4f"):
     return "—" if v is None or (isinstance(v, float) and v != v) else format(v, f)
 
 
+def src_trees(files: dict) -> dict:
+    """git tree of src/ for every recorded run hash: the runs are comparable only if
+    they all ran the same src (later commits touched only specs/analysis/results)."""
+    import subprocess
+    out = {}
+    for h in sorted({f["git_hash"] for f in files.values()}):
+        t = subprocess.run(["git", "-C", str(REPO), "rev-parse", f"{h}:src"],
+                           capture_output=True, text=True).stdout.strip()
+        out[h] = t or "unknown"
+    return out
+
+
 def write(box, d, files, refs, missing, src):
     arms = list(dict.fromkeys(list(REF[box][1]) + list(NEW[box])))
     V = {a: arm_row(d, box, a) for a in arms}
@@ -257,6 +269,11 @@ def write(box, d, files, refs, missing, src):
         for k, p in X.items():
             if p:
                 o.append(f"| {k[0]} − {k[1]} | {p['mean']:+.4f} ± {p['se']:.4f} |")
+    trees = src_trees(files)
+    dirty = sorted(k for k, f in files.items() if f.get("git_dirty_code"))
+    o += [f"\n走の記録: commit {len(trees)} 種・src/ の tree {len(set(trees.values()))} 種"
+          f"（{', '.join(sorted(set(trees.values())))[:60]}）・未 commit の変更つきの走 {len(dirty)} 本"
+          + (f"（{', '.join(dirty[:5])}）" if dirty else "") + "。"]
     o += ["\n## 判定（spec §5）\n"]
     for k, v in L.items():
         o.append(f"- **{k}** = `{json.dumps(v, ensure_ascii=False) if not isinstance(v, str) else v}`")
@@ -269,7 +286,7 @@ def write(box, d, files, refs, missing, src):
          "runs": {k: {kk: f[kk] for kk in ("git_hash", "git_dirty_code", "device", "threads",
                                           "tasks_completed", "wall_clock_s")}
                   for k, f in files.items()},
-         "missing": missing}, indent=1, default=float))
+         "missing": missing, "src_trees": trees, "dirty_runs": dirty}, indent=1, default=float))
     print(txt)
 
 
