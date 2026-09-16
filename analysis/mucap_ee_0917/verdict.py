@@ -404,7 +404,9 @@ def analyze(shards: dict) -> dict:
                                  "n_censored": len(ths) - len(obs)})
         res["secondary"].append({"arm": arm, "quantity": "seeds_at_floor", "window": f"{MAIN_WIN[0]}-{MAIN_WIN[1]}",
                                  "mean": float(sum(floors[(arm, s)]["at_floor"] for s in valid))})
-        led = [shards[(arm, s)]["ledger"] for s in valid if shards[(arm, s)]["ledger"]]
+        # a ledger-off shard still writes ledger.npz with its task column only (fixed after the run,
+        # 0917: this line read such a file as a ledger and raised; labels never read the ledger)
+        led = [shards[(arm, s)]["ledger"] for s in valid if "adam_q_align" in shards[(arm, s)]["ledger"]]
         for comp in ("q", "v2") if led else ():
             for part in ("adam", "proj"):
                 for term in ("align", "sq"):

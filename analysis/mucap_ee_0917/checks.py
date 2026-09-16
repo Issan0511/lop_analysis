@@ -744,7 +744,9 @@ def synth_shards(V, scen: dict) -> dict:
                 hs["batch_sha256"] = "broken"
             prov = {"git_hash": "synthetic", "per_seed": {str(s): {**hs, "tasks_completed": T,
                                                                    "divergence": {"diverged": False}}}}
-            shards[(a, s)] = {"units": units, "per_task": pt, "prov": prov, "ledger": {}}
+            # a ledger-off shard writes ledger.npz with its task column only (the real grid does)
+            shards[(a, s)] = {"units": units, "per_task": pt, "prov": prov,
+                              "ledger": {"task": np.arange(1, T + 1)}}
     return shards
 
 
