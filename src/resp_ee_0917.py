@@ -65,7 +65,7 @@ from src import mucap_el_run_0916 as EL          # forward2 (mucap_ee_0917's ver
 
 EXPERIMENT = "resp_ee_0917"
 SPEC = "specs/spec_resp_ee_0917.md"
-PREREG_COMMIT = None                             # written after the spec is pushed, before any arm runs
+PREREG_COMMIT = "b6b937d053485bb438ccec747802bceb36c9b340"   # specs/spec_resp_ee_0917.md, pushed before any arm ran
 ACT = EG.ELU(1.0)
 LR = 1e-3
 BETA1, BETA2, EPS = 0.9, 0.999, 1e-8             # the host's Adam
