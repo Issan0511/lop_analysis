@@ -194,7 +194,7 @@ S6（帳簿の閉包）は、本走で ledger を使わないので実行しな�
 | RESCUED の腕の第2層の応答 | 主窓の中でも下がり続ける（task 51 の値 > task 100 の値が過半の seed）50% |
 | IMPAIRED | どの腕も立たない 80% |
 
-**Issa の予測**: （登録後・本走前にチャットで記入）
+**Issa の予測**（2026-09-17・登録 commit 21038e6 の後、cap 腕を回す前にチャットの選択式で記入）: 主 cap_perp **RESCUED**、cap_par **COLLAPSED**、cap_par の時間 **LATER**、cap_both **RESCUED**。ラベルだけを記録し、Issa 自身の確率は付けない。Claude の最頻ラベルと全項目で一致。
 
 ## 8. 費用と実行
 
