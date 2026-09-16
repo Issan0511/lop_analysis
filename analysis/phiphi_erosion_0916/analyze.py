@@ -239,7 +239,8 @@ def snapshot():
         nr=len(w);raw=torch.cat([ck['env']['flip_state'].double()[None].expand(32,-1,-1),bits[:,None].expand(-1,nr,-1)],2)
         x=raw-ck['layer_means'][0].double()[None]
         z=torch.einsum('rhd,prd->prh',w,x)+b
-        phi=torch.where(z>0,z,a*z);gate=torch.where(z>0,1.,a);q=phi*gate
+        phi=torch.where(z>0,z,a*z)
+        gate=torch.where(z>0,torch.ones_like(z),torch.full_like(z,a));q=phi*gate
         te=ck['teacher'];tz=torch.einsum('rhd,prd->prh',te['W'].double(),raw)+te['b'].double()
         y=((tz>=te['tau'].double()).double()*te['v'].double()).sum(-1)+te['cout'].double()
         pred=(phi*v).sum(-1)+n['c'].double();err=pred-y
