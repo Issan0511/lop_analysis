@@ -1,0 +1,875 @@
+{
+  "experiment": "resp_ee_0917",
+  "started": "2026-09-17T02:26:21.879234",
+  "git_head": "f34568a21d600a6d950fca1813cbc4f799726af0",
+  "runner_sha256": "852493c0a23c5bb450852bcf86d6e4520f4b56e55406b2387fee5d3edd79bb6a",
+  "verdict_sha256": "e2c98164f93c28db956b6a4d1d72aa153dacefb02d9ec52c7dde322a44563e35",
+  "checks_sha256": "43adbc4f1ededed92a9d5f0f405f5a56652848bf2d1b5c97ef9ff993a94910bc",
+  "S0": {
+    "title": "prefix = mucap_ee_0917 ref (machine-bound, seeds 0-1, tasks 1-22)",
+    "target": "src/resp_ee_0917.py",
+    "threshold_derivation": "Exact float equality of online_acc and memo_acc per task: both are exact sums/ratios of counts,\n    so any trajectory difference that changes one prediction shows; the state is not recorded by\n    mucap_ee, so the per-task accuracies are the link.  Stops a seed at its first mismatch.",
+    "pass": true,
+    "compared_tasks": 44,
+    "failed_items": [],
+    "record_sha256": {
+      "0": "130386624f962a67fbe6d77b046c240f1d7b229f20ceea14885dca4a34974ed2",
+      "1": "e40641c7bfcfe5a5358fa3576dc5cc465a73ad9afe4e58b14ca7cd2ce4556931"
+    },
+    "seconds_per_seed": {
+      "0": 177.5074965953827,
+      "1": 106.91170191764832
+    },
+    "machine": "white-san",
+    "cpu_capability": "AVX2",
+    "mutations": [
+      {
+        "mutation": "lr off by 1e-4 relative",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "compared_tasks": 2,
+          "machine": "white-san",
+          "cpu_capability": "AVX2",
+          "failed_items": [
+            "seed 0 task 1: online 0.7919375 vs np.float64(0.7914791666666666), memo 1.0 vs np.float64(0.9991666674613953)",
+            "seed 1 task 1: online 0.7871875 vs np.float64(0.7876354166666667), memo 0.9991666674613953 vs np.float64(0.9991666674613953)"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 294.2
+  },
+  "all_pass": true,
+  "S1": {
+    "title": "update loop = host run_one (ref, ELU->ELU)",
+    "target": "src/resp_ee_0917.py",
+    "threshold_derivation": "Bit equality: final state sha256, per-task online_acc and memo_acc, init/subset sha256.",
+    "pass": true,
+    "failed_items": [],
+    "tasks": 3,
+    "mutations": [
+      {
+        "mutation": "bias correction of v one step late",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tasks": 3,
+          "failed_items": [
+            "final state sha256",
+            "task-1 state sha256",
+            "task 1: online 0.11708333333333333/0.11875 memo 0.19750000536441803/0.19750000536441803",
+            "task 2: online 0.11875/0.12 memo 0.2058333307504654/0.20499999821186066",
+            "task 3: online 0.12416666666666666/0.12416666666666666 memo 0.1899999976158142/0.18583333492279053"
+          ]
+        }
+      },
+      {
+        "mutation": "minibatch order reversed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tasks": 3,
+          "failed_items": [
+            "final state sha256",
+            "task-1 state sha256",
+            "task 1: online 0.11708333333333333/0.12958333333333333 memo 0.19750000536441803/0.17416666448116302",
+            "task 2: online 0.11875/0.12041666666666667 memo 0.2058333307504654/0.20000000298023224",
+            "task 3: online 0.12416666666666666/0.1175 memo 0.1899999976158142/0.18000000715255737"
+          ]
+        }
+      },
+      {
+        "mutation": "second layer leaky in the natural forward",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tasks": 3,
+          "failed_items": [
+            "final state sha256",
+            "task-1 state sha256",
+            "task 1: online 0.11708333333333333/0.1175 memo 0.19750000536441803/0.18333333730697632",
+            "task 2: online 0.11875/0.1125 memo 0.2058333307504654/0.16333332657814026",
+            "task 3: online 0.12416666666666666/0.11916666666666667 memo 0.1899999976158142/0.16833333671092987"
+          ]
+        }
+      },
+      {
+        "mutation": "online accuracy miscounted",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tasks": 3,
+          "failed_items": [
+            "task 1: online 0.11708333333333333/0.058541666666666665 memo 0.19750000536441803/0.19750000536441803",
+            "task 2: online 0.11875/0.059375 memo 0.2058333307504654/0.2058333307504654",
+            "task 3: online 0.12416666666666666/0.06208333333333333 memo 0.1899999976158142/0.1899999976158142"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 5.9
+  },
+  "S2": {
+    "title": "natural continuations reproduce the prefix; interventions leave it",
+    "target": "src/resp_ee_0917.py",
+    "threshold_derivation": "Natural arms: state sha256 after continuation task k == the prefix's at branch + k (both k).\n    Other arms: the response they start with is the one they were given -- a field arm's unit-mean\n    phi' at the branch point is closer to the source task's than to the branch task's (prefix rows), a\n    uniform arm's is strictly below the natural arm's (phi'(z - delta) <= phi'(z) for ELU, with equality\n    only where z > delta) -- and a reset-only arm ends task 1 in a different state from the natural arm.\n    Every arm's branch-point logits equal the natural net's.\n    The saved branch states' digest is unchanged by running all arms.",
+    "pass": true,
+    "failed_items": [],
+    "n_arms": 26,
+    "n_natural": 6,
+    "n_rows": 52,
+    "mutations": [
+      {
+        "mutation": "moments aliased to the branch state",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 26,
+          "n_natural": 6,
+          "n_rows": 52,
+          "failed_items": [
+            "branch states modified by the arms",
+            "N2: does not reproduce the prefix",
+            "N5: does not reproduce the prefix",
+            "N7: does not reproduce the prefix",
+            "N10: does not reproduce the prefix",
+            "N15: does not reproduce the prefix",
+            "N20: does not reproduce the prefix"
+          ]
+        }
+      },
+      {
+        "mutation": "parameters aliased to the branch state",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 26,
+          "n_natural": 6,
+          "n_rows": 52,
+          "failed_items": [
+            "branch states modified by the arms",
+            "N2: does not reproduce the prefix",
+            "N5: does not reproduce the prefix",
+            "N7: does not reproduce the prefix",
+            "N10: does not reproduce the prefix",
+            "N15: does not reproduce the prefix",
+            "N20: does not reproduce the prefix",
+            "R2_10r: start response 0.879718 not nearer the source 0.913842 than the branch 0.855031"
+          ]
+        }
+      },
+      {
+        "mutation": "order stream restarted",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 26,
+          "n_natural": 6,
+          "n_rows": 52,
+          "failed_items": [
+            "N2: does not reproduce the prefix",
+            "N5: does not reproduce the prefix",
+            "N7: does not reproduce the prefix",
+            "N10: does not reproduce the prefix",
+            "N15: does not reproduce the prefix",
+            "N20: does not reproduce the prefix"
+          ]
+        }
+      },
+      {
+        "mutation": "shift silently zero",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 26,
+          "n_natural": 6,
+          "n_rows": 52,
+          "failed_items": [
+            "S2_5r: start response 0.913842 not nearer the source 0.91244 than the branch 0.913842",
+            "S2_7r: start response 0.913842 not nearer the source 0.913685 than the branch 0.913842",
+            "S2_10r: start response 0.913842 not nearer the source 0.881679 than the branch 0.913842",
+            "S2_15r: start response 0.913842 not nearer the source 0.88289 than the branch 0.913842",
+            "S2_20r: start response 0.913842 not nearer the source 0.877131 than the branch 0.913842",
+            "S2_10: start response 0.913842 not nearer the source 0.881679 than the branch 0.913842",
+            "S2u5r: start response 0.913842 not below the natural 0.913842",
+            "S2u10r: start response 0.913842 not below the natural 0.913842"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 100.5
+  },
+  "S3": {
+    "title": "branch point: same logits, argument on its target",
+    "target": "src/resp_ee_0917.py",
+    "threshold_derivation": "(a) logits at the branch point on all 1200 images and on the first minibatch equal the natural\n    net's bit for bit (torch.equal).\n    (b) the argument the arm trains with, on all 1200 images: the arm's full-batch z is the stored\n    branch field z_b bit for bit (same op on the same state), so z_b + d with d = float32(z_src - z_b)\n    differs from z_src only by the float32 cast of d (<= eps32 |d| / 2) and the float64 sum of two\n    float32 values (<= eps64 (|z_b| + |d|)): bound = eps32 |d| + 2 eps64 (|z_b| + |d|), per unit and image.\n    With the float64 subtraction that made d (<= eps64 (|z_src| + |z_b|) <= eps64 (2|z_b| + |d|)) the total is\n    <= eps32 |d| / 2 + eps64 (3 |z_b| + 2 |d|) <= eps32 |d| + 4 eps64 (|z_b| + |d|), the bound used.\n    Uniform: delta is an integer, exact in float32, so only the eps64 terms remain.  ELU's phi' is\n    1-Lipschitz, so the gate differs by at most the same bound plus exp's own rounding, 2 eps64 phi'.",
+    "pass": true,
+    "failed_items": [],
+    "worst": {
+      "S2_5r": {
+        "z_err_over_bound": 0.4999724540343425,
+        "gate_err_over_bound": 0.4788226354182001,
+        "max_abs_d": 60.12724304199219
+      },
+      "S2_7r": {
+        "z_err_over_bound": 0.49999200870638294,
+        "gate_err_over_bound": 0.40361049692508466,
+        "max_abs_d": 142.40188598632812
+      },
+      "S2_10r": {
+        "z_err_over_bound": 0.4999088176687381,
+        "gate_err_over_bound": 0.3491442804668812,
+        "max_abs_d": 236.5808868408203
+      },
+      "S2_15r": {
+        "z_err_over_bound": 0.49988319835474093,
+        "gate_err_over_bound": 0.15682105553642425,
+        "max_abs_d": 360.60198974609375
+      },
+      "S2_20r": {
+        "z_err_over_bound": 0.4999398028071081,
+        "gate_err_over_bound": 0.11163450814652541,
+        "max_abs_d": 403.9282531738281
+      },
+      "S2_10": {
+        "z_err_over_bound": 0.4999088176687381,
+        "gate_err_over_bound": 0.3491442804668812,
+        "max_abs_d": 236.5808868408203
+      },
+      "S2u5r": {
+        "z_err_over_bound": 0.0,
+        "gate_err_over_bound": 0.0,
+        "max_abs_d": 5.0
+      },
+      "S2u10r": {
+        "z_err_over_bound": 0.0,
+        "gate_err_over_bound": 0.0,
+        "max_abs_d": 10.0
+      },
+      "S2u15r": {
+        "z_err_over_bound": 0.0,
+        "gate_err_over_bound": 0.0,
+        "max_abs_d": 15.0
+      },
+      "S2u20r": {
+        "z_err_over_bound": 0.0,
+        "gate_err_over_bound": 0.0,
+        "max_abs_d": 20.0
+      },
+      "S2u30r": {
+        "z_err_over_bound": 0.0,
+        "gate_err_over_bound": 0.0,
+        "max_abs_d": 30.0
+      },
+      "S1u20r": {
+        "z_err_over_bound": 0.0,
+        "gate_err_over_bound": 0.0,
+        "max_abs_d": 20.0
+      },
+      "R2_5": {
+        "z_err_over_bound": 0.4999724577594277,
+        "gate_err_over_bound": 0.467659635578289,
+        "max_abs_d": 60.12724304199219
+      },
+      "R2_7": {
+        "z_err_over_bound": 0.49999200632829127,
+        "gate_err_over_bound": 0.47497243279797846,
+        "max_abs_d": 142.40188598632812
+      },
+      "R2_10": {
+        "z_err_over_bound": 0.49990881394412706,
+        "gate_err_over_bound": 0.4715859559426035,
+        "max_abs_d": 236.5808868408203
+      },
+      "R2_15": {
+        "z_err_over_bound": 0.4998831946303207,
+        "gate_err_over_bound": 0.4698454894639355,
+        "max_abs_d": 360.60198974609375
+      },
+      "R2_20": {
+        "z_err_over_bound": 0.4999397991306678,
+        "gate_err_over_bound": 0.46631664193001227,
+        "max_abs_d": 403.9282531738281
+      },
+      "R2_10r": {
+        "z_err_over_bound": 0.49990881394412706,
+        "gate_err_over_bound": 0.4715859559426035,
+        "max_abs_d": 236.5808868408203
+      }
+    },
+    "n_intervention_arms": 18,
+    "mutations": [
+      {
+        "mutation": "layer-2 anchor dropped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_intervention_arms": 18,
+          "failed_items": [
+            "S2_5r: full-batch logits differ (max 54)",
+            "S2_5r: first-minibatch logits differ",
+            "S2_7r: full-batch logits differ (max 61.1)",
+            "S2_7r: first-minibatch logits differ",
+            "S2_10r: full-batch logits differ (max 62)",
+            "S2_10r: first-minibatch logits differ",
+            "S2_15r: full-batch logits differ (max 62)",
+            "S2_15r: first-minibatch logits differ"
+          ]
+        }
+      },
+      {
+        "mutation": "layer-1 anchor dropped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_intervention_arms": 18,
+          "failed_items": [
+            "S1u20r: full-batch logits differ (max 51.3)",
+            "S1u20r: first-minibatch logits differ"
+          ]
+        }
+      },
+      {
+        "mutation": "field sign flipped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_intervention_arms": 18,
+          "failed_items": [
+            "S2_5r: argument off its target (max err/bound 1.68e+07, gate 1.6e+07)",
+            "S2_7r: argument off its target (max err/bound 1.68e+07, gate 1.66e+07)",
+            "S2_10r: argument off its target (max err/bound 1.68e+07, gate 1.28e+07)",
+            "S2_15r: argument off its target (max err/bound 1.68e+07, gate 8.65e+06)",
+            "S2_20r: argument off its target (max err/bound 1.68e+07, gate 5.97e+06)",
+            "S2_10: argument off its target (max err/bound 1.68e+07, gate 1.28e+07)",
+            "R2_5: argument off its target (max err/bound 1.68e+07, gate 1.62e+07)",
+            "R2_7: argument off its target (max err/bound 1.68e+07, gate 1.49e+07)"
+          ]
+        }
+      },
+      {
+        "mutation": "uniform shift sign flipped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_intervention_arms": 18,
+          "failed_items": [
+            "S2u5r: argument off its target (max err/bound 1.68e+07, gate 1.68e+06)",
+            "S2u10r: argument off its target (max err/bound 1.68e+07, gate 8.39e+05)",
+            "S2u15r: argument off its target (max err/bound 1.68e+07, gate 5.59e+05)",
+            "S2u20r: argument off its target (max err/bound 1.68e+07, gate 4.19e+05)",
+            "S2u30r: argument off its target (max err/bound 1.68e+07, gate 2.8e+05)",
+            "S1u20r: argument off its target (max err/bound 1.68e+07, gate 4.19e+05)"
+          ]
+        }
+      },
+      {
+        "mutation": "field taken from the branch task, not the source",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_intervention_arms": 18,
+          "failed_items": [
+            "S2_5r: argument off its target (max err/bound 6.83e+21, gate 6.22e+19)",
+            "S2_7r: argument off its target (max err/bound 1.43e+22, gate 2.75e+20)",
+            "S2_10r: argument off its target (max err/bound 2.34e+22, gate 1.2e+21)",
+            "S2_15r: argument off its target (max err/bound 5.82e+22, gate 1.2e+21)",
+            "S2_20r: argument off its target (max err/bound 5.81e+22, gate 1.2e+21)",
+            "S2_10: argument off its target (max err/bound 2.34e+22, gate 1.2e+21)",
+            "R2_5: argument off its target (max err/bound 4.4e+18, gate 9.45e+16)",
+            "R2_7: argument off its target (max err/bound 1.17e+18, gate 1.28e+16)"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 5.7
+  },
+  "S4": {
+    "title": "gradient = phi'(z + d) chain (float64, independent)",
+    "target": "src/resp_ee_0917.py",
+    "threshold_derivation": "The runner's forward is dtype-generic; run it in float64 (float64 state, shift field and images)\n    and compare its autograd gradient with _manual_grads64, an independent chain rule whose derivative\n    is TRAIN_DPHI (expm1 + 1, what autograd applies; S4b pins it).  Both are float64 evaluations of the\n    same formula on bit-identical preactivations, so they differ by summation rounding only: an entry is\n    a sum of <= B * max(fan_in) = 16 * 785 products, and the error enters through at most 3 layers of\n    such sums, so |diff| <= 3 * 16 * 785 * eps64 * scale, scale = the absolute-value chain.  A wrong\n    derivative (phi'(z) instead of phi'(z + d), a misaligned d) changes a shifted unit's gradient by\n    O(1) relative, and the shifted and natural gradients must differ (non-vacuity).",
+    "pass": true,
+    "failed_items": [],
+    "worst": {
+      "R2_10": {
+        "max_diff_over_tol": 3.535853621398375e-05,
+        "natural_vs_shifted_rel": 0.846401259651702
+      },
+      "R2_20": {
+        "max_diff_over_tol": 3.270629240272546e-05,
+        "natural_vs_shifted_rel": 0.999945118857528
+      },
+      "S2_10r": {
+        "max_diff_over_tol": 1.867633379300207e-05,
+        "natural_vs_shifted_rel": 0.9479488891064951
+      },
+      "S2u10r": {
+        "max_diff_over_tol": 2.3618929600877852e-05,
+        "natural_vs_shifted_rel": 0.9651340393327514
+      },
+      "S1u20r": {
+        "max_diff_over_tol": 2.207808267264204e-05,
+        "natural_vs_shifted_rel": 0.9999999486203972
+      },
+      "S2_10": {
+        "max_diff_over_tol": 1.867633379300207e-05,
+        "natural_vs_shifted_rel": 0.9479488891064951
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "layer-2 derivative bypassed (forward unchanged)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R2_10: tensor 0 off by 0.497 (tol 8.66e-11)",
+            "R2_10: tensor 1 off by 0.487 (tol 1.28e-10)",
+            "R2_10: tensor 2 off by 6.44 (tol 3.13e-10)",
+            "R2_10: tensor 3 off by 0.132 (tol 8.47e-12)",
+            "R2_20: tensor 0 off by 0.305 (tol 8.61e-11)",
+            "R2_20: tensor 1 off by 0.284 (tol 1.18e-10)",
+            "R2_20: tensor 2 off by 7.63 (tol 7.45e-10)",
+            "R2_20: tensor 3 off by 0.13 (tol 1.04e-11)"
+          ]
+        }
+      },
+      {
+        "mutation": "layer-1 derivative bypassed (forward unchanged)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "S1u20r: tensor 0 off by 1.03 (tol 2e-18)",
+            "S1u20r: tensor 1 off by 1.11 (tol 2.13e-18)"
+          ]
+        }
+      },
+      {
+        "mutation": "layer-2 field misaligned with the minibatch (forward unchanged at the branch point)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R2_10: tensor 0 off by 0.597 (tol 8.66e-11)",
+            "R2_10: tensor 1 off by 0.488 (tol 1.28e-10)",
+            "R2_10: tensor 2 off by 6.89 (tol 3.13e-10)",
+            "R2_10: tensor 3 off by 0.169 (tol 8.47e-12)",
+            "R2_20: tensor 0 off by 0.657 (tol 8.61e-11)",
+            "R2_20: tensor 1 off by 0.796 (tol 1.18e-10)",
+            "R2_20: tensor 2 off by 15.3 (tol 7.45e-10)",
+            "R2_20: tensor 3 off by 0.167 (tol 1.04e-11)"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.3
+  },
+  "S4b": {
+    "title": "training derivative = expm1 + 1 (float32 zero below -17.33)",
+    "target": "src/resp_ee_0917.py",
+    "threshold_derivation": "The derivative training uses: autograd through the runner's ELU equals TRAIN_DPHI bit for bit\n    in float32 and float64 on a grid over [-45, 5] (so it is 0 below the kernel's threshold, not exp(z)),\n    and the runner's dphi_train is the same function.  Exact equality: same operations.",
+    "pass": true,
+    "failed_items": [],
+    "zero_z32": -16.635532333438686,
+    "mutations": [
+      {
+        "mutation": "runner dphi_train uses exp",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "zero_z32": -16.635532333438686,
+          "failed_items": [
+            "torch.float32: runner dphi_train differs",
+            "torch.float64: runner dphi_train differs",
+            "float32 zero not at ZERO_Z32: [5.959872950711542e-08, 5.961055649095215e-08]"
+          ]
+        }
+      },
+      {
+        "mutation": "zero threshold at the round-to-nearest place",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "zero_z32": -17.328679513998633,
+          "failed_items": [
+            "float32 zero not at ZERO_Z32: [0.0, 0.0]"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.0
+  },
+  "S5": {
+    "title": "fresh Adam: first update = lr g / (|g| + eps)",
+    "target": "src/resp_ee_0917.py",
+    "threshold_derivation": "A fresh Adam's first update: m = (1-b1) g, v = (1-b2) g^2, t = 1, so the update is\n    lr * g / (|g| + eps) up to the float32 rounding of the 6 operations per coordinate (<= 8 eps32\n    relative together), and the run's RMS is a float32 mean of N = numel squares, whose recursive sum\n    is off by at most (N - 1) eps32 relative: |RMS_run - RMS_expected| <= ((N - 1) + 8) eps32 RMS_expected.\n    g is recomputed here with the arm's own forward on the first minibatch (float32, same ops).\n    The run's per-update RMS comes from run_arm's saved step array (1 epoch per task keeps it short).",
+    "pass": true,
+    "failed_items": [],
+    "arms": {
+      "N10r": {
+        "run": [
+          0.000606370682362467,
+          0.0004903816152364016,
+          0.0009999998146668077
+        ],
+        "expected": [
+          0.000606370614253278,
+          0.000490381575891957,
+          0.0009999997818125386
+        ],
+        "err_over_tol": [
+          1.201718165275068e-05,
+          6.725665662149864e-05,
+          0.00027368584301210985
+        ]
+      },
+      "N2r": {
+        "run": [
+          0.0007252399227581918,
+          0.0009999993490055203,
+          0.0009999996982514858
+        ],
+        "expected": [
+          0.0007252398471378632,
+          0.0009999992099155965,
+          0.0009999996394547096
+        ],
+        "err_over_tol": [
+          1.1155575129627966e-05,
+          0.00011659556006311823,
+          0.000489794722468448
+        ]
+      },
+      "R2_10r": {
+        "run": [
+          0.0006887001800350845,
+          0.0009999994654208422,
+          0.0009999998146668077
+        ],
+        "expected": [
+          0.0006887001308827349,
+          0.0009999993388733043,
+          0.0009999997818125386
+        ],
+        "err_over_tol": [
+          7.635705689975492e-06,
+          0.00010608158191958902,
+          0.00027368584301210985
+        ]
+      },
+      "S2u10r": {
+        "run": [
+          0.0007123228861019015,
+          0.0009965080535039306,
+          0.0009999996982514858
+        ],
+        "expected": [
+          0.0007123228387032549,
+          0.0009965080049601927,
+          0.0009999996394547096
+        ],
+        "err_over_tol": [
+          7.1190842986020005e-06,
+          4.0835551219828094e-05,
+          0.000489794722468448
+        ]
+      },
+      "S2_10r": {
+        "run": [
+          0.0006904362235218287,
+          0.00033704034285619855,
+          0.0009999996982514858
+        ],
+        "expected": [
+          0.0006904361925555801,
+          0.0003370402890167439,
+          0.0009999996394547096
+        ],
+        "err_over_tol": [
+          4.7984404499825525e-06,
+          0.00013390747907399071,
+          0.000489794722468448
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "reset keeps the step count",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "N10r: first update RMS [0.001769605209119618, 0.001319626346230507, 0.0031622557435184717] vs [0.000606370614253278, 0.000490381575891957, 0.0009999997818125386]",
+            "N2r: first update RMS [0.002282863250002265, 0.0031621891539543867, 0.0031622322276234627] vs [0.0007252398471378632, 0.0009999992099155965, 0.0009999996394547096]",
+            "R2_10r: first update RMS [0.0021389659959822893, 0.003162211971357465, 0.0031622557435184717] vs [0.0006887001308827349, 0.0009999993388733043, 0.0009999997818125386]",
+            "S2u10r: first update RMS [0.0021341608371585608, 0.0029974603094160557, 0.0031622322276234627] vs [0.0007123228387032549, 0.0009965080049601927, 0.0009999996394547096]",
+            "S2_10r: first update RMS [0.0020949251484125853, 0.0008312481222674251, 0.0031622322276234627] vs [0.0006904361925555801, 0.0003370402890167439, 0.0009999996394547096]"
+          ]
+        }
+      },
+      {
+        "mutation": "reset keeps v",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "N10r: first update RMS [0.00011477862426545471, 9.195618622470647e-05, 3.405321331229061e-05] vs [0.000606370614253278, 0.000490381575891957, 0.0009999997818125386]",
+            "N2r: first update RMS [0.0003320479008834809, 0.00047694490058347583, 0.000388812564779073] vs [0.0007252398471378632, 0.0009999992099155965, 0.0009999996394547096]",
+            "R2_10r: first update RMS [0.0004737893177662045, 0.0009122099727392197, 3.405321331229061e-05] vs [0.0006887001308827349, 0.0009999993388733043, 0.0009999997818125386]",
+            "S2u10r: first update RMS [2.307675458723679e-06, 3.7324189179344103e-06, 0.000388812564779073] vs [0.0007123228387032549, 0.0009965080049601927, 0.0009999996394547096]",
+            "S2_10r: first update RMS [4.3489515519468114e-05, 2.663023587956559e-05, 0.000388812564779073] vs [0.0006904361925555801, 0.0003370402890167439, 0.0009999996394547096]"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 10.0
+  },
+  "S6": {
+    "title": "verdict on synthetic seeds",
+    "target": "analysis/resp_ee_0917/verdict.py",
+    "threshold_derivation": "Synthetic seeds with a known structure; the verdict must return the designed label and the\n    designed means (to 1e-9: the effects are added exactly and the noise is shared by both arms of a\n    contrast only through the per-arm draw, so the expected mean is recomputed here from the same draws).",
+    "pass": true,
+    "failed_items": [],
+    "cases": {
+      "both": {
+        "label": "RESPONSE_BOTH_WAYS",
+        "want": "RESPONSE_BOTH_WAYS",
+        "P1": 0.3995625568600479,
+        "P2": 0.4067062740314385
+      },
+      "restore_only": {
+        "label": "RESTORE_ONLY",
+        "want": "RESTORE_ONLY",
+        "P1": 0.3995625568600479,
+        "P2": 0.0067062740314384525
+      },
+      "sink_only": {
+        "label": "SINK_ONLY",
+        "want": "SINK_ONLY",
+        "P1": -0.00043744313995212615,
+        "P2": 0.4067062740314385
+      },
+      "none": {
+        "label": "RESPONSE_NOT_SHOWN",
+        "want": "RESPONSE_NOT_SHOWN",
+        "P1": -0.00043744313995212615,
+        "P2": 0.0067062740314384525
+      },
+      "reversed": {
+        "label": "RESPONSE_REVERSED",
+        "want": "RESPONSE_REVERSED",
+        "P1": -0.30043744313995213,
+        "P2": 0.4067062740314385
+      },
+      "no_gap": {
+        "label": "NOT_REPRODUCED",
+        "want": "NOT_REPRODUCED",
+        "P1": 0.399562556860048,
+        "P2": 0.4067062740314385
+      },
+      "invalid": {
+        "label": "INAPPLICABLE",
+        "want": "INAPPLICABLE",
+        "P1": null,
+        "P2": null
+      },
+      "wrong_prereg": {
+        "label": "INAPPLICABLE",
+        "want": "INAPPLICABLE",
+        "P1": null,
+        "P2": null
+      },
+      "ladder_eps": {
+        "label": "RESPONSE_BOTH_WAYS",
+        "want": "RESPONSE_BOTH_WAYS",
+        "P1": 0.3995625568600479,
+        "P2": 0.4067062740314385
+      },
+      "ladder_early": {
+        "label": "RESPONSE_BOTH_WAYS",
+        "want": "RESPONSE_BOTH_WAYS",
+        "P1": 0.3995625568600479,
+        "P2": 0.4067062740314385
+      },
+      "ladder_late": {
+        "label": "RESPONSE_BOTH_WAYS",
+        "want": "RESPONSE_BOTH_WAYS",
+        "P1": 0.3995625568600479,
+        "P2": 0.4067062740314385
+      },
+      "ladder_mid": {
+        "label": "RESPONSE_BOTH_WAYS",
+        "want": "RESPONSE_BOTH_WAYS",
+        "P1": 0.3995625568600479,
+        "P2": 0.4067062740314385
+      },
+      "ladder_floor": {
+        "label": "RESPONSE_BOTH_WAYS",
+        "want": "RESPONSE_BOTH_WAYS",
+        "P1": 0.3995625568600479,
+        "P2": 0.4067062740314385
+      }
+    },
+    "t_quantiles": {
+      "0.975/9": 2.262157162797873,
+      "0.9875/9": 2.6850108468168266,
+      "0.975/7": 2.364624251593117,
+      "0.9875/7": 2.841244248588115,
+      "0.975/4": 2.776445105197478
+    },
+    "mutations": [
+      {
+        "mutation": "P2 sign convention flipped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "both: RESPONSE_REVERSED != RESPONSE_BOTH_WAYS",
+            "sink_only: RESPONSE_REVERSED != SINK_ONLY",
+            "ladder_eps: RESPONSE_REVERSED != RESPONSE_BOTH_WAYS",
+            "ladder_early: RESPONSE_REVERSED != RESPONSE_BOTH_WAYS",
+            "ladder_late: RESPONSE_REVERSED != RESPONSE_BOTH_WAYS",
+            "ladder_mid: RESPONSE_REVERSED != RESPONSE_BOTH_WAYS",
+            "ladder_floor: RESPONSE_REVERSED != RESPONSE_BOTH_WAYS"
+          ]
+        }
+      },
+      {
+        "mutation": "primary level 95%",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "both: P1 interval is not the 97.5% one (level 0.95)"
+          ]
+        }
+      },
+      {
+        "mutation": "floor without the binomial margin",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "floor_thr 0.11",
+            "ladder_floor: at_floor 8"
+          ]
+        }
+      },
+      {
+        "mutation": "(B) skipped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "no_gap: RESPONSE_BOTH_WAYS != NOT_REPRODUCED"
+          ]
+        }
+      },
+      {
+        "mutation": "prereg not enforced",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "wrong_prereg: RESPONSE_BOTH_WAYS != INAPPLICABLE"
+          ]
+        }
+      },
+      {
+        "mutation": "ladder uses the median instead of q0.1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ladder_mid: DROPS_BEFORE_EPS below [5, 10, 15]"
+          ]
+        }
+      },
+      {
+        "mutation": "minibatch-logit validity ignored",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "invalid: RESPONSE_BOTH_WAYS != INAPPLICABLE"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 133.2
+  },
+  "S7": {
+    "title": "CLI = in-process run, with provenance",
+    "target": "src/resp_ee_0917.py",
+    "threshold_derivation": "The CLI (subprocess, as the launcher runs it) and the in-process run_seed with the same short\n    settings write identical arms.csv state hashes and online accuracies; two CLI runs agree; the\n    provenance says flush on, 1 thread, this experiment and the registered commit the runner carries.",
+    "pass": true,
+    "failed_items": [],
+    "prereg_commit": null,
+    "cpu_capability": "AVX2",
+    "mutations": [
+      {
+        "mutation": "CLI leaves flush off",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "prereg_commit": null,
+          "cpu_capability": "AVX2",
+          "failed_items": [
+            "provenance flush_denormal"
+          ]
+        }
+      },
+      {
+        "mutation": "CLI ignores --threads",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "prereg_commit": null,
+          "cpu_capability": "AVX2",
+          "failed_items": [
+            "arms.csv state_sha256 differs",
+            "arms.csv online_ce differs",
+            "provenance threads 2"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 19.3
+  },
+  "S-cost": {
+    "pass": true,
+    "codes": [
+      0,
+      0,
+      0
+    ],
+    "wall_s": 56.38636827468872,
+    "sec_per_update": [
+      0.0007302737406321934,
+      0.0009964781545457385,
+      0.001262051298504784
+    ],
+    "peak_rss_gib": [
+      1.0550041198730469,
+      1.0550041198730469,
+      1.0550041198730469
+    ],
+    "peak_rss_gib_max": 1.0550041198730469,
+    "mem_available_gib_after": 11.21828842163086,
+    "probe": 3,
+    "slots": 4,
+    "pass_note": "recorded, not a gate"
+  },
+  "finished": "2026-09-17T02:36:47.509060"
+}
