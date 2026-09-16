@@ -25,7 +25,10 @@ SURFACE, INK, INK2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e6e5e1"
 COLOR = {"SWA1": "#2a78d6", "SW1": "#eb6834", "SWA3": "#1baf7a", "SW3": "#eda100",
          "SNA": "#e87ba4", "SNAc3": "#008300", "SN06": "#4a3aa7", "SN3": "#e34948"}
 GRAY = {"LR": "#8f8e89", "R": "#3f3e3b"}
-PANELS = (("Swish（適応 SWA・固定 SW）", ("SWA1", "SW1", "SWA3", "SW3")),
+COLOR.update({"SWA1u": COLOR["SWA1"], "SWA3u": COLOR["SWA3"]})   # same entity, floor lowered
+DASHED = {"SWA1u", "SWA3u"}
+PANELS = (("Swish（適応 SWA・固定 SW、破線 = α の下限を外した u）",
+           ("SWA1", "SW1", "SWA3", "SW3", "SWA1u", "SWA3u")),
           ("Snake（適応 SNA・固定 SN）", ("SNA", "SNAc3", "SN06", "SN3")))
 REFS = {"cnn": {"LR": "LR", "R": "R"}, "mlp": {"LR": "LR", "R": "R@gpu"}}
 
@@ -76,7 +79,9 @@ def draw(box, d, out):
             if not len(c):
                 continue
             ax.plot(c.index, c.values, color=COLOR[arm], lw=2, zorder=3,
-                    solid_capstyle="round", solid_joinstyle="round", label=arm)
+                    ls=(0, (4, 2)) if arm in DASHED else "-",
+                    solid_capstyle="round", solid_joinstyle="round",
+                    dash_capstyle="round", label=arm)
             ax.plot([c.index[-1]], [c.iloc[-1]], "o", ms=6.5, color=COLOR[arm],
                     mec=SURFACE, mew=2, zorder=4)
             labels.append((float(c.iloc[-1]), arm))
@@ -126,7 +131,8 @@ def draw_rank(box, d, out):
         y = len(rows) - 1 - i
         ax.axhline(y, color=GRID, lw=0.8, zorder=0)
         ax.scatter(e, [y] * len(e), s=18, color=col, alpha=0.55, lw=0, zorder=2)
-        ax.scatter([m], [y], s=70, facecolor=SURFACE, edgecolor=col, lw=2, zorder=3)
+        ax.scatter([m], [y], s=70, facecolor=SURFACE, edgecolor=col, lw=2, zorder=3,
+                   marker="s" if base in DASHED else "o")
         ax.annotate(f"{1 - m:.3f}", xy=(m, y), xytext=(0, 7), textcoords="offset points",
                     ha="center", va="bottom", fontsize=8, color=INK2)
     ax.set_yticks(range(len(rows)))

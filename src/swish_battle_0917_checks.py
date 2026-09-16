@@ -110,7 +110,7 @@ def rows_equal(r1: list[dict], r2: list[dict], ignore=("arm",)) -> tuple[bool, l
 def s_ema_off(device, data: dict) -> dict:
     out, ok = {}, True
     for box in SB.BOXES:
-        for c, fixed, ada in ((1.0, "SW1", "SWA1"), (3.0, "SW3", "SWA3")):
+        for c, fixed, ada in ((1.0, "SW1", "SWA1"), (3.0, "SW3", "SWA3"), (1.0, "SW1", "SWA1u")):
             rf, _ = SB.run_host(box, fixed, 0, data[box], device, **SHORT)
             r0, _ = SB.run_host(box, ada, 0, data[box], device, beta=0.0, **SHORT)
             r1, _ = SB.run_host(box, ada, 0, data[box], device, beta=0.01, **SHORT)
@@ -119,9 +119,11 @@ def s_ema_off(device, data: dict) -> dict:
             alpha_c = all(r0[-1][f"alpha_med_{t}"] == c and r0[-1][f"alpha_W_med_{t}"] == c
                           for t in SB.TAGS[box])
             train_cols = [k for k in diff_mut if k in ("online_acc", "memo_acc") or k.startswith("w_norm")]
-            out[f"{box}_c{c}"] = {"equal": eq, "diff": diff, "alpha_is_c": alpha_c,
+            lo = SB.arm_act(box, ada, device)[0].lo
+            out[f"{box}_{ada}"] = {"equal": eq, "diff": diff, "alpha_is_c": alpha_c, "lo": lo,
                                   "mutation_differs": not eq_mut, "mutation_train_cols": train_cols}
-            ok &= eq and alpha_c and (not eq_mut) and bool(train_cols)
+            want_lo = 1e-8 if ada.endswith("u") else 1e-3
+            ok &= eq and alpha_c and (not eq_mut) and bool(train_cols) and abs(lo - want_lo) < 1e-12
     out["pass"] = ok
     return out
 

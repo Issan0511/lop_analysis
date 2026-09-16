@@ -30,7 +30,8 @@ SEEDS = list(range(10))
 N_TASKS = 50
 SITES = {"mlp": ("l1", "l2"), "cnn": ("c1", "c2", "f1", "f2")}
 NEW = {"cnn": ("SNAc3", "SWA1", "SW1", "SWA3", "SW3"),
-       "mlp": ("LR", "SNA", "SN06", "SN3", "SNAc3", "SW1", "SW3", "SWA1", "SWA3")}
+       "mlp": ("LR", "SNA", "SN06", "SN3", "SNAc3", "SW1", "SW3", "SWA1", "SWA3",
+               "SWA1u", "SWA3u")}                    # u: spec addendum 2
 REF = {"cnn": (Path("/home/issan/Projects/claude/proj_004_drift/results/rlcifar_cnn_0908"),
                {"SNA": "SNA", "SN06": "SN06", "SN3": "SN3", "LR": "LR", "R": "R"}),
        "mlp": (REPO / "results" / "pmnist_rlmnist_0906",
@@ -38,7 +39,7 @@ REF = {"cnn": (Path("/home/issan/Projects/claude/proj_004_drift/results/rlcifar_
 # alpha of the fixed arms, for the gate argument at the mean
 FIXED_ALPHA = {"SW1": 1.0, "SW3": 3.0, "SN06": 0.6, "SN3": 3.0}
 SNAKE = {"SNA", "SNAc3", "SN06", "SN3"}
-SWISH = {"SW1", "SW3", "SWA1", "SWA3"}
+SWISH = {"SW1", "SW3", "SWA1", "SWA3", "SWA1u", "SWA3u"}
 ADAPT_C = {"SWA1": 1.0, "SWA3": 3.0, "SNA": 0.6, "SNAc3": 3.0}
 PAIRS = {
     "cnn": [("SNAc3", "SNA"), ("SNAc3", "SN3"), ("SN3", "SNA"), ("SN06", "SNA"),
@@ -48,7 +49,9 @@ PAIRS = {
     "mlp": [("SWA1", "SW1"), ("SWA3", "SW3"), ("SWA1", "SWA3"),
             ("SWA1", "SNA"), ("SWA3", "SNA"), ("SWA1", "LR"), ("SWA3", "LR"),
             ("SNAc3", "SNA"), ("SN3", "SNA"), ("SN06", "SNA"), ("SW1", "LR"), ("SW3", "LR"),
-            ("LR", "LR@gpu"), ("SNA", "SNA@gpu")],
+            ("LR", "LR@gpu"), ("SNA", "SNA@gpu"),
+            ("SWA1u", "SWA1"), ("SWA3u", "SWA3"), ("SWA1u", "SW1"), ("SWA3u", "SW3"),
+            ("SWA1u", "SWA3u"), ("SWA1u", "SNA"), ("SWA3u", "SNA"), ("SWA1u", "LR"), ("SWA3u", "LR")],
 }
 CROSS = {"mlp": [("SWA1", "R@gpu"), ("SWA3", "R@gpu"), ("SW1", "R@gpu"), ("SW3", "R@gpu"),
                  ("LR", "R@gpu")], "cnn": []}
@@ -192,11 +195,20 @@ def labels(box, d, P, V):
     for c, (ad, fx) in (("c1", ("SWA1", "SW1")), ("c3", ("SWA3", "SW3"))):
         v = verdict_ab(P.get((ad, fx)))
         L[f"B_{c}"] = {"WIN": "ADAPT_WINS", "LOSS": "ADAPT_LOSES", "TIE": "TIE"}.get(v, v)
-    best = max(("SWA1", "SWA3"), key=lambda k: V[k]["onl"])
-    L["C_swa_best"] = best
-    for opp in ("SNA", "LR"):
-        v = verdict_ab(P.get((best, opp)))
-        L[f"C_vs_{opp}"] = {"WIN": "SWA_ABOVE", "LOSS": "SWA_BELOW", "TIE": "TIE"}.get(v, v)
+    for tag, pair_ in (("C", ("SWA1", "SWA3")), ("Cu", ("SWA1u", "SWA3u"))):
+        if not all(k in V for k in pair_):
+            continue
+        best = max(pair_, key=lambda k: V[k]["onl"])
+        L[f"{tag}_swa_best"] = best
+        for opp in ("SNA", "LR"):
+            v = verdict_ab(P.get((best, opp)))
+            L[f"{tag}_vs_{opp}"] = {"WIN": "SWA_ABOVE", "LOSS": "SWA_BELOW", "TIE": "TIE"}.get(v, v)
+    for c in ("1", "3"):                      # addendum 2: the floor's effect and B'
+        if f"SWA{c}u" in V:
+            v = verdict_ab(P.get((f"SWA{c}u", f"SWA{c}")))
+            L[f"E_c{c}"] = {"WIN": "U_HIGHER", "LOSS": "U_LOWER", "TIE": "TIE"}.get(v, v)
+            v = verdict_ab(P.get((f"SWA{c}u", f"SW{c}")))
+            L[f"Bu_c{c}"] = {"WIN": "ADAPT_WINS", "LOSS": "ADAPT_LOSES", "TIE": "TIE"}.get(v, v)
     L["C_ranking"] = [k for k, _ in sorted(((k, v["onl"]) for k, v in V.items()),
                                            key=lambda kv: -kv[1])]
     if box == "mlp":

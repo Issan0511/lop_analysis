@@ -13,6 +13,7 @@ New arms, registered into the host's ARMS table at run time (no host file is edi
   SWA1, SWA3   adaptive Swish  a_j = clip(c / W_j, lo, hi), W_j = sqrt(EMA_beta var z_j),
                                c = 1 or 3.  Statistic, granularity (unit for fc, channel
                                for conv) and beta = 0.01 are the host SNA's.
+  SWA1u, SWA3u the same with the alpha floor lowered from 1e-3 to 1e-8 (spec addendum 2)
   SNAc3        the host's adaptive Snake with c = 3 instead of 0.6
 The host arms (R, LR, SN06, SN3, SNA) run unchanged through the same entry point.
 
@@ -64,7 +65,14 @@ SNA_CLIP = {"mlp": (0.05, 3.0), "cnn": (0.005, 3.0)}
 
 HOST_ARMS = ("R", "LR", "SN06", "SN3", "SNA")
 FIXED_SW = {"SW1": 1.0, "SW3": 3.0}
-ADAPT_SW = {"SWA1": 1.0, "SWA3": 3.0}
+ADAPT_SW = {"SWA1": 1.0, "SWA3": 3.0, "SWA1u": 1.0, "SWA3u": 3.0}
+# spec addendum 2: the 1e-3 floor binds in the MLP's second layer (W ~ 5e3), so the
+# "u" arms lower it to 1e-8; everything else is the registered SWA arm.
+SW_LO_U = 1e-8
+
+
+def sw_clip(arm: str) -> tuple[float, float]:
+    return (SW_LO_U if arm.endswith("u") else SW_LO), SW_HI
 ADAPT_SN = {"SNAc3": 3.0}
 ARMS = HOST_ARMS + tuple(ADAPT_SN) + tuple(FIXED_SW) + tuple(ADAPT_SW)
 BOXES = ("mlp", "cnn")
@@ -174,7 +182,8 @@ def arm_act(box: str, arm: str, device, beta: float = BETA):
         return H.Activation(arm, "adaptive_snake", ADAPT_SN[arm]), ADAPT_SN[arm]
     if arm in ADAPT_SW:
         cls = ChannelSwish if box == "cnn" else AdaptiveSwish
-        return cls(ADAPT_SW[arm], beta, device), ADAPT_SW[arm]
+        lo, hi = sw_clip(arm)
+        return cls(ADAPT_SW[arm], beta, device, lo=lo, hi=hi), ADAPT_SW[arm]
     raise SystemExit(f"unknown arm {arm!r}; known: {','.join(ARMS)}")
 
 
@@ -183,7 +192,7 @@ def describe(box: str, arm: str) -> dict:
         return {"family": "swish", "adaptive": False, "alpha": FIXED_SW[arm]}
     if arm in ADAPT_SW:
         return {"family": "swish", "adaptive": True, "c": ADAPT_SW[arm], "beta": BETA,
-                "alpha_clip": [SW_LO, SW_HI]}
+                "alpha_clip": list(sw_clip(arm))}
     if arm in ADAPT_SN or arm == "SNA":
         return {"family": "snake", "adaptive": True, "c": ADAPT_SN.get(arm, SNA_C), "beta": BETA,
                 "alpha_clip": list(SNA_CLIP[box])}
