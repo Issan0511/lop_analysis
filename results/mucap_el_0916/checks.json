@@ -1,10 +1,11 @@
 {
   "run_id": "mucap_el_0916",
-  "started_at": "2026-09-16T16:45:21.470653+09:00",
+  "started_at": "2026-09-16T17:00:50.605442+09:00",
   "spec": "obsidian-research \u53ef\u5851\u6027\u55aa\u5931/spec/H2_W\u6210\u9577\u6291\u5236\u3068\u8ca0\u5074\u8f38\u9001_\u8a2d\u8a08\u6848_0916.md section 10.4",
   "code_sha256": {
     "src/mucap_el_0916.py": "4f337bfa9aff872fce30a3b880cd57cf552034e30ae77edd04d8de812633e67a",
-    "analysis/mucap_el_0916/checks.py": "d64c7a3df03682493ff49979ebf0870fe9b659775f832762160af5aae915cdcb"
+    "src/mucap_el_run_0916.py": "b6c0f3966c2b4ab46db53c866c8cf1e58767c71d89a348a838be299c339a79b5",
+    "analysis/mucap_el_0916/checks.py": "4d6bb4ddb96aae511e93692789b79a039e9330c7190125fae6c7cf152813217a"
   },
   "torch": "2.13.0+cu130",
   "threads": 1,
@@ -483,5 +484,244 @@
     "all_mutations_detected": true,
     "seconds": 0.0
   },
-  "finished_at": "2026-09-16T16:45:21.687801+09:00"
+  "S4_S-wiring": {
+    "title": "S4 ELU on the first hidden layer, leaky on the second, and forward2 is the host's",
+    "threshold_derivation": "(i) forward2 with one activation twice is bit-identical to the host's forward, for leaky and\n    for ELU1 -- the wiring is the host's, not a second implementation.  (ii) In a real run's own\n    diagnostics the second layer's gate satisfies the leaky identity  mean phi' = 0.1 + 0.9 p+  to\n    TOL_LEAKY (phi' takes only the two float32 values A32 and 1), and the first layer misses it by more than\n    TOL_ELU (phi' = e^z there).  A swapped or duplicated activation moves one of the two.  (iii) inside\n    forward2 each hidden layer's output is its own activation applied to its own preactivation, which is\n    what a forward2 that reuses act1 downstream breaks while the per-layer diagnostics still look right.\n    Tolerances: TOL_LEAKY, TOL_ELU.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "forward2_is_host_LR": true,
+      "forward2_is_host_ELU1": true,
+      "iii_a1_is_act1": true,
+      "iii_a2_is_act2": true,
+      "iii_acts_differ_here": true,
+      "ii_layer2_is_leaky": true,
+      "ii_layer1_is_not_leaky": true,
+      "nonvacuous": true,
+      "leaky_identity_gap_l2": 1.1102230246251565e-16,
+      "leaky_identity_gap_l1": 0.6653860506725807
+    },
+    "mutations": [
+      {
+        "mutation": "M4a: the two activations swapped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_layer2_is_leaky",
+            "ii_layer1_is_not_leaky"
+          ]
+        }
+      },
+      {
+        "mutation": "M4b: ELU on both hidden layers",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_layer2_is_leaky"
+          ]
+        }
+      },
+      {
+        "mutation": "M4c: forward2 applies the first activation to both layers",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iii_a2_is_act2"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.8
+  },
+  "S5_S-identical": {
+    "title": "S5 all four arms share task 1 bit for bit; the radii are that state's",
+    "threshold_derivation": "(i) the four arms' task 1 is the same run: identical init, subset, labels, batch orders and\n    task-1-end state sha256; (ii) they have stopped being the same run by the end of task 2, and ref\n    still differs from each cap arm (a cap that never binds would make this vacuous); (iii) the radii\n    each cap arm stores are that arm's own task-1-end row, recomputed here with the module's own\n    parallel_cap / perp_cap from the captured task-1-end weights -- not the init row, and on the\n    layer the design names.  Bit comparisons only; no tolerance.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_task1_identical": true,
+      "ii_arms_diverge_by_task2": true,
+      "iii_radii_are_task1_end": true,
+      "nonvacuous": true,
+      "task1_identical": {
+        "ref": true,
+        "cap_par": true,
+        "cap_perp": true,
+        "cap_both": true
+      },
+      "differs_from_ref_after_task2": {
+        "cap_par": true,
+        "cap_perp": true,
+        "cap_both": true
+      },
+      "radii_match_task1_end": {
+        "cap_par": true,
+        "cap_perp": true,
+        "cap_both": true
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M5a: the cap is on from task 1 (task 1 stops being shared)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "raised": "TypeError(\"'>' not supported between instances of 'Tensor' and 'NoneType'\")"
+      },
+      {
+        "mutation": "M5b: the radii are taken at init instead of at the end of task 1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iii_radii_are_task1_end"
+          ]
+        }
+      },
+      {
+        "mutation": "M5c: the cap is applied to the second layer instead of the first",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "raised": "RuntimeError('size mismatch, got input (100), mat (100x100), vec (784)')"
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 2.8
+  },
+  "S6_S-ledger": {
+    "title": "S6 the per-update books close against the task's end points",
+    "threshold_derivation": "For every task of a capped run and every unit: the four accumulated terms of each component\n    (Adam align + Adam square + projection align + projection square) reproduce the change in that\n    component between the task's first and last diagnostic point, and the signed displacements\n    reproduce the change in q and in m.  The residual is read against n_steps * eps64 * traffic,\n    where traffic is the sum of |increment| the books actually accumulated: under a cap the net\n    change can be ~0 while the traffic is not, and a relative error against the net change would\n    then say nothing.  Tolerance: TOL_CLOSE.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "cap_both": {
+        "i_books_close": true,
+        "nonvacuous": true,
+        "worst_residual_in_units": 0.21455916087207347,
+        "worst_item": "1_wt2"
+      },
+      "ref": {
+        "i_books_close": true,
+        "nonvacuous": true,
+        "worst_residual_in_units": 0.4391036900766846,
+        "worst_item": "3_v2"
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M6a: the second-order term of q dropped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "cap_both|i_books_close",
+            "ref|i_books_close"
+          ]
+        }
+      },
+      {
+        "mutation": "M6b: the projection's book never written",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "cap_both|i_books_close",
+            "cap_both|nonvacuous"
+          ]
+        }
+      },
+      {
+        "mutation": "M6c: v's alignment term without the parallel correction",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "cap_both|i_books_close",
+            "ref|i_books_close"
+          ]
+        }
+      },
+      {
+        "mutation": "M6d: W~'s second-order term without the row-mean correction",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "cap_both|i_books_close",
+            "ref|i_books_close"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 5.5
+  },
+  "S7_S-repro": {
+    "title": "S7 the same call twice gives the same bits",
+    "threshold_derivation": "The same call twice, in the same process, gives the same bits: every diagnostic array, every\n    ledger array and the state hashes.  An update order that does not come from the run's own\n    generator is what this catches.  Bit comparisons only; no tolerance.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "ref": {
+        "i_arrays": true,
+        "ii_ledger": true,
+        "iii_hashes": true,
+        "iv_rows": true,
+        "nonvacuous": true
+      },
+      "cap_both": {
+        "i_arrays": true,
+        "ii_ledger": true,
+        "iii_hashes": true,
+        "iv_rows": true,
+        "nonvacuous": true
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M7a: the batch order does not come from the run's own generator",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref|i_arrays",
+            "ref|ii_ledger",
+            "ref|iii_hashes",
+            "ref|iv_rows",
+            "cap_both|i_arrays",
+            "cap_both|ii_ledger",
+            "cap_both|iii_hashes",
+            "cap_both|iv_rows"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 3.1
+  },
+  "S-cost": {
+    "pass": true,
+    "gate": "all 4 processes exit 0 and slots >= 4",
+    "threshold_derivation": "slot = peak RSS of one process; budget = 0.8 * MemAvailable at the start; 4 slots is the least that makes the 40-run grid fit in a day on this machine",
+    "returncodes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "mem_available_gib_before": 18.835254669189453,
+    "peak_rss_gib_max": 1.0264663696289062,
+    "slots": 14,
+    "seconds_per_update_under_load": 0.0010810473759969076,
+    "one_trajectory_min": 16.215710639953613,
+    "grid_40_serial_hours": 10.810473759969076,
+    "grid_40_wall_hours_at_slots": 0.7721766971406483,
+    "note": "per-update cost measured with 4 processes at once; at more slots each process is slower, so grid_40_wall_hours_at_slots is a lower bound, not a measurement",
+    "measured_at": "2026-09-16T17:01:17.864369+09:00",
+    "seconds": 14.8
+  },
+  "finished_at": "2026-09-16T17:01:17.864867+09:00"
 }

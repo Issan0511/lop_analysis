@@ -20,6 +20,8 @@ import datetime as dt
 import hashlib
 import json
 import os
+import resource
+import subprocess
 import sys
 import time
 import types
@@ -35,8 +37,11 @@ import torch
 torch.set_num_threads(1)
 from src import pmnist_0905 as H                 # noqa: E402
 from src import pmnist_rlmnist_0906 as RL        # noqa: E402
+from src import elu_growth_0909 as EG            # noqa: E402
+from src import mucap_el_0916 as MU              # noqa: E402
 
-RUNNER = REPO / "src" / "mucap_el_0916.py"
+CAPS = REPO / "src" / "mucap_el_0916.py"
+RUNNER = REPO / "src" / "mucap_el_run_0916.py"
 OUT = REPO / "results" / "mucap_el_0916"
 SCR = REPO / "results" / "_checks_mucap_el_0916"
 EPS32 = float(np.finfo(np.float32).eps)          # 1.19e-7
@@ -45,6 +50,10 @@ D_IN = 784                                       # first layer fan-in; the long 
 DEV = H.setup("cpu")
 MNIST = H.Mnist(DEV)
 SEEDS = (0, 1, 2)
+PROBE = 4                                        # processes run at once for S-cost
+PY = sys.executable
+THREAD_ENV = {**os.environ, "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"}
+TASKS_RUN, STEPS_RUN = 150, 6000                 # the design's box, for the projection
 RESULTS: dict = {}
 DUMP_PATH = OUT / "checks.json"
 
@@ -72,25 +81,33 @@ def load(path: Path, subs=()):
     return mod
 
 
+def _mem_available_gib() -> float:
+    for line in Path("/proc/meminfo").read_text().splitlines():
+        if line.startswith("MemAvailable:"):
+            return int(line.split()[1]) / 1024 ** 2
+    return float("nan")
+
+
 def brief(r: dict) -> dict:
     return {k: v for k, v in r.items() if k != "pass" and not isinstance(v, (dict, list))} | \
         {"failed_items": r.get("failed_items", [])[:8]}
 
 
 def dump() -> None:
-    checks = {k: v for k, v in RESULTS.items() if k.startswith("S")}
+    checks = {k: v for k, v in RESULTS.items() if k.startswith("S") and isinstance(v, dict) and "pass" in v}
     RESULTS["all_pass"] = bool(checks) and all(
         v.get("pass") and v.get("all_mutations_detected", True) for v in checks.values())
     DUMP_PATH.parent.mkdir(parents=True, exist_ok=True)
     DUMP_PATH.write_text(json.dumps(RESULTS, indent=2, default=str))
 
 
-def run_check(key: str, title: str, fn, mutations: list, derivation: str) -> None:
+def run_check(key: str, title: str, fn, mutations: list, derivation: str, target: Path = None) -> None:
+    target = target or CAPS
     t0 = time.time()
-    base = fn(load(RUNNER))
+    base = fn(load(target))
     entry = {"title": title, "threshold_derivation": derivation, **base, "mutations": []}
     for label, subs in mutations:
-        mod = load(RUNNER, subs)
+        mod = load(target, subs)
         try:
             r = fn(mod)
             entry["mutations"].append({"mutation": label, "check_pass_on_mutant": bool(r["pass"]),
@@ -391,14 +408,272 @@ S3_MUT = [
 ]
 
 
+
+# --------------------------------------------------------------------------
+# S4-S7: the runner (src/mucap_el_run_0916.py)
+# --------------------------------------------------------------------------
+
+R_ACTS = '    act1, act2 = EG.ELU(1.0), H.ARMS["LR"]\n'
+R_FWD_A1 = "    a1 = act1.phi(z1)\n"
+R_CAPON = "        cap_on = t >= 2 and (do_par or do_perp)\n"
+R_CAPSET = "            q_cap = MU.parallel_cap(params[CAP_LAYER], e1)\n"
+R_CAPLAYER = "CAP_LAYER = 0 "
+R_QSQ = '    acc[f"{part}_q_sq"] += dq * dq\n'
+R_PROJBOOK = '        _add_step(acc, "proj", pm, _point(W_after, e64), d_in)\n'
+R_V2ALIGN = '    acc[f"{part}_v2_align"] += 2 * (dot - q0 * dq)\n'
+R_WT2SQ = '    acc[f"{part}_wt2_sq"] += sq - d_in * dm * dm\n'
+R_ORDER = "            order = torch.randperm(N_IMAGES, generator=g_batch).to(device)\n"
+
+EP = 2               # 150 updates per task in the runner checks; the properties are per update
+A32 = float(torch.tensor(H.ARMS["LR"].param, dtype=torch.float32))   # the 0.1 the host actually stores
+TOL_LEAKY = 1e-12    # gate_mean = A32 + (1-A32) p+ for leaky: a float64 mean of the two float32
+                     # constants over N=1200 images, <= N*eps64 = 2.7e-13.  The decimal 0.1 is NOT
+                     # that constant -- float32(0.1) - 0.1 = 1.5e-9 and the identity would miss by it
+TOL_ELU = 1e-3       # non-vacuity: the first layer must MISS that identity by at least this much
+TOL_CLOSE = 8.0      # S6 residual in units of n_steps*eps64*traffic: the accumulation of n signed
+                     # terms rounds by at most n*eps64 times the traffic it accumulated
+
+
+def _run(M, arm, seed=0, tasks=1, ledger=False, debug=None):
+    return M.run_one(arm, seed, 1e-3, tasks, MNIST, DEV, epochs=EP, ledger=ledger, debug=debug)
+
+
+def s4(M) -> dict:
+    """(i) forward2 with one activation twice is bit-identical to the host's forward, for leaky and
+    for ELU1 -- the wiring is the host's, not a second implementation.  (ii) In a real run's own
+    diagnostics the second layer's gate satisfies the leaky identity  mean phi' = 0.1 + 0.9 p+  to
+    TOL_LEAKY (phi' takes only the two float32 values A32 and 1), and the first layer misses it by more than
+    TOL_ELU (phi' = e^z there).  A swapped or duplicated activation moves one of the two.  (iii) inside
+    forward2 each hidden layer's output is its own activation applied to its own preactivation, which is
+    what a forward2 that reuses act1 downstream breaks while the per-layer diagnostics still look right.
+    Tolerances: TOL_LEAKY, TOL_ELU."""
+    failed, per = [], {}
+    p = [t.detach() for t in H.init_params(0, DEV)]
+    x = _images(0)
+    for nm, act in (("LR", H.ARMS["LR"]), ("ELU1", EG.ELU(1.0))):
+        same = all(bool((a == b).all()) for a, b in zip(M.forward2(p, x, act, act), H.forward(p, x, act)))
+        per[f"forward2_is_host_{nm}"] = same
+        if not same:
+            failed.append(f"forward2_is_host_{nm}")
+    elu, lr = EG.ELU(1.0), H.ARMS["LR"]
+    z1, a1, z2, a2, lg = M.forward2(p, x, elu, lr)
+    per["iii_a1_is_act1"] = bool((a1 == elu.phi(z1)).all())
+    per["iii_a2_is_act2"] = bool((a2 == lr.phi(z2)).all())
+    per["iii_acts_differ_here"] = bool((elu.phi(z2) != lr.phi(z2)).any())
+    failed += [k for k in ("iii_a1_is_act1", "iii_a2_is_act2", "iii_acts_differ_here") if not per[k]]
+    rows, arrays, _, _ = _run(M, "ref", tasks=1)
+    g2, pp2 = arrays["gate_mean_l2"], arrays["pplus_l2"]
+    g1, pp1 = arrays["gate_mean_l1"], arrays["pplus_l1"]
+    leaky_gap = float(np.abs(g2 - (A32 + (1 - A32) * pp2)).max())
+    elu_gap = float(np.abs(g1 - (A32 + (1 - A32) * pp1)).max())
+    ok = dict(ii_layer2_is_leaky=leaky_gap <= TOL_LEAKY, ii_layer1_is_not_leaky=elu_gap > TOL_ELU,
+              nonvacuous=bool((pp1 > 0).any() and (pp1 < 1).any()))
+    per |= {**ok, "leaky_identity_gap_l2": leaky_gap, "leaky_identity_gap_l1": elu_gap}
+    failed += [k for k, v in ok.items() if not v]
+    return {"pass": not failed, "failed_items": failed, "detail": per}
+
+
+S4_MUT = [
+    ("M4a: the two activations swapped", [(R_ACTS, '    act1, act2 = H.ARMS["LR"], EG.ELU(1.0)\n')]),
+    ("M4b: ELU on both hidden layers", [(R_ACTS, '    act1, act2 = EG.ELU(1.0), EG.ELU(1.0)\n')]),
+    ("M4c: forward2 applies the first activation to both layers",
+     [(R_FWD_A1, "    a1 = act1.phi(z1)\n"), ("    a2 = act2.phi(z2)\n", "    a2 = act1.phi(z2)\n")]),
+]
+
+
+def s5(M) -> dict:
+    """(i) the four arms' task 1 is the same run: identical init, subset, labels, batch orders and
+    task-1-end state sha256; (ii) they have stopped being the same run by the end of task 2, and ref
+    still differs from each cap arm (a cap that never binds would make this vacuous); (iii) the radii
+    each cap arm stores are that arm's own task-1-end row, recomputed here with the module's own
+    parallel_cap / perp_cap from the captured task-1-end weights -- not the init row, and on the
+    layer the design names.  Bit comparisons only; no tolerance."""
+    failed, per = [], {}
+    end1, states, caps = {}, {}, {}
+    for arm in M.ARMS:
+        d = {}
+        rows, arrays, _, info = _run(M, arm, tasks=2, debug=d)
+        end1[arm] = (info["init_sha256"], info["subset_idx_sha256"], info["labels_sha256"],
+                     info["batch_sha256"], info["task1_end_state_sha256"])
+        states[arm] = info["final_state_sha256"]
+        W1 = d["task1_end_params"][M.CAP_LAYER]
+        caps[arm] = (MU.parallel_cap(W1, d["e1"]), MU.perp_cap(W1, d["e1"]), arrays["q_cap"], arrays["v_cap"])
+    ref = end1["ref"]
+    same_t1 = {a: end1[a] == ref for a in M.ARMS}
+    diff_t2 = {a: states[a] != states["ref"] for a in M.ARMS if a != "ref"}
+    radii = {}
+    for a in M.ARMS:
+        if a == "ref":
+            continue
+        want_q, want_v, got_q, got_v = caps[a]
+        radii[a] = (bool((want_q[:, 0].numpy() == got_q).all()) and
+                    bool((want_v[:, 0].numpy() == got_v).all()))
+    ok = dict(i_task1_identical=all(same_t1.values()), ii_arms_diverge_by_task2=all(diff_t2.values()),
+              iii_radii_are_task1_end=all(radii.values()), nonvacuous=len(set(states.values())) > 1)
+    per = {**ok, "task1_identical": same_t1, "differs_from_ref_after_task2": diff_t2,
+           "radii_match_task1_end": radii}
+    failed += [k for k, v in ok.items() if not v]
+    return {"pass": not failed, "failed_items": failed, "detail": per}
+
+
+S5_MUT = [
+    ("M5a: the cap is on from task 1 (task 1 stops being shared)",
+     [(R_CAPON, "        cap_on = t >= 1 and (do_par or do_perp)\n")]),
+    ("M5b: the radii are taken at init instead of at the end of task 1",
+     [(R_CAPSET, "            q_cap = MU.parallel_cap(H.init_params(seed, device)[CAP_LAYER], e1)\n")]),
+    ("M5c: the cap is applied to the second layer instead of the first",
+     [(R_CAPLAYER, "CAP_LAYER = 2 ")]),
+]
+
+
+def s6(M) -> dict:
+    """For every task of a capped run and every unit: the four accumulated terms of each component
+    (Adam align + Adam square + projection align + projection square) reproduce the change in that
+    component between the task's first and last diagnostic point, and the signed displacements
+    reproduce the change in q and in m.  The residual is read against n_steps * eps64 * traffic,
+    where traffic is the sum of |increment| the books actually accumulated: under a cap the net
+    change can be ~0 while the traffic is not, and a relative error against the net change would
+    then say nothing.  Tolerance: TOL_CLOSE."""
+    failed, per = [], {}
+    n = M.STEPS_PER_EPOCH * EP
+    for arm in ("cap_both", "ref"):
+        rows, arrays, led, _ = _run(M, arm, tasks=3, ledger=True)
+        t_d, s_d = arrays["task"], arrays["step"]
+        worst = {}
+        for t in (1, 2, 3):
+            i0 = int(np.where((t_d == t) & (s_d == 0))[0][0])
+            i1 = int(np.where((t_d == t) & (s_d == n))[0][0])
+            j = int(np.where(led["task"] == t)[0][0])
+            base = {"q": arrays["q_l1"], "v2": arrays["v_norm_l1"], "m": arrays["row_mean_l1"],
+                    "wt2": arrays["wt_norm_l1"]}
+            for comp in M.LEDGER_COMPS:
+                a0, a1 = base[comp][i0], base[comp][i1]
+                direct = a1 ** 2 - a0 ** 2 if comp in ("q", "m") else a1 ** 2 - a0 ** 2
+                terms = sum(led[f"{p}_{comp}_{x}"][j] for p in ("adam", "proj") for x in ("align", "sq"))
+                unit = np.abs(direct - terms) / np.maximum(n * EPS64 * led[f"traffic_{comp}"][j], 1e-300)
+                worst[f"{t}_{comp}"] = float(unit.max())
+            for comp, arr in (("q", arrays["q_l1"]), ("m", arrays["row_mean_l1"])):
+                d_direct = arr[i1] - arr[i0]
+                d_terms = sum(led[f"{p}_{comp}_d"][j] for p in ("adam", "proj"))
+                sc = np.maximum(n * EPS64 * led[f"traffic_{comp}"][j] / np.maximum(np.abs(arr[i0]), 1e-12),
+                                1e-300)
+                worst[f"{t}_{comp}_signed"] = float((np.abs(d_direct - d_terms) / sc).max())
+        got = max(worst.values())
+        ok = dict(i_books_close=got <= TOL_CLOSE,
+                  nonvacuous=bool(led["traffic_q"][1:].min() > 0 and
+                                  (arm == "ref" or led["proj_q_align"][1:].any())))
+        per[arm] = {**ok, "worst_residual_in_units": got, "worst_item": max(worst, key=worst.get)}
+        failed += [f"{arm}|{k}" for k, v in ok.items() if not v]
+    return {"pass": not failed, "failed_items": failed, "detail": per}
+
+
+S6_MUT = [
+    ("M6a: the second-order term of q dropped", [(R_QSQ, '    acc[f"{part}_q_sq"] += 0.0 * dq\n')]),
+    ("M6b: the projection's book never written", [(R_PROJBOOK, "        pass\n")]),
+    ("M6c: v's alignment term without the parallel correction",
+     [(R_V2ALIGN, '    acc[f"{part}_v2_align"] += 2 * dot\n')]),
+    ("M6d: W~'s second-order term without the row-mean correction",
+     [(R_WT2SQ, '    acc[f"{part}_wt2_sq"] += sq\n')]),
+]
+
+
+def s7(M) -> dict:
+    """The same call twice, in the same process, gives the same bits: every diagnostic array, every
+    ledger array and the state hashes.  An update order that does not come from the run's own
+    generator is what this catches.  Bit comparisons only; no tolerance."""
+    failed, per = [], {}
+    for arm in ("ref", "cap_both"):
+        r1, a1, l1, i1 = _run(M, arm, tasks=2, ledger=True)
+        r2, a2, l2, i2 = _run(M, arm, tasks=2, ledger=True)
+        arrays_same = set(a1) == set(a2) and all(np.array_equal(a1[k], a2[k], equal_nan=True) for k in a1)
+        led_same = set(l1) == set(l2) and all(np.array_equal(l1[k], l2[k], equal_nan=True) for k in l1)
+        hash_same = all(i1[k] == i2[k] for k in ("init_sha256", "labels_sha256", "batch_sha256",
+                                                 "task1_end_state_sha256", "final_state_sha256"))
+        rows_same = r1 == r2
+        ok = dict(i_arrays=arrays_same, ii_ledger=led_same, iii_hashes=hash_same, iv_rows=rows_same,
+                  nonvacuous=len(a1) > 10 and len(l1) > 10)
+        per[arm] = ok
+        failed += [f"{arm}|{k}" for k, v in ok.items() if not v]
+    return {"pass": not failed, "failed_items": failed, "detail": per}
+
+
+S7_MUT = [
+    ("M7a: the batch order does not come from the run's own generator",
+     [(R_ORDER, "            order = torch.randperm(N_IMAGES).to(device)\n")]),
+]
+
+
+def s_cost() -> None:
+    """Cost under the load the grid would actually run at: PROBE processes of the real box (2 tasks,
+    80 epochs, the ledger on) at once, each on one thread.  Gate: every process exits 0 and the
+    memory budget leaves at least 4 slots, where a slot is one process's measured peak RSS against
+    MemAvailable with a 20% margin -- the number of cores is not the budget.  The projection to the
+    design's 150 tasks assumes the per-update cost measured here, which already carries the dense
+    diagnostics of the early tasks."""
+    t0 = time.time()
+    avail0 = _mem_available_gib()
+    SCR.mkdir(parents=True, exist_ok=True)
+    procs = []
+    for i in range(PROBE):
+        d = SCR / f"cost_{i}"
+        procs.append((d, subprocess.Popen(
+            [PY, str(REPO / "src" / "mucap_el_run_0916.py"), "--arm", "cap_both", "--seeds", str(i),
+             "--tasks", "2", "--out", str(d)], env=THREAD_ENV, stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE)))
+    rc, peak, secs = [], [], []
+    for d, pr in procs:
+        err = pr.communicate()[1]
+        rc.append(pr.returncode)
+        if pr.returncode == 0:
+            pv = json.loads((d / "provenance.json").read_text())
+            peak.append(pv["peak_rss_kb"] / 1024 ** 2)
+            secs.append(pv["wall_clock_s"])
+        else:
+            print(err.decode()[-400:], flush=True)
+    steps = 2 * STEPS_RUN
+    per_update = (max(secs) / steps) if secs else float("nan")
+    slots = int(avail0 * 0.8 / max(peak)) if peak else 0
+    one = TASKS_RUN * STEPS_RUN * per_update
+    ok = all(r == 0 for r in rc) and slots >= 4
+    RESULTS["S-cost"] = {"pass": bool(ok), "gate": f"all {PROBE} processes exit 0 and slots >= 4",
+                         "threshold_derivation": "slot = peak RSS of one process; budget = 0.8 * "
+                                                 "MemAvailable at the start; 4 slots is the least that "
+                                                 "makes the 40-run grid fit in a day on this machine",
+                         "returncodes": rc, "mem_available_gib_before": avail0,
+                         "peak_rss_gib_max": max(peak) if peak else None, "slots": slots,
+                         "seconds_per_update_under_load": per_update,
+                         "one_trajectory_min": one / 60,
+                         "grid_40_serial_hours": 40 * one / 3600,
+                         "grid_40_wall_hours_at_slots": 40 * one / 3600 / max(slots, 1),
+                         "note": f"per-update cost measured with {PROBE} processes at once; at more "
+                                 f"slots each process is slower, so grid_40_wall_hours_at_slots is a "
+                                 f"lower bound, not a measurement",
+                         "measured_at": dt.datetime.now().astimezone().isoformat(),
+                         "seconds": round(time.time() - t0, 1)}
+    dump()
+    c = RESULTS["S-cost"]
+    print(f"S-cost: pass={ok}  {per_update * 1e3:.2f} ms/update under {PROBE} at once -> "
+          f"{c['one_trajectory_min']:.1f} min per trajectory, {c['grid_40_serial_hours']:.1f} h serial, "
+          f"{c['grid_40_wall_hours_at_slots']:.1f} h at {slots} slots (peak RSS "
+          f"{c['peak_rss_gib_max']:.2f} GiB, MemAvailable {avail0:.1f} GiB)", flush=True)
+
+
 # --------------------------------------------------------------------------
 
 CHECKS = {
     "S1_S-mu-basis": ("S1 e is the mean-image axis and zbar = q||mu|| + b holds on the fixed set", s1, S1_MUT,
-                      s1.__doc__),
+                      s1.__doc__, CAPS),
     "S2_S-mu-projection": ("S2 each cap writes its own component only, keeps the other, tallies match", s2,
-                           S2_MUT, s2.__doc__),
-    "S3_S-mu-order": ("S3 the caps commute, are idempotent, and touch nothing else", s3, S3_MUT, s3.__doc__),
+                           S2_MUT, s2.__doc__, CAPS),
+    "S3_S-mu-order": ("S3 the caps commute, are idempotent, and touch nothing else", s3, S3_MUT, s3.__doc__,
+                      CAPS),
+    "S4_S-wiring": ("S4 ELU on the first hidden layer, leaky on the second, and forward2 is the host's",
+                    s4, S4_MUT, s4.__doc__, RUNNER),
+    "S5_S-identical": ("S5 all four arms share task 1 bit for bit; the radii are that state's", s5, S5_MUT,
+                       s5.__doc__, RUNNER),
+    "S6_S-ledger": ("S6 the per-update books close against the task's end points", s6, S6_MUT, s6.__doc__,
+                    RUNNER),
+    "S7_S-repro": ("S7 the same call twice gives the same bits", s7, S7_MUT, s7.__doc__, RUNNER),
 }
 
 
@@ -413,14 +688,17 @@ def main() -> None:
         DUMP_PATH = SCR / "checks_partial.json"
     RESULTS.update({"run_id": "mucap_el_0916", "started_at": dt.datetime.now().astimezone().isoformat(),
                     "spec": "obsidian-research 可塑性喪失/spec/H2_W成長抑制と負側輸送_設計案_0916.md section 10.4",
-                    "code_sha256": {"src/mucap_el_0916.py": hashlib.sha256(RUNNER.read_bytes()).hexdigest(),
+                    "code_sha256": {"src/mucap_el_0916.py": hashlib.sha256(CAPS.read_bytes()).hexdigest(),
+                                    "src/mucap_el_run_0916.py": hashlib.sha256(RUNNER.read_bytes()).hexdigest(),
                                     "analysis/mucap_el_0916/checks.py":
                                         hashlib.sha256(Path(__file__).read_bytes()).hexdigest()},
                     "torch": torch.__version__, "threads": torch.get_num_threads(),
                     "eps32": EPS32, "eps64": EPS64, "seeds": list(SEEDS)})
     for k in keys:
-        title, fn, mut, deriv = CHECKS[k]
-        run_check(k, title, fn, mut, deriv)
+        title, fn, mut, deriv, target = CHECKS[k]
+        run_check(k, title, fn, mut, deriv, target)
+    if not args.only or "cost" in args.only:
+        s_cost()
     RESULTS["finished_at"] = dt.datetime.now().astimezone().isoformat()
     dump()
     print(f"all_pass = {RESULTS['all_pass']}  -> {DUMP_PATH}")
