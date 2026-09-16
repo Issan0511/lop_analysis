@@ -1,0 +1,160 @@
+"""Readable report generated only from committed aggregate measurements."""
+from pathlib import Path
+import json
+import pandas as pd
+
+ROOT=Path(__file__).resolve().parents[2]
+OUT=ROOT/'results/phiphi_erosion_0916'
+
+def table(frame):
+    def cell(v):
+        return f'{v:.4f}' if isinstance(v,float) else str(v)
+    return '\n'.join(['| '+' | '.join(map(str,frame.columns))+' |',
+                      '| '+' | '.join(['---']*len(frame.columns))+' |']+
+                     ['| '+' | '.join(cell(v) for v in row)+' |' for row in frame.itertuples(index=False,name=None)])
+
+def write_report():
+    pred=pd.read_csv(OUT/'prediction_summary.csv')
+    pm=pd.read_csv(OUT/'pm_phase_summary.csv')
+    ep=pd.read_csv(OUT/'conda_endpoint_ratios.csv')
+    ep=ep[(ep.aux==0)&(ep.window=='initial_to_final')].groupby('a')[['median_weight_ratio','median_width_ratio']].median().reset_index()
+    ad=pd.read_csv(OUT/'adam_map_by_seed.csv').groupby('arm').median(numeric_only=True).reset_index()
+    sn=pd.read_csv(OUT/'snapshot_by_seed.csv')
+    counts=json.loads((OUT/'prediction_scope.json').read_text())
+    checks=json.loads((OUT/'snapshot_checks.json').read_text())
+    ack=json.loads((OUT/'adam_map_checks.json').read_text())
+    dense=pd.read_csv(OUT/'dense_thresholds.csv').groupby('feature').ba.median()
+    text=r'''# φφ′の分布全体での合計は幅の侵食を決めるか — 事後検証 0916
+
+依頼: Issa。「侵食」は重み・前活性分布の幅が縮むこと。「積分」は各ニューロンの前活性分布全体。
+既存ログと保存状態の解析、および保存されたAdam軌道の短い再生。新規の長期学習実験はしていない。
+
+## 判定
+
+**φφ′を含む自己項は存在する。ただし、その分布全体の単純な合計だけで、実際の幅の収縮・拡大が決まるとは確認できなかった。**
+CondA/SGDの単一閾値による次タスク予測はほぼ無情報。これは特定の予測仮説の不成立であり、自己項の不在、全ての非線形予測の不可能性、時刻ごとの力の時間積分の無関係を意味しない。
+
+**Adamは分ける必要がある。** 同じPM保存状態・同じbatch・同じCE勾配でも、素のSGD方向から実際のAdam更新へ変えると、中心化重みノルムに対する線形寄与の符号がLeakyの約31%で反転した。入力上の分散に対する符号反転は約7%。ノルムと入力分散も同じ量ではない。
+これでoptimizerによる局所的な方向変更は確認できるが、CondAとPMの長期差の原因がAdamだけだとは言えない。
+
+## 1. 測定した系と、混ぜてはいけない差
+
+| 系 | 損失・モデル | 更新 | 今回の量 |
+|---|---|---|---|
+| CondA傾き梯子 | 1隠れ層100、スカラーMSE、5自由bitの全32入力 | SGD、lr=.01、batch=1、10000更新/タスク | 全20入力重みノルムと、自由5重みから決まる入力分散 |
+| Permuted MNIST | 784–100–100–10、CE | Adam、lr=.001、batch=16、625更新/タスク、履歴持越し | W1の行平均除去ノルムと、固定512画像上の入力分散 |
+
+CondAは7傾き×10seed、task20終了からtask500終了まで。seed0–4で閾値とその向きを選び、seed5–9に固定して適用。
+PMはLeaky a=.1とAdaptiveSnake、各3seed、task21–40。optimizer、入力、損失、モデル、傾き、学習予算が異なるので、両系の横比較をAdamの因果効果にしない。
+
+## 2. CondA: 合計・積分の単一閾値
+
+q=φ(z)φ′(z)。主量はQ=E[q]（32入力の和は32Q）。補助としてE|q|、一様な区間積分I=∫q dz=(φ(zmax)²−φ(zmin)²)/2、I/(zmax−zmin)も調べた。
+目的変数は**次の10000更新後の分散が増えるか減るか**。その間の個々の更新の符号ではない。
+BAは収縮と拡大の正答率を同じ重みで平均した成績で、.5が無情報。以下は各傾きのBAをseed内で平均後、5評価seedの中央値。
+
+'''
+    keep=['q','qabs','q_integral','q_uniform','qcov','qcov_v2','multivariable_logistic']
+    text+=table(pred[pred.feature.isin(keep)][['feature','ba','auc']])+'\n\n'
+    text+=f"主解析の評価は{counts['primary_test_rows']:,}ユニット・タスク、独立反復単位は5seed。全解析で停止・再構成曖昧点の除外率は{counts['excluded_fraction']:.3%}。多数のユニットを独立反復にしたp値は使っていない。\n\n"
+    text+=f"末尾20タスクで次の1000更新を当てる補助解析でもQのBA中央値は{dense['q']:.4f}。この値はseed×傾き×タスク内位相のセル中央値なので上表とは集約が異なる。傾きを一つずつ未学習にした検証も約.5台。\n\n"
+    text+=r'''qcov=E[q(z−z̄)]、qcov_v2=v²qcov。幅方向の射影を含む補助量でも、次タスクの正味符号は単一閾値では決まらなかった。
+さらにタスク全体の2w·Δwや全重みノルム変化を目的変数にしてもQの閾値は約.5台（`erosion_amount_and_radial.csv`）。
+タスク開始のQと侵食量の一次比例も支持されない。ただし、タスク中のQの時間積分を測った検定ではない。
+閾値の支持目安BA≥.80かつ各傾き≥.70は満たさなかった。これは事後解析であり、既知の研究結果から独立した事前登録実験ではない。
+
+## 3. 「0.6付近の境目」は残るが、何の境目か
+
+以下は初期→5M更新後の**個体ごとの比の中央値をseed間で中央値**。過去ノートの集約と同一とは限らない。
+
+'''
+    text+=table(ep)+'\n\n'
+    text+=r'''ここでは全重みノルムはa=.45と.55の間、前活性の標準偏差はa=.55と.60の間で、最終/初期比が1をまたぐ。
+したがって「Leakyの傾きを増やすと成長側から収縮側へ変わる」という現象はある。しかし、それだけで「Qが共通の閾値を越えるため」とは決まらない。
+
+## 4. φφ′が出てくる正確な場所
+
+1層MSEで、着目ユニット以外と教師をRにまとめ、残差をvφ+Rと書くと、
+
+$$g_w=2v^2E[\phi\phi' x]+2vE[R\phi' x].$$
+
+φφ′の合計は、入力方向xを落とす前の勾配の**自己項**に入る。幅の変化を得るには、さらに幅を変える向きに射影しなければならない。
+CondAでw_fを自由5入力に掛かる重みとすると、σ²=‖w_f‖²/4。自己項によるSGDの一次変化は
+
+$$\frac{\Delta\sigma^2_{\rm self}}{\eta}=-v^2E[q(w_f\cdot x_f)].$$
+
+ここで
+
+$$E[q(w_f\cdot x_f)] = E[q(z-\bar z)] + E[q]\,w_f\cdot E[x_f].$$
+
+**このCondAの`centered_layers`はμ=0を意味しない。** target_mu_norm=3.041を保つ補正があるため、保存された入力平均の項を残す必要がある。
+平均ゼロの自由入力なら右端が消え、中心からの距離で重み付けた共分散になる。単なるQだけにはならない。
+その理想的な中心化条件では、Leakyのqはzに単調増加なので共分散は非負。自己項だけの収縮がa≈.6で突然始まるわけではない。
+
+合成例ではQ=−.36が同じでも、分散.0125と.05で自己項の幅収縮率は4倍違う。単純な合計は幅方向の力を一意に定めない。
+実際の保存状態では上の自己項と残りの項を、全32入力のMSE勾配から別々に計算した。
+
+'''
+    text+=f"7傾き×10seed×2時点×100ユニット=14,000状態を監査。autogradとの差の最大は{max(r['autograd_error'] for r in checks):.2e}、自己項の幅射影公式との差は{max(r['self_projection_error'] for r in checks):.2e}。自己項の収縮率と全勾配の収縮率の符号一致は、seed×傾き×時点セルの中央値で{sn.self_full_sign_agreement.median():.1%}だった。自己項は多くの個体を縮めるが、残りの項による打消し・逆転を省けない。これはタスク端の凍結状態の結果。\n\n"
+    text+=r'''## 5. Adam: 同じ勾配でもノルムへの向きが変わる
+
+Adamは現在勾配gをそのまま使わず、履歴mと座標ごとの二乗勾配履歴sを使う。
+
+$$\Delta w=-\eta\,\frac{\widehat m}{\sqrt{\widehat s}+\epsilon}.$$
+
+分母の座標差は方向を変え、分子には過去の勾配が残る。全勾配履歴を一定の正の倍率で拡大するだけなら、εを無視したAdam更新では分子と分母の倍率が相殺される。従ってSGDの「勾配が何倍だから侵食も何倍」をそのまま移せない。
+これは全履歴の一様倍率の性質であり、活性化の傾きだけを変えても全勾配が一様に変わるという主張ではない。
+更新則の出典: [Kingma & Ba, Adam](https://arxiv.org/abs/1412.6980)。実装も`src/boundary_early_source_0908.py`の更新式と照合。
+
+各保存タスクの最初の同一batchで、(A)素の負勾配、(B)実際のAdam分母を通した現在勾配、(C)履歴込みのAdam更新を比較した。
+表は中心化W1に対する2W̃·ΔW̃の符号反転率、各seed2000個体・境界を集計した3seed中央値。更新長を正の倍率で変えてもこの符号は変わらない。
+
+'''
+    cols=['arm','raw_sgd_vs_current_radial_flip','current_vs_adam_radial_flip','raw_sgd_vs_adam_radial_flip','raw_sgd_vs_adam_var_linear_flip']
+    text+=table(ad[cols])+'\n\n'
+    text+=f"A→Bは座標補正、B→Cは分子の履歴を加えた比較。これらは同じ実測分母を固定した局所分解で、独立に再学習したoptimizerの比較ではない。task21の20更新を全6走で再生し、保存パラメータとの差はすべて{max(r.get('replay20_allparams_maxerr',0) for r in ack):.0f}。\n\n"
+    text+=r'''## 6. 「直交した増分→広がり→侵食」の幾何と時間順序
+
+どのoptimizerでも、固定した重み座標では
+
+$$\Delta\|w\|^2=2w\cdot\Delta w+\|\Delta w\|^2.$$
+
+完全に直交した加算ならノルムは増える。しかし「cosが小さい」だけでは成長は保証されず、小さな負の射影が二乗項を上回ることもある。
+また純粋な回転はノルムを変えない。固定入力上の幅はσ²=wᵀΣwで、異方的入力では回転だけでも幅が変わる。
+PMは同じ新置換・同じ512画像で比較したので、単に入力置換を替えた効果はこの学習増分から除いてある。
+
+'''
+    text+=table(pm[['arm','start','end','norm_delta','radial','injection','dsigma2','median_abs_cos','symmetry_among_growth']])+'\n\n'
+    text+=r'''0–20更新窓で、LeakyのΔW̃はW̃とほぼ直交しているが、負の2W̃·ΔW̃と正の‖ΔW̃‖²がともに現れる。
+**これは同じ窓の収支に両方あるという意味で、20更新内の前後関係や各更新での同時発生を示したものではない。**
+20–300、300–625でも平均分散は増えており、このPM/Adamの窓では「後半は正味収縮」とはならない。
+各窓の長さが違うので、変化量の大小をそのまま単位更新あたり速度の比較には使わない。
+窓全体の二乗項は、個々の更新の二乗項の和ではない。従って「タスク切替で注入された量」を因果的に同定したとは扱わない。
+
+左右は中心から5%/95%分位への距離で評価。幅増加個体の非対称度=|Δ上幅−Δ下幅|/(|Δ上幅|+|Δ下幅|)。
+0–20のLeaky平均非対称度は約.50で、設定した「ほぼ対称」目安.20を満たさない。集団で両側が広がることと、各個体で左右同量は別。
+
+## 7. 残る穴と適用範囲
+
+「自己項の形」→「残りの勾配とoptimizerを含む実更新」→「タスク中の収支」→「長期の幅の成長/収縮」をつなぐ必要がある。
+今回、単純なQ閾値でこの接続を省けるという支持は得られなかった。Adamの変換がこの接続を変えることは局所的に確認した。
+ただし、CondAでSGDとAdamだけを替えた長期比較は未実施なので、ユーザーが見た長期ノルム差の全原因は未確定。
+φφ′を含む、読み出し・入力幾何・残差・optimizer履歴で重み付けされた力の時間積分という仮説は残る。
+
+検証上の制限: 既存結果を読んだ後の事後解析、限られた傾きとseed、32離散入力または512画像probe、保存間隔の制約。
+オフセット±.5の補助入力はz=0でqが不連続になるため、float32復元で枝が曖昧な点を除外した。主CondA c=0はこの除外の影響を受けない。
+ReLU型の飽和不可避性や可塑性喪失の因果的媒介割合を、この予測検証だけから証明したとはしない。
+
+## 出所・再現
+
+- 仕様: `specs/posthoc_phiphi_erosion_0916.md`（解析の追補時点を記載）。
+- 解析: `analysis/phiphi_erosion_0916/analyze.py`。`algebra, conda, pm, evaluate, snapshot, adam_audit, report`の順に各stageを実行。CPU、追加の長期訓練なし。
+- 原データとSHA256: `conda_sources.json`, `pm_sources.json`, `snapshot_sources.json`。Adam監査は同じPM保存状態を使用。
+- 個体測定: `/home/issan/Projects/obsidian-research-data/phiphi_erosion_0916/`。
+- `backup_manifest.json`と`provenance.json`に保存先・SHA256・解析コード版を記録。
+- 図: `verification.png` / `verification.pdf`。図はCondAとPM/Adamを区別。
+- 全seed・傾き別の指標と閾値は同じresultsディレクトリ内のCSV。表中の予測成績は実測から生成。
+'''
+    (OUT/'summary.md').write_text(text)
+
+if __name__=='__main__':write_report()
