@@ -284,6 +284,71 @@ def snapshot():
     savejson('snapshot_checks.json',checks);savejson('snapshot_sources.json',sources)
     print('snapshot',len(rows),'unit-states',flush=True)
 
+def adam_audit():
+    """Same-state, same-gradient map comparison; not a new SGD trajectory."""
+    from src import boundary_gradient_0908 as G
+    H=G.H;H.DATA_DIR=ORIGINAL/'data/mnist';H.setup('cpu')
+    mnist=H.Mnist(torch.device('cpu'));frames=[];checks=[]
+    for arm,seed in itertools.product(['LR','SNA'],range(3)):
+        saved=torch.load(ARCHIVE/f'boundary_tasks20_40_0909/source/{arm}_none_s{seed}_states.pt',weights_only=False,map_location='cpu')
+        px=mnist.test_x[saved['probe_indices']]
+        for raw in saved['boundaries']:
+            p,act,adam=G.clone_state(raw,arm)
+            gd=torch.Generator();gd.set_state(raw['rng_after_perm']['data'])
+            gb=torch.Generator();gb.set_state(raw['rng_after_perm']['batch'])
+            idx=H.stratified_draw(mnist,gd);order=torch.randperm(H.TASK_EXAMPLES,generator=gb)
+            nsteps=20 if raw['task']==21 else 1
+            chosen=idx[order[:16*nsteps]];xs=mnist.train_x[chosen][:,raw['perm']];ys=mnist.train_y[chosen]
+            xp=px[:,raw['perm']].double();xp=xp-xp.mean(0)
+            for k in range(nsteps):
+                out=H.forward(p,xs[k*16:(k+1)*16],act)
+                gs=torch.autograd.grad(torch.nn.functional.cross_entropy(out[4],ys[k*16:(k+1)*16]),p)
+                with torch.no_grad():
+                    old=p[0].clone();prior=adam[0][0].double().clone();gg=gs[0].double()
+                    m,v,tc=adam;tc[0]+=1;c1=1-.9**tc[0];c2=1-.999**tc[0]
+                    for j,(param,grad,mi,vi) in enumerate(zip(p,gs,m,v)):
+                        mi.mul_(.9).add_(grad,alpha=1-.9);vi.mul_(.999).addcmul_(grad,grad,value=1-.999)
+                        denom=(vi/c2).sqrt()+1e-8
+                        if j==0:
+                            coeff=-.001/c1/denom.double();current=coeff*(1-.9)*gg;history=coeff*.9*prior
+                        param-=.001*(mi/c1)/denom
+                    if isinstance(act,H.AdaptiveSnake):act.update(out[0],out[2])
+                    if k==0:
+                        dw=p[0].double()-old.double();err=float((dw-current-history).abs().max())
+                        assert err<2e-7
+                        rec=dict(arm=arm,seed=seed,task=raw['task'],unit=np.arange(100))
+                        w=old.double();wc=w-w.mean(1,keepdim=True);zc=xp@w.T
+                        maps={'adam':dw,'raw_sgd':-gg,'current':current,'history':history}
+                        for name,delta in maps.items():
+                            dc=delta-delta.mean(1,keepdim=True);dz=xp@delta.T
+                            cos=(wc*dc).sum(1)/(wc.norm(dim=1)*dc.norm(dim=1)).clamp(min=1e-30)
+                            rec[name+'_radial']=(2*(wc*dc).sum(1)).numpy()
+                            rec[name+'_cos']=cos.numpy()
+                            rec[name+'_var_linear']=(2*(zc*dz).mean(0)).numpy()
+                            if name=='adam':
+                                rec['adam_norm_change']=(2*(wc*dc).sum(1)+dc.square().sum(1)).numpy()
+                        frames.append(pd.DataFrame(rec))
+                        checks.append(dict(arm=arm,seed=seed,task=raw['task'],update_addition_maxerr=err))
+            if raw['task']==21:
+                expected=raw['after_20']['state']['params']
+                replay=max(float((u.detach()-v).abs().max()) for u,v in zip(p,expected))
+                assert replay==0,(arm,seed,replay)
+                checks[-1]['replay20_allparams_maxerr']=replay
+        print('Adam map',arm,seed,flush=True)
+    df=pd.concat(frames,ignore_index=True);df.to_csv(RAW/'adam_map_units.csv.gz',index=False)
+    rows=[]
+    for (arm,seed),f in df.groupby(['arm','seed']):
+        row=dict(arm=arm,seed=int(seed))
+        for metric in ['radial','var_linear']:
+            for left,right in [('raw_sgd','current'),('current','adam'),('raw_sgd','adam')]:
+                u=f[left+'_'+metric];v=f[right+'_'+metric];ok=(abs(u)>1e-12)&(abs(v)>1e-12)
+                row[left+'_vs_'+right+'_'+metric+'_flip']=float(((u[ok]*v[ok])<0).mean())
+                row[left+'_vs_'+right+'_'+metric+'_n']=int(ok.sum())
+        row['adam_median_abs_cos']=float(f.adam_cos.abs().median())
+        row['raw_sgd_median_abs_cos']=float(f.raw_sgd_cos.abs().median())
+        rows.append(row)
+    pd.DataFrame(rows).to_csv(OUT/'adam_map_by_seed.csv',index=False);savejson('adam_map_checks.json',checks)
+
 def evaluate():
     with np.load(RAW/'conda_units.npz') as d:allf=pd.DataFrame(dict(d))
     valid=(abs(allf.dsigma2)>1e-6*np.maximum(allf['var'],1e-4))&(allf.reconstruction_valid>0)
@@ -373,7 +438,7 @@ def report():
     for arm in ['LR','SNA']:
         p=pms[(pms.arm==arm)&~((pms.start==0)&(pms.end==625))]
         axes[0].plot(['0–20','20–300','300–625'],p.dsigma2,marker='o',label=arm)
-    axes[0].axhline(0,color='gray',lw=.8);axes[0].set(title='PM: variance change per phase',ylabel='Mean change in within-unit variance',xlabel='Updates after task switch');axes[0].legend()
+    axes[0].axhline(0,color='gray',lw=.8);axes[0].set(title='PM / Adam: variance change per phase',ylabel='Mean change in within-unit variance',xlabel='Updates after task switch');axes[0].legend()
     sels=['q','qabs','qcov','qcov_v2','var','multivariable_logistic']
     for col in sels:
         g=core[core.feature==col].groupby('a').ba.median()
@@ -398,8 +463,10 @@ def report():
     text+='## 適用範囲\n\n単一閾値の不成立はφφ′を含む自己項の不在を意味しない。condAの1層MSE/SGDとPMの多層CE/Adamを同一の力学として混ぜない。入力上の幅と重みノルムを分けた。平均沈降の検定ではない。\n\n'
     text+='測定済み未来は予測特徴に含めていない。既存研究を読んだ後の事後解析であり、新規の事前登録実験ではない。20更新内の時間順序と因果的な媒介割合は未判定。\n'
     (OUT/'summary.md').write_text(text)
+    from report_text import write_report
+    write_report()
     print(summary.to_string());print(pms[['arm','start','end','dsigma2','norm_delta','median_abs_cos']].to_string(index=False))
 
 if __name__=='__main__':
-    ap=argparse.ArgumentParser();ap.add_argument('stage',choices=['conda','pm','evaluate','report','algebra','snapshot']);args=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('stage',choices=['conda','pm','evaluate','report','algebra','snapshot','adam_audit']);args=ap.parse_args()
     globals()[args.stage]()
