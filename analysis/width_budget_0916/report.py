@@ -11,12 +11,19 @@ def markdown(f):
         ['| '+' | '.join(value(v) for v in row)+' |' for row in f.itertuples(index=False,name=None)])
 
 def run():
-    rows=[];phase_rows=[];probes=[];guards=[];unit_sums=[]
+    rows=[];phase_rows=[];probes=[];guards=[];sources=[]
     for start in [0,1000000]:
         for arm in ARMS:
             meta=json.loads((OUT/f'{arm}_{start}.json').read_text());guards.append(meta)
             with np.load(meta['archive']) as d:
                 b=d['budget'];ep=d['endpoints'];pidx=d['probe_index'];total=b.sum((0,1))
+                st=d['source_terms'].sum((0,1))/100
+                eta=float(np.float32(.01))
+                for seed in range(10):
+                    ss,hh,bb,cc,aa=st[seed]
+                    sources.append(dict(a=meta['a'],start=start,seed=seed,
+                        S_linear=-2*eta*ss,H_linear=-2*eta*hh,B_linear=2*eta*bb,C_linear=2*eta*cc,
+                        predicted_linear=-2*eta*aa,formula_residual=-2*eta*(ss+hh-bb-cc-aa)))
                 for gi,geom in enumerate(GEOMS):
                     for seed in range(10):
                         vals=total[gi,seed];initial=ep[0,gi,seed];final=ep[-1,gi,seed]
@@ -51,10 +58,12 @@ def run():
                                 q=float(d['probe_q'][ii,seed].mean()),
                                 self_variance_rate=float(d['probe_self_variance_rate'][ii,seed].mean())))
     df=pd.DataFrame(rows);ph=pd.DataFrame(phase_rows);pr=pd.DataFrame(probes)
+    pd.DataFrame(sources).to_csv(OUT/'source_terms_by_seed.csv',index=False)
     df.to_csv(OUT/'window_by_seed.csv',index=False);ph.to_csv(OUT/'phase_by_seed.csv',index=False);pr.to_csv(OUT/'frozen_expectations_by_seed.csv',index=False)
     group=df.groupby(['geometry','start','a'])
     summary=group[['net','normalized_net','median_size_ratio','unit_shrink_fraction','balance','formula_balance']].median().reset_index()
     summary['min_seed_net']=group.net.min().values;summary['max_seed_net']=group.net.max().values
+    summary['contracting_seeds']=group.net.apply(lambda x:int((x<0).sum())).values
     summary.to_csv(OUT/'window_summary.csv',index=False)
     # Paired difference at .55 -> .60: report additive raw differences, not
     # subtraction of separately aggregated medians.
@@ -122,6 +131,13 @@ def run():
     text+='区間は長さが違うので、上表は増減量の積分であって単位更新あたり速度ではない。個体の侵食と回復が交互に起きる可能性もある。\n\n'
     text+='## SGDの二乗項と雑音\n\n'
     text+='各タスクphase0,20,100,1000,5000,9999で全32入力を計算。E‖ĝ‖²=‖Eĝ‖²+E‖ĝ−Eĝ‖²で、SGDの期待注入とfull-batchの注入を分けた。疎な凍結状態の測定であり、これらを全時間の雑音寄与率とは呼ばない。frozen_expectations_by_seed.csvに保存。\n\n'
+    text+='S/H/B/Cそれぞれの中心化ノルムへの線形寄与はsource_terms_by_seed.csvに保存。LeakyのHは理論上0で、ここに残るのはnative float32演算の誤差。各成分の相殺を含むため、S単独の符号を幅の符号とはしない。\n\n'
+    hist=OUT/'historical_horizons.csv'
+    if hist.exists():
+        old=pd.read_csv(hist)
+        text+='## 既存の長期軌道との対応\n\n'
+        text+=markdown(old[np.isclose(old.a,.55)|np.isclose(old.a,.6)].groupby(['geometry','horizon','a']).median_size_ratio.median().reset_index())+'\n\n'
+        text+='初期→最終の比と、一つの後期窓の局所収支は異なる。例えばa=.6でも初期に広がってから縮む。0.6という傾きだけで全時間の収縮符号を固定する読みは、この履歴と合わない。\n\n'
     text+='## 判定と範囲\n\n'+markdown(pd.DataFrame(verdict))+'\n\n'
     text+='単一の普遍的なa*=.6を前提にしない。測定窓で符号を挟まない場合、元の5M初期/最終比の境目をこの短い窓で説明したとはしない。収支は増減がどの成分差で起きたかを特定するが、活性化変更が学習状態・誤差・読み出しを変える原因まで帳簿だけで同定するものではない。\n\n'
     text+='φφ′の自己項の自由分散への時間積分はwindow_by_seed.csvのself_linear、残りはrest_linear。両者の大きさだけで実質的な機序・因果割合を断定しない。前の単純閾値50.9%は今回の恒等式由来の収支の反証ではない。\n\n'

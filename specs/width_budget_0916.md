@@ -49,3 +49,8 @@ Q3: 初期窓だけ注入、後期窓だけ侵食という時間分離が成立�
 コードanalysis/width_budget_0916、結果results/width_budget_0916、生の個体・時相配列は
 /home/issan/Projects/obsidian-research-data/width_budget_0916へ保存。出所SHA、コード版、
 再現検査、backup_manifestを保存してmainへ統合。有限窓で未決ならそのまま報告する。
+
+## 補助集計（再生開始後・本集計前）
+
+既存ログのみから初期→task1,2,5,10,20,50,100,110,200,500の変化を集計し、
+今回の短い窓と5Mの境界を区別する。主測定窓を結果に合わせて変更しない。
