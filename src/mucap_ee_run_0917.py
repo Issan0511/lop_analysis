@@ -46,7 +46,7 @@ from src import mucap_el_run_0916 as EL          # the box, the arms and the dia
 
 EXPERIMENT = "mucap_ee_0917"
 SPEC = "specs/spec_mucap_ee_0917.md"
-PREREG_COMMIT = "unregistered"                   # set to the spec's registration commit before any cap arm runs
+PREREG_COMMIT = "21038e6d699677000f34c57587a82cc5a8d5e296"   # specs/spec_mucap_ee_0917.md, pushed before any EE cap arm ran
 ACT2_NAME = "ELU1"
 ARMS = EL.ARMS
 TASKS = 100
