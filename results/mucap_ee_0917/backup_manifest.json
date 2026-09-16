@@ -1,0 +1,894 @@
+{
+  "run_id": "mucap_ee_0917",
+  "created_at": "2026-09-17T02:48:18.843558+09:00",
+  "rule": "~/Projects/claude/CLAUDE.md §4-1 (git 外ファイルの退避・__pycache__ は除外して削除)",
+  "worktree": "/home/issan/Projects/claude/wt/mucap_ee_0917",
+  "branch": "claude/mucap_ee_0917",
+  "note": "git 外に残っていたのは各 shard の units.npz と ledger.npz（ledger off なので task 列だけ）、登録前の ref パイロット（results/_pilot_mucap_ee_0917・40 タスク・seed 0–1・flush なし／flush あり seed 0）とそのログ、検査の作業ディレクトリ（results/_checks_mucap_ee_0917・S-cost の 6 shard・S9 の CLI shard・開発時の部分実行 json とログ）。data/ は proj_004_drift/data への symlink で写しではないので退避していない。コピー後に sha256 と bytes を照合してから元を消した。",
+  "total_bytes": 96259699,
+  "n_files": 126,
+  "files": [
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/checks_partial.json",
+      "source_rel": "results/_checks_mucap_ee_0917/checks_partial.json",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/checks_partial.json",
+      "bytes": 13356,
+      "sha256": "88f5150c34c2bfa7b8b5143eeb408901dbe99d9753a4587b004523d75441b115"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_0/ledger.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_0/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_0/ledger.npz",
+      "bytes": 208,
+      "sha256": "bda1f41b6fbb41e5c98773b818fe0cb22244f8df5a337fc3a3320de36eb2afc6"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_0/per_task.csv",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_0/per_task.csv",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_0/per_task.csv",
+      "bytes": 1811,
+      "sha256": "61de8d30458248d090cfefce01bd7e311dee4ebc649dc6694b0d7f14e20b20cf"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_0/provenance.json",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_0/provenance.json",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_0/provenance.json",
+      "bytes": 2796,
+      "sha256": "9684c0f84779ebd575c2b279d1c1ed5e7b253c924dd18a14be243be163c28f5f"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_0/units.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_0/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_0/units.npz",
+      "bytes": 192910,
+      "sha256": "04be38d01c469274a707f8c9fa7bfc1bca986071180d3b19e85a9ccbff43a2c9"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_1/ledger.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_1/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_1/ledger.npz",
+      "bytes": 208,
+      "sha256": "893860a767370afd9a08f776b7962a97eb4d52d62b67355853f11fe23a6ca9ea"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_1/per_task.csv",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_1/per_task.csv",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_1/per_task.csv",
+      "bytes": 1849,
+      "sha256": "e452a77f219ee65dce930524f87c795af8af4d463a74ae5f30fd2c5d2c9ba1cd"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_1/provenance.json",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_1/provenance.json",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_1/provenance.json",
+      "bytes": 2803,
+      "sha256": "423220e88e93fc601bf1eef6c6c2b2a2bc15885616e363c0110136ee2ee38f6f"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_1/units.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_1/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_1/units.npz",
+      "bytes": 192702,
+      "sha256": "3a7027735d14cf530bec790b09945df79a64f0eb8a53ccb66c226bad4c191ee0"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_2/ledger.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_2/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_2/ledger.npz",
+      "bytes": 208,
+      "sha256": "df5be560bde86d8dae392bef0a2f0e3f455f34f72905c651a0523e5f94f03d62"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_2/per_task.csv",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_2/per_task.csv",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_2/per_task.csv",
+      "bytes": 1889,
+      "sha256": "2a2490f7ec5e59f11a8f2b5f9abf6c37a56d8e89b7151a02fd0c6ba917340081"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_2/provenance.json",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_2/provenance.json",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_2/provenance.json",
+      "bytes": 2803,
+      "sha256": "b85ae7db16130e7a17c0308e29d4bfea8c92a57f983bb4816251a58f89fa1b0d"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_2/units.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_2/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_2/units.npz",
+      "bytes": 192844,
+      "sha256": "789fe4cbe39e5f3a3dfa265d8881e132f8d5e8bdd31525b91450662cc4427bb9"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_3/ledger.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_3/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_3/ledger.npz",
+      "bytes": 208,
+      "sha256": "cae41bd260f99bbbd671f418d9c9007f5aec796b7375e75794cc4dc00a4944b7"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_3/per_task.csv",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_3/per_task.csv",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_3/per_task.csv",
+      "bytes": 1833,
+      "sha256": "1138ded007214ccaad3aaf79503ea27806dbe5011786de8b0601208895d41a4e"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_3/provenance.json",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_3/provenance.json",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_3/provenance.json",
+      "bytes": 2802,
+      "sha256": "6d20e3201219a866e1297f495c9ac1fbc03b592ccc17da87447efafef7fe59a7"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_3/units.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_3/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_3/units.npz",
+      "bytes": 192889,
+      "sha256": "cc741b6cc8500f0630374ebc9df39bf3376d0fbc0679cb74c8bce564575d23ac"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_4/ledger.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_4/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_4/ledger.npz",
+      "bytes": 208,
+      "sha256": "426ad89632caa60278f86a16a2ec63cc128ea977d7735b0b3e8087748e6bcfdb"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_4/per_task.csv",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_4/per_task.csv",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_4/per_task.csv",
+      "bytes": 1873,
+      "sha256": "8c42107cca9378d63ff3b5bcf174c43e413ee67c82b038307855c1ff7ac38613"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_4/provenance.json",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_4/provenance.json",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_4/provenance.json",
+      "bytes": 2802,
+      "sha256": "76b69c310c1b5539fcedd8069752ddae03c85b72b310db89e2c8095d46d05f29"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_4/units.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_4/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_4/units.npz",
+      "bytes": 192932,
+      "sha256": "6090f88d01b1b570fbc93968c8cab58a194bf6034147696db980b0ba089018db"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_5/ledger.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_5/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_5/ledger.npz",
+      "bytes": 208,
+      "sha256": "b139a6d1ab231882fba3aa7786ad318447d2c299d8f32177e47b0f4ecf302966"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_5/per_task.csv",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_5/per_task.csv",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_5/per_task.csv",
+      "bytes": 1853,
+      "sha256": "cb0f8910a7203d403ca596c88f9cdfc796e409d0d203f3c19b82e48f0a226a8d"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_5/provenance.json",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_5/provenance.json",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_5/provenance.json",
+      "bytes": 2803,
+      "sha256": "bf684c273b9732b869d0382adff978ce34f5b61e149e1883f413427f73a54bdc"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_5/units.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/cost_5/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/cost_5/units.npz",
+      "bytes": 192467,
+      "sha256": "235ffdc4f4e02d7ee4c51d560ffbc2e28d4cdaf219479cc307a5851a62b46568"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/dev_s0.log",
+      "source_rel": "results/_checks_mucap_ee_0917/dev_s0.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/dev_s0.log",
+      "bytes": 233,
+      "sha256": "c5b467de12ea27359e6cd8c0379e77e8a037215ca0dde4d2888f31c0de6548e9"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/dev_s4579.log",
+      "source_rel": "results/_checks_mucap_ee_0917/dev_s4579.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/dev_s4579.log",
+      "bytes": 1214,
+      "sha256": "da48ed15624eb65b165d6667987f99fa0d09e609fa5a83a656639cd12c2256c1"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/full_postreg.log",
+      "source_rel": "results/_checks_mucap_ee_0917/full_postreg.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/full_postreg.log",
+      "bytes": 1500,
+      "sha256": "f0a57e71c44920475ce68f01606979345865ebad715177eb99d85102cabf9d8c"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/full_prereg.log",
+      "source_rel": "results/_checks_mucap_ee_0917/full_prereg.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/full_prereg.log",
+      "bytes": 1500,
+      "sha256": "c1ea6d3bab5a3d9df58a6318aaee81d4397a8bf036fc69f77edd67a216e056eb"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/s9_cli/ledger.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/s9_cli/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/s9_cli/ledger.npz",
+      "bytes": 208,
+      "sha256": "bda1f41b6fbb41e5c98773b818fe0cb22244f8df5a337fc3a3320de36eb2afc6"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/s9_cli/per_task.csv",
+      "source_rel": "results/_checks_mucap_ee_0917/s9_cli/per_task.csv",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/s9_cli/per_task.csv",
+      "bytes": 1131,
+      "sha256": "d1e396e17f9a994aa76547e618a93a8290636ebb5f9d6b0d8ddc4cbfab528661"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/s9_cli/provenance.json",
+      "source_rel": "results/_checks_mucap_ee_0917/s9_cli/provenance.json",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/s9_cli/provenance.json",
+      "bytes": 2805,
+      "sha256": "d9da90d1cfcd7fa76db1ee7e2951332bbc9ab382c97f2f34667d83143bb838f9"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_checks_mucap_ee_0917/s9_cli/units.npz",
+      "source_rel": "results/_checks_mucap_ee_0917/s9_cli/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_checks_mucap_ee_0917/s9_cli/units.npz",
+      "bytes": 81750,
+      "sha256": "4774d5439c74e19da7f6fb4808a4cf46bfb22b96f0a4fcbe4406dc54031b48a8"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_pilot_mucap_ee_0917/flush_ref_s0.log",
+      "source_rel": "results/_pilot_mucap_ee_0917/flush_ref_s0.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_pilot_mucap_ee_0917/flush_ref_s0.log",
+      "bytes": 1378,
+      "sha256": "fea15878f5ca6d1ed350ae271aa176ca6cf486d57d2206ec90642b1ea50044bc"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_pilot_mucap_ee_0917/flush_ref_s0_rows.json",
+      "source_rel": "results/_pilot_mucap_ee_0917/flush_ref_s0_rows.json",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_pilot_mucap_ee_0917/flush_ref_s0_rows.json",
+      "bytes": 50436,
+      "sha256": "60f0842cef1ace957d5a8ac914c10b3e6ed43bffbf394fd561347f99358e4fc8"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_pilot_mucap_ee_0917/flush_test.py",
+      "source_rel": "results/_pilot_mucap_ee_0917/flush_test.py",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_pilot_mucap_ee_0917/flush_test.py",
+      "bytes": 641,
+      "sha256": "38e6108ea29e901b54d525d4e6b517ebd9bfb7f9a3d7dc437d24a1b27adcfd87"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_pilot_mucap_ee_0917/pilot_ref_s0.log",
+      "source_rel": "results/_pilot_mucap_ee_0917/pilot_ref_s0.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_pilot_mucap_ee_0917/pilot_ref_s0.log",
+      "bytes": 1417,
+      "sha256": "c3bc0fa35dcccdf03232ce4be94de37c63483fc041998297794d16d1e7debe21"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_pilot_mucap_ee_0917/pilot_ref_s1.log",
+      "source_rel": "results/_pilot_mucap_ee_0917/pilot_ref_s1.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_pilot_mucap_ee_0917/pilot_ref_s1.log",
+      "bytes": 1417,
+      "sha256": "79a0ef118e75e0d089f253671e592577a6443e88927432aa5f18e6b3d66ea5ca"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s0/ledger.npz",
+      "source_rel": "results/_pilot_mucap_ee_0917/ref_s0/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s0/ledger.npz",
+      "bytes": 208,
+      "sha256": "bda1f41b6fbb41e5c98773b818fe0cb22244f8df5a337fc3a3320de36eb2afc6"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s0/per_task.csv",
+      "source_rel": "results/_pilot_mucap_ee_0917/ref_s0/per_task.csv",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s0/per_task.csv",
+      "bytes": 25469,
+      "sha256": "31fca6571ee1f892e60a70d02477c884121abb8c60c52b69401745839d2a8a55"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s0/provenance.json",
+      "source_rel": "results/_pilot_mucap_ee_0917/ref_s0/provenance.json",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s0/provenance.json",
+      "bytes": 2678,
+      "sha256": "14cd98edb2e39d698493033a6e758fc1b7596494dc5c77e3843a08ee4edf3107"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s0/units.npz",
+      "source_rel": "results/_pilot_mucap_ee_0917/ref_s0/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s0/units.npz",
+      "bytes": 1524929,
+      "sha256": "ad1d283d28bf23a9f97f7dd9d07d6275897dc1aa03aac32fb2f5d5ddb2449966"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s1/ledger.npz",
+      "source_rel": "results/_pilot_mucap_ee_0917/ref_s1/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s1/ledger.npz",
+      "bytes": 208,
+      "sha256": "893860a767370afd9a08f776b7962a97eb4d52d62b67355853f11fe23a6ca9ea"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s1/per_task.csv",
+      "source_rel": "results/_pilot_mucap_ee_0917/ref_s1/per_task.csv",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s1/per_task.csv",
+      "bytes": 25513,
+      "sha256": "622521f41fd664ae02b4d7a26f4134b5e530a34ecd0a5d762a7bc21a08747431"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s1/provenance.json",
+      "source_rel": "results/_pilot_mucap_ee_0917/ref_s1/provenance.json",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s1/provenance.json",
+      "bytes": 2679,
+      "sha256": "8da66a5b4fc6546770eb67af25b37499ae06dbccf8cf69a9458b78c8fa5150be"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s1/units.npz",
+      "source_rel": "results/_pilot_mucap_ee_0917/ref_s1/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/_pilot_mucap_ee_0917/ref_s1/units.npz",
+      "bytes": 1531404,
+      "sha256": "64c9a595d58bb5ccecf38f9b0575f5a57051784eccb59298113987540958f73e"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s0/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s0/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s0/ledger.npz",
+      "bytes": 208,
+      "sha256": "bda1f41b6fbb41e5c98773b818fe0cb22244f8df5a337fc3a3320de36eb2afc6"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s0/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s0/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s0/units.npz",
+      "bytes": 2088005,
+      "sha256": "d34ce99f5b2102c3db1e7d42ba2e2c8d93b6559ef25ec3df24830ef47a9b7c80"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s1/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s1/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s1/ledger.npz",
+      "bytes": 208,
+      "sha256": "893860a767370afd9a08f776b7962a97eb4d52d62b67355853f11fe23a6ca9ea"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s1/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s1/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s1/units.npz",
+      "bytes": 2349753,
+      "sha256": "2c79d2593b6a0d1df3f866d4f1eee72b6ff01b1827c785380d44bfc65c3827fb"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s2/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s2/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s2/ledger.npz",
+      "bytes": 208,
+      "sha256": "df5be560bde86d8dae392bef0a2f0e3f455f34f72905c651a0523e5f94f03d62"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s2/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s2/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s2/units.npz",
+      "bytes": 2467750,
+      "sha256": "9b14b23d2709dbe82c298e9fd263e3db304652bde74986bb8c717abf4b0c2a7a"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s3/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s3/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s3/ledger.npz",
+      "bytes": 208,
+      "sha256": "cae41bd260f99bbbd671f418d9c9007f5aec796b7375e75794cc4dc00a4944b7"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s3/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s3/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s3/units.npz",
+      "bytes": 1952562,
+      "sha256": "bd68adbf4d7fde8fbcc6e07b913a2ec2054dcf610072d4dd203a7a2f074b16c1"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s4/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s4/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s4/ledger.npz",
+      "bytes": 208,
+      "sha256": "426ad89632caa60278f86a16a2ec63cc128ea977d7735b0b3e8087748e6bcfdb"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s4/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s4/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s4/units.npz",
+      "bytes": 2874742,
+      "sha256": "2ee35a6c5cc6a1b823b0b823dcb6ceb2dcb3d13c8a5299c269502a1bfa06191d"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s5/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s5/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s5/ledger.npz",
+      "bytes": 208,
+      "sha256": "b139a6d1ab231882fba3aa7786ad318447d2c299d8f32177e47b0f4ecf302966"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s5/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s5/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s5/units.npz",
+      "bytes": 1936604,
+      "sha256": "93d67bb9ca0256a68efb7bdc089bda892b2a5c1accf11626b8045f2f966b60f5"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s6/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s6/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s6/ledger.npz",
+      "bytes": 208,
+      "sha256": "687820defd2bd4411d130bae4c1be4f0358bb22a3834f19c451de6f2ff84fe17"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s6/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s6/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s6/units.npz",
+      "bytes": 2486530,
+      "sha256": "9931ffd778f10c4f43ef743051369a181444f274a42e3c22da8fa5efcc55aea8"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s7/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s7/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s7/ledger.npz",
+      "bytes": 208,
+      "sha256": "ba89c4e9233539e625d5cc494b7db7a94c02a9035082815ad2eb3d20d05f5b71"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s7/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s7/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s7/units.npz",
+      "bytes": 2958121,
+      "sha256": "d4e432584bca5a1206b4c6bcf2d2f694c3a16f0c550734a8bc38bec86b90aa06"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s8/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s8/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s8/ledger.npz",
+      "bytes": 208,
+      "sha256": "542fd45818692420610572e16240dd4b0d4119e994057bb5fe8037ea7330ccc2"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s8/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s8/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s8/units.npz",
+      "bytes": 2962350,
+      "sha256": "96d33c97ac21f041ec422bd7390fdf8775b1ae3324ba3f68dbdf81a9a1d8f066"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s9/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s9/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s9/ledger.npz",
+      "bytes": 208,
+      "sha256": "78fa76c694e6feafa4b7bdc4a7e23ef61f717567908fcde560944ee690fb012f"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s9/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_both_s9/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s9/units.npz",
+      "bytes": 2027942,
+      "sha256": "3156f3edc9f9233e29439949b957cd8a26f4274e56cc2cdd23550892636682f4"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s0/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s0/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s0/ledger.npz",
+      "bytes": 208,
+      "sha256": "bda1f41b6fbb41e5c98773b818fe0cb22244f8df5a337fc3a3320de36eb2afc6"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s0/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s0/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s0/units.npz",
+      "bytes": 2395519,
+      "sha256": "79fa55badb3fb52286636e0b2d2180f5002e9a401d8fb741e10059f21a958be1"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s1/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s1/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s1/ledger.npz",
+      "bytes": 208,
+      "sha256": "893860a767370afd9a08f776b7962a97eb4d52d62b67355853f11fe23a6ca9ea"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s1/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s1/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s1/units.npz",
+      "bytes": 2967779,
+      "sha256": "ac215112b9932bd1d70d1dc3e46748e450c37a04ae2a267fbe27fddb803768b4"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s2/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s2/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s2/ledger.npz",
+      "bytes": 208,
+      "sha256": "df5be560bde86d8dae392bef0a2f0e3f455f34f72905c651a0523e5f94f03d62"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s2/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s2/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s2/units.npz",
+      "bytes": 2094837,
+      "sha256": "4a9a7ccd6dd822b7dec2448c35532169b0352a7b8f97a2fca9d7ff92e13f7e00"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s3/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s3/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s3/ledger.npz",
+      "bytes": 208,
+      "sha256": "cae41bd260f99bbbd671f418d9c9007f5aec796b7375e75794cc4dc00a4944b7"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s3/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s3/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s3/units.npz",
+      "bytes": 2262412,
+      "sha256": "9787eb7396ca2575b993a637c17bbd13f9ae55dc6ed445d0bc251f9bd6bdea5f"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s4/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s4/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s4/ledger.npz",
+      "bytes": 208,
+      "sha256": "426ad89632caa60278f86a16a2ec63cc128ea977d7735b0b3e8087748e6bcfdb"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s4/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s4/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s4/units.npz",
+      "bytes": 2973810,
+      "sha256": "fac0b9631b531d2a1ed1693c35b63bc484da83c8c09efd08252a1217e9087ec1"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s5/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s5/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s5/ledger.npz",
+      "bytes": 208,
+      "sha256": "b139a6d1ab231882fba3aa7786ad318447d2c299d8f32177e47b0f4ecf302966"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s5/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s5/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s5/units.npz",
+      "bytes": 2480788,
+      "sha256": "e1abd9671b815a19d29d5f8d91a5f985dee3e49eeed8b4b02eaac01c2a3ba174"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s6/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s6/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s6/ledger.npz",
+      "bytes": 208,
+      "sha256": "687820defd2bd4411d130bae4c1be4f0358bb22a3834f19c451de6f2ff84fe17"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s6/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s6/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s6/units.npz",
+      "bytes": 2545727,
+      "sha256": "7eb653d1e380248cc5320513158b4d909a702a3efa0c0939e75624bd8ef9ff2e"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s7/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s7/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s7/ledger.npz",
+      "bytes": 208,
+      "sha256": "ba89c4e9233539e625d5cc494b7db7a94c02a9035082815ad2eb3d20d05f5b71"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s7/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s7/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s7/units.npz",
+      "bytes": 2500203,
+      "sha256": "d86e6eb61a89925bca5e8c5a551505a9688e68f2cc5616406a0a835c34756ceb"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s8/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s8/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s8/ledger.npz",
+      "bytes": 208,
+      "sha256": "542fd45818692420610572e16240dd4b0d4119e994057bb5fe8037ea7330ccc2"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s8/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s8/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s8/units.npz",
+      "bytes": 2340614,
+      "sha256": "8357358d8a13b367e5207856d2ae384f1049bd2776e0260c63d2de9ca9c4a42c"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s9/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s9/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s9/ledger.npz",
+      "bytes": 208,
+      "sha256": "78fa76c694e6feafa4b7bdc4a7e23ef61f717567908fcde560944ee690fb012f"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s9/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_par_s9/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_par_s9/units.npz",
+      "bytes": 2901599,
+      "sha256": "dcf025558cabcb133fa9a871d2b950047a4a75357442a2a64f6038f296590759"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s0/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s0/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s0/ledger.npz",
+      "bytes": 208,
+      "sha256": "bda1f41b6fbb41e5c98773b818fe0cb22244f8df5a337fc3a3320de36eb2afc6"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s0/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s0/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s0/units.npz",
+      "bytes": 2256327,
+      "sha256": "9787440bd743224b959009d7a72f77929d008bdfa82526736fa94b6abbd9c42e"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s1/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s1/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s1/ledger.npz",
+      "bytes": 208,
+      "sha256": "893860a767370afd9a08f776b7962a97eb4d52d62b67355853f11fe23a6ca9ea"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s1/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s1/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s1/units.npz",
+      "bytes": 2676157,
+      "sha256": "1fa97a312dacea2aa04b6d4e2ead31ead482bb23d7f421d5fe1c11a41abd3b82"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s2/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s2/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s2/ledger.npz",
+      "bytes": 208,
+      "sha256": "df5be560bde86d8dae392bef0a2f0e3f455f34f72905c651a0523e5f94f03d62"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s2/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s2/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s2/units.npz",
+      "bytes": 2006163,
+      "sha256": "e93e7d1f29c396a8f9dd088ad1d4cb078b9739f9691562ec43892ad32eca9752"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s3/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s3/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s3/ledger.npz",
+      "bytes": 208,
+      "sha256": "cae41bd260f99bbbd671f418d9c9007f5aec796b7375e75794cc4dc00a4944b7"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s3/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s3/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s3/units.npz",
+      "bytes": 2512258,
+      "sha256": "79ebb64e93bfbfeb7c69802ac2eee1f16dbd6d974ea94ecd6cf85a912f40ce83"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s4/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s4/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s4/ledger.npz",
+      "bytes": 208,
+      "sha256": "426ad89632caa60278f86a16a2ec63cc128ea977d7735b0b3e8087748e6bcfdb"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s4/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s4/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s4/units.npz",
+      "bytes": 2925970,
+      "sha256": "b5029192c0bc571ec1cf355d6a13f8b6399f658904ce8c9a6a1a1b4b4e55835d"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s5/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s5/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s5/ledger.npz",
+      "bytes": 208,
+      "sha256": "b139a6d1ab231882fba3aa7786ad318447d2c299d8f32177e47b0f4ecf302966"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s5/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s5/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s5/units.npz",
+      "bytes": 2523381,
+      "sha256": "013e949d3b8e084c423b8252bb97ea2a517a6e9ad7f13bef6b1a775a00ea51b8"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s6/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s6/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s6/ledger.npz",
+      "bytes": 208,
+      "sha256": "687820defd2bd4411d130bae4c1be4f0358bb22a3834f19c451de6f2ff84fe17"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s6/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s6/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s6/units.npz",
+      "bytes": 2970729,
+      "sha256": "a5e393b288c2b8c9f026ab3c053cb97b94c154fd12348380ad7d0909c2793eb6"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s7/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s7/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s7/ledger.npz",
+      "bytes": 208,
+      "sha256": "ba89c4e9233539e625d5cc494b7db7a94c02a9035082815ad2eb3d20d05f5b71"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s7/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s7/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s7/units.npz",
+      "bytes": 2109959,
+      "sha256": "cc96358455f28fcd53ee707ea85b975a9450e2cafd0c97b04e0000181a3b8e93"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s8/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s8/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s8/ledger.npz",
+      "bytes": 208,
+      "sha256": "542fd45818692420610572e16240dd4b0d4119e994057bb5fe8037ea7330ccc2"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s8/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s8/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s8/units.npz",
+      "bytes": 2179167,
+      "sha256": "a696624918f440f82daf76e97ccc0d51944b9aed301f078a24c74a89358744cf"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s9/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s9/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s9/ledger.npz",
+      "bytes": 208,
+      "sha256": "78fa76c694e6feafa4b7bdc4a7e23ef61f717567908fcde560944ee690fb012f"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s9/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/cap_perp_s9/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_perp_s9/units.npz",
+      "bytes": 2381523,
+      "sha256": "6fe6ab4d58064fc874c51b200b90a586c1576fcee527f38fe46c1093d0ac7d05"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s0/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s0/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s0/ledger.npz",
+      "bytes": 208,
+      "sha256": "bda1f41b6fbb41e5c98773b818fe0cb22244f8df5a337fc3a3320de36eb2afc6"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s0/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s0/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s0/units.npz",
+      "bytes": 1615571,
+      "sha256": "92adbb70ad42f0eb5d3ecbcc42527fe79ed7676c381deb2ae18bbe78b07fc640"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s1/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s1/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s1/ledger.npz",
+      "bytes": 208,
+      "sha256": "893860a767370afd9a08f776b7962a97eb4d52d62b67355853f11fe23a6ca9ea"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s1/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s1/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s1/units.npz",
+      "bytes": 1621296,
+      "sha256": "b3440b9e22a6805539ec01afeeca1ba6399bb3c133eb18c2ed9e7c23f1669191"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s2/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s2/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s2/ledger.npz",
+      "bytes": 208,
+      "sha256": "df5be560bde86d8dae392bef0a2f0e3f455f34f72905c651a0523e5f94f03d62"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s2/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s2/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s2/units.npz",
+      "bytes": 2178569,
+      "sha256": "feb3368405c046b8d9eac5cf0811f4e17f0816763a30e7e3eb339f3cc42511e6"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s3/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s3/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s3/ledger.npz",
+      "bytes": 208,
+      "sha256": "cae41bd260f99bbbd671f418d9c9007f5aec796b7375e75794cc4dc00a4944b7"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s3/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s3/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s3/units.npz",
+      "bytes": 1599093,
+      "sha256": "d8b28776718052a0a0d1897c59e2626261fe4f4ade1ce1a4fb0b36dcf830d490"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s4/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s4/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s4/ledger.npz",
+      "bytes": 208,
+      "sha256": "426ad89632caa60278f86a16a2ec63cc128ea977d7735b0b3e8087748e6bcfdb"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s4/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s4/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s4/units.npz",
+      "bytes": 1953638,
+      "sha256": "30f84dad3feac9c927514796e05ea30469408eb73126be947964a48adf9da457"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s5/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s5/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s5/ledger.npz",
+      "bytes": 208,
+      "sha256": "b139a6d1ab231882fba3aa7786ad318447d2c299d8f32177e47b0f4ecf302966"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s5/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s5/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s5/units.npz",
+      "bytes": 1783038,
+      "sha256": "505e613ac87c59215839c90cc97a2795424914de7d3938890592fdc9d973f63d"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s6/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s6/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s6/ledger.npz",
+      "bytes": 208,
+      "sha256": "687820defd2bd4411d130bae4c1be4f0358bb22a3834f19c451de6f2ff84fe17"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s6/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s6/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s6/units.npz",
+      "bytes": 1560333,
+      "sha256": "9993accd54ec175cc37a587fbb2a856fa9430f47e11790935e0ffc98c3ffa782"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s7/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s7/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s7/ledger.npz",
+      "bytes": 208,
+      "sha256": "ba89c4e9233539e625d5cc494b7db7a94c02a9035082815ad2eb3d20d05f5b71"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s7/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s7/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s7/units.npz",
+      "bytes": 1886082,
+      "sha256": "6fe27feb7476bf1af1eb0cbead9d25c8d2d871f62366ab658731a8251b9a7064"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s8/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s8/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s8/ledger.npz",
+      "bytes": 208,
+      "sha256": "542fd45818692420610572e16240dd4b0d4119e994057bb5fe8037ea7330ccc2"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s8/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s8/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s8/units.npz",
+      "bytes": 1566319,
+      "sha256": "74c7df182fe718ca54658c370fa23c5b3a02b265cbb92513271e23edc5a48eb3"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s9/ledger.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s9/ledger.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s9/ledger.npz",
+      "bytes": 208,
+      "sha256": "78fa76c694e6feafa4b7bdc4a7e23ef61f717567908fcde560944ee690fb012f"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s9/units.npz",
+      "source_rel": "results/mucap_ee_0917/runs/ref_s9/units.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s9/units.npz",
+      "bytes": 1920176,
+      "sha256": "d022a60ff091a074fb0136e8cc65202d998a69e99b29c762a801a2ea8c1740a7"
+    }
+  ]
+}
