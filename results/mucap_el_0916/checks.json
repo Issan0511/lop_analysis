@@ -1,12 +1,13 @@
 {
   "run_id": "mucap_el_0916",
-  "started_at": "2026-09-16T17:43:43.159682+09:00",
+  "started_at": "2026-09-16T18:45:53.506850+09:00",
   "spec": "specs/spec_mucap_el_0916.md",
   "prereg_commit": "feb41ff6409f2e1aa2a8a145b9a0421fd24925a8",
   "code_sha256": {
     "src/mucap_el_0916.py": "4f337bfa9aff872fce30a3b880cd57cf552034e30ae77edd04d8de812633e67a",
+    "analysis/mucap_el_0916/verdict.py": "e2376d9e9d4a02d3b1d5bb08297257367210bba33486e4c81de8ad822b065f54",
     "src/mucap_el_run_0916.py": "f86c54a0cab96dfc1d7caa3bed928e3618b86c2382bc4a6e882f79a85926bcab",
-    "analysis/mucap_el_0916/checks.py": "17f52671d0c93093fa5e9b71d89aca9929eb99e5681ba1a9fe034b2b5eb903bf"
+    "analysis/mucap_el_0916/checks.py": "c0bca8ac0a9e567fd2488e2b834801081a91f7a9b655f69c27389f8d66902add"
   },
   "torch": "2.13.0+cu130",
   "threads": 1,
@@ -536,7 +537,7 @@
       }
     ],
     "all_mutations_detected": true,
-    "seconds": 0.9
+    "seconds": 0.8
   },
   "S5_S-identical": {
     "title": "S5 all four arms share task 1 bit for bit; the radii are that state's",
@@ -703,6 +704,283 @@
     "all_mutations_detected": true,
     "seconds": 3.1
   },
+  "S8_S-verdict": {
+    "title": "S8 the verdict returns the designed labels and estimates on synthetic shards",
+    "threshold_derivation": "verdict.analyze on the S8 scenarios: every designed label and estimate must come out as\n    written (estimates within TOL_EST, flags exactly), and t_quantile must reproduce the published\n    Student-t table within TOL_T.  Tolerances: TOL_EST, TOL_T.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "t_table": {
+        "got": {
+          "0.975|9": 2.262157162797873,
+          "0.9875|9": 2.6850108468168266,
+          "0.975|7": 2.364624251593117,
+          "0.95|9": 1.833112932656089
+        },
+        "bad": []
+      },
+      "designed": {
+        "labels": {
+          "main": "BOTH_HELD",
+          "cap_par": "BOTH_HELD",
+          "cap_perp": "CAP_DEEPENS",
+          "cap_both_95": "BOTH_HELD"
+        },
+        "bad": []
+      },
+      "borderline": {
+        "labels": {
+          "main": "UNRESOLVED",
+          "cap_par": "BOTH_HELD",
+          "cap_perp": "CAP_DEEPENS",
+          "cap_both_95": "BOTH_HELD"
+        },
+        "bad": []
+      },
+      "response_only": {
+        "labels": {
+          "main": "RESPONSE_ONLY",
+          "cap_par": "BOTH_HELD",
+          "cap_perp": "CAP_DEEPENS",
+          "cap_both_95": "RESPONSE_ONLY"
+        },
+        "bad": []
+      },
+      "no_phenomenon": {
+        "labels": {
+          "main": "INAPPLICABLE",
+          "cap_par": "INAPPLICABLE",
+          "cap_perp": "INAPPLICABLE",
+          "cap_both_95": "INAPPLICABLE"
+        },
+        "bad": []
+      },
+      "cap_idle": {
+        "labels": {
+          "main": "INAPPLICABLE",
+          "cap_par": "BOTH_HELD",
+          "cap_perp": "CAP_DEEPENS",
+          "cap_both_95": "INAPPLICABLE"
+        },
+        "bad": []
+      },
+      "broken_streams": {
+        "labels": {
+          "main": "INAPPLICABLE",
+          "cap_par": "INAPPLICABLE",
+          "cap_perp": "INAPPLICABLE",
+          "cap_both_95": "INAPPLICABLE"
+        },
+        "bad": []
+      },
+      "degenerate": {
+        "labels": {
+          "main": "BOTH_HELD",
+          "cap_par": "BOTH_HELD",
+          "cap_perp": "CAP_DEEPENS",
+          "cap_both_95": "BOTH_HELD"
+        },
+        "bad": []
+      },
+      "paired_matters": {
+        "labels": {
+          "main": "BOTH_HELD",
+          "cap_par": "BOTH_HELD",
+          "cap_perp": "CAP_DEEPENS",
+          "cap_both_95": "BOTH_HELD"
+        },
+        "bad": []
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M8a: main window 2-10",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|main: got UNRESOLVED want BOTH_HELD",
+            "designed|cap_par: got UNRESOLVED want BOTH_HELD",
+            "designed|cap_perp: got UNRESOLVED want CAP_DEEPENS",
+            "designed|cap_both_95: got UNRESOLVED want BOTH_HELD",
+            "designed|main_E1: got 0.0 want 0.25",
+            "designed|main_E2: got 0.0 want 1.0",
+            "borderline|cap_both_95: got UNRESOLVED want BOTH_HELD",
+            "borderline|main_E1: got 0.0 want 0.03873790133706265"
+          ]
+        }
+      },
+      {
+        "mutation": "M8b: E2 reads zbar instead of d",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|main: got INAPPLICABLE want BOTH_HELD",
+            "designed|cap_par: got INAPPLICABLE want BOTH_HELD",
+            "designed|cap_perp: got INAPPLICABLE want CAP_DEEPENS",
+            "designed|cap_both_95: got INAPPLICABLE want BOTH_HELD",
+            "designed|main_E2: got -0.9999999999999997 want 1.0",
+            "borderline|main: got INAPPLICABLE want UNRESOLVED",
+            "borderline|cap_both_95: got INAPPLICABLE want BOTH_HELD",
+            "response_only|main: got INAPPLICABLE want RESPONSE_ONLY"
+          ]
+        }
+      },
+      {
+        "mutation": "M8c: main label at 95% (Bonferroni dropped)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "borderline|main: got BOTH_HELD want UNRESOLVED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8d: ref's phenomenon never required",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "no_phenomenon|main: got BOTH_HELD want INAPPLICABLE",
+            "no_phenomenon|cap_par: got BOTH_HELD want INAPPLICABLE"
+          ]
+        }
+      },
+      {
+        "mutation": "M8e: the pairing broken (ref in reverse seed order)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|cap_perp: got CAP_DEEPENS_PARTIAL want CAP_DEEPENS",
+            "borderline|cap_both_95: got UNRESOLVED want BOTH_HELD",
+            "response_only|main: got UNRESOLVED want RESPONSE_ONLY",
+            "paired_matters|main: got UNRESOLVED want BOTH_HELD"
+          ]
+        }
+      },
+      {
+        "mutation": "M8f: unit median instead of the arithmetic mean",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|main_E1: got 0.20100000000000007 want 0.25"
+          ]
+        }
+      },
+      {
+        "mutation": "M8g: absorption on the first U < 0 (no 5-task run)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|absorb|ref|frac_absorbed: got 0.2 want 0.1",
+            "designed|absorb|ref|median_absorb_task: got 45.5 want 60.0",
+            "designed|absorb|ref|n_censored: got 80.0 want 90.0"
+          ]
+        }
+      },
+      {
+        "mutation": "M8h: censored units given task 151",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|absorb|ref|frac_absorbed: got 1.0 want 0.1",
+            "designed|absorb|ref|median_absorb_task: got 151.0 want 60.0",
+            "designed|absorb|ref|n_censored: got 0.0 want 90.0"
+          ]
+        }
+      },
+      {
+        "mutation": "M8i: cap_both's applicability looks at the parallel rows only",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "cap_idle|main: got BOTH_HELD want INAPPLICABLE"
+          ]
+        }
+      },
+      {
+        "mutation": "M8j: the cross-arm stream check switched off",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "broken_streams|main: got BOTH_HELD want INAPPLICABLE",
+            "broken_streams|n_valid: got 10 want 7"
+          ]
+        }
+      },
+      {
+        "mutation": "M8k: a task's first row taken as its end point",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|main: got INAPPLICABLE want BOTH_HELD",
+            "designed|cap_par: got INAPPLICABLE want BOTH_HELD",
+            "designed|cap_perp: got INAPPLICABLE want CAP_DEEPENS",
+            "designed|cap_both_95: got INAPPLICABLE want BOTH_HELD",
+            "designed|main_E1: got 0.0 want 0.25",
+            "designed|main_E2: got 0.0 want 1.0",
+            "designed|absorb|ref|frac_absorbed: got 0.0 want 0.1",
+            "designed|absorb|ref|median_absorb_task: got nan want 60.0"
+          ]
+        }
+      },
+      {
+        "mutation": "M8l: IMPAIRED against ref's early fit itself (its own loss not subtracted)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|impaired|cap_par: got True want False"
+          ]
+        }
+      },
+      {
+        "mutation": "M8m: nan units not dropped from the unit mean",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|main: got INAPPLICABLE want BOTH_HELD",
+            "designed|cap_par: got INAPPLICABLE want BOTH_HELD",
+            "designed|cap_perp: got INAPPLICABLE want CAP_DEEPENS",
+            "designed|cap_both_95: got INAPPLICABLE want BOTH_HELD",
+            "designed|main_E2: got nan want 1.0",
+            "borderline|main: got INAPPLICABLE want UNRESOLVED",
+            "borderline|cap_both_95: got INAPPLICABLE want BOTH_HELD",
+            "response_only|main: got INAPPLICABLE want RESPONSE_ONLY"
+          ]
+        }
+      },
+      {
+        "mutation": "M8n: the t CDF's tails swapped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "t(0.975,9) = 1000.000000 want 2.262157",
+            "t(0.9875,9) = 1000.000000 want 2.685011",
+            "t(0.975,7) = 1000.000000 want 2.364624",
+            "t(0.95,9) = 1000.000000 want 1.833113",
+            "designed|main: got INAPPLICABLE want BOTH_HELD",
+            "designed|cap_par: got INAPPLICABLE want BOTH_HELD",
+            "designed|cap_perp: got INAPPLICABLE want CAP_DEEPENS",
+            "designed|cap_both_95: got INAPPLICABLE want BOTH_HELD"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 52.7
+  },
   "S-cost": {
     "pass": true,
     "gate": "all 4 processes exit 0 and slots >= 4",
@@ -713,16 +991,16 @@
       0,
       0
     ],
-    "mem_available_gib_before": 18.5675048828125,
-    "peak_rss_gib_max": 1.0257148742675781,
+    "mem_available_gib_before": 18.716785430908203,
+    "peak_rss_gib_max": 1.0547332763671875,
     "slots": 14,
-    "seconds_per_update_under_load": 0.0010824780861536662,
-    "one_trajectory_min": 16.237171292304993,
-    "grid_40_serial_hours": 10.824780861536661,
-    "grid_40_wall_hours_at_slots": 0.7731986329669044,
+    "seconds_per_update_under_load": 0.0011087385813395181,
+    "one_trajectory_min": 16.63107872009277,
+    "grid_40_serial_hours": 11.08738581339518,
+    "grid_40_wall_hours_at_slots": 0.7919561295282271,
     "note": "per-update cost measured with 4 processes at once; at more slots each process is slower, so grid_40_wall_hours_at_slots is a lower bound, not a measurement",
-    "measured_at": "2026-09-16T17:44:10.838550+09:00",
-    "seconds": 14.9
+    "measured_at": "2026-09-16T18:47:13.930187+09:00",
+    "seconds": 15.1
   },
-  "finished_at": "2026-09-16T17:44:10.839067+09:00"
+  "finished_at": "2026-09-16T18:47:13.930847+09:00"
 }
