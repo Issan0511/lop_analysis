@@ -1,0 +1,179 @@
+{
+  "experiment": "phiphi_erosion_0916",
+  "kind": "posthoc archived trajectory analysis and bounded exact replay",
+  "git_hash": "535def25b19dd81bcaf2072a455f69e630176a0c",
+  "created_at": "2026-09-16T11:15:17.834501+00:00",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "numpy": "2.5.1",
+  "pandas": "3.0.5",
+  "torch": "2.13.0+cu130",
+  "device": "cpu",
+  "code": [
+    {
+      "path": "analysis/phiphi_erosion_0916/analyze.py",
+      "sha256": "8c61963e833f55a3c2da74cbf4cd2e9a55f6a3e5c08cf6ee4146a28a2b19162e"
+    },
+    {
+      "path": "analysis/phiphi_erosion_0916/report_text.py",
+      "sha256": "d2d456fc7c612911ddc833b61b83c6131aa39113b9465e6e0fdd3bcb5525a0ff"
+    },
+    {
+      "path": "specs/posthoc_phiphi_erosion_0916.md",
+      "sha256": "055fb09fb287754656d18fa278360045fa6624267f8307401541f26cdda1f736"
+    }
+  ],
+  "source_manifests": [
+    "conda_sources.json",
+    "pm_sources.json",
+    "snapshot_sources.json"
+  ],
+  "derived_raw_manifest": "backup_manifest.json",
+  "stages_completed": [
+    "algebra",
+    "conda",
+    "pm",
+    "evaluate",
+    "snapshot",
+    "adam_audit",
+    "report"
+  ],
+  "new_long_training_runs": 0,
+  "adam_local_comparison": "Same W/batch/gradient; fixed observed second-moment denominator; not a matched long-run SGD-versus-Adam experiment",
+  "exact_replay": "20 updates at task21 for LR and SNA, 3 seeds each, all parameter max error zero",
+  "failed_checks_fixed": [
+    "offset q discontinuity at z=0 from archived float32 reconstruction: exclude only ambiguous offset auxiliary snapshots, no primary exclusion for this issue",
+    "manual Torch derivative gate created as float32 from scalar branches: use float64 ones_like/full_like; retain original 1e-10 autograd threshold"
+  ],
+  "artifacts": [
+    {
+      "path": "results/phiphi_erosion_0916/adam_map_by_seed.csv",
+      "sha256": "848785c8d6fda91f073127239ace1bc5ca1efaca36319b216511f76dc08f9660",
+      "bytes": 1094
+    },
+    {
+      "path": "results/phiphi_erosion_0916/adam_map_checks.json",
+      "sha256": "29a18d0a1e97c6e84d95876727d00e20d6788660cd4889eb8412166298382ce0",
+      "bytes": 13440
+    },
+    {
+      "path": "results/phiphi_erosion_0916/algebra_checks.json",
+      "sha256": "8f0a14817a44be6563ef3ddc172ea77ea4885d6599229a33b588661d6d1ce507",
+      "bytes": 456
+    },
+    {
+      "path": "results/phiphi_erosion_0916/backup_manifest.json",
+      "sha256": "3fca9c9b4989f6a123923872a7053f772e0bd814392202e20256881b06738d18",
+      "bytes": 1930
+    },
+    {
+      "path": "results/phiphi_erosion_0916/conda_budget_by_seed.csv",
+      "sha256": "072961d4ff38df937209f931c502fd0bae7ed62316603ee33ece5a1b10369fc6",
+      "bytes": 13779
+    },
+    {
+      "path": "results/phiphi_erosion_0916/conda_checks.json",
+      "sha256": "11b411f9077b267e83e9146f6631d6472304ab9932ad459c51d9929077ecd945",
+      "bytes": 35365
+    },
+    {
+      "path": "results/phiphi_erosion_0916/conda_endpoint_ratios.csv",
+      "sha256": "a8886d90e4eb987c2c4cca49dfc3079317a6620e1c3c760e758c5b4c6e9fa7f0",
+      "bytes": 13186
+    },
+    {
+      "path": "results/phiphi_erosion_0916/conda_sources.json",
+      "sha256": "54057e59fe7d82c1ba6aacadd2c5c05a2277ce83e75a10f1292c1e7b17778823",
+      "bytes": 22942
+    },
+    {
+      "path": "results/phiphi_erosion_0916/dense_thresholds.csv",
+      "sha256": "eda5c3b2a455fdd49de2321ba35debb52aee11518bff6acaf3977f9035cccb0a",
+      "bytes": 28456
+    },
+    {
+      "path": "results/phiphi_erosion_0916/erosion_amount_and_radial.csv",
+      "sha256": "9a281f250cdb34a6acc2257802899712ce0cac4b38efdde21c2e4eb2fba65913",
+      "bytes": 77598
+    },
+    {
+      "path": "results/phiphi_erosion_0916/leave_one_slope_out.csv",
+      "sha256": "0d80855bff75ae630a324b864d6fedc4b0836a873a0d5236d3482cedbeff559a",
+      "bytes": 11582
+    },
+    {
+      "path": "results/phiphi_erosion_0916/pm_checks.json",
+      "sha256": "a8efc0e59b0b885b7709b0d1589f66827404bd5925ede81c2f3eade6db77fbdc",
+      "bytes": 54333
+    },
+    {
+      "path": "results/phiphi_erosion_0916/pm_phase_by_seed.csv",
+      "sha256": "c184499419f33428824ac3ca3f5260e2796718fb36a6a8c5e9ce3c1bcf81736e",
+      "bytes": 6349
+    },
+    {
+      "path": "results/phiphi_erosion_0916/pm_phase_summary.csv",
+      "sha256": "34b75b9eb2bc3b0cae3f6d8333dfeccbe6d7a6bbc3c3a937787a8b2622962222",
+      "bytes": 2203
+    },
+    {
+      "path": "results/phiphi_erosion_0916/pm_sources.json",
+      "sha256": "c9b0e77672e81cd0b64ff94ab2dda01144b24cd6427174dcbbe7dafb1f674ffb",
+      "bytes": 1355
+    },
+    {
+      "path": "results/phiphi_erosion_0916/prediction_scope.json",
+      "sha256": "a3db3fdaf6b183b97444b9175d484192e905e88b7d1709c9d4d09575b52c0417",
+      "bytes": 576
+    },
+    {
+      "path": "results/phiphi_erosion_0916/prediction_summary.csv",
+      "sha256": "c12d0f34fd7ba652e9f00fcf69d804306dead9c9e499716b4546b42d48a3e54f",
+      "bytes": 659
+    },
+    {
+      "path": "results/phiphi_erosion_0916/snapshot_by_seed.csv",
+      "sha256": "327a3f60f993a0bf7cf8878c5c7e865ada02beefdb610d6052502aaededdbe02",
+      "bytes": 15794
+    },
+    {
+      "path": "results/phiphi_erosion_0916/snapshot_checks.json",
+      "sha256": "aa0ecc761807d3397d06c2c90825e55bc0463d7ea896954b91ccee328b670a6e",
+      "bytes": 33430
+    },
+    {
+      "path": "results/phiphi_erosion_0916/snapshot_sources.json",
+      "sha256": "559c80f88e2d333371afab4f2a6518d990d9e3e522705b2bf4fd45a22d5004c8",
+      "bytes": 3272
+    },
+    {
+      "path": "results/phiphi_erosion_0916/summary.md",
+      "sha256": "5c111fb5f243cf372fd69c6c54bf59c86b97fd677f5473ddcc7d9c54da15ffeb",
+      "bytes": 12940
+    },
+    {
+      "path": "results/phiphi_erosion_0916/threshold_by_seed_and_slope.csv",
+      "sha256": "92d97479dc65e97c0deb915d5556d9408fbe3158d082beb3aa41e4f6348998be",
+      "bytes": 72284
+    },
+    {
+      "path": "results/phiphi_erosion_0916/threshold_fits.csv",
+      "sha256": "bcbdb861c0ad24623125fac6981222effebc42fbdd8c0a103b3e89dfa951ab32",
+      "bytes": 420
+    },
+    {
+      "path": "results/phiphi_erosion_0916/verdict.csv",
+      "sha256": "d4f03f80449b410e0faefae5e27f974b63e7d952cb4a6c55bd573a021d1cb5a0",
+      "bytes": 547
+    },
+    {
+      "path": "results/phiphi_erosion_0916/verification.pdf",
+      "sha256": "6e64ddc44ad4e22ced69068f9cfe4463611ce00bd2a70e96fd315a2d941f41aa",
+      "bytes": 27228
+    },
+    {
+      "path": "results/phiphi_erosion_0916/verification.png",
+      "sha256": "5339442680e65068db75991bf46d2d47d02316963953b97ffc33ed8c184ed963",
+      "bytes": 200120
+    }
+  ]
+}
