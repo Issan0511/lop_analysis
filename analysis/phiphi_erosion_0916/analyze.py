@@ -72,6 +72,16 @@ def algebra():
     assert result['radial_identity_error']<1e-12
     assert result['variance_identity_error']<1e-12
     assert result['gradient_fd_maxerr']<1e-8
+    # Same integrated phi*phi', different width contraction: all-negative leaky.
+    examples=[]
+    for scale in [.1,.2]:
+        zz=x@(np.ones(5)*scale)-1
+        qq=a*a*zz
+        examples.append(dict(scale=scale,qmean=float(qq.mean()),variance=float(zz.var()),
+                             self_width_rate=float(-v*v*np.mean(qq*(zz-zz.mean())))))
+    assert abs(examples[0]['qmean']-examples[1]['qmean'])<1e-12
+    assert abs(examples[1]['self_width_rate']/examples[0]['self_width_rate']-4)<1e-10
+    result['same_integral_different_self_contraction']=examples
     savejson('algebra_checks.json',result)
 
 def conda():
@@ -261,6 +271,22 @@ def evaluate():
         q=('q','mean'),qabs=('qabs','mean'),qcov=('qcov','mean'),qcov_v2=('qcov_v2','mean'),
         radial=('radial','mean'),injection=('injection','mean'),dsigma2=('dsigma2','mean'),cos=('cos','mean')).reset_index()
     agg.to_csv(OUT/'conda_budget_by_seed.csv',index=False)
+    # User separates widening injection from erosion. Also examine the signed
+    # radial budget, not just the finite net width change. This is a task-level
+    # decomposition, not the sum of per-update radial budgets.
+    rrows=[]
+    for target in ['dsigma2','radial']:
+        for col in ['q','qabs','qcov','qcov_v2']:
+            tr=primary[train];x=tr[col].to_numpy();y=-tr[target].to_numpy()
+            slope=np.mean((x-x.mean())*(y-y.mean()))/(np.var(x)+1e-30)
+            intercept=y.mean()-slope*x.mean()
+            t,lo=threshold(x,y>0)
+            for (a,seed),g in primary[test].groupby(['a','seed']):
+                xx=g[col].to_numpy();yy=-g[target].to_numpy();pp=intercept+slope*xx
+                rrows.append(dict(target=target,feature=col,a=a,seed=seed,slope=slope,intercept=intercept,
+                    r2=1-float(np.sum((yy-pp)**2)/(np.sum((yy-yy.mean())**2)+1e-30)),
+                    spearman=spearman(xx,yy),ba=ba(yy>0,predict(xx,t,lo))))
+    pd.DataFrame(rrows).to_csv(OUT/'erosion_amount_and_radial.csv',index=False)
     print('prediction completed',flush=True)
 
 def report():
