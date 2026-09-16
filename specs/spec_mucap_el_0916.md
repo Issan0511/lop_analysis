@@ -218,7 +218,7 @@ online 精度（各バッチの更新前の正解率の平均）、タスク終�
 | IMPAIRED | cap_both 35% ／ cap_par 20% ／ cap_perp 15% |
 | 交互作用 | cap_both の E2 は cap_par とほぼ同じ（交互作用の 95% 区間が 0 を含む）60% |
 
-**Issa の予測**: 未記入。
+**Issa の予測**（2026-09-16・登録 commit feb41ff の後、cap 腕を回す前にチャットで記入）: **Claude と同じ** — cap_par **BOTH_HELD**、cap_perp **CAP_DEEPENS**（広がりだけ止めて $q\|\mu\|$ の沈みを放置すると $d$ は −10 以下へ）、cap_both **BOTH_HELD**。発言は「同じ予想で」。ラベルの一致を記録し、Issa 自身の確率は付けない。
 
 ## 8. 費用と実行
 
