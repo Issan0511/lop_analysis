@@ -210,3 +210,10 @@ S6（帳簿の閉包）は、本走で ledger を使わないので実行しな�
 - 登録前パイロット `results/_pilot_mucap_ee_0917/` と検査の作業ディレクトリ `results/_checks_mucap_ee_0917/` は git に入れず、`obsidian-research-data/mucap_ee_0917/` へ退避して `backup_manifest.json` に記録する。
 - 0916 の結果ノート（vault）に memo_acc の訂正を追記する。
 - 結果 commit の後、その日のうちに origin/main へ統合し worktree と branch を消す。
+
+## 10. 実行記録（本走後の追記・計画は変えていない）
+
+- 本走: 2026-09-17 01:23–02:42、commit 18d3ef0、6 並列、40/40 完走・失敗 0・有効 seed 10。1 run 6.9–14.6 分。
+- **判定スクリプトの本走後の修正（f5f0720）**: ledger off の shard も task 列だけの `ledger.npz` を書くため、副 endpoint の帳簿の節がそれを帳簿と読んで KeyError で止まった。その節だけ「帳簿の列がある shard に限る」とし、S8 の合成 shard にも同じ task 列だけの ledger を持たせて再実行した（pass・19/19）。ラベル・適用条件・時間ラベルは ledger を読まない。
+- 判定: 主 **COLLAPSED**（cap_perp）、cap_par **COLLAPSED**、cap_both **COLLAPSED**、時間は 3 腕とも **LATER**（10/10 seed・p = 0.002）。独立検算（verdict.py を使わず shard から）で主 6 推定値の差は最大 4.4e−17、床の判定・$T_{1/2}$ も一致。
+- 事後の時間経過（未登録）: `analysis/mucap_ee_0917/posthoc_timecourse.py` → `results/mucap_ee_0917/posthoc_timecourse.md`。
