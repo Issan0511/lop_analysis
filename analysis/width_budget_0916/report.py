@@ -15,7 +15,8 @@ def run():
     for start in [0,1000000]:
         for arm in ARMS:
             meta=json.loads((OUT/f'{arm}_{start}.json').read_text());guards.append(meta)
-            with np.load(meta['archive']) as d:
+            with np.load(meta['archive']) as archive:
+                d={key:archive[key] for key in archive.files}
                 b=d['budget'];ep=d['endpoints'];pidx=d['probe_index'];total=b.sum((0,1))
                 st=d['source_terms'].sum((0,1))/100
                 eta=float(np.float32(.01))
@@ -33,6 +34,7 @@ def run():
                             initial_mean=scale,final_mean=float(final.mean()),net=net,
                             normalized_net=net/scale,median_size_ratio=float(np.median(np.sqrt(final/initial))),
                             unit_shrink_fraction=float((final<initial).mean()),
+                            median_unit_balance=float(np.median((vals[:,0]-vals[:,1])/np.maximum(vals[:,2],1e-30))),
                             erosion=erosion,recovery=recovery,injection=injection,
                             inward=erosion-recovery,balance=(erosion-recovery)/max(injection,1e-30),
                             pred_linear=means[3],pred_injection=means[4],
@@ -61,7 +63,7 @@ def run():
     pd.DataFrame(sources).to_csv(OUT/'source_terms_by_seed.csv',index=False)
     df.to_csv(OUT/'window_by_seed.csv',index=False);ph.to_csv(OUT/'phase_by_seed.csv',index=False);pr.to_csv(OUT/'frozen_expectations_by_seed.csv',index=False)
     group=df.groupby(['geometry','start','a'])
-    summary=group[['net','normalized_net','median_size_ratio','unit_shrink_fraction','balance','formula_balance']].median().reset_index()
+    summary=group[['net','normalized_net','median_size_ratio','unit_shrink_fraction','median_unit_balance','balance','formula_balance']].median().reset_index()
     summary['min_seed_net']=group.net.min().values;summary['max_seed_net']=group.net.max().values
     summary['contracting_seeds']=group.net.apply(lambda x:int((x<0).sum())).values
     summary.to_csv(OUT/'window_summary.csv',index=False)
@@ -117,6 +119,16 @@ def run():
     fig.tight_layout();fig.savefig(OUT/'budget.png',dpi=170);fig.savefig(OUT/'budget.pdf');plt.close(fig)
     text='# 恒等式11.1で幅の成長・収縮を検証 — 0916\n\n'
     text+='事後検証。CondA/SGDの7傾き×10 seed、既存step0/1Mから各10タスクを同じ乱数列で再生した。新しい長期軌道やAdamとの比較ではない。\n\n'
+    text+='## 読み取れたこと\n\n'
+    text+='**収支の閾値は実更新と整合した。ただし「Leakyの傾き0.6がいつでも収縮の境目」という仮説は、この窓では支持されなかった。** 収縮は個体・学習時点・タスク内の時間帯で変わる。\n\n'
+    ex=df[(df.geometry=='variance')&np.isclose(df.a,.6)]
+    text+='a=.6で、各個体の収支比を作ってから個体中央値→seed中央値を取ると、次のように1をまたいだ。\n\n'
+    text+=markdown(ex.groupby('start')[['median_unit_balance','median_size_ratio','unit_shrink_fraction']].median().reset_index())+'\n\n'
+    text+='一方、層全体で個体の分散を平均すると、後期窓でも拡大するseedが6/10。典型個体の縮小と層の平均分散の拡大が両立している。\n\n'
+    text+='**時間順序は、想定した「切替直後に広がって後半で削られる」と逆だった。** a=.55/.60の両方、task1–10と101–110の両窓で、0–20、20–100、100–1000更新の各区間は全10seedのタスク平均で収縮、1000–10000更新は全10seedで拡大。全重みノルム・中心化ノルム・前活性分散の全てでこの符号。個々のタスクや更新が全てこの符号という意味ではない。\n\n'
+    text+='自己項の存在と、自己項だけで正味収縮が決まることは異なる。a=.6の自由入力分散について、以下は加法性を保つため個体平均→全seed平均で集計した10タスク積算（前の中央値表と集約を分ける）。\n\n'
+    text+=markdown(ex.groupby('start')[['self_linear','rest_linear','injection','net']].mean().reset_index())+'\n\n'
+    text+='self_linearは読み出しと幅方向の入力で重み付けたφφ′自己項、rest_linearは他の勾配成分（勾配演算の微小な丸め残差を含む）。大きな負の自己項と大きな正の残りが相殺し、その差と各更新の二乗項が競合する。後期a=.6では−27.323 +26.992 +0.334 ≈ +0.0034。この平均収支をφφ′の単純和だけに還元することはできなかった。\n\n'
     text+='## 検算\n\n'+json.dumps(verification,ensure_ascii=False,indent=2)+'\n\n'
     text+='既存ログのWノルム・読み出しvを1000更新ごと、自由Wを10000更新ごとにbit一致で確認。丸め誤差込みの実更新Uによる帳簿は恒等式なので、この一致は機構の独立な予測精度ではない。理想的SGD式と実更新の違いにはfloat32丸めを残す。\n\n'
     text+='## 収支の定義\n\n'
@@ -125,6 +137,7 @@ def run():
     text+='全重みノルムfull、行平均除去ノルムcentered、前活性分散varianceを分ける。CondAではvariance=‖w_free‖²/4。各表の収支は個体平均をseed別に出し、そのseed中央値。成分ごとの中央値は加法的とは限らないため、CSVのseed別閉包で検算。\n\n'
     text+='## 傾きと収支\n\n'+markdown(summary)+'\n\n'
     text+='median_size_ratioは各個体のノルム（varianceでは標準偏差）の終/始比の中央値をseed間で中央値。normalized_netは個体平均の二乗量変化をその初期値で割った値。両者の集約を混ぜない。seed範囲は独立な再試行の不確実性の記述で、個体を独立とする有意差検定ではない。\n\n'
+    text+='balanceは層の個体平均で成分を足してから割った比、median_unit_balanceは各個体で比を作ってから中央値を取った値。少数の大きな拡大が多数の小さな収縮を上回る場合、層の平均分散と典型個体の幅は逆向きに動く。\n\n'
     text+='## a=.55→.60の対比較\n\n'+markdown(cont.groupby(['geometry','start']).median(numeric_only=True).drop(columns='seed').reset_index())+'\n\n'
     text+='同じseed内で差を取った後の中央値。各成分差はseed別には厳密に足し上がるが、中央値どうしの加法性は保証されない。詳細はpaired_055_to_060.csv。\n\n'
     text+='## 時間帯\n\n'+markdown(ph.groupby(['geometry','start','a','phase_start','phase_end'])[['erosion','recovery','injection','net']].median().reset_index().query("geometry == 'variance' and (a == .55 or a == .6)"))+'\n\n'
