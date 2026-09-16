@@ -1,7 +1,7 @@
 {
  "device": "cpu",
  "torch": "2.13.0+cu130",
- "git_hash": "ff1b516f70b73ed75841836dd42d0db5cc99004f",
+ "git_hash": "e14af82841d10ab1f34852c10e36e446668705dd",
  "git_dirty_code": false,
  "S-act": {
   "fixed_a1.0": 2.220446049250313e-16,
@@ -39,10 +39,11 @@
   "pass": true
  },
  "S-ema-off": {
-  "mlp_c1.0": {
+  "mlp_SWA1": {
    "equal": true,
    "diff": [],
    "alpha_is_c": true,
+   "lo": 0.001,
    "mutation_differs": true,
    "mutation_train_cols": [
     "memo_acc",
@@ -52,10 +53,11 @@
     "w_norm_l3"
    ]
   },
-  "mlp_c3.0": {
+  "mlp_SWA3": {
    "equal": true,
    "diff": [],
    "alpha_is_c": true,
+   "lo": 0.001,
    "mutation_differs": true,
    "mutation_train_cols": [
     "memo_acc",
@@ -65,10 +67,25 @@
     "w_norm_l3"
    ]
   },
-  "cnn_c1.0": {
+  "mlp_SWA1u": {
    "equal": true,
    "diff": [],
    "alpha_is_c": true,
+   "lo": 1e-08,
+   "mutation_differs": true,
+   "mutation_train_cols": [
+    "memo_acc",
+    "online_acc",
+    "w_norm_l1",
+    "w_norm_l2",
+    "w_norm_l3"
+   ]
+  },
+  "cnn_SWA1": {
+   "equal": true,
+   "diff": [],
+   "alpha_is_c": true,
+   "lo": 0.001,
    "mutation_differs": true,
    "mutation_train_cols": [
     "memo_acc",
@@ -80,10 +97,27 @@
     "w_norm_f3"
    ]
   },
-  "cnn_c3.0": {
+  "cnn_SWA3": {
    "equal": true,
    "diff": [],
    "alpha_is_c": true,
+   "lo": 0.001,
+   "mutation_differs": true,
+   "mutation_train_cols": [
+    "memo_acc",
+    "online_acc",
+    "w_norm_c1",
+    "w_norm_c2",
+    "w_norm_f1",
+    "w_norm_f2",
+    "w_norm_f3"
+   ]
+  },
+  "cnn_SWA1u": {
+   "equal": true,
+   "diff": [],
+   "alpha_is_c": true,
+   "lo": 1e-08,
    "mutation_differs": true,
    "mutation_train_cols": [
     "memo_acc",
