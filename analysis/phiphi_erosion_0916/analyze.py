@@ -105,6 +105,10 @@ def conda():
             zc=np.einsum('tuj,pj->tup',w[idx],bits);z=zc+zb[si,:,None]
             phi=np.where(z>0,z,a*z)+c;gate=np.where(z>0,1.,a);q=phi*gate
             qmean=q.mean(2);var=np.mean(zc**2,2);cov=np.mean(q*zc,2)
+            # Offset makes phi*phi' discontinuous at z=0. Float32 saved weights
+            # cannot recover the branch at an exact kink; exclude these unit
+            # snapshots instead of treating a .45/32 jump as a physical effect.
+            safe=np.ones_like(var,dtype=bool) if c==0 else np.min(abs(z),axis=2)>2e-6
             delta=w[idx+1]-w[idx];rad=2*np.sum(w[idx]*delta,2);inj=np.sum(delta**2,2)
             dn=np.sum(w[idx+1]**2,2)-np.sum(w[idx]**2,2)
             check=dict(file=path.name,moment_maxerr=float(np.max(abs(qmean-qm[mi]))),
@@ -112,12 +116,15 @@ def conda():
                        zmax_maxerr=float(np.max(abs(z.max(2)-zmax[si]))),
                        width_maxerr=float(np.max(abs(np.sqrt(var)-den[si]))),
                        norm_closure=float(np.max(abs(dn-rad-inj))))
-            assert max(check[k] for k in ['moment_maxerr','zmin_maxerr','zmax_maxerr','width_maxerr'])<2e-5,check
+            check['kink_ambiguous_fraction']=float(1-safe.mean())
+            check['moment_maxerr_away_kink']=float(np.max(abs(qmean-qm[mi])[safe]))
+            assert max(check[k] for k in ['moment_maxerr_away_kink','zmin_maxerr','zmax_maxerr','width_maxerr'])<2e-5,check
             assert check['norm_closure']<1e-10
             guards.append(check)
             shape=var.shape
             vals=dict(a=np.full(shape,a),c=np.full(shape,c),seed=np.full(shape,seed),aux=np.full(shape,aux),
                       task=np.broadcast_to(ws[idx,None]/10000,shape),unit=np.broadcast_to(np.arange(100),shape),
+                      reconstruction_valid=safe,
                       q=qmean,qabs=np.mean(abs(q),2),qpos=np.mean(np.maximum(q,0),2),
                       qneg=np.mean(np.maximum(-q,0),2),qcov=cov,qcov_v2=cov*vn[si]**2,
                       var=var,vabs=abs(vn[si]),zmean=zb[si],dsigma2=dn/4,radial=rad/4,injection=inj/4,
@@ -217,7 +224,7 @@ def regression_train(X,y):
 
 def evaluate():
     with np.load(RAW/'conda_units.npz') as d:allf=pd.DataFrame(dict(d))
-    valid=abs(allf.dsigma2)>1e-6*np.maximum(allf['var'],1e-4)
+    valid=(abs(allf.dsigma2)>1e-6*np.maximum(allf['var'],1e-4))&(allf.reconstruction_valid>0)
     f=allf.loc[valid].copy();f['shrink']=f.dsigma2<0
     primary=f[f.aux==0];train=primary.seed<5;test=~train
     models={};metrics=[];fits=[];transfers=[]
