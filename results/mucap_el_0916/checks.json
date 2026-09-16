@@ -1,0 +1,487 @@
+{
+  "run_id": "mucap_el_0916",
+  "started_at": "2026-09-16T16:45:21.470653+09:00",
+  "spec": "obsidian-research \u53ef\u5851\u6027\u55aa\u5931/spec/H2_W\u6210\u9577\u6291\u5236\u3068\u8ca0\u5074\u8f38\u9001_\u8a2d\u8a08\u6848_0916.md section 10.4",
+  "code_sha256": {
+    "src/mucap_el_0916.py": "4f337bfa9aff872fce30a3b880cd57cf552034e30ae77edd04d8de812633e67a",
+    "analysis/mucap_el_0916/checks.py": "d64c7a3df03682493ff49979ebf0870fe9b659775f832762160af5aae915cdcb"
+  },
+  "torch": "2.13.0+cu130",
+  "threads": 1,
+  "eps32": 1.1920928955078125e-07,
+  "eps64": 2.220446049250313e-16,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "S1_S-mu-basis": {
+    "title": "S1 e is the mean-image axis and zbar = q||mu|| + b holds on the fixed set",
+    "threshold_derivation": "For each seed: (i) ||e|| = 1; (ii) e is the unit vector along the mean image (not 1/sqrt(d));\n    (iii) q e + v reconstructs W; (iv) v . e = 0; (v) the identity zbar_i = q_i ||mu|| + b_i against\n    the mean preactivation computed directly from the images, in float64 (TOL_ID64) and with\n    split_mu's own float32 q (TOL_ID32); (vi) mu = 0 returns (None, None, 0.0), not a crash or a zero\n    vector; (vii) the float32 e the caps use is the cast of e64, not a separately rounded vector.\n    Tolerances: TOL_UNIT, TOL_ORTH, TOL_RECON, TOL_ID64, TOL_ID32.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "seed0": {
+        "i_unit": true,
+        "ii_is_mu_axis": true,
+        "iii_recon": true,
+        "iv_orth": true,
+        "v_identity64": true,
+        "v_identity32": true,
+        "vi_zero_mu": true,
+        "vii_e32_matches_e64": true,
+        "nonvacuous": true,
+        "mu_norm": 5.840526933968529,
+        "cos_to_mu": 0.9999999999999999,
+        "cos_to_uniform_axis": 0.6169242753426024,
+        "unit_err": 1.1102230246251565e-16,
+        "recon_in_eps32": 0.8803170323371887,
+        "orth_rel": 1.2845009876624991e-08,
+        "identity_rel_f64": 3.940955009481322e-17,
+        "identity_rel_f32": 1.0497068867197584e-08
+      },
+      "seed1": {
+        "i_unit": true,
+        "ii_is_mu_axis": true,
+        "iii_recon": true,
+        "iv_orth": true,
+        "v_identity64": true,
+        "v_identity32": true,
+        "vi_zero_mu": true,
+        "vii_e32_matches_e64": true,
+        "nonvacuous": true,
+        "mu_norm": 5.909708682890375,
+        "cos_to_mu": 1.0000000000000007,
+        "cos_to_uniform_axis": 0.6197679283153718,
+        "unit_err": 4.440892098500626e-16,
+        "recon_in_eps32": 0.8775954842567444,
+        "orth_rel": 1.670786068439452e-08,
+        "identity_rel_f64": 3.4694826254666503e-17,
+        "identity_rel_f32": 1.2542311452961232e-08
+      },
+      "seed2": {
+        "i_unit": true,
+        "ii_is_mu_axis": true,
+        "iii_recon": true,
+        "iv_orth": true,
+        "v_identity64": true,
+        "v_identity32": true,
+        "vi_zero_mu": true,
+        "vii_e32_matches_e64": true,
+        "nonvacuous": true,
+        "mu_norm": 5.966733985482054,
+        "cos_to_mu": 1.0000000000000002,
+        "cos_to_uniform_axis": 0.6188404169555525,
+        "unit_err": 0.0,
+        "recon_in_eps32": 0.880595862865448,
+        "orth_rel": 1.1274910702300316e-08,
+        "identity_rel_f64": 2.992709499271615e-17,
+        "identity_rel_f32": 8.249686156737654e-09
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M1a: e left unnormalised (e = mu)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "seed0|i_unit",
+            "seed0|iv_orth",
+            "seed0|v_identity64",
+            "seed0|v_identity32",
+            "seed0|nonvacuous",
+            "seed1|i_unit",
+            "seed1|iv_orth",
+            "seed1|v_identity64"
+          ]
+        }
+      },
+      {
+        "mutation": "M1b: wrong axis -- the uniform direction 1/sqrt(d) instead of the mean image",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "seed0|ii_is_mu_axis",
+            "seed0|v_identity64",
+            "seed0|v_identity32",
+            "seed0|nonvacuous",
+            "seed1|ii_is_mu_axis",
+            "seed1|v_identity64",
+            "seed1|v_identity32",
+            "seed1|nonvacuous"
+          ]
+        }
+      },
+      {
+        "mutation": "M1c: v not fully orthogonalised (half the parallel part removed)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "seed0|iii_recon",
+            "seed0|iv_orth",
+            "seed1|iii_recon",
+            "seed1|iv_orth",
+            "seed2|iii_recon",
+            "seed2|iv_orth"
+          ]
+        }
+      },
+      {
+        "mutation": "M1d: q from the raw mean image instead of the unit vector",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "seed0|iv_orth",
+            "seed0|v_identity32",
+            "seed1|iv_orth",
+            "seed1|v_identity32",
+            "seed2|iv_orth",
+            "seed2|v_identity32"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.1
+  },
+  "all_pass": true,
+  "S2_S-mu-projection": {
+    "title": "S2 each cap writes its own component only, keeps the other, tallies match",
+    "threshold_derivation": "On every case, cap_parallel_ and cap_perp_ separately.  Parallel: (i) rows with |q| <= q_cap keep\n    every bit; (ii) written rows get |q'| = q_cap (TOL_Q) with the sign q had; (iii) their v is kept\n    (TOL_KEEP, in eps32 units); (iv) the row count and the sum of |q| - q_cap match a float64 recount.\n    Perpendicular: (v) rows with ||v|| <= v_cap keep every bit; (vi) written rows get ||v'|| = v_cap\n    (TOL_NORM) with the direction of v (TOL_COS); (vii) their q is kept (TOL_KEEP); (viii) tallies match.\n    A cap of 0 is checked separately: the row must land on q = 0 to within the write's own rounding\n    (TOL_KEEP, in units of eps32*max|w|*sqrt(d)), and it has no sign to keep.\n    (ix) neither cap produces a non-finite weight, including the zero-v row and the zero-cap row.\n    All norms, cosines and counts recomputed in float64.  Tolerances: TOL_Q, TOL_NORM, TOL_COS,\n    TOL_KEEP, TOL_REMOVED.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "random_784": {
+        "i_par_under_bit_identical": true,
+        "ii_par_magnitude": true,
+        "ii_par_zero_cap": true,
+        "ii_par_sign": true,
+        "iii_par_keeps_v": true,
+        "iv_par_count": true,
+        "iv_par_removed": true,
+        "v_perp_under_bit_identical": true,
+        "vi_perp_norm": true,
+        "vi_perp_direction": true,
+        "vii_perp_keeps_q": true,
+        "viii_perp_count": true,
+        "viii_perp_removed": true,
+        "ix_finite": true,
+        "nonvacuous": true,
+        "rows_over_par": 52,
+        "rows_over_perp": 45,
+        "max_rel_q": 2.819471738302326e-07,
+        "zero_cap_residual_q_in_eps32": 0.06058167532367622,
+        "v_kept_in_eps32": 0.4519565783583852,
+        "max_rel_vnorm": 9.94722666458614e-08,
+        "max_1mcos": 4.107825191113079e-15,
+        "q_kept_in_eps32": 2.155649831036771,
+        "removed_rel_err_par": 8.056319225925933e-09,
+        "removed_rel_err_perp": 9.109678385764499e-08
+      },
+      "random_100": {
+        "i_par_under_bit_identical": true,
+        "ii_par_magnitude": true,
+        "ii_par_zero_cap": true,
+        "ii_par_sign": true,
+        "iii_par_keeps_v": true,
+        "iv_par_count": true,
+        "iv_par_removed": true,
+        "v_perp_under_bit_identical": true,
+        "vi_perp_norm": true,
+        "vi_perp_direction": true,
+        "vii_perp_keeps_q": true,
+        "viii_perp_count": true,
+        "viii_perp_removed": true,
+        "ix_finite": true,
+        "nonvacuous": true,
+        "rows_over_par": 50,
+        "rows_over_perp": 48,
+        "max_rel_q": 2.976600955717501e-07,
+        "zero_cap_residual_q_in_eps32": 0.03035137117801779,
+        "v_kept_in_eps32": 0.4286436554385684,
+        "max_rel_vnorm": 1.428388900492905e-07,
+        "max_1mcos": 5.995204332975845e-15,
+        "q_kept_in_eps32": 0.5480683877143527,
+        "removed_rel_err_par": 7.367883119908202e-08,
+        "removed_rel_err_perp": 1.5785427462691065e-08
+      },
+      "init_W1_mu1": {
+        "i_par_under_bit_identical": true,
+        "ii_par_magnitude": true,
+        "ii_par_zero_cap": true,
+        "ii_par_sign": true,
+        "iii_par_keeps_v": true,
+        "iv_par_count": true,
+        "iv_par_removed": true,
+        "v_perp_under_bit_identical": true,
+        "vi_perp_norm": true,
+        "vi_perp_direction": true,
+        "vii_perp_keeps_q": true,
+        "viii_perp_count": true,
+        "viii_perp_removed": true,
+        "ix_finite": true,
+        "nonvacuous": true,
+        "rows_over_par": 50,
+        "rows_over_perp": 50,
+        "max_rel_q": 4.4703372621412996e-06,
+        "zero_cap_residual_q_in_eps32": 0.0,
+        "v_kept_in_eps32": 0.44623635305181253,
+        "max_rel_vnorm": 1.0094130264981516e-07,
+        "max_1mcos": 1.1102230246251565e-15,
+        "q_kept_in_eps32": 0.579227358632793,
+        "removed_rel_err_par": 6.100324915599023e-08,
+        "removed_rel_err_perp": 8.345352275741189e-08
+      },
+      "init_W2_mu2": {
+        "i_par_under_bit_identical": true,
+        "ii_par_magnitude": true,
+        "ii_par_zero_cap": true,
+        "ii_par_sign": true,
+        "iii_par_keeps_v": true,
+        "iv_par_count": true,
+        "iv_par_removed": true,
+        "v_perp_under_bit_identical": true,
+        "vi_perp_norm": true,
+        "vi_perp_direction": true,
+        "vii_perp_keeps_q": true,
+        "viii_perp_count": true,
+        "viii_perp_removed": true,
+        "ix_finite": true,
+        "nonvacuous": true,
+        "rows_over_par": 50,
+        "rows_over_perp": 50,
+        "max_rel_q": 6.253823338076003e-06,
+        "zero_cap_residual_q_in_eps32": 0.0,
+        "v_kept_in_eps32": 0.33409615505227397,
+        "max_rel_vnorm": 1.3199715609424345e-07,
+        "max_1mcos": 9.992007221626409e-16,
+        "q_kept_in_eps32": 0.42709895311887497,
+        "removed_rel_err_par": 9.169054181404913e-08,
+        "removed_rel_err_perp": 9.442494013859293e-08
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M2a: the parallel cap scales the whole row instead of its parallel part",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "random_784|iii_par_keeps_v",
+            "random_100|iii_par_keeps_v",
+            "init_W1_mu1|iii_par_keeps_v",
+            "init_W2_mu2|iii_par_keeps_v"
+          ]
+        }
+      },
+      {
+        "mutation": "M2b: |q| set to the cap on every row (rows under the cap are stretched too)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "random_784|i_par_under_bit_identical",
+            "random_100|i_par_under_bit_identical",
+            "init_W1_mu1|i_par_under_bit_identical",
+            "init_W2_mu2|i_par_under_bit_identical"
+          ]
+        }
+      },
+      {
+        "mutation": "M2c: the parallel cap clips to [0, q_cap], dropping the sign",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "random_784|ii_par_magnitude",
+            "random_784|ii_par_sign",
+            "random_100|ii_par_magnitude",
+            "random_100|ii_par_sign",
+            "init_W1_mu1|ii_par_magnitude",
+            "init_W1_mu1|ii_par_sign",
+            "init_W2_mu2|ii_par_magnitude",
+            "init_W2_mu2|ii_par_sign"
+          ]
+        }
+      },
+      {
+        "mutation": "M2d: the perpendicular cap rescales q along with v",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "random_784|vii_perp_keeps_q",
+            "random_100|vii_perp_keeps_q",
+            "init_W1_mu1|vii_perp_keeps_q",
+            "init_W2_mu2|vii_perp_keeps_q"
+          ]
+        }
+      },
+      {
+        "mutation": "M2e: ||v|| set to the cap on every row (zero-norm rows included)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "random_784|v_perp_under_bit_identical",
+            "random_100|v_perp_under_bit_identical",
+            "init_W1_mu1|v_perp_under_bit_identical",
+            "init_W2_mu2|v_perp_under_bit_identical"
+          ]
+        }
+      },
+      {
+        "mutation": "M2f: the perpendicular cap adds a 1% tangential component",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "random_784|vi_perp_norm",
+            "random_784|vi_perp_direction",
+            "random_784|vii_perp_keeps_q",
+            "random_100|vi_perp_norm",
+            "random_100|vi_perp_direction",
+            "random_100|vii_perp_keeps_q",
+            "init_W1_mu1|vi_perp_norm",
+            "init_W1_mu1|vi_perp_direction"
+          ]
+        }
+      },
+      {
+        "mutation": "M2g: scale factor v_cap / n^2",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "random_784|vi_perp_norm",
+            "random_100|vi_perp_norm",
+            "init_W1_mu1|vi_perp_norm",
+            "init_W2_mu2|vi_perp_norm"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.1
+  },
+  "S3_S-mu-order": {
+    "title": "S3 the caps commute, are idempotent, and touch nothing else",
+    "threshold_derivation": "(i) cap_both_ (parallel then perpendicular) agrees with the other order within TOL_ORDER;\n    (ii) a second application moves no row beyond the write's own rounding (TOL_ORDER).  A float32\n    projection is not bit-idempotent -- |q'| lands a rounding step above its cap for about half the\n    written rows, so the second pass writes them again; what must not happen is a further real move,\n    which is how a wrong scale factor shows up even when the first application looks right.\n    (iii) the caps touch only\n    the tensor handed to them: the other parameters and a stand-in Adam moment\n    pair are bit-identical.  (iv) after cap_both_ BOTH constraints hold on every row -- |q| <= q_cap and\n    ||v|| <= v_cap to within TOL_Q / TOL_NORM -- which is what a cap_both_ that silently drops one of its\n    two steps fails.  Tolerances: TOL_ORDER, TOL_Q, TOL_NORM.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "random_784": {
+        "i_orders_agree": true,
+        "ii_idempotent": true,
+        "iii_others_untouched": true,
+        "iv_both_caps_hold": true,
+        "nonvacuous": true,
+        "order_gap_in_eps32": 1.6476692659574228,
+        "second_pass_move_in_eps32": 1.235751949468067,
+        "max_q_over_cap": 1.0000002940645323,
+        "max_vnorm_over_cap": 1.0000000989014153,
+        "rows_written_on_second_pass": [
+          22,
+          9
+        ]
+      },
+      "random_100": {
+        "i_orders_agree": true,
+        "ii_idempotent": true,
+        "iii_others_untouched": true,
+        "iv_both_caps_hold": true,
+        "nonvacuous": true,
+        "order_gap_in_eps32": 1.017767828573148,
+        "second_pass_move_in_eps32": 0.7650412785003505,
+        "max_q_over_cap": 1.0000002007592672,
+        "max_vnorm_over_cap": 1.0000001258921516,
+        "rows_written_on_second_pass": [
+          17,
+          11
+        ]
+      },
+      "init_W1_mu1": {
+        "i_orders_agree": true,
+        "ii_idempotent": true,
+        "iii_others_untouched": true,
+        "iv_both_caps_hold": true,
+        "nonvacuous": true,
+        "order_gap_in_eps32": 2.189124109016951,
+        "second_pass_move_in_eps32": 0.8775701563244234,
+        "max_q_over_cap": 1.0000095530056103,
+        "max_vnorm_over_cap": 1.000000124784857,
+        "rows_written_on_second_pass": [
+          25,
+          17
+        ]
+      },
+      "init_W2_mu2": {
+        "i_orders_agree": true,
+        "ii_idempotent": true,
+        "iii_others_untouched": true,
+        "iv_both_caps_hold": true,
+        "nonvacuous": true,
+        "order_gap_in_eps32": 1.2674581863924475,
+        "second_pass_move_in_eps32": 1.2654986895992766,
+        "max_q_over_cap": 1.0000050338492703,
+        "max_vnorm_over_cap": 1.000000120770933,
+        "rows_written_on_second_pass": [
+          23,
+          18
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M3a: perpendicular scale factor v_cap / n^2 (first pass plausible, not idempotent)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "init_W1_mu1|ii_idempotent",
+            "init_W1_mu1|iv_both_caps_hold",
+            "init_W2_mu2|ii_idempotent",
+            "init_W2_mu2|iv_both_caps_hold"
+          ]
+        }
+      },
+      {
+        "mutation": "M3b: the parallel cap also shrinks v by 1% (the orders stop agreeing)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "random_784|i_orders_agree",
+            "random_784|ii_idempotent",
+            "random_100|i_orders_agree",
+            "random_100|ii_idempotent",
+            "init_W1_mu1|i_orders_agree",
+            "init_W1_mu1|ii_idempotent",
+            "init_W2_mu2|i_orders_agree",
+            "init_W2_mu2|ii_idempotent"
+          ]
+        }
+      },
+      {
+        "mutation": "M3c: cap_both_ runs the parallel step twice and never caps v",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "random_784|iv_both_caps_hold",
+            "random_100|iv_both_caps_hold",
+            "init_W1_mu1|iv_both_caps_hold",
+            "init_W2_mu2|iv_both_caps_hold"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.0
+  },
+  "finished_at": "2026-09-16T16:45:21.687801+09:00"
+}
