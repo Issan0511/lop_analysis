@@ -1,4 +1,4 @@
-"""Checks for src/mucap_el_0916 (the mu-direction component caps of H2 design note section 10.4).
+"""Checks for src/mucap_el_0916 and src/mucap_el_run_0916 (specs/spec_mucap_el_0916.md section 6).
 
     OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python3 analysis/mucap_el_0916/checks.py
     ... --only S2            # development: writes results/_checks_mucap_el_0916/checks_partial.json
@@ -687,7 +687,8 @@ def main() -> None:
         SCR.mkdir(parents=True, exist_ok=True)
         DUMP_PATH = SCR / "checks_partial.json"
     RESULTS.update({"run_id": "mucap_el_0916", "started_at": dt.datetime.now().astimezone().isoformat(),
-                    "spec": "obsidian-research 可塑性喪失/spec/H2_W成長抑制と負側輸送_設計案_0916.md section 10.4",
+                    "spec": "specs/spec_mucap_el_0916.md",
+                    "prereg_commit": load(RUNNER).PREREG_COMMIT,
                     "code_sha256": {"src/mucap_el_0916.py": hashlib.sha256(CAPS.read_bytes()).hexdigest(),
                                     "src/mucap_el_run_0916.py": hashlib.sha256(RUNNER.read_bytes()).hexdigest(),
                                     "analysis/mucap_el_0916/checks.py":

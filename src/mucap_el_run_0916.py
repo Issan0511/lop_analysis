@@ -4,7 +4,8 @@
     OMP_NUM_THREADS=1 python3 src/mucap_el_run_0916.py --arm cap_both --seeds 0 \
         --out results/mucap_el_0916/runs/cap_both_s0
 
-H2 design note section 10.4 (obsidian-research 可塑性喪失/spec/H2_W成長抑制と負側輸送_設計案_0916.md).
+specs/spec_mucap_el_0916.md (registered at PREREG_COMMIT); design: obsidian-research
+可塑性喪失/spec/H2_W成長抑制と負側輸送_設計案_0916.md section 10.4.
 The box is pmnist_rlmnist_0906's and is imported, not copied: the 1200-image subset, the task labels
 and evaluate_rl come from src/pmnist_rlmnist_0906.py; init, the rng streams and leaky from the host
 src/pmnist_0905.py; ELU1 from src/elu_growth_0909.py; state_sha256 and git_dirty from
@@ -53,6 +54,7 @@ from src import elu_growth_0909 as EG            # ELU1; not touched
 from src import mucap_el_0916 as MU              # the caps (checks S1-S3)
 
 EXPERIMENT = "mucap_el_0916"
+PREREG_COMMIT = "feb41ff6409f2e1aa2a8a145b9a0421fd24925a8"   # specs/spec_mucap_el_0916.md, pushed before any cap arm ran
 ARMS = ("ref", "cap_par", "cap_perp", "cap_both")
 N_IMAGES = RL.N_IMAGES                      # 1200
 BATCH = RL.BATCH                            # 16
@@ -402,8 +404,9 @@ def main() -> None:
     if all_led:
         np.savez_compressed(out / "ledger.npz", **all_led)
     (out / "provenance.json").write_text(json.dumps({
-        "experiment": EXPERIMENT, "spec": "H2 design note section 10.4",
-        "git_hash": SH.git_hash() if hasattr(SH, "git_hash") else None,
+        "experiment": EXPERIMENT, "spec": "specs/spec_mucap_el_0916.md", "prereg_commit": PREREG_COMMIT,
+        "spec_sha256": SH.file_sha256(me.parents[1] / "specs" / "spec_mucap_el_0916.md"),
+        "git_hash": H.git_hash(),
         "git_dirty_code": SH.git_dirty(["src", "analysis/mucap_el_0916"]),
         "hostname": socket.gethostname(), "platform": platform.platform(),
         "torch": torch.__version__, "python": sys.version.split()[0], "device": args.device,
