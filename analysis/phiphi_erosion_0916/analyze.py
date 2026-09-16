@@ -227,6 +227,62 @@ def regression_train(X,y):
         if np.linalg.norm(step)<1e-6:break
     return beta
 
+def snapshot():
+    """Exact frozen-state MSE gradient: self term versus actual width force."""
+    bits=torch.tensor(list(itertools.product([0.,1.],repeat=5)),dtype=torch.float64)
+    rows=[];checks=[];sources=[]
+    folder=ORIGINAL/'results/scale_attractor_b_0906'
+    for path in sorted((folder/'ckpts').glob('*.pt')):
+        ck=torch.load(path,weights_only=False,map_location='cpu')
+        if ck['step'] not in [1000000,5000000]:continue
+        a=float(ck['act_alpha']);n=ck['net'];w=n['W'].double();b=n['b'].double();v=n['v'].double()
+        nr=len(w);raw=torch.cat([ck['env']['flip_state'].double()[None].expand(32,-1,-1),bits[:,None].expand(-1,nr,-1)],2)
+        x=raw-ck['layer_means'][0].double()[None]
+        z=torch.einsum('rhd,prd->prh',w,x)+b
+        phi=torch.where(z>0,z,a*z);gate=torch.where(z>0,1.,a);q=phi*gate
+        te=ck['teacher'];tz=torch.einsum('rhd,prd->prh',te['W'].double(),raw)+te['b'].double()
+        y=((tz>=te['tau'].double()).double()*te['v'].double()).sum(-1)+te['cout'].double()
+        pred=(phi*v).sum(-1)+n['c'].double();err=pred-y
+        grad=2*v[:,:,None]*torch.einsum('prh,prd->rhd',err[:,:,None]*gate,x)/32
+        selfgrad=2*v[:,:,None]**2*torch.einsum('prh,prd->rhd',q,x)/32
+        fullrate=-(w[:,:,15:]*grad[:,:,15:]).sum(-1)/2
+        selfrate=-(w[:,:,15:]*selfgrad[:,:,15:]).sum(-1)/2
+        freeproj=torch.einsum('rhd,prd->prh',w[:,:,15:],x[:,:,15:])
+        formula=-v**2*(q*freeproj).mean(0)
+        closure=float((formula-selfrate).abs().max());assert closure<1e-10
+        # Independent automatic-differentiation check for all runs together.
+        ww=w.clone().requires_grad_(True);zz=torch.einsum('rhd,prd->prh',ww,x)+b
+        pp=(torch.where(zz>0,zz,a*zz)*v).sum(-1)+n['c'].double()
+        ag=torch.autograd.grad(((pp-y)**2).mean(0).sum(),ww)[0]
+        ge=float((ag-grad).abs().max());assert ge<1e-10
+        for r,run in enumerate(ck['runs']):
+            with np.load(folder/'logs'/f"{ck['arm']}_seed{run['seed']}.npz") as d:
+                ix=int(np.flatnonzero(d['step']==ck['step'])[0]);le=abs(float((err[:,r]**2).mean())-float(d['eval_loss_exact'][ix]))
+                ze=float(np.max(abs(z[:,r].mean(0).numpy()-d['layer1_zbar'][ix])))
+                assert le<1e-9 and ze<2e-5,(path,le,ze)
+            for unit in range(w.shape[1]):
+                rows.append(dict(a=a,step=ck['step'],seed=int(run['seed']),unit=unit,q=float(q[:,r,unit].mean()),
+                     qcov=float((q[:,r,unit]*(z[:,r,unit]-z[:,r,unit].mean())).mean()),
+                     qrad=float((q[:,r,unit]*freeproj[:,r,unit]).mean()),v=float(v[r,unit]),
+                     variance=float(z[:,r,unit].var(unbiased=False)),
+                     full_width_rate=float(fullrate[r,unit]),self_width_rate=float(selfrate[r,unit]),
+                     rest_width_rate=float(fullrate[r,unit]-selfrate[r,unit])))
+            checks.append(dict(path=path.name,seed=int(run['seed']),loss_error=le,z_error=ze,autograd_error=ge,self_projection_error=closure))
+        sources.append(dict(path=str(path),bytes=path.stat().st_size,sha256=sha(path)))
+    f=pd.DataFrame(rows);f.to_csv(RAW/'snapshot_forces.csv',index=False)
+    ss=[]
+    for (a,step,seed),g in f.groupby(['a','step','seed']):
+        ok=abs(g.full_width_rate)>1e-12
+        ss.append(dict(a=a,step=step,seed=seed,full_shrink_fraction=float((g.loc[ok,'full_width_rate']<0).mean()),
+                       self_shrink_fraction=float((g.self_width_rate<0).mean()),
+                       self_full_sign_agreement=float((np.sign(g.loc[ok,'self_width_rate'])==np.sign(g.loc[ok,'full_width_rate'])).mean()),
+                       self_abs_mean=float(g.self_width_rate.abs().mean()),full_abs_mean=float(g.full_width_rate.abs().mean()),
+                       rest_abs_mean=float(g.rest_width_rate.abs().mean()),
+                       q_full_spearman=spearman(g.q,-g.full_width_rate)))
+    pd.DataFrame(ss).to_csv(OUT/'snapshot_by_seed.csv',index=False)
+    savejson('snapshot_checks.json',checks);savejson('snapshot_sources.json',sources)
+    print('snapshot',len(rows),'unit-states',flush=True)
+
 def evaluate():
     with np.load(RAW/'conda_units.npz') as d:allf=pd.DataFrame(dict(d))
     valid=(abs(allf.dsigma2)>1e-6*np.maximum(allf['var'],1e-4))&(allf.reconstruction_valid>0)
@@ -344,5 +400,5 @@ def report():
     print(summary.to_string());print(pms[['arm','start','end','dsigma2','norm_delta','median_abs_cos']].to_string(index=False))
 
 if __name__=='__main__':
-    ap=argparse.ArgumentParser();ap.add_argument('stage',choices=['conda','pm','evaluate','report','algebra']);args=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('stage',choices=['conda','pm','evaluate','report','algebra','snapshot']);args=ap.parse_args()
     globals()[args.stage]()
