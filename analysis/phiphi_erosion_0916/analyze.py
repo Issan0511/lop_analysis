@@ -105,6 +105,9 @@ def conda():
             zc=np.einsum('tuj,pj->tup',w[idx],bits);z=zc+zb[si,:,None]
             phi=np.where(z>0,z,a*z)+c;gate=np.where(z>0,1.,a);q=phi*gate
             qmean=q.mean(2);var=np.mean(zc**2,2);cov=np.mean(q*zc,2)
+            pmin=phi.min(2);pmax=phi.max(2)
+            integral=.5*(pmax**2-pmin**2)
+            integral_abs=np.where(pmin*pmax<0,.5*(pmax**2+pmin**2),abs(integral))
             # Offset makes phi*phi' discontinuous at z=0. Float32 saved weights
             # cannot recover the branch at an exact kink; exclude these unit
             # snapshots instead of treating a .45/32 jump as a physical effect.
@@ -126,6 +129,8 @@ def conda():
                       task=np.broadcast_to(ws[idx,None]/10000,shape),unit=np.broadcast_to(np.arange(100),shape),
                       reconstruction_valid=safe,
                       q=qmean,qabs=np.mean(abs(q),2),qpos=np.mean(np.maximum(q,0),2),
+                      q_integral=integral,q_integral_abs=integral_abs,
+                      q_uniform=integral/np.maximum(z.max(2)-z.min(2),1e-30),
                       qneg=np.mean(np.maximum(-q,0),2),qcov=cov,qcov_v2=cov*vn[si]**2,
                       var=var,vabs=abs(vn[si]),zmean=zb[si],dsigma2=dn/4,radial=rad/4,injection=inj/4,
                       dw2_total=wn[np.searchsorted(step,ws[idx+1])]**2-wn[si]**2,
@@ -228,7 +233,7 @@ def evaluate():
     f=allf.loc[valid].copy();f['shrink']=f.dsigma2<0
     primary=f[f.aux==0];train=primary.seed<5;test=~train
     models={};metrics=[];fits=[];transfers=[]
-    features=['q','qabs','qpos','qneg','qcov','qcov_v2','var','vabs','qnearzero','qedges']
+    features=['q','qabs','qpos','qneg','q_integral','q_integral_abs','q_uniform','qcov','qcov_v2','var','vabs','qnearzero','qedges']
     for col in features:
         t,lo=threshold(primary.loc[train,col].to_numpy(),primary.loc[train,'shrink'].to_numpy())
         fits.append(dict(feature=col,threshold=t,shrink_if='le' if lo else 'gt'))
@@ -240,7 +245,7 @@ def evaluate():
     # Exact held-out-a scalar threshold, using separate seeds as well.
     for a in sorted(primary.a.unique()):
         tr=primary[(primary.a!=a)&(primary.seed<5)];te=primary[(primary.a==a)&(primary.seed>=5)]
-        for col in ['q','qabs','qcov','qcov_v2']:
+        for col in ['q','qabs','q_integral','q_uniform','qcov','qcov_v2']:
             t,lo=threshold(tr[col].to_numpy(),tr.shrink.to_numpy())
             for seed,g in te.groupby('seed'):
                 transfers.append(dict(a=a,seed=seed,feature=col,threshold=t,
@@ -282,8 +287,8 @@ def evaluate():
     # radial budget, not just the finite net width change. This is a task-level
     # decomposition, not the sum of per-update radial budgets.
     rrows=[]
-    for target in ['dsigma2','radial']:
-        for col in ['q','qabs','qcov','qcov_v2']:
+    for target in ['dsigma2','radial','dw2_total']:
+        for col in ['q','qabs','q_integral','q_uniform','qcov','qcov_v2']:
             tr=primary[train];x=tr[col].to_numpy();y=-tr[target].to_numpy()
             slope=np.mean((x-x.mean())*(y-y.mean()))/(np.var(x)+1e-30)
             intercept=y.mean()-slope*x.mean()
@@ -324,7 +329,7 @@ def report():
     axes[2].axhline(1,color='gray',ls='--');axes[2].set(title='condA: final / initial size',xlabel='Leaky negative slope a',ylabel='Median individual ratio');axes[2].legend()
     fig.tight_layout();fig.savefig(OUT/'verification.png',dpi=170);fig.savefig(OUT/'verification.pdf');plt.close(fig)
     verdict=[]
-    for col in ['q','qabs','qcov','qcov_v2']:
+    for col in ['q','qabs','q_integral','q_uniform','qcov','qcov_v2']:
         pooled=float(summary.loc[col,'ba']);min_a=float(core[core.feature==col].groupby('a').ba.median().min())
         verdict.append(dict(hypothesis='single_threshold_'+col,label='PREDICTIVE_SUPPORT' if pooled>=.8 and min_a>=.7 else 'NOT_SUFFICIENT',ba=pooled,min_slope_ba=min_a,grade='posthoc'))
     pd.DataFrame(verdict).to_csv(OUT/'verdict.csv',index=False)
