@@ -1,0 +1,137 @@
+{
+  "verdict": [
+    {
+      "part": "B",
+      "target": "L3 ELU1 (description, seen before registration)",
+      "label": "s0 ZERO_R / s1 ZERO_R / s2 ZERO_T"
+    },
+    {
+      "part": "B",
+      "target": "L3 SMINH",
+      "label": "TRAVEL",
+      "detail": "s0 TRAVEL / s1 TRAVEL / s2 TRAVEL"
+    },
+    {
+      "part": "C2",
+      "target": "L1 layer 2, t2",
+      "label": "NOT_TESTABLE",
+      "main": false
+    },
+    {
+      "part": "C2",
+      "target": "L1 layer 2, t5",
+      "label": "NOT_TESTABLE",
+      "main": false
+    },
+    {
+      "part": "C2",
+      "target": "L1 layer 2, t7",
+      "label": "ZERO_NOT_EPS",
+      "main": false
+    },
+    {
+      "part": "C2",
+      "target": "L1 layer 2, t10",
+      "label": "ZERO_NOT_EPS",
+      "main": false
+    },
+    {
+      "part": "C2",
+      "target": "L1 layer 2, t15",
+      "label": "ZERO_NOT_EPS",
+      "main": true
+    },
+    {
+      "part": "C2",
+      "target": "L1 layer 2, t20",
+      "label": "ZERO_NOT_EPS",
+      "main": true
+    },
+    {
+      "part": "C1",
+      "target": "L1 ref",
+      "label": "ZERO_NOT_EPS",
+      "detail": "FREEZE_AT_DEATH only 10/10, FROZEN_WHILE_LIVE 0/10, NO_FULL_DEATH 0/10"
+    },
+    {
+      "part": "C1",
+      "target": "L1 cap_perp",
+      "label": "ZERO_NOT_EPS",
+      "detail": "FREEZE_AT_DEATH only 9/10, FROZEN_WHILE_LIVE 0/10, NO_FULL_DEATH 1/10"
+    },
+    {
+      "part": "C1",
+      "target": "L1 cap_par",
+      "label": "ZERO_NOT_EPS",
+      "detail": "FREEZE_AT_DEATH only 8/10, FROZEN_WHILE_LIVE 0/10, NO_FULL_DEATH 2/10"
+    },
+    {
+      "part": "C1",
+      "target": "L1 cap_both",
+      "label": "ZERO_NOT_EPS",
+      "detail": "FREEZE_AT_DEATH only 8/10, FROZEN_WHILE_LIVE 0/10, NO_FULL_DEATH 2/10"
+    },
+    {
+      "part": "C3",
+      "target": "L1 ref layer 1",
+      "label": "HISTORY_DECAY",
+      "detail": "HISTORY_DECAY 10"
+    },
+    {
+      "part": "C3",
+      "target": "L1 cap_perp layer 1",
+      "label": "PARTIAL",
+      "detail": "HISTORY_DECAY 9, NOT_REACHED 1"
+    },
+    {
+      "part": "C3",
+      "target": "L1 cap_par layer 1",
+      "label": "PARTIAL",
+      "detail": "HISTORY_DECAY 8, NOT_REACHED 2"
+    },
+    {
+      "part": "C3",
+      "target": "L1 cap_both layer 1",
+      "label": "PARTIAL",
+      "detail": "HISTORY_DECAY 8, NOT_REACHED 2"
+    },
+    {
+      "part": "D1",
+      "target": "L2 eps arms (l2_wall variant)",
+      "label": "L2_NO_FLOOR"
+    }
+  ],
+  "predictions": [
+    [
+      "P1",
+      "C2 layer 2 t15 and t20 both ZERO_NOT_EPS",
+      true
+    ],
+    [
+      "P1b",
+      "C2 layer 2 t10 ZERO_NOT_EPS",
+      true
+    ],
+    [
+      "P2",
+      "C1 ref ZERO_NOT_EPS",
+      true
+    ],
+    [
+      "P3",
+      "C3 ref HISTORY_DECAY",
+      true
+    ],
+    [
+      "P4",
+      "B SMINH EPS_REAL",
+      false
+    ],
+    [
+      "P5",
+      "D1 L2_NO_FLOOR",
+      true
+    ]
+  ],
+  "checks_all_pass": true
+}
