@@ -78,6 +78,16 @@ class Act:
     def init_state(self, R: int, device, key: str) -> None:
         pass
 
+    def begin_step(self, R: int, B: int, device) -> None:
+        """Called once before every training step (outside a captured CUDA graph)."""
+        pass
+
+    def state(self) -> dict:
+        return {}
+
+    def load_state(self, st: dict) -> None:
+        pass
+
     def update(self, z1, z2) -> None:
         pass
 
@@ -140,19 +150,37 @@ class RandSmoothLeaky(SmoothLeaky):
         self.gen = None
 
     def init_state(self, R, device, key):
-        # one cuda generator per process; the draw covers every slot at once, so the
+        # one generator per process; the draw covers every slot at once, so the
         # sequence is a property of (arm, slots), not of the seed alone (spec §3)
         self.gen = torch.Generator(device=device)
         h = hashlib.sha256(f"{EXPERIMENT}|rsl_noise|{key}".encode()).digest()
         self.gen.manual_seed(int.from_bytes(h[:8], "little") & ((1 << 63) - 1))
         self.noise_seed = int(self.gen.initial_seed())
+        self.noise = None
+
+    def begin_step(self, R, B, device):
+        # U(0,1) for layer 1 then layer 2, into fixed buffers (a captured graph reads them)
+        if self.noise is None:
+            self.noise = [torch.empty(R, B, w, device=device) for w in (DIMS[1], DIMS[2])]
+        for buf in self.noise:
+            torch.rand(buf.shape, generator=self.gen, out=buf)
+
+    def state(self):
+        return {"gen": self.gen.get_state()}
+
+    def load_state(self, st):
+        self.gen.set_state(st["gen"])
 
     def draw(self, z):
         return self.l + (self.u - self.l) * torch.rand(z.shape, generator=self.gen,
                                                        device=z.device, dtype=z.dtype)
 
     def phi(self, z, layer=0, train=False):
-        return self._phi(z, self.draw(z) if train else self.a)
+        if not train:
+            return self._phi(z, self.a)
+        if self.noise is None:                       # standalone use (S-rsl-mode)
+            return self._phi(z, self.draw(z))
+        return self._phi(z, self.l + (self.u - self.l) * self.noise[layer])
 
 
 class ELU(Act):
@@ -212,6 +240,13 @@ class SnakeFamily(Act):
 
     def init_state(self, R, device, key):
         self.V = [torch.ones(R, w, device=device) for w in self.widths]
+
+    def state(self):
+        return {"V": [v.clone() for v in self.V]}
+
+    def load_state(self, st):
+        for v, src in zip(self.V, st["V"]):
+            v.copy_(src)                             # in place: a captured graph holds these
 
     def alpha(self, layer):
         return (self.c / self.V[layer].sqrt()).clamp(self.lo, self.hi)       # (R, n)
@@ -446,7 +481,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         hi: float = 3.0, progress=print, cifar: RC.Cifar10 | None = None,
         debug: dict | None = None, perturb: list[float] | None = None,
         nan_slot: int | None = None, snapshots: bool = True, checkpoint: bool = False,
-        resume: bool = False) -> dict:
+        resume: bool = False, graph: bool = True) -> dict:
     """Train R = len(seeds) * len(conds) runs in lockstep and write their rows/hists/snapshots.
 
     Check-only hooks (never used by the main run): `perturb[r]` multiplies slot r's W1 by
@@ -455,7 +490,11 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
 
     `checkpoint` writes out/ckpt.pt after every task (weights, Adam moments and step, alpha
     statistics, every generator's state, the rows); `resume` continues from it, bit for bit
-    (S-resume).  A checkpoint of a finished run can also extend it to more tasks."""
+    (S-resume).  A checkpoint of a finished run can also extend it to more tasks.
+
+    `graph` (cuda only) captures one training step as a CUDA graph and replays it: the same
+    kernels on the same static tensors, so the rows are the eager engine's bit for bit (S-graph),
+    without a host round trip per step."""
     t_start = time.time()
     act = make_act(arm, c, beta, lo, hi)
     slots = [(s, cd) for s in seeds for cd in conds]
@@ -498,7 +537,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                     q.copy_(v)
         tc = st["tc"]
         if act.adaptive:
-            act.V = [v.to(device) for v in st["V"]]
+            act.load_state({"V": st["V"]})
         if act.stochastic:
             act.gen.set_state(st["rsl_state"])
         for s in useeds:
@@ -521,13 +560,70 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         for r, (s, cd) in enumerate(slots):
             write_snapshot(snapshot_path(out, arm, cd, s, 0), P, act, r)      # t00 = init
 
+    # ---- one training step on static tensors (eager, or captured once and replayed)
+    b1, b2, eps = 0.9, 0.999, 1e-8
+    static_idx = torch.zeros(R, BATCH, dtype=torch.long, device=device)
+    Ydev = torch.zeros(R, N_IMAGES, dtype=torch.long, device=device)
+    inv_c1 = torch.zeros((), device=device)          # x / c (python float) == x * float32(1/c), bit for bit
+    inv_c2 = torch.zeros((), device=device)
+    step_t = torch.zeros((), dtype=torch.long, device=device)
+    acc_sum = torch.zeros(R, device=device)
+    bad_step = torch.full((R,), -1, dtype=torch.long, device=device)
+    last_hit = torch.zeros(R, device=device)
+
+    def step():
+        xb, yb = X[ar, static_idx], Ydev[ar, static_idx]                # gathers, no arithmetic
+        z1, a1, z2, a2, z3 = forward(P, xb, act, train=True)
+        lossv = F.cross_entropy(z3.reshape(-1, N_CLASSES), yb.reshape(-1),
+                                reduction="none").view(R, BATCH).mean(1)
+        hit = (z3.detach().argmax(-1) == yb).float().mean(1)
+        acc_sum.add_(hit)
+        last_hit.copy_(hit)
+        grads = torch.autograd.grad(lossv.sum(), P)
+        with torch.no_grad():
+            bad = ~torch.isfinite(lossv)
+            bad_step.copy_(torch.where((bad_step < 0) & bad, step_t, bad_step))
+            step_t.add_(1)
+            for p, gr, mi, vi in zip(P, grads, adam_m, adam_v):
+                mi.mul_(b1).add_(gr, alpha=1 - b1)
+                vi.mul_(b2).addcmul_(gr, gr, value=1 - b2)
+                p.sub_(lr * (mi * inv_c1) / ((vi * inv_c2).sqrt() + eps))
+            act.update(z1.detach(), z2.detach())
+
+    use_graph = graph and device.type == "cuda" and debug is None
+    cg = None
+    if use_graph:
+        # warm-up and capture both execute the step, so every tensor they touch is saved and
+        # put back in place afterwards (the graph keeps pointers to these very tensors)
+        keep = [q.detach().clone() for q in (*P, *adam_m, *adam_v, acc_sum, bad_step, step_t, last_hit)]
+        keep_act = act.state()
+        inv_c1.fill_(1.0); inv_c2.fill_(1.0)
+        side = torch.cuda.Stream()
+        side.wait_stream(torch.cuda.current_stream())
+        with torch.cuda.stream(side):
+            for _ in range(3):
+                act.begin_step(R, BATCH, device)
+                step()
+        torch.cuda.current_stream().wait_stream(side)
+        cg = torch.cuda.CUDAGraph()
+        act.begin_step(R, BATCH, device)
+        with torch.cuda.graph(cg):
+            step()
+        with torch.no_grad():
+            for q, v in zip((*P, *adam_m, *adam_v, acc_sum, bad_step, step_t, last_hit), keep):
+                q.copy_(v)
+        act.load_state(keep_act)
+        del keep
+
     for t in range(t_first, n_tasks + 1):
         lab = {s: RC.task_labels(g_lab[s]) for s in useeds}               # once per seed per task
         Y = torch.stack([lab[s] for s, cd in slots]).to(device)           # (R, 1200)
+        Ydev.copy_(Y)
         if debug is not None:
             debug.setdefault("labels", []).append(Y.cpu().clone())
-        acc_sum = torch.zeros(R, device=device)
-        bad_step = torch.full((R,), -1, dtype=torch.long, device=device)
+        acc_sum.zero_()
+        bad_step.fill_(-1)
+        step_t.zero_()
         t0 = time.time()
         for e in range(epochs):
             order = {s: torch.randperm(N_IMAGES, generator=g_batch[s]) for s in useeds}
@@ -535,30 +631,17 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             if debug is not None:
                 debug.setdefault("orders", []).append(ORD.cpu().clone())
             for j in range(STEPS_PER_EPOCH):
-                s_ = e * STEPS_PER_EPOCH + j
-                idx = ORD[:, j * BATCH:(j + 1) * BATCH]                   # (R, 16)
-                xb, yb = X[ar, idx], Y[ar, idx]                           # gathers, no arithmetic
-                z1, a1, z2, a2, z3 = forward(P, xb, act, train=True)
-                lossv = F.cross_entropy(z3.reshape(-1, N_CLASSES), yb.reshape(-1),
-                                        reduction="none").view(R, BATCH).mean(1)
-                hit = (z3.detach().argmax(-1) == yb).float().mean(1)
-                acc_sum += hit
-                grads = torch.autograd.grad(lossv.sum(), P)
-                with torch.no_grad():
-                    bad = ~torch.isfinite(lossv)
-                    bad_step = torch.where((bad_step < 0) & bad,
-                                           torch.tensor(s_, device=device), bad_step)
-                    tc += 1
-                    b1, b2, eps = 0.9, 0.999, 1e-8
-                    c1 = 1 - b1 ** tc
-                    c2 = 1 - b2 ** tc
-                    for p, gr, mi, vi in zip(P, grads, adam_m, adam_v):
-                        mi.mul_(b1).add_(gr, alpha=1 - b1)
-                        vi.mul_(b2).addcmul_(gr, gr, value=1 - b2)
-                        p -= lr * (mi / c1) / ((vi / c2).sqrt() + eps)
-                    act.update(z1.detach(), z2.detach())
+                static_idx.copy_(ORD[:, j * BATCH:(j + 1) * BATCH])
+                tc += 1
+                inv_c1.fill_(1.0 / (1 - b1 ** tc))
+                inv_c2.fill_(1.0 / (1 - b2 ** tc))
+                act.begin_step(R, BATCH, device)
+                if cg is not None:
+                    cg.replay()
+                else:
+                    step()
                 if debug is not None:
-                    debug.setdefault("online", []).append(hit.cpu().clone())
+                    debug.setdefault("online", []).append(last_hit.cpu().clone())
         if device.type == "cuda":
             torch.cuda.synchronize()
         step_ms = 1e3 * (time.time() - t0) / spt
@@ -626,7 +709,8 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             "hist": {"lo": RC.HIST_LO, "hi": RC.HIST_HI, "bins": RC.HIST_NB, "dtype": "int32",
                      "theta": {"lo": TH_LO, "hi": TH_HI, "bins": TH_NB} if act.adaptive else None,
                      "path": "hist/<arm>_<cond>_seed<seed>.npz"},
-            "engine": "stacked baddbmm, autograd, elementwise Adam (spec §2.2)",
+            "engine": "stacked baddbmm, autograd, elementwise Adam (spec §2.2)"
+                      + (", one step captured as a CUDA graph" if use_graph else ", eager"),
             "snapshots": "snap/<arm>_<cond>_seed<seed>/t<task>.npz: W1,b1,W2,b2,W3,b3 float32 "
                          "(+V1,V2 for adaptive arms) at init (t00) and every task's end, plus z1,z2 "
                          "(1200x100, float16, images in subset order) at every task's end; exact "
