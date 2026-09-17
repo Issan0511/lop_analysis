@@ -181,3 +181,10 @@ $P_C=E(\text{SC\_dyn\_r})-E(\text{SC\_dyn\_free\_r})$、$P_R=E(\text{RR\_dyn\_ca
 - `results/swap_ee_0917/runs/s<seed>/`（`prefix.csv`・`arms.csv`・`traj.csv`・`provenance.json` は git、`units.npz` は退避）。
 - 判定: `analysis/swap_ee_0917/verdict.py` → `results/swap_ee_0917/{summary.md,verdict.csv,paired.csv,provenance.json}`。
 - `units.npz` と `results/_checks_swap_ee_0917/` は `obsidian-research-data/swap_ee_0917/` へ退避し `backup_manifest.json` を commit。結果 commit の後、その日のうちに main へ統合し worktree と branch を消す。
+
+## 10. 実行記録（本走後の追記・計画は変えていない）
+
+- 本走: 2026-09-17 17:19–17:45、commit c194096、最大 4 並列（flock で直列起動）、10/10 seed 完走・失敗 0。1 seed 7.4–9.0 分。判定スクリプトは本走後に変更していない。
+- 再現の記録: 全 10 seed で ref の軌道 12/12 タスクが resp_ee と、cap12 の軌道 12/12 タスクが l2cap_ee_0917 の退避と一致。NR_r・S2u30r・S2dyn_10r・全影・全腕の分岐点の logits・動く腕の $d(0)$ もすべて一致（無効 seed なし）。S2dyn_10r と S2u30r の E は respdyn の記録と同値。
+- 判定: Q1 **REMAINDER_IN_BOTH**（$R_C$ +0.037 [+0.022, +0.053]・$D$ +0.016 [−0.012, +0.043]）、Q2 **BOTH_WAYS**（$L_S/TE$ 0.96・$G_R/TE$ 1.06）、Q3 $P_C$ **GROWTH_HELPS**・$P_R$ GROWTH_COSTS・$P_N$ **GROWTH_COSTS**・$P_F$ GROWTH_COSTS。
+- 独立検算（verdict.py を使わず arms.csv から）: 主な 10 量の平均と SD の差は 0。
