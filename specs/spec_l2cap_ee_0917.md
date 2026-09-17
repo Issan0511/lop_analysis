@@ -168,7 +168,7 @@ mucap_ee_0917 の spec §3 と同じ診断点・`units.npz`・`per_task.csv`。�
 | IMPAIRED | どの腕も立たない 75% |
 | cap1・ref が mucap_ee の記録と全 100 タスクで bit 一致（報告のみ） | 85% |
 
-**Issa の予測**: （登録後・本走前にチャットで記入）
+**Issa の予測**（2026-09-17・登録 commit b83d593 の後、第2層に上限を置いた腕を回す前にチャットの選択式で記入）: 主 cap12 **RESCUED**、cap12_bfix **RESCUED**、cap2 **COLLAPSED（ref より遅れて）**。cap1 は未記入。ラベルだけを記録し、Issa 自身の確率は付けない。Claude の最頻ラベルと一致。
 
 ## 8. 費用と実行
 
