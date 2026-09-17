@@ -53,7 +53,7 @@ from src import layer_chimera_rl_0914 as L       # engine for the per-layer chim
 
 EXPERIMENT = "neff_pred_0917"
 SPEC = "specs/spec_neff_pred_0917.md"
-PREREG_COMMIT = None                              # set to the registration commit before the main run
+PREREG_COMMIT = "f829fc2dfe3805ce3fa92f64a5f40da63724e141"   # specs/spec_neff_pred_0917.md, pushed before the main run
 ROOT = Path(__file__).resolve().parents[1]
 TASKS = 150
 EE_TASKS = 51
