@@ -1,0 +1,552 @@
+{
+  "experiment": "neff_pred_0917",
+  "started": "2026-09-17T14:21:10.798225",
+  "git_head": "31fcf5a25e27d772dfeb92d8212f8536490dc791",
+  "runner_sha256": "1eecb220bd5918eb905e51c37b84ccf6b7052132218c4e13b4fb5f345b42faca",
+  "verdict_sha256": "4c92af9ffea40c6847e5993111354ffc3ebd3c9254e9a3f678f3d4fd314ff6fd",
+  "calibrate_sha256": "534f2bf43800a3990d5e0d574e1761831e58a7515ff31ad2a01e7f2560369586",
+  "checks_sha256": "98676582ad42fa535f315e2f4983f3a72bd57a7cbec57fa7ea10fd2d6cb4c4e6",
+  "calibration_sha256": "55b5e1d4c2ed3d52bc297821a0380b74f682f84900c396489a3d53a786f4178f",
+  "S0a": {
+    "title": "GPU engines = their records (tasks 1-3, all shared columns)",
+    "target": "src/neff_pred_0917.py",
+    "threshold_derivation": "Exact equality (floats round-tripped through CSV) of every column the new rows share with the\n    record, for all 30 (B) and 24 (L) models and tasks 1-3.  Equality is the only tolerance: the engines\n    are imported unchanged and the draws are the records' own streams, so any difference is a change.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "B": {
+        "rows": 90,
+        "expected": 90,
+        "columns": 21,
+        "mismatch": {}
+      },
+      "L": {
+        "rows": 72,
+        "expected": 72,
+        "columns": 12,
+        "mismatch": {}
+      }
+    },
+    "tasks": 3,
+    "mutations": [
+      {
+        "mutation": "perm drawn before the batch orders",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tasks": 2,
+          "failed_items": [
+            "B: {'rows': 60, 'expected': 60, 'columns': 21, 'mismatch': {'online_acc': 30, 'online_ce': 30, 'train_ce': 30, 'zmean_l1': 30, 'gate_mean_l1': 30, 'lowgate_l1': 24, 'tinygate_l1': 12, 'neggate_l1': 12, 'zmed_l1': 30, 'zmean_l2': 30, 'gate_mean_l2': 30, 'lowgate_l2': 24, 'tinygate_l2': 14, 'neggate_l2': 12, 'zmed_l2': 30, 'wnorm_l1': 30, 'wnorm_l2': 30, 'wnorm_l3': 30, 'cnorm_l1': 30}}",
+            "L: {'rows': 48, 'expected': 48, 'columns': 12, 'mismatch': {'online_acc': 24, 'online_ce': 24, 'train_ce': 24, 'a1_rms': 24, 'wnorm_l1': 24, 'wnorm_l2': 24, 'wnorm_l3': 24, 'cnorm_l1': 24, 'lowgate_l1': 12, 'nearzero_l1': 24}}"
+          ]
+        }
+      },
+      {
+        "mutation": "PM trained on random labels",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tasks": 2,
+          "failed_items": [
+            "B: {'rows': 60, 'expected': 60, 'columns': 21, 'mismatch': {'online_acc': 30, 'online_ce': 30, 'train_acc': 6, 'train_ce': 30, 'zmean_l1': 30, 'gate_mean_l1': 30, 'lowgate_l1': 24, 'tinygate_l1': 12, 'neggate_l1': 12, 'zmed_l1': 30, 'zmean_l2': 30, 'gate_mean_l2': 30, 'lowgate_l2': 24, 'tinygate_l2': 15, 'neggate_l2': 12, 'zmed_l2': 30, 'wnorm_l1': 30, 'wnorm_l2': 30, 'wnorm_l3': 30, 'cnorm_l1': 30}}",
+            "L: {'rows': 48, 'expected': 48, 'columns': 12, 'mismatch': {'online_acc': 24, 'online_ce': 24, 'train_acc': 4, 'train_ce': 24, 'a1_rms': 24, 'wnorm_l1': 24, 'wnorm_l2': 24, 'wnorm_l3': 24, 'cnorm_l1': 24, 'lowgate_l1': 12, 'nearzero_l1': 24}}"
+          ]
+        }
+      },
+      {
+        "mutation": "RL labels from the next seed's stream",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tasks": 2,
+          "failed_items": [
+            "B: {'rows': 60, 'expected': 60, 'columns': 21, 'mismatch': {'floor_acc': 30, 'online_acc': 30, 'online_ce': 30, 'train_acc': 9, 'train_ce': 30, 'zmean_l1': 30, 'gate_mean_l1': 30, 'lowgate_l1': 24, 'tinygate_l1': 12, 'neggate_l1': 12, 'zmed_l1': 30, 'zmean_l2': 30, 'gate_mean_l2': 30, 'lowgate_l2': 24, 'tinygate_l2': 11, 'neggate_l2': 12, 'zmed_l2': 30, 'wnorm_l1': 30, 'wnorm_l2': 30, 'wnorm_l3': 30, 'cnorm_l1': 30}}",
+            "L: {'rows': 48, 'expected': 48, 'columns': 12, 'mismatch': {'floor_acc': 24, 'online_acc': 24, 'online_ce': 24, 'train_acc': 7, 'train_ce': 24, 'a1_rms': 24, 'wnorm_l1': 24, 'wnorm_l2': 24, 'wnorm_l3': 24, 'cnorm_l1': 24, 'lowgate_l1': 12, 'nearzero_l1': 24}}"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 175.7
+  },
+  "all_pass": true,
+  "S0b": {
+    "title": "CPU ee path = resp_ee_0917 s0 prefix (tasks 1-3)",
+    "target": "src/neff_pred_0917.py",
+    "threshold_derivation": "Exact equality with resp_ee_0917 runs/s0/prefix.csv for tasks 1-3: state sha256, online accuracy\n    and both layers' neffT/gtr/zero.  The ee path calls resp_ee's own run_prefix, so equality is the only\n    tolerance.",
+    "pass": true,
+    "failed_items": [],
+    "wall_s": 11.388772010803223,
+    "mutations": [
+      {
+        "mutation": "seed offset",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "wall_s": 11.41490125656128,
+          "failed_items": [
+            "t1 state_sha256",
+            "t1 online_acc",
+            "t1 online_ce",
+            "t1 neffT1_end",
+            "t1 neffT2_end",
+            "t1 gtr1_end",
+            "t1 gtr2_end",
+            "t2 state_sha256"
+          ]
+        }
+      },
+      {
+        "mutation": "one epoch short",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "wall_s": 11.266458749771118,
+          "failed_items": [
+            "t1 state_sha256",
+            "t1 online_acc",
+            "t1 online_ce",
+            "t1 neffT1_end",
+            "t1 neffT2_end",
+            "t1 gtr1_end",
+            "t1 gtr2_end",
+            "t2 state_sha256"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 34.1
+  },
+  "S1": {
+    "title": "statistics = per-unit loop; they read the backward's factor",
+    "target": "src/neff_pred_0917.py",
+    "threshold_derivation": "(i) Against the per-unit loop: relative 1e-12 (float64 sums of <= 64 terms, each exact from float32;\n    the loop uses fsum, the tensor path plain sums: the difference is bounded by 64 eps64 relative).\n    Designed units: dead (0), constant (1), one image (1/N), mixed signs (abs != sgn), subnormal float32\n    values (their squares underflow float32; a float32 path gives 0 or nan).\n    (ii) Each engine's backward, rebuilt with the g the statistics read, gives bit-equal gradients.",
+    "pass": true,
+    "failed_items": [],
+    "mutations": [
+      {
+        "mutation": "abs sum uses signed g",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "neff_abs max rel err 0.999",
+            "mixed-sign unit: signed n_eff not below abs"
+          ]
+        }
+      },
+      {
+        "mutation": "float32 arithmetic",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "neff_abs max rel err 1",
+            "neff_sgn max rel err 1",
+            "gabs max rel err 1.04e-07",
+            "designed unit 4 neff_abs = [0. 0.] != 1.0"
+          ]
+        }
+      },
+      {
+        "mutation": "dead unit counted as 1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "neff_abs max rel err 1e+300",
+            "neff_sgn max rel err 1e+300",
+            "designed unit 0 neff_abs = [1. 1.] != 0.0"
+          ]
+        }
+      },
+      {
+        "mutation": "N missing from the denominator",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "neff_abs max rel err 63",
+            "neff_sgn max rel err 63",
+            "designed unit 1 neff_abs = [64. 64.] != 1.0",
+            "designed unit 2 neff_abs = [1. 1.] != 0.015625",
+            "designed unit 4 neff_abs = [64. 64.] != 1.0"
+          ]
+        }
+      },
+      {
+        "mutation": "B gate of layer 2 read on layer 1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "B: gradient 0 rebuilt from the read g differs",
+            "B: gradient 1 rebuilt from the read g differs"
+          ]
+        }
+      },
+      {
+        "mutation": "L layer masks swapped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "L: gradient 0 rebuilt from the read g differs",
+            "L: gradient 1 rebuilt from the read g differs",
+            "L: gradient 2 rebuilt from the read g differs",
+            "L: gradient 3 rebuilt from the read g differs"
+          ]
+        }
+      },
+      {
+        "mutation": "L layer-1 derivative floored at 0.2",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "L: gradient 0 rebuilt from the read g differs",
+            "L: gradient 1 rebuilt from the read g differs"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 1.0
+  },
+  "S2": {
+    "title": "RL start(t+1) = end(t); PM start is on the new permutation",
+    "target": "src/neff_pred_0917.py",
+    "threshold_derivation": "Bitwise: RL start(t+1) = end(t) for every statistic and model (same images, same weights); PM\n    start(t+1) != end(t) in at least one statistic for every model (a new permutation), so the RL\n    equality is not a read of the same tensor twice.",
+    "pass": true,
+    "failed_items": [],
+    "n_rl": 54,
+    "n_pm": 54,
+    "keys": [
+      "dead_l1",
+      "dead_l2",
+      "gabs_l1",
+      "gabs_l2",
+      "gsgn_l1",
+      "gsgn_l2",
+      "neff_abs_l1",
+      "neff_abs_l2",
+      "neff_sgn_l1",
+      "neff_sgn_l2",
+      "neg_l1",
+      "neg_l2",
+      "tiny_l1",
+      "tiny_l2",
+      "zbar_l1",
+      "zbar_l2",
+      "zero_l1",
+      "zero_l2"
+    ],
+    "mutations": [
+      {
+        "mutation": "statistics read after the task instead of before (weights moved)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_rl": 27,
+          "n_pm": 27,
+          "failed_items": [
+            "RL B ELU1/ELU1 s0 t1: start != end",
+            "RL B ELU1/ELU1 s1 t1: start != end",
+            "RL B ELU1/ELU1 s2 t1: start != end",
+            "RL B GELU/GELU s0 t1: start != end",
+            "RL B GELU/GELU s1 t1: start != end",
+            "RL B GELU/GELU s2 t1: start != end",
+            "RL B LR/LR s0 t1: start != end",
+            "RL B LR/LR s1 t1: start != end"
+          ]
+        }
+      },
+      {
+        "mutation": "start read before the new inputs are loaded",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_rl": 27,
+          "n_pm": 27,
+          "failed_items": [
+            "PM B ELU1/ELU1 s0 t1: start == end",
+            "PM B ELU1/ELU1 s1 t1: start == end",
+            "PM B ELU1/ELU1 s2 t1: start == end",
+            "PM B GELU/GELU s0 t1: start == end",
+            "PM B GELU/GELU s1 t1: start == end",
+            "PM B GELU/GELU s2 t1: start == end",
+            "PM B LR/LR s0 t1: start == end",
+            "PM B LR/LR s1 t1: start == end"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 77.7
+  },
+  "S3": {
+    "title": "points: x, E from row t+1; E0 from task 3; F clipped",
+    "target": "analysis/neff_pred_0917/verdict.py",
+    "threshold_derivation": "Synthetic rows whose start stats encode the task (x = 1/(10 task)), whose end stats encode\n    -task, and whose online accuracy encodes the task; the points must pick x from row t+1's start,\n    E from row t+1, E0 from task 3, and clip F to [0, 1].  Exact equality (constructed values).",
+    "pass": true,
+    "failed_items": [],
+    "mutations": [
+      {
+        "mutation": "x from row t",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "t1 x 2.1 != 2.05",
+            "t2 x 2.05 != 2.033333333333333",
+            "t3 x 2.033333333333333 != 2.025",
+            "t4 x 2.025 != 2.02",
+            "t5 x 2.02 != 2.0166666666666666",
+            "t6 x 2.0166666666666666 != 2.0142857142857142"
+          ]
+        }
+      },
+      {
+        "mutation": "E0 from task 2",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "t1 E/E0",
+            "t1 F 1.0 != 0.2",
+            "t2 E/E0",
+            "t3 E/E0",
+            "t3 F 1.0 != 0.4000000000000001",
+            "t4 E/E0",
+            "t4 F 1.0 != 0.49999999999999994",
+            "t5 E/E0"
+          ]
+        }
+      },
+      {
+        "mutation": "F not clipped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "t6 F 1.7 != 1.0",
+            "F not clipped"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.0
+  },
+  "S4": {
+    "title": "verdict on synthetic shards",
+    "target": "analysis/neff_pred_0917/verdict.py",
+    "threshold_derivation": "Synthetic shards with known answers (on-curve boxes, a box that falls below the band, the CPU box\n    off the curve, n_eff tied with the mean derivative) -> the registered label; malformed shards ->\n    INVALID.  The on-curve points sit exactly on the fitted curve, far inside any band.",
+    "pass": true,
+    "failed_items": [],
+    "labels": {
+      "all_on_curve": "GENERALIZES",
+      "gelu_low": "BOX_SPECIFIC",
+      "gelu_partial": "BOX_SPECIFIC",
+      "ee_off": "NOT_PREDICTIVE",
+      "tied": "PREDICTS_NOT_BEST",
+      "missing_seed": "INVALID",
+      "wrong_prereg": "INVALID",
+      "dirty": "INVALID"
+    },
+    "mutations": [
+      {
+        "mutation": "pass share 0.5",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "gelu_partial: GENERALIZES != BOX_SPECIFIC"
+          ]
+        }
+      },
+      {
+        "mutation": "EL box read on its leaky layer",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "all_on_curve: BOX_SPECIFIC != GENERALIZES",
+            "tied: BOX_SPECIFIC != PREDICTS_NOT_BEST"
+          ]
+        }
+      },
+      {
+        "mutation": "(b) ignored",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "tied: GENERALIZES != PREDICTS_NOT_BEST"
+          ]
+        }
+      },
+      {
+        "mutation": "CPU box not required",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ee_off: GENERALIZES != NOT_PREDICTIVE"
+          ]
+        }
+      },
+      {
+        "mutation": "prereg not enforced",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "wrong_prereg: GENERALIZES != INVALID"
+          ]
+        }
+      },
+      {
+        "mutation": "dirty start accepted",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "dirty: GENERALIZES != INVALID"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 13.0
+  },
+  "S5": {
+    "title": "calibration rebuilt, optimal, LOSO-covered",
+    "target": "analysis/neff_pred_0917/calibrate.py",
+    "threshold_derivation": "(i) The committed calibration.json is what calibrate.py builds now (byte-equal JSON of the fitted\n    entries); (ii) its input sha256 are the committed resp_ee files; (iii) the fitted (c, w) is a grid\n    least-squares optimum: no step of the last grid (2e-5) in c or w lowers the SSE; (iv) the LOSO\n    coverage of the primary band is at least the binomial 1% quantile of Bin(40, 0.95).",
+    "pass": true,
+    "failed_items": [],
+    "loso_inside": 39,
+    "loso_floor": 34,
+    "mutations": [
+      {
+        "mutation": "fit from t = 1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "loso_inside": 39,
+          "loso_floor": 34,
+          "failed_items": [
+            "L2.c: rebuilt -0.92308000000012 != registered -0.9229800000001199",
+            "L2.w: rebuilt 0.28202000000001015 != registered 0.28512000000001025",
+            "L2.q: rebuilt [0.08010926559744833, 0.19292360627232163, 0.0723453570239605] != registered [0.07794779735328285, 0.19108115570281414, 0.08883082978164314]",
+            "L2.n_bin: rebuilt [145, 26, 39] != registered [145, 26, 29]",
+            "min.c: rebuilt -0.9289600000001201 != registered -0.9291600000001203",
+            "min.w: rebuilt 0.26362000000001024 != registered 0.26642000000001004",
+            "min.q: rebuilt [0.09419884941986605, 0.20889819266701826, 0.0974221645535811] != registered [0.0931755875371302, 0.20723168905255795, 0.1014086297314607]",
+            "min.n_bin: rebuilt [146, 24, 40] != registered [146, 24, 30]"
+          ]
+        }
+      },
+      {
+        "mutation": "E0 from task 2",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "loso_inside": 39,
+          "loso_floor": 34,
+          "failed_items": [
+            "L2.c: rebuilt -0.9424400000001195 != registered -0.9229800000001199",
+            "L2.w: rebuilt 0.27804000000001017 != registered 0.28512000000001025",
+            "L2.q: rebuilt [0.07576844346407044, 0.2049543450567991, 0.10458112383958473] != registered [0.07794779735328285, 0.19108115570281414, 0.08883082978164314]",
+            "L2.n_bin: rebuilt [144, 26, 30] != registered [145, 26, 29]",
+            "min.c: rebuilt -0.9473000000001197 != registered -0.9291600000001203",
+            "min.w: rebuilt 0.2610800000000102 != registered 0.26642000000001004",
+            "min.q: rebuilt [0.08691466301323772, 0.22001383652079376, 0.10141293182746858] != registered [0.0931755875371302, 0.20723168905255795, 0.1014086297314607]",
+            "min.n_bin: rebuilt [145, 25, 30] != registered [146, 24, 30]"
+          ]
+        }
+      },
+      {
+        "mutation": "band at 50%",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "loso_inside": 19,
+          "loso_floor": 34,
+          "failed_items": [
+            "L2.q: rebuilt [0.01630986276049849, 0.045021216228201044, 0.053215195910554014] != registered [0.07794779735328285, 0.19108115570281414, 0.08883082978164314]",
+            "min.q: rebuilt [0.017067090006928718, 0.04581781200091967, 0.07050602304622389] != registered [0.0931755875371302, 0.20723168905255795, 0.1014086297314607]",
+            "arms26.q differs",
+            "LOSO 19/40 below 34"
+          ]
+        }
+      },
+      {
+        "mutation": "coarse grid only",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "loso_inside": 39,
+          "loso_floor": 34,
+          "failed_items": [
+            "L2.c: rebuilt -0.9200000000001083 != registered -0.9229800000001199",
+            "L2.w: rebuilt 0.27999999999999997 != registered 0.28512000000001025",
+            "L2.q: rebuilt [0.08254220704060033, 0.1916886169997376, 0.0863142272982097] != registered [0.07794779735328285, 0.19108115570281414, 0.08883082978164314]",
+            "L2: SSE lower at (-2e-05, 0)",
+            "L2: SSE lower at (0, 2e-05)",
+            "min.c: rebuilt -0.9300000000001081 != registered -0.9291600000001203",
+            "min.w: rebuilt 0.26999999999999996 != registered 0.26642000000001004",
+            "min.q: rebuilt [0.086462307455913, 0.2056072251037746, 0.1037854565046874] != registered [0.0931755875371302, 0.20723168905255795, 0.1014086297314607]"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 151.5
+  },
+  "S6": {
+    "title": "CLI = in-process, with provenance",
+    "target": "src/neff_pred_0917.py",
+    "threshold_derivation": "The CLI's shards equal the in-process ones (task 1: ee state sha256 = resp_ee s0; gpu rows = the\n    S0a rows for task 1), and provenance says: flush on (ee), deterministic and no TF32 (gpu), git state\n    read at start, this spec and prereg field present.",
+    "pass": true,
+    "failed_items": [],
+    "mutations": [
+      {
+        "mutation": "CLI leaves flush off",
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ee flush_denormal not on"
+          ]
+        }
+      },
+      {
+        "mutation": "CLI leaves determinism off",
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "gpu not deterministic / tf32 on"
+          ]
+        }
+      },
+      {
+        "mutation": "CLI ignores --threads",
+        "detected": true,
+        "raised": "AssertionError(\"mutation anchor occurs 0 times: '        torch.set_num_threads(args.threads)\\\\n'\")"
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 80.8
+  },
+  "S-cost": {
+    "gpu_sec_per_task": 19.543567657470703,
+    "gpu_peak_rss_gib": 1.8370513916015625,
+    "ee_sec_per_task_t1_3": 3.7962573369344077,
+    "ee_peak_rss_gib": 2.064422607421875,
+    "resp_ee_prefix_sec_per_task": 4.639945181933316,
+    "note": "the ee box slows as layer 2 sinks; resp_ee's 22-task prefix is the reference"
+  },
+  "finished": "2026-09-17T14:30:04.684717"
+}
