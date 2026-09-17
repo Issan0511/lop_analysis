@@ -150,3 +150,10 @@ Random Label MNIST（1200 枚固定）、784–100–100–10、両隠れ層 ELU
 
 - `results/escape_ee_0917/runs/s<seed>/`（`prefix.csv`・`arms.csv`・`traj.csv`・`provenance.json` は git、`units.npz` は退避）。判定: `analysis/escape_ee_0917/verdict.py` → `results/escape_ee_0917/{summary.md,verdict.csv,paired.csv,provenance.json}`。
 - `units.npz` と `results/_checks_escape_ee_0917/` は `obsidian-research-data/escape_ee_0917/` へ退避し `backup_manifest.json` を commit。結果 commit の後、その日のうちに main へ統合し worktree と branch を消す。
+
+## 10. 実行記録（本走後の追記・計画は変えていない）
+
+- 本走: 2026-09-17 18:32–18:58、commit 52c99b7、最大 4 並列、10/10 seed 完走・失敗 0。1 seed 7.1–9.2 分。判定スクリプトは本走後に変更していない。
+- 再現: 全 seed で自然軌道 12/12 タスクが resp_ee と一致、S2dyn_10r・S2u30r・S2_10r・N2r は respdyn と resp_ee の記録と 2 タスクとも一致、影・分岐点の logits・$d(0)$ もすべて一致（無効 seed なし）。報告のみの記録: S2dyn_frz の online は 10/10 seed で床と一致。S2u30r_c12 の状態は 9/10 seed で床と一致し、seed 4 は開始時に微分が 0 でない (ユニット, 画像) が 0.000009 残っていて上限が第1層を書いた（online は 2 タスクとも床と同値）。
+- 判定: 主 **ESCAPE_NOT_MANIPULATED**（適用条件 (C) 不成立: $\Delta{\rm climb}$ = +0.54 [−0.50, +1.58]・5/10）。主の 2 量そのものは $\Delta R$ = +0.046 [+0.031, +0.061]・$R_{c12}$ = +0.066 [+0.041, +0.091]（97.5%・ともに 10/10）。並び **CLIMB_UNRESOLVED**（$\rho$ 平均 +0.23・7 対 3・p 0.34）、固定した場 **FIX_REMAINDER_REDUCED**（+0.074・10/10）、読みのフラグ **NO_IMPAIRMENT_FLAG**（$I$ = −0.017）。
+- 独立検算（verdict.py を使わず arms.csv から）: 主な 6 量の平均と SD の差は 0。
