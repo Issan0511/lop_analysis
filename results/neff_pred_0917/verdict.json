@@ -1,0 +1,233 @@
+{
+  "problems": [],
+  "boxes": {
+    "RL_EE_cpu": {
+      "engine": "ee",
+      "env": "RL",
+      "act1": "ELU1",
+      "act2": "ELU1",
+      "layer": 2,
+      "n": 15,
+      "inside": 15,
+      "need": 12,
+      "pass": true,
+      "below": 0,
+      "above": 0
+    },
+    "RL_GELU": {
+      "engine": "B",
+      "env": "RL",
+      "act1": "GELU",
+      "act2": "GELU",
+      "layer": 2,
+      "n": 15,
+      "inside": 3,
+      "need": 12,
+      "pass": false,
+      "below": 12,
+      "above": 0
+    },
+    "PM_GELU": {
+      "engine": "B",
+      "env": "PM",
+      "act1": "GELU",
+      "act2": "GELU",
+      "layer": 2,
+      "n": 18,
+      "inside": 12,
+      "need": 15,
+      "pass": false,
+      "below": 0,
+      "above": 6
+    },
+    "RL_EL": {
+      "engine": "L",
+      "env": "RL",
+      "act1": "ELU1",
+      "act2": "LR",
+      "layer": 1,
+      "n": 15,
+      "inside": 7,
+      "need": 12,
+      "pass": false,
+      "below": 0,
+      "above": 8
+    }
+  },
+  "b": {
+    "rho": {
+      "neff": 0.0848403569969786,
+      "gmean": 0.2783722111479812,
+      "zero": 0.5301092913457937
+    },
+    "n": 48,
+    "pass": false
+  },
+  "label": "BOX_SPECIFIC",
+  "failing_boxes": [
+    "RL_GELU",
+    "PM_GELU",
+    "RL_EL"
+  ],
+  "timing": {
+    "RL_EE_cpu": {
+      "10": {
+        "T_x": 6,
+        "T_F": 6,
+        "last_t": 50
+      },
+      "11": {
+        "T_x": 7,
+        "T_F": 7,
+        "last_t": 50
+      },
+      "12": {
+        "T_x": 6,
+        "T_F": 6,
+        "last_t": 50
+      }
+    },
+    "RL_GELU": {
+      "0": {
+        "T_x": null,
+        "T_F": 7,
+        "last_t": 149
+      },
+      "1": {
+        "T_x": null,
+        "T_F": 6,
+        "last_t": 149
+      },
+      "2": {
+        "T_x": null,
+        "T_F": 7,
+        "last_t": 149
+      }
+    },
+    "PM_GELU": {
+      "0": {
+        "T_x": 56,
+        "T_F": 62,
+        "last_t": 149
+      },
+      "1": {
+        "T_x": 78,
+        "T_F": 93,
+        "last_t": 149
+      },
+      "2": {
+        "T_x": 56,
+        "T_F": 60,
+        "last_t": 149
+      }
+    },
+    "RL_EL": {
+      "0": {
+        "T_x": 18,
+        "T_F": 20,
+        "last_t": 149
+      },
+      "1": {
+        "T_x": 14,
+        "T_F": 17,
+        "last_t": 149
+      },
+      "2": {
+        "T_x": 13,
+        "T_F": 16,
+        "last_t": 149
+      }
+    }
+  },
+  "predictions": {
+    "label": {
+      "pred": "BOX_SPECIFIC",
+      "prob": 0.8,
+      "obs": "BOX_SPECIFIC",
+      "hit": true
+    },
+    "pass_RL_EE_cpu": {
+      "prob_pass": 0.85,
+      "obs": true,
+      "hit": true
+    },
+    "pass_RL_GELU": {
+      "prob_pass": 0.15,
+      "obs": false,
+      "hit": true
+    },
+    "pass_PM_GELU": {
+      "prob_pass": 0.55,
+      "obs": false,
+      "hit": false
+    },
+    "pass_RL_EL": {
+      "prob_pass": 0.45,
+      "obs": false,
+      "hit": true
+    },
+    "b": {
+      "prob_pass": 0.45,
+      "obs": false,
+      "hit": true
+    },
+    "gelu_t50_below": {
+      "prob": 0.8,
+      "obs": 3,
+      "hit": true
+    },
+    "el_t50_above": {
+      "prob": 0.4,
+      "obs": 3,
+      "hit": false
+    },
+    "pm_timing_close": {
+      "prob": 0.55,
+      "obs": 1,
+      "hit": false
+    },
+    "design_note": {
+      "RL_EE_cpu": {
+        "prob_pass": 0.85,
+        "obs": true,
+        "hit": true
+      },
+      "RL_GELU": {
+        "prob_pass": 0.6,
+        "obs": false,
+        "hit": false
+      },
+      "PM_GELU": {
+        "prob_pass": 0.55,
+        "obs": false,
+        "hit": false
+      },
+      "RL_EL": {
+        "prob_pass": 0.4,
+        "obs": false,
+        "hit": true
+      }
+    },
+    "n_hit": 6,
+    "n_total": 9
+  },
+  "link": {
+    "B": {
+      "flag": "LINKED",
+      "compared_rows": 4500,
+      "expected_rows": 4500,
+      "columns": 21,
+      "mismatches": {},
+      "tasks": 150
+    },
+    "L": {
+      "flag": "LINKED",
+      "compared_rows": 1200,
+      "expected_rows": 1200,
+      "columns": 12,
+      "mismatches": {},
+      "tasks": 50
+    }
+  },
+  "calibration_sha256": "55b5e1d4c2ed3d52bc297821a0380b74f682f84900c396489a3d53a786f4178f"
+}

@@ -1,0 +1,1081 @@
+{
+  "run_id": "l2cap_ee_0917",
+  "started_at": "2026-09-17T09:18:23.012201+09:00",
+  "spec": "specs/spec_l2cap_ee_0917.md",
+  "prereg_commit": "b83d59335fd72e0ae4787f139752e253e1b63df1",
+  "code_sha256": {
+    "src/mucap_el_run_0916.py": "a397eed57a84f20ce3fae0de3c20d6455b6d0e3077189cdb2c3a4a3069234606",
+    "src/l2cap_ee_run_0917.py": "9b71c4d17466107c6fe1bdcc19761e90e7893d4a021076bd531e714ce97159f3",
+    "src/l2cap_ee_0917.py": "858a9f36a4368c85a3b53e632616624bb40100773fff105ab40f05bd7c600135",
+    "analysis/l2cap_ee_0917/verdict.py": "c1241ded6bbdc98aff681cb4e76d250dfb5e1baec0789a9ea89dde665bf87827",
+    "analysis/l2cap_ee_0917/checks.py": "e33cbfdca91914178ce85aa25a0bcb603a9f79646f688a1b36567e5d0bb020b8",
+    "src/mucap_el_0916.py": "4f337bfa9aff872fce30a3b880cd57cf552034e30ae77edd04d8de812633e67a"
+  },
+  "torch": "2.13.0+cu130",
+  "threads": 1,
+  "S1_S-mu-basis": {
+    "title": "S1 e is the mean-image axis and zbar = q||mu|| + b holds on the fixed set (0916 record; src/mucap_el_0916.py unchanged)",
+    "pass": true,
+    "all_mutations_detected": true,
+    "record": "results/mucap_el_0916/checks.json",
+    "record_sha256_of_caps": "4f337bfa9aff872fce30a3b880cd57cf552034e30ae77edd04d8de812633e67a",
+    "caps_sha256_now": "4f337bfa9aff872fce30a3b880cd57cf552034e30ae77edd04d8de812633e67a",
+    "mutations_detected": "4/4"
+  },
+  "S2_S-mu-projection": {
+    "title": "S2 each cap writes its own component only, keeps the other, tallies match (0916 record; src/mucap_el_0916.py unchanged)",
+    "pass": true,
+    "all_mutations_detected": true,
+    "record": "results/mucap_el_0916/checks.json",
+    "record_sha256_of_caps": "4f337bfa9aff872fce30a3b880cd57cf552034e30ae77edd04d8de812633e67a",
+    "caps_sha256_now": "4f337bfa9aff872fce30a3b880cd57cf552034e30ae77edd04d8de812633e67a",
+    "mutations_detected": "7/7"
+  },
+  "S3_S-mu-order": {
+    "title": "S3 the caps commute, are idempotent, and touch nothing else (0916 record; src/mucap_el_0916.py unchanged)",
+    "pass": true,
+    "all_mutations_detected": true,
+    "record": "results/mucap_el_0916/checks.json",
+    "record_sha256_of_caps": "4f337bfa9aff872fce30a3b880cd57cf552034e30ae77edd04d8de812633e67a",
+    "caps_sha256_now": "4f337bfa9aff872fce30a3b880cd57cf552034e30ae77edd04d8de812633e67a",
+    "mutations_detected": "3/3"
+  },
+  "all_pass": true,
+  "S0_S-el-unchanged": {
+    "title": "S0 the shared runner's EL path reproduces the 0916 shards",
+    "target": "src/mucap_el_run_0916.py",
+    "threshold_derivation": "The shared runner's default path (act2_name=None) is the 0916 EL box: for tasks 1-2 of the\n    recorded shards ref_s0 and cap_both_s0 (80 epochs, ledger on), (i) every per_task.csv column the 0916\n    shard has, except memo_acc, is equal as written (csv round-trips floats exactly), (ii) every\n    units.npz and ledger.npz array the archived 0916 shard has is bit-equal on the task 1-2 rows (the\n    archive copy is used only when its sha256 matches backup_manifest.json), (iii) the task-1-end state\n    hash equals the 0916 provenance's.  (iv) memo_acc, which 0916 computed on an ELU->ELU copy of the\n    net, now equals the accuracy of the trained ELU->leaky net recomputed from the task-1-end weights,\n    and the recorded 0916 value equals the ELU->ELU copy's (the bug was what this says it was).\n    (v) the new column major_frac is the largest label count / 1200.  Bit and string comparisons only.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "ref_s0": {
+        "i_per_task_columns": true,
+        "ii_arrays": true,
+        "iii_task1_state": true,
+        "iv_memo_is_the_net": true,
+        "iv_old_memo_was_ee_copy": true,
+        "v_major_frac": true,
+        "nonvacuous": true,
+        "bad_columns": [],
+        "n_columns": 76,
+        "bad_arrays": [],
+        "n_arrays": 100,
+        "archive_used": [
+          "/home/issan/Projects/obsidian-research-data/mucap_el_0916/results/mucap_el_0916/runs/ref_s0/units.npz",
+          "/home/issan/Projects/obsidian-research-data/mucap_el_0916/results/mucap_el_0916/runs/ref_s0/ledger.npz"
+        ],
+        "memo_recorded_0916": 0.996666669845581,
+        "memo_now": 1.0,
+        "acc_elu_leaky": 1.0,
+        "acc_elu_elu_copy": 0.996666669845581
+      },
+      "cap_both_s0": {
+        "i_per_task_columns": true,
+        "ii_arrays": true,
+        "iii_task1_state": true,
+        "iv_memo_is_the_net": true,
+        "iv_old_memo_was_ee_copy": true,
+        "v_major_frac": true,
+        "nonvacuous": true,
+        "bad_columns": [],
+        "n_columns": 76,
+        "bad_arrays": [],
+        "n_arrays": 100,
+        "archive_used": [
+          "/home/issan/Projects/obsidian-research-data/mucap_el_0916/results/mucap_el_0916/runs/cap_both_s0/units.npz",
+          "/home/issan/Projects/obsidian-research-data/mucap_el_0916/results/mucap_el_0916/runs/cap_both_s0/ledger.npz"
+        ],
+        "memo_recorded_0916": 0.996666669845581,
+        "memo_now": 1.0,
+        "acc_elu_leaky": 1.0,
+        "acc_elu_elu_copy": 0.996666669845581
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M0a: the default path runs ELU on the second layer",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|i_per_task_columns",
+            "ref_s0|ii_arrays",
+            "ref_s0|iii_task1_state",
+            "ref_s0|iv_memo_is_the_net",
+            "ref_s0|iv_old_memo_was_ee_copy",
+            "cap_both_s0|i_per_task_columns",
+            "cap_both_s0|ii_arrays",
+            "cap_both_s0|iii_task1_state"
+          ]
+        }
+      },
+      {
+        "mutation": "M0b: a diagnostic constant moved (low-gate mark 0.06)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|i_per_task_columns",
+            "ref_s0|ii_arrays",
+            "cap_both_s0|i_per_task_columns",
+            "cap_both_s0|ii_arrays"
+          ]
+        }
+      },
+      {
+        "mutation": "M0c: memo_acc back on the ELU->ELU copy (the 0916 bug)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|iv_memo_is_the_net",
+            "cap_both_s0|iv_memo_is_the_net"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 94.3
+  },
+  "S0b_S-ee-unchanged": {
+    "title": "S0b its EE path with the new switches off reproduces mucap_ee_0917",
+    "target": "src/mucap_el_run_0916.py",
+    "threshold_derivation": "run_one(act2_name=\"ELU1\") with w2cap and bias_fix off, flush on, 80 epochs, tasks 1-2, reproduces\n    the recorded mucap_ee_0917 shards ref_s0 and cap_both_s0: every per_task.csv column that shard has is\n    equal as written, every units.npz array it has is bit-equal on the task 1-2 rows (test arrays: the\n    task-1 row; the archive copy only if its sha256 matches the manifest), the task-1-end state hash is\n    the recorded one, and the new projection tallies are zero.  String and bit comparisons only.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "ref_s0": {
+        "i_per_task_columns": true,
+        "ii_arrays": true,
+        "iii_task1_state": true,
+        "iv_new_tallies_zero": true,
+        "nonvacuous": true,
+        "bad_columns": [],
+        "n_columns": 82,
+        "bad_arrays": [],
+        "n_arrays": 79,
+        "archive": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/ref_s0/units.npz"
+      },
+      "cap_both_s0": {
+        "i_per_task_columns": true,
+        "ii_arrays": true,
+        "iii_task1_state": true,
+        "iv_new_tallies_zero": true,
+        "nonvacuous": true,
+        "bad_columns": [],
+        "n_columns": 82,
+        "bad_arrays": [],
+        "n_arrays": 79,
+        "archive": "/home/issan/Projects/obsidian-research-data/mucap_ee_0917/results/mucap_ee_0917/runs/cap_both_s0/units.npz"
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M0d: the second-layer cap is on whatever w2cap says",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|i_per_task_columns",
+            "ref_s0|ii_arrays",
+            "ref_s0|iv_new_tallies_zero",
+            "cap_both_s0|i_per_task_columns",
+            "cap_both_s0|ii_arrays",
+            "cap_both_s0|iv_new_tallies_zero"
+          ]
+        }
+      },
+      {
+        "mutation": "M0e: the biases are held whatever bias_fix says",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|i_per_task_columns",
+            "ref_s0|ii_arrays",
+            "ref_s0|iv_new_tallies_zero",
+            "cap_both_s0|i_per_task_columns",
+            "cap_both_s0|ii_arrays",
+            "cap_both_s0|iv_new_tallies_zero"
+          ]
+        }
+      },
+      {
+        "mutation": "M0f: a diagnostic changed on the EE path (units read the second layer through leaky)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|ii_arrays",
+            "cap_both_s0|ii_arrays"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 62.6
+  },
+  "S2c_S-row-norm-cap": {
+    "title": "S2c the row-norm cap writes only rows above their radius, onto it",
+    "target": "src/l2cap_ee_0917.py",
+    "threshold_derivation": "On real second-layer rows (task-1-end-like: init scaled by 1.5) with radii from row_norms of the\n    unscaled rows, plus hand-made rows: (i) rows at or below the radius keep every bit; (ii) a row above\n    it ends with norm r within TOL_RAD*eps32*r and the same direction (cosine 1 within 1e-6); (iii) the\n    tally counts exactly the rows above and the removed norm matches sum(n - r)+ within TOL_REM; (iv) a\n    zero row with radius 0 and a row equal to its radius stay bit-identical and no NaN appears; (v)\n    row_norms is the float norm of each row; (vi) a second application writes no row by more than the\n    rounding bound (projection is a fixed point up to TOL_RAD).  Non-vacuity: some rows over, some not.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "v_row_norms": true,
+      "i_under_rows_bit_identical": true,
+      "ii_norm_at_radius_max_rel": 1.1543950242803906e-07,
+      "ii_norm_at_radius": true,
+      "ii_direction_kept": true,
+      "iii_tally_rows": true,
+      "iii_tally_removed": true,
+      "iv_zero_and_equal_rows": true,
+      "vi_second_application_bound": true,
+      "nonvacuous": true
+    },
+    "mutations": [
+      {
+        "mutation": "M2a: rows at the radius are rewritten (>= instead of >)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_under_rows_bit_identical",
+            "iii_tally_rows",
+            "iv_zero_and_equal_rows",
+            "vi_second_application_bound"
+          ]
+        }
+      },
+      {
+        "mutation": "M2b: every row is scaled, including those below",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_under_rows_bit_identical",
+            "iii_tally_rows",
+            "iv_zero_and_equal_rows",
+            "vi_second_application_bound"
+          ]
+        }
+      },
+      {
+        "mutation": "M2c: rows are shrunk to half the radius",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_norm_at_radius"
+          ]
+        }
+      },
+      {
+        "mutation": "M2d: the removed norm is not clamped at zero",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iii_tally_removed"
+          ]
+        }
+      },
+      {
+        "mutation": "M2e: the radius is the squared norm",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "v_row_norms",
+            "iv_zero_and_equal_rows"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.0
+  },
+  "S4_S-wiring": {
+    "title": "S4 cap12_bfix updates are the host ELU->ELU update + caps + bias restore; dtrain is autograd's",
+    "target": "src/mucap_el_run_0916.py",
+    "threshold_derivation": "(i) forward2(ELU, ELU) is the host's forward.  (ii) Four captured updates of a cap12_bfix run (one\n    in task 1, three with every switch on) are bit-identical to the host ELU->ELU update followed by the\n    first-layer caps, the second-layer row-norm cap and the bias restore; the same recomputation without\n    the row-norm cap, without the bias restore, or with leaky, gives different bits (non-vacuity).\n    (iii) The task-1-end units.npz and per_task diagnostics of the second layer are the host's.  (iv) The\n    training-derivative diagnostics are autograd through the host ELU on the host z (bit for bit), equal\n    expm1(min(z,0))+1 on a grid over [-45, 5] in float32, are exactly 0 just below ln(2^-24) and positive\n    just above, and differ from the analytic exp gate there.  (v) memo_acc is the host's accuracy.\n    Bit comparisons, one tolerance: TOL_ELU (the leaky identity must be missed).",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_forward2_is_host_ELU": true,
+      "ii_updates": {
+        "(1, 37)": {
+          "equals_host": true,
+          "switch_on": false,
+          "differs_without_w2cap": false,
+          "differs_without_bfix": false,
+          "differs_with_leaky": true
+        },
+        "(2, 5)": {
+          "equals_host": true,
+          "switch_on": true,
+          "differs_without_w2cap": true,
+          "differs_without_bfix": true,
+          "differs_with_leaky": true
+        },
+        "(2, 149)": {
+          "equals_host": true,
+          "switch_on": true,
+          "differs_without_w2cap": true,
+          "differs_without_bfix": true,
+          "differs_with_leaky": true
+        },
+        "(3, 90)": {
+          "equals_host": true,
+          "switch_on": true,
+          "differs_without_w2cap": true,
+          "differs_without_bfix": true,
+          "differs_with_leaky": true
+        }
+      },
+      "ii_update_is_host": true,
+      "ii_nonvacuous": true,
+      "iii_zbar_l2_is_host": true,
+      "iii_gate_l2_is_host_elu": true,
+      "iii_not_leaky": true,
+      "iii_row_median_is_host_elu": true,
+      "iv_dtrain_is_autograd": true,
+      "iv_grid_equals_expm1_plus_1": true,
+      "iv_zero_below_threshold": true,
+      "iv_differs_from_exp_gate": true,
+      "iv_runner_sees_zero_derivative": true,
+      "v_memo_is_host_elu": true
+    },
+    "mutations": [
+      {
+        "mutation": "M4a: act2_name ignored (trains ELU->leaky)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_update_is_host",
+            "iii_gate_l2_is_host_elu",
+            "iii_not_leaky",
+            "iii_row_median_is_host_elu",
+            "iv_dtrain_is_autograd",
+            "v_memo_is_host_elu"
+          ]
+        }
+      },
+      {
+        "mutation": "M4b: ACT2['ELU1'] is the leaky object",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_update_is_host",
+            "iii_gate_l2_is_host_elu",
+            "iii_not_leaky",
+            "iii_row_median_is_host_elu",
+            "iv_dtrain_is_autograd",
+            "v_memo_is_host_elu"
+          ]
+        }
+      },
+      {
+        "mutation": "M4c: units.npz reads the second layer through leaky",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iii_gate_l2_is_host_elu",
+            "iii_not_leaky",
+            "iv_dtrain_is_autograd"
+          ]
+        }
+      },
+      {
+        "mutation": "M4d: the per-task medians read the second layer through leaky",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iii_row_median_is_host_elu"
+          ]
+        }
+      },
+      {
+        "mutation": "M4e: memo_acc through leaky",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "v_memo_is_host_elu"
+          ]
+        }
+      },
+      {
+        "mutation": "M4f: the row-norm cap lands on W3",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_update_is_host",
+            "ii_nonvacuous"
+          ]
+        }
+      },
+      {
+        "mutation": "M4g: only b2 is held",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_update_is_host"
+          ]
+        }
+      },
+      {
+        "mutation": "M4h: the training derivative read from the analytic exp",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iv_dtrain_is_autograd",
+            "iv_runner_sees_zero_derivative"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 5.2
+  },
+  "S5_S-identical": {
+    "title": "S5 five arms share task 1; radii and held biases are task-1-end values",
+    "target": "src/mucap_el_run_0916.py",
+    "threshold_derivation": "The five arms' task 1 is the same run (init, subset, labels, batch orders, task-1-end state\n    sha256); every arm differs from every other by the end of task 3; the first-layer radii are the\n    task-1-end rows (0916's check); the second-layer radii r2 are the norms of the task-1-end W2 rows;\n    the held biases are the task-1-end biases and cap12_bfix's biases at the end of task 3 are those,\n    bit for bit.  Bit comparisons only.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_task1_identical": true,
+      "ii_all_differ_by_task3": true,
+      "iii_radii_l1": true,
+      "iv_r2": true,
+      "v_b_star": true,
+      "vi_bfix_holds": true,
+      "nonvacuous": true,
+      "per_arm": {
+        "ref": {
+          "radii_l1": true,
+          "r2_is_task1_end": true,
+          "b_star_is_task1_end": true,
+          "biases_held_at_end": false,
+          "biases_moved": true
+        },
+        "cap1": {
+          "radii_l1": true,
+          "r2_is_task1_end": true,
+          "b_star_is_task1_end": true,
+          "biases_held_at_end": false,
+          "biases_moved": true
+        },
+        "cap2": {
+          "radii_l1": true,
+          "r2_is_task1_end": true,
+          "b_star_is_task1_end": true,
+          "biases_held_at_end": false,
+          "biases_moved": true
+        },
+        "cap12": {
+          "radii_l1": true,
+          "r2_is_task1_end": true,
+          "b_star_is_task1_end": true,
+          "biases_held_at_end": false,
+          "biases_moved": true
+        },
+        "cap12_bfix": {
+          "radii_l1": true,
+          "r2_is_task1_end": true,
+          "b_star_is_task1_end": true,
+          "biases_held_at_end": true,
+          "biases_moved": false
+        }
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M5a: the first-layer cap is on from task 1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "raised": "TypeError(\"'>' not supported between instances of 'Tensor' and 'NoneType'\")"
+      },
+      {
+        "mutation": "M5b: the first-layer radii are taken at init",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iii_radii_l1"
+          ]
+        }
+      },
+      {
+        "mutation": "M5c: r2 is taken at init",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iv_r2"
+          ]
+        }
+      },
+      {
+        "mutation": "M5d: the held biases are the init biases",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "v_b_star",
+            "vi_bfix_holds"
+          ]
+        }
+      },
+      {
+        "mutation": "M5e: the second-layer cap is on from task 1 with the init radii",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_task1_identical"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 13.7
+  },
+  "S7_S-repro": {
+    "title": "S7 the same call twice gives the same bits",
+    "target": "src/mucap_el_run_0916.py",
+    "threshold_derivation": "The same call twice gives the same bits (arrays, hashes, rows), for ref and cap12_bfix.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "ref": {
+        "i_arrays": true,
+        "ii_hashes": true,
+        "iii_rows": true,
+        "nonvacuous": true
+      },
+      "cap12_bfix": {
+        "i_arrays": true,
+        "ii_hashes": true,
+        "iii_rows": true,
+        "nonvacuous": true
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M7a: the batch order does not come from the run's own generator",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref|i_arrays",
+            "ref|ii_hashes",
+            "ref|iii_rows",
+            "cap12_bfix|i_arrays",
+            "cap12_bfix|ii_hashes",
+            "cap12_bfix|iii_rows"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 2.9
+  },
+  "S8_S-verdict": {
+    "title": "S8 the verdict returns the designed labels and estimates on synthetic shards",
+    "target": "analysis/l2cap_ee_0917/verdict.py",
+    "threshold_derivation": "verdict.analyze on the S8 scenarios: every designed label and estimate comes out as written\n    (estimates within TOL_EST, flags, states and censored times exactly), and the imported t quantile\n    reproduces the published table within TOL_T.  Tolerances: TOL_EST, TOL_T.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "designed": {
+        "labels": {
+          "main": "RESCUED",
+          "cap12_95": "RESCUED",
+          "cap1": "COLLAPSED",
+          "cap2": "COLLAPSED",
+          "cap12_bfix": "RESCUED_FUNCTION_ONLY",
+          "timing_cap1": "LATER",
+          "timing_cap2": "EARLIER",
+          "timing_cap12": "LATER",
+          "timing_cap12_bfix": "LATER"
+        },
+        "bad": []
+      },
+      "borderline": {
+        "labels": {
+          "main": "RESCUED_FUNCTION_ONLY",
+          "cap12_95": "RESCUED",
+          "cap1": "COLLAPSED",
+          "cap2": "COLLAPSED",
+          "cap12_bfix": "RESCUED_FUNCTION_ONLY",
+          "timing_cap1": "LATER",
+          "timing_cap2": "EARLIER",
+          "timing_cap12": "LATER",
+          "timing_cap12_bfix": "LATER"
+        },
+        "bad": []
+      },
+      "not_reproduced": {
+        "labels": {
+          "main": "NOT_REPRODUCED",
+          "cap12_95": "NOT_REPRODUCED",
+          "cap1": "NOT_REPRODUCED",
+          "cap2": "NOT_REPRODUCED",
+          "cap12_bfix": "NOT_REPRODUCED",
+          "timing_cap1": "EARLIER",
+          "timing_cap2": "EARLIER",
+          "timing_cap12": "NO_TIMING_DIFF",
+          "timing_cap12_bfix": "NO_TIMING_DIFF"
+        },
+        "bad": []
+      },
+      "ref_8_of_10": {
+        "labels": {
+          "main": "RESCUED",
+          "cap12_95": "RESCUED",
+          "cap1": "COLLAPSED",
+          "cap2": "COLLAPSED",
+          "cap12_bfix": "RESCUED_FUNCTION_ONLY",
+          "timing_cap1": "NO_TIMING_DIFF",
+          "timing_cap2": "EARLIER",
+          "timing_cap12": "LATER",
+          "timing_cap12_bfix": "LATER"
+        },
+        "bad": []
+      },
+      "ref_7_of_10": {
+        "labels": {
+          "main": "NOT_REPRODUCED",
+          "cap12_95": "NOT_REPRODUCED",
+          "cap1": "NOT_REPRODUCED",
+          "cap2": "NOT_REPRODUCED",
+          "cap12_bfix": "NOT_REPRODUCED",
+          "timing_cap1": "NO_TIMING_DIFF",
+          "timing_cap2": "EARLIER",
+          "timing_cap12": "LATER",
+          "timing_cap12_bfix": "LATER"
+        },
+        "bad": []
+      },
+      "split": {
+        "labels": {
+          "main": "SPLIT",
+          "cap12_95": "SPLIT",
+          "cap1": "COLLAPSED",
+          "cap2": "COLLAPSED",
+          "cap12_bfix": "RESCUED_FUNCTION_ONLY",
+          "timing_cap1": "LATER",
+          "timing_cap2": "EARLIER",
+          "timing_cap12": "LATER",
+          "timing_cap12_bfix": "LATER"
+        },
+        "bad": []
+      },
+      "floor_margin": {
+        "labels": {
+          "main": "RESCUED",
+          "cap12_95": "RESCUED",
+          "cap1": "COLLAPSED",
+          "cap2": "RESCUED",
+          "cap12_bfix": "COLLAPSED",
+          "timing_cap1": "LATER",
+          "timing_cap2": "LATER",
+          "timing_cap12": "LATER",
+          "timing_cap12_bfix": "LATER"
+        },
+        "bad": []
+      },
+      "cap_idle": {
+        "labels": {
+          "main": "RESCUED",
+          "cap12_95": "RESCUED",
+          "cap1": "COLLAPSED",
+          "cap2": "COLLAPSED",
+          "cap12_bfix": "INAPPLICABLE",
+          "timing_cap1": "LATER",
+          "timing_cap2": "EARLIER",
+          "timing_cap12": "LATER",
+          "timing_cap12_bfix": "INAPPLICABLE"
+        },
+        "bad": []
+      },
+      "broken_streams": {
+        "labels": {
+          "main": "INAPPLICABLE",
+          "cap12_95": "INAPPLICABLE",
+          "cap1": "INAPPLICABLE",
+          "cap2": "INAPPLICABLE",
+          "cap12_bfix": "INAPPLICABLE",
+          "timing_cap1": "INAPPLICABLE",
+          "timing_cap2": "INAPPLICABLE",
+          "timing_cap12": "INAPPLICABLE",
+          "timing_cap12_bfix": "INAPPLICABLE"
+        },
+        "bad": []
+      },
+      "timing_counts": {
+        "labels": {
+          "main": "COLLAPSED",
+          "cap12_95": "COLLAPSED",
+          "cap1": "COLLAPSED",
+          "cap2": "COLLAPSED",
+          "cap12_bfix": "COLLAPSED",
+          "timing_cap1": "LATER",
+          "timing_cap2": "NO_TIMING_DIFF",
+          "timing_cap12": "NO_TIMING_DIFF",
+          "timing_cap12_bfix": "EARLIER"
+        },
+        "bad": []
+      },
+      "paired_matters": {
+        "labels": {
+          "main": "RESCUED",
+          "cap12_95": "RESCUED",
+          "cap1": "COLLAPSED",
+          "cap2": "COLLAPSED",
+          "cap12_bfix": "RESCUED_FUNCTION_ONLY",
+          "timing_cap1": "LATER",
+          "timing_cap2": "EARLIER",
+          "timing_cap12": "LATER",
+          "timing_cap12_bfix": "LATER"
+        },
+        "bad": []
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M8a: the primary arm is cap12_bfix",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|main: got RESCUED_FUNCTION_ONLY want RESCUED",
+            "designed|cap12_95: got RESCUED_FUNCTION_ONLY want RESCUED",
+            "designed|main_E1: got 0.38000224385713216 want 0.5000022438571322",
+            "designed|main_E2: got -5.551115123125783e-18 want 0.25",
+            "borderline|cap12_95: got RESCUED_FUNCTION_ONLY want RESCUED",
+            "borderline|main_E2: got -5.551115123125783e-18 want 0.03873790133706265",
+            "ref_8_of_10|main: got RESCUED_FUNCTION_ONLY want RESCUED",
+            "split|main: got RESCUED_FUNCTION_ONLY want SPLIT"
+          ]
+        }
+      },
+      {
+        "mutation": "M8b: E2 reads the analytic exp gate instead of the training derivative",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|main: got NOT_REPRODUCED want RESCUED",
+            "designed|cap12_95: got NOT_REPRODUCED want RESCUED",
+            "designed|cap1: got NOT_REPRODUCED want COLLAPSED",
+            "designed|cap2: got NOT_REPRODUCED want COLLAPSED",
+            "designed|cap12_bfix: got NOT_REPRODUCED want RESCUED_FUNCTION_ONLY",
+            "designed|main_E2: got 0.0 want 0.25",
+            "borderline|main: got NOT_REPRODUCED want RESCUED_FUNCTION_ONLY",
+            "borderline|cap12_95: got NOT_REPRODUCED want RESCUED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8c: main label at 95%",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "borderline|main: got RESCUED want RESCUED_FUNCTION_ONLY"
+          ]
+        }
+      },
+      {
+        "mutation": "M8d: ref's collapse never required",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "not_reproduced|main: got RESCUED want NOT_REPRODUCED",
+            "not_reproduced|cap2: got COLLAPSED want NOT_REPRODUCED",
+            "not_reproduced|cap12_bfix: got ALIVE_UNRESOLVED want NOT_REPRODUCED",
+            "ref_7_of_10|main: got RESCUED want NOT_REPRODUCED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8e: ref must be floored in every seed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_8_of_10|main: got NOT_REPRODUCED want RESCUED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8f: ref floored in half the seeds is enough",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_7_of_10|main: got RESCUED want NOT_REPRODUCED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8g: the floor margin dropped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "floor_margin|cap12_bfix: got RESCUED_FUNCTION_ONLY want COLLAPSED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8h: the floor at chance instead of the label draw",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "floor_margin|cap12_bfix: got RESCUED_FUNCTION_ONLY want COLLAPSED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8i: the pairing broken",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "borderline|cap12_95: got RESCUED_FUNCTION_ONLY want RESCUED",
+            "paired_matters|main: got RESCUED_FUNCTION_ONLY want RESCUED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8j: unit median instead of the mean",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|main_E2: got 0.20010000000000003 want 0.25"
+          ]
+        }
+      },
+      {
+        "mutation": "M8k: a censored arm counted as a tie",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|timing_cap12: got NO_TIMING_DIFF want LATER",
+            "designed|timing_cap12_bfix: got NO_TIMING_DIFF want LATER"
+          ]
+        }
+      },
+      {
+        "mutation": "M8l: sign test at 0.2",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "timing_counts|timing_cap2: got EARLIER want NO_TIMING_DIFF",
+            "timing_counts|timing_cap12: got EARLIER want NO_TIMING_DIFF"
+          ]
+        }
+      },
+      {
+        "mutation": "M8m: ties counted in the sign test's n",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "timing_counts|timing_cap12_bfix: got NO_TIMING_DIFF want EARLIER"
+          ]
+        }
+      },
+      {
+        "mutation": "M8n: T_half on raw accuracy instead of the fit fraction",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|timing_cap12_bfix: got EARLIER want LATER",
+            "designed|t_half|cap12_bfix|0: got 2 want None"
+          ]
+        }
+      },
+      {
+        "mutation": "M8o: (C) read in the main window",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|cap1: got INAPPLICABLE want COLLAPSED",
+            "designed|cap2: got INAPPLICABLE want COLLAPSED",
+            "designed|timing_cap1: got INAPPLICABLE want LATER",
+            "designed|timing_cap2: got INAPPLICABLE want EARLIER",
+            "not_reproduced|cap2: got INAPPLICABLE want NOT_REPRODUCED",
+            "split|main: got INAPPLICABLE want SPLIT",
+            "floor_margin|cap12_bfix: got INAPPLICABLE want COLLAPSED",
+            "floor_margin|cap2: got INAPPLICABLE want RESCUED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8p: cap12_bfix's (C) does not require the bias restore",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "cap_idle|cap12_bfix: got RESCUED_FUNCTION_ONLY want INAPPLICABLE"
+          ]
+        }
+      },
+      {
+        "mutation": "M8q: the cross-arm stream check off",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "broken_streams|main: got RESCUED want INAPPLICABLE",
+            "broken_streams|n_valid: got 10 want 7"
+          ]
+        }
+      },
+      {
+        "mutation": "M8r: IMPAIRED against ref's early fit itself",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|impaired|cap12: got True want False",
+            "designed|impaired|cap12_bfix: got True want False"
+          ]
+        }
+      },
+      {
+        "mutation": "M8s: a task's first row taken as its end point (E2)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|main: got NOT_REPRODUCED want RESCUED",
+            "designed|cap12_95: got NOT_REPRODUCED want RESCUED",
+            "designed|cap1: got NOT_REPRODUCED want COLLAPSED",
+            "designed|cap2: got NOT_REPRODUCED want COLLAPSED",
+            "designed|cap12_bfix: got NOT_REPRODUCED want RESCUED_FUNCTION_ONLY",
+            "designed|main_E2: got 0.0 want 0.25",
+            "borderline|main: got NOT_REPRODUCED want RESCUED_FUNCTION_ONLY",
+            "borderline|cap12_95: got NOT_REPRODUCED want RESCUED"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 141.2
+  },
+  "S9_S-cli": {
+    "title": "S9 the CLI maps, relabels and records this experiment",
+    "target": "src/l2cap_ee_run_0917.py",
+    "threshold_derivation": "main() on a 2-task, 2-epoch cap12_bfix shard writes (i) per_task rows labelled cap12_bfix and\n    otherwise equal to the in-process run of the registered map (cap_both, w2cap, bias_fix), and (ii) the\n    same units.npz arrays, bit for bit; (iii) the CLI's ARM_MAP is the registered one; (iv) provenance\n    names this experiment, act2 ELU1, flush on, the arm map, and hashes both runners and the cap module;\n    (v) the defaults are 100 tasks x 80 epochs, ledger off; (vi) main() leaves flush on.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_rows": true,
+      "ii_units": true,
+      "iii_arm_map": true,
+      "iv_provenance": true,
+      "v_defaults": true,
+      "vi_flush_left_on": true
+    },
+    "mutations": [
+      {
+        "mutation": "M9a: cap12_bfix does not hold the biases",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_rows",
+            "ii_units",
+            "iii_arm_map",
+            "iv_provenance"
+          ]
+        }
+      },
+      {
+        "mutation": "M9b: the rows keep the shared runner's arm name",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_rows"
+          ]
+        }
+      },
+      {
+        "mutation": "M9c: the registered horizon is 150 tasks",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "v_defaults"
+          ]
+        }
+      },
+      {
+        "mutation": "M9d: denormals not flushed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "vi_flush_left_on"
+          ]
+        }
+      },
+      {
+        "mutation": "M9e: the CLI trains ELU->leaky",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_rows",
+            "ii_units"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 6.1
+  },
+  "S-cost": {
+    "pass": true,
+    "gate": "all 6 processes exit 0 and slots >= 6",
+    "returncodes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "mem_available_gib_before": 13.871391296386719,
+    "peak_rss_gib_max": 1.3372421264648438,
+    "slots": 8,
+    "seconds_per_update_under_load": 0.0013828590313593547,
+    "growth_factor": 1.6885181048459748,
+    "one_trajectory_min": 23.34982510900038,
+    "grid_50_wall_hours_at_probe": 3.2430312651389417,
+    "measured_at": "2026-09-17T09:24:09.084595+09:00",
+    "seconds": 20.0
+  },
+  "finished_at": "2026-09-17T09:24:09.085221+09:00"
+}

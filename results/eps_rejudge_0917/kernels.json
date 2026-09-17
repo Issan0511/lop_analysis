@@ -1,0 +1,94 @@
+{
+  "torch": "2.13.0+cu130",
+  "cpu_capability": "AVX2",
+  "cuda": "NVIDIA GeForce RTX 5060 Ti",
+  "ln2m24": -16.635532333438686,
+  "ln2m25": -17.328679513998633,
+  "ln2m149": -103.27892990343184,
+  "kernels": {
+    "K1_cpu": {
+      "largest_zero_z": -16.635534286499023,
+      "next_z": -16.63553237915039,
+      "factor_at_next": 5.960464477539063e-08
+    },
+    "K3_cpu": {
+      "largest_zero_z": -103.97208404541016,
+      "next_z": -103.97207641601562,
+      "factor_at_next": 1.401298464324817e-45
+    },
+    "S0mut_cpu": {
+      "largest_zero_z": null
+    },
+    "K1_cpu_flush": {
+      "largest_zero_z": -16.635534286499023,
+      "next_z": -16.63553237915039,
+      "factor_at_next": 5.960464477539063e-08
+    },
+    "K3_cpu_flush": {
+      "largest_zero_z": -87.3365478515625,
+      "next_z": -87.33654022216797,
+      "factor_at_next": 1.175499675756452e-38
+    },
+    "S0mut_cpu_flush": {
+      "largest_zero_z": null
+    },
+    "K2_cuda": {
+      "largest_zero_z": -16.982107162475586,
+      "next_z": -16.982105255126953,
+      "factor_at_next": 5.960464477539063e-08
+    },
+    "K3_cuda": {
+      "largest_zero_z": -103.97208404541016,
+      "next_z": -103.97207641601562,
+      "factor_at_next": 1.401298464324817e-45
+    },
+    "K4": [
+      {
+        "beta": 0.9,
+        "start": 1e-06,
+        "flush": false,
+        "steps": 834,
+        "final": 5.605193857299268e-45,
+        "final_in_tiny_quanta": 4.0,
+        "reached_zero": false
+      },
+      {
+        "beta": 0.9,
+        "start": 1e-06,
+        "flush": true,
+        "steps": 698,
+        "final": 0.0,
+        "final_in_tiny_quanta": 0.0,
+        "reached_zero": true
+      },
+      {
+        "beta": 0.999,
+        "start": 1e-12,
+        "flush": false,
+        "steps": 69285,
+        "final": 7.006492321624085e-43,
+        "final_in_tiny_quanta": 500.0,
+        "reached_zero": false
+      },
+      {
+        "beta": 0.999,
+        "start": 1e-12,
+        "flush": true,
+        "steps": 59677,
+        "final": 0.0,
+        "final_in_tiny_quanta": 0.0,
+        "reached_zero": true
+      }
+    ]
+  },
+  "S0": {
+    "K1_matches_resp_ee": true,
+    "K1_next_factor_is_2m24": true,
+    "K1_flush_same": true,
+    "mutant_exp_has_no_zero_above_m80": true,
+    "K4_m_sticks_without_flush": true,
+    "K4_m_zero_with_flush": true,
+    "K4_v_zero_with_flush": true,
+    "pass": true
+  }
+}
