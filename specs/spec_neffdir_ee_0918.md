@@ -232,7 +232,28 @@ seed 内の差の t 区間（自由度 n−1）。主の $\Delta R_{\rm add\_h}$
 
 ## 10. 実行記録（本走後に追記。計画は変えない）
 
-（未実行）
+- 本走: 2026-09-18 02:24:18–03:08:11 JST、commit `55f75d5ff5c3646d14fbe7dca54a1ca517f721cb`、最大 3 並列、seed 30–39 の 10/10 完走・失敗 0。事前登録 `b52bb8930881700d969590a45285d4b78bd5ad46`、登録 hash 固定 `61294b6`、全検査・launcher `5df388d` は本走前に push 済み。03:39 JST の定期確認で完走を確認し判定した（ユーザー指示により確認は 1 時間おき）。
+- 検査: 登録後の全検査 `checks.json` は `all_pass: true`、42/42 変異検出。S-cost は 3/3 正常終了、ピーク RSS 1.331 GiB、空きメモリから 6 slots、1 seed 約 10.97 分の見積もり。launcher は最大 3 に固定し、6 GiB を残すメモリの門・STOP・flock・二重起動防止・検査 hash と登録 hash・予測記録・commit/push の確認を実施。
+- 記録照合: 有効 seed 10/10、(A)(B) 成立。24 腕行・12 prefix 行、全コード hash・spec hash・本走 commit・登録 commit を確認し、全 seed `git_dirty_code: false`、CPU 1 thread・float32・flush 有効。seed 30–39 の過去記録は無く、resp_ee/respdyn/escape の照合は全て空欄。分岐点の logits・影 = N10・場・マスク/持ち上げ・c12 保持は登録条件を満たす。証跡は `run_audit.json` と各 seed の provenance。
+- 主: **ADD_H_MOVES_E**。継続 1 の E(c12) 0.2739 → E(c12_a02) 0.4035、ΔR_add_h **+0.1296 [ +0.1079, +0.1513 ]（97.5%・10/10 正）**。操作の確認 Δn_add_h +0.0082、κ の seed 平均 2.5761。比例は **SUPRAPROPORTIONAL**（φ_add_h −0.0446 [−0.0584, −0.0307]・95%）。成長ありの追加も ADD_MOVES_E・SUPRAPROPORTIONAL。比例より小さいという Claude/Codex の予測は反対向きに外れた。
+- 落とす側: 課題全体の drop・drop_h・m25 は **NOT_MANIPULATED**。comp +0.0199 [ +0.0129, +0.0270 ]、comp_h +0.0054 [ +0.0034, +0.0075 ]（95%）で **COMPENSATES / COMPENSATES_H**。成長あり m50 は E が 0.3149 → 0.2807 と下がる一方、課題全体の n(S) は 0.00889 → 0.01430 と増えており、課題平均の n だけによる比例の読みは成立しない。前半は両方とも操作成立、DROP_EARLY_NO_EFFECT / DROP_H_EARLY_MOVES_E。前半の比例ラベルはともに PROPORTIONAL だが、R_none_e=0.0071、κ_drop_e=0.6462、κ_drop_h_e=0.5993 と床の上の残りが小さいため、§5.3 の判別力の限定を付ける。
+- 構造 STRUCT_EQUAL、F.elu **FELU_SAME**（ΔE +0.0003 [−0.0008, +0.0013]・95%、ゼロ割合の減少 +0.7955）、並び NEFF_UNRESOLVED（平均ρ +0.10・正7/負2/零1・p=0.1797）、成長 GROWTH_REMAINDER。
+- 独立検算: `independent_verify.py` は verdict を import せず arms.csv から ΔR_add_h・φ_add_h・ΔR_drop・comp を再計算。40 個の seed 別値（差 < 1e−12）、4 量×2 水準の平均・SD・t 区間が一致（最大差 3.1e−15）。t 分位点は t 密度の独立な数値積分。結果は `independent_verification.json`。判定スクリプトと runner の数値計算は本走後に変更していない。
+- Issa の予測: 主は的中。比例は PROPORTIONAL → SUPRAPROPORTIONAL、補償は NO_COMPENSATION → COMPENSATES、F.elu は FELU_HIGHER → FELU_SAME で不一致。Claude/Codex の最頻ラベルは主・補償・F.elu で的中、比例で不一致。Claude の +0.05（0〜+0.12）と Codex の +0.04（+0.01〜+0.08）より主の効果は大きかった。
+
+| seed | 秒（provenance seconds_total） | 分 |
+|---|---|---|
+| 30 | 651.8 | 10.86 |
+| 31 | 666.2 | 11.10 |
+| 32 | 735.0 | 12.25 |
+| 33 | 686.5 | 11.44 |
+| 34 | 672.7 | 11.21 |
+| 35 | 681.9 | 11.37 |
+| 36 | 768.0 | 12.80 |
+| 37 | 745.9 | 12.43 |
+| 38 | 750.5 | 12.51 |
+| 39 | 516.6 | 8.61 |
+
 
 ## 11. 引き継ぎ（Codex へ・2026-09-18）
 
