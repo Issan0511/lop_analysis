@@ -1,0 +1,37 @@
+{
+  "run_id": "avgpool_cnn_0917",
+  "arm": "SN3_avg",
+  "host_arm": "SN3",
+  "pool": "avg",
+  "seed": 0,
+  "git_hash": "2b2897298f8a69afdb712150c65c2ecff1dcb61f",
+  "git_dirty_code": false,
+  "host": "src/rlcifar_cnn_0908.py",
+  "host_sha256": "168f624eb1475dea1a9cad4ceb010a74f40adefcf1db3af8c5617198e991b00f",
+  "forward": "forward_pool (host forward_cnn with the pool as an argument)",
+  "pool_call": "F.avg_pool2d(a, 2, 2)",
+  "lr": 0.001,
+  "optimizer": "adam",
+  "tasks": 50,
+  "epochs_per_task": 400,
+  "sna": null,
+  "tasks_completed": 50,
+  "divergence": {
+    "diverged": false,
+    "task": null,
+    "step": null,
+    "seed": 0,
+    "arm": "SN3"
+  },
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 5060 Ti",
+  "threads": 1,
+  "torch": "2.13.0+cu130",
+  "hostname": "white-san",
+  "cuda_max_mem_mb": 813.9208984375,
+  "maxrss_mb": 2211.2734375,
+  "wall_clock_s": 7398.603420257568
+}
