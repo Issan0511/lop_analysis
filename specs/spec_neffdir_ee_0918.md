@@ -1,6 +1,6 @@
 # 微分の担い手を直接動かす（H7）— respdyn の残りは担い手の数で決まるか
 
-状態: **下書き（未登録）**。設計・実装・較正・速い検査は Claude（2026-09-18 未明）。**登録から後は Codex が §11 の手順で行う**（Issa「全部 Codex に渡す」）。登録は、§11 の手順 3 で本ファイルの状態行を「事前登録」に替えて commit・push したときに成立する。
+状態: **事前登録**（本ファイルの commit が登録。seed 30–39 では、どの腕もまだ走っていない）
 作成: 2026-09-18 / 起草: Claude / 依頼: Issa「やりましょう」（vault `主張/中心主張v10作業リスト_0917` の H7）
 前の走: `specs/spec_escneff_ee_0917.md`（seed 10–19・主 `REMAINDER_REDUCED_BY_HOLD`・`NEFF_TRACKS`・`SLOPE_POSITIVE`）、`specs/spec_escape_ee_0917.md`（seed 0–9）
 実装: `src/neffdir_ee_0918.py`・`analysis/neffdir_ee_0918/{checks.py,verdict.py}`（`launch.sh` は未作成・§11）
@@ -158,14 +158,21 @@ seed 内の差の t 区間（自由度 n−1）。主の $\Delta R_{\rm add\_h}$
 
 `python3 analysis/neffdir_ee_0918/checks.py` → `results/neffdir_ee_0918/checks.json`。各検査は本物のコードで通り、列挙した変異（対象ファイルの 1 か所の置換）で必ず落ちなければならない。検査は E を出力しない。
 
-| 検査 | 要求 | 変異 | 開発実行（2026-09-18 未明・Claude） |
+| 検査 | 要求 | 変異 | 開発実行（2026-09-18・Claude / Codex） |
 |---|---|---|---|
-| S1a 記録（seed 0・80 epoch） | S2dyn_10r・S2dyn_c12・S2u30r・N2r がこの runner を通して respdyn・escape・resp_ee の記録と状態 hash が一致（2 タスク）、分岐点の logits、影と $d(0)$、c12 の保持と書き込み、`nbar_neffT2` が escape の記録と完全一致し `nbar_neffS2` もそれに等しい、provenance | 4 | **未実行**（約 20 分） |
-| S1b 担い手（seed 45・8 epoch） | q = 1・r = 0 の 3 腕が S2dyn_10r と bit 一致、全腕の logits・影・場、マスクの割合と入れ子と引いた回数、持ち上げの割合と位置（2 eps32 (\|top\|+\|z\|) 以内）、c12 の 2 腕の保持、前半の列、実 minibatch で autograd の係数 = G·s·φ₂′（固定マスク・F.elu・恒等・健康な網のマスク）、探針の独立な再計算 | 8 | **未実行**（約 15 分） |
-| S1c 係数（格子） | F.elu と宿主 ELU の autograd の係数が runner の係数と完全一致、F.elu の係数が exp の 2 ulp 以内、0 になる範囲（−16.64・−87.34）、φ₂ の値（F.elu は宿主と 2⁻²⁴ 以内） | 2 | pass・2/2 検出 |
-| S8 判定 | 合成 seed 30–39 の 40 場面でラベルと推定値（1e−9）、t 分位点（公表値）、SEEDS・MARGIN・DYN | 22 | pass・22/22 検出 |
-| S9 CLI | seed 45・2 epoch で provenance（実験名・spec・flush・乱数表の hash・code hash）、定数（seed 30–39・12 腕・検査 3 腕・塩・前半 1500） | 6 | pass・6/6 検出 |
+| S1a 記録（seed 0・80 epoch） | S2dyn_10r・S2dyn_c12・S2u30r・N2r がこの runner を通して respdyn・escape・resp_ee の記録と状態 hash が一致（2 タスク）、分岐点の logits、影と $d(0)$、c12 の保持と書き込み、`nbar_neffT2` が escape の記録と完全一致し `nbar_neffS2` もそれに等しい、provenance | 4 | pass・4/4 検出（Codex・608.3 秒） |
+| S1b 担い手（seed 45・8 epoch） | q = 1・r = 0 の 3 腕が S2dyn_10r と bit 一致、全腕の logits・影・場、マスクの割合と入れ子と引いた回数、持ち上げの割合と位置（2 eps32 (\|top\|+\|z\|) 以内）、c12 の 2 腕の保持、前半の列、実 minibatch で autograd の係数 = G·s·φ₂′（固定マスク・F.elu・恒等・健康な網のマスク）、探針の独立な再計算 | 8 | pass・8/8 検出（Codex・参照計算 2 点を修正後） |
+| S1c 係数（格子） | F.elu と宿主 ELU の autograd の係数が runner の係数と完全一致、F.elu の係数が exp の 2 ulp 以内、0 になる範囲（−16.64・−87.34）、φ₂ の値（F.elu は宿主と 2⁻²⁴ 以内） | 2 | pass・2/2 検出（Codex 再確認） |
+| S8 判定 | 合成 seed 30–39 の 40 場面でラベルと推定値（1e−9）、t 分位点（公表値）、SEEDS・MARGIN・DYN | 22 | pass・22/22 検出（Codex 再確認） |
+| S9 CLI | seed 45・2 epoch で provenance（実験名・spec・flush・乱数表の hash・code hash）、定数（seed 30–39・12 腕・検査 3 腕・塩・前半 1500） | 6 | pass・6/6 検出（Codex 再確認） |
 | S-cost | seed 40–42（登録外）で 3 プロセス同時・腕 3 本（N2r・S2dyn_10r・S2dyn_m50）、exit 0・MemAvailable の 80% で 3 スロット以上 | — | 未実行 |
+
+**登録前の検査修正（2026-09-18・Codex）**:
+
+1. S1b の独立な探針再計算だけが不一致だった。旧参照は F.elu の係数を `torch.exp` で代用しており、§2.3 の kernel 差（最大 1 ulp）を無視していた。seed 45 の同じ分岐の $n_{\rm eff}$ はその代用だけで約 4.28×10⁻¹⁰ 異なる。登録する量は「訓練で使う F.elu の微分」なので、参照側でも runner の関数を呼ばず `F.elu` を独立に autograd して再計算するよう修正した。
+2. その修正後、本体は通ったが M2b（残す対の 1/q 倍を除く）だけを検出できなかった。検査の期待値が `car.s` を読んでおり、実装の誤りと一緒に変わる循環があった。§2.3 の定義 $s=\mathbb 1[U<q]/q$ に従い、期待値を表 U と登録値 q から独立に作るよう修正した。修正前の「8/8 検出」は本体の不一致に隠れていたため、成功の証拠とは数えない。
+
+**完全一致の要求・許容・変異一覧は変更していない。runner・判定コードも変更していない。** 修正前の記録は `results/_checks_neffdir_ee_0918/dev_initial_checks.json`、1 回目の修正は同 `dev_corrected_probe_only.json`、最終修正後は同 `dev_corrected/checks_partial.json`（最後に git 外へ退避）。
 
 ## 7. 事前予測
 
@@ -188,7 +195,17 @@ seed 内の差の t 区間（自由度 n−1）。主の $\Delta R_{\rm add\_h}$
 | ladder | NEFF_TRACKS 55%（m25 で $n$ と E が逆に並ぶ可能性） |
 | growth | GROWTH_REMAINDER 90%（escneff の再現） |
 
-### 7.2 Codex（任意・§11 の手順 6 の前に記入）
+### 7.2 Codex（2026-09-18 01:40 JST・開発検査中、登録 seed は未実行・較正と検査の E は未読）
+
+| 項目 | 予測 |
+|---|---|
+| primary | ADD_H_MOVES_E 75% / ADD_H_NO_EFFECT 15% / ADD_H_REVERSED 3% / その他 7% |
+| $\Delta R_{\rm add\_h}$ | +0.04（中心的な見込み +0.01〜+0.08） |
+| prop_add_h | SUBPROPORTIONAL 60% / PROPORTIONAL 20% / PROPORTION_UNRESOLVED 15% / SUPRAPROPORTIONAL 5% |
+| compensation・compensation_h | COMPENSATES 85%・COMPENSATES_H 70% |
+| felu | FELU_SAME 80% / FELU_HIGHER 15% / その他 5% |
+
+根拠: 較正では成長を止めても持ち上げが担い手を増やしているので、主の方向は正と見る。ただし、追加された対の配置や微分の大きさは成長で残った対と同じではなく、escneff の比例の傾きをそのまま移せるとは見ない。補償は較正の観察を採用するが、1 seed からの予測である。
 
 ### 7.3 Issa（本走の前に、§11 の手順 6 で選択式に記入）
 

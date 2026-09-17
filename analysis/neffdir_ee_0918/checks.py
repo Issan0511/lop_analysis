@@ -223,7 +223,10 @@ def _grad_factor(M, arm_name: str, pre: dict):
     got = torch.autograd.grad((out[3] * G).sum(), out[2])[0]
     e2 = sh[2][ob] if sh is not None else torch.zeros_like(out[2])
     ze = out[2].detach() + e2
-    s = car.s[ob] if hasattr(car, "s") else torch.ones_like(ze)
+    # Build the expected scale from U and the specified q, never from car.s:
+    # otherwise removing 1/q changes both sides of this check together.
+    s = (torch.where(U[ob] < arm["q"], torch.tensor(1.0 / arm["q"]), torch.tensor(0.0))
+         if arm["carrier"] == "fixed" else torch.ones_like(ze))
     want = (G * s) * car.dphi2(ze)
     return got, want, car
 
@@ -298,7 +301,11 @@ def s1b(M) -> dict:
             mover.refresh(0)
         ze32 = zb + sh[2]
         if a == "S2dyn_felu":
-            g = torch.where(ze32 > 0, torch.ones_like(ze32), torch.exp(ze32.clamp(max=0.0))).double()
+            # The independent reference must use the registered F.elu kernel:
+            # torch.exp differs by 1 ulp at some z (spec 2.3 and S1c).
+            # Do not call the runner's dphi_felu: its mutation must remain detectable.
+            zz = ze32.detach().clone().requires_grad_(True)
+            g = torch.autograd.grad(F.elu(zz, alpha=1.0).sum(), zz)[0].double()
         else:
             g = RE.dphi_train(ze32).double()
         if a == "S2dyn_m50":
