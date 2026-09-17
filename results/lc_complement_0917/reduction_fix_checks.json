@@ -1,0 +1,14 @@
+{
+  "issue": "False task26 GPU replay mismatch from per-model vs batched float64 reduction",
+  "fix": "Same batched reduction as neff_pred_0917.Box.stats; equality guard unchanged",
+  "tests": {
+    "reference_reduction_and_old_counterexample": "PASS",
+    "resume_only_exact_completed_prefix": "PASS",
+    "completed_c1_shards_compatible": 10
+  },
+  "files": {
+    "analysis/lc_complement_0917/gpu.py": "66c07471046288826216e6bcc1778243c0f29afe365784359f0613f05bf15445",
+    "analysis/lc_complement_0917/run_all.py": "b9fe95572335e0fa285071277661761904503518fb9f47d6ffe155f95d9aba18",
+    "analysis/lc_complement_0917/check_reduction.py": "fba7def0f6d26d2afabbc36dae4731ce232fc1feb0180443511337de8384a02a"
+  }
+}

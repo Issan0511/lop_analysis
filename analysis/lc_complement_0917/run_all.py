@@ -53,6 +53,52 @@ def save(state):
     tmp.replace(OUT / "status.json")
 
 
+def completed_prefix(state, plan):
+    if state["status"] != "FAILED":
+        raise ValueError("Explicit resume requires a failed, stopped run")
+    names = [entry["job"] for entry in state["completed"]]
+    if names != [name for name, _ in plan[:len(names)]] or len(names) >= len(plan):
+        raise ValueError("Completed jobs must be an exact prefix of this plan")
+    if state["current_job"] != plan[len(names)][0]:
+        raise ValueError("Failure does not point to the next unfinished job")
+    return len(names)
+
+
+def resume(plan):
+    from analysis.lc_complement_0917.verdict import load
+    from src.lc_complement_0917 import code_hashes
+    state = json.loads((OUT / "status.json").read_text())
+    count = completed_prefix(state, plan)
+    for name, command in plan[:count]:
+        output = Path(command[command.index("--out") + 1])
+        if name.endswith("_aggregate"):
+            for file in ("summary.md", "verdict.csv", "verdict.json"):
+                if not (output / file).is_file():
+                    raise ValueError(f"Missing completed aggregate: {output / file}")
+        else:
+            p = json.loads((output / "provenance.json").read_text())
+            if p["status"] != "COMPLETE" or p["smoke"] or p["code_sha256"] != code_hashes(p["part"]):
+                raise ValueError(f"Completed shard is incompatible: {name}")
+            if p["part"] != "c1-gpu":
+                load(output, p["part"], p["config"]["seed"], p["config"].get("arm"))
+    # Preserve failed data and logs verbatim; only the failed job is rerun.
+    archive = OUT / "failed_attempts" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    archive.mkdir(parents=True, exist_ok=False)
+    (archive / "status.json").write_text((OUT / "status.json").read_text())
+    name, command = plan[count]
+    failed_output = Path(command[command.index("--out") + 1])
+    if failed_output.exists():
+        failed_output.rename(archive / failed_output.name)
+    failed_log = OUT / f"{name}.log"
+    if failed_log.exists():
+        failed_log.rename(archive / failed_log.name)
+    state.setdefault("resumes", []).append(dict(time=now(), commit=git("rev-parse", "HEAD"),
+                                                failed_attempt=str(archive)))
+    state.update(status="RUNNING", pid=os.getpid())
+    state.pop("error", None)
+    return state, count
+
+
 def finalize(state):
     # Small summaries go into git; all per-seed arrays and process logs already
     # live outside the worktree. Keep the original validation manifest entries.
@@ -106,13 +152,18 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     lock = (OUT / "launch.lock").open("a")
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    if (OUT / "status.json").exists():
-        raise FileExistsError("Existing run status: refuse a duplicate or implicit restart")
-    state = dict(status="RUNNING", started_at=now(), pid=os.getpid(),
-                 run_commit=git("rev-parse", "HEAD"), completed=[], total_jobs=len(list(jobs())))
+    plan = list(jobs())
+    if "--resume" in sys.argv:
+        state, offset = resume(plan)
+    else:
+        if (OUT / "status.json").exists():
+            raise FileExistsError("Existing run status: refuse a duplicate or implicit restart")
+        state = dict(status="RUNNING", started_at=now(), pid=os.getpid(),
+                     run_commit=git("rev-parse", "HEAD"), completed=[], total_jobs=len(plan))
+        offset = 0
     save(state)
     try:
-        for name, command in jobs():
+        for name, command in plan[offset:]:
             state.update(current_job=name, current_started_at=now())
             save(state)
             log = OUT / f"{name}.log"

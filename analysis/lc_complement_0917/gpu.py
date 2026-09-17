@@ -23,6 +23,16 @@ def fields(box):
     return (z1, a1, N.L.gate(z1, e.elu1)), (z2, a2, N.L.gate(z2, e.elu2))
 
 
+def reference_zmeans(field_values):
+    """Use the reference's batched reduction, including its rounding order.
+
+    A separate mean for each model launches a different CUDA reduction kernel
+    and can differ by a float64 ULP even when the float32 field is identical.
+    The equality guard stays exact; this fixes the diagnostic computation.
+    """
+    return [z.double().mean(dim=(1, 2)).cpu().numpy() for z, _, _ in field_values]
+
+
 def run(out, tasks=150, device="cuda", smoke=False):
     if not smoke and (tasks != 150 or device != "cuda"):
         raise ValueError("Main replay requires the registered 150-task CUDA protocol")
@@ -62,14 +72,16 @@ def run(out, tasks=150, device="cuda", smoke=False):
                 e.cx[j].copy_(xs[s][:, perms[s]] if m["env"] == "PM" else xs[s])
                 e.cy[j].copy_(torch.nn.functional.one_hot(ys[s] if m["env"] == "PM" else labels[s], 10))
             pending = []
-            for layer, (z, a, g) in enumerate(fields(box), 1):
+            start_fields = fields(box)
+            start_zmeans = reference_zmeans(start_fields)
+            for layer, (z, a, g) in enumerate(start_fields, 1):
                 for j, m in enumerate(box.models):
                     act1, act2 = N.model_key(m)
                     family = "ELU" if (act1, act2)[layer - 1] == "ELU1" else (act1, act2)[layer - 1]
                     stats, _ = C.confusion(a[j], g[j], family)
                     pending.append(dict(engine=box.name, seed=m["seed"], env=m["env"],
                                         act1=act1, act2=act2, task=task, branch=task-1,
-                                        layer=layer, phase="start", zbar=float(z[j].double().mean()), **stats))
+                                        layer=layer, phase="start", zbar=float(start_zmeans[layer-1][j]), **stats))
             e.acc.zero_()
             e.ce.zero_()
             for step in range(0, 6000, N.B.BLOCK):
@@ -77,10 +89,11 @@ def run(out, tasks=150, device="cuda", smoke=False):
                 e.replay_block()
             acc = (e.acc / 6000).cpu().numpy()
             final = fields(box)
+            final_zmeans = reference_zmeans(final)
             for j, m in enumerate(box.models):
                 acts = N.model_key(m)
                 rr = ref.loc[(box.name, m["seed"], m["env"], *acts, task)]
-                values = [float(acc[j]), *(float(z[j].double().mean()) for z, _, _ in final)]
+                values = [float(acc[j]), *(float(zm[j]) for zm in final_zmeans)]
                 expected = [rr.online_acc, rr.end_zbar_l1, rr.end_zbar_l2]
                 if device == "cuda" and values != expected:
                     raise ValueError(f"GPU replay differs at {box.name}/{m}/task{task}: {values} != {expected}")
@@ -93,7 +106,7 @@ def run(out, tasks=150, device="cuda", smoke=False):
                     # No E at task end: pairing it with this task's online would leak the outcome.
                     pending.append(dict(engine=box.name, seed=m["seed"], env=m["env"],
                                         act1=acts[0], act2=acts[1], task=task, branch=task,
-                                        layer=layer, phase="end", zbar=float(z[j].double().mean()), **stats))
+                                        layer=layer, phase="end", zbar=float(final_zmeans[layer-1][j]), **stats))
             rows.extend(pending)
         C.R.write_csv(out / "rows.csv", rows)
         print(f"C1 GPU replay task={task}/{tasks}", flush=True)
