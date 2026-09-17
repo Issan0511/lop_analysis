@@ -1,0 +1,838 @@
+{
+ "run_id": "neff_pred_0917",
+ "created_at": "2026-09-17T15:29:30.236146+09:00",
+ "rule": "~/Projects/claude/CLAUDE.md §4-1 (git 外ファイルの退避・__pycache__ は除外して削除)",
+ "worktree": "/home/issan/Projects/claude/wt/neff_pred_0917",
+ "branch": "claude/neff_pred_0917",
+ "note": "git 外に残っていたのは GPU 走と CPU 3 seed の units.npz（各タスク開始時のユニット別 n_eff・微分の平均・0 の割合）と、検査の作業ディレクトリ results/_checks_neff_pred_0917（S0a/S2 の GPU 3 タスク走と変異走・S0b の CPU 走・S6 の CLI 走・S4 の合成の走・checks_partial.json）。data/ は proj_004_drift/data への symlink で写しではないので退避していない。コピー後に sha256 と bytes を照合してから元を消す。",
+ "total_bytes": 30423977,
+ "n_files": 118,
+ "files": [
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/checks_partial.json",
+   "source_rel": "results/_checks_neff_pred_0917/checks_partial.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/checks_partial.json",
+   "bytes": 8188,
+   "sha256": "0a5675553906eaed29e84d07763042021646bfe5ecc6a3f2ccd3f98c69ab4243"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_base/ee/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/cli_base/ee/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_base/ee/prefix.csv",
+   "bytes": 1474,
+   "sha256": "e6d0c5dcbbbf9b90b76a91ea2893ffb9f35538592d0de74c4218ee16c0324e36"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_base/ee/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/cli_base/ee/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_base/ee/provenance.json",
+   "bytes": 1968,
+   "sha256": "8e377e1bccb4a650ed04f6ff124d950318c04c6a56c3f723c1dc72f7cd40af18"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_base/ee/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/cli_base/ee/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_base/ee/units.npz",
+   "bytes": 21914,
+   "sha256": "b70771c7062c64fb5a038b14e7222308fa2f299bec4fc608769b1ba5fd71a948"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_base/gpu/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/cli_base/gpu/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_base/gpu/provenance.json",
+   "bytes": 8051,
+   "sha256": "bdd8a95b2b7f4a4e5b7e668b66718c989427095191a0f93e80b9ead56fe30962"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_base/gpu/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/cli_base/gpu/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_base/gpu/rows.csv",
+   "bytes": 43153,
+   "sha256": "421ef148bd3b13f46012ebe86a4395adb4ca1fd96ac43bb3c7a49d8688744b1a"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_base/gpu/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/cli_base/gpu/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_base/gpu/units.npz",
+   "bytes": 99327,
+   "sha256": "365da7870c10640f7f25352a409f54c345f514c2a59a47bcbbd7159e78ab7957"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut36/ee/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut36/ee/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut36/ee/prefix.csv",
+   "bytes": 1474,
+   "sha256": "c7d70da6caf7e45acb77753d417c96f36666ecec94695a4e50e15121da7407f2"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut36/ee/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut36/ee/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut36/ee/provenance.json",
+   "bytes": 1970,
+   "sha256": "1bacbe3cc707e754e9855d7af065624241005a414c91aea3ecd2248ff8b3427b"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut36/ee/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut36/ee/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut36/ee/units.npz",
+   "bytes": 21914,
+   "sha256": "b70771c7062c64fb5a038b14e7222308fa2f299bec4fc608769b1ba5fd71a948"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut36/gpu/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut36/gpu/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut36/gpu/provenance.json",
+   "bytes": 8050,
+   "sha256": "612d51739e30a454e53692d3e17b041f3d76dfe7812f5121198ad3a4e15b84f6"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut36/gpu/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut36/gpu/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut36/gpu/rows.csv",
+   "bytes": 43153,
+   "sha256": "421ef148bd3b13f46012ebe86a4395adb4ca1fd96ac43bb3c7a49d8688744b1a"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut36/gpu/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut36/gpu/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut36/gpu/units.npz",
+   "bytes": 99327,
+   "sha256": "365da7870c10640f7f25352a409f54c345f514c2a59a47bcbbd7159e78ab7957"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut37/ee/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut37/ee/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut37/ee/prefix.csv",
+   "bytes": 1473,
+   "sha256": "e4695cb077e80181a1c68f673cddffc6c4586ff212f30f699f7ea723e3017fae"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut37/ee/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut37/ee/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut37/ee/provenance.json",
+   "bytes": 1969,
+   "sha256": "b11f82b5493d1150029b8581dfec8c262ec534f8d163547a3c17d62955e3b3e8"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut37/ee/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut37/ee/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut37/ee/units.npz",
+   "bytes": 21914,
+   "sha256": "b70771c7062c64fb5a038b14e7222308fa2f299bec4fc608769b1ba5fd71a948"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut37/gpu/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut37/gpu/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut37/gpu/provenance.json",
+   "bytes": 8051,
+   "sha256": "e4e00731ff5fa088b114ed8af3d25dd452999ac150ee7b45a502107beb9b5cb1"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut37/gpu/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut37/gpu/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut37/gpu/rows.csv",
+   "bytes": 43153,
+   "sha256": "421ef148bd3b13f46012ebe86a4395adb4ca1fd96ac43bb3c7a49d8688744b1a"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut37/gpu/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut37/gpu/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut37/gpu/units.npz",
+   "bytes": 99327,
+   "sha256": "365da7870c10640f7f25352a409f54c345f514c2a59a47bcbbd7159e78ab7957"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut38/ee/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut38/ee/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut38/ee/prefix.csv",
+   "bytes": 1472,
+   "sha256": "5fc951fb778164d811c7c1592bfcaf26f76070ec69fbfe1d7b1201641514ce9e"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut38/ee/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut38/ee/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut38/ee/provenance.json",
+   "bytes": 2018,
+   "sha256": "01c1ec8dffce9db64dfe2d97d63efa72227e6a8259aa3ee01aab39e2865ea310"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut38/ee/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut38/ee/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut38/ee/units.npz",
+   "bytes": 21914,
+   "sha256": "b70771c7062c64fb5a038b14e7222308fa2f299bec4fc608769b1ba5fd71a948"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut38/gpu/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut38/gpu/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut38/gpu/provenance.json",
+   "bytes": 8101,
+   "sha256": "744af2172aa7d40e1add4c6572f91959ff4fab4ef56ce8da2004b41cc8a816d0"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut38/gpu/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut38/gpu/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut38/gpu/rows.csv",
+   "bytes": 43153,
+   "sha256": "421ef148bd3b13f46012ebe86a4395adb4ca1fd96ac43bb3c7a49d8688744b1a"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut38/gpu/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/cli_mut38/gpu/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/cli_mut38/gpu/units.npz",
+   "bytes": 99327,
+   "sha256": "365da7870c10640f7f25352a409f54c345f514c2a59a47bcbbd7159e78ab7957"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/ee_base/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/ee_base/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/ee_base/prefix.csv",
+   "bytes": 3164,
+   "sha256": "6fbcd13e12eaa49fba243280f36851cd3d81a9175b328a443d01874fa0ba8b7b"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/ee_base/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/ee_base/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/ee_base/provenance.json",
+   "bytes": 1946,
+   "sha256": "95f1df6596ebd58bed93972c61d0beaf26f846bfd2a129c174fbcf7d8a7a0562"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/ee_base/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/ee_base/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/ee_base/units.npz",
+   "bytes": 50960,
+   "sha256": "c65a6f4c81bcee2e2dad0866627c921873dfd1a369e7a0b178e54e147b21784a"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/ee_mut6/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/ee_mut6/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/ee_mut6/prefix.csv",
+   "bytes": 3085,
+   "sha256": "2f1733ae169520aae303d176364c9abaf04c7eed8c755ba59cc2d7ff303f6b8c"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/ee_mut6/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/ee_mut6/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/ee_mut6/provenance.json",
+   "bytes": 1945,
+   "sha256": "cc147b1b3649c74b8a646a469acc32bfd3302402f9813e9bfc2e2992f466b31f"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/ee_mut6/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/ee_mut6/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/ee_mut6/units.npz",
+   "bytes": 51006,
+   "sha256": "d5ad73dd7b5d5e2e45b43d65c497dadf92cb20d899327214cef878c65d592540"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/ee_mut7/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/ee_mut7/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/ee_mut7/prefix.csv",
+   "bytes": 3167,
+   "sha256": "a6c1b7c6b98b5b4df49be18ddf81a52b156a6cdbd45801509728a6389410658d"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/ee_mut7/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/ee_mut7/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/ee_mut7/provenance.json",
+   "bytes": 1946,
+   "sha256": "638b421c0db0e2301b3a43fc4d7b722f52bedf4d9f1488ae97d4bbea4523c3f8"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/ee_mut7/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/ee_mut7/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/ee_mut7/units.npz",
+   "bytes": 50957,
+   "sha256": "4af769e7d819c6331efe5bd279dc633401b6badb5ce7755a6281e661f4112d84"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_base/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_base/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_base/provenance.json",
+   "bytes": 8028,
+   "sha256": "e9d2dd9fa6dec77f4b7136e61fc45b650ccdf04dbc43073bd3b4fc0d8b578a32"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_base/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_base/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_base/rows.csv",
+   "bytes": 129150,
+   "sha256": "3af48f080ba5cabf9c2639c38d1b103423d50bc151d02606d0ae60dd0d228697"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_base/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_base/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_base/units.npz",
+   "bytes": 303939,
+   "sha256": "2017e52fb0e84c5b45fd8e8514fa78c91347a21da37b59a41d12c531a08d2600"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut2/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_mut2/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut2/provenance.json",
+   "bytes": 8028,
+   "sha256": "1d614ae970a8d068e200a92626033b30f21db35f30ec40fce290208920dd633a"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut2/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_mut2/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut2/rows.csv",
+   "bytes": 85947,
+   "sha256": "7a2fecc9ba914de21b3840b5179eb8c07f8b3d9ba95e892502635dc57246948d"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut2/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_mut2/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut2/units.npz",
+   "bytes": 201061,
+   "sha256": "0c01709ff9cf332cc7e9bb39f634d353a1ca0ee59ae90d5da65cd0ab7ef23b2f"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut3/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_mut3/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut3/provenance.json",
+   "bytes": 8025,
+   "sha256": "258862d0d1caf8feb77ced28bf6da0f3d21dc05fb15ac1cbb772e7b54577ff22"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut3/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_mut3/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut3/rows.csv",
+   "bytes": 86007,
+   "sha256": "cf0f77432ac965d8979b067004d4a9e1e9352b9730bfa0d5eb824304281cdb44"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut3/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_mut3/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut3/units.npz",
+   "bytes": 204935,
+   "sha256": "a7c09b87514bc7e55b914d8ff28b5c6649edebbf5ea7398fa20d367e80bbc25c"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut4/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_mut4/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut4/provenance.json",
+   "bytes": 8027,
+   "sha256": "fe637ee8b3a60bf0bfb5c7698ef0e595ea690ce00eca0bc780df36a5ea954762"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut4/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_mut4/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut4/rows.csv",
+   "bytes": 85738,
+   "sha256": "084b9ebe6a9feae6364a80618af213566d2d59c7d3af47631124fc76d9583594"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut4/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_mut4/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_mut4/units.npz",
+   "bytes": 201334,
+   "sha256": "49883a08b805dd07cf5e9c3d90b63d4bee67e6a0561df34c81c957e76dbd0345"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_s2mut17/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_s2mut17/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_s2mut17/provenance.json",
+   "bytes": 8027,
+   "sha256": "d24feb74c81cb4267084fdf76e63375d452c09abe09bafd4172d33694cdbad42"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_s2mut17/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_s2mut17/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_s2mut17/rows.csv",
+   "bytes": 86192,
+   "sha256": "323e2ebb39c03c4c7eea83a29994a263d45a297f4222a4efef5b190fdab76df4"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_s2mut17/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_s2mut17/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_s2mut17/units.npz",
+   "bytes": 213943,
+   "sha256": "420aa2fa60b5ddba196b2a59e77e14ddd5351772673e18196afb096d2631f908"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_s2mut18/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_s2mut18/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_s2mut18/provenance.json",
+   "bytes": 8027,
+   "sha256": "77e0632087370040fc0e5bc4cd15134c5db17f594ad5ac0e59d982db83b9c242"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_s2mut18/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_s2mut18/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_s2mut18/rows.csv",
+   "bytes": 85789,
+   "sha256": "9da9fbd204957336911ce40feb7703cdee6ca7b757f287a540e5d984bdf48d3e"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/gpu_s2mut18/units.npz",
+   "source_rel": "results/_checks_neff_pred_0917/gpu_s2mut18/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/gpu_s2mut18/units.npz",
+   "bytes": 202876,
+   "sha256": "b825160d6caa12e7bb21eaf544f1a0415f6889faecb015711a016ae8b564a579"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/ee/s10/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_all_on_curve/ee/s10/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/ee/s10/prefix.csv",
+   "bytes": 4330,
+   "sha256": "b97722e1268af1172d8df38b3310a6bf4252f81005d8ad0efd6de6bd886f0c66"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/ee/s10/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_all_on_curve/ee/s10/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/ee/s10/provenance.json",
+   "bytes": 73,
+   "sha256": "34f19aae318a86ae688ff66c15b10540f8dbcebd35ed38112dcc09c4fe59865f"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/ee/s11/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_all_on_curve/ee/s11/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/ee/s11/prefix.csv",
+   "bytes": 4301,
+   "sha256": "5fc7ccbdeda3ecb41845744b6ef33fe0fb590d66985ee9b9657d4c6762e6ba95"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/ee/s11/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_all_on_curve/ee/s11/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/ee/s11/provenance.json",
+   "bytes": 73,
+   "sha256": "71a84379a3e441728c61769ba419ee6a19f42d0fb6e58087b89d5f2ffddd5329"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/ee/s12/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_all_on_curve/ee/s12/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/ee/s12/prefix.csv",
+   "bytes": 4355,
+   "sha256": "5de20325e96b806e65c4c6add7c17de2eb190f62d76378cbbb613a07205d91e5"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/ee/s12/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_all_on_curve/ee/s12/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/ee/s12/provenance.json",
+   "bytes": 73,
+   "sha256": "e5ed8b060ae1ab4e248b0bdd7061070cddd4e773f8e1d7a4913a1201d88d2eaa"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/gpu/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_all_on_curve/gpu/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/gpu/provenance.json",
+   "bytes": 62,
+   "sha256": "32913429c5aacce5fe6979d715142b5b7a4a83a99c341a51d96008f053e097de"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/gpu/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_all_on_curve/gpu/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_all_on_curve/gpu/rows.csv",
+   "bytes": 1510165,
+   "sha256": "d306f302431d43af47f0016eb0ef4b14d8569599c618962facf53102b5f7b3c4"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/ee/s10/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_dirty/ee/s10/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/ee/s10/prefix.csv",
+   "bytes": 4330,
+   "sha256": "b97722e1268af1172d8df38b3310a6bf4252f81005d8ad0efd6de6bd886f0c66"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/ee/s10/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_dirty/ee/s10/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/ee/s10/provenance.json",
+   "bytes": 73,
+   "sha256": "34f19aae318a86ae688ff66c15b10540f8dbcebd35ed38112dcc09c4fe59865f"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/ee/s11/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_dirty/ee/s11/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/ee/s11/prefix.csv",
+   "bytes": 4301,
+   "sha256": "5fc7ccbdeda3ecb41845744b6ef33fe0fb590d66985ee9b9657d4c6762e6ba95"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/ee/s11/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_dirty/ee/s11/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/ee/s11/provenance.json",
+   "bytes": 73,
+   "sha256": "71a84379a3e441728c61769ba419ee6a19f42d0fb6e58087b89d5f2ffddd5329"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/ee/s12/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_dirty/ee/s12/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/ee/s12/prefix.csv",
+   "bytes": 4355,
+   "sha256": "5de20325e96b806e65c4c6add7c17de2eb190f62d76378cbbb613a07205d91e5"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/ee/s12/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_dirty/ee/s12/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/ee/s12/provenance.json",
+   "bytes": 73,
+   "sha256": "e5ed8b060ae1ab4e248b0bdd7061070cddd4e773f8e1d7a4913a1201d88d2eaa"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/gpu/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_dirty/gpu/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/gpu/provenance.json",
+   "bytes": 73,
+   "sha256": "74b971d484b74c588acae4749f808e862c4080fbef04941586d3b15f17ed6339"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/gpu/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_dirty/gpu/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_dirty/gpu/rows.csv",
+   "bytes": 1510165,
+   "sha256": "d306f302431d43af47f0016eb0ef4b14d8569599c618962facf53102b5f7b3c4"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/ee/s10/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_ee_off/ee/s10/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/ee/s10/prefix.csv",
+   "bytes": 1956,
+   "sha256": "33a2404799527f7f394c7b97e7a2b09044dadd03c55f64ef0695ef40265132a8"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/ee/s10/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_ee_off/ee/s10/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/ee/s10/provenance.json",
+   "bytes": 73,
+   "sha256": "34f19aae318a86ae688ff66c15b10540f8dbcebd35ed38112dcc09c4fe59865f"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/ee/s11/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_ee_off/ee/s11/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/ee/s11/prefix.csv",
+   "bytes": 1956,
+   "sha256": "33a2404799527f7f394c7b97e7a2b09044dadd03c55f64ef0695ef40265132a8"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/ee/s11/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_ee_off/ee/s11/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/ee/s11/provenance.json",
+   "bytes": 73,
+   "sha256": "71a84379a3e441728c61769ba419ee6a19f42d0fb6e58087b89d5f2ffddd5329"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/ee/s12/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_ee_off/ee/s12/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/ee/s12/prefix.csv",
+   "bytes": 1956,
+   "sha256": "33a2404799527f7f394c7b97e7a2b09044dadd03c55f64ef0695ef40265132a8"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/ee/s12/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_ee_off/ee/s12/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/ee/s12/provenance.json",
+   "bytes": 73,
+   "sha256": "e5ed8b060ae1ab4e248b0bdd7061070cddd4e773f8e1d7a4913a1201d88d2eaa"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/gpu/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_ee_off/gpu/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/gpu/provenance.json",
+   "bytes": 62,
+   "sha256": "32913429c5aacce5fe6979d715142b5b7a4a83a99c341a51d96008f053e097de"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/gpu/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_ee_off/gpu/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_ee_off/gpu/rows.csv",
+   "bytes": 1510165,
+   "sha256": "d306f302431d43af47f0016eb0ef4b14d8569599c618962facf53102b5f7b3c4"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/ee/s10/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_low/ee/s10/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/ee/s10/prefix.csv",
+   "bytes": 4330,
+   "sha256": "b97722e1268af1172d8df38b3310a6bf4252f81005d8ad0efd6de6bd886f0c66"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/ee/s10/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_low/ee/s10/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/ee/s10/provenance.json",
+   "bytes": 73,
+   "sha256": "34f19aae318a86ae688ff66c15b10540f8dbcebd35ed38112dcc09c4fe59865f"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/ee/s11/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_low/ee/s11/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/ee/s11/prefix.csv",
+   "bytes": 4301,
+   "sha256": "5fc7ccbdeda3ecb41845744b6ef33fe0fb590d66985ee9b9657d4c6762e6ba95"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/ee/s11/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_low/ee/s11/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/ee/s11/provenance.json",
+   "bytes": 73,
+   "sha256": "71a84379a3e441728c61769ba419ee6a19f42d0fb6e58087b89d5f2ffddd5329"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/ee/s12/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_low/ee/s12/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/ee/s12/prefix.csv",
+   "bytes": 4355,
+   "sha256": "5de20325e96b806e65c4c6add7c17de2eb190f62d76378cbbb613a07205d91e5"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/ee/s12/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_low/ee/s12/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/ee/s12/provenance.json",
+   "bytes": 73,
+   "sha256": "e5ed8b060ae1ab4e248b0bdd7061070cddd4e773f8e1d7a4913a1201d88d2eaa"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/gpu/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_low/gpu/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/gpu/provenance.json",
+   "bytes": 62,
+   "sha256": "32913429c5aacce5fe6979d715142b5b7a4a83a99c341a51d96008f053e097de"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/gpu/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_low/gpu/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_low/gpu/rows.csv",
+   "bytes": 1459825,
+   "sha256": "06bb0f4fc70b1e8c07b6dff6e7efb08c6c63a200aa195f8a031f0ff33b0f177c"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/ee/s10/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_partial/ee/s10/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/ee/s10/prefix.csv",
+   "bytes": 4330,
+   "sha256": "b97722e1268af1172d8df38b3310a6bf4252f81005d8ad0efd6de6bd886f0c66"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/ee/s10/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_partial/ee/s10/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/ee/s10/provenance.json",
+   "bytes": 73,
+   "sha256": "34f19aae318a86ae688ff66c15b10540f8dbcebd35ed38112dcc09c4fe59865f"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/ee/s11/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_partial/ee/s11/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/ee/s11/prefix.csv",
+   "bytes": 4301,
+   "sha256": "5fc7ccbdeda3ecb41845744b6ef33fe0fb590d66985ee9b9657d4c6762e6ba95"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/ee/s11/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_partial/ee/s11/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/ee/s11/provenance.json",
+   "bytes": 73,
+   "sha256": "71a84379a3e441728c61769ba419ee6a19f42d0fb6e58087b89d5f2ffddd5329"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/ee/s12/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_partial/ee/s12/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/ee/s12/prefix.csv",
+   "bytes": 4355,
+   "sha256": "5de20325e96b806e65c4c6add7c17de2eb190f62d76378cbbb613a07205d91e5"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/ee/s12/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_partial/ee/s12/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/ee/s12/provenance.json",
+   "bytes": 73,
+   "sha256": "e5ed8b060ae1ab4e248b0bdd7061070cddd4e773f8e1d7a4913a1201d88d2eaa"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/gpu/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_partial/gpu/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/gpu/provenance.json",
+   "bytes": 62,
+   "sha256": "32913429c5aacce5fe6979d715142b5b7a4a83a99c341a51d96008f053e097de"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/gpu/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_gelu_partial/gpu/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_gelu_partial/gpu/rows.csv",
+   "bytes": 1503673,
+   "sha256": "b14937f8f0c79a3b25da73214f3deee3b89330b9127cbd413da439b96dbbca2e"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_missing_seed/ee/s10/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_missing_seed/ee/s10/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_missing_seed/ee/s10/prefix.csv",
+   "bytes": 4330,
+   "sha256": "b97722e1268af1172d8df38b3310a6bf4252f81005d8ad0efd6de6bd886f0c66"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_missing_seed/ee/s10/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_missing_seed/ee/s10/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_missing_seed/ee/s10/provenance.json",
+   "bytes": 73,
+   "sha256": "34f19aae318a86ae688ff66c15b10540f8dbcebd35ed38112dcc09c4fe59865f"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_missing_seed/ee/s11/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_missing_seed/ee/s11/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_missing_seed/ee/s11/prefix.csv",
+   "bytes": 4301,
+   "sha256": "5fc7ccbdeda3ecb41845744b6ef33fe0fb590d66985ee9b9657d4c6762e6ba95"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_missing_seed/ee/s11/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_missing_seed/ee/s11/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_missing_seed/ee/s11/provenance.json",
+   "bytes": 73,
+   "sha256": "71a84379a3e441728c61769ba419ee6a19f42d0fb6e58087b89d5f2ffddd5329"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_missing_seed/gpu/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_missing_seed/gpu/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_missing_seed/gpu/provenance.json",
+   "bytes": 62,
+   "sha256": "32913429c5aacce5fe6979d715142b5b7a4a83a99c341a51d96008f053e097de"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_missing_seed/gpu/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_missing_seed/gpu/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_missing_seed/gpu/rows.csv",
+   "bytes": 1510165,
+   "sha256": "d306f302431d43af47f0016eb0ef4b14d8569599c618962facf53102b5f7b3c4"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/ee/s10/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_tied/ee/s10/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/ee/s10/prefix.csv",
+   "bytes": 4330,
+   "sha256": "b97722e1268af1172d8df38b3310a6bf4252f81005d8ad0efd6de6bd886f0c66"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/ee/s10/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_tied/ee/s10/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/ee/s10/provenance.json",
+   "bytes": 73,
+   "sha256": "34f19aae318a86ae688ff66c15b10540f8dbcebd35ed38112dcc09c4fe59865f"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/ee/s11/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_tied/ee/s11/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/ee/s11/prefix.csv",
+   "bytes": 4301,
+   "sha256": "5fc7ccbdeda3ecb41845744b6ef33fe0fb590d66985ee9b9657d4c6762e6ba95"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/ee/s11/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_tied/ee/s11/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/ee/s11/provenance.json",
+   "bytes": 73,
+   "sha256": "71a84379a3e441728c61769ba419ee6a19f42d0fb6e58087b89d5f2ffddd5329"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/ee/s12/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_tied/ee/s12/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/ee/s12/prefix.csv",
+   "bytes": 4355,
+   "sha256": "5de20325e96b806e65c4c6add7c17de2eb190f62d76378cbbb613a07205d91e5"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/ee/s12/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_tied/ee/s12/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/ee/s12/provenance.json",
+   "bytes": 73,
+   "sha256": "e5ed8b060ae1ab4e248b0bdd7061070cddd4e773f8e1d7a4913a1201d88d2eaa"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/gpu/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_tied/gpu/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/gpu/provenance.json",
+   "bytes": 62,
+   "sha256": "32913429c5aacce5fe6979d715142b5b7a4a83a99c341a51d96008f053e097de"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/gpu/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_tied/gpu/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_tied/gpu/rows.csv",
+   "bytes": 1433935,
+   "sha256": "686d4014c0d95a53bb8ed8fd2ffb6b06ce184e7e83216d21a41b29b769d644e8"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s10/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s10/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s10/prefix.csv",
+   "bytes": 4330,
+   "sha256": "b97722e1268af1172d8df38b3310a6bf4252f81005d8ad0efd6de6bd886f0c66"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s10/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s10/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s10/provenance.json",
+   "bytes": 73,
+   "sha256": "34f19aae318a86ae688ff66c15b10540f8dbcebd35ed38112dcc09c4fe59865f"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s11/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s11/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s11/prefix.csv",
+   "bytes": 4301,
+   "sha256": "5fc7ccbdeda3ecb41845744b6ef33fe0fb590d66985ee9b9657d4c6762e6ba95"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s11/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s11/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s11/provenance.json",
+   "bytes": 73,
+   "sha256": "71a84379a3e441728c61769ba419ee6a19f42d0fb6e58087b89d5f2ffddd5329"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s12/prefix.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s12/prefix.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s12/prefix.csv",
+   "bytes": 4355,
+   "sha256": "5de20325e96b806e65c4c6add7c17de2eb190f62d76378cbbb613a07205d91e5"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s12/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s12/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/ee/s12/provenance.json",
+   "bytes": 73,
+   "sha256": "e5ed8b060ae1ab4e248b0bdd7061070cddd4e773f8e1d7a4913a1201d88d2eaa"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/gpu/provenance.json",
+   "source_rel": "results/_checks_neff_pred_0917/synth_wrong_prereg/gpu/provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/gpu/provenance.json",
+   "bytes": 62,
+   "sha256": "07bd00a11da21b419f414d3cff39dbb78fb54dd18a2fbddf4fb68f46eb938e68"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/gpu/rows.csv",
+   "source_rel": "results/_checks_neff_pred_0917/synth_wrong_prereg/gpu/rows.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/_checks_neff_pred_0917/synth_wrong_prereg/gpu/rows.csv",
+   "bytes": 1510165,
+   "sha256": "d306f302431d43af47f0016eb0ef4b14d8569599c618962facf53102b5f7b3c4"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/neff_pred_0917/ee/s10/units.npz",
+   "source_rel": "results/neff_pred_0917/ee/s10/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/neff_pred_0917/ee/s10/units.npz",
+   "bytes": 479068,
+   "sha256": "6c5704aad78b387ed331fa74b7e8fcf237c2bca4e2b4a56e933c992787095519"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/neff_pred_0917/ee/s11/units.npz",
+   "source_rel": "results/neff_pred_0917/ee/s11/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/neff_pred_0917/ee/s11/units.npz",
+   "bytes": 470179,
+   "sha256": "4b536c35cfed507e34e9649e3e6b5381332ea81b02e78a10b7229e53f4ec9e48"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/neff_pred_0917/ee/s12/units.npz",
+   "source_rel": "results/neff_pred_0917/ee/s12/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/neff_pred_0917/ee/s12/units.npz",
+   "bytes": 648914,
+   "sha256": "ca713de24d42a29b3b7b460ccb5fb28de1c802057f06066843eef4b7b3be4b54"
+  },
+  {
+   "source": "/home/issan/Projects/claude/wt/neff_pred_0917/results/neff_pred_0917/gpu/units.npz",
+   "source_rel": "results/neff_pred_0917/gpu/units.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/neff_pred_0917/results/neff_pred_0917/gpu/units.npz",
+   "bytes": 13967873,
+   "sha256": "e1da282cb40eabcb66b6db4505c8d280b604db75d61da0d3e4bbf497bd6fd70b"
+  }
+ ]
+}
