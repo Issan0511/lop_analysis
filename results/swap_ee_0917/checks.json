@@ -1,0 +1,552 @@
+{
+  "run_id": "swap_ee_0917",
+  "started_at": "2026-09-17T16:59:56.714187+09:00",
+  "spec": "specs/spec_swap_ee_0917.md",
+  "prereg_commit": "64adf3bc1cbc19ec9b700aadff014a468851d10f",
+  "code_sha256": {
+    "src/swap_ee_0917.py": "056fa0f27d850b597f2fa5382cbb71e006053eb9ca85c375a45ec9b00e27de97",
+    "analysis/swap_ee_0917/verdict.py": "3c40d3124e3885d4f9922204e291ef8e8ba904bdb66d675663e6144c9d770559",
+    "analysis/swap_ee_0917/checks.py": "b2951a1b2aaaa13a94f6e4e3a2c367937fbe245a41c741bb6f6f9d4dc0a5e789"
+  },
+  "torch": "2.13.0+cu130",
+  "S0c_S-cap-prefix": {
+    "title": "S0c the cap12 prefix is l2cap_ee_0917's cap12",
+    "target": "src/swap_ee_0917.py",
+    "threshold_derivation": "run_cap_prefix at 80 epochs, tasks 1-2, seed 0: every EL.unit_arrays array at both task ends is\n    bit-equal to l2cap_ee_0917's archived cap12_s0 units (the archive only if its sha256 matches the\n    manifest), and task 2 wrote second-layer rows (non-vacuity).  Bit comparisons only.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "archive_loaded": true,
+      "match": [
+        true,
+        true
+      ],
+      "keys": [
+        39,
+        39
+      ],
+      "bad": [
+        "",
+        ""
+      ],
+      "rows_w2_t2": 354048,
+      "both_tasks_match": true,
+      "keys_compared": true,
+      "nonvacuous": true
+    },
+    "mutations": [
+      {
+        "mutation": "M0a: the caps are on in task 1 with init radii",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "both_tasks_match"
+          ]
+        }
+      },
+      {
+        "mutation": "M0b: the radii are taken at init",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "both_tasks_match"
+          ]
+        }
+      },
+      {
+        "mutation": "M0c: the perpendicular cap is skipped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "both_tasks_match",
+            "nonvacuous"
+          ]
+        }
+      },
+      {
+        "mutation": "M0d: the row-norm cap is skipped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "both_tasks_match",
+            "nonvacuous"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 44.7
+  },
+  "all_pass": true,
+  "S1_S-arms": {
+    "title": "S1 the swap arms at the real branch",
+    "target": "src/swap_ee_0917.py",
+    "threshold_derivation": "Seed 0, 80 epochs, the two prefixes computed once (the prefix code is S0c's and resp_ee's), then\n    8 arms through M.run_seed: (i) branch-point logits equal the host's natural logits for every arm;\n    (ii) the swap is real: at the start the cap12 host with ref's field has >= 0.9 of (unit, image) pairs\n    with a zero training derivative and the ref host with cap12's field <= 0.01 (ref's t10 has 0.94,\n    cap12's 1e-4: l2cap_ee_0917), while each host's natural arm keeps its own; (iii) d(0) of SC_dyn_r and\n    RR_dyn_r is the fixed field; (iv) both shadows are their networks' natural continuations (state hash =\n    the prefix's t11 and t12); (v) the capped arms stay within TOL_CAP of their radii and wrote rows, the\n    free cap12 arm ends above cap12's radii (non-vacuity), the 'here' caps bind on the ref host; (vi)\n    NR_r is resp_ee_0917's N10r (state hash, both tasks).  Tolerance: TOL_CAP.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_logits": true,
+      "zero2_start": {
+        "NC_r": 0.0002,
+        "NC_free_r": 0.0002,
+        "SC_fix_r": 0.9644333333333333,
+        "SC_dyn_r": 0.9644333333333333,
+        "NR_r": 0.9644333333333333,
+        "NR_cap_r": 0.9644333333333333,
+        "RR_fix_r": 0.0002,
+        "RR_dyn_r": 0.0002
+      },
+      "ii_swap_real": true,
+      "iii_field0": true,
+      "iv_shadows": true,
+      "v_caps_hold": true,
+      "v_caps_bind": true,
+      "v_free_grows": true,
+      "vi_NR_is_N10r": true
+    },
+    "mutations": [
+      {
+        "mutation": "M1a: cap12's shadow runs without cap12's caps",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iv_shadows"
+          ]
+        }
+      },
+      {
+        "mutation": "M1b: 'own' caps are not applied",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "v_caps_hold",
+            "v_caps_bind"
+          ]
+        }
+      },
+      {
+        "mutation": "M1c: the restore arm takes ref's own field (no swap)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_swap_real"
+          ]
+        }
+      },
+      {
+        "mutation": "M1d: fixed fields without the anchor (forward value moves too)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_logits"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 826.5
+  },
+  "S8_S-verdict": {
+    "title": "S8 the verdict on synthetic seeds",
+    "target": "analysis/swap_ee_0917/verdict.py",
+    "threshold_derivation": "verdict.analyze on 14 synthetic scenarios: labels as designed, estimates within TOL_EST, the\n    imported t quantile on the published table within 1e-6.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "designed": {
+        "labels": {
+          "Q1": "REMAINDER_FOLLOWS_HOST",
+          "Q2": "BOTH_WAYS",
+          "Q3_P_C": "GROWTH_COSTS",
+          "Q3_P_R": "GROWTH_COSTS",
+          "Q3_P_N": "GROWTH_COSTS",
+          "Q3_P_F": "GROWTH_COSTS"
+        },
+        "bad": []
+      },
+      "in_both": {
+        "labels": {
+          "Q1": "REMAINDER_IN_BOTH",
+          "Q2": "BOTH_WAYS",
+          "Q3_P_C": "GROWTH_COSTS",
+          "Q3_P_R": "GROWTH_COSTS",
+          "Q3_P_N": "GROWTH_COSTS",
+          "Q3_P_F": "GROWTH_COSTS"
+        },
+        "bad": []
+      },
+      "none": {
+        "labels": {
+          "Q1": "NO_REMAINDER_IN_NONPUSHING_HOST",
+          "Q2": "BOTH_WAYS",
+          "Q3_P_C": "GROWTH_COSTS",
+          "Q3_P_R": "GROWTH_COSTS",
+          "Q3_P_N": "GROWTH_COSTS",
+          "Q3_P_F": "GROWTH_COSTS"
+        },
+        "bad": []
+      },
+      "larger_in_pushing": {
+        "labels": {
+          "Q1": "REMAINDER_LARGER_IN_PUSHING_HOST",
+          "Q2": "BOTH_WAYS",
+          "Q3_P_C": "GROWTH_COSTS",
+          "Q3_P_R": "GROWTH_COSTS",
+          "Q3_P_N": "GROWTH_COSTS",
+          "Q3_P_F": "GROWTH_COSTS"
+        },
+        "bad": []
+      },
+      "borderline": {
+        "labels": {
+          "Q1": "NO_REMAINDER_IN_NONPUSHING_HOST",
+          "Q2": "BOTH_WAYS",
+          "Q3_P_C": "GROWTH_COSTS",
+          "Q3_P_R": "GROWTH_COSTS",
+          "Q3_P_N": "GROWTH_COSTS",
+          "Q3_P_F": "GROWTH_COSTS"
+        },
+        "bad": []
+      },
+      "not_reproduced": {
+        "labels": {
+          "Q1": "NOT_REPRODUCED",
+          "Q2": "NOT_REPRODUCED",
+          "Q3_P_C": "GROWTH_COSTS",
+          "Q3_P_R": "GROWTH_COSTS",
+          "Q3_P_N": "GROWTH_COSTS",
+          "Q3_P_F": "GROWTH_COSTS"
+        },
+        "bad": []
+      },
+      "r_t2_absent": {
+        "labels": {
+          "Q1": "NOT_REPRODUCED",
+          "Q2": "NOT_REPRODUCED",
+          "Q3_P_C": "GROWTH_COSTS",
+          "Q3_P_R": "GROWTH_COSTS",
+          "Q3_P_N": "GROWTH_COSTS",
+          "Q3_P_F": "GROWTH_COSTS"
+        },
+        "bad": []
+      },
+      "shadow_broken": {
+        "labels": {
+          "Q1": "INAPPLICABLE",
+          "Q2": "INAPPLICABLE",
+          "Q3_P_C": "INAPPLICABLE",
+          "Q3_P_R": "INAPPLICABLE",
+          "Q3_P_N": "INAPPLICABLE",
+          "Q3_P_F": "INAPPLICABLE"
+        },
+        "bad": []
+      },
+      "cap_violation": {
+        "labels": {
+          "Q1": "INAPPLICABLE",
+          "Q2": "INAPPLICABLE",
+          "Q3_P_C": "INAPPLICABLE",
+          "Q3_P_R": "INAPPLICABLE",
+          "Q3_P_N": "INAPPLICABLE",
+          "Q3_P_F": "INAPPLICABLE"
+        },
+        "bad": []
+      },
+      "cap_idle": {
+        "labels": {
+          "Q1": "INAPPLICABLE",
+          "Q2": "INAPPLICABLE",
+          "Q3_P_C": "INAPPLICABLE",
+          "Q3_P_R": "INAPPLICABLE",
+          "Q3_P_N": "INAPPLICABLE",
+          "Q3_P_F": "INAPPLICABLE"
+        },
+        "bad": []
+      },
+      "sink_only": {
+        "labels": {
+          "Q1": "REMAINDER_FOLLOWS_HOST",
+          "Q2": "SINK_ONLY",
+          "Q3_P_C": "GROWTH_COSTS",
+          "Q3_P_R": "GROWTH_COSTS",
+          "Q3_P_N": "GROWTH_COSTS",
+          "Q3_P_F": "GROWTH_COSTS"
+        },
+        "bad": []
+      },
+      "paired_matters": {
+        "labels": {
+          "Q1": "REMAINDER_FOLLOWS_HOST",
+          "Q2": "BOTH_WAYS",
+          "Q3_P_C": "GROWTH_COSTS",
+          "Q3_P_R": "GROWTH_COSTS",
+          "Q3_P_N": "GROWTH_COSTS",
+          "Q3_P_F": "GROWTH_COSTS"
+        },
+        "bad": []
+      },
+      "prefix_mismatch": {
+        "labels": {
+          "Q1": "INAPPLICABLE",
+          "Q2": "INAPPLICABLE",
+          "Q3_P_C": "INAPPLICABLE",
+          "Q3_P_R": "INAPPLICABLE",
+          "Q3_P_N": "INAPPLICABLE",
+          "Q3_P_F": "INAPPLICABLE"
+        },
+        "bad": []
+      },
+      "respdyn_k2": {
+        "labels": {
+          "Q1": "INAPPLICABLE",
+          "Q2": "INAPPLICABLE",
+          "Q3_P_C": "INAPPLICABLE",
+          "Q3_P_R": "INAPPLICABLE",
+          "Q3_P_N": "INAPPLICABLE",
+          "Q3_P_F": "INAPPLICABLE"
+        },
+        "bad": []
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M8a: R_C against the fixed field",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|R_C: got 0.22999999999999998 want 0.11",
+            "designed|D: got 0.22000000000000003 want 0.1",
+            "in_both|Q1: got REMAINDER_FOLLOWS_HOST want REMAINDER_IN_BOTH",
+            "in_both|D: got 0.12000000000000002 want 0.0",
+            "none|Q1: got REMAINDER_FOLLOWS_HOST want NO_REMAINDER_IN_NONPUSHING_HOST",
+            "none|R_C: got 0.12 want 0.0",
+            "larger_in_pushing|Q1: got REMAINDER_FOLLOWS_HOST want REMAINDER_LARGER_IN_PUSHING_HOST",
+            "borderline|Q1: got REMAINDER_FOLLOWS_HOST want NO_REMAINDER_IN_NONPUSHING_HOST"
+          ]
+        }
+      },
+      {
+        "mutation": "M8b: R_R against the cap12 floor",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|R_R: got -0.04999999999999999 want 0.01",
+            "designed|D: got 0.16 want 0.1",
+            "in_both|Q1: got REMAINDER_FOLLOWS_HOST want REMAINDER_IN_BOTH",
+            "in_both|R_R: got -0.04999999999999999 want 0.11",
+            "in_both|D: got 0.16 want 0.0",
+            "larger_in_pushing|Q1: got REMAINDER_FOLLOWS_HOST want REMAINDER_LARGER_IN_PUSHING_HOST",
+            "paired_matters|D: got 0.16 want 0.1"
+          ]
+        }
+      },
+      {
+        "mutation": "M8c: D reversed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|Q1: got REMAINDER_LARGER_IN_PUSHING_HOST want REMAINDER_FOLLOWS_HOST",
+            "designed|D: got -0.10000000000000002 want 0.1",
+            "larger_in_pushing|Q1: got REMAINDER_FOLLOWS_HOST want REMAINDER_LARGER_IN_PUSHING_HOST",
+            "paired_matters|Q1: got REMAINDER_LARGER_IN_PUSHING_HOST want REMAINDER_FOLLOWS_HOST",
+            "paired_matters|D: got -0.1 want 0.1"
+          ]
+        }
+      },
+      {
+        "mutation": "M8d: Q1 at 95%",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "borderline|Q1: got REMAINDER_IN_BOTH want NO_REMAINDER_IN_NONPUSHING_HOST"
+          ]
+        }
+      },
+      {
+        "mutation": "M8e: (B) never required",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "not_reproduced|Q1: got REMAINDER_FOLLOWS_HOST want NOT_REPRODUCED",
+            "not_reproduced|Q2: got RESTORE_ONLY want NOT_REPRODUCED",
+            "r_t2_absent|Q1: got REMAINDER_FOLLOWS_HOST want NOT_REPRODUCED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8f: shadows not checked",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "shadow_broken|Q1: got REMAINDER_FOLLOWS_HOST want INAPPLICABLE",
+            "shadow_broken|n_valid: got 10 want 7"
+          ]
+        }
+      },
+      {
+        "mutation": "M8g: cap tolerance 0.1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "cap_violation|Q1: got REMAINDER_FOLLOWS_HOST want INAPPLICABLE",
+            "cap_violation|n_valid: got 10 want 7"
+          ]
+        }
+      },
+      {
+        "mutation": "M8h: binding not checked",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "cap_idle|Q1: got REMAINDER_FOLLOWS_HOST want INAPPLICABLE",
+            "cap_idle|n_valid: got 10 want 7"
+          ]
+        }
+      },
+      {
+        "mutation": "M8i: pairing broken",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|Q3_P_N: got NO_EFFECT want GROWTH_COSTS",
+            "paired_matters|Q1: got NOT_REPRODUCED want REMAINDER_FOLLOWS_HOST",
+            "paired_matters|Q2: got NOT_REPRODUCED want BOTH_WAYS"
+          ]
+        }
+      },
+      {
+        "mutation": "M8j: the sink loss with the fixed field",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|L_S: got 0.4 want 0.52"
+          ]
+        }
+      },
+      {
+        "mutation": "M8k: the cap12 prefix not checked",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "prefix_mismatch|Q1: got REMAINDER_FOLLOWS_HOST want INAPPLICABLE",
+            "prefix_mismatch|n_valid: got 10 want 7"
+          ]
+        }
+      },
+      {
+        "mutation": "M8l: the reproduction checks on task 1 only",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "respdyn_k2|Q1: got REMAINDER_FOLLOWS_HOST want INAPPLICABLE",
+            "respdyn_k2|n_valid: got 10 want 7"
+          ]
+        }
+      },
+      {
+        "mutation": "M8m: P_N reversed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|Q3_P_N: got GROWTH_HELPS want GROWTH_COSTS",
+            "designed|P_N: got -0.01999999999999999 want 0.02"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 2.4
+  },
+  "S9_S-cli": {
+    "title": "S9 the CLI's provenance and constants",
+    "target": "src/swap_ee_0917.py",
+    "threshold_derivation": "main() with 2 epochs and one arm writes provenance naming this experiment and spec, flush on,\n    the branch 10 and the 2 continuation tasks, and hashes of this runner and every module it runs;\n    the registered constants are branch 10, 80 epochs, 12 prefix tasks and 14 arms.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "experiment": true,
+      "spec": true,
+      "flush": true,
+      "branch": true,
+      "hashes": true,
+      "constants": true
+    },
+    "mutations": [
+      {
+        "mutation": "M9a: flush off",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "flush"
+          ]
+        }
+      },
+      {
+        "mutation": "M9b: another spec",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "spec"
+          ]
+        }
+      },
+      {
+        "mutation": "M9c: branch at 5",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "branch",
+            "constants"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 12.7
+  },
+  "S-cost": {
+    "pass": true,
+    "gate": "all 4 exit 0 and slots >= 4",
+    "returncodes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "mem_available_gib": 11.090534210205078,
+    "peak_rss_gib": 1.3240089416503906,
+    "slots": 6,
+    "prefix_s": 111.94230794906616,
+    "plain_arm_s": 11.697378396987915,
+    "dyn_arm_s": 68.10017848014832,
+    "one_seed_min": 9.295326765378316,
+    "grid_10_wall_min_at_probe": 23.23831691344579,
+    "measured_at": "2026-09-17T17:19:05.404185+09:00",
+    "seconds": 262.5
+  },
+  "finished_at": "2026-09-17T17:19:05.404753+09:00"
+}

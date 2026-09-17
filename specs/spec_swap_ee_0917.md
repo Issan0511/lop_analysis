@@ -168,7 +168,7 @@ $P_C=E(\text{SC\_dyn\_r})-E(\text{SC\_dyn\_free\_r})$、$P_R=E(\text{RR\_dyn\_ca
 | $P_N$ | NO_EFFECT 70%（崩壊後に成長を止めても戻れない） |
 | $P_F$ | NO_EFFECT 55% / GROWTH_COSTS 35%（上限を外しても 2 タスクでは崩れきらない。ref は t1 から T½ 7） |
 
-**Issa の予測**: （登録後・本走前にチャットで記入）
+**Issa の予測**（2026-09-17・登録 commit 64adf3b の後、本走の前にチャットの選択式で記入）: Q1 **REMAINDER_FOLLOWS_HOST**、Q2 **BOTH_WAYS**、$P_N$ **NO_EFFECT**、$P_C$ **NO_EFFECT**。$P_R$・$P_F$ は未記入。ラベルだけを記録し、Issa 自身の確率は付けない。Claude の最頻ラベルと全項目で一致。
 
 ## 8. 費用と実行
 
