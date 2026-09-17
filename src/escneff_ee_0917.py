@@ -33,7 +33,7 @@ from src import escape_ee_0917 as ES             # the twelve arms, the prefix, 
 
 EXPERIMENT = "escneff_ee_0917"
 SPEC = "specs/spec_escneff_ee_0917.md"
-PREREG_COMMIT = "unregistered"                   # set to the spec's registration commit before the run
+PREREG_COMMIT = "469327c3c46ec81fc67f0cc8c638afaea8306b26"   # specs/spec_escneff_ee_0917.md, pushed before any arm ran on seeds 10-19
 ROOT = Path(__file__).resolve().parents[1]
 NEFF_PRED_EE = ROOT / "results" / "neff_pred_0917" / "ee"
 SEEDS = tuple(range(10, 20))
