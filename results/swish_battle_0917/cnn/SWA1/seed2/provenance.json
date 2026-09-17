@@ -1,0 +1,41 @@
+{
+  "run_id": "swish_battle_0917",
+  "box": "cnn",
+  "arm": "SWA1",
+  "seed": 2,
+  "git_hash": "0c435d39502e7b4789c2242adf73d9117d8b5a61",
+  "git_dirty_code": false,
+  "host": "src/rlcifar_cnn_0908.py",
+  "act": {
+    "family": "swish",
+    "adaptive": true,
+    "c": 1.0,
+    "beta": 0.01,
+    "alpha_clip": [
+      0.001,
+      1000.0
+    ]
+  },
+  "lr": 0.001,
+  "optimizer": "adam",
+  "tasks": 50,
+  "epochs_per_task": 400,
+  "tasks_completed": 50,
+  "divergence": {
+    "diverged": false,
+    "task": null,
+    "step": null,
+    "seed": 2,
+    "arm": "SWA1"
+  },
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 5060 Ti",
+  "threads": 1,
+  "torch": "2.13.0+cu130",
+  "hostname": "white-san",
+  "maxrss_mb": 2107.8046875,
+  "wall_clock_s": 6086.192719221115
+}
