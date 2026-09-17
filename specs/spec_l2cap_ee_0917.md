@@ -182,3 +182,11 @@ mucap_ee_0917 の spec §3 と同じ診断点・`units.npz`・`per_task.csv`。�
 - shard: `results/l2cap_ee_0917/runs/<arm>_s<seed>/`。集約と判定: `analysis/l2cap_ee_0917/verdict.py` → `results/l2cap_ee_0917/{summary.md,verdict.csv,paired.csv,timing.csv,secondary.csv,provenance.json}`。
 - `units.npz`・task 列だけの `ledger.npz`・`results/_checks_l2cap_ee_0917/` は git に入れず、`obsidian-research-data/l2cap_ee_0917/` へ退避して `backup_manifest.json` に記録する。
 - 結果 commit の後、その日のうちに origin/main へ統合し worktree と branch を消す。
+
+## 10. 実行記録（本走後の追記・計画は変えていない）
+
+- 本走: 2026-09-17 09:24–11:25、commit 866c045、4 並列（別セッションの負荷のため）、50/50 完走・失敗 0・有効 seed 10。1 run 7.0–10.0 分。判定スクリプトは本走後に変更していない。
+- 判定: 主 **RESCUED**（cap12・10/10 seed ALIVE）、cap12_bfix **RESCUED**、cap1 **COLLAPSED**、cap2 **SPLIT**（9/10 seed で床、seed 6 は主窓 0.124 で閾値 0.115 の上）、時間は 4 腕とも **LATER**。IMPAIRED なし。交互作用 E1 +0.724 [+0.717, +0.732]。
+- 独立検算（verdict.py を使わず shard から）: 主 8 推定値の差は最大 2.2e−16、床の判定は一致。
+- **ref と cap1 は mucap_ee_0917 の ref と cap_both と、全 10 seed・全 100 タスクの units.npz・per_task.csv の記録列・最終状態 hash まで bit 一致**（§2.2 の報告）。
+- 事後の時間経過（未登録）: `analysis/l2cap_ee_0917/posthoc_timecourse.py` → `results/l2cap_ee_0917/posthoc_timecourse.md`。
