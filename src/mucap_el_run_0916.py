@@ -52,6 +52,7 @@ from src import pmnist_rlmnist_0906 as RL        # 0906 runner; not touched
 from src import shell_l2_rlmnist_0913 as SH      # 0913 runner; not touched
 from src import elu_growth_0909 as EG            # ELU1; not touched
 from src import mucap_el_0916 as MU              # the caps (checks S1-S3)
+from src import l2cap_ee_0917 as W2C             # the second-layer row-norm cap (l2cap_ee_0917)
 
 EXPERIMENT = "mucap_el_0916"
 PREREG_COMMIT = "feb41ff6409f2e1aa2a8a145b9a0421fd24925a8"   # specs/spec_mucap_el_0916.md, pushed before any cap arm ran
@@ -118,6 +119,13 @@ def unit_arrays(params, x, act1, act2, e1_64) -> dict[str, np.ndarray]:
     for li, (z, act, k, e64) in enumerate(((z1, act1, 0, e1_64), (z2, act2, 2, e2_64)), start=1):
         z64 = z.double()
         g = act.dphi(z).double()
+        # the derivative training actually uses: autograd through the same activation on the same
+        # float32 z (for this ELU it is expm1 + 1, exactly 0 below z = -16.64; resp_ee_0917).  0917.
+        with torch.enable_grad():
+            zz = z.detach().clone().requires_grad_(True)
+            gt, = torch.autograd.grad(act.phi(zz).sum(), zz)
+        out[f"dtrain_mean_l{li}"] = gt.double().mean(0).numpy()
+        out[f"dtrain_zero_l{li}"] = (gt == 0).double().mean(0).numpy()
         zbar, sd = z64.mean(0), z64.std(0, unbiased=False)
         U = z64.amax(0)
         safe = torch.where(sd > 0, sd, torch.full_like(sd, float("nan")))
@@ -222,11 +230,15 @@ def new_ledger(rows: int) -> dict:
 
 def run_one(arm_s: str, seed: int, lr: float, n_tasks: int, mnist: H.Mnist, device: torch.device,
             epochs: int = EPOCHS, ledger: bool = True, debug: dict | None = None,
-            progress: bool = False, act2_name: str | None = None):
+            progress: bool = False, act2_name: str | None = None, w2cap: bool = False,
+            bias_fix: bool = False):
     """debug (checks only): init, subset, labels, batch orders, the task-1-end state and, at the
     (task, step) pairs in debug['capture'], the state before and after that single update.
     act2_name: None = leaky 0.1 on the second hidden layer (this experiment); a key of ACT2 replaces it
-    (mucap_ee_0917 passes "ELU1")."""
+    (mucap_ee_0917 passes "ELU1").
+    w2cap / bias_fix (l2cap_ee_0917): from the first update of task 2, after the first-layer caps, cap
+    each second-layer row's norm at its task-1-end value / put both hidden biases back to their
+    task-1-end values.  Both default off, which is the 0916 and mucap_ee_0917 path."""
     t_start = time.time()
     act1, act2 = EG.ELU(1.0), H.ARMS["LR"]
     if act2_name is not None:
@@ -250,6 +262,7 @@ def run_one(arm_s: str, seed: int, lr: float, n_tasks: int, mnist: H.Mnist, devi
     h_lab, h_batch = hashlib.sha256(), hashlib.sha256()
     spt = STEPS_PER_EPOCH * epochs
     q_cap = v_cap = None
+    r2 = b_star = None
     rows, led_rows, diag = [], [], {"task": [], "step": []}
     info = {"init_sha256": hashlib.sha256(b"".join(_bytes(q) for q in params)).hexdigest(),
             "subset_idx_sha256": hashlib.sha256(_bytes(idx)).hexdigest(),
@@ -272,9 +285,12 @@ def run_one(arm_s: str, seed: int, lr: float, n_tasks: int, mnist: H.Mnist, devi
         if debug is not None:
             debug.setdefault("labels", []).append(y.cpu().clone())
         cap_on = t >= 2 and (do_par or do_perp)
+        l2_on = t >= 2 and w2cap
+        fix_on = t >= 2 and bias_fix
         acc_sum = torch.zeros((), device=device)
         bad_step = torch.full((), -1, dtype=torch.long, device=device)
-        proj = {"rows_par": 0, "rows_perp": 0, "rem_par": 0.0, "rem_perp": 0.0}
+        proj = {"rows_par": 0, "rows_perp": 0, "rem_par": 0.0, "rem_perp": 0.0,
+                "rows_w2": 0, "rem_w2": 0.0, "rows_bfix": 0}
         acc = new_ledger(params[CAP_LAYER].shape[0]) if ledger else None
         dense = set(DENSE) if 2 <= t <= 10 else {0}
         if 0 in dense:
@@ -294,7 +310,10 @@ def run_one(arm_s: str, seed: int, lr: float, n_tasks: int, mnist: H.Mnist, devi
                         "xb": xs[j * BATCH:(j + 1) * BATCH].clone(),
                         "yb": ys[j * BATCH:(j + 1) * BATCH].clone(), "cap_on": cap_on,
                         "q_cap": None if q_cap is None else q_cap.clone(),
-                        "v_cap": None if v_cap is None else v_cap.clone()}
+                        "v_cap": None if v_cap is None else v_cap.clone(),
+                        "l2_on": l2_on, "fix_on": fix_on,
+                        "r2": None if r2 is None else r2.clone(),
+                        "b_star": None if b_star is None else tuple(b.clone() for b in b_star)}
                 xb, yb = xs[j * BATCH:(j + 1) * BATCH], ys[j * BATCH:(j + 1) * BATCH]
                 out = forward2(params, xb, act1, act2)
                 loss = torch.nn.functional.cross_entropy(out[4], yb)
@@ -323,6 +342,14 @@ def run_one(arm_s: str, seed: int, lr: float, n_tasks: int, mnist: H.Mnist, devi
                             nr, rem = MU.cap_perp_(params[CAP_LAYER], e1, v_cap)
                             proj["rows_perp"] += int(nr)
                             proj["rem_perp"] += float(rem)
+                    if l2_on:
+                        nr, rem = W2C.cap_row_norm_(params[2], r2)
+                        proj["rows_w2"] += int(nr)
+                        proj["rem_w2"] += float(rem)
+                    if fix_on:
+                        proj["rows_bfix"] += int((params[1] != b_star[0]).sum() + (params[3] != b_star[1]).sum())
+                        params[1].copy_(b_star[0])
+                        params[3].copy_(b_star[1])
                     if acc is not None:
                         ledger_add(acc, W_before, W_mid, params[CAP_LAYER].detach(), e1_64,
                                    cap_on and (do_par or do_perp))
@@ -345,8 +372,12 @@ def run_one(arm_s: str, seed: int, lr: float, n_tasks: int, mnist: H.Mnist, devi
             v_cap = MU.perp_cap(params[CAP_LAYER], e1)
             if debug is not None:
                 debug["task1_end_params"] = [q.detach().cpu().clone() for q in params]
+                debug["task1_end_adam"] = ([q.clone() for q in adam[0]], [q.clone() for q in adam[1]], adam[2][0])
             info["zero_q_cap_rows"] = int((q_cap == 0).sum())
             info["zero_v_cap_rows"] = int((v_cap == 0).sum())
+            r2 = W2C.row_norms(params[2])
+            b_star = (params[1].detach().clone(), params[3].detach().clone())
+            info["zero_r2_rows"] = int((r2 == 0).sum())
         if spt not in dense:
             snap(t, spt)
         # memo_acc on the trained net itself.  Until 0917 this line was RL.evaluate_rl(params, x, y, act1),
