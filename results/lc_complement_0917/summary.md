@@ -13,3 +13,7 @@ C1–C4の実行コード・集計器・登録仕様・実行手順を実装。*
 C1–C3の本走は未開始。C4の算術は登録後に実行済み（c4/verdict.csv）。C3は彼らの手順を採用したため、先頭1200枚・固定順・native ELU/CELU。C2のexpm1系とは区別する。
 
 生データはbackup_manifest.jsonの場所に保存。実行手順はanalysis/lc_complement_0917/README.md。
+
+## 本走完了
+
+C1 CPU10seed、C1 GPU150task、C2の10seed、C3の5腕×3seedが完了。各部のsummary.mdとverdict.csvを参照。C4は既存の算術結果を使用。
