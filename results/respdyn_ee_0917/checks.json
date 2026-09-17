@@ -1,0 +1,1021 @@
+{
+  "experiment": "respdyn_ee_0917",
+  "started": "2026-09-17T14:20:06.183677",
+  "git_head": "31fcf5a25e27d772dfeb92d8212f8536490dc791",
+  "runner_sha256": "8a1b096d113bba5d396419794898557bd953cd38f7ea3076c139bbbdeca26e0c",
+  "natrunner_sha256": "e1cf6864b488b57dda7b3f20cc924caba465d3b8bb02d1176c66d54c0326dc7a",
+  "verdict_sha256": "9c02aade0538f68160bbb511ebc3ef6178bccdcdf5ab89b3d6ad5b11806645d6",
+  "checks_sha256": "30e1e04b3d3dfaa4079cc8bdb49acf413250e38a3b933eeed9d67ec5e67118f3",
+  "S0": {
+    "title": "resp_ee_0917 re-made on this machine (seeds 0-1, full length)",
+    "target": "src/respdyn_ee_0917.py",
+    "threshold_derivation": "Exact equality of the state sha256 (parameters, both Adam moments, step count) at every task end\n    of the prefix and at both continuation task ends of each listed arm, against resp_ee_0917's\n    committed records.  The prefix is RE.run_prefix (not reachable by a mutation of this runner), so\n    it is computed once per seed and reused; the arms go through this runner.  An arm stops the seed at\n    its first mismatch.",
+    "pass": true,
+    "compared": 72,
+    "failed_items": [],
+    "seconds_per_seed": {
+      "0": 136.07940101623535,
+      "1": 135.04467034339905
+    },
+    "machine": "white-san",
+    "cpu_capability": "AVX2",
+    "record_sha256": {
+      "0": "804e19fcd7937bcf895041b06be240eaa4a9200a208db94217e51551612864ca",
+      "1": "dcacabe66359a804937dbc23322a91afd7cdaf9bcbe4ab260d3afc11961bd105"
+    },
+    "mutations": [
+      {
+        "mutation": "Adam eps off by half in the Stepper",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "compared": 48,
+          "machine": "white-san",
+          "cpu_capability": "AVX2",
+          "failed_items": [
+            "seed 0 arm N10r k1",
+            "seed 0 arm N10r k2",
+            "seed 1 arm N10r k1",
+            "seed 1 arm N10r k2"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 285.9
+  },
+  "all_pass": true,
+  "S1b": {
+    "title": "Stepper = RE.train_task (all 26 resp_ee arms)",
+    "target": "src/respdyn_ee_0917.py",
+    "threshold_derivation": "Bit equality, all 26 resp_ee arms, both tasks, every listed field (short tasks, seed 0).",
+    "pass": true,
+    "failed_items": [],
+    "n_arms": 26,
+    "mutations": [
+      {
+        "mutation": "bias correction of v one step late",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 26,
+          "failed_items": [
+            "S2_5r k1 state_sha256",
+            "S2_5r k2 state_sha256",
+            "S2_7r k1 state_sha256",
+            "S2_7r k2 state_sha256",
+            "S2_10r k1 state_sha256",
+            "S2_10r k2 state_sha256",
+            "S2_15r k1 state_sha256",
+            "S2_15r k2 state_sha256"
+          ]
+        }
+      },
+      {
+        "mutation": "minibatch order reversed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 26,
+          "failed_items": [
+            "S2_5r k1 state_sha256",
+            "S2_5r k2 state_sha256",
+            "S2_7r k1 state_sha256",
+            "S2_7r k2 state_sha256",
+            "S2_10r k1 state_sha256",
+            "S2_10r k2 state_sha256",
+            "S2_15r k1 state_sha256",
+            "S2_15r k2 state_sha256"
+          ]
+        }
+      },
+      {
+        "mutation": "online accuracy miscounted",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 26,
+          "failed_items": [
+            "S2_5r k1 online_acc",
+            "S2_5r k2 online_acc",
+            "S2_7r k1 online_acc",
+            "S2_7r k2 online_acc",
+            "S2_10r k1 online_acc",
+            "S2_10r k2 online_acc",
+            "S2_15r k1 online_acc",
+            "S2_15r k2 online_acc"
+          ]
+        }
+      },
+      {
+        "mutation": "minibatch index taken from the epoch",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 26,
+          "failed_items": [
+            "S2_5r k1 state_sha256",
+            "S2_5r k2 state_sha256",
+            "S2_7r k1 state_sha256",
+            "S2_7r k2 state_sha256",
+            "S2_10r k1 state_sha256",
+            "S2_10r k2 state_sha256",
+            "S2_15r k1 state_sha256",
+            "S2_15r k2 state_sha256"
+          ]
+        }
+      },
+      {
+        "mutation": "second layer leaky in the natural forward",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 26,
+          "failed_items": [
+            "N2r k1 state_sha256",
+            "N2r k2 state_sha256",
+            "N10r k1 state_sha256",
+            "N10r k2 state_sha256",
+            "N2 k1 state_sha256",
+            "N2 k2 state_sha256",
+            "N5 k1 state_sha256",
+            "N5 k2 state_sha256"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 91.5
+  },
+  "S2": {
+    "title": "continuation: naturals and shadows reproduce the prefix; moving fields move",
+    "target": "src/respdyn_ee_0917.py",
+    "threshold_derivation": "Natural arms: state sha256 after continuation task k == the prefix's at branch + k.  Dyn arms: the\n    shadow's state sha256 == the prefix's at src + k.  The saved branch states are untouched by all 32\n    arms.  Anchored arms: branch-point logits equal the natural net's (all images, first minibatch); the\n    unanchored arm's do not (non-vacuity).  Moving arms start on their fixed field (field0_equal_fixed)\n    and end task 1 in a different state from their fixed twin; the ramp's field mean is -10, -20, -30\n    at the start, the end of task 1 and the end of task 2 (float32 constants, exact).",
+    "pass": true,
+    "failed_items": [],
+    "n_arms": 32,
+    "n_rows": 64,
+    "mutations": [
+      {
+        "mutation": "shadow on the arm's label stream",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 32,
+          "n_rows": 64,
+          "failed_items": [
+            "S2dyn_10r: shadow is not N10",
+            "R2dyn_10: shadow is not N2",
+            "S2dyn_5r: shadow is not N5",
+            "S2dyn_20r: shadow is not N20"
+          ]
+        }
+      },
+      {
+        "mutation": "shadow parameters aliased to the branch state",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 32,
+          "n_rows": 64,
+          "failed_items": [
+            "branch states modified by the arms",
+            "N2: natural continuation does not reproduce the prefix",
+            "N5: natural continuation does not reproduce the prefix",
+            "N10: natural continuation does not reproduce the prefix",
+            "N20: natural continuation does not reproduce the prefix"
+          ]
+        }
+      },
+      {
+        "mutation": "shadow never steps",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 32,
+          "n_rows": 64,
+          "failed_items": [
+            "S2dyn_10r: shadow is not N10",
+            "S2dyn_10r: field does not start at the fixed field",
+            "R2dyn_10: shadow is not N2",
+            "R2dyn_10: field does not start at the fixed field",
+            "S2dyn_5r: shadow is not N5",
+            "S2dyn_5r: field does not start at the fixed field",
+            "S2dyn_20r: shadow is not N20",
+            "S2dyn_20r: field does not start at the fixed field"
+          ]
+        }
+      },
+      {
+        "mutation": "shadow with a fresh Adam",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 32,
+          "n_rows": 64,
+          "failed_items": [
+            "S2dyn_10r: shadow is not N10",
+            "S2dyn_10r: field does not start at the fixed field",
+            "R2dyn_10: shadow is not N2",
+            "R2dyn_10: field does not start at the fixed field",
+            "S2dyn_5r: shadow is not N5",
+            "S2dyn_5r: field does not start at the fixed field",
+            "S2dyn_20r: shadow is not N20",
+            "S2dyn_20r: field does not start at the fixed field"
+          ]
+        }
+      },
+      {
+        "mutation": "field refreshed from the branch (zero field)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 32,
+          "n_rows": 64,
+          "failed_items": [
+            "S2dyn_10r: shadow is not N10",
+            "S2dyn_10r: field does not start at the fixed field",
+            "R2dyn_10: shadow is not N2",
+            "R2dyn_10: field does not start at the fixed field",
+            "S2dyn_5r: shadow is not N5",
+            "S2dyn_5r: field does not start at the fixed field",
+            "S2dyn_20r: shadow is not N20",
+            "S2dyn_20r: field does not start at the fixed field"
+          ]
+        }
+      },
+      {
+        "mutation": "ramp does not deepen",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "n_arms": 32,
+          "n_rows": 64,
+          "failed_items": [
+            "S2dyn_10r: shadow is not N10",
+            "S2dyn_10r: field does not start at the fixed field",
+            "R2dyn_10: shadow is not N2",
+            "R2dyn_10: field does not start at the fixed field",
+            "S2ramp_r: identical to S2u10r (the field did not move)",
+            "S2ramp_r: ramp field means [(-10.0, -10.0), (-10.0, -10.0)] != [(-10.0, -20.0), (-20.0, -30.0)]",
+            "S2dyn_5r: shadow is not N5",
+            "S2dyn_5r: field does not start at the fixed field"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 90.6
+  },
+  "S-t0": {
+    "title": "moving field: start = fixed field; frozen = fixed twin; timing",
+    "target": "src/respdyn_ee_0917.py",
+    "threshold_derivation": "(a) Full-length states: after build + refresh(0), each dyn arm's field equals the fixed field\n    RE.build_shift makes (torch.equal), and the shadow's full-batch z2 equals the stored source field;\n    the ramp's field equals S2u10r's.\n    (b) With the shadow frozen, each dyn arm reproduces its fixed twin (state sha256, both tasks); with\n    RAMP = (10, 10) the ramp reproduces S2u10r (short tasks on the full-length states).\n    (c) S2dyn_10r at T0_EPOCHS epochs: the field the arm's forward reads at update s (captured by the\n    Stepper hook) equals float32(float64(z2) - float64(z2_branch)) with z2 from EL.forward2 on the\n    source state advanced by RE.train_task for exactly s updates (s = 0, 75, 750) -- an independent\n    replay; exact equality (same ops on the same bits).",
+    "pass": true,
+    "failed_items": [],
+    "mutations": [
+      {
+        "mutation": "shadow one update ahead of the arm",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "field at update 0 is not the shadow's after 0 updates",
+            "field at update 75 is not the shadow's after 75 updates",
+            "field at update 750 is not the shadow's after 750 updates"
+          ]
+        }
+      },
+      {
+        "mutation": "field relative to the source instead of the branch",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "S2dyn_10r: field(0) != fixed field",
+            "S2dyn_10r: field(0) != resp_ee's field arm",
+            "R2dyn_10: field(0) != fixed field",
+            "R2dyn_10: field(0) != resp_ee's field arm",
+            "S2dyn_5r: field(0) != fixed field",
+            "S2dyn_5r: field(0) != resp_ee's field arm",
+            "S2dyn_20r: field(0) != fixed field",
+            "S2dyn_20r: field(0) != resp_ee's field arm"
+          ]
+        }
+      },
+      {
+        "mutation": "freeze ignored",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "S2dyn_10r: frozen shadow != S2_10r",
+            "R2dyn_10: frozen shadow != R2_10",
+            "S2dyn_5r: frozen shadow != S2_5r",
+            "S2dyn_20r: frozen shadow != S2_20r"
+          ]
+        }
+      },
+      {
+        "mutation": "ramp starts at 11",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ramp: field(0) != S2u10r's"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 70.4
+  },
+  "S3": {
+    "title": "branch point: anchored arms keep the logits; the unanchored arm takes the source features",
+    "target": "src/respdyn_ee_0917.py",
+    "threshold_derivation": "(a) New anchored arms (dyn, ramp) at the branch point: logits on all 1200 images and on the first\n    minibatch equal the natural net's (torch.equal); the argument z_b + d(0) sits on the source field\n    (dyn: within eps32 |d| + 4 eps64 (|z_b| + |d|), resp_ee's S3 bound) or on z_b - 10 (ramp).\n    (b) The unanchored arm: its full-batch z2 is the stored branch field, and its float32 features\n    phi(fl32(z_b + d)) equal the source's phi(z_src) within\n        |fl32(z_b + d) - (z_b + d)| + |z_b + d - z_src| + rounding of the two expm1 evaluations\n        <= eps32/2 |z_b + d| + bound + eps32 (|phi(u)| + |phi(z_src)|)\n    (ELU is 1-Lipschitz; expm1 is accurate to one ulp), bounded by 2 bound + eps32 (|z_src| + |a| + |a_src|)\n    with |z_b + d| <= |z_src| + bound; and its logits differ from the natural net's (non-vacuity).",
+    "pass": true,
+    "failed_items": [],
+    "worst": {
+      "S2dyn_10r": {
+        "z_err_over_bound": 0.4999088176687381
+      },
+      "R2dyn_10": {
+        "z_err_over_bound": 0.49990881394412706
+      },
+      "S2dyn_5r": {
+        "z_err_over_bound": 0.4999724540343425
+      },
+      "S2dyn_20r": {
+        "z_err_over_bound": 0.4999398028071081
+      },
+      "S2ramp_r": {
+        "z_err_over_bound": 0.0
+      },
+      "R2_10_noanchor": {
+        "z_err_over_bound": 0.49990881394412706,
+        "feature_err_over_bound": 0.24697542903897282
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "unanchored arm anchored",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R2_10_noanchor: logits equal the natural net's (vacuous)",
+            "R2_10_noanchor: features are not the source's (max 40.8)"
+          ]
+        }
+      },
+      {
+        "mutation": "unanchored arm without its field",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R2_10_noanchor: logits equal the natural net's (vacuous)",
+            "R2_10_noanchor: features are not the source's (max 40.8)"
+          ]
+        }
+      },
+      {
+        "mutation": "dyn field sign flipped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "S2dyn_10r: argument off its target (max err/bound 1.68e+07)",
+            "R2dyn_10: argument off its target (max err/bound 1.68e+07)",
+            "S2dyn_5r: argument off its target (max err/bound 1.68e+07)",
+            "S2dyn_20r: argument off its target (max err/bound 1.68e+07)"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.3
+  },
+  "S4": {
+    "title": "unanchored gradient = phi'(z + d) chain (float64, independent)",
+    "target": "src/respdyn_ee_0917.py",
+    "threshold_derivation": "The unanchored forward is dtype-generic; run it in float64 and compare its autograd gradient with\n    _manual_noanchor64.  Both are float64 evaluations of one formula, so they differ by summation\n    rounding only: |diff| <= 3 * 16 * 785 * eps64 * scale (resp_ee's S4 bound).  Non-vacuity: the\n    gradient with the natural value and derivative (d = 0) differs in W2.",
+    "pass": true,
+    "failed_items": [],
+    "worst": {
+      "R2_10_noanchor": {
+        "max_diff_over_tol": 3.455921912084074e-05,
+        "natural_vs_shifted_rel": 0.9006536579969753
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "unanchored derivative bypassed (forward unchanged)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R2_10_noanchor: tensor 0 off by 0.714",
+            "R2_10_noanchor: tensor 1 off by 0.906",
+            "R2_10_noanchor: tensor 2 off by 8.64",
+            "R2_10_noanchor: tensor 3 off by 0.218"
+          ]
+        }
+      },
+      {
+        "mutation": "unanchored field misaligned with the minibatch",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R2_10_noanchor: tensor 0 off by 1.03",
+            "R2_10_noanchor: tensor 1 off by 0.972",
+            "R2_10_noanchor: tensor 2 off by 11.1",
+            "R2_10_noanchor: tensor 3 off by 0.355",
+            "R2_10_noanchor: tensor 4 off by 6.07",
+            "R2_10_noanchor: tensor 5 off by 0.18"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.0
+  },
+  "S5": {
+    "title": "fresh Adam in the new reset arms: first update = lr g / (|g| + eps)",
+    "target": "src/respdyn_ee_0917.py",
+    "threshold_derivation": "A fresh Adam's first update is lr * g / (|g| + eps) up to float32 rounding (<= 8 eps32 relative\n    per coordinate) and the float32 mean of N squares (<= (N - 1) eps32 relative):\n    |RMS_run - RMS_expected| <= ((N - 1) + 8) eps32 RMS_expected (resp_ee's S5 bound).  g is recomputed\n    with the arm's forward at the field it starts with (d(0)), on the first minibatch.",
+    "pass": true,
+    "failed_items": [],
+    "arms": {
+      "S2dyn_10r": {
+        "run": [
+          0.0006904362235218287,
+          0.00033704034285619855,
+          0.0009999996982514858
+        ],
+        "expected": [
+          0.0006904361925555801,
+          0.0003370402890167439,
+          0.0009999996394547096
+        ],
+        "err_over_tol": [
+          4.7984404499825525e-06,
+          0.00013390747907399071,
+          0.000489794722468448
+        ]
+      },
+      "S2ramp_r": {
+        "run": [
+          0.0007123228861019015,
+          0.0009965080535039306,
+          0.0009999996982514858
+        ],
+        "expected": [
+          0.0007123228387032549,
+          0.0009965080049601927,
+          0.0009999996394547096
+        ],
+        "err_over_tol": [
+          7.1190842986020005e-06,
+          4.0835551219828094e-05,
+          0.000489794722468448
+        ]
+      },
+      "S2dyn_20r": {
+        "run": [
+          0.0006083184853196144,
+          0.00016552451415918767,
+          0.0009999996982514858
+        ],
+        "expected": [
+          0.0006083184447082596,
+          0.00016552451391254098,
+          0.0009999996394547096
+        ],
+        "err_over_tol": [
+          7.142521490609292e-06,
+          1.2491051058738416e-06,
+          0.000489794722468448
+        ]
+      },
+      "S2dyn_5r": {
+        "run": [
+          0.000723207020200789,
+          0.000992382992990315,
+          0.0009999996982514858
+        ],
+        "expected": [
+          0.000723207012720805,
+          0.0009923828552092753,
+          0.0009999996394547096
+        ],
+        "err_over_tol": [
+          1.1065552463036374e-06,
+          0.0001163847840836069,
+          0.000489794722468448
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "reset keeps the step count",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "S2dyn_10r: first update RMS [0.0020949251484125853, 0.0008312481222674251, 0.0031622322276234627] vs [0.0006904361925555801, 0.0003370402890167439, 0.0009999996394547096]",
+            "S2ramp_r: first update RMS [0.0021341608371585608, 0.0029974603094160557, 0.0031622322276234627] vs [0.0007123228387032549, 0.0009965080049601927, 0.0009999996394547096]",
+            "S2dyn_20r: first update RMS [0.0018921347800642252, 0.0004526667180471122, 0.0031622322276234627] vs [0.0006083184447082596, 0.00016552451391254098, 0.0009999996394547096]",
+            "S2dyn_5r: first update RMS [0.00227171229198575, 0.0030903497245162725, 0.0031622322276234627] vs [0.000723207012720805, 0.0009923828552092753, 0.0009999996394547096]"
+          ]
+        }
+      },
+      {
+        "mutation": "reset keeps v",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "S2dyn_10r: first update RMS [4.3489515519468114e-05, 2.663023587956559e-05, 0.000388812564779073] vs [0.0006904361925555801, 0.0003370402890167439, 0.0009999996394547096]",
+            "S2ramp_r: first update RMS [2.307675458723679e-06, 3.7324189179344103e-06, 0.000388812564779073] vs [0.0007123228387032549, 0.0009965080049601927, 0.0009999996394547096]",
+            "S2dyn_20r: first update RMS [4.8488927859580144e-05, 2.9638511477969587e-05, 0.000388812564779073] vs [0.0006083184447082596, 0.00016552451391254098, 0.0009999996394547096]",
+            "S2dyn_5r: first update RMS [0.00016446024528704584, 0.0002769665443338454, 0.000388812564779073] vs [0.000723207012720805, 0.0009923828552092753, 0.0009999996394547096]"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 6.4
+  },
+  "S6": {
+    "title": "verdict on synthetic shards",
+    "target": "analysis/respdyn_ee_0917/verdict.py",
+    "threshold_derivation": "Synthetic shards with a known structure; the verdict must return the designed labels.  The\n    registered interval is checked against an independent 95% t computation from the files, the n_eff\n    line against numpy.polyfit on the clipped log10 n-bar with the textbook prediction interval.",
+    "pass": true,
+    "failed_items": [],
+    "cases": {
+      "full": {
+        "label": "FULL_MEDIATION",
+        "want": "FULL_MEDIATION",
+        "literal": "PARTIAL",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "partial": {
+        "label": "PARTIAL",
+        "want": "PARTIAL",
+        "literal": "PARTIAL",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "static": {
+        "label": "STATIC_ONLY",
+        "want": "STATIC_ONLY",
+        "literal": "STATIC_ONLY",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "helps": {
+        "label": "MOVEMENT_HELPS",
+        "want": "MOVEMENT_HELPS",
+        "literal": "MOVEMENT_HELPS",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "unresolved": {
+        "label": "UNRESOLVED",
+        "want": "UNRESOLVED",
+        "literal": "UNRESOLVED",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_MISSES"
+      },
+      "beyond": {
+        "label": "FULL_MEDIATION",
+        "want": "FULL_MEDIATION",
+        "literal": "BEYOND_NATURAL",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "literal_full": {
+        "label": "FULL_MEDIATION",
+        "want": "FULL_MEDIATION",
+        "literal": "FULL_MEDIATION",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "no_gap": {
+        "label": "NOT_REPRODUCED",
+        "want": "NOT_REPRODUCED",
+        "literal": "NOT_REPRODUCED",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "no_fixed_sink": {
+        "label": "NOT_REPRODUCED",
+        "want": "NOT_REPRODUCED",
+        "literal": "NOT_REPRODUCED",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "floor_above_fixed": {
+        "label": "NOT_REPRODUCED",
+        "want": "NOT_REPRODUCED",
+        "literal": "NOT_REPRODUCED",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "field_static": {
+        "label": "FIELD_STATIC",
+        "want": "FIELD_STATIC",
+        "literal": "FIELD_STATIC",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "shadow_invalid": {
+        "label": "INAPPLICABLE",
+        "want": "INAPPLICABLE",
+        "literal": null,
+        "sub": null,
+        "neff": null
+      },
+      "wrong_prereg": {
+        "label": "INAPPLICABLE",
+        "want": "INAPPLICABLE",
+        "literal": null,
+        "sub": null,
+        "neff": null
+      },
+      "sub_static": {
+        "label": "STATIC_ONLY",
+        "want": "STATIC_ONLY",
+        "literal": "STATIC_ONLY",
+        "sub": "EXCESS_IS_STATIC",
+        "neff": "NEFF_PREDICTS"
+      },
+      "sub_remains": {
+        "label": "STATIC_ONLY",
+        "want": "STATIC_ONLY",
+        "literal": "STATIC_ONLY",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "sub_reversed": {
+        "label": "STATIC_ONLY",
+        "want": "STATIC_ONLY",
+        "literal": "STATIC_ONLY",
+        "sub": "EXCESS_REVERSED",
+        "neff": "NEFF_PREDICTS"
+      },
+      "sub_none": {
+        "label": "STATIC_ONLY",
+        "want": "STATIC_ONLY",
+        "literal": "STATIC_ONLY",
+        "sub": "NO_EXCESS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "neff_on": {
+        "label": "FULL_MEDIATION",
+        "want": "FULL_MEDIATION",
+        "literal": "PARTIAL",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "neff_off": {
+        "label": "FULL_MEDIATION",
+        "want": "FULL_MEDIATION",
+        "literal": "PARTIAL",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_MISSES"
+      },
+      "nat_repro": {
+        "label": "STATIC_ONLY",
+        "want": "STATIC_ONLY",
+        "literal": "STATIC_ONLY",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "nat_not": {
+        "label": "STATIC_ONLY",
+        "want": "STATIC_ONLY",
+        "literal": "STATIC_ONLY",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "nat_delayed": {
+        "label": "STATIC_ONLY",
+        "want": "STATIC_ONLY",
+        "literal": "STATIC_ONLY",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "nat_few": {
+        "label": "STATIC_ONLY",
+        "want": "STATIC_ONLY",
+        "literal": "STATIC_ONLY",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      },
+      "pred_hit": {
+        "label": "PARTIAL",
+        "want": "PARTIAL",
+        "literal": "PARTIAL",
+        "sub": "EXCESS_REMAINS",
+        "neff": "NEFF_PREDICTS"
+      }
+    },
+    "t_quantiles": {
+      "0.975/9": 2.262157162797873,
+      "0.975/7": 2.364624251593117,
+      "0.975/23": 2.068657610419411,
+      "0.975/2": 4.302652729749834
+    },
+    "mutations": [
+      {
+        "mutation": "M sign convention flipped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "full: MOVEMENT_HELPS != FULL_MEDIATION",
+            "full: literal MOVEMENT_HELPS != PARTIAL",
+            "full: M is not the 95% paired interval of the files",
+            "partial: MOVEMENT_HELPS != PARTIAL",
+            "partial: literal MOVEMENT_HELPS != PARTIAL",
+            "helps: PARTIAL != MOVEMENT_HELPS",
+            "helps: literal PARTIAL != MOVEMENT_HELPS",
+            "beyond: MOVEMENT_HELPS != FULL_MEDIATION"
+          ]
+        }
+      },
+      {
+        "mutation": "response floor taken as N10r",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "full: PARTIAL != FULL_MEDIATION",
+            "floor_above_fixed: STATIC_ONLY != NOT_REPRODUCED",
+            "neff_on: PARTIAL != FULL_MEDIATION",
+            "neff_off: PARTIAL != FULL_MEDIATION"
+          ]
+        }
+      },
+      {
+        "mutation": "R = 0 read as PARTIAL",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "full: PARTIAL != FULL_MEDIATION",
+            "literal_full: PARTIAL != FULL_MEDIATION",
+            "neff_on: PARTIAL != FULL_MEDIATION",
+            "neff_off: PARTIAL != FULL_MEDIATION"
+          ]
+        }
+      },
+      {
+        "mutation": "(B) skipped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "no_gap: STATIC_ONLY != NOT_REPRODUCED",
+            "no_fixed_sink: PARTIAL != NOT_REPRODUCED",
+            "floor_above_fixed: UNRESOLVED != NOT_REPRODUCED"
+          ]
+        }
+      },
+      {
+        "mutation": "field-moved condition skipped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "field_static: FULL_MEDIATION != FIELD_STATIC"
+          ]
+        }
+      },
+      {
+        "mutation": "shadow validity ignored",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "shadow_invalid: FULL_MEDIATION != INAPPLICABLE"
+          ]
+        }
+      },
+      {
+        "mutation": "prereg not enforced",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "wrong_prereg: STATIC_ONLY != INAPPLICABLE"
+          ]
+        }
+      },
+      {
+        "mutation": "n_eff not clipped at one image",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "neff_on: line 0.648975 0.113315 != polyfit 0.772598 0.222982",
+            "neff_on: prediction interval"
+          ]
+        }
+      },
+      {
+        "mutation": "side-run label ignores task 11",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "nat_delayed: REPRODUCED != DELAYED"
+          ]
+        }
+      },
+      {
+        "mutation": "interval level 97.5%",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "full: M is not the 95% paired interval of the files"
+          ]
+        }
+      },
+      {
+        "mutation": "excess gate removed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "sub_none: EXCESS_REMAINS"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 268.0
+  },
+  "S7": {
+    "title": "CLI = in-process run, with provenance",
+    "target": "src/respdyn_ee_0917.py",
+    "threshold_derivation": "The CLI (subprocess, as the launcher runs it) and the in-process run_seed with the same short\n    settings write identical arms.csv and traj.csv columns; two CLI runs agree; the provenance says flush\n    on, 1 thread, this experiment, the registered commit the runner carries and a git hash read at start.",
+    "pass": true,
+    "failed_items": [],
+    "prereg_commit": "",
+    "cpu_capability": "AVX2",
+    "mutations": [
+      {
+        "mutation": "CLI leaves flush off",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "prereg_commit": "",
+          "cpu_capability": "AVX2",
+          "failed_items": [
+            "provenance flush_denormal"
+          ]
+        }
+      },
+      {
+        "mutation": "CLI ignores --threads",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "prereg_commit": "",
+          "cpu_capability": "AVX2",
+          "failed_items": [
+            "arms.csv state_sha256 differs",
+            "arms.csv online_ce differs",
+            "arms.csv shadow_state_sha256 differs",
+            "arms.csv nbar_neffT2 differs",
+            "traj.csv differs",
+            "provenance threads 2"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 24.2
+  },
+  "S8": {
+    "title": "side runner: f32_host = prefix; dtypes; exp derivative",
+    "target": "src/respdyn_nat_0917.py",
+    "threshold_derivation": "(a) f32_host is RE.run_prefix bit for bit (state sha256 and online accuracy, 3 short tasks).\n    (b) After a short run each variant's parameters, moments and images have the variant's dtype.\n    (c) Training derivative through the variant's activation, by autograd on a grid: F.elu variants\n    give exp(z) > 0 on [-700, 0] (float64) and [-85, 0] (float32, above the flush boundary ln 2^-126\n    = -87.3), equal to torch.exp within 4 eps relative (the same exp up to the kernel's rounding);\n    the float64 host ELU gives expm1 + 1 exactly (so 0 below ln 2^-53 = -36.7).",
+    "pass": true,
+    "failed_items": [],
+    "dtypes": {
+      "f64_felu": {
+        "param_dtypes": [
+          "torch.float64"
+        ],
+        "x_dtype": "torch.float64",
+        "moment_dtypes": [
+          "torch.float64"
+        ]
+      },
+      "f32_felu": {
+        "param_dtypes": [
+          "torch.float32"
+        ],
+        "x_dtype": "torch.float32",
+        "moment_dtypes": [
+          "torch.float32"
+        ]
+      },
+      "f64_host": {
+        "param_dtypes": [
+          "torch.float64"
+        ],
+        "x_dtype": "torch.float64",
+        "moment_dtypes": [
+          "torch.float64"
+        ]
+      },
+      "f32_host": {
+        "param_dtypes": [
+          "torch.float32"
+        ],
+        "x_dtype": "torch.float32",
+        "moment_dtypes": [
+          "torch.float32"
+        ]
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "f64_felu runs the host ELU",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "f64_felu: derivative 0 somewhere on [-700.0, 0]",
+            "f64_felu: derivative is not exp(z)"
+          ]
+        }
+      },
+      {
+        "mutation": "parameters not cast",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "raised": "RuntimeError('expected m1 and m2 to have the same dtype, but got: double != float')"
+      },
+      {
+        "mutation": "bias correction of v one step late",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "f32_host != RE.run_prefix"
+          ]
+        }
+      },
+      {
+        "mutation": "F.elu replaced by the expm1 form",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "f64_felu: derivative 0 somewhere on [-700.0, 0]",
+            "f64_felu: derivative is not exp(z)",
+            "f32_felu: derivative 0 somewhere on [-85.0, 0]",
+            "f32_felu: derivative is not exp(z)"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 4.0
+  },
+  "S-cost": {
+    "pass": true,
+    "codes": [
+      0,
+      0
+    ],
+    "wall_s": 88.81787180900574,
+    "sec_per_update_prefix": [
+      0.0005931975212362078
+    ],
+    "sec_per_update_dyn_arm": [
+      0.003683808386325836
+    ],
+    "nat_seconds_3_tasks": 12.86784291267395,
+    "nat_peak_rss_gib": 1.0473861694335938,
+    "peak_rss_gib": [
+      1.0473861694335938
+    ],
+    "peak_rss_gib_max": 1.0473861694335938,
+    "mem_available_gib_after": 9.68819808959961,
+    "probe": 2,
+    "slots": 2,
+    "pass_note": "recorded, not a gate"
+  },
+  "finished": "2026-09-17T14:35:36.236023"
+}
