@@ -1,0 +1,341 @@
+{
+  "run_id": "avgpool_cnn_0917",
+  "created_at": "2026-09-17T22:25:44.728898+09:00",
+  "rule": "~/Projects/claude/CLAUDE.md §4-1 (git 外ファイルの退避・__pycache__ は除外して削除)",
+  "worktree": "/home/issan/Projects/claude/wt/avgpool_cnn_0917",
+  "branch": "claude/avgpool_cnn_0917",
+  "note": "git 外に残っていたのは 20 本の hist npz（ヒストグラム・チャネル平均・固定格子の生サンプル）と launcher の記録（plan・events・launcher.log/pid・各走のログ）。検査のログと swish の STOP を消した待機スクリプト・そのログは scratchpad にあったので scratchpad/ として写した。data/ は proj_004_drift/data への symlink で写しではないので退避していない。煙試験と再生試験（参照の max-pool 腕を avg 腕に見立てた集計の試験）は scratchpad の使い捨てで、退避していない。コピー後に sha256 と bytes を照合してから worktree 側の元を消した。report.py / figures.py を再実行するときは hist をこの退避先から戻す。",
+  "total_bytes": 44656866,
+  "n_files": 47,
+  "files": [
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed0/hist/SN3_seed0.npz",
+      "source_rel": "results/avgpool_cnn_0917/SN3_avg/seed0/hist/SN3_seed0.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed0/hist/SN3_seed0.npz",
+      "bytes": 2201086,
+      "sha256": "ea34c7387e0d4ff82ad8fafd6daa2c037c92a073bc0fdd809267b42b09bd8c04"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed1/hist/SN3_seed1.npz",
+      "source_rel": "results/avgpool_cnn_0917/SN3_avg/seed1/hist/SN3_seed1.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed1/hist/SN3_seed1.npz",
+      "bytes": 2171490,
+      "sha256": "3106db1512911bed4c2a61114e3603981b6b07379887e72df759cdc09b78710e"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed2/hist/SN3_seed2.npz",
+      "source_rel": "results/avgpool_cnn_0917/SN3_avg/seed2/hist/SN3_seed2.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed2/hist/SN3_seed2.npz",
+      "bytes": 2191600,
+      "sha256": "3fc526427a162683a52a88388b16d3a3ed300bf8cae14bad50d52970c7a889ef"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed3/hist/SN3_seed3.npz",
+      "source_rel": "results/avgpool_cnn_0917/SN3_avg/seed3/hist/SN3_seed3.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed3/hist/SN3_seed3.npz",
+      "bytes": 2204691,
+      "sha256": "908373c26e1e35c28e290c1c3932154dd7f046837ab6fe9dada7dc316ef9af3d"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed4/hist/SN3_seed4.npz",
+      "source_rel": "results/avgpool_cnn_0917/SN3_avg/seed4/hist/SN3_seed4.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed4/hist/SN3_seed4.npz",
+      "bytes": 2208925,
+      "sha256": "8a7e3b8742d106b89d249056abafdeb373345457da2fb1c7597d4f3375cd4d8a"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed5/hist/SN3_seed5.npz",
+      "source_rel": "results/avgpool_cnn_0917/SN3_avg/seed5/hist/SN3_seed5.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed5/hist/SN3_seed5.npz",
+      "bytes": 2226808,
+      "sha256": "e264685ee806bc1abbaf0e5a8dcff469304479eed1ba9dac951c1a480a682bd4"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed6/hist/SN3_seed6.npz",
+      "source_rel": "results/avgpool_cnn_0917/SN3_avg/seed6/hist/SN3_seed6.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed6/hist/SN3_seed6.npz",
+      "bytes": 2199561,
+      "sha256": "9ed460efc0e35fdbd5ecddd866e8cd7db4dc18aac8ee0d0ad696d2fab2bb8bd6"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed7/hist/SN3_seed7.npz",
+      "source_rel": "results/avgpool_cnn_0917/SN3_avg/seed7/hist/SN3_seed7.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed7/hist/SN3_seed7.npz",
+      "bytes": 2202616,
+      "sha256": "08d306dc6e21a064b2f6e839bb15a96ada0f2d195093c2781ed9852f2e9be07b"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed8/hist/SN3_seed8.npz",
+      "source_rel": "results/avgpool_cnn_0917/SN3_avg/seed8/hist/SN3_seed8.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed8/hist/SN3_seed8.npz",
+      "bytes": 2188126,
+      "sha256": "d0a6aad9f68d95aa6cda5e7d969967bc242fc2c5a504e2c58eee4dfaf8878d76"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed9/hist/SN3_seed9.npz",
+      "source_rel": "results/avgpool_cnn_0917/SN3_avg/seed9/hist/SN3_seed9.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SN3_avg/seed9/hist/SN3_seed9.npz",
+      "bytes": 2197930,
+      "sha256": "aa093bdf360f7f13f23e24cd2244cab4e008526b1f5e3f55fdaecbac39693504"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed0/hist/SNA_seed0.npz",
+      "source_rel": "results/avgpool_cnn_0917/SNA_avg/seed0/hist/SNA_seed0.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed0/hist/SNA_seed0.npz",
+      "bytes": 2269571,
+      "sha256": "f69ee7fa97f4c7dfe4a2662b924760fc4b5f1f75a065968f5893b5a885f2a215"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed1/hist/SNA_seed1.npz",
+      "source_rel": "results/avgpool_cnn_0917/SNA_avg/seed1/hist/SNA_seed1.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed1/hist/SNA_seed1.npz",
+      "bytes": 2250444,
+      "sha256": "c11f43914b1caaa203dfec9081f8c5dc00a0b2b1f108651d5cdcb75545de9589"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed2/hist/SNA_seed2.npz",
+      "source_rel": "results/avgpool_cnn_0917/SNA_avg/seed2/hist/SNA_seed2.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed2/hist/SNA_seed2.npz",
+      "bytes": 2256867,
+      "sha256": "1d117905ade374b18ee2f4f28672439fe848510bc5aa3e693c6ac639619776d9"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed3/hist/SNA_seed3.npz",
+      "source_rel": "results/avgpool_cnn_0917/SNA_avg/seed3/hist/SNA_seed3.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed3/hist/SNA_seed3.npz",
+      "bytes": 2268319,
+      "sha256": "dcf0f06686bc72306dec2733ab6fe49de7931f40f83b44207dd6584760ad152a"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed4/hist/SNA_seed4.npz",
+      "source_rel": "results/avgpool_cnn_0917/SNA_avg/seed4/hist/SNA_seed4.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed4/hist/SNA_seed4.npz",
+      "bytes": 2283326,
+      "sha256": "518c89a7e50d71cae527e180f52d17b7e546164495fe5f475db260ed8918332d"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed5/hist/SNA_seed5.npz",
+      "source_rel": "results/avgpool_cnn_0917/SNA_avg/seed5/hist/SNA_seed5.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed5/hist/SNA_seed5.npz",
+      "bytes": 2273876,
+      "sha256": "18cd0312983bc92d40eee4c1e7b4fb34dba2d03427c098b191185facaaa0270a"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed6/hist/SNA_seed6.npz",
+      "source_rel": "results/avgpool_cnn_0917/SNA_avg/seed6/hist/SNA_seed6.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed6/hist/SNA_seed6.npz",
+      "bytes": 2266132,
+      "sha256": "561fbaaf63e47e52ea3db32e274deb3350dc916ba459c58387250d2a77001c2e"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed7/hist/SNA_seed7.npz",
+      "source_rel": "results/avgpool_cnn_0917/SNA_avg/seed7/hist/SNA_seed7.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed7/hist/SNA_seed7.npz",
+      "bytes": 2262660,
+      "sha256": "2f25115a8a442a7ad051719d8dc1b8c9377022cc99d49ed2442796914986c179"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed8/hist/SNA_seed8.npz",
+      "source_rel": "results/avgpool_cnn_0917/SNA_avg/seed8/hist/SNA_seed8.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed8/hist/SNA_seed8.npz",
+      "bytes": 2250196,
+      "sha256": "2760b9a4f89a069529ed8dba9110550d941ab6178c796f0af9b2a57284911eed"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed9/hist/SNA_seed9.npz",
+      "source_rel": "results/avgpool_cnn_0917/SNA_avg/seed9/hist/SNA_seed9.npz",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/SNA_avg/seed9/hist/SNA_seed9.npz",
+      "bytes": 2269184,
+      "sha256": "4624baa9c877f1f671aca1fe9ded82debf266a1abfacc99bee77c324922ba939"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/events.jsonl",
+      "source_rel": "results/avgpool_cnn_0917/_launch/events.jsonl",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/events.jsonl",
+      "bytes": 4620,
+      "sha256": "dd418cd5838d1d53d0eb9ebe49d556663ec0d595fe0cf8f0b0b276d4df700fbc"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/launcher.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/launcher.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/launcher.log",
+      "bytes": 4620,
+      "sha256": "dd418cd5838d1d53d0eb9ebe49d556663ec0d595fe0cf8f0b0b276d4df700fbc"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/launcher.pid",
+      "source_rel": "results/avgpool_cnn_0917/_launch/launcher.pid",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/launcher.pid",
+      "bytes": 6,
+      "sha256": "dbce424a0592220b3e21f4e95166887477c89cc3a150d8c7a43353e7769134ac"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed0_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed0_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed0_cuda.log",
+      "bytes": 64,
+      "sha256": "07e5898d745ae6e890a0087e01857dd42084d3f91a7df96dc151656527429c9a"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed1_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed1_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed1_cuda.log",
+      "bytes": 64,
+      "sha256": "c8f326d8e30c2d2b888bcd9c3836923f114e4dab3bea8a3eb851b7b35e35a8cc"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed2_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed2_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed2_cuda.log",
+      "bytes": 64,
+      "sha256": "a5367b65508816204ef2a018da55a778479dd2e64def00472db230c257557d1c"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed3_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed3_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed3_cuda.log",
+      "bytes": 64,
+      "sha256": "c07165934afded22c95725e94dc338bc9cdc4f84b86fbbfcbe5804117fbe0c72"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed4_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed4_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed4_cuda.log",
+      "bytes": 64,
+      "sha256": "f546c3eb61ad1045ea908b7c133b7651c3edee6db0b65b91847795a6c6ebeabb"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed5_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed5_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed5_cuda.log",
+      "bytes": 64,
+      "sha256": "51344df4fd97ceab2b0fab7855b1bdf8ca440d055176da6a9042747ea4d121dd"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed6_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed6_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed6_cuda.log",
+      "bytes": 64,
+      "sha256": "167b239b1f1af320c97248df8d3b9714c12f8f32fb1ab974d61d40cbc53e7a82"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed7_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed7_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed7_cuda.log",
+      "bytes": 64,
+      "sha256": "c719d09d3695f6b494bafcbcf4052b65971bb2401c49ba6f304fcc19dda667ff"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed8_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed8_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed8_cuda.log",
+      "bytes": 64,
+      "sha256": "2e7be7ef4989cfbeb0792ec0543a372603a683cab2fc8ade930be4c6cf15f8ae"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed9_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed9_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SN3_avg_seed9_cuda.log",
+      "bytes": 64,
+      "sha256": "5039f25b187334aa579d699a9a4e4728eb16a7c2f65aa42917d81e6cdeb09e20"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed0_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed0_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed0_cuda.log",
+      "bytes": 64,
+      "sha256": "4926ef170df98565c2f7d48b2d0ef0a2c33ae8853e4a1ac4f2be07d055d73e1b"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed1_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed1_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed1_cuda.log",
+      "bytes": 64,
+      "sha256": "366337a1324986035cae6ba1966fb2bbe73dd2b4c5390ba2016e4d92404cc97f"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed2_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed2_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed2_cuda.log",
+      "bytes": 64,
+      "sha256": "3146d2a65cb7355a3b102f88ae2cb8cdf952cbfa31bdc320c5a3560c0a404819"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed3_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed3_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed3_cuda.log",
+      "bytes": 64,
+      "sha256": "de0279426c89f9a56332db2dce1373d0b32dd664454339449c66ecfdc49b543b"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed4_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed4_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed4_cuda.log",
+      "bytes": 64,
+      "sha256": "90d6457e00d22079e907dfa558f110c62365f3cad6eea9894850ef3d84225c72"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed5_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed5_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed5_cuda.log",
+      "bytes": 64,
+      "sha256": "46098d55bd1f25597a072c358b72386490f527a0326758c39ee599d699465c05"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed6_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed6_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed6_cuda.log",
+      "bytes": 64,
+      "sha256": "8290051363d8ba513e09c78b286d2aff2a0fc4a473b4e4e4ea460b53f8349b01"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed7_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed7_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed7_cuda.log",
+      "bytes": 64,
+      "sha256": "7f76b5b23a93a21379b2af9dc3be75e102b87ba4e0ff15f77f4c5734ab276d94"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed8_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed8_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed8_cuda.log",
+      "bytes": 64,
+      "sha256": "663a84ec45680b4f408d4653a97f865427257ea7589fcde2609174b4d38f0551"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed9_cuda.log",
+      "source_rel": "results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed9_cuda.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/logs/SNA_avg_seed9_cuda.log",
+      "bytes": 64,
+      "sha256": "822da03a040bbfaf69cbc80c0f72a19be40980b9d02c2ef209d7cbfa3c2671ad"
+    },
+    {
+      "source": "/home/issan/Projects/claude/wt/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/plan.json",
+      "source_rel": "results/avgpool_cnn_0917/_launch/plan.json",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/results/avgpool_cnn_0917/_launch/plan.json",
+      "bytes": 2051,
+      "sha256": "a3a594c6d32bb79b7fe64816255977243f1db585c1fe252204f02e18a88a6b8d"
+    },
+    {
+      "source": "/tmp/claude-1000/-home-issan-Projects-claude/d398f941-222e-4bd7-894d-269fa1264e1f/scratchpad/avgpool_checks.log",
+      "source_rel": "scratchpad/avgpool_checks.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/scratchpad/avgpool_checks.log",
+      "bytes": 146,
+      "sha256": "187a285527a0f2c4c0970f6a8dbda99757bbc381b09045e1d7581c9ac9a91e5b"
+    },
+    {
+      "source": "/tmp/claude-1000/-home-issan-Projects-claude/d398f941-222e-4bd7-894d-269fa1264e1f/scratchpad/resume_swish_after_avg.sh",
+      "source_rel": "scratchpad/resume_swish_after_avg.sh",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/scratchpad/resume_swish_after_avg.sh",
+      "bytes": 574,
+      "sha256": "d28a99135107567dc6a86defbe261d54390bc9d5881bcbe080a92b2c11a39cc2"
+    },
+    {
+      "source": "/tmp/claude-1000/-home-issan-Projects-claude/d398f941-222e-4bd7-894d-269fa1264e1f/scratchpad/resume_swish_after_avg.log",
+      "source_rel": "scratchpad/resume_swish_after_avg.log",
+      "backup": "/home/issan/Projects/obsidian-research-data/avgpool_cnn_0917/scratchpad/resume_swish_after_avg.log",
+      "bytes": 161,
+      "sha256": "fd433db2e637f3959d8b9d3e40b2fc43e0dccb41b88865211af7ffc05ec2dced"
+    }
+  ]
+}
