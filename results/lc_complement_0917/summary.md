@@ -10,6 +10,6 @@ C1–C4の実行コード・集計器・登録仕様・実行手順を実装。*
 - C3: 5腕すべて2task×1epochのCLI smoke完了。標準nn.Linear/nn.ELU/Adamとの3更新後のparameter bit一致。
 - C4: Cauchy–Schwarz上界を検査。一般の勾配履歴で3.16ηを超える反例と、約7.27ηの上界への一致を確認。回復時間について得られるのは下限だけ。
 
-本走は未開始。C3は彼らの手順を採用したため、先頭1200枚・固定順・native ELU/CELU。C2のexpm1系とは区別する。
+C1–C3の本走は未開始。C4の算術は登録後に実行済み（c4/verdict.csv）。C3は彼らの手順を採用したため、先頭1200枚・固定順・native ELU/CELU。C2のexpm1系とは区別する。
 
 生データはbackup_manifest.jsonの場所に保存。実行手順はanalysis/lc_complement_0917/README.md。
