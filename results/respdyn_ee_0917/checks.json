@@ -1,9 +1,9 @@
 {
   "experiment": "respdyn_ee_0917",
-  "started": "2026-09-17T14:20:06.183677",
-  "git_head": "31fcf5a25e27d772dfeb92d8212f8536490dc791",
-  "runner_sha256": "8a1b096d113bba5d396419794898557bd953cd38f7ea3076c139bbbdeca26e0c",
-  "natrunner_sha256": "e1cf6864b488b57dda7b3f20cc924caba465d3b8bb02d1176c66d54c0326dc7a",
+  "started": "2026-09-17T14:36:33.539559",
+  "git_head": "7f15cad5bc7456250998e4db009ace2055c8adc6",
+  "runner_sha256": "72378dbd000b74e0b81e3302d056bfe705088bc775290e156ca0e4e6d4cc2cf3",
+  "natrunner_sha256": "9e391f8588be00ef71ff3ea9a001eb5080b1b3a95aefb9949090557977b9130d",
   "verdict_sha256": "9c02aade0538f68160bbb511ebc3ef6178bccdcdf5ab89b3d6ad5b11806645d6",
   "checks_sha256": "30e1e04b3d3dfaa4079cc8bdb49acf413250e38a3b933eeed9d67ec5e67118f3",
   "S0": {
@@ -14,8 +14,8 @@
     "compared": 72,
     "failed_items": [],
     "seconds_per_seed": {
-      "0": 136.07940101623535,
-      "1": 135.04467034339905
+      "0": 135.31680178642273,
+      "1": 134.4778459072113
     },
     "machine": "white-san",
     "cpu_capability": "AVX2",
@@ -42,7 +42,7 @@
       }
     ],
     "all_mutations_detected": true,
-    "seconds": 285.9
+    "seconds": 285.0
   },
   "all_pass": true,
   "S1b": {
@@ -145,7 +145,7 @@
       }
     ],
     "all_mutations_detected": true,
-    "seconds": 91.5
+    "seconds": 93.6
   },
   "S2": {
     "title": "continuation: naturals and shadows reproduce the prefix; moving fields move",
@@ -265,7 +265,7 @@
       }
     ],
     "all_mutations_detected": true,
-    "seconds": 90.6
+    "seconds": 90.4
   },
   "S-t0": {
     "title": "moving field: start = fixed field; frozen = fixed twin; timing",
@@ -328,7 +328,7 @@
       }
     ],
     "all_mutations_detected": true,
-    "seconds": 70.4
+    "seconds": 69.9
   },
   "S3": {
     "title": "branch point: anchored arms keep the logits; the unanchored arm takes the source features",
@@ -547,7 +547,7 @@
       }
     ],
     "all_mutations_detected": true,
-    "seconds": 6.4
+    "seconds": 6.7
   },
   "S6": {
     "title": "verdict on synthetic shards",
@@ -860,7 +860,7 @@
       }
     ],
     "all_mutations_detected": true,
-    "seconds": 268.0
+    "seconds": 270.0
   },
   "S7": {
     "title": "CLI = in-process run, with provenance",
@@ -868,7 +868,7 @@
     "threshold_derivation": "The CLI (subprocess, as the launcher runs it) and the in-process run_seed with the same short\n    settings write identical arms.csv and traj.csv columns; two CLI runs agree; the provenance says flush\n    on, 1 thread, this experiment, the registered commit the runner carries and a git hash read at start.",
     "pass": true,
     "failed_items": [],
-    "prereg_commit": "",
+    "prereg_commit": "7f15cad5bc7456250998e4db009ace2055c8adc6",
     "cpu_capability": "AVX2",
     "mutations": [
       {
@@ -876,7 +876,7 @@
         "check_pass_on_mutant": false,
         "detected": true,
         "mutant_result": {
-          "prereg_commit": "",
+          "prereg_commit": "7f15cad5bc7456250998e4db009ace2055c8adc6",
           "cpu_capability": "AVX2",
           "failed_items": [
             "provenance flush_denormal"
@@ -888,7 +888,7 @@
         "check_pass_on_mutant": false,
         "detected": true,
         "mutant_result": {
-          "prereg_commit": "",
+          "prereg_commit": "7f15cad5bc7456250998e4db009ace2055c8adc6",
           "cpu_capability": "AVX2",
           "failed_items": [
             "arms.csv state_sha256 differs",
@@ -902,7 +902,7 @@
       }
     ],
     "all_mutations_detected": true,
-    "seconds": 24.2
+    "seconds": 25.0
   },
   "S8": {
     "title": "side runner: f32_host = prefix; dtypes; exp derivative",
@@ -991,7 +991,7 @@
       }
     ],
     "all_mutations_detected": true,
-    "seconds": 4.0
+    "seconds": 4.2
   },
   "S-cost": {
     "pass": true,
@@ -999,23 +999,23 @@
       0,
       0
     ],
-    "wall_s": 88.81787180900574,
+    "wall_s": 89.23938488960266,
     "sec_per_update_prefix": [
-      0.0005931975212362078
+      0.0005980734825134277
     ],
     "sec_per_update_dyn_arm": [
-      0.003683808386325836
+      0.003683528006076813
     ],
-    "nat_seconds_3_tasks": 12.86784291267395,
-    "nat_peak_rss_gib": 1.0473861694335938,
+    "nat_seconds_3_tasks": 14.56992483139038,
+    "nat_peak_rss_gib": 1.0478057861328125,
     "peak_rss_gib": [
-      1.0473861694335938
+      1.0478057861328125
     ],
-    "peak_rss_gib_max": 1.0473861694335938,
-    "mem_available_gib_after": 9.68819808959961,
-    "probe": 2,
+    "peak_rss_gib_max": 1.0478057861328125,
+    "mem_available_gib_after": 8.912841796875,
+    "probe": 1,
     "slots": 2,
     "pass_note": "recorded, not a gate"
   },
-  "finished": "2026-09-17T14:35:36.236023"
+  "finished": "2026-09-17T14:52:07.962080"
 }

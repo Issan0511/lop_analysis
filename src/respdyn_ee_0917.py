@@ -60,7 +60,7 @@ from src import resp_ee_0917 as RE               # the box, prefix, anchored for
 
 EXPERIMENT = "respdyn_ee_0917"
 SPEC = "specs/spec_respdyn_ee_0917.md"
-PREREG_COMMIT = ""                               # set to the registration commit before the run
+PREREG_COMMIT = "7f15cad5bc7456250998e4db009ace2055c8adc6"                               # set to the registration commit before the run
 ACT = RE.ACT
 LR, BETA1, BETA2, EPS = RE.LR, RE.BETA1, RE.BETA2, RE.EPS
 N_IMG, BATCH, SPE = RE.N_IMG, RE.BATCH, RE.SPE

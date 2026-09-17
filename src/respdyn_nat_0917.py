@@ -42,7 +42,7 @@ from src import shell_l2_rlmnist_0913 as SH      # state_sha256, file_sha256; no
 from src import resp_ee_0917 as RE               # the box's constants and helpers; not touched
 
 EXPERIMENT = "respdyn_ee_0917"
-PREREG_COMMIT = ""                               # set with the main runner's
+PREREG_COMMIT = "7f15cad5bc7456250998e4db009ace2055c8adc6"                               # set with the main runner's
 LR, BETA1, BETA2, EPS = RE.LR, RE.BETA1, RE.BETA2, RE.EPS
 N_IMG, BATCH, SPE = RE.N_IMG, RE.BATCH, RE.SPE
 EPOCHS = RE.EPOCHS
