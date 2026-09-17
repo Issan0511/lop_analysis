@@ -100,7 +100,7 @@ def draw(box, d, out):
         for s in ("left", "bottom"):
             ax.spines[s].set_color(GRID)
         ax.tick_params(colors=INK2, labelsize=9)
-        ax.legend(loc="lower left", bbox_to_anchor=(0.0, 1.035), ncol=3, frameon=False,
+        ax.legend(loc="lower left", bbox_to_anchor=(0.0, 1.035), ncol=4, frameon=False,
                   fontsize=8.5, labelcolor=INK2, handlelength=1.6, borderaxespad=0)
     axes[0].set_ylabel("online 正解率（seed 平均）", color=INK2)
     name = {"mlp": "RL-MNIST・MLP（CPU、R のみ GPU 参照）",
