@@ -1,0 +1,693 @@
+{
+  "run_id": "escneff_ee_0917",
+  "started_at": "2026-09-17T19:32:22.474408+09:00",
+  "spec": "specs/spec_escneff_ee_0917.md",
+  "prereg_commit": "469327c3c46ec81fc67f0cc8c638afaea8306b26",
+  "code_sha256": {
+    "src/escneff_ee_0917.py": "22e5968d40e8a504069e9537c555a28ea96cd9f1c4e72f1dee73b6dedea30876",
+    "src/escape_ee_0917.py": "15b8b7ce2cae6ba32cf4ca918fd3eb79f17f7910ac279d673378f649fd7a673f",
+    "analysis/escneff_ee_0917/verdict.py": "938f49d017f1031f9bb46ee95e843d8c273ddf4a49dafd2db8f6683f37f9c315",
+    "analysis/escneff_ee_0917/checks.py": "57db2557f66e1fe6a5594c9c2a5a1bc1dd0a4d50ca26535d8fcc64847e996e68"
+  },
+  "torch": "2.13.0+cu130",
+  "S1_S-arms": {
+    "title": "S1 escape's arms through this runner at the real branch",
+    "target": "src/escape_ee_0917.py",
+    "threshold_derivation": "Seed 0, 80 epochs, the prefix computed once, then 6 arms through this runner's run_seed with M\n    (the escape runner, possibly mutated) as its engine: (i) branch-point\n    logits equal the natural t2 net's for every arm; (ii) S2dyn_10r is respdyn's arm and S2u30r is resp_ee's\n    and respdyn's (state hash, both tasks); (iii) the dyn arms' shadows are N10 (t11, t12) and d(0) is the\n    fixed field; (iv) S2dyn_c12 and N2r_c12 stay within TOL_CAP of every t2 radius (all three columns\n    present) and the hold wrote rows in both tasks; (v) S2dyn_frz keeps W1, b1, W2, b2 at their t2 values\n    exactly and its online accuracy equals the floor's in both tasks; (vi) the capped floor's state equals\n    the floor's in both tasks.  Tolerance: TOL_CAP.  No accuracy is reported (checks run before the\n    predictions are registered).  (vii) provenance names this experiment and its engine.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_logits": true,
+      "ii_repro": true,
+      "iii_shadows": true,
+      "iv_hold": true,
+      "iv_bind": true,
+      "v_frozen": true,
+      "vi_capped_floor": true,
+      "vii_provenance": true
+    },
+    "mutations": [
+      {
+        "mutation": "M1a: the c12 hold leaves the second layer free",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iv_bind"
+          ]
+        }
+      },
+      {
+        "mutation": "M1b: the frozen arm lets b2 move",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "v_frozen"
+          ]
+        }
+      },
+      {
+        "mutation": "M1c: the holds take t10's values instead of t2's",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iv_bind",
+            "v_frozen",
+            "vi_capped_floor"
+          ]
+        }
+      },
+      {
+        "mutation": "M1d: the moving field follows N2 instead of N10",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_repro",
+            "iii_shadows"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 1195.0
+  },
+  "all_pass": true,
+  "S1b_S-prefix-record": {
+    "title": "S1b the prefix is compared with neff_pred's record where it exists",
+    "target": "src/escneff_ee_0917.py",
+    "threshold_derivation": "M.prefix(seed, es=cached escape runner): seed 10's 12 prefix rows all match neff_pred_0917's record\n    (state sha256) and have no resp_ee record (None), and the record covers 12 tasks; seed 13's rows have\n    no record in either (all None, 0 tasks).  Bit comparisons only.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "seed10_matches": true,
+      "seed10_no_resp_ee": true,
+      "seed10_record_tasks": true,
+      "seed13_unrecorded": true
+    },
+    "mutations": [
+      {
+        "mutation": "M1e: the record read from resp_ee's folder",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "seed10_matches",
+            "seed10_record_tasks"
+          ]
+        }
+      },
+      {
+        "mutation": "M1f: the record shifted by one task",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "seed10_matches",
+            "seed10_record_tasks"
+          ]
+        }
+      },
+      {
+        "mutation": "M1g: the record read for the wrong seed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "seed10_matches"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 202.9
+  },
+  "S8_S-verdict": {
+    "title": "S8 the verdict on synthetic seeds 10-19",
+    "target": "analysis/escneff_ee_0917/verdict.py",
+    "threshold_derivation": "verdict.analyze on 21 synthetic scenarios over seeds 10-19: labels as designed, estimates within\n    TOL_EST, the imported t quantile on the published table within 1e-6.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "designed": {
+        "labels": {
+          "primary": "REMAINDER_REDUCED_BY_HOLD",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_POSITIVE",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.9282210436661681,
+        "slope_p": 0.00010642870517219016,
+        "bad": []
+      },
+      "removed": {
+        "labels": {
+          "primary": "REMAINDER_REMOVED_BY_HOLD",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_POSITIVE",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.9282210436661682,
+        "slope_p": 0.00010642870517219016,
+        "bad": []
+      },
+      "leaves": {
+        "labels": {
+          "primary": "HOLD_LEAVES_REMAINDER",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_POSITIVE",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.9282210436661685,
+        "slope_p": 0.00010642870517219016,
+        "bad": []
+      },
+      "raises": {
+        "labels": {
+          "primary": "HOLD_RAISES_REMAINDER",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_POSITIVE",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.9282210436661678,
+        "slope_p": 0.00010642870517219016,
+        "bad": []
+      },
+      "not_manipulated": {
+        "labels": {
+          "primary": "ESCAPE_NOT_MANIPULATED",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_UNRESOLVED",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.3433467159696187,
+        "slope_p": 0.331383587118117,
+        "bad": []
+      },
+      "climb_flat": {
+        "labels": {
+          "primary": "REMAINDER_REDUCED_BY_HOLD",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_POSITIVE",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.9282210436661681,
+        "slope_p": 0.00010642870517219016,
+        "bad": []
+      },
+      "not_reproduced": {
+        "labels": {
+          "primary": "NOT_REPRODUCED",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_POSITIVE",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.928221043666169,
+        "slope_p": 0.00010642870517219016,
+        "bad": []
+      },
+      "borderline": {
+        "labels": {
+          "primary": "HOLD_LEAVES_REMAINDER",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_POSITIVE",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.9937236100188812,
+        "slope_p": 6.738186231203258e-09,
+        "bad": []
+      },
+      "impaired": {
+        "labels": {
+          "primary": "REMAINDER_REDUCED_BY_HOLD",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_POSITIVE",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "HOLD_IMPAIRS"
+        },
+        "slope_r": 0.9282210436661681,
+        "slope_p": 0.00010642870517219016,
+        "bad": []
+      },
+      "impaired_small": {
+        "labels": {
+          "primary": "REMAINDER_REDUCED_BY_HOLD",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_POSITIVE",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.9282210436661681,
+        "slope_p": 0.00010642870517219016,
+        "bad": []
+      },
+      "neff_opposes": {
+        "labels": {
+          "primary": "ESCAPE_NOT_MANIPULATED",
+          "neff_tracks": "NEFF_OPPOSES",
+          "slope": "SLOPE_POSITIVE",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.92822104366617,
+        "slope_p": 0.00010642870517219016,
+        "bad": []
+      },
+      "slope_negative": {
+        "labels": {
+          "primary": "REMAINDER_REDUCED_BY_HOLD",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_NEGATIVE",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": -0.8699233950844558,
+        "slope_p": 0.001067386924018754,
+        "bad": []
+      },
+      "slope_flat": {
+        "labels": {
+          "primary": "REMAINDER_REDUCED_BY_HOLD",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_UNRESOLVED",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.34334671596961003,
+        "slope_p": 0.33138358711813076,
+        "bad": []
+      },
+      "shadow_broken": {
+        "labels": {
+          "primary": "INAPPLICABLE",
+          "neff_tracks": "INAPPLICABLE",
+          "slope": "INAPPLICABLE",
+          "fixed_field": "INAPPLICABLE",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.910820316206151,
+        "slope_p": 0.004345586104652188,
+        "bad": []
+      },
+      "hold_violation": {
+        "labels": {
+          "primary": "INAPPLICABLE",
+          "neff_tracks": "INAPPLICABLE",
+          "slope": "INAPPLICABLE",
+          "fixed_field": "INAPPLICABLE",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.910820316206151,
+        "slope_p": 0.004345586104652188,
+        "bad": []
+      },
+      "hold_idle": {
+        "labels": {
+          "primary": "INAPPLICABLE",
+          "neff_tracks": "INAPPLICABLE",
+          "slope": "INAPPLICABLE",
+          "fixed_field": "INAPPLICABLE",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.910820316206151,
+        "slope_p": 0.004345586104652188,
+        "bad": []
+      },
+      "repro_contradicts": {
+        "labels": {
+          "primary": "INAPPLICABLE",
+          "neff_tracks": "INAPPLICABLE",
+          "slope": "INAPPLICABLE",
+          "fixed_field": "INAPPLICABLE",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.910820316206151,
+        "slope_p": 0.004345586104652188,
+        "bad": []
+      },
+      "prefix_contradicts": {
+        "labels": {
+          "primary": "INAPPLICABLE",
+          "neff_tracks": "INAPPLICABLE",
+          "slope": "INAPPLICABLE",
+          "fixed_field": "INAPPLICABLE",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.953846485585517,
+        "slope_p": 0.0008573188801979104,
+        "bad": []
+      },
+      "prefix_unrecorded": {
+        "labels": {
+          "primary": "REMAINDER_REDUCED_BY_HOLD",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_POSITIVE",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.9282210436661681,
+        "slope_p": 0.00010642870517219016,
+        "bad": []
+      },
+      "frz_unrecorded": {
+        "labels": {
+          "primary": "INAPPLICABLE",
+          "neff_tracks": "INAPPLICABLE",
+          "slope": "INAPPLICABLE",
+          "fixed_field": "INAPPLICABLE",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.910820316206151,
+        "slope_p": 0.004345586104652188,
+        "bad": []
+      },
+      "paired_matters": {
+        "labels": {
+          "primary": "REMAINDER_REDUCED_BY_HOLD",
+          "neff_tracks": "NEFF_TRACKS",
+          "slope": "SLOPE_POSITIVE",
+          "fixed_field": "FIX_REMAINDER_REDUCED",
+          "impairment_flag": "NO_IMPAIRMENT_FLAG"
+        },
+        "slope_r": 0.9282210436661692,
+        "slope_p": 0.00010642870517219016,
+        "bad": []
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M8a: dR reversed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|primary: got HOLD_RAISES_REMAINDER want REMAINDER_REDUCED_BY_HOLD",
+            "designed|slope: got SLOPE_NEGATIVE want SLOPE_POSITIVE",
+            "designed|dR: got -0.07000000000000002 want 0.07",
+            "removed|primary: got HOLD_RAISES_REMAINDER want REMAINDER_REMOVED_BY_HOLD",
+            "raises|primary: got REMAINDER_REDUCED_BY_HOLD want HOLD_RAISES_REMAINDER",
+            "climb_flat|primary: got HOLD_RAISES_REMAINDER want REMAINDER_REDUCED_BY_HOLD",
+            "borderline|dR: got -0.015495160534825081 want 0.015495160534825058",
+            "impaired_small|impairment_flag: got HOLD_IMPAIRS want NO_IMPAIRMENT_FLAG"
+          ]
+        }
+      },
+      {
+        "mutation": "M8b: R_c12 read off the bias-held arm",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|slope: got SLOPE_UNRESOLVED want SLOPE_POSITIVE",
+            "designed|R_c12: got 0.02000000000000001 want 0.04",
+            "designed|dR: got 0.09000000000000001 want 0.07",
+            "removed|R_c12: got -0.005000000000000007 want 0.0",
+            "leaves|primary: got REMAINDER_REDUCED_BY_HOLD want HOLD_LEAVES_REMAINDER",
+            "leaves|dR: got 0.09000000000000001 want 0.0",
+            "raises|primary: got REMAINDER_REDUCED_BY_HOLD want HOLD_RAISES_REMAINDER",
+            "borderline|primary: got REMAINDER_REDUCED_BY_HOLD want HOLD_LEAVES_REMAINDER"
+          ]
+        }
+      },
+      {
+        "mutation": "M8c: primary at 95%",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "borderline|primary: got REMAINDER_REDUCED_BY_HOLD want HOLD_LEAVES_REMAINDER"
+          ]
+        }
+      },
+      {
+        "mutation": "M8d: the manipulation check back on the mean climb",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "not_manipulated|primary: got REMAINDER_REDUCED_BY_HOLD want ESCAPE_NOT_MANIPULATED",
+            "climb_flat|primary: got ESCAPE_NOT_MANIPULATED want REMAINDER_REDUCED_BY_HOLD",
+            "neff_opposes|primary: got REMAINDER_REDUCED_BY_HOLD want ESCAPE_NOT_MANIPULATED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8e: the manipulation check dropped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "not_manipulated|primary: got REMAINDER_REDUCED_BY_HOLD want ESCAPE_NOT_MANIPULATED",
+            "neff_opposes|primary: got REMAINDER_REDUCED_BY_HOLD want ESCAPE_NOT_MANIPULATED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8f: the reproduction of R dropped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "not_reproduced|primary: got REMAINDER_REMOVED_BY_HOLD want NOT_REPRODUCED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8g: shadows not checked",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "shadow_broken|primary: got REMAINDER_REDUCED_BY_HOLD want INAPPLICABLE",
+            "shadow_broken|n_valid: got 10 want 7"
+          ]
+        }
+      },
+      {
+        "mutation": "M8h: hold tolerance 0.1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "hold_violation|primary: got REMAINDER_REDUCED_BY_HOLD want INAPPLICABLE",
+            "hold_violation|n_valid: got 10 want 7"
+          ]
+        }
+      },
+      {
+        "mutation": "M8i: binding not checked",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "hold_idle|primary: got REMAINDER_REDUCED_BY_HOLD want INAPPLICABLE",
+            "hold_idle|n_valid: got 10 want 7"
+          ]
+        }
+      },
+      {
+        "mutation": "M8j: pairing broken",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|slope: got SLOPE_UNRESOLVED want SLOPE_POSITIVE",
+            "slope_negative|slope: got SLOPE_UNRESOLVED want SLOPE_NEGATIVE",
+            "paired_matters|primary: got NOT_REPRODUCED want REMAINDER_REDUCED_BY_HOLD"
+          ]
+        }
+      },
+      {
+        "mutation": "M8k: the impairment flag on any positive I",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "impaired_small|impairment_flag: got HOLD_IMPAIRS want NO_IMPAIRMENT_FLAG"
+          ]
+        }
+      },
+      {
+        "mutation": "M8l: the ladder read on the mean climb",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "climb_flat|neff_tracks: got NEFF_UNRESOLVED want NEFF_TRACKS",
+            "neff_opposes|neff_tracks: got NEFF_TRACKS want NEFF_OPPOSES"
+          ]
+        }
+      },
+      {
+        "mutation": "M8m: the slope on dclimb",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|slope: got SLOPE_UNRESOLVED want SLOPE_POSITIVE",
+            "slope_negative|slope: got SLOPE_UNRESOLVED want SLOPE_NEGATIVE"
+          ]
+        }
+      },
+      {
+        "mutation": "M8n: an unrecorded prefix is invalid",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|primary: got INAPPLICABLE want REMAINDER_REDUCED_BY_HOLD",
+            "designed|neff_tracks: got INAPPLICABLE want NEFF_TRACKS",
+            "designed|slope: got INAPPLICABLE want SLOPE_POSITIVE",
+            "designed|fixed_field: got INAPPLICABLE want FIX_REMAINDER_REDUCED",
+            "designed|R_none: got nan want 0.11",
+            "designed|R_c12: got nan want 0.04",
+            "designed|dR: got nan want 0.07",
+            "designed|dneff: got nan want 0.0031"
+          ]
+        }
+      },
+      {
+        "mutation": "M8o: a contradicted prefix is valid",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "prefix_contradicts|primary: got REMAINDER_REDUCED_BY_HOLD want INAPPLICABLE",
+            "prefix_contradicts|n_valid: got 10 want 7"
+          ]
+        }
+      },
+      {
+        "mutation": "M8p: a contradicted reproduction is valid",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "repro_contradicts|primary: got REMAINDER_REDUCED_BY_HOLD want INAPPLICABLE",
+            "repro_contradicts|n_valid: got 10 want 7"
+          ]
+        }
+      },
+      {
+        "mutation": "M8q: dR_fix reversed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|fixed_field: got FIX_REMAINDER_RAISED want FIX_REMAINDER_REDUCED",
+            "designed|dR_fix: got -0.11000000000000003 want 0.11"
+          ]
+        }
+      },
+      {
+        "mutation": "M8r: seeds 0-9",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "SEEDS (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)",
+            "designed|primary: got INAPPLICABLE want REMAINDER_REDUCED_BY_HOLD",
+            "designed|neff_tracks: got INAPPLICABLE want NEFF_TRACKS",
+            "designed|slope: got INAPPLICABLE want SLOPE_POSITIVE",
+            "designed|fixed_field: got INAPPLICABLE want FIX_REMAINDER_REDUCED",
+            "designed|R_none: got nan want 0.11",
+            "designed|R_c12: got nan want 0.04",
+            "designed|dR: got nan want 0.07"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 6.9
+  },
+  "S9_S-cli": {
+    "title": "S9 the CLI's provenance and constants",
+    "target": "src/escneff_ee_0917.py",
+    "threshold_derivation": "main() with 2 epochs and one arm on seed 20 (unregistered, unrecorded) writes provenance naming this experiment, its spec and\n    registration field, the escape engine, flush on, and hashes of this runner and the escape runner; the\n    registered seeds are 10-19 and the engine's arms and holds are escape's twelve and six.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "experiment": true,
+      "spec": true,
+      "flush": true,
+      "hashes": true,
+      "unrecorded_seed": true,
+      "constants": true
+    },
+    "mutations": [
+      {
+        "mutation": "M9a: flush off",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "flush"
+          ]
+        }
+      },
+      {
+        "mutation": "M9b: another spec",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "spec"
+          ]
+        }
+      },
+      {
+        "mutation": "M9c: the escape experiment's name",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "experiment"
+          ]
+        }
+      },
+      {
+        "mutation": "M9d: seeds 0-9",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "constants"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 21.4
+  },
+  "S-cost": {
+    "pass": true,
+    "gate": "all 4 exit 0 and slots >= 4",
+    "returncodes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "mem_available_gib": 9.450450897216797,
+    "peak_rss_gib": 1.356109619140625,
+    "slots": 5,
+    "prefix_s": 1.9073486328125e-05,
+    "plain_arm_s": 22.844884634017944,
+    "dyn_arm_s": 102.43857407569885,
+    "one_seed_min": 12.528346188863118,
+    "grid_10_wall_min_at_probe": 31.320865472157795,
+    "measured_at": "2026-09-17T20:01:16.825905+09:00",
+    "seconds": 308.1
+  },
+  "finished_at": "2026-09-17T20:01:16.826669+09:00"
+}
