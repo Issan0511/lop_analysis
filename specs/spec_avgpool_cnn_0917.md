@@ -106,3 +106,11 @@ RL-CIFAR の CNN の max-pool 2 か所を avg-pool に替え、`SNA`（適応 c=
 ## 8. 答えないこと
 
 ストライド付き conv の CNN、c のサイト分割、fc の谷の効果、Swish と pool の組み合わせ、WD との組み合わせ、avg-pool が他の活性化（LR など）に与える影響（`LR_avg` は回さない）。
+
+## 追補 1（2026-09-17 14:05、本走の前）: 検査で見た値の開示
+
+- 検査は 14:03 に all_pass（`results/_checks_avgpool_cnn_0917/checks.json`、bf0d301 の上で実行）。
+- S-switch の中身として、avg 腕の **task 1 の値**を見た: online_acc は SNA_avg 0.9710（max 版 0.9790）、SN3_avg 0.9624（max 版 0.9724）。memo_acc はどれも 1.0。
+  S-wiring の 2 epoch × 2 タスクの値（学習前に近い）も見ている。登録した判定（t31–50 の窓、t50 の谷越え）にかかわる値はまだ見ていない。
+- Claude の予測（§6）はこれより前に書いたもの。Issa の予測がこの後に書かれる場合は、上の値を見られる状態で書かれたことを併記する。
+- 起動の実際: swish の launcher に STOP を置いたのは 13:59:09。その直前（13:58 前後）に swish の seed 4 が起動しており、それは最後まで回す。avg 腕は GPU の空き（合計 5 本）から順に起動する。
