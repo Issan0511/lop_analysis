@@ -209,6 +209,17 @@ seed 内の差の t 区間（自由度 n−1）。主の $\Delta R_{\rm add\_h}$
 
 ### 7.3 Issa（本走の前に、§11 の手順 6 で選択式に記入）
 
+2026-09-18 02:24 JST 記録。検査中にチャットの選択式で受領し、事前登録・全検査合格の後、本走の前に確定した。seed 30–39 は未実行で、較正 seed 44 と検査の E（online_acc・early_acc）も Codex は未読。Issa 自身の確率は付けない。
+
+| 項目 | 予測 |
+|---|---|
+| primary | ADD_H_MOVES_E |
+| prop_add_h | PROPORTIONAL |
+| compensation | NO_COMPENSATION |
+| felu | FELU_HIGHER |
+
+補償は成長を止めない網での問い（compensation）。compensation_h の予測は尋ねていない。
+
 ## 8. 費用と実行
 
 - 1 seed = prefix（約 1 分）+ 動く場の 9 腕（1 腕 2 タスクで 1〜2.5 分。混み具合による）+ 3 腕（約 20 秒ずつ）で 12〜25 分。ピーク RSS 約 1.0 GiB。最大 3 並列で約 1 時間（S-cost で見積もる）。
