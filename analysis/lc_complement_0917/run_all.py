@@ -140,7 +140,9 @@ def finalize(state):
     # Leave the current directory before asking git to remove this worktree.
     os.chdir(CLONE)
     git("worktree", "remove", str(ROOT), cwd=CLONE)
-    git("branch", "-d", BRANCH, cwd=CLONE)
+    # Ancestry to origin/main was checked above. -d instead checks the stale
+    # experiment upstream and rejects a branch whose results were pushed to main.
+    git("branch", "-D", BRANCH, cwd=CLONE)
     git("push", "origin", "--delete", BRANCH, cwd=CLONE)
 
 
