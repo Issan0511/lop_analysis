@@ -1,0 +1,103 @@
+{
+ "arms": {
+  "SNA": {
+   "max_abs_err_f64": 4.440892098500626e-16
+  },
+  "KKA": {
+   "max_abs_err_f64": 4.440892098500626e-16
+  },
+  "R": {
+   "max_abs_err_f64": 0.0
+  },
+  "LR": {
+   "max_abs_err_f64": 0.0
+  },
+  "KKT1": {
+   "max_abs_err_f64": 4.440892098500626e-16
+  },
+  "KKA23": {
+   "max_abs_err_f64": 4.440892098500626e-16
+  },
+  "SL": {
+   "max_abs_err_f64": 2.220446049250313e-16
+  },
+  "RSL": {
+   "max_abs_err_f64": 2.220446049250313e-16
+  },
+  "LK001": {
+   "max_abs_err_f64": 0.0
+  },
+  "LK03": {
+   "max_abs_err_f64": 0.0
+  },
+  "ELU": {
+   "max_abs_err_f64": 1.1102230246251565e-16
+  },
+  "SILU": {
+   "max_abs_err_f64": 2.220446049250313e-16
+  },
+  "GELU": {
+   "max_abs_err_f64": 2.220446049250313e-16
+  }
+ },
+ "joins": {
+  "KKA": [
+   {
+    "theta": -4.71238898038469,
+    "phi_jump": 4.000028752670914e-09,
+    "gate_jump": 0.0
+   },
+   {
+    "theta": 1.5707963267948966,
+    "phi_jump": 4.000007436388842e-09,
+    "gate_jump": 0.0
+   }
+  ],
+  "KKA23": [
+   {
+    "theta": -4.71238898038469,
+    "phi_jump": 2.666688203589729e-09,
+    "gate_jump": 0.0
+   },
+   {
+    "theta": 1.5707963267948966,
+    "phi_jump": 2.666670440021335e-09,
+    "gate_jump": 0.0
+   }
+  ],
+  "KKT1": [
+   {
+    "theta": -6.283185307179586,
+    "phi_jump": 2.0000072709080996e-09,
+    "gate_jump": 3.983962715281564e-09
+   },
+   {
+    "theta": 3.141592653589793,
+    "phi_jump": 2.0000072709080996e-09,
+    "gate_jump": 3.983961827103144e-09
+   }
+  ]
+ },
+ "mutations": {
+  "leaky_dphi_slope": 0.19999999999999998,
+  "kkt1_gate_band": 0.9999949629825235,
+  "kka_right_shift_phi_jump": 23.452057957620454,
+  "all_caught": true
+ },
+ "elu_f32": {
+  "cuda": {
+   "bit_equal": true,
+   "max_abs_diff": 0.0,
+   "autograd_zero_above": -103.97209930419922,
+   "elu_plus_1_zero_above": -16.98219871520996
+  },
+  "cpu": {
+   "bit_equal": false,
+   "max_abs_diff": 5.960464477539063e-08,
+   "autograd_zero_above": -103.97209930419922,
+   "elu_plus_1_zero_above": -16.63559913635254
+  }
+ },
+ "pass": true,
+ "seconds": 0.5
+}

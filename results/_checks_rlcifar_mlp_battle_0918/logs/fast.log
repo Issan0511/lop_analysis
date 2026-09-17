@@ -1,0 +1,19 @@
+S-act PASS
+S-std PASS
+S-stack PASS
+S-eval PASS
+S-rsl-mode PASS
+S-diverge FAIL
+S-snap PASS
+Traceback (most recent call last):
+  File "/home/issan/Projects/claude/wt/rlcifar_mlp_battle_0918/src/rlcifar_mlp_battle_0918_checks.py", line 602, in <module>
+    main()
+  File "/home/issan/Projects/claude/wt/rlcifar_mlp_battle_0918/src/rlcifar_mlp_battle_0918_checks.py", line 589, in main
+    r = s_resume(dev, cifar)
+        ^^^^^^^^^^^^^^^^^^^^
+  File "/home/issan/Projects/claude/wt/rlcifar_mlp_battle_0918/src/rlcifar_mlp_battle_0918_checks.py", line 458, in s_resume
+    prov = E.run(arm, [100, 101], ["raw", "std"], 3, 1, dev, b_dir, cifar=cifar, progress=quiet,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/issan/Projects/claude/wt/rlcifar_mlp_battle_0918/src/rlcifar_mlp_battle_0918.py", line 503, in run
+    act.gen.set_state(st["rsl_state"])
+TypeError: RNG state must be a torch.ByteTensor
