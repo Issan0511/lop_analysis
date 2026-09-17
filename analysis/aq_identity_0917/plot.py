@@ -23,8 +23,9 @@ for dtype in parts:
     parts[dtype] = np.concatenate(parts[dtype])
 
 plt.rcParams.update({"font.size": 11, "axes.spines.top": False, "axes.spines.right": False})
-fig, ax = plt.subplots(1, 2, figsize=(12, 5.1), layout="constrained")
-fig.suptitle("CondA: does the A/Q formula match actual SGD updates?", fontsize=16)
+fig, ax = plt.subplots(1, 2, figsize=(12, 5.8))
+fig.subplots_adjust(left=.09, right=.98, bottom=.22, top=.80, wspace=.32)
+fig.suptitle("CondA: A/Q formula versus actual SGD updates", fontsize=17, y=.96)
 p, a, b = parts["float64"].T
 lim = max(np.abs(p).max(), np.abs(a).max())*1.15
 ax[0].plot([-lim, lim], [-lim, lim], color="#9ca3af", lw=2, label="Exact agreement")
@@ -33,6 +34,11 @@ ax[0].set(xscale="symlog", yscale="symlog", xlabel=r"Predicted $-2\eta A+\eta^2Q
           ylabel=r"Observed $\|W'_c\|^2-\|W_c\|^2$", title="Independent norm differences")
 ax[0].set_xscale("symlog", linthresh=1e-9)
 ax[0].set_yscale("symlog", linthresh=1e-9)
+ticks = [-.1, -1e-4, -1e-7, 0, 1e-7, 1e-4, .1]
+ax[0].set_xticks(ticks)
+ax[0].set_yticks(ticks)
+ax[0].tick_params(axis="both", labelsize=9)
+ax[0].tick_params(axis="x", rotation=25)
 ax[0].legend(loc="upper left", fontsize=9)
 ax[0].grid(alpha=.18)
 for dtype, color in [("float64", "#2563eb"), ("float32", "#dc6b26")]:
@@ -46,8 +52,7 @@ ax[1].set_xlim(1e-10, 2)
 ax[1].set_ylim(0,1.02)
 ax[1].legend(fontsize=9)
 ax[1].grid(alpha=.18)
-fig.get_layout_engine().set(rect=(0,.06,1,1))
-fig.text(.5,.025,"Row-centered weights · learning rate 0.005 · sampled checkpoint / input / unit events",
+fig.text(.5,.045,"Row-centered weights · learning rate 0.005 · sampled checkpoint / input / unit events",
          ha="center",fontsize=10,color="#4b5563")
 fig.savefig(OUT/"identity_check.png",dpi=180)
 fig.savefig(OUT/"identity_check.pdf")
