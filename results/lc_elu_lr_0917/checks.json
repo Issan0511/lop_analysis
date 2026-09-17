@@ -1,0 +1,358 @@
+{
+ "run_id": "lc_elu_lr_0917",
+ "started": "2026-09-17T18:58:58",
+ "git_hash": "dfc1654fb9382b3959da0228fb4731aada4f9df1",
+ "git_dirty": [],
+ "torch": "2.13.0+cu130",
+ "checks": {
+  "S1": {
+   "real": {
+    "E36_lr1e4": {
+     "init": true,
+     "labels": true,
+     "final_params": true,
+     "online": true,
+     "online_runner": [
+      0.1375,
+      0.13833333333333334,
+      0.135
+     ],
+     "online_ref": [
+      0.1375,
+      0.13833333333333334,
+      0.135
+     ]
+    },
+    "E1_lr1e3": {
+     "init": true,
+     "labels": true,
+     "final_params": true,
+     "online": true,
+     "online_runner": [
+      0.13583333333333333,
+      0.1413888888888889,
+      0.125
+     ],
+     "online_ref": [
+      0.13583333333333333,
+      0.1413888888888889,
+      0.125
+     ]
+    },
+    "pass": true
+   },
+   "mutations": {
+    "reversed batch order": {
+     "detected": true
+    },
+    "alpha ignored": {
+     "detected": true
+    },
+    "Adam eps": {
+     "detected": true
+    },
+    "validation labels drawn first": {
+     "detected": true
+    },
+    "image order": {
+     "detected": true
+    },
+    "labels for 51 tasks before the model": {
+     "detected": true
+    },
+    "online denominator": {
+     "detected": true
+    }
+   },
+   "lc_src_sha256": {
+    "src_case_cl_benchmarks_bench_models.py": "2cbb080f4e9e6b151127f2b5c5d3bf42a3bbda0e223fe45f46841c9470d4168f",
+    "utils_custom_activations.py": "ab171d6082e010d6c90f176e5af2f40f298fb87f6db0dd4dde157a9257201cd5",
+    "src_case_cl_benchmarks_bench_main.py": "0fafb44614c4a870aef83f15ce2a4c3644fac23e19d51e77805885c8abdfc420",
+    "src_case_cl_benchmarks_bench_data_handlers.py": "68e525b71fb969fa6ca09b23415b2450ca2c3886235a42d8da7ba28241be4972"
+   },
+   "pass": true,
+   "seconds": 7.8
+  },
+  "S2": {
+   "real": {
+    "elu_1.0": {
+     "g": [
+      0.3678794503211975,
+      1.1253517584464134e-07,
+      4.139937814784389e-08,
+      2.06115369216775e-09,
+      1.9287498933537385e-22,
+      3.783505853677006e-44
+     ],
+     "max_rel": 0.0,
+     "ok": true
+    },
+    "elu_3.6": {
+     "g": [
+      1.3243659734725952,
+      4.0512662735636695e-07,
+      1.4903775991115253e-07,
+      7.420152936532531e-09,
+      6.943499666560556e-22,
+      1.3592595103950726e-43
+     ],
+     "max_rel": 0.0,
+     "ok": true
+    },
+    "relu": [
+     0.0,
+     1.0
+    ],
+    "leaky": [
+     0.800000011920929,
+     1.0
+    ],
+    "pass": true
+   },
+   "mutations": {
+    "expm1 ELU": {
+     "detected": true
+    }
+   },
+   "pass": true,
+   "seconds": 0.0
+  },
+  "S3": {
+   "real": {
+    "init": true,
+    "labels_1_50": true,
+    "global_rng_after_build": true,
+    "ext_new": true,
+    "pass": true
+   },
+   "mutations": {
+    "extension labels from the global RNG": {
+     "detected": true
+    }
+   },
+   "pass": true,
+   "seconds": 0.0
+  },
+  "S4": {
+   "real": {
+    "identity_l1": {
+     "max_dev": 1.0449938081524834e-08,
+     "min_tol": 0.0002118918068397183,
+     "ok": true
+    },
+    "neff_l1": {
+     "zmin": -2.3230841159820557,
+     "max_rel": 7.174521267411346e-10,
+     "ok": true
+    },
+    "identity_l2": {
+     "max_dev": 9.541671341928293e-09,
+     "min_tol": 1.555216004133499e-05,
+     "ok": true
+    },
+    "neff_l2": {
+     "zmin": -2.0061087608337402,
+     "max_rel": 6.774255155448947e-10,
+     "ok": true
+    },
+    "csv_vs_npz": {
+     "keys": 22,
+     "worst_rel": 2.220446049250313e-16,
+     "ok": true
+    },
+    "floor": {
+     "ok": true
+    },
+    "pass": true
+   },
+   "mutations": {
+    "mu2 from a2": {
+     "detected": true
+    },
+    "neff over the unit axis": {
+     "detected": true
+    },
+    "median for mean": {
+     "detected": true
+    }
+   },
+   "pass": true,
+   "seconds": 1.7
+  },
+  "S5": {
+   "real": {
+    "stopped_is_partial": true,
+    "tables": true,
+    "units": true,
+    "params": true,
+    "two_segments": true,
+    "pass": true
+   },
+   "mutations": {
+    "resume without the optimizer state": {
+     "detected": true
+    }
+   },
+   "pass": true,
+   "seconds": 2.2
+  },
+  "S6": {
+   "real": {
+    "base": {
+     "got": {
+      "Q1": "LR_DOMINATES",
+      "Q2": "REPRODUCED",
+      "Q3": "E1=RUNNING, E36=RUNNING",
+      "Q4": "E1=COLLAPSED_BY_150, E36=ABOVE_AT_150"
+     },
+     "ok": true
+    },
+    "alpha": {
+     "got": {
+      "Q1": "ALPHA_DOMINATES",
+      "Q2": "REPRODUCED",
+      "Q3": "E1=RUNNING, E36=RUNNING",
+      "Q4": "E1=COLLAPSED_BY_150, E36=ABOVE_AT_150"
+     },
+     "ok": true
+    },
+    "joint": {
+     "got": {
+      "Q1": "JOINT_ONLY",
+      "Q2": "REPRODUCED",
+      "Q3": "E1=RUNNING, E36=RUNNING",
+      "Q4": "E1=COLLAPSED_BY_150, E36=ABOVE_AT_150"
+     },
+     "ok": true
+    },
+    "all": {
+     "got": {
+      "Q1": "ALL_COLLAPSE",
+      "Q2": "LOWER",
+      "Q3": "E1=RUNNING, E36=RUNNING",
+      "Q4": "E1=COLLAPSED_BY_150, E36=COLLAPSED_BY_150"
+     },
+     "ok": true
+    },
+    "none": {
+     "got": {
+      "Q1": "NONE_COLLAPSE",
+      "Q2": "REPRODUCED",
+      "Q3": "E1=RUNNING, E36=RUNNING",
+      "Q4": "E1=COLLAPSED_BY_150, E36=ABOVE_AT_150"
+     },
+     "ok": true
+    },
+    "nmaj": {
+     "got": {
+      "Q1": "OTHER(E1_lr1e3=SPLIT, E36_lr1e3=COLLAPSED, E1_lr1e4=ABOVE, E36_lr1e4=ABOVE)",
+      "Q2": "REPRODUCED",
+      "Q3": "E1=RUNNING, E36=RUNNING",
+      "Q4": "E1=COLLAPSED_BY_150, E36=ABOVE_AT_150"
+     },
+     "ok": true
+    },
+    "window": {
+     "got": {
+      "Q1": "LR_DOMINATES",
+      "Q2": "REPRODUCED",
+      "Q3": "E1=RUNNING, E36=RUNNING",
+      "Q4": "E1=COLLAPSED_BY_150, E36=ABOVE_AT_150"
+     },
+     "ok": true
+    },
+    "margin": {
+     "got": {
+      "Q1": "LR_DOMINATES",
+      "Q2": "REPRODUCED",
+      "Q3": "E1=RUNNING, E36=RUNNING",
+      "Q4": "E1=COLLAPSED_BY_150, E36=ABOVE_AT_150"
+     },
+     "ok": true
+    },
+    "q2k": {
+     "got": {
+      "Q1": "LR_DOMINATES",
+      "Q2": "REPRODUCED",
+      "Q3": "E1=RUNNING, E36=RUNNING",
+      "Q4": "E1=COLLAPSED_BY_150, E36=ABOVE_AT_150"
+     },
+     "ok": true
+    },
+    "pre": {
+     "got": {
+      "Q1": "LR_DOMINATES",
+      "Q2": "REPRODUCED",
+      "Q3": "E1=RUNNING, E36=RUNNING",
+      "Q4": "E1=COLLAPSED_BY_150, E36=ABOVE_AT_150"
+     },
+     "ok": true
+    },
+    "refuse_short": true,
+    "main_stage": true,
+    "pass": true
+   },
+   "mutations": {
+    "N_MAJ 3": {
+     "detected": true
+    },
+    "window from 30": {
+     "detected": true
+    },
+    "margin sign": {
+     "detected": true
+    },
+    "Q2 two SE": {
+     "detected": true
+    },
+    "Q3 comparison window": {
+     "detected": true
+    }
+   },
+   "pass": true,
+   "seconds": 11.8
+  },
+  "S7": {
+   "real": {
+    "status": true,
+    "threads": true,
+    "git": true,
+    "labels": true,
+    "arm": true,
+    "spec": true,
+    "lifetime_none": true,
+    "pass": true,
+    "dirty_at_start": []
+   },
+   "mutations": {
+    "threads + 1": {
+     "detected": true
+    }
+   },
+   "cli": {
+    "ok": true,
+    "stderr": ""
+   },
+   "pass": true,
+   "seconds": 2.2
+  },
+  "S-cost": {
+   "returncode": 0,
+   "sec_per_task": 13.766992330551147,
+   "wall_s": 15.35347843170166,
+   "peak_rss_gib": 1.1943283081054688,
+   "mem_available_gib_now": 11.81234359741211,
+   "slots": 5,
+   "estimate_min": {
+    "E_lr1e3_min": 29.82848338286082,
+    "E_lr1e4_150_min": 44.74272507429123,
+    "anchor_min": 22.944987217585247
+   },
+   "total_cpu_h": 16.252699279122886,
+   "pass": true,
+   "seconds": 15.4
+  }
+ },
+ "all_pass": true,
+ "finished": "2026-09-17T18:59:39"
+}
