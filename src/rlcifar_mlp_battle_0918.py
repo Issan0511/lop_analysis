@@ -489,7 +489,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
     ck = out / "ckpt.pt"
     git_states, resumed, t_first = [git_state()], [], 1
     if resume and ck.exists():
-        st = torch.load(ck, map_location=device, weights_only=False)
+        st = torch.load(ck, map_location="cpu", weights_only=False)   # generator states must stay on the cpu
         if st["meta"] != meta:
             raise SystemExit(f"{ck} belongs to another configuration: {st['meta']}")
         with torch.no_grad():

@@ -382,14 +382,21 @@ def s_diverge(dev, cifar) -> dict:
             out[tag] = (pd.read_csv(f"{d}/per_task.csv", float_precision="round_trip"), prov["divergences"])
     a, b = out["clean"][0], out["nan0"][0]
     cols = [c for c in a.columns if c not in ("slot",)]
-    same = all(a[a.seed == s][cols].reset_index(drop=True).equals(b[b.seed == s][cols].reset_index(drop=True))
-               for s in (101, 102))
+    num = [c for c in cols if pd.api.types.is_numeric_dtype(a[c])]
+    txt = [c for c in cols if c not in num]
+
+    def same_rows(s):          # values, not dtypes: an all-zero column reads as int next to a NaN row's float
+        x, y = a[a.seed == s], b[b.seed == s]
+        return (len(x) == len(y)
+                and np.array_equal(x[num].to_numpy(float), y[num].to_numpy(float), equal_nan=True)
+                and (x[txt].to_numpy() == y[txt].to_numpy()).all())
+    same = all(same_rows(s) for s in (101, 102))
     div = out["nan0"][1]
     b0 = b[b.seed == 100]
     res = {"others_bit_identical": bool(same), "divergences": div,
            "nan_slot_rows": int(len(b0)), "nan_slot_acc_is_nan": bool(b0["acc"].isna().all()),
-           "power_101_vs_102_differ": bool(not a[a.seed == 101]["online_acc"].reset_index(drop=True).equals(
-               a[a.seed == 102]["online_acc"].reset_index(drop=True)))}
+           "power_101_vs_102_differ": bool(not np.array_equal(a[a.seed == 101][num].to_numpy(float),
+                                                              a[a.seed == 102][num].to_numpy(float)))}
     res["pass"] = bool(same and len(div) == 1 and div[0]["seed"] == 100 and div[0]["task"] == 1
                        and res["nan_slot_rows"] == 1 and res["nan_slot_acc_is_nan"]
                        and res["power_101_vs_102_differ"])
