@@ -222,6 +222,8 @@ def main() -> None:
     src = Path(a.src) if a.src else OUT
     if a.allow_partial and not a.src:
         raise SystemExit("--allow-partial only with --src")
+    dst = src                                   # --src reads and writes one directory
+    dst.mkdir(parents=True, exist_ok=True)
     d, prov, missing = load(src, a.allow_partial)
     r = runs(d)
 
@@ -306,13 +308,13 @@ def main() -> None:
     for k, v in S.items():
         if k != "_summary":
             lines.append(f"| {k} | {v['claim']} | {v['p']:.2f} | {'yes' if v['hit'] else 'no'} |")
-    (OUT / "summary.md").write_text("\n".join(lines) + "\n")
+    (dst / "summary.md").write_text("\n".join(lines) + "\n")
     verdict = {"labels": {k: v for k, v in L.items()}, "score": S, "runs": r.to_dict("records"),
                "course": course, "bands": bands, "missing": missing,
                "provenance": {k: {kk: vv for kk, vv in v.items() if kk not in ("subset_sha256",)} for k, v in prov.items()}}
-    (OUT / "verdict.json").write_text(json.dumps(verdict, indent=1, default=str))
+    (dst / "verdict.json").write_text(json.dumps(verdict, indent=1, default=str))
     print("\n".join(lines[:60]))
-    print(f"\nwrote {OUT}/summary.md and verdict.json")
+    print(f"\nwrote {dst}/summary.md and verdict.json")
 
 
 if __name__ == "__main__":

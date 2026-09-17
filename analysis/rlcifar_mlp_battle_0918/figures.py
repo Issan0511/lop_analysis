@@ -54,6 +54,7 @@ def main() -> None:
     ap.add_argument("--src", default=None)
     a = ap.parse_args()
     src = Path(a.src) if a.src else OUT
+    src.mkdir(parents=True, exist_ok=True)
     d = load(src)
     win = d[(d.task >= 31) & (d.task <= 50)].groupby(["arm", "cond", "seed"]).online_acc.mean().reset_index()
     order = [x for x in ARMS if x in set(win.arm)]
@@ -81,7 +82,7 @@ def main() -> None:
         ax.set_title(f"入力 {cond}"); ax.set_ylim(0, 1.02)
         if k == 1:
             ax.legend(fontsize=7, ncol=2, loc="lower left")
-    fig.tight_layout(); fig.savefig(OUT / "figure.png", dpi=130)
+    fig.tight_layout(); fig.savefig(src / "figure.png", dpi=130)
 
     fig, axes = plt.subplots(2, 1, figsize=(11, 7), sharex=True)
     th = np.linspace(-3 * PI, 2.5 * PI, 2000)
@@ -114,8 +115,8 @@ def main() -> None:
     axes[-1].set_xlabel("θ = 2α_i z（per-unit の α、raw、seed 平均）")
     axes[-1].set_xticks([-3 * PI, -2 * PI, -1.5 * PI, -PI, -PI / 2, 0, PI / 2, PI, 1.5 * PI, 2 * PI])
     axes[-1].set_xticklabels(["−3π", "−2π", "−3π/2", "−π", "−π/2", "0", "π/2", "π", "3π/2", "2π"])
-    fig.tight_layout(); fig.savefig(OUT / "phase.png", dpi=130)
-    print("wrote", OUT / "figure.png", OUT / "phase.png")
+    fig.tight_layout(); fig.savefig(src / "phase.png", dpi=130)
+    print("wrote", src / "figure.png", src / "phase.png")
 
 
 if __name__ == "__main__":
