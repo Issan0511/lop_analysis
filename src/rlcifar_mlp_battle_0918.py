@@ -478,7 +478,7 @@ def git_state() -> dict:
 
 def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int, device,
         out: Path, lr: float = LR, c: float = 0.6, beta: float = 0.01, lo: float = 0.005,
-        hi: float = 3.0, progress=print, cifar: RC.Cifar10 | None = None,
+        hi: float = 3.0, progress=None, cifar: RC.Cifar10 | None = None,
         debug: dict | None = None, perturb: list[float] | None = None,
         nan_slot: int | None = None, snapshots: bool = True, checkpoint: bool = False,
         resume: bool = False, graph: bool = True) -> dict:
@@ -496,6 +496,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
     kernels on the same static tensors, so the rows are the eager engine's bit for bit (S-graph),
     without a host round trip per step."""
     t_start = time.time()
+    progress = progress or (lambda m: print(m, flush=True))   # a redirected stdout is block-buffered
     act = make_act(arm, c, beta, lo, hi)
     slots = [(s, cd) for s in seeds for cd in conds]
     R = len(slots)

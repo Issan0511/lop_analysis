@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""One-screen progress of rlcifar_mlp_battle_0918: per arm, the last task line and ETA.
-Reads only the runner logs (not per_task.csv), so it shows no per-arm results beyond the
-running mean the runner itself prints."""
+"""One-screen progress of rlcifar_mlp_battle_0918.
+
+Reads only how many tasks each slot has finished (row counts and file times), never a result
+column: the box is judged when it is complete.
+"""
+import csv
 import json
-import re
 import time
 from pathlib import Path
 
@@ -11,22 +13,27 @@ REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "results" / "rlcifar_mlp_battle_0918"
 L = OUT / "_launch"
 plan = json.loads((L / "plan.json").read_text())
+N_TASKS, R = 50, 20
+now = time.time()
 done = 0
 for j in plan["jobs"]:
     arm = j["arm"]
-    if (OUT / arm / "provenance.json").exists():
+    d = OUT / arm
+    f = d / "per_task.csv"
+    if (d / "provenance.json").exists():
         done += 1
         print(f"{arm:6s} done")
         continue
-    f = L / "logs" / f"{arm}.log"
     if not f.exists():
-        print(f"{arm:6s} pending")
+        print(f"{arm:6s} {'started' if (L / 'logs' / (arm + '.log')).exists() else 'pending'}")
         continue
-    lines = [l for l in f.read_text().splitlines() if " task " in l]
-    if not lines:
-        print(f"{arm:6s} started, no task finished yet  ({time.ctime(f.stat().st_mtime)})")
-        continue
-    m = re.search(r"task\s+(\d+)/(\d+).*?([\d.]+) ms/step.*ETA (\d+) min", lines[-1])
-    print(f"{arm:6s} task {m.group(1)}/{m.group(2)}  {m.group(3)} ms/step  ETA {m.group(4)} min"
-          if m else f"{arm:6s} {lines[-1]}")
+    with f.open() as fh:
+        tasks = [int(row["task"]) for row in csv.DictReader(fh)]
+    per_slot = len(tasks) / R
+    started = (L / "logs" / f"{arm}.log").stat().st_mtime if (L / "logs" / f"{arm}.log").exists() else None
+    t0 = min(started or now, (d / "ckpt.pt").stat().st_mtime if (d / "ckpt.pt").exists() else now)
+    el = (now - (started or now)) / 60
+    rate = el / max(per_slot, 1e-9)
+    print(f"{arm:6s} task {per_slot:4.1f}/{N_TASKS}  {el:5.1f} min elapsed, "
+          f"{rate:4.1f} min/task, ETA {rate * (N_TASKS - per_slot):5.0f} min")
 print(f"done {done}/{len(plan['jobs'])}", "STOP" if (L / "STOP").exists() else "")

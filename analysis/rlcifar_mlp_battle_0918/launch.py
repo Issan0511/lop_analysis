@@ -147,8 +147,9 @@ def main() -> None:
                 cmd = [sys.executable, str(RUNNER), "run", "--arm", name,
                        "--threads", str(j.get("threads", 2))]
                 fh = open(L / "logs" / f"{name}.log", "a")
+                env = {**os.environ, "PYTHONUNBUFFERED": "1"}
                 p = subprocess.Popen(cmd, cwd=REPO, stdout=fh, stderr=subprocess.STDOUT,
-                                     stdin=subprocess.DEVNULL, start_new_session=True)
+                                     stdin=subprocess.DEVNULL, start_new_session=True, env=env)
                 running[name] = {"job": j, "t0": time.time(), "proc": p}
                 log({"ev": "start", "job": name, "pid": p.pid, "mem_avail_gb": round(avail, 2),
                      "gpu_n": gpu_n + 1, "own": len(running)})
