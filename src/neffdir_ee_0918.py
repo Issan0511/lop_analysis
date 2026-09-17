@@ -61,7 +61,7 @@ from src import escape_ee_0917 as ES             # Hold, prefix; not touched
 
 EXPERIMENT = "neffdir_ee_0918"
 SPEC = "specs/spec_neffdir_ee_0918.md"
-PREREG_COMMIT = ""                               # set to the registration commit before the run
+PREREG_COMMIT = "b52bb8930881700d969590a45285d4b78bd5ad46"   # pushed registration before any registered arm ran
 ACT = RE.ACT
 EPOCHS = RE.EPOCHS
 SPE = RE.SPE
