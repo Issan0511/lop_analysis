@@ -43,7 +43,7 @@ from src import mucap_el_run_0916 as EL          # the box, the arms and the dia
 
 EXPERIMENT = "l2cap_ee_0917"
 SPEC = "specs/spec_l2cap_ee_0917.md"
-PREREG_COMMIT = "unregistered"                   # set to the spec's registration commit before any arm runs
+PREREG_COMMIT = "b83d59335fd72e0ae4787f139752e253e1b63df1"   # specs/spec_l2cap_ee_0917.md, pushed before any arm with a second-layer cap ran
 ACT2_NAME = "ELU1"
 # arm -> (first-layer arm of the shared runner, second-layer row-norm cap, hidden biases held)
 ARM_MAP = {"ref": ("ref", False, False), "cap1": ("cap_both", False, False), "cap2": ("ref", True, False),
