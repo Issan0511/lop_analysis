@@ -56,7 +56,7 @@ from src import respdyn_ee_0917 as RD            # Stepper, DynField, probe, run
 
 EXPERIMENT = "swap_ee_0917"
 SPEC = "specs/spec_swap_ee_0917.md"
-PREREG_COMMIT = "unregistered"                   # set to the spec's registration commit before the run
+PREREG_COMMIT = "64adf3bc1cbc19ec9b700aadff014a468851d10f"   # specs/spec_swap_ee_0917.md, pushed before any swap arm ran for the record
 ACT = RE.ACT
 EPOCHS = RE.EPOCHS                               # 80 -> 6000 updates per task
 SPE = RE.SPE
