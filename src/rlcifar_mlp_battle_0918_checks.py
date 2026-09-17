@@ -20,8 +20,9 @@ S-eval     the batched metrics and histograms equal the host's evaluate_rl / pre
 S-rsl-mode RSL draws r in [l, u] per element per call in training; eval is fixed r and
            deterministic; two runs with the same key are identical.  Mutation: eval with train=True.
 S-diverge  a NaN slot is recorded as diverged and leaves the other slots bit-identical.
-S-snap     the snapshot's float16 z1/z2 and the replayed float32 z reproduce the run's own
-           recorded metrics; the wrong condition does not.
+S-snap     replaying the snapshots in the run's slot layout reproduces the recorded metrics and
+           the stored float16 z exactly; the wrong condition does not.
+S-resume   a run stopped after task 1 and resumed equals the uninterrupted run bit for bit.
 S-reuse    (400 epochs, 3 tasks) the engine's realizations of seed 100 (8 slots, W1 x (1+k 1e-7))
            bracket the 0917 host probe rows (SNA, LR) within 4 sd; mutations (SNA with beta=0,
            LR with slope 0) do not.
@@ -273,10 +274,18 @@ def s_stack(dev, cifar) -> dict:
 
 # --------------------------------------------------------------------------
 def s_eval(dev, cifar) -> dict:
-    """Same weights, same inputs: the engine's per-slot metric expressions are the host's, so the
-    columns agree to float32 round-off of the forward (bound 1e-6 relative, 1e-9 absolute near 0).
-    Histogram counts can move only for values within the forward's max deviation of a bin edge:
-    allowed L1 difference = 2 x that count (0 when the forward is bit-identical)."""
+    """Same weights, same inputs: the engine's per-slot metric expressions are the host's; only the
+    forward differs (batched vs plain BLAS on the 1200-image batch), by at most D = max|z_eng - z_host|
+    per layer, measured here.  Bounds that follow from D:
+      zbar, zbar_min, zsd (means, medians, sd of values moved by <= D): |diff| <= D + 1e-6 |v|
+      mob (mean of phi', Lipschitz L = sup|phi''|; 1.5 bounds every non-snake arm's smooth part and a
+          kink moves the gate only for values within D of 0, a fraction <= that count / 1200):
+          |diff| <= L D + (#|z| <= D)/1200 + 1e-6 |v|, L = 2 alpha_max for the snake family
+      eff_rank (float64 from activations moved by <= L' D): relative 1e-6 + L' D / median|a|
+      acc, dead_frac, zeroout, w_norm, alpha stats: exact unless a value sits within D of a threshold
+          (reported; acc must be exact)
+      histogram: counts move only for values within D of a bin edge: L1 <= 2 x that count
+      per-unit means m: |diff| <= D + 1e-6 |m|;  float16 z: within 2 float16 steps + D."""
     X = torch.stack([cifar.images(RC.subset_idx(s), dev) for s in SEEDS])
     Y = torch.stack([RC.task_labels(H.stream("rlc_labels", s)) for s in SEEDS]).to(dev)
     P = [torch.stack([H.init_params(s, dev, RC.DIMS)[i].detach() for s in SEEDS]) for i in range(6)]
@@ -290,30 +299,50 @@ def s_eval(dev, cifar) -> dict:
         rows, hists, zs = E.evaluate(P, X, Y, act)
         with torch.no_grad():
             zz = E.forward(P, X, act)                      # the R=3 forward evaluate used
-        worst, hist_ok, zbit = 0.0, True, True
+        L = 2.0 * float(act.alpha(0).max().clamp_min(act.alpha(1).max())) if act.adaptive else 1.5
+        viol, worst_ratio, hist_ok, info = [], 0.0, True, {}
         for r, s in enumerate(SEEDS):
             hp = [P[i][r].contiguous() for i in range(6)]
             ha = host_act(arm, dev, act.V if act.adaptive else None, r) if arm in ("LR", "R", "SNA") else act
             ref = RL.evaluate_rl(hp, X[r], Y[r], ha)
             ref_h = RC.preact_hist(hp, X[r], ha)
-            for k, v in ref.items():
-                err = abs(rows[r][k] - v) / max(abs(v), 1e-3)
-                worst = max(worst, err)
             hz = H.forward(hp, X[r], ha)
-            for k, zref in ((1, hz[0]), (2, hz[2])):
-                zref = zref.detach().cpu().numpy()
-                dev_max = float(np.abs(zref - zz[2 * k - 2][r].cpu().numpy()).max())
-                zbit &= dev_max == 0.0
+            D, near0 = {}, {}
+            for k, zref_t in ((1, hz[0]), (2, hz[2])):
+                zref = zref_t.detach().cpu().numpy()
+                D[k] = float(np.abs(zref - zz[2 * k - 2][r].cpu().numpy()).max())
+                near0[k] = int((np.abs(zref) <= D[k]).sum())
                 v = zref.reshape(-1)
-                near = int((np.abs(v - np.round(v / 0.1) * 0.1) <= dev_max).sum()) if dev_max > 0 else 0
+                near = int((np.abs(v - np.round(v / 0.1) * 0.1) <= D[k]).sum())
                 l1 = int(np.abs(ref_h[f"h{k}"].astype(np.int64) - hists[r][f"h{k}"]).sum())
-                hist_ok &= l1 <= 2 * near and ref_h[f"oob{k}"] == hists[r][f"oob{k}"]
-                hist_ok &= bool(np.allclose(ref_h[f"m{k}"], hists[r][f"m{k}"], rtol=1e-6, atol=1e-6))
+                ok_h = l1 <= 2 * near and ref_h[f"oob{k}"] == hists[r][f"oob{k}"]
+                ok_m = bool((np.abs(ref_h[f"m{k}"] - hists[r][f"m{k}"]) <= D[k] + 1e-6 * np.abs(ref_h[f"m{k}"])).all())
                 z16 = zref.astype(np.float16)
-                hist_ok &= bool((np.abs(zs[k - 1][r].astype(np.float32) - z16.astype(np.float32))
-                                 <= 2 * np.spacing(np.abs(z16)).astype(np.float32)).all())
-        res["arms"][arm] = {"worst_rel": worst, "hist_ok": bool(hist_ok), "z_bit_equal_R1_vs_host": bool(zbit)}
-        ok &= worst <= 1e-6 and hist_ok
+                ok_z = bool((np.abs(zs[k - 1][r].astype(np.float32) - z16.astype(np.float32))
+                             <= 2 * np.spacing(np.abs(z16)).astype(np.float32) + D[k]).all())
+                hist_ok &= ok_h and ok_m and ok_z
+                info[f"s{s}_l{k}"] = {"D": D[k], "hist_L1": l1, "hist_bound": 2 * near, "m_ok": ok_m, "z16_ok": ok_z}
+            amed = {1: float(hz[1].abs().median()), 2: float(hz[3].abs().median())}
+            for key, v in ref.items():
+                diff = abs(rows[r][key] - v)
+                lk = 2 if key.endswith("_l2") else 1
+                if key.startswith(("zbar", "zsd")):
+                    bound = D[lk] + 1e-6 * abs(v)
+                elif key.startswith("mob"):
+                    bound = L * D[lk] + near0[lk] / 1200 + 1e-6 * abs(v)
+                elif key.startswith("eff_rank"):
+                    bound = abs(v) * (1e-6 + L * D[lk] / max(amed[lk], 1e-12))
+                elif key == "acc":
+                    bound = 0.0
+                else:                                   # dead/zeroout/w_norm/alpha: exact expected
+                    bound = 0.0 if not key.startswith(("dead", "zeroout")) else near0[lk] / 100
+                if diff > bound:
+                    viol.append({"seed": s, "col": key, "host": v, "engine": rows[r][key], "bound": bound})
+                if bound > 0:
+                    worst_ratio = max(worst_ratio, diff / bound)
+        res["arms"][arm] = {"violations": viol, "worst_diff_over_bound": worst_ratio,
+                            "hist_ok": bool(hist_ok), "per_layer": info}
+        ok &= not viol and hist_ok
     res["pass"] = bool(ok)
     return res
 
@@ -369,32 +398,38 @@ def s_diverge(dev, cifar) -> dict:
 
 # --------------------------------------------------------------------------
 def s_snap(dev, cifar) -> dict:
-    """replay() is the run's own forward at R=1.  memo/zbar from the replayed z must equal the
-    recorded columns (to the forward's R=20 vs R=1 round-off, bound 1e-6); the float16 z in the
-    snapshot equals the replayed z cast to float16 up to that same round-off (|dz| <= 1e-6 * |z|
-    moves a float16 value by at most one step, 0.01 at |z| <= 256)."""
+    """replay_stack() with the run's own slot list is the forward evaluate ran, so every recorded
+    column it re-derives (memo_acc, zbar_l1, zbar_l2, mob_l1 at 10 digits) and the snapshot's
+    float16 z must match exactly.  The single-slot replay() differs by batched-BLAS round-off only:
+    reported, and its memo must still match.  Mutation: the std snapshot on raw inputs."""
     res, ok = {}, True
     with tempfile.TemporaryDirectory() as d:
         out = Path(d)
-        for arm in ("SNA", "KKA"):
-            E.run(arm, [100, 101], ["raw", "std"], 2, 1, dev, out / arm, cifar=cifar, progress=quiet)
+        for arm in ("SNA", "KKA", "ELU"):
+            prov = E.run(arm, [100, 101], ["raw", "std"], 2, 1, dev, out / arm, cifar=cifar, progress=quiet)
+            slots = [(q["seed"], q["cond"]) for q in prov["slots"]]
             rec = pd.read_csv(out / arm / "per_task.csv", float_precision="round_trip")
+            z1, a1, z2, a2, logits, Y = E.replay_stack(out / arm, arm, slots, 2, dev, cifar)
+            act = E.make_act(arm); act.init_state(len(slots), dev, "snap")
+            if act.adaptive:
+                ds = [np.load(E.snapshot_path(out / arm, arm, cd, s, 2)) for s, cd in slots]
+                act.V = [torch.stack([torch.from_numpy(x[k]) for x in ds]).to(dev) for k in ("V1", "V2")]
             r_ = {}
-            for cond in ("raw", "std"):
-                row = rec[(rec.seed == 100) & (rec.cond == cond) & (rec.task == 2)].iloc[0]
-                z1, a1, z2, a2, logits, y = E.replay(out / arm, arm, cond, 100, 2, dev, cifar)
-                snap = np.load(E.snapshot_path(out / arm, arm, cond, 100, 2))
-                memo = float((logits.argmax(1) == y).float().mean())
-                zbar = float(z1.mean(0).median())
-                r_[cond] = {"memo_equal": memo == row["memo_acc"],
-                            "zbar_rel": abs(zbar - row["zbar_l1"]) / max(abs(row["zbar_l1"]), 1e-6),
-                            "z16_max_abs": float(np.abs(snap["z1"].astype(np.float32) - z1.cpu().numpy()).max()),
-                            "snap_keys": sorted(snap.files)}
-                zr32 = z1.cpu().numpy()
-                r_[cond]["z16_within_2_steps"] = bool((np.abs(snap["z1"].astype(np.float32) - zr32)
-                                                      <= 2 * np.spacing(np.abs(zr32).astype(np.float16)).astype(np.float32) + 1e-6 * np.abs(zr32)).all())
-                ok &= r_[cond]["memo_equal"] and r_[cond]["zbar_rel"] <= 1e-6 and r_[cond]["z16_within_2_steps"]
-            # mutation: replay the std snapshot on raw inputs
+            for r, (s, cd) in enumerate(slots):
+                row = rec[(rec.slot == r) & (rec.task == 2)].iloc[0]
+                snap = np.load(E.snapshot_path(out / arm, arm, cd, s, 2))
+                g = lambda x: f"{float(x):.10g}"
+                got = {"memo_acc": g((logits[r].argmax(1) == Y[r]).float().mean()),
+                       "zbar_l1": g(z1[r].mean(0).median()), "zbar_l2": g(z2[r].mean(0).median()),
+                       "mob_l1": g(act.dphi(z1, 0)[r].mean(0).median())}
+                exact = all(got[k] == g(row[k]) for k in got)
+                z16 = bool(np.array_equal(snap["z1"], z1[r].cpu().numpy().astype(np.float16))
+                           and np.array_equal(snap["z2"], z2[r].cpu().numpy().astype(np.float16)))
+                one = E.replay(out / arm, arm, cd, s, 2, dev, cifar)
+                r_[f"{s}_{cd}"] = {"stack_exact": exact, "z16_exact": z16,
+                                   "single_slot_memo_equal": g((one[4].argmax(1) == one[5]).float().mean()) == g(row["memo_acc"]),
+                                   "single_slot_max_abs_dz1": float((one[0] - z1[r]).abs().max())}
+                ok &= exact and z16 and r_[f"{s}_{cd}"]["single_slot_memo_equal"]
             snap_std = np.load(E.snapshot_path(out / arm, arm, "std", 100, 2))
             zr = E.replay(out / arm, arm, "raw", 100, 2, dev, cifar)[0]
             r_["mutation_wrong_cond_z_diff"] = float(np.abs(snap_std["z1"].astype(np.float32) - zr.cpu().numpy()).max())
@@ -402,6 +437,39 @@ def s_snap(dev, cifar) -> dict:
             res[arm] = r_
         res["t00_exists"] = E.snapshot_path(out / "SNA", "SNA", "raw", 100, 0).exists()
         ok &= res["t00_exists"]
+    res["pass"] = bool(ok)
+    return res
+
+
+# --------------------------------------------------------------------------
+def s_resume(dev, cifar) -> dict:
+    """Run 3 tasks straight; run 1 task, stop, resume to 3.  Rows (round-trip floats), histogram
+    files and the t03 snapshots must be identical, and provenance must show the resume happened
+    (resumed_at_task == [2]) -- otherwise a pass could come from never taking the resume path.
+    RSL exercises the cuda generator state, SNA the alpha statistics."""
+    res, ok = {}, True
+    for arm in ("RSL", "SNA"):
+        with tempfile.TemporaryDirectory() as d:
+            a_dir, b_dir = Path(d) / "a", Path(d) / "b"
+            E.run(arm, [100, 101], ["raw", "std"], 3, 1, dev, a_dir, cifar=cifar, progress=quiet,
+                  checkpoint=True, resume=True)
+            E.run(arm, [100, 101], ["raw", "std"], 1, 1, dev, b_dir, cifar=cifar, progress=quiet,
+                  checkpoint=True, resume=True)
+            prov = E.run(arm, [100, 101], ["raw", "std"], 3, 1, dev, b_dir, cifar=cifar, progress=quiet,
+                         checkpoint=True, resume=True)
+            ra = pd.read_csv(a_dir / "per_task.csv", float_precision="round_trip")
+            rb = pd.read_csv(b_dir / "per_task.csv", float_precision="round_trip")
+            same_rows = ra.equals(rb)
+            same_hist = all(
+                all(np.array_equal(np.load(f)[k], np.load(b_dir / "hist" / f.name)[k]) for k in np.load(f).files)
+                for f in sorted((a_dir / "hist").glob("*.npz")))
+            same_snap = all(
+                all(np.array_equal(np.load(f)[k], np.load(b_dir / f.relative_to(a_dir))[k]) for k in np.load(f).files)
+                for f in sorted(a_dir.glob("snap/*/t03.npz")))
+            res[arm] = {"rows_identical": bool(same_rows), "hist_identical": bool(same_hist),
+                        "t03_snapshots_identical": bool(same_snap), "resumed_at_task": prov["resumed_at_task"],
+                        "n_rows": int(len(rb))}
+            ok &= same_rows and same_hist and same_snap and prov["resumed_at_task"] == [2] and len(rb) == 12
     res["pass"] = bool(ok)
     return res
 
@@ -426,7 +494,8 @@ def s_reuse(dev, cifar) -> dict:
 
     def realize(arm, n_tasks, beta=0.01):
         with tempfile.TemporaryDirectory() as d:
-            E.run(arm, [100], ["raw"] * 8, n_tasks, 400, dev, Path(d), cifar=cifar, progress=print,
+            E.run(arm, [100], ["raw"] * 8, n_tasks, 400, dev, Path(d), cifar=cifar,
+                  progress=lambda m: print(m, flush=True),
                   perturb=pert, snapshots=False, beta=beta)
             return pd.read_csv(f"{d}/per_task.csv")
 
@@ -478,7 +547,7 @@ def s_cost(dev, cifar, arm) -> dict:
 # --------------------------------------------------------------------------
 def collect() -> None:
     parts = {p.stem[len("part_"):]: json.loads(p.read_text()) for p in sorted(OUTDIR.glob("part_*.json"))}
-    need = ("S-act", "S-std", "S-stack", "S-eval", "S-rsl-mode", "S-diverge", "S-snap", "S-reuse")
+    need = ("S-act", "S-std", "S-stack", "S-eval", "S-rsl-mode", "S-diverge", "S-snap", "S-resume", "S-reuse")
     res = {k: parts.get(k, {"pass": False, "missing": True}) for k in need}
     res["S-cost"] = {k[len("S-cost_"):]: v for k, v in parts.items() if k.startswith("S-cost_")}
     res["S-cost"]["pass"] = bool(res["S-cost"])
@@ -516,6 +585,8 @@ def main() -> None:
             r = s_diverge(dev, cifar)
         elif name == "S-snap":
             r = s_snap(dev, cifar)
+        elif name == "S-resume":
+            r = s_resume(dev, cifar)
         elif name == "S-reuse":
             r = s_reuse(dev, cifar)
         elif name == "S-cost":

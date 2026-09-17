@@ -312,24 +312,27 @@ def forward(P, X, act: Act, train: bool = False):
 
 def _hist_rows(v: np.ndarray, edges: np.ndarray, lo: float, hi: float):
     """Per-run histogram over the flattened (B, n) values; `oob` is the exact complement."""
-    h = np.stack([np.histogram(row.reshape(-1), bins=edges)[0].astype(np.int32) for row in v])
-    oob = np.array([int(((row < lo) | (row > hi)).sum()) for row in v], dtype=np.int64)
+    h = [np.histogram(row.reshape(-1), bins=edges)[0].astype(np.int32) for row in v]
+    oob = [np.int64(((row < lo) | (row > hi)).sum()) for row in v]
     return h, oob
 
 
 @torch.no_grad()
-def evaluate(P, X, Y, act: Act) -> tuple[list[dict], list[dict], list[np.ndarray]]:
+def evaluate(P, X, Y, act: Act, live: list[int] | None = None
+             ) -> tuple[list[dict], list[dict], list[np.ndarray]]:
     """Per-run metrics (the host's evaluate_rl, column for column) and per-run histograms
-    (the host's preact_hist + alpha and the theta histogram for the adaptive arms)."""
+    (the host's preact_hist + alpha and the theta histogram for the adaptive arms).
+    Only slots in `live` are read (default: all); the others get empty entries."""
     R = X.shape[0]
+    live = list(range(R)) if live is None else live
     z1, a1, z2, a2, logits = forward(P, X, act, train=False)
     acc = (logits.argmax(-1) == Y).float().mean(1)
-    rows = [{"acc": float(acc[r])} for r in range(R)]
+    rows = [{"acc": float(acc[r])} if r in live else {} for r in range(R)]
     hists = [{} for _ in range(R)]
     zs = []
     for li, (tag, z, a) in enumerate((("l1", z1, a1), ("l2", z2, a2))):
         d = act.dphi(z, li)
-        for r in range(R):
+        for r in live:
             # the host's evaluate_rl expressions on the slot's own (1200, n) tensors; median
             # without dim is CUDA-deterministic, median(dim) is not
             zr, ar_, dr = z[r], a[r], d[r]
@@ -342,23 +345,25 @@ def evaluate(P, X, Y, act: Act) -> tuple[list[dict], list[dict], list[np.ndarray
                 f"mob_{tag}": float(dr.mean(0).median()),
                 f"eff_rank_{tag}": H.eff_rank(ar_)})
         k = li + 1
-        v = z.cpu().numpy()
-        zs.append(v.astype(np.float16))
+        v = z[live].cpu().numpy()
+        z16 = [None] * R
         h, oob = _hist_rows(v, RC.HIST_EDGES, RC.HIST_LO, RC.HIST_HI)
-        m = torch.stack([z[r].mean(0) for r in range(R)]).cpu().numpy().astype(np.float32)
-        for r in range(R):
-            hists[r][f"h{k}"], hists[r][f"oob{k}"], hists[r][f"m{k}"] = h[r], oob[r], m[r]
+        m = torch.stack([z[r].mean(0) for r in live]).cpu().numpy().astype(np.float32) if live else None
         if act.adaptive:
             al = act.alpha(li)                                             # (R, n)
-            th = (2.0 * al[:, None, :] * z).cpu().numpy()
+            th = (2.0 * al[live][:, None, :] * z[live]).cpu().numpy()
             th_h, th_oob = _hist_rows(th, TH_EDGES, TH_LO, TH_HI)
-            aln = al.cpu().numpy().astype(np.float32)
-            for r in range(R):
-                hists[r][f"th{k}"], hists[r][f"thoob{k}"], hists[r][f"alpha{k}"] = th_h[r], th_oob[r], aln[r]
+            aln = al[live].cpu().numpy().astype(np.float32)
+        for j, r in enumerate(live):
+            z16[r] = v[j].astype(np.float16)
+            hists[r][f"h{k}"], hists[r][f"oob{k}"], hists[r][f"m{k}"] = h[j], oob[j], m[j]
+            if act.adaptive:
+                hists[r][f"th{k}"], hists[r][f"thoob{k}"], hists[r][f"alpha{k}"] = th_h[j], th_oob[j], aln[j]
+        zs.append(z16)
     for i, tag in enumerate(("l1", "l2", "l3")):
-        for r in range(R):
+        for r in live:
             rows[r][f"w_norm_{tag}"] = float(P[2 * i][r].norm(dim=1).median())
-    for r in range(R):
+    for r in live:
         rows[r].update(act.stats(r))
     return rows, hists, zs
 
@@ -381,25 +386,36 @@ def snapshot_path(out: Path, arm: str, cond: str, seed: int, task: int) -> Path:
 
 
 @torch.no_grad()
-def replay(out: Path, arm: str, cond: str, seed: int, task: int, device=None,
-           cifar: RC.Cifar10 | None = None, c=0.6, beta=0.01, lo=0.005, hi=3.0):
-    """Rebuild (z1, a1, z2, a2, logits, y) on the slot's 1200 images from the saved snapshot.
-
-    The forward is the run's own (stacked, R=1), so the values are the ones `evaluate`
-    saw at that task's end, bit for bit on the same device."""
+def replay_stack(out: Path, arm: str, slots: list[tuple[int, str]], task: int, device=None,
+                 cifar: RC.Cifar10 | None = None, c=0.6, beta=0.01, lo=0.005, hi=3.0):
+    """Rebuild stacked (z1, a1, z2, a2, logits, Y) on each slot's 1200 images from the saved
+    snapshots.  With the run's own slot list (provenance "slots", same order) this is the
+    forward `evaluate` ran, bit for bit on the same device (S-snap); other layouts differ by
+    batched-BLAS round-off (up to ~1e-4 absolute at |z| ~ 50)."""
     device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    d = np.load(snapshot_path(out, arm, cond, seed, task))
-    P = [torch.from_numpy(d[k]).to(device)[None] for k in ("W1", "b1", "W2", "b2", "W3", "b3")]
+    cifar = cifar or RC.Cifar10()
+    ds = [np.load(snapshot_path(out, arm, cd, s, task)) for s, cd in slots]
+    P = [torch.stack([torch.from_numpy(d[k]) for d in ds]).to(device)
+         for k in ("W1", "b1", "W2", "b2", "W3", "b3")]
     act = make_act(arm, c, beta, lo, hi)
-    act.init_state(1, device, key="replay")
+    act.init_state(len(slots), device, key="replay")
     if act.adaptive:
-        act.V = [torch.from_numpy(d["V1"]).to(device)[None], torch.from_numpy(d["V2"]).to(device)[None]]
-    X = slot_inputs(cifar or RC.Cifar10(), seed, cond, device)[None]
-    g = H.stream("rlc_labels", seed)
-    for _ in range(task):
-        y = RC.task_labels(g)
+        act.V = [torch.stack([torch.from_numpy(d[k]) for d in ds]).to(device) for k in ("V1", "V2")]
+    X = torch.stack([slot_inputs(cifar, s, cd, device) for s, cd in slots])
+    Y = []
+    for s, cd in slots:
+        g = H.stream("rlc_labels", s)
+        for _ in range(task):
+            y = RC.task_labels(g)
+        Y.append(y)
     z1, a1, z2, a2, logits = forward(P, X, act, train=False)
-    return z1[0], a1[0], z2[0], a2[0], logits[0], y.to(device)
+    return z1, a1, z2, a2, logits, torch.stack(Y).to(device)
+
+
+def replay(out: Path, arm: str, cond: str, seed: int, task: int, device=None,
+           cifar: RC.Cifar10 | None = None, **kw):
+    """One slot on its own (R=1): the snapshot's network on its 1200 images."""
+    return tuple(v[0] for v in replay_stack(out, arm, [(seed, cond)], task, device, cifar, **kw))
 
 
 def write_hist(path: Path, hs: list[dict], accs: list[float]) -> None:
@@ -429,12 +445,17 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         out: Path, lr: float = LR, c: float = 0.6, beta: float = 0.01, lo: float = 0.005,
         hi: float = 3.0, progress=print, cifar: RC.Cifar10 | None = None,
         debug: dict | None = None, perturb: list[float] | None = None,
-        nan_slot: int | None = None, snapshots: bool = True) -> dict:
+        nan_slot: int | None = None, snapshots: bool = True, checkpoint: bool = False,
+        resume: bool = False) -> dict:
     """Train R = len(seeds) * len(conds) runs in lockstep and write their rows/hists/snapshots.
 
     Check-only hooks (never used by the main run): `perturb[r]` multiplies slot r's W1 by
     (1 + perturb[r]) at init, so repeated (seed, cond) slots become separate realizations of
-    one run (S-reuse); `nan_slot` poisons that slot's W1 at init (S-diverge)."""
+    one run (S-reuse); `nan_slot` poisons that slot's W1 at init (S-diverge).
+
+    `checkpoint` writes out/ckpt.pt after every task (weights, Adam moments and step, alpha
+    statistics, every generator's state, the rows); `resume` continues from it, bit for bit
+    (S-resume).  A checkpoint of a finished run can also extend it to more tasks."""
     t_start = time.time()
     act = make_act(arm, c, beta, lo, hi)
     slots = [(s, cd) for s in seeds for cd in conds]
@@ -462,12 +483,45 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
     out.mkdir(parents=True, exist_ok=True)
     if debug is not None:
         debug["init"] = [q.detach().cpu().clone() for q in P]
-    for r, (s, cd) in enumerate(slots):
-        if snapshots:
-            write_snapshot(snapshot_path(out, arm, cd, s, 0), P, act, r)      # t00 = init
     step_ms = float("nan")
+    meta = {"arm": arm, "seeds": seeds, "conds": conds, "epochs": epochs, "lr": lr, "c": c,
+            "beta": beta, "lo": lo, "hi": hi, "perturb": perturb, "nan_slot": nan_slot}
+    ck = out / "ckpt.pt"
+    git_states, resumed, t_first = [git_state()], [], 1
+    if resume and ck.exists():
+        st = torch.load(ck, map_location=device, weights_only=False)
+        if st["meta"] != meta:
+            raise SystemExit(f"{ck} belongs to another configuration: {st['meta']}")
+        with torch.no_grad():
+            for dst, src in ((P, st["P"]), (adam_m, st["m"]), (adam_v, st["v"])):
+                for q, v in zip(dst, src):
+                    q.copy_(v)
+        tc = st["tc"]
+        if act.adaptive:
+            act.V = [v.to(device) for v in st["V"]]
+        if act.stochastic:
+            act.gen.set_state(st["rsl_state"])
+        for s in useeds:
+            g_lab[s].set_state(st["g_lab"][s])
+            g_batch[s].set_state(st["g_batch"][s])
+        alive = st["alive"].to(device)
+        rows, diverged, step_ms = st["rows"], st["diverged"], st["step_ms"]
+        git_states = st["git_states"] + git_states
+        resumed = st["resumed"] + [st["t"] + 1]
+        t_first = st["t"] + 1
+        for r, (s, cd) in enumerate(slots):             # histories up to the checkpointed task
+            f = out / "hist" / f"{arm}_{cd}_seed{s}.npz"
+            n_done = sum(1 for q in rows if q["slot"] == r and "memo_acc" in q)
+            if f.exists() and n_done:
+                d = np.load(f)
+                keys = [k for k in d.files if k not in ("edges", "acc", "th_edges")]
+                hists[r] = [{k: d[k][i] for k in keys} for i in range(n_done)]
+        progress(f"[{time.strftime('%T')}] {arm} resumed from {ck} at task {t_first}")
+    elif snapshots:
+        for r, (s, cd) in enumerate(slots):
+            write_snapshot(snapshot_path(out, arm, cd, s, 0), P, act, r)      # t00 = init
 
-    for t in range(1, n_tasks + 1):
+    for t in range(t_first, n_tasks + 1):
         lab = {s: RC.task_labels(g_lab[s]) for s in useeds}               # once per seed per task
         Y = torch.stack([lab[s] for s, cd in slots]).to(device)           # (R, 1200)
         if debug is not None:
@@ -520,7 +574,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                 rows.append({"arm": arm, "cond": cd, "seed": s, "slot": r, "lr": lr, "task": t,
                              "iv": "none", "acc": float("nan")})
             alive &= ~newly
-            m, hs, zs = evaluate(P, X, Y, act)
+            m, hs, zs = evaluate(P, X, Y, act, torch.nonzero(alive).flatten().tolist())
         for r in torch.nonzero(alive).flatten().tolist():
             s, cd = slots[r]
             rows.append({"arm": arm, "cond": cd, "seed": s, "slot": r, "lr": lr, "task": t,
@@ -536,6 +590,16 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                 s, cd = slots[r]
                 write_hist(out / "hist" / f"{arm}_{cd}_seed{s}.npz", hists[r],
                            [q["memo_acc"] for q in rows if q["slot"] == r and "memo_acc" in q])
+        if checkpoint:
+            tmp = out / "ckpt.pt.tmp"
+            torch.save({"t": t, "meta": meta, "P": [q.detach() for q in P], "m": adam_m, "v": adam_v,
+                        "tc": tc, "V": act.V if act.adaptive else None,
+                        "rsl_state": act.gen.get_state() if act.stochastic else None,
+                        "g_lab": {s: g_lab[s].get_state() for s in useeds},
+                        "g_batch": {s: g_batch[s].get_state() for s in useeds},
+                        "alive": alive.cpu(), "rows": rows, "diverged": diverged, "step_ms": step_ms,
+                        "git_states": git_states, "resumed": resumed}, tmp)
+            os.replace(tmp, ck)
         on = acc_sum[alive] / spt
         memo = torch.tensor([m[r]["acc"] for r in range(R) if alive[r]])
         el = time.time() - t_start
@@ -543,9 +607,11 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                  f"online {float(on.mean()) if len(on) else float('nan'):.3f} "
                  f"(min {float(on.min()) if len(on) else float('nan'):.3f}) "
                  f"memo min {float(memo.min()) if len(memo) else float('nan'):.3f} "
-                 f"{step_ms:.2f} ms/step  {el/60:.0f} min, ETA {el/t*(n_tasks-t)/60:.0f} min")
+                 f"{step_ms:.2f} ms/step  {el/60:.0f} min, "
+                 f"ETA {el/(t-t_first+1)*(n_tasks-t)/60:.0f} min")
 
-    prov = {"run_id": EXPERIMENT, **git_state(), "arm": arm, "conds": conds, "seeds": seeds,
+    prov = {"run_id": EXPERIMENT, **git_states[0], "git_states": git_states, "resumed_at_task": resumed,
+            "arm": arm, "conds": conds, "seeds": seeds,
             "slots": [{"seed": s, "cond": cd} for s, cd in slots], "R": R, "lr": lr,
             "n_tasks": n_tasks, "epochs_per_task": epochs, "batch": BATCH, "steps_per_task": spt,
             "n_images": N_IMAGES, "train_n": RC.TRAIN_N, "dims": list(DIMS), "n_classes": N_CLASSES,
@@ -601,12 +667,13 @@ def main() -> None:
     ap.add_argument("--out", default=None, help="default results/<experiment>/<arm>")
     ap.add_argument("--device", default="auto")
     ap.add_argument("--threads", type=int, default=2, help="torch cpu threads (eval: eff_rank, histograms)")
+    ap.add_argument("--no-resume", action="store_true", help="ignore an existing out/ckpt.pt")
     a = ap.parse_args()
     torch.set_num_threads(a.threads)
     device = H.setup(a.device)
     out = Path(a.out) if a.out else OUT_ROOT / a.arm
     run(a.arm, parse_ints(a.seeds), a.conds.split(","), a.tasks, a.epochs, device, out,
-        c=a.c, beta=a.beta, lo=a.alpha_lo, hi=a.alpha_hi)
+        c=a.c, beta=a.beta, lo=a.alpha_lo, hi=a.alpha_hi, checkpoint=True, resume=not a.no_resume)
 
 
 if __name__ == "__main__":
