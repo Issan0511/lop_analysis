@@ -127,6 +127,20 @@ def t_half(pt: pd.DataFrame) -> int | None:
     return None
 
 
+ZERO_Z32 = math.log(2.0 ** -24)             # spec 4.2-3: the float32 ELU's training derivative is 0 below
+
+
+def t_cross(u: dict) -> int | None:
+    """First task whose end-point unit-mean zbar2 is below ZERO_Z32 (report only); None if never."""
+    if "zbar_l2" not in u:
+        return None
+    ends = task_ends(u)
+    for t in range(1, N_TASKS + 1):
+        if unit_mean(u["zbar_l2"][ends[t]])[0] < ZERO_Z32:
+            return t
+    return None
+
+
 def fit_early(pt: pd.DataFrame) -> float:
     f = fit(pt)
     return float(np.mean([f.loc[t] for t in range(EARLY[0], EARLY[1] + 1)]))
@@ -320,6 +334,7 @@ def analyze(shards: dict) -> dict:
             res["timing"].append({"arm": arm, "seed": s, "t_half_arm": th[(arm, s)],
                                   "t_half_ref": th[("ref", s)], "compare": c})
     res["timing_labels"] = timing
+    res["t_cross"] = {f"{a}|{s}": t_cross(shards[(a, s)]["units"]) for a in ARMS for s in valid}
     res["t_half"] = {f"{a}|{s}": v for (a, s), v in th.items()}
 
     res["labels"] = {"main": labels[(MAIN_ARM, MAIN_LEVEL)],
@@ -502,6 +517,10 @@ def summary_md(res: dict, missing: list, env: dict) -> str:
         tl = res["timing_labels"].get(arm)
         L.append(f"| {arm} | " + " | ".join(str(res['t_half'][f'{arm}|{s}'] or '—') for s in res["valid_seeds"])
                  + (f" | {tl['earlier']}/{tl['later']}/{tl['ties']} | {tl['p']:.3g} |" if tl else " | | |"))
+    L += ["", f"### 3.3 第2層のユニット平均 z̄₂ が初めて ln 2^−24 = {ZERO_Z32:.2f} を下回るタスク（報告のみ・— は未到達）", "",
+          "| 腕 | " + " | ".join(f"s{s}" for s in res["valid_seeds"]) + " |", "|---|" + "---|" * n]
+    for arm in ARMS:
+        L.append(f"| {arm} | " + " | ".join(str(res['t_cross'][f'{arm}|{s}'] or '—') for s in res["valid_seeds"]) + " |")
     L += ["", "## 4. 副 endpoint（判定に使わない）", "", "| 腕 | 量 | 窓 | 値 | 差 [95%] |", "|---|---|---|---|---|"]
     for r in res["secondary"]:
         diff = (f"{_f(r['diff_mean'])} [{_f(r['diff_lo95'])}, {_f(r['diff_hi95'])}] ({r['diff_pos_seeds']}/{n} 正)"
@@ -541,6 +560,7 @@ def main() -> None:
         "valid_seeds": res["valid_seeds"], "invalid_seeds": res["invalid_seeds"],
         "applicability": res["applicability"], "floor_state": res["floor_state"], "floors": res["floors"],
         "impaired": res["impaired"], "labels": res["labels"], "timing": res["timing_labels"],
+        "t_half": res["t_half"], "t_cross": res["t_cross"],
         "transport": {k: {kk: v[kk] for kk in ("mean", "lo", "hi", "sign")} for k, v in res["transport"].items()},
         "verdict_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "el_verdict_sha256": hashlib.sha256((REPO / "analysis" / "mucap_el_0916" / "verdict.py").read_bytes()).hexdigest(),
