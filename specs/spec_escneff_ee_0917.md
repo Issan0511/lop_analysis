@@ -134,3 +134,10 @@ seed 0–9 の値（§1.1）を知ったうえでの予測。新しい seed の�
 
 - `results/escneff_ee_0917/runs/s<seed>/`（seed 10–19。`prefix.csv`・`arms.csv`・`traj.csv`・`provenance.json` は git、`units.npz` は退避）。判定: `analysis/escneff_ee_0917/verdict.py` → `results/escneff_ee_0917/{summary.md,verdict.csv,paired.csv,provenance.json}`。
 - `units.npz` と `results/_checks_escneff_ee_0917/` は `obsidian-research-data/escneff_ee_0917/` へ退避し `backup_manifest.json` を commit。結果 commit の後、main へ統合し worktree と branch を消す。
+
+## 10. 実行記録（本走後の追記・計画は変えていない）
+
+- 本走: 2026-09-17 20:01–20:35、commit 5ca6084、最大 4 並列、10/10 seed 完走・失敗 0。1 seed 8.9–13.4 分。判定スクリプトは本走後に変更していない。
+- 記録: seed 10–12 の prefix は neff_pred の記録と 12/12 タスク一致、seed 13–19 は記録なし。resp_ee / respdyn の記録はどの seed にも無い（照合は空欄）。影・分岐点の logits・$d(0)$・保持・書き込みはすべて成立（無効 seed なし）。報告のみ: 凍結した腕の online は 10/10 seed で床と一致、上限つきの床の状態は 9/10 seed で床と一致（seed 17 は escape の seed 4 と同じく、開始時に微分が 0 でない要素が残って上限が第1層を書いた）。
+- 判定: 主 **REMAINDER_REDUCED_BY_HOLD**（$\Delta R$ +0.051 [+0.038, +0.065]・$R_{c12}$ +0.077 [+0.063, +0.090]・97.5%・ともに 10/10）、(C) $\Delta n$ +0.0033 [+0.0022, +0.0044]（10/10）、並び **NEFF_TRACKS**（順位相関 平均 +0.90・10/10・p 0.002）、傾き **SLOPE_POSITIVE**（r +0.92・t 6.63・p 0.0002）、固定した場 **FIX_REMAINDER_REDUCED**（+0.083）、読みのフラグ **NO_IMPAIRMENT_FLAG**（$I$ −0.023）。$R_{\rm none}$ = +0.128。平均の登りの順位相関（報告）は平均 +0.02。
+- 独立検算（verdict.py を使わず arms.csv から）: $\Delta R$・$\Delta n$・傾きが一致。
