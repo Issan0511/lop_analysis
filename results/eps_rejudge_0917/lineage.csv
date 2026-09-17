@@ -1,0 +1,7 @@
+lineage,run,machine,derivative,zero_below,flush,evidence
+L1,mucap_el_0916 (ELU in layer 1 only),"white-san CPU, 1 thread",autograd expm1(z)+1,-16.635534286499023,off,src/mucap_el_run_0916.py forward2 + torch.autograd.grad (run_one)
+L1,mucap_ee_0917 / resp_ee_0917 / l2cap_ee_0917,"white-san CPU, 1 thread",autograd expm1(z)+1,-16.635534286499023,on,"src/mucap_el_run_0916.py run_one(act2_name='ELU1'); src/resp_ee_0917.py train_task, main set_flush_denormal(True)"
+L2,elu_environment_0913 / layer_chimera_rl_0914 / relu_gelu_silu_rl_0914 (+ext150),"white-san RTX 5060 Ti, CUDA graph","hand-written gate exp(min(z,0))",-103.97208404541016,n/a (GPU),src/layer_chimera_rl_0914.py:44-57 gate/gradients; src/elu_environment_0913.py:39-40; src/relu_gelu_silu_rl_0914.py:66-67
+L2,"l2_wall_0916 (chimera, ext150, variant incl. Part B eps arms)",white-san RTX 5060 Ti,"hand-written gate exp(min(z,0))",-103.97208404541016,n/a (GPU),src/l2_wall_0916.py vgradients uses C.gate (layer_chimera_rl_0914)
+L3,act_chimera_0913 rlmnist ELU1 (400 epochs; 0914 section 5 table),GCP c2d-standard-32 AMD EPYC 7B13 CPU,autograd expm1(z)+1,>= -17.328679513998633 (kernel not measurable),off,src/act_chimera_rlmnist_0913.py run (torch.autograd.grad); provenance machine.cpu
+L3,act_chimera_0913 rlmnist SMINH (same box),GCP AMD EPYC 7B13 CPU,"autograd of exp(min(z,ln .1)) - C: exp(z) in the deep branch",-103.97208404541016,off,src/act_chimera_0913.py:92-94 _phi_SMINH
