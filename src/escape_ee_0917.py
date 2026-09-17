@@ -54,7 +54,7 @@ from src import swap_ee_0917 as SW               # CapStepper, CapDynField, buil
 
 EXPERIMENT = "escape_ee_0917"
 SPEC = "specs/spec_escape_ee_0917.md"
-PREREG_COMMIT = "unregistered"                   # set to the spec's registration commit before the run
+PREREG_COMMIT = "106b28fe43993a7e76fae75959ca230ddd323715"   # specs/spec_escape_ee_0917.md, pushed before any held arm ran for the record
 ACT = RE.ACT
 EPOCHS = RE.EPOCHS
 SPE = RE.SPE
