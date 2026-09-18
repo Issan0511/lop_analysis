@@ -65,3 +65,10 @@ Snapshotはinitと各task終端。optimizerと全RNGは毎task checkpointに保�
 したがって上記はTiny ImageNetを採用した場合の候補仕様として保持し、本走開始は保留。
 まずRL-CIFARとの課題、学習量、計算量、解釈の違いを比較する。2条件を実測比較した結果はまだ存在しない。
 Joudaki ViT単体の合成入力benchmarkだけは両入力形状で測り、性能・可塑性の結果と混同しない。
+
+## 追補2 — Tiny ImageNet採用（実装・本走前）
+
+ユーザー「流石にTinyImageNetかな」によりTiny ImageNet案を採用。追補1の本走保留を解除する。
+13腕×seed0–9、40タスク×500更新を採用。CIFAR本走は行わない。
+実装は原典モデルを直接使用。画像拡張はPillowで同分布のcrop/flip/ColorJitterを実装し、torchvisionには依存しない。
+乱数の実現は原典と異なるが、seedごと画像・batch・拡張は全腕で一致。
