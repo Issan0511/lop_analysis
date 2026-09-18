@@ -1,0 +1,109 @@
+{
+  "run_id": "relu_doors_0919",
+  "git_hash": "4ca7dac348246f8750db51cc791154cd42a6aa8d",
+  "dirty_src_analysis": [],
+  "git_states": [
+    {
+      "git_hash": "4ca7dac348246f8750db51cc791154cd42a6aa8d",
+      "dirty_src_analysis": []
+    }
+  ],
+  "resumed_at_task": [],
+  "arm": "CH",
+  "conds": [
+    "raw"
+  ],
+  "seeds": [
+    100,
+    101,
+    102
+  ],
+  "slots": [
+    {
+      "seed": 100,
+      "cond": "raw"
+    },
+    {
+      "seed": 101,
+      "cond": "raw"
+    },
+    {
+      "seed": 102,
+      "cond": "raw"
+    }
+  ],
+  "R": 3,
+  "lr": 0.001,
+  "n_tasks": 3,
+  "epochs_per_task": 400,
+  "batch": 16,
+  "steps_per_task": 30000,
+  "n_images": 1200,
+  "train_n": 50000,
+  "dims": [
+    3072,
+    100,
+    100,
+    10
+  ],
+  "n_classes": 10,
+  "doors": {
+    "c": true,
+    "h": true,
+    "b": "none"
+  },
+  "door_lam": 0.0,
+  "door_beta": 0.01,
+  "intervention": "none",
+  "optimizer": "adam",
+  "weight_decay": 0.0,
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "subset_sha256": {
+    "100": "0261ffb74ba3c3cbaac7a1a42e2ea6f61ec5952d15c63b66e2a9eaeafe95ac6f",
+    "101": "210746a06e5eb15e01804c7acbcec934413f29edb8b80210bb5c5da37ad302ba",
+    "102": "06262f0284414e14eaeec48e000685fe6fca60a7cb4a47705ad086591e1366ba"
+  },
+  "std": {
+    "mean": [
+      0.4914,
+      0.4822,
+      0.4465
+    ],
+    "std": [
+      0.247,
+      0.2435,
+      0.2616
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "rng_roles": [
+    "rlc_subset",
+    "rlc_labels",
+    "rlc_batch",
+    "init"
+  ],
+  "rsl_noise_seed": null,
+  "hist": {
+    "lo": -512.0,
+    "hi": 256.0,
+    "bins": 7680,
+    "dtype": "int32",
+    "theta": null,
+    "path": "hist/<arm>_<cond>_seed<seed>.npz"
+  },
+  "engine": "stacked baddbmm, autograd, elementwise Adam (spec \u00a72.2), one step captured as a CUDA graph",
+  "snapshots": "snap/<arm>_<cond>_seed<seed>/t<task>.npz: W1,b1,W2,b2,W3,b3 float32 (+V1,V2 for adaptive arms) at init (t00) and every task's end, plus z1,z2 (1200x100, float16, images in subset order) at every task's end; exact float32 z via replay()",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 0.27435898780822754,
+  "wall_clock_s": 28.1005802154541,
+  "divergences": [],
+  "check_hooks": {
+    "perturb": null,
+    "nan_slot": null,
+    "snapshots": true
+  }
+}
