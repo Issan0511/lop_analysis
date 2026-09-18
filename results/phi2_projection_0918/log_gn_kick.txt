@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/issan/Projects/claude/wt/phi2_projection_0918/analysis/phi2_projection_0918/gn_kick.py", line 55, in <module>
+    for row in gn_bias_share(n, sup, u):
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/issan/Projects/claude/wt/phi2_projection_0918/analysis/phi2_projection_0918/gn_kick.py", line 33, in gn_bias_share
+    resid = Jq - Jo @ (torch.linalg.pinv(Ko) @ Jq)       # part of Jq outside the others' row space
+                 ~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+RuntimeError: size mismatch, got input (32), mat (32x2179), vec (32)
