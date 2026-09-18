@@ -92,3 +92,14 @@ KKA eager139.42ms、compile+fused62.84ms。KKAは2.22倍。
 float32・TF32無効を維持。Inductorのfallback_random=TrueでdropoutのATen乱数列を保ち、RSLの私有乱数はcompile外で事前生成する。
 数値融合により丸め順は変わるので、長期軌道のbit一致は主張しない。元実装との1更新の出力・勾配・EMAを比較し、同一エンジンでcheckpoint再開がbit一致することを本走前の条件とする。
 13腕×10seedの学習時間はこの2腕の速度から約45時間、実データと保存の overhead は別途実測。
+
+## 追補5 — 高速化前検査で見つかった差と修正（本走前）
+
+適応Vをforward内部でin-place更新した版では、KKAのcompile勾配がeagerから最大relative L2 .002589ずれた（GELU/RSLは約2e-6）。
+V更新を元MLPと同様optimizer更新の後へ移し、forwardではdetachした分散を保持するだけにしたところ、KKAも最大1.942e-6へ縮小した。
+この修正版を使う。forward時のalphaは旧Vから計算し、学習後のVだけを次stepへ持ち越す。
+
+検査の補足: 最初のAdam更新後のqkv biasに相対誤差だけを当てると失敗した。attentionのkey biasの勾配は解析的に0であり、丸めによる微小差をAdamのepsが増幅するため、ゼロ近傍パラメータへの相対誤差は検査として不適切だった。
+forward/gradient/EMAは256×float32 epsilonのrelative L2を基準とし、Adam単独は同じ勾配を渡してforeachとfusedを比較する。
+異なる丸め勾配による最初のAdam更新差は、g→lr*g/(|g|+eps)のLipschitz定数lr/epsから導いた成分別の上界で検査する。
+長期軌道の一致は主張しない。失敗した初期検査もraw/preflightに保持した。
