@@ -1,0 +1,187 @@
+{
+ "all_pass": true,
+ "checks": {
+  "S-B": {
+   "pass": true,
+   "CHB": {
+    "max_abs_b1": 0.0,
+    "max_abs_b2": 0.1172543317079544,
+    "max_abs_b3": 0.09441975504159927,
+    "b3_moved_from_init": 0.02740369737148285
+   },
+   "CHB0": {
+    "max_abs_b1": 0.0,
+    "max_abs_b2": 0.0,
+    "max_abs_b3": 0.09561514854431152,
+    "b3_moved_from_init": 0.025141917169094086
+   },
+   "CH": {
+    "max_abs_b1": 0.03830050304532051,
+    "max_abs_b2": 0.11412438750267029,
+    "max_abs_b3": 0.09273970127105713,
+    "b3_moved_from_init": 0.02340439334511757
+   },
+   "one_step_b2": 4.999143600463867,
+   "expected_b2": 4.9991435,
+   "one_step_b1": 0.0,
+   "one_step_b3_untouched": 5.0,
+   "mutation_lam0_b2": 5.0,
+   "seconds": 1.7
+  },
+  "S-C": {
+   "pass": true,
+   "100": {
+    "residual_mean_norm": 1.5994600062185782e-06,
+    "bound": 0.0018961648608499819,
+    "shift_is_constant_max_dev": 2.9802322387695312e-08,
+    "shift_bound": "2.3841858e-07",
+    "scale_unchanged": true,
+    "r_before": 1.9339402914047241,
+    "r_after": 1.163097635981103e-07
+   },
+   "101": {
+    "residual_mean_norm": 1.5822434988876921e-06,
+    "bound": 0.0018727299744894317,
+    "shift_is_constant_max_dev": 5.960464477539063e-08,
+    "shift_bound": "2.3841858e-07",
+    "scale_unchanged": true,
+    "r_before": 1.9053558111190796,
+    "r_after": 1.1483205497597737e-07
+   },
+   "102": {
+    "residual_mean_norm": 1.5050344472911092e-06,
+    "bound": 0.001861045700637141,
+    "shift_is_constant_max_dev": 5.960464477539063e-08,
+    "shift_bound": "2.3841858e-07",
+    "scale_unchanged": true,
+    "r_before": 1.8977994918823242,
+    "r_after": 1.0947741202471661e-07
+   },
+   "mutation_uncentred_mean_norm": 26.595016479492188,
+   "mutation_over_bound": 14025.687865331818,
+   "seconds": 0.2
+  },
+  "S-H": {
+   "pass": true,
+   "ema_max_abs_error": 5.960464477539063e-08,
+   "bound": "1.1434765e-05",
+   "ema_scale": 0.47960880398750305,
+   "train_equals_eval": true,
+   "subtracts_m_error": 1.1920928955078125e-07,
+   "subtracts_m_bound": "7.477604e-07",
+   "mutation_beta0_m_is_zero": 0.0,
+   "seconds": 0.1
+  },
+  "S-cost_C": {
+   "pass": true,
+   "arm": "C",
+   "R": 10,
+   "ms_per_step": 2.5649991035461426,
+   "wall_seconds": 6.8,
+   "implied_50_task_minutes": 64.1,
+   "max_rss_gb": 1.95,
+   "cuda_max_mem_gb": 0.42,
+   "seconds": 6.8
+  },
+  "S-cost_CH": {
+   "pass": true,
+   "arm": "CH",
+   "R": 10,
+   "ms_per_step": 2.5694260597229004,
+   "wall_seconds": 6.0,
+   "implied_50_task_minutes": 64.2,
+   "max_rss_gb": 1.94,
+   "cuda_max_mem_gb": 0.42,
+   "seconds": 6.0
+  },
+  "S-cost_CHB": {
+   "pass": true,
+   "arm": "CHB",
+   "R": 10,
+   "ms_per_step": 4.1384358406066895,
+   "wall_seconds": 11.8,
+   "implied_50_task_minutes": 103.5,
+   "max_rss_gb": 1.94,
+   "cuda_max_mem_gb": 0.42,
+   "seconds": 11.8
+  },
+  "S-cost_CHB0": {
+   "pass": true,
+   "arm": "CHB0",
+   "R": 10,
+   "ms_per_step": 4.274825096130371,
+   "wall_seconds": 12.0,
+   "implied_50_task_minutes": 106.9,
+   "max_rss_gb": 1.94,
+   "cuda_max_mem_gb": 0.42,
+   "seconds": 12.0
+  },
+  "S-diverge": {
+   "pass": true,
+   "others_bit_identical": true,
+   "divergences": [
+    {
+     "diverged": true,
+     "task": 1,
+     "step": 0,
+     "seed": 100,
+     "cond": "raw",
+     "arm": "CH"
+    }
+   ],
+   "nan_slot_acc_is_nan": true,
+   "seconds": 0.6
+  },
+  "S-grad": {
+   "pass": true,
+   "m_in_parameters": false,
+   "m_requires_grad": false,
+   "dphi_dz_error": 0.0,
+   "ema_converges_to": 2.9999988079071045,
+   "target": 3.0,
+   "mutation_centred_ema_converges_to": 1.5384609699249268,
+   "mutation_note": "feeding the centred activation converges to target/2, not target",
+   "seconds": 0.1
+  },
+  "S-off": {
+   "pass": true,
+   "bit_identical_to_parent": true,
+   "mutation_C_differs": true,
+   "columns": 16,
+   "rows": 6,
+   "seconds": 0.8
+  },
+  "S-pin": {
+   "pass": true,
+   "CHB": {
+    "max_abs_zbar_l1": 6.484985419774603e-07,
+    "cauchy_schwarz_bound": 2.7355972020887728e-06,
+    "ratio": 0.23705922110254296,
+    "reported_abs_zbar_l1": 5.722046126e-07
+   },
+   "CHB0": {
+    "max_abs_zbar_l1": 6.930033578100847e-07,
+    "cauchy_schwarz_bound": 2.867677129925154e-06,
+    "ratio": 0.24166017526114317,
+    "reported_abs_zbar_l1": 8.996327665e-07
+   },
+   "C": {
+    "max_abs_zbar_l1": 0.05537625774741173,
+    "cauchy_schwarz_bound": 2.6353247348915557e-06,
+    "ratio": 21013.067958659172,
+    "reported_abs_zbar_l1": 0.05537620559,
+    "note": "door B open, so b1 is free and the bound does not apply"
+   },
+   "mutation_uncentred_max_abs_zbar": 9.534989356994629,
+   "mutation_bound": 1.1774746536555853e-06,
+   "seconds": 3.2
+  },
+  "S-resume": {
+   "pass": true,
+   "bit_identical": true,
+   "mutation_wrong_arm_refused": true,
+   "rows": 6,
+   "seconds": 5.4
+  }
+ }
+}

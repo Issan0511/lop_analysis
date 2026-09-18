@@ -308,6 +308,8 @@ def write_snapshot(path: Path, P, act: Act, r: int, z=None) -> None:
     d = {k: P[i][r].detach().cpu().numpy() for i, k in enumerate(("W1", "b1", "W2", "b2", "W3", "b3"))}
     if act.adaptive:
         d["V1"], d["V2"] = act.V[0][r].cpu().numpy(), act.V[1][r].cpu().numpy()
+    if getattr(act, "door_h", False):
+        d["m1"], d["m2"] = act.m[0][r].cpu().numpy(), act.m[1][r].cpu().numpy()
     if z is not None:
         d["z1"], d["z2"] = z[0][r], z[1][r]
     np.savez(path, **d)
@@ -333,6 +335,8 @@ def replay_stack(out: Path, arm: str, slots: list[tuple[int, str]], task: int, d
     act.init_state(len(slots), device, key="replay")
     if act.adaptive:
         act.V = [torch.stack([torch.from_numpy(d[k]) for d in ds]).to(device) for k in ("V1", "V2")]
+    if act.door_h:
+        act.m = [torch.stack([torch.from_numpy(d[k]) for d in ds]).to(device) for k in ("m1", "m2")]
     X = torch.stack([slot_inputs(cifar, s, cd, device, center=act.door_c)
                      for s, cd in slots])
     Y = []
@@ -437,8 +441,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                 for q, v in zip(dst, src):
                     q.copy_(v)
         tc = st["tc"]
-        if act.adaptive:
-            act.load_state({"V": st["V"]})
+        act.load_state(st["act_state"])       # door H's EMA lives here (S-resume)
         if act.stochastic:
             act.gen.set_state(st["rsl_state"])
         for s in useeds:
@@ -578,7 +581,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         if checkpoint:
             tmp = out / "ckpt.pt.tmp"
             torch.save({"t": t, "meta": meta, "P": [q.detach() for q in P], "m": adam_m, "v": adam_v,
-                        "tc": tc, "V": act.V if act.adaptive else None,
+                        "tc": tc, "act_state": act.state(),
                         "rsl_state": act.gen.get_state() if act.stochastic else None,
                         "g_lab": {s: g_lab[s].get_state() for s in useeds},
                         "g_batch": {s: g_batch[s].get_state() for s in useeds},
@@ -614,7 +617,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             "engine": "stacked baddbmm, autograd, elementwise Adam (spec §2.2)"
                       + (", one step captured as a CUDA graph" if use_graph else ", eager"),
             "snapshots": "snap/<arm>_<cond>_seed<seed>/t<task>.npz: W1,b1,W2,b2,W3,b3 float32 "
-                         "(+V1,V2 for adaptive arms) at init (t00) and every task's end, plus z1,z2 "
+                         "(+m1,m2 for door H) at init (t00) and every task's end, plus z1,z2 "
                          "(1200x100, float16, images in subset order) at every task's end; exact "
                          "float32 z via replay()",
             "device": str(device), "torch": torch.__version__,
