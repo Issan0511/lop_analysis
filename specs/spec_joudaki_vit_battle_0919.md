@@ -58,3 +58,10 @@ Snapshotはinitと各task終端。optimizerと全RNGは毎task checkpointに保�
 合成入力GELU benchmark: 73.55ms/step, peak1.83GB, parameters10,824,008。13×10×20,000stepは学習のみ53.12 GPU時間。実データ・保存で延びる。
 原典よりseedを5→10へ増やす理由は元バトルの対応符号検定（5seedでは全勝でも両側p=.0625）を保つため。
 本走は1GPU逐次、STOPでtask境界で停止。終了後に集計・図・Obsidian結果ノート・manifestを保存しmain統合。
+
+## 追補1 — ユーザーからの設定比較の依頼（本走開始前）
+
+上のTiny ImageNet案を登録した直後、ユーザーはデータ/タスクの選択に対して「比較してほしいかも 難易度の違いとか」と回答。
+したがって上記はTiny ImageNetを採用した場合の候補仕様として保持し、本走開始は保留。
+まずRL-CIFARとの課題、学習量、計算量、解釈の違いを比較する。2条件を実測比較した結果はまだ存在しない。
+Joudaki ViT単体の合成入力benchmarkだけは両入力形状で測り、性能・可塑性の結果と混同しない。
