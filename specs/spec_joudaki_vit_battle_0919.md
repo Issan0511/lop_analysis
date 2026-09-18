@@ -111,3 +111,12 @@ KKA/RSLは実画像・本番サイズでtask境界再開を試し、モデル・
 13腕の同一初期化/finite backward、class/batch/augmentation対応、task maskとhead reset、集計の不完全拒否もPASS。
 seed101・実画像500更新・本番の評価/保存込みの初回タスクはGELU44.52秒、KKA46.84秒（初回shapeコンパイルを含む）。
 試走はseed100/101のみで、本走seed0–9の判定値はまだ見ていない。約45時間はsteady-state学習の概算で、保存等を含む実時間は長くなる。
+
+## 追補7 — 同一GPUでの複数プロセス測定（本走をtask境界で一時停止）
+
+ユーザーの並列実行の質問を受け、SNA seed0をtask22終了で安全に停止し、seed100のKKA合成入力で1/2/4プロセスを比較した。
+本番と同じViT・batch128・float32・TF32無効・compile/fused Adam。各プロセス10更新warmup後にbarrierで揃えて200更新し、最初の開始から最後の終了までを全体時間とした。通常の独立CUDAプロセスで、MPSや単一プロセス内の複数streamは未測定。
+総更新/秒は1本14.2975、2本13.1567（0.920倍）、4本13.9227（0.974倍）。全プロセスの最終モデルと適応Vは1本実行とSHA256が一致。
+これは学習部分の短い合成入力測定であり、実画像読込・評価・保存を含むend-to-end並列測定ではない。通常の複数プロセス化に学習速度の利点が見られないため、本走は既定の1GPU逐次のまま再開する。
+本走の精度・順位はこの判断に使用していない。実験ディレクトリ内の凍結Pythonソースは変更していない。
+スクリプト: analysis/benchmark_joudaki_vit_parallel_0919.py。結果: results/joudaki_vit_battle_0919/parallel_benchmark.json。生ログ: raw/preflight/parallel_benchmark.log。
