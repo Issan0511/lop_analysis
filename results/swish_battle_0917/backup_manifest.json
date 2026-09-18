@@ -3,39 +3,9 @@
  "moved_at": "2026-09-18",
  "dest": "/home/issan/Projects/obsidian-research-data/swish_battle_0917",
  "note": "CNN box abandoned at 46 runs (see cnn/ABANDONED.md); MLP box complete",
- "n_files": 217,
- "bytes": 333345988,
+ "n_files": 212,
+ "bytes": 151253195,
  "files": [
-  {
-   "source": "data/cifar10/cifar-10-python.tar.gz",
-   "backup": "/home/issan/Projects/obsidian-research-data/swish_battle_0917/data/cifar10/cifar-10-python.tar.gz",
-   "bytes": 170498071,
-   "sha256": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
-  },
-  {
-   "source": "data/mnist/t10k-images-idx3-ubyte.gz",
-   "backup": "/home/issan/Projects/obsidian-research-data/swish_battle_0917/data/mnist/t10k-images-idx3-ubyte.gz",
-   "bytes": 1648877,
-   "sha256": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6"
-  },
-  {
-   "source": "data/mnist/t10k-labels-idx1-ubyte.gz",
-   "backup": "/home/issan/Projects/obsidian-research-data/swish_battle_0917/data/mnist/t10k-labels-idx1-ubyte.gz",
-   "bytes": 4542,
-   "sha256": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
-  },
-  {
-   "source": "data/mnist/train-images-idx3-ubyte.gz",
-   "backup": "/home/issan/Projects/obsidian-research-data/swish_battle_0917/data/mnist/train-images-idx3-ubyte.gz",
-   "bytes": 9912422,
-   "sha256": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609"
-  },
-  {
-   "source": "data/mnist/train-labels-idx1-ubyte.gz",
-   "backup": "/home/issan/Projects/obsidian-research-data/swish_battle_0917/data/mnist/train-labels-idx1-ubyte.gz",
-   "bytes": 28881,
-   "sha256": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c"
-  },
   {
    "source": "results/swish_battle_0917/_launch/STOP",
    "backup": "/home/issan/Projects/obsidian-research-data/swish_battle_0917/results/swish_battle_0917/_launch/STOP",
@@ -1308,5 +1278,6 @@
    "bytes": 2533856,
    "sha256": "f31a42fa91a141b9b80269bac05995114d5b04adfa0210598606e0b83c788ed4"
   }
- ]
+ ],
+ "correction_0918": "the first sweep followed the worktree's `data` symlink and moved the shared datasets (mnist, cifar10, 174 MB) out of proj_004_drift/data; they were moved back after a sha256 check and are not part of this backup"
 }
