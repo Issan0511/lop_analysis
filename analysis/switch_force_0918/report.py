@@ -100,7 +100,7 @@ def main():
             ax.axhline(0,color='0.45',lw=.7);ax.set_xscale('symlog',linthresh=10)
             ax.set_title(f'a={0.1 if ir==0 else 0.7}; after {step//10000} tasks')
             ax.grid(alpha=.2)
-            if ic==0:ax.set_ylabel('Weight-only change in mean response')
+            if ic==0:ax.set_ylabel(r'$\Delta(w^\top\mu_{\rm new})$ (weights only)')
             if ir==1:ax.set_xlabel('SGD updates after branch point')
     axes[0,0].legend(frameon=False)
     fig.suptitle('Task switch vs matched continuation: fixed new-task mean input',fontsize=14)
@@ -139,7 +139,15 @@ def main():
         for step in STEPS:
             vals=[ws(arm,step,10000,k) for k in ['self_pos','self_neg','rest_pos','rest_neg','W','pos','neg']]
             lines.append(f"| {arm} | {step//10000} | "+' | '.join(f'{q:.7g}' for q in vals)+' |')
-    lines+=['','## Verification and limits','',f"Independent endpoint verification: {'PASS' if verification['all_pass'] else 'FAIL'}.",
+    lines+=['','## Reading of the registered and descriptive results','',
+        'The adjusted primary test resolves added downward transport only for a=.1 after 20 prior tasks, at both 100 and 10000 updates. Other cells are unresolved, not evidence of zero effect. Native float32 yields the same 12 primary labels.',
+        'For a=.1, frozen switching makes the seed-mean force more negative at all three checkpoints. Only the 20- and 100-task new-force descriptive 95% intervals exclude zero; the 500-task interval crosses zero. Input changes and target changes both contribute under symmetric two-factor allocation. The residual/gate interaction is retained; changing the gate alone is not the complete explanation.',
+        'The 20-task a=.1 force changes through both a more negative self contribution and a weaker positive rest contribution. By 100 tasks the rest contribution changes sign; by 500 tasks it weakens while self changes little. A single fixed self-force story is insufficient across checkpoints.',
+        'The a=.1 20-task switched trajectory has W transport -0.045406, of which stepwise radial is -0.004110 and tangential is -0.041296. Exact symmetric endpoint allocation gives length -0.001036 and direction -0.044370. Only 50.5% of units have negative W transport: the population mean is not a universal per-unit drift.',
+        'In that same trajectory the input-only jump is +0.049354 and bias learning is -0.004759. Thus final z relative to the old-task starting mean changes by only -0.000811, despite negative learning transport. Downward adaptation after a changed input distribution is not automatically a downward staircase across task boundaries.',
+        'At later a=.1 checkpoints, the mean first falls then substantially recovers within the task. All six cells gain row-centered squared weight norm on average over the switched task, while mean-response transport differs in sign. Norm growth and signed mean transport remain distinct.',
+        'The duration of one task and three sampled ages cannot establish a persistent force or explain the complete 500-task drift. No new long-horizon run was performed.',
+        '', '## Verification and limits','',f"Independent endpoint verification: {'PASS' if verification['all_pass'] else 'FAIL'}.",
         'The first preflight failed because scalar torch.where branches made diagnostic leak constants float32; production update was correct. Original failed output is retained. Corrected code uses dtype-preserving branches; no thresholds changed. Main checks are in checks_main.json.',
         'Primary inference concerns the added effect of a switch relative to no switch, at 100 and 10000 updates. Other windows, source allocations, branch breakdowns and geometry are descriptive/exploratory. The paired trajectories use one random flip per seed; all-flip robustness is tested only for frozen instantaneous forces. Results do not prove indefinite drift or transfer to CE/Adam.',
         'Tables are seed means, not universal unit behavior. A whole-population mean can be driven by subsets. Tangential projection contributions are exact stepwise ledgers, not pure finite rotations. Endpoint length/direction allocation is symmetric and exact.',
