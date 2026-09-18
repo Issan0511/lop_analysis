@@ -1,0 +1,45 @@
+{
+  "measurements": [
+    {
+      "arm": "GELU",
+      "engine": "eager",
+      "status": "ok",
+      "ms_per_step": 79.59735760989133,
+      "warmup_seconds": 1.2152930670417845,
+      "all_runs_training_hours": 57.486980496032636
+    },
+    {
+      "arm": "GELU",
+      "engine": "fused",
+      "status": "ok",
+      "ms_per_step": 77.9813062195899,
+      "warmup_seconds": 1.1813089430215769,
+      "all_runs_training_hours": 56.31983226970382
+    },
+    {
+      "arm": "GELU",
+      "engine": "compile",
+      "status": "ok",
+      "ms_per_step": 61.80185362987686,
+      "warmup_seconds": 8.851938807987608,
+      "all_runs_training_hours": 44.634672066022176
+    },
+    {
+      "arm": "KKA",
+      "engine": "eager",
+      "status": "ok",
+      "ms_per_step": 139.42067132040393,
+      "warmup_seconds": 1.8898682279977947,
+      "all_runs_training_hours": 100.69270706473617
+    },
+    {
+      "arm": "KKA",
+      "engine": "compile",
+      "status": "ok",
+      "ms_per_step": 62.77887286036275,
+      "warmup_seconds": 2.401318600983359,
+      "all_runs_training_hours": 45.340297065817545
+    }
+  ],
+  "note": "KKA compile remeasured after moving EMA update after backward/optimizer. Eager reference timing from initial implementation; same mathematical update."
+}
