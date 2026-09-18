@@ -82,3 +82,13 @@ Joudaki ViT単体の合成入力benchmarkだけは両入力形状で測り、性
 空き約550GBのローカルディスクで実行し、25GiB未満ならtask境界で停止する。元データへのsymlinkは作らない。
 ユーザーから高速化の依頼を受け、float32/TF32無効のままfused Adamとtorch.compileを速度測定する。
 採用するエンジンと検査結果は本走前に追加記録する。
+
+## 追補4 — 高速化エンジン（本走前）
+
+合成入力seed100・batch128の100更新実測（初回warmupを除く）:
+GELU eager79.60ms、fused Adam77.98ms、compile+fused61.80ms。
+KKA eager139.42ms、compile+fused62.84ms。KKAは2.22倍。
+`torch.compile(fullgraph=True)` と fused Adam を全腕同じ設定で採用する方針。
+float32・TF32無効を維持。Inductorのfallback_random=TrueでdropoutのATen乱数列を保ち、RSLの私有乱数はcompile外で事前生成する。
+数値融合により丸め順は変わるので、長期軌道のbit一致は主張しない。元実装との1更新の出力・勾配・EMAを比較し、同一エンジンでcheckpoint再開がbit一致することを本走前の条件とする。
+13腕×10seedの学習時間はこの2腕の速度から約45時間、実データと保存の overhead は別途実測。
