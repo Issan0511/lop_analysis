@@ -72,3 +72,13 @@ Joudaki ViT単体の合成入力benchmarkだけは両入力形状で測り、性
 13腕×seed0–9、40タスク×500更新を採用。CIFAR本走は行わない。
 実装は原典モデルを直接使用。画像拡張はPillowで同分布のcrop/flip/ColorJitterを実装し、torchvisionには依存しない。
 乱数の実現は原典と異なるが、seedごと画像・batch・拡張は全腕で一致。
+
+## 追補3 — 原典の正解率と保存量の照合（本走前）
+
+原典train_continual.pyは損失を現タスク5クラスへmaskするが、正解率は全200出力のargmaxを使用していた。
+当方の登録主指標は5クラス内の正解率を保持し、原典と同じ全200出力の正解率を`online_global_acc` / `train_global_acc` / `val_global_acc`として併記する。
+この読み出しの差を隠さず、原論文の図との直接数値一致は主張しない。
+全snapshot保存量はモデル約230GB、前活性（圧縮前）約100GB、optimizer付き最終checkpoint約17GB。
+空き約550GBのローカルディスクで実行し、25GiB未満ならtask境界で停止する。元データへのsymlinkは作らない。
+ユーザーから高速化の依頼を受け、float32/TF32無効のままfused Adamとtorch.compileを速度測定する。
+採用するエンジンと検査結果は本走前に追加記録する。
