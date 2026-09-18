@@ -52,6 +52,12 @@ PREDICTIONS = {                       # spec §6, Claude (2026-09-18 02:20, befo
     "P18": ("every leaky arm (LK001, LR, LK03) is STD_HELPS", 0.50),
     "P19": ("SNA is TIE between raw and std", 0.45),
 }
+ISSA = {                              # spec §6, Issa (2026-09-18 13:30, before any result was read; labels only)
+    "I1": "A == SNA_TIED_TOP in both conditions",
+    "I2": "K1 in (PERIOD_FREE, PERIOD_HURTS) in both conditions",
+    "I3": "K2 == SCALE_FREE in both conditions",
+    "I4": "K3 == TAIL2_BETTER in both conditions",
+}
 
 
 def sign(diff) -> tuple[int, int, float]:
@@ -210,6 +216,20 @@ def score(labels: dict) -> dict:
     return out
 
 
+def score_issa(labels: dict) -> dict:
+    """Issa's four labels (no probabilities, so hits only)."""
+    L = labels
+    got = {
+        "I1": all(L["A"][c]["label"] == "SNA_TIED_TOP" for c in CONDS),
+        "I2": all(L["K1"][c]["label"] in ("PERIOD_FREE", "PERIOD_HURTS") for c in CONDS),
+        "I3": all(L["K2"][c]["label"] == "SCALE_FREE" for c in CONDS),
+        "I4": all(L["K3"][c]["label"] == "TAIL2_BETTER" for c in CONDS),
+    }
+    out = {k: {"claim": ISSA[k], "hit": bool(got[k])} for k in ISSA}
+    out["_summary"] = {"n": len(ISSA), "hits": sum(v["hit"] for v in out.values() if "hit" in v)}
+    return out
+
+
 def f(v, spec=".4f"):
     return "n/a" if v is None or (isinstance(v, float) and math.isnan(v)) else format(v, spec)
 
@@ -308,8 +328,15 @@ def main() -> None:
     for k, v in S.items():
         if k != "_summary":
             lines.append(f"| {k} | {v['claim']} | {v['p']:.2f} | {'yes' if v['hit'] else 'no'} |")
+    SI = score_issa(L)
+    lines += ["", "## prediction score (spec §6, Issa)", "",
+              f"hits {SI['_summary']['hits']}/{SI['_summary']['n']}", "",
+              "| key | claim | hit |", "|---|---|---|"]
+    for k, v in SI.items():
+        if k != "_summary":
+            lines.append(f"| {k} | {v['claim']} | {'yes' if v['hit'] else 'no'} |")
     (dst / "summary.md").write_text("\n".join(lines) + "\n")
-    verdict = {"labels": {k: v for k, v in L.items()}, "score": S, "runs": r.to_dict("records"),
+    verdict = {"labels": {k: v for k, v in L.items()}, "score": S, "score_issa": SI, "runs": r.to_dict("records"),
                "course": course, "bands": bands, "missing": missing,
                "provenance": {k: {kk: vv for kk, vv in v.items() if kk not in ("subset_sha256",)} for k, v in prov.items()}}
     (dst / "verdict.json").write_text(json.dumps(verdict, indent=1, default=str))
