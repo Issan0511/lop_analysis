@@ -111,8 +111,13 @@ RL-CIFAR × MLP（3072-100-100-10、1200 枚、50 タスク × 400 epoch、Adam 
 - 腕の順位（raw、窓の中央値）: SNA ≈ KKA ≈ KKT1 > KKA23 > SL ≈ RSL > LK03 > LR > LK001 > SILU ≈ GELU > ELU > R。
 - std で最も得をするのは leaky 系（`STD_HELPS`）、SNA は `TIE`。
 
-### Issa
-（記入欄。空のまま実装に進んでよい。本走の前に書き足せる。）
+### Issa（2026-09-18 13:30 記入。本走は走行中で、13 腕のうち 6 腕が完走していたが、**Claude・Issa とも結果は 1 行も読んでいない**。
+記入の直前に Claude が §5 の判定の定義だけを口頭で説明した。確率は付けず、ラベルだけ。）
+
+- **A**: `SNA_TIED_TOP`（両条件とも。SNA は誰にも負けないが、全勝はしない）
+- **K1**: `PERIOD_FREE` または `PERIOD_HURTS`（＝ KKA は SNA に劣らない。`PERIOD_HELPS` が出たら外れ）
+- **K2**: `SCALE_FREE`
+- **K3**: `TAIL2_BETTER`（裾の傾きは 2 のほうがよい）
 
 ## 7. 実行計画
 1. この spec を commit（実装の前）。
