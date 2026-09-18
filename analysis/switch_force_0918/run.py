@@ -72,7 +72,7 @@ def new_net(cp,dtype,repeats=1):
 def parts(n,x,y):
     z,a,f=n.forward_batch(x)
     z,a,f=z.double(),a.double(),f.double()
-    e=f-y.double(); k=torch.where(z>0,1.,n.act_alpha)
+    e=f-y.double(); k=torch.where(z>0,torch.ones_like(z),torch.full_like(z,n.act_alpha))
     v=n.v.double()[None]
     h=2*e[...,None]*v*k
     hs=2*v*v*a*k
@@ -231,7 +231,8 @@ def trajectory(cp,arm,step,dtype,T=10000,tag=''):
         ii=indices[t].repeat(2); x=xall[ii,ids]; y=yall[ii,ids]
         w=n.W.double().clone(); b=n.b.double().clone(); v=n.v.double().clone()
         pre,a,f=n.forward(x); gW,gb,gv,gc=n.grads(x,pre,a,f-y)
-        k=torch.where(pre.double()>0,1.,n.act_alpha); h=2*(f.double()-y.double())[:,None]*v*k
+        pd=pre.double()
+        k=torch.where(pd>0,torch.ones_like(pd),torch.full_like(pd,n.act_alpha)); h=2*(f.double()-y.double())[:,None]*v*k
         hs=2*v*v*a.double()*k; hr=h-hs
         xd=x.double(); xm=(xd*mu).sum(-1)[:,None]
         # Use production gradients and update; diagnostics never mutate these tensors.

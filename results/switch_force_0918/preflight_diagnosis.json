@@ -1,0 +1,6 @@
+{
+  "original_code": "670dc01",
+  "issue": "Scalar branches in torch.where created a float32 leak constant in nominal float64 diagnostics.",
+  "fix": "Use ones_like and full_like on float64 preactivations. Production update was correct; primary runs had not begun.",
+  "thresholds_changed": false
+}
