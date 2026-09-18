@@ -103,3 +103,11 @@ V更新を元MLPと同様optimizer更新の後へ移し、forwardではdetachし
 forward/gradient/EMAは256×float32 epsilonのrelative L2を基準とし、Adam単独は同じ勾配を渡してforeachとfusedを比較する。
 異なる丸め勾配による最初のAdam更新差は、g→lr*g/(|g|+eps)のLipschitz定数lr/epsから導いた成分別の上界で検査する。
 長期軌道の一致は主張しない。失敗した初期検査もraw/preflightに保持した。
+
+## 追補6 — 本走前の検査と実画像コスト
+
+修正版のGELU/KKA/RSLでforward・gradient・EMAと同一勾配でのfused Adamの数値検査が全件PASS。
+KKA/RSLは実画像・本番サイズでtask境界再開を試し、モデル・Adam・RNG・診断・保存前活性が連続実行とbit一致。
+13腕の同一初期化/finite backward、class/batch/augmentation対応、task maskとhead reset、集計の不完全拒否もPASS。
+seed101・実画像500更新・本番の評価/保存込みの初回タスクはGELU44.52秒、KKA46.84秒（初回shapeコンパイルを含む）。
+試走はseed100/101のみで、本走seed0–9の判定値はまだ見ていない。約45時間はsteady-state学習の概算で、保存等を含む実時間は長くなる。
