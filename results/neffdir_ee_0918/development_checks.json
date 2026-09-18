@@ -1,0 +1,1609 @@
+{
+  "phase": "pre-registration development (S-cost excluded)",
+  "all_pass": true,
+  "selected_checks": {
+    "S1a_S-records": {
+      "title": "S1a identity-carrier arms reproduce respdyn / escape / resp_ee",
+      "target": "src/neffdir_ee_0918.py",
+      "threshold_derivation": "Seed 0, 80 epochs, the escape prefix computed once, the four arms that exist in the records through\n    this runner: (i) branch-point logits equal (full batch and first minibatch); (ii) state sha256 equals\n    every record of the same computation in both tasks (S2dyn_10r: respdyn, escape; S2dyn_c12: escape;\n    S2u30r and N2r: resp_ee, respdyn, escape); (iii) shadows are N10 and d(0) is the fixed field;\n    (iv) the c12 hold stays within TOL_CAP and writes rows in both tasks; (v) the probe's raw nbar_neffT2\n    equals escape's recorded value exactly (CSV repr round trip) and the structural nbar_neffS2 equals it\n    for these identity carriers; (vi) provenance names this experiment and the prefix matched resp_ee on\n    all 12 tasks.  Bit comparisons only.",
+      "pass": true,
+      "failed_items": [],
+      "detail": {
+        "i_logits": true,
+        "ii_records": true,
+        "iii_shadows": true,
+        "iv_hold": true,
+        "v_probe": true,
+        "vi_provenance": true
+      },
+      "mutations": [
+        {
+          "mutation": "M1a: the anchored sum re-associated",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "i_logits",
+              "ii_records",
+              "v_probe"
+            ]
+          }
+        },
+        {
+          "mutation": "M1b: the c12 hold becomes c1",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "raised": "KeyError('exc_w2')"
+        },
+        {
+          "mutation": "M1c: the floor at 29",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "ii_records",
+              "v_probe"
+            ]
+          }
+        },
+        {
+          "mutation": "M1d: the structural probe off by 1e-3",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "v_probe"
+            ]
+          }
+        }
+      ],
+      "all_mutations_detected": true,
+      "seconds": 608.3
+    },
+    "S1b_S-carriers": {
+      "title": "S1b the carriers do what they say",
+      "target": "src/neffdir_ee_0918.py",
+      "threshold_derivation": "Seed 45 (no registered arm there), 8 epochs, the prefix computed once:\n    (i) S2dyn_m100, S2dyn_s100 and S2dyn_a00 (q = 1, r = 0) have S2dyn_10r's state sha256 in both tasks;\n    (ii) every arm's branch-point logits (full batch, first minibatch) equal the natural t2 net's, every\n    dyn arm's shadow is N10, d(0) is the fixed field off the lifted pairs and the constructed lift on them;\n    (iii) the fixed masks keep q of the pairs (|share - q| <= KEEP_TOL), m25's kept pairs are inside m50's,\n    and the step mask kept q and drew once per gradient-enabled forward (75 preflight + 600 per task);\n    (iv) the lifted share is 0.02 within KEEP_TOL and each lifted pair sits at its shadow unit's top\n    (|z2_branch + d(0) - top| <= 2 eps32 (|top| + |z2_branch|), float rounding of one sum and one cast);\n    (v) the autograd factor d(sum a2 G)/dz2 on a real minibatch equals G s dphi2(z2 + d) exactly for the\n    fixed mask (s = 1/q on kept pairs, 0 off), F.elu (dphi2 = exp) and the identity;\n    (vi) the structural probe at the branch equals an independent recomputation: the masked factor for\n    m50, F.elu's for felu, the raw one for the identity.",
+      "pass": true,
+      "failed_items": [],
+      "detail": {
+        "i_identity": true,
+        "ii_logits": true,
+        "ii_shadow_field": true,
+        "iii_keep": true,
+        "iii_nested": true,
+        "iii_draws": true,
+        "iv_lift_share": true,
+        "iv_held": true,
+        "iv_early_cols": true,
+        "iv_lift_top": true,
+        "v_autograd": true,
+        "vi_probe": true,
+        "factor": {
+          "S2dyn_m50": true,
+          "S2dyn_felu": true,
+          "S2dyn_10r": true,
+          "N2r_m50": true
+        },
+        "probe": {
+          "S2dyn_m50": true,
+          "S2dyn_felu": true,
+          "S2dyn_10r": true
+        }
+      },
+      "mutations": [
+        {
+          "mutation": "M2a: the fixed mask leaks into the forward value",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "ii_logits",
+              "v_autograd"
+            ]
+          }
+        },
+        {
+          "mutation": "M2b: kept pairs not rescaled by 1/q",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "v_autograd"
+            ]
+          }
+        },
+        {
+          "mutation": "M2c: the step mask also draws without gradients",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "iii_draws"
+            ]
+          }
+        },
+        {
+          "mutation": "M2d: the complement is lifted",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "i_identity",
+              "ii_shadow_field",
+              "iv_lift_top"
+            ]
+          }
+        },
+        {
+          "mutation": "M2e: the lift goes to the unit's bottom",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "ii_shadow_field",
+              "iv_lift_top"
+            ]
+          }
+        },
+        {
+          "mutation": "M2f: the masks are not nested",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "iii_nested",
+              "v_autograd",
+              "vi_probe"
+            ]
+          }
+        },
+        {
+          "mutation": "M2g: the structural probe ignores the mask",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "vi_probe"
+            ]
+          }
+        },
+        {
+          "mutation": "M2h: F.elu's factor taken as exp everywhere",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "v_autograd",
+              "vi_probe"
+            ]
+          }
+        }
+      ],
+      "all_mutations_detected": true,
+      "seconds": 492.8
+    },
+    "S1c_S-derivatives": {
+      "title": "S1c the derivative factors on a grid",
+      "target": "src/neffdir_ee_0918.py",
+      "threshold_derivation": "float32 z on a grid over [-100, 5] (step 1/64, plus the float32 neighbours of -16.64 and -87.34):\n    (i) autograd of M.FeluCarrier.phi2 equals M.dphi_felu and autograd of M.Carrier.phi2 equals\n    M.Carrier.dphi2 (= RE.dphi_train) exactly; (ii) M.dphi_felu is 1 above 0 and exp(z) below it to two\n    ulps (|factor / torch.exp(z) - 1| <= 2 eps32: two float32 exp kernels, each within one ulp), except where\n    it is 0; (iii) the host factor is 0 exactly below ln 2^-24 and not above it, F.elu's factor is 0 only\n    below the float32 normal range with flush on (ln 1.1755e-38 = -87.34); (iv) the phi2 values: the\n    identity carrier's is the host ELU bit for bit, F.elu's is F.elu and within one float32 step of -1\n    (2^-24) of the host ELU (they differ only where the host's expm1 kernel truncates), so the felu arm\n    moves the backward and, at most, a forward value by 2^-24.",
+      "pass": true,
+      "failed_items": [],
+      "detail": {
+        "i_felu": true,
+        "i_host": true,
+        "ii_felu_exp": true,
+        "iii_host_zero": true,
+        "iii_felu_zero": true,
+        "iv_phi2": true
+      },
+      "mutations": [
+        {
+          "mutation": "M3a: the felu carrier uses the host ELU",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "i_felu",
+              "iv_phi2"
+            ]
+          }
+        },
+        {
+          "mutation": "M3b: dphi_felu is the host's factor",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "i_felu",
+              "ii_felu_exp",
+              "iii_felu_zero"
+            ]
+          }
+        }
+      ],
+      "all_mutations_detected": true,
+      "seconds": 0.0
+    },
+    "S8_S-verdict": {
+      "title": "S8 the verdict on synthetic seeds 30-39",
+      "target": "analysis/neffdir_ee_0918/verdict.py",
+      "threshold_derivation": "verdict.analyze on the synthetic scenarios over seeds 30-39: labels as designed, estimates within\n    TOL_EST, the imported t quantile on the published table within 1e-6, SEEDS, MARGIN and the arm list as\n    registered.",
+      "pass": true,
+      "failed_items": [],
+      "detail": {
+        "designed": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "marker": {
+          "labels": {
+            "primary": "ADD_H_NO_EFFECT",
+            "prop_add_h": "SUBPROPORTIONAL",
+            "add": "ADD_NO_EFFECT",
+            "prop_add": "SUBPROPORTIONAL",
+            "drop_h": "DROP_H_NO_EFFECT",
+            "prop_drop_h": "SUBPROPORTIONAL",
+            "drop": "DROP_NO_EFFECT",
+            "prop_drop": "SUBPROPORTIONAL",
+            "m25": "M25_NO_EFFECT",
+            "drop_early": "DROP_EARLY_NO_EFFECT",
+            "prop_drop_early": "SUBPROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_NO_EFFECT",
+            "prop_drop_h_early": "SUBPROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCT_EQUAL",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_UNRESOLVED",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "add_h_not_manipulated": {
+          "labels": {
+            "primary": "NOT_MANIPULATED",
+            "prop_add_h": "NOT_MANIPULATED",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "not_reproduced": {
+          "labels": {
+            "primary": "NOT_REPRODUCED",
+            "prop_add_h": "NOT_REPRODUCED",
+            "add": "NOT_REPRODUCED",
+            "prop_add": "NOT_REPRODUCED",
+            "drop_h": "NOT_REPRODUCED",
+            "prop_drop_h": "NOT_REPRODUCED",
+            "drop": "NOT_REPRODUCED",
+            "prop_drop": "NOT_REPRODUCED",
+            "m25": "NOT_REPRODUCED",
+            "drop_early": "NOT_REPRODUCED",
+            "prop_drop_early": "NOT_REPRODUCED",
+            "drop_h_early": "NOT_REPRODUCED",
+            "prop_drop_h_early": "NOT_REPRODUCED",
+            "compensation": "NOT_REPRODUCED",
+            "compensation_h": "NOT_REPRODUCED",
+            "structure": "NOT_REPRODUCED",
+            "felu": "NOT_REPRODUCED",
+            "ladder": "NEFF_TRACKS",
+            "growth": "NOT_REPRODUCED"
+          },
+          "bad": []
+        },
+        "not_reproduced_held": {
+          "labels": {
+            "primary": "NOT_REPRODUCED",
+            "prop_add_h": "NOT_REPRODUCED",
+            "add": "NOT_REPRODUCED",
+            "prop_add": "NOT_REPRODUCED",
+            "drop_h": "NOT_REPRODUCED",
+            "prop_drop_h": "NOT_REPRODUCED",
+            "drop": "NOT_REPRODUCED",
+            "prop_drop": "NOT_REPRODUCED",
+            "m25": "NOT_REPRODUCED",
+            "drop_early": "NOT_REPRODUCED",
+            "prop_drop_early": "NOT_REPRODUCED",
+            "drop_h_early": "NOT_REPRODUCED",
+            "prop_drop_h_early": "NOT_REPRODUCED",
+            "compensation": "NOT_REPRODUCED",
+            "compensation_h": "NOT_REPRODUCED",
+            "structure": "NOT_REPRODUCED",
+            "felu": "NOT_REPRODUCED",
+            "ladder": "NEFF_TRACKS",
+            "growth": "NOT_REPRODUCED"
+          },
+          "bad": []
+        },
+        "add_h_reversed": {
+          "labels": {
+            "primary": "ADD_H_REVERSED",
+            "prop_add_h": "SUBPROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "add_h_borderline_main": {
+          "labels": {
+            "primary": "ADD_H_NO_EFFECT",
+            "prop_add_h": "SUBPROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "add_h_supra": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "SUPRAPROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "prop_margin_out": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "SUBPROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "prop_margin_in": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "drop_sub": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "SUBPROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "no_compensation": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "NO_COMPENSATION",
+            "compensation_h": "NO_COMPENSATION_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "raw_falls": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "RAW_FALLS",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "struct_equal": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCT_EQUAL",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "step_worse": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STEP_WORSE",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "felu_higher": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_HIGHER",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "felu_lower": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_LOWER",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "felu_not_manipulated": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "NOT_MANIPULATED",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "felu_margin_out": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_HIGHER",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "felu_margin_in": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "ladder_opposes": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "NOT_MANIPULATED",
+            "prop_add": "NOT_MANIPULATED",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "NOT_MANIPULATED",
+            "prop_drop": "NOT_MANIPULATED",
+            "m25": "NOT_MANIPULATED",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_OPPOSES",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "early_not_manipulated": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "NOT_MANIPULATED",
+            "prop_drop_early": "NOT_MANIPULATED",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "early_no_effect": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_NO_EFFECT",
+            "prop_drop_early": "SUBPROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "growth_none": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "SUBPROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_NO_REMAINDER"
+          },
+          "bad": []
+        },
+        "shadow_broken": {
+          "labels": {
+            "primary": "INAPPLICABLE",
+            "prop_add_h": "INAPPLICABLE",
+            "add": "INAPPLICABLE",
+            "prop_add": "INAPPLICABLE",
+            "drop_h": "INAPPLICABLE",
+            "prop_drop_h": "INAPPLICABLE",
+            "drop": "INAPPLICABLE",
+            "prop_drop": "INAPPLICABLE",
+            "m25": "INAPPLICABLE",
+            "drop_early": "INAPPLICABLE",
+            "prop_drop_early": "INAPPLICABLE",
+            "drop_h_early": "INAPPLICABLE",
+            "prop_drop_h_early": "INAPPLICABLE",
+            "compensation": "INAPPLICABLE",
+            "compensation_h": "INAPPLICABLE",
+            "structure": "INAPPLICABLE",
+            "felu": "INAPPLICABLE",
+            "ladder": "INAPPLICABLE",
+            "growth": "INAPPLICABLE"
+          },
+          "bad": []
+        },
+        "keep_off": {
+          "labels": {
+            "primary": "INAPPLICABLE",
+            "prop_add_h": "INAPPLICABLE",
+            "add": "INAPPLICABLE",
+            "prop_add": "INAPPLICABLE",
+            "drop_h": "INAPPLICABLE",
+            "prop_drop_h": "INAPPLICABLE",
+            "drop": "INAPPLICABLE",
+            "prop_drop": "INAPPLICABLE",
+            "m25": "INAPPLICABLE",
+            "drop_early": "INAPPLICABLE",
+            "prop_drop_early": "INAPPLICABLE",
+            "drop_h_early": "INAPPLICABLE",
+            "prop_drop_h_early": "INAPPLICABLE",
+            "compensation": "INAPPLICABLE",
+            "compensation_h": "INAPPLICABLE",
+            "structure": "INAPPLICABLE",
+            "felu": "INAPPLICABLE",
+            "ladder": "INAPPLICABLE",
+            "growth": "INAPPLICABLE"
+          },
+          "bad": []
+        },
+        "step_keep_off": {
+          "labels": {
+            "primary": "INAPPLICABLE",
+            "prop_add_h": "INAPPLICABLE",
+            "add": "INAPPLICABLE",
+            "prop_add": "INAPPLICABLE",
+            "drop_h": "INAPPLICABLE",
+            "prop_drop_h": "INAPPLICABLE",
+            "drop": "INAPPLICABLE",
+            "prop_drop": "INAPPLICABLE",
+            "m25": "INAPPLICABLE",
+            "drop_early": "INAPPLICABLE",
+            "prop_drop_early": "INAPPLICABLE",
+            "drop_h_early": "INAPPLICABLE",
+            "prop_drop_h_early": "INAPPLICABLE",
+            "compensation": "INAPPLICABLE",
+            "compensation_h": "INAPPLICABLE",
+            "structure": "INAPPLICABLE",
+            "felu": "INAPPLICABLE",
+            "ladder": "INAPPLICABLE",
+            "growth": "INAPPLICABLE"
+          },
+          "bad": []
+        },
+        "top_broken": {
+          "labels": {
+            "primary": "INAPPLICABLE",
+            "prop_add_h": "INAPPLICABLE",
+            "add": "INAPPLICABLE",
+            "prop_add": "INAPPLICABLE",
+            "drop_h": "INAPPLICABLE",
+            "prop_drop_h": "INAPPLICABLE",
+            "drop": "INAPPLICABLE",
+            "prop_drop": "INAPPLICABLE",
+            "m25": "INAPPLICABLE",
+            "drop_early": "INAPPLICABLE",
+            "prop_drop_early": "INAPPLICABLE",
+            "drop_h_early": "INAPPLICABLE",
+            "prop_drop_h_early": "INAPPLICABLE",
+            "compensation": "INAPPLICABLE",
+            "compensation_h": "INAPPLICABLE",
+            "structure": "INAPPLICABLE",
+            "felu": "INAPPLICABLE",
+            "ladder": "INAPPLICABLE",
+            "growth": "INAPPLICABLE"
+          },
+          "bad": []
+        },
+        "lift_share_off": {
+          "labels": {
+            "primary": "INAPPLICABLE",
+            "prop_add_h": "INAPPLICABLE",
+            "add": "INAPPLICABLE",
+            "prop_add": "INAPPLICABLE",
+            "drop_h": "INAPPLICABLE",
+            "prop_drop_h": "INAPPLICABLE",
+            "drop": "INAPPLICABLE",
+            "prop_drop": "INAPPLICABLE",
+            "m25": "INAPPLICABLE",
+            "drop_early": "INAPPLICABLE",
+            "prop_drop_early": "INAPPLICABLE",
+            "drop_h_early": "INAPPLICABLE",
+            "prop_drop_h_early": "INAPPLICABLE",
+            "compensation": "INAPPLICABLE",
+            "compensation_h": "INAPPLICABLE",
+            "structure": "INAPPLICABLE",
+            "felu": "INAPPLICABLE",
+            "ladder": "INAPPLICABLE",
+            "growth": "INAPPLICABLE"
+          },
+          "bad": []
+        },
+        "hold_violation": {
+          "labels": {
+            "primary": "INAPPLICABLE",
+            "prop_add_h": "INAPPLICABLE",
+            "add": "INAPPLICABLE",
+            "prop_add": "INAPPLICABLE",
+            "drop_h": "INAPPLICABLE",
+            "prop_drop_h": "INAPPLICABLE",
+            "drop": "INAPPLICABLE",
+            "prop_drop": "INAPPLICABLE",
+            "m25": "INAPPLICABLE",
+            "drop_early": "INAPPLICABLE",
+            "prop_drop_early": "INAPPLICABLE",
+            "drop_h_early": "INAPPLICABLE",
+            "prop_drop_h_early": "INAPPLICABLE",
+            "compensation": "INAPPLICABLE",
+            "compensation_h": "INAPPLICABLE",
+            "structure": "INAPPLICABLE",
+            "felu": "INAPPLICABLE",
+            "ladder": "INAPPLICABLE",
+            "growth": "INAPPLICABLE"
+          },
+          "bad": []
+        },
+        "hold_idle": {
+          "labels": {
+            "primary": "INAPPLICABLE",
+            "prop_add_h": "INAPPLICABLE",
+            "add": "INAPPLICABLE",
+            "prop_add": "INAPPLICABLE",
+            "drop_h": "INAPPLICABLE",
+            "prop_drop_h": "INAPPLICABLE",
+            "drop": "INAPPLICABLE",
+            "prop_drop": "INAPPLICABLE",
+            "m25": "INAPPLICABLE",
+            "drop_early": "INAPPLICABLE",
+            "prop_drop_early": "INAPPLICABLE",
+            "drop_h_early": "INAPPLICABLE",
+            "prop_drop_h_early": "INAPPLICABLE",
+            "compensation": "INAPPLICABLE",
+            "compensation_h": "INAPPLICABLE",
+            "structure": "INAPPLICABLE",
+            "felu": "INAPPLICABLE",
+            "ladder": "INAPPLICABLE",
+            "growth": "INAPPLICABLE"
+          },
+          "bad": []
+        },
+        "repro_contradicts": {
+          "labels": {
+            "primary": "INAPPLICABLE",
+            "prop_add_h": "INAPPLICABLE",
+            "add": "INAPPLICABLE",
+            "prop_add": "INAPPLICABLE",
+            "drop_h": "INAPPLICABLE",
+            "prop_drop_h": "INAPPLICABLE",
+            "drop": "INAPPLICABLE",
+            "prop_drop": "INAPPLICABLE",
+            "m25": "INAPPLICABLE",
+            "drop_early": "INAPPLICABLE",
+            "prop_drop_early": "INAPPLICABLE",
+            "drop_h_early": "INAPPLICABLE",
+            "prop_drop_h_early": "INAPPLICABLE",
+            "compensation": "INAPPLICABLE",
+            "compensation_h": "INAPPLICABLE",
+            "structure": "INAPPLICABLE",
+            "felu": "INAPPLICABLE",
+            "ladder": "INAPPLICABLE",
+            "growth": "INAPPLICABLE"
+          },
+          "bad": []
+        },
+        "repro_recorded_ok": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "logits_mb": {
+          "labels": {
+            "primary": "INAPPLICABLE",
+            "prop_add_h": "INAPPLICABLE",
+            "add": "INAPPLICABLE",
+            "prop_add": "INAPPLICABLE",
+            "drop_h": "INAPPLICABLE",
+            "prop_drop_h": "INAPPLICABLE",
+            "drop": "INAPPLICABLE",
+            "prop_drop": "INAPPLICABLE",
+            "m25": "INAPPLICABLE",
+            "drop_early": "INAPPLICABLE",
+            "prop_drop_early": "INAPPLICABLE",
+            "drop_h_early": "INAPPLICABLE",
+            "prop_drop_h_early": "INAPPLICABLE",
+            "compensation": "INAPPLICABLE",
+            "compensation_h": "INAPPLICABLE",
+            "structure": "INAPPLICABLE",
+            "felu": "INAPPLICABLE",
+            "ladder": "INAPPLICABLE",
+            "growth": "INAPPLICABLE"
+          },
+          "bad": []
+        },
+        "field_fixed": {
+          "labels": {
+            "primary": "INAPPLICABLE",
+            "prop_add_h": "INAPPLICABLE",
+            "add": "INAPPLICABLE",
+            "prop_add": "INAPPLICABLE",
+            "drop_h": "INAPPLICABLE",
+            "prop_drop_h": "INAPPLICABLE",
+            "drop": "INAPPLICABLE",
+            "prop_drop": "INAPPLICABLE",
+            "m25": "INAPPLICABLE",
+            "drop_early": "INAPPLICABLE",
+            "prop_drop_early": "INAPPLICABLE",
+            "drop_h_early": "INAPPLICABLE",
+            "prop_drop_h_early": "INAPPLICABLE",
+            "compensation": "INAPPLICABLE",
+            "compensation_h": "INAPPLICABLE",
+            "structure": "INAPPLICABLE",
+            "felu": "INAPPLICABLE",
+            "ladder": "INAPPLICABLE",
+            "growth": "INAPPLICABLE"
+          },
+          "bad": []
+        },
+        "early_nonfinite": {
+          "labels": {
+            "primary": "INAPPLICABLE",
+            "prop_add_h": "INAPPLICABLE",
+            "add": "INAPPLICABLE",
+            "prop_add": "INAPPLICABLE",
+            "drop_h": "INAPPLICABLE",
+            "prop_drop_h": "INAPPLICABLE",
+            "drop": "INAPPLICABLE",
+            "prop_drop": "INAPPLICABLE",
+            "m25": "INAPPLICABLE",
+            "drop_early": "INAPPLICABLE",
+            "prop_drop_early": "INAPPLICABLE",
+            "drop_h_early": "INAPPLICABLE",
+            "prop_drop_h_early": "INAPPLICABLE",
+            "compensation": "INAPPLICABLE",
+            "compensation_h": "INAPPLICABLE",
+            "structure": "INAPPLICABLE",
+            "felu": "INAPPLICABLE",
+            "ladder": "INAPPLICABLE",
+            "growth": "INAPPLICABLE"
+          },
+          "bad": []
+        },
+        "prefix_contradicts": {
+          "labels": {
+            "primary": "INAPPLICABLE",
+            "prop_add_h": "INAPPLICABLE",
+            "add": "INAPPLICABLE",
+            "prop_add": "INAPPLICABLE",
+            "drop_h": "INAPPLICABLE",
+            "prop_drop_h": "INAPPLICABLE",
+            "drop": "INAPPLICABLE",
+            "prop_drop": "INAPPLICABLE",
+            "m25": "INAPPLICABLE",
+            "drop_early": "INAPPLICABLE",
+            "prop_drop_early": "INAPPLICABLE",
+            "drop_h_early": "INAPPLICABLE",
+            "prop_drop_h_early": "INAPPLICABLE",
+            "compensation": "INAPPLICABLE",
+            "compensation_h": "INAPPLICABLE",
+            "structure": "INAPPLICABLE",
+            "felu": "INAPPLICABLE",
+            "ladder": "INAPPLICABLE",
+            "growth": "INAPPLICABLE"
+          },
+          "bad": []
+        },
+        "prefix_recorded_ok": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "paired_matters": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTIONAL",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        },
+        "kappa_measured": {
+          "labels": {
+            "primary": "ADD_H_MOVES_E",
+            "prop_add_h": "PROPORTION_UNRESOLVED",
+            "add": "ADD_MOVES_E",
+            "prop_add": "PROPORTIONAL",
+            "drop_h": "DROP_H_MOVES_E",
+            "prop_drop_h": "PROPORTIONAL",
+            "drop": "DROP_MOVES_E",
+            "prop_drop": "PROPORTIONAL",
+            "m25": "M25_MOVES_E",
+            "drop_early": "DROP_EARLY_MOVES_E",
+            "prop_drop_early": "PROPORTIONAL",
+            "drop_h_early": "DROP_H_EARLY_MOVES_E",
+            "prop_drop_h_early": "PROPORTIONAL",
+            "compensation": "COMPENSATES",
+            "compensation_h": "COMPENSATES_H",
+            "structure": "STRUCTURE_MATTERS",
+            "felu": "FELU_SAME",
+            "ladder": "NEFF_TRACKS",
+            "growth": "GROWTH_REMAINDER"
+          },
+          "bad": []
+        }
+      },
+      "mutations": [
+        {
+          "mutation": "M8a: every change's sign reversed",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "designed|primary: got ADD_H_REVERSED want ADD_H_MOVES_E",
+              "designed|add: got ADD_REVERSED want ADD_MOVES_E",
+              "designed|drop_h: got DROP_H_REVERSED want DROP_H_MOVES_E",
+              "designed|drop: got DROP_REVERSED want DROP_MOVES_E",
+              "designed|m25: got M25_REVERSED want M25_MOVES_E",
+              "designed|drop_early: got DROP_EARLY_REVERSED want DROP_EARLY_MOVES_E",
+              "designed|drop_h_early: got DROP_H_EARLY_REVERSED want DROP_H_EARLY_MOVES_E",
+              "designed|dR_add_h: got -0.1155 want 0.1155"
+            ]
+          }
+        },
+        {
+          "mutation": "M8b: the primary read on the free host",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "add_h_not_manipulated|primary: got ADD_H_MOVES_E want NOT_MANIPULATED",
+              "add_h_reversed|primary: got ADD_H_MOVES_E want ADD_H_REVERSED",
+              "add_h_borderline_main|primary: got ADD_H_MOVES_E want ADD_H_NO_EFFECT",
+              "ladder_opposes|primary: got NOT_MANIPULATED want ADD_H_MOVES_E"
+            ]
+          }
+        },
+        {
+          "mutation": "M8c: the manipulation checks dropped",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "add_h_not_manipulated|primary: got ADD_H_NO_EFFECT want NOT_MANIPULATED",
+              "add_h_not_manipulated|prop_add_h: got PROPORTIONAL want NOT_MANIPULATED",
+              "early_not_manipulated|drop_early: got DROP_EARLY_NO_EFFECT want NOT_MANIPULATED"
+            ]
+          }
+        },
+        {
+          "mutation": "M8d: kappa taken as a constant",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "designed|prop_add_h: got SUPRAPROPORTIONAL want PROPORTIONAL",
+              "designed|prop_drop_h: got SUPRAPROPORTIONAL want PROPORTIONAL",
+              "designed|prop_drop: got SUPRAPROPORTIONAL want PROPORTIONAL",
+              "designed|prop_drop_early: got SUPRAPROPORTIONAL want PROPORTIONAL",
+              "designed|prop_drop_h_early: got SUPRAPROPORTIONAL want PROPORTIONAL",
+              "designed|kappa_add_h: got 2.0 want 2.4",
+              "designed|phi_add_h: got -0.03300000000000001 want 0.0",
+              "designed|phi_add: got -0.022000000000000058 want 0.0"
+            ]
+          }
+        },
+        {
+          "mutation": "M8e: margin 0.3",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "MARGIN 0.3",
+              "marker|prop_add_h: got PROPORTIONAL want SUBPROPORTIONAL",
+              "marker|prop_add: got PROPORTIONAL want SUBPROPORTIONAL",
+              "marker|prop_drop_h: got PROPORTIONAL want SUBPROPORTIONAL",
+              "marker|prop_drop: got PROPORTIONAL want SUBPROPORTIONAL",
+              "marker|prop_drop_early: got PROPORTIONAL want SUBPROPORTIONAL",
+              "add_h_supra|prop_add_h: got PROPORTIONAL want SUPRAPROPORTIONAL",
+              "prop_margin_out|prop_add_h: got PROPORTIONAL want SUBPROPORTIONAL"
+            ]
+          }
+        },
+        {
+          "mutation": "M8f: main level 95%",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "add_h_borderline_main|primary: got ADD_H_MOVES_E want ADD_H_NO_EFFECT"
+            ]
+          }
+        },
+        {
+          "mutation": "M8g: structure reversed",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "designed|structure: got STEP_WORSE want STRUCTURE_MATTERS",
+              "designed|struct: got -0.06929999999999999 want 0.06930000000000001",
+              "step_worse|structure: got STRUCTURE_MATTERS want STEP_WORSE"
+            ]
+          }
+        },
+        {
+          "mutation": "M8h: compensation read on the masked count",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "designed|compensation: got RAW_FALLS want COMPENSATES",
+              "designed|comp: got -0.006500000000000001 want 0.005",
+              "no_compensation|compensation: got RAW_FALLS want NO_COMPENSATION",
+              "no_compensation|comp: got -0.006500000000000001 want 0.0"
+            ]
+          }
+        },
+        {
+          "mutation": "M8i: F.elu same on any interval containing 0",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "felu_margin_in|felu: got FELU_HIGHER want FELU_SAME"
+            ]
+          }
+        },
+        {
+          "mutation": "M8j: the ladder read on E only",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "ladder_opposes|ladder: got NEFF_TRACKS want NEFF_OPPOSES"
+            ]
+          }
+        },
+        {
+          "mutation": "M8k: shadows not checked",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "shadow_broken|primary: got ADD_H_MOVES_E want INAPPLICABLE",
+              "shadow_broken|n_valid: got 10 want 7"
+            ]
+          }
+        },
+        {
+          "mutation": "M8l: keep tolerance 0.6",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "keep_off|primary: got ADD_H_MOVES_E want INAPPLICABLE",
+              "keep_off|n_valid: got 10 want 7",
+              "step_keep_off|primary: got ADD_H_MOVES_E want INAPPLICABLE",
+              "step_keep_off|n_valid: got 10 want 7"
+            ]
+          }
+        },
+        {
+          "mutation": "M8m: the lift not checked",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "top_broken|primary: got ADD_H_MOVES_E want INAPPLICABLE",
+              "top_broken|n_valid: got 10 want 7",
+              "lift_share_off|primary: got ADD_H_MOVES_E want INAPPLICABLE",
+              "lift_share_off|n_valid: got 10 want 7"
+            ]
+          }
+        },
+        {
+          "mutation": "M8n: hold tolerance 0.1",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "hold_violation|primary: got ADD_H_MOVES_E want INAPPLICABLE",
+              "hold_violation|n_valid: got 10 want 7"
+            ]
+          }
+        },
+        {
+          "mutation": "M8o: a contradicted record is valid",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "repro_contradicts|primary: got ADD_H_MOVES_E want INAPPLICABLE",
+              "repro_contradicts|n_valid: got 10 want 7"
+            ]
+          }
+        },
+        {
+          "mutation": "M8p: seeds 10-19",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "SEEDS (10, 11, 12, 13, 14, 15, 16, 17, 18, 19)",
+              "designed|primary: got INAPPLICABLE want ADD_H_MOVES_E",
+              "designed|prop_add_h: got INAPPLICABLE want PROPORTIONAL",
+              "designed|add: got INAPPLICABLE want ADD_MOVES_E",
+              "designed|prop_add: got INAPPLICABLE want PROPORTIONAL",
+              "designed|drop_h: got INAPPLICABLE want DROP_H_MOVES_E",
+              "designed|prop_drop_h: got INAPPLICABLE want PROPORTIONAL",
+              "designed|drop: got INAPPLICABLE want DROP_MOVES_E"
+            ]
+          }
+        },
+        {
+          "mutation": "M8q: the floor read off N2r_m50",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "designed|primary: got NOT_REPRODUCED want ADD_H_MOVES_E",
+              "designed|prop_add_h: got NOT_REPRODUCED want PROPORTIONAL",
+              "designed|add: got NOT_REPRODUCED want ADD_MOVES_E",
+              "designed|prop_add: got NOT_REPRODUCED want PROPORTIONAL",
+              "designed|drop_h: got NOT_REPRODUCED want DROP_H_MOVES_E",
+              "designed|prop_drop_h: got NOT_REPRODUCED want PROPORTIONAL",
+              "designed|drop: got NOT_REPRODUCED want DROP_MOVES_E",
+              "designed|prop_drop: got NOT_REPRODUCED want PROPORTIONAL"
+            ]
+          }
+        },
+        {
+          "mutation": "M8r: pairing broken",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "designed|prop_add_h: got PROPORTION_UNRESOLVED want PROPORTIONAL",
+              "designed|prop_add: got PROPORTION_UNRESOLVED want PROPORTIONAL",
+              "prop_margin_out|prop_add_h: got PROPORTION_UNRESOLVED want SUBPROPORTIONAL",
+              "prop_margin_in|prop_add_h: got PROPORTION_UNRESOLVED want PROPORTIONAL",
+              "paired_matters|primary: got NOT_REPRODUCED want ADD_H_MOVES_E",
+              "paired_matters|prop_add_h: got NOT_REPRODUCED want PROPORTIONAL",
+              "paired_matters|prop_drop: got NOT_REPRODUCED want PROPORTIONAL",
+              "kappa_measured|phi_add_h: got -0.0034480693202373013 want 0.0"
+            ]
+          }
+        },
+        {
+          "mutation": "M8s: the early floor read on the whole task",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "designed|prop_drop_early: got SUPRAPROPORTIONAL want PROPORTIONAL",
+              "designed|prop_drop_h_early: got SUPRAPROPORTIONAL want PROPORTIONAL",
+              "designed|R_none_e: got 0.017999999999999985 want 0.088",
+              "designed|phi_drop_e: got -0.03499999999999999 want 0.0",
+              "designed|phi_drop_h_e: got -0.03499999999999999 want 0.0",
+              "marker|prop_drop_early: got PROPORTIONAL want SUBPROPORTIONAL",
+              "early_no_effect|prop_drop_early: got PROPORTIONAL want SUBPROPORTIONAL"
+            ]
+          }
+        },
+        {
+          "mutation": "M8t: the minibatch logits not checked",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "logits_mb|primary: got ADD_H_MOVES_E want INAPPLICABLE",
+              "logits_mb|n_valid: got 10 want 7"
+            ]
+          }
+        },
+        {
+          "mutation": "M8u: the held remainder not required",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "not_reproduced_held|primary: got ADD_H_MOVES_E want NOT_REPRODUCED"
+            ]
+          }
+        },
+        {
+          "mutation": "M8v: the early window's n read on the whole task",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "designed|dn_drop_e: got 0.006500000000000001 want 0.004",
+              "designed|phi_drop_e: got 0.008000000000000018 want 0.0",
+              "designed|phi_drop_h_e: got 0.005280000000000016 want 0.0",
+              "early_not_manipulated|drop_early: got DROP_EARLY_NO_EFFECT want NOT_MANIPULATED",
+              "early_not_manipulated|dn_drop_e: got 0.006500000000000001 want 0.0"
+            ]
+          }
+        }
+      ],
+      "all_mutations_detected": true,
+      "seconds": 22.0
+    },
+    "S9_S-cli": {
+      "title": "S9 the CLI's provenance and constants",
+      "target": "src/neffdir_ee_0918.py",
+      "threshold_derivation": "main() with 2 epochs and one arm on seed 45 writes provenance naming this experiment, its spec and\n    registration field, flush on, the salts and the two tables' sha256 (recomputed here), and hashes of this\n    runner and the imported runners; the registered seeds are 30-39, the arm table has the 12 registered\n    arms and the 3 check arms, the salts are 918001 / 918002 and the early window is 1500 updates.",
+      "pass": true,
+      "failed_items": [],
+      "detail": {
+        "experiment": true,
+        "spec": true,
+        "flush": true,
+        "tables": true,
+        "hashes": true,
+        "constants": true
+      },
+      "mutations": [
+        {
+          "mutation": "M9a: flush off",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "flush"
+            ]
+          }
+        },
+        {
+          "mutation": "M9b: another spec",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "spec"
+            ]
+          }
+        },
+        {
+          "mutation": "M9c: another experiment name",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "experiment"
+            ]
+          }
+        },
+        {
+          "mutation": "M9d: seeds 10-19",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "constants"
+            ]
+          }
+        },
+        {
+          "mutation": "M9e: another mask salt",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "tables",
+              "constants"
+            ]
+          }
+        },
+        {
+          "mutation": "M9f: another early window",
+          "check_pass_on_mutant": false,
+          "detected": true,
+          "mutant_result": {
+            "failed_items": [
+              "constants"
+            ]
+          }
+        }
+      ],
+      "all_mutations_detected": true,
+      "seconds": 13.1
+    }
+  },
+  "source_reports": [
+    {
+      "path": "results/_checks_neffdir_ee_0918/dev_initial_checks.json",
+      "sha256": "b3235888a61dd593d9cdbbaaffb10660e580595f9c6200ae3763a92efde507b4",
+      "started_at": "2026-09-18T01:21:58.900835+09:00",
+      "finished_at": "2026-09-18T01:40:40.700802+09:00",
+      "code_sha256": {
+        "src/neffdir_ee_0918.py": "e465c9766fdb4766417b2a89a18a2699a216cbd1a20f2bc60e898e5c84f8cb77",
+        "analysis/neffdir_ee_0918/verdict.py": "de42be59e4074c2c4ecd8ffb372f0b2c451eb42663490704cb0294a90c517e98",
+        "analysis/neffdir_ee_0918/checks.py": "e6ccf8eb8c6c5996f97b4ebd379992039c736a8c3d0b0a20b45c00bc95c94eb1"
+      }
+    },
+    {
+      "path": "results/_checks_neffdir_ee_0918/dev_corrected/checks_partial.json",
+      "sha256": "480c0cb61c80173c018a3966ab65ba6d1671521e200b5197e143788067280822",
+      "started_at": "2026-09-18T01:47:34.384268+09:00",
+      "finished_at": "2026-09-18T01:55:47.191554+09:00",
+      "code_sha256": {
+        "src/neffdir_ee_0918.py": "e465c9766fdb4766417b2a89a18a2699a216cbd1a20f2bc60e898e5c84f8cb77",
+        "analysis/neffdir_ee_0918/verdict.py": "de42be59e4074c2c4ecd8ffb372f0b2c451eb42663490704cb0294a90c517e98",
+        "analysis/neffdir_ee_0918/checks.py": "a407ad7c947def8e0bfa3020e260e61cd05922855cc296fc13b0e3f100dab271"
+      }
+    },
+    {
+      "path": "results/_checks_neffdir_ee_0918/checks_partial.json",
+      "sha256": "3cf592e2ddbf900f63ecbdd8229637ae618b229e9706d7bc3fd08936304fccf5",
+      "started_at": "2026-09-18T01:45:13.853044+09:00",
+      "finished_at": "2026-09-18T01:45:48.956189+09:00",
+      "code_sha256": {
+        "src/neffdir_ee_0918.py": "e465c9766fdb4766417b2a89a18a2699a216cbd1a20f2bc60e898e5c84f8cb77",
+        "analysis/neffdir_ee_0918/verdict.py": "de42be59e4074c2c4ecd8ffb372f0b2c451eb42663490704cb0294a90c517e98",
+        "analysis/neffdir_ee_0918/checks.py": "4979dd44aceae6fda6168153df3b8b4d73298605419ff16e45bdf58e0a303620"
+      }
+    }
+  ]
+}
