@@ -28,7 +28,7 @@ def H_A(n, sup, u):
     return 2.0 * (n.v[torch.arange(R), u] ** 2)[:, None, None] * E
 
 
-def run_cond(arm, step, eps, T, n_pos, n_neg, margin, seed):
+def run_cond(arm, step, eps, T, n_pos, n_neg, margin, seed, lr=LR, modes=("fullbatch_wonly", "sgd_wonly", "natural")):
     cp, R, f, m = load(arm, step)
     flip = cp["env"]["flip_state"].clone().double()
     sup = support(cp, flip, R, m, f)
@@ -48,14 +48,14 @@ def run_cond(arm, step, eps, T, n_pos, n_neg, margin, seed):
                 continue
             q0 = eps * sup["muhat"]
             HA = H_A(n0, sup, u)                                              # [R,m,m]
-            M = torch.eye(m, dtype=torch.float64)[None] - LR * HA               # one-step mean operator
-            ev = torch.linalg.eigvalsh(LR * HA)                                 # eta*lambda, in [0,2) for contraction
+            M = torch.eye(m, dtype=torch.float64)[None] - lr * HA               # one-step mean operator
+            ev = torch.linalg.eigvalsh(lr * HA)                                 # eta*lambda, in [0,2) for contraction
             rowmask = torch.zeros(R, H, 1, dtype=torch.float64); rowmask[torch.arange(R), u, 0] = 1.0
-            for mode in ("fullbatch_wonly", "sgd_wonly", "natural"):
+            for mode in modes:
                 A = make_net(cp, R, m); B = make_net(cp, R, m)
                 B.W[torch.arange(R), u, :] += q0
                 Mt = torch.eye(m, dtype=torch.float64)[None].expand(R, -1, -1).clone()
-                lrv = torch.full((R,), LR, dtype=torch.float64)
+                lrv = torch.full((R,), lr, dtype=torch.float64)
                 mism = torch.zeros(R, dtype=torch.int64)
                 for t in range(1, T + 1):
                     if mode == "fullbatch_wonly":
@@ -86,7 +86,7 @@ def run_cond(arm, step, eps, T, n_pos, n_neg, margin, seed):
                             if not bool(ok[r]):
                                 continue
                             qe, qp = q_emp[r], q_pred[r]
-                            rows.append(dict(arm=arm, step=step, group=grp, rank=j, seed=r, unit=int(u[r]), mode=mode, t=t,
+                            rows.append(dict(arm=arm, step=step, group=grp, rank=j, seed=r, unit=int(u[r]), mode=mode, t=t, lr=lr,
                                              rel_err=float((qe - qp).norm() / q0[r].norm()),
                                              rel_err_vs_pred=float((qe - qp).norm() / qp.norm().clamp_min(1e-300)),
                                              cos=float((qe @ qp) / (qe.norm() * qp.norm()).clamp_min(1e-300)),
@@ -106,12 +106,13 @@ if __name__ == "__main__":
     ap.add_argument("--T", type=int, default=2000); ap.add_argument("--eps", type=float, default=1e-2)
     ap.add_argument("--n_pos", type=int, default=5); ap.add_argument("--n_neg", type=int, default=5)
     ap.add_argument("--margin", type=float, default=0.03); ap.add_argument("--seed", type=int, default=20260918)
+    ap.add_argument("--lr", type=float, default=LR); ap.add_argument("--modes", default="fullbatch_wonly,sgd_wonly,natural"); ap.add_argument("--tag", default="")
     args = ap.parse_args()
     rows = []
     for arm in ARMS:
         for st in STEPS:
-            rows += run_cond(arm, st, args.eps, args.T, args.n_pos, args.n_neg, args.margin, args.seed)
-    df = pd.DataFrame(rows); df.to_csv(OUT / "boxed.csv", index=False)
+            rows += run_cond(arm, st, args.eps, args.T, args.n_pos, args.n_neg, args.margin, args.seed, lr=args.lr, modes=tuple(args.modes.split(",")))
+    df = pd.DataFrame(rows); df.to_csv(OUT / f"boxed{args.tag}.csv", index=False)
     pd.set_option("display.width", 250)
     for mode in ("fullbatch_wonly", "sgd_wonly", "natural"):
         d = df[df["mode"] == mode]

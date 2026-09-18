@@ -1,0 +1,59 @@
+  boxed LR_a0p1_q0 200000 pos0 done
+  boxed LR_a0p1_q0 200000 pos1 done
+  boxed LR_a0p1_q0 200000 pos2 done
+  boxed LR_a0p1_q0 200000 neg0 done
+  boxed LR_a0p1_q0 200000 neg1 done
+  boxed LR_a0p1_q0 200000 neg2 done
+  boxed LR_a0p1_q0 200000 neg3 done
+  boxed LR_a0p1_q0 200000 neg4 done
+  boxed LR_a0p1_q0 5000000 neg0 done
+  boxed LR_a0p1_q0 5000000 neg1 done
+  boxed LR_a0p1_q0 5000000 neg2 done
+  boxed LR_a0p1_q0 5000000 neg3 done
+  boxed LR_a0p1_q0 5000000 neg4 done
+  boxed LR_a0p7_q0 5000000 pos0 done
+  boxed LR_a0p7_q0 5000000 neg0 done
+  boxed LR_a0p7_q0 5000000 neg1 done
+  boxed LR_a0p7_q0 5000000 neg2 done
+  boxed LR_a0p7_q0 5000000 neg3 done
+  boxed LR_a0p7_q0 5000000 neg4 done
+
+== fullbatch_wonly: max rel_err (vs q0) by t; median survival emp vs pred ==
+Empty DataFrame
+Columns: [max_rel_err, med_rel_err, med_cos, surv_emp, surv_pred, gate_mismatch_max, n]
+Index: []
+
+== sgd_wonly: max rel_err (vs q0) by t; median survival emp vs pred ==
+      max_rel_err  med_rel_err   med_cos  surv_emp  surv_pred  gate_mismatch_max    n
+t                                                                                    
+1        0.022918     0.000226  1.000000  0.999475   0.999392                  0  122
+2        0.038128     0.000329  1.000000  0.998888   0.998784                  0  122
+5        0.070330     0.000480  1.000000  0.997027   0.996962                  0  122
+10       0.064189     0.000717  1.000000  0.994122   0.993933                  0  122
+20       0.075937     0.000990  1.000000  0.987991   0.987902                  1  122
+50       0.067293     0.001348  0.999999  0.969914   0.970030                  8  122
+100      0.263231     0.001787  0.999999  0.940831   0.940959                 47  122
+200      0.503681     0.003313  0.999993  0.885393   0.885407                116  122
+500      0.501184     0.005712  0.999964  0.738113   0.737684                415  122
+1000     0.497021     0.006436  0.999887  0.545024   0.544236                490  122
+2000     0.488815     0.006401  0.999738  0.297298   0.296354                490  122
+
+== natural: max rel_err (vs q0) by t; median survival emp vs pred ==
+      max_rel_err  med_rel_err   med_cos  surv_emp  surv_pred  gate_mismatch_max    n
+t                                                                                    
+1        0.022918     0.000226  1.000000  0.999475   0.999392                  0  122
+2        0.061088     0.000613  1.000000  0.999658   0.998784                  0  122
+5        0.224649     0.002305  1.000000  0.999270   0.996962                  0  122
+10       0.383097     0.005902  1.000000  0.999104   0.993933                  0  122
+20       0.619754     0.015745  1.000000  0.999004   0.987902                  0  122
+50       0.895352     0.041146  1.000000  0.998967   0.970030                  0  122
+100      2.731177     0.078462  0.999998  0.997275   0.940959                  0  122
+200      6.677344     0.153701  0.999988  0.997416   0.885407                  2  122
+500      5.725470     0.309580  0.999873  0.995379   0.737684                 16  122
+1000     4.960720     0.473572  0.999467  0.994906   0.544236                 38  122
+2000     6.670210     0.687427  0.997570  0.993510   0.296354                130  122
+
+eta*lambda_max by group (median/max):
+Empty DataFrame
+Columns: [median, max]
+Index: []
