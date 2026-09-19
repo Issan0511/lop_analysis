@@ -302,3 +302,7 @@ results/ch_chb_200_0919/
 判定と compact な証跡・provenance を commit し、大きい checkpoint/snapshot/hist・検査 raw・生ログは `~/Projects/obsidian-research-data/ch_chb_200_0919/` へ元の相対パスを保って退避する。`git status --porcelain --ignored --untracked-files=all` で漏れを確認し、`__pycache__` と symlink を除外して **共有 data/ を辿らない**。`backup_manifest.json` は各実ファイルの **source・backup・bytes・sha256**、run id、退避時刻を記録し、コピー先で検算して commit。元 relu_doors の manifest/退避を差し替えない。
 
 **今回は spec commit で停止するため、実験は未完了。worktree と branch を保持し、push・main 統合・削除は今回行わない。** 結果 commit が済んだ将来の実行セッションで、その日のうちに CLAUDE.md §4 の順序どおり、退避→manifest commit→fetch/merge origin/main→push HEAD:main→取り込み確認→今回の worktree/branch の削除を行う。push 済み commit を rebase・squash・amend しない。provenance の git_hash を失わせない。
+
+### 実行着手記録（2026-09-19、延長開始前）
+
+Issa の「実行して」により実装・検査・本走へ進む。続く「待機は１時間で」に従い本走の進捗確認は 1 時間間隔とする。§4.2 の保存 W の配列方向の記述を訂正: 実ファイルは **出力×入力**（W1=100×3072、W2=100×100）であり、入力軸は snapshot の axis=1。登録済みの「ユニットごとに入力方向の平均を引く」という数学的定義は変えない。独立監査は未実施。

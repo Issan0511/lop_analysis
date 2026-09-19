@@ -440,7 +440,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         progress=None, cifar: RC.Cifar10 | None = None,
         debug: dict | None = None, perturb: list[float] | None = None,
         nan_slot: int | None = None, snapshots: bool = True, checkpoint: bool = False,
-        resume: bool = False, graph: bool = True) -> dict:
+        resume: bool = False, graph: bool = True, lifecycle=None) -> dict:
     """Train R = len(seeds) * len(conds) runs in lockstep and write their rows/hists/snapshots.
 
     Check-only hooks (never used by the main run): `perturb[r]` multiplies slot r's W1 by
@@ -579,10 +579,15 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         act.load_state(keep_act)
         del keep
 
+    # Optional read-only observer / task-boundary STOP for registered extensions.
+    if lifecycle is not None:
+        lifecycle("ready", locals())
     for t in range(t_first, n_tasks + 1):
         lab = {s: RC.task_labels(g_lab[s]) for s in useeds}               # once per seed per task
         Y = torch.stack([lab[s] for s, cd in slots]).to(device)           # (R, 1200)
         Ydev.copy_(Y)
+        if lifecycle is not None and t == t_first:
+            lifecycle("labels", locals())
         if debug is not None:
             debug.setdefault("labels", []).append(Y.cpu().clone())
         acc_sum.zero_()
@@ -592,6 +597,8 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         for e in range(epochs):
             order = {s: torch.randperm(N_IMAGES, generator=g_batch[s]) for s in useeds}
             ORD = torch.stack([order[s] for s, cd in slots]).to(device)  # (R, 1200)
+            if lifecycle is not None and t == t_first and e == 0:
+                lifecycle("order", locals())
             if debug is not None:
                 debug.setdefault("orders", []).append(ORD.cpu().clone())
             for j in range(STEPS_PER_EPOCH):
@@ -647,6 +654,8 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                         "alive": alive.cpu(), "rows": rows, "diverged": diverged, "step_ms": step_ms,
                         "git_states": git_states, "resumed": resumed}, tmp)
             os.replace(tmp, ck)
+        if lifecycle is not None and lifecycle("task_end", locals()):
+            break
         on = acc_sum[alive] / spt
         memo = torch.tensor([m[r]["acc"] for r in range(R) if alive[r]])
         el = time.time() - t_start
