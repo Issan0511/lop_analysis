@@ -9,6 +9,21 @@ from src import ch_chb_200_0919 as S
 from analysis.ch_chb_200_0919 import report as V, launch as L
 OUT=S.OUT/'checks';SEEDS=list(range(200,210));E=S.E
 REQUIRED=('S-source','S-continuity','S-resume','S-history','S-observer','S-columns','S-gate','S-H','S-B','S-pin','S-verdict','S-output','S-launch','S-cost')
+# Frozen required mutation identities: deleting a check cannot leave an all([]) PASS.
+REQUIRED_MUTATIONS={
+ 'S-source':{f'{a}_{k}' for a in S.LAM for k in ('arm','seeds','lam')}|{'one_byte','missing_checkpoint'},
+ 'S-continuity':{f'{a}_{k}' for a in S.LAM for k in ('moment','EMA','RNG','v','tc','t','capture_restore')},
+ 'S-resume':{f'{a}_{k}' for a in S.LAM for k in ('moment','EMA','RNG')},
+ 'S-history':{'missing_hist','one_point_missing','task_axis_shift','seed_mix'},
+ 'S-observer':{f'{a}_{k}' for a in S.LAM for k in ('logger_EMA','logger_RNG','round_old','layer_swap')},
+ 'S-columns':{'omit_center','wrong_axis','divide_lr','layer_swap','abs_mean_bias','sink_as_depth','preH_r'},
+ 'S-gate':{'dead_equals_gate','strict_negative','denominator'},
+ 'S-H':{'beta_zero','centered_EMA','eval_updates_m','EMA_grad'},
+ 'S-B':{'nonzero_b1','lambda_zero','wd_b3'},'S-pin':{'C_off_fixed_expected','bias_added'},
+ 'S-verdict':{'8_of_10','strict_boundary','seed_shift','nan_zero','missing_arm','missing_seed','median_mean','window_shift','missing_task'},
+ 'S-output':{'old_root','parent_hash','final_HEAD_substitution'},
+ 'S-launch':{'slash_basename','STOP_ignored','PID_only_success'},'S-cost':{'other_GPU_job'}
+}
 records={name:dict(positive=[],mutations={}) for name in REQUIRED}
 
 def save():S.put(OUT/'check_evidence.json',records)
@@ -239,8 +254,16 @@ def gpu():
     elapsed=time.time()-started;step=prov['step_ms_last_task']/1000
     snapbytes=sum(p.stat().st_size for p in (out/'snap').rglob('t01.npz'))
     laterbytes=2*200*snapbytes;free=shutil.disk_usage(S.OUT).free
-    estimate=300*(30000*step+max(0,elapsed-1500*step))
-    cost=dict(wall_clock_s=elapsed,step_ms=step*1000,estimated_two_arm_seconds=estimate,snapshot_bytes_per_task=snapbytes,
+    # Synthetic t200-sized histories assembled only from known prefix histograms.
+    late_dir=OUT/'cost_late_hist';late_dir.mkdir(exist_ok=True);late_start=time.time()
+    for seed in range(10):
+        with np.load(S.OUT/'inputs/CH/hist'/f'CH_raw_seed{seed}.npz') as d:
+            keys=[k for k in d.files if k not in ('edges','acc','th_edges')]
+            hs=[{k:d[k][i%50] for k in keys} for i in range(200)]
+            E.write_hist(late_dir/f'seed{seed}.npz',hs,np.tile(d['acc'],4).tolist())
+    late_hist_s=time.time()-late_start
+    estimate=300*(30000*step+max(0,elapsed-1500*step)+late_hist_s)
+    cost=dict(wall_clock_s=elapsed,late_hist_200task_s=late_hist_s,step_ms=step*1000,estimated_two_arm_seconds=estimate,snapshot_bytes_per_task=snapbytes,
         peak_RSS_bytes=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss*1024,peak_GPU_bytes=torch.cuda.max_memory_allocated(),free_disk_bytes=free,estimated_snapshots_bytes=laterbytes,
         note='Sequential R=10; startup included in overhead; long-history compression grows. No accuracy displayed.')
     S.put(OUT/'cost.json',cost);good('S-cost','measured',free>laterbytes and elapsed>0,cost)
@@ -265,10 +288,11 @@ def main():
     basic()
     with L.exclusive():gpu()
     # Explicit list: every required group must have real positive and killed mutation evidence.
-    assert set(records)==set(REQUIRED)
+    assert set(records)==set(REQUIRED)==set(REQUIRED_MUTATIONS)
+    assert all(set(records[k]['mutations'])==REQUIRED_MUTATIONS[k] for k in REQUIRED),'missing or unexpected mutation'
     ok=all(r['positive'] and r['mutations'] and all(q['pass_'] for q in r['positive']) and all(q['detected'] for q in r['mutations'].values()) for r in records.values())
     files=['src/relu_doors_0919.py','src/ch_chb_200_0919.py','analysis/ch_chb_200_0919/checks.py','analysis/ch_chb_200_0919/report.py','analysis/ch_chb_200_0919/launch.py']
-    S.put(OUT/'checks.json',dict(all_pass=ok,required=list(REQUIRED),positive_count=sum(len(r['positive']) for r in records.values()),mutation_count=sum(len(r['mutations']) for r in records.values()),evidence_sha256=S.sha(OUT/'check_evidence.json'),tested_source_sha256={f:S.sha(S.ROOT/f) for f in files},wall_clock_s=time.time()-started,independent_audit=False))
+    S.put(OUT/'checks.json',dict(all_pass=ok,required=list(REQUIRED),required_mutations={k:sorted(v) for k,v in REQUIRED_MUTATIONS.items()},positive_count=sum(len(r['positive']) for r in records.values()),mutation_count=sum(len(r['mutations']) for r in records.values()),evidence_sha256=S.sha(OUT/'check_evidence.json'),tested_source_sha256={f:S.sha(S.ROOT/f) for f in files},wall_clock_s=time.time()-started,independent_audit=False))
     assert ok
     print('ALL CHECKS PASS',flush=True)
 
