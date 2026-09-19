@@ -228,8 +228,7 @@ def eval_metrics(P,values):
   ans['zsd_'+tag]=torch.stack([v.std(0).median() for v in z])
   ans['sink_ratio_'+tag]=torch.stack([(v.mean(0)/v.std(0).clamp(min=1e-12)).median() for v in z])
   ans['bias_over_sd_'+tag]=torch.stack([P[2*li+1][r].abs().mean()/float(z[r].std(0).median().clamp(min=1e-12)) for r in range(10)])
- mu=a1.mean(1);den=(a1-mu[:,None,:]).square().sum(2).mean(1).sqrt()
- ans['r_a1']=mu.norm(dim=1)/den
+ ans['r_a1']=torch.stack([row.mean(0).norm()/(row-row.mean(0)).square().sum(1).mean().sqrt() for row in a1])
  return ans
 
 def round10(v):return float(f'{float(v):.10g}')
