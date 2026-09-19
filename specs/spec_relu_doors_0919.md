@@ -175,3 +175,67 @@ sd(z₂) はタスクとともに育つ（t1 8.4 → t3 29.2 → 0918 の類似�
   R std 第2層 t50 で −0.026（歪度 −1.18）、LR std 第2層 t50 で −0.037（−0.78）、第1層は −0.005〜−0.008（歪度 ≈ 0）。
   **片側になっているのはほぼ平均のずれで、歪みの上乗せは 0.5〜3.7 ポイント。**これを見て Claude は P9 を 0.35 → 0.20 に下げ、
   Issa は `SKEW_ROUTE` を記入した。`relu_doors_0919` の走は 1 本も無い時点での測定である。
+
+---
+
+## 10. 追補 1 — 文献照合を受けた対照 2 腕（2026-09-19 09:50 記入、走る前）
+
+### 10.1 なぜ足すか
+
+本走の結果（§5 の判定は `verdict.json`）を受けて先行研究を原典で照合したところ、**問い自体は既出**だった。
+
+- **Lyle ら, arXiv 2402.18762, 付録 D.2 / Figure 8**（パネル内題 "Isolating features of normalization layers"、凡例 `subtract mean` / `divide by std` / `both`、BN・LN × CNN・MLP の 4 パネル）。結論は逐語で
+  "We find that **most of the performance gain from normalization layers can be attributed to the second mechanism**"（＝分散で割るほう）。
+- 姉妹論文 **arXiv 2407.01800 付録 A.4**: "**centering does not have noticeable effects on the network's robustness to unit saturation.** … applying at least RMSNorm is crucial prior to nonlinearities, but the choice of whether or not to incorporate centering is up to the designer's discretion."
+  ただしこの主張の足場（付録 C.4 / Figure 11）は**訓練した網ではなく等方ガウス勾配のランダムウォーク・シミュレーション**。Figure 8 がどの箱の結果かは本文に記載が無い。
+- **同 付録 E.9**: "…the MLP struggles in the absence of mean subtraction from batch normalization. In the case of the MLP, we observed in later experiments that **centering the inputs at approximately zero was important for training the network, and that most of the benefits of the mean subtraction from batch normalization seen here were replicated by input centering.**"
+  前半は本走の `D2` と一致、後半は本走の `D1`（`C` 単独が完全に無効）と衝突する。ただし図も数値も手順も無い一文。
+- **Kumar ら, arXiv 2308.11958 (CoLLAs 2024)** は箱がほぼ同型（MNIST 1200 枚・400 epoch・50 タスク・batch 16・Adam・MLP 2×100）。Figure 2 の数値: Random Label MNIST で Baseline **0.16** / **Layer Norm 0.54** / L2 Init 0.86 / Concat ReLU 0.95。総括は "**Layer Norm mitigates only some plasticity loss.**" Random Label CIFAR は **CNN** で Baseline 0.26 / Layer Norm 0.91。
+- **Lewandowski ら, arXiv 2406.06811 Figure 12**（RL-MNIST × 4×256 MLP、LayerNorm の on/off）: 素の ReLU が ≈0.11 → ≈0.62（40 epoch）・≈0.16 → ≈0.755（120 epoch）、**いずれもタスクとともに単調に低下**（図からの読み取り・近似）。
+- 上記 5 本のいずれにも **RMSNorm は無く、affine 無しのアブレーションも無い**。**RL-CIFAR × MLP に正規化を入れた数値は照合した範囲で存在しない。**
+
+したがって本走の `H`（中心化のみ・分散正規化なし・affine なし）が 0.113 → 0.987 を出したことは、**Lyle らの結論と逆向き**である。だが**この箱がそもそも簡単なだけ**なら比較は成立しない。それを決めるための対照を 2 腕足す。
+
+### 10.2 腕
+
+| 腕 | 中身 |
+|---|---|
+| **`CS`** | 扉 C ＋ **扉 H の正確な裏返し**。同じ特徴ごとの走行統計の**スケール側**: v ← (1−β)v + β·mean_batch(φ(z)²)、出力は φ(z)/√v。**中心化なし・affine なし**（RMSNorm 相当）。β = 0.01。 |
+| **`LN`** | 扉 C ＋ **素の LayerNorm**。標本ごとに特徴方向で正規化し、**学習可能な γ・β あり**（γ=1・β=0 で初期化し、走自身の Adam が最適化する）、**線形写像の後・非線形の前**に置く（Lewandowski らが明記する置き方）。eps = 1e−5。 |
+
+どちらも入力の中心化（扉 C）は入れる。**`C` 単独が完全に無効である以上、C は交絡しない**（本走の D1 = TIE）。各 seed 0–9・50 タスク。
+
+### 10.3 登録する判定（追補）
+
+| 記号 | 判定 | ラベル |
+|---|---|---|
+| **CS_M** | `CS` の窓 | `RESCUED`（10 seed 中 9 以上が窓 ≥ 0.5）/ `SPLIT` / `COLLAPSED` |
+| **LN_M** | `LN` の窓 | 同上 |
+| **E1** | `CS` − `CH` の窓（符号検定） | `SCALE_ENOUGH`（CS が救い CH と TIE 以上）/ `CENTER_NEEDED`（CS が崩壊）/ `CENTER_BETTER` |
+| **E2** | `LN` − `CH` の窓 | `LN_BETTER` / `TIE` / `LN_WORSE` |
+| **E3** | 救う腕の集合 | `ALL_THREE` / `ONLY_CENTER` / `ONLY_SCALE` / `CENTER_AND_LN` / `NONE` |
+
+### 10.4 予測
+
+**Claude（2026-09-19 09:50、両腕を回す前。本走 §5 の結果は読んだ）**
+
+| 記号 | 主張 | 確率 |
+|---|---|---|
+| Q1 | CS_M = `RESCUED` | 0.70 |
+| Q2 | LN_M = `RESCUED` | 0.75 |
+| Q3 | E3 = `ALL_THREE` | 0.60 |
+| Q4 | E1 = `SCALE_ENOUGH` | 0.65 |
+| Q5 | `LN` の窓が Kumar の RL-MNIST の LayerNorm（0.54）を 0.3 以上上回る | 0.70 |
+
+読み: **この箱では正規化系なら何でも効く**が本線。その場合、主張は「中心化が効く側だ」ではなく「**分散正規化も affine も無い最小の介入で足りる**」に縮む。逆に `CS` が崩壊すれば、Lyle らの結論とこの箱で正面から食い違う対象が立つ。
+
+**Issa（空欄。結果を読む前に記入し、時刻を明記する）**
+
+- CS_M:
+- LN_M:
+- E1:
+
+### 10.5 開示
+
+- この 2 腕は**本走 4 腕の結果を読んだあとに**設計した。§10.4 の Claude の確率もその後に付けたものである。したがって **CS_M・LN_M・E1–E3 は「本走の登録判定」ではなく、追補として独立に登録した判定**である。
+- 検査は S-CS（走行統計がスケール側の漸化式どおりで、中心化していないこと。変異対照 β=0）と S-LN（torch の `F.layer_norm` と 4.8e−7 で一致、γ/β が実際に動く、affine 無しとは異なる）を追加し、既存 8 本も全部かけ直して all_pass を確認した。

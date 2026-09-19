@@ -275,6 +275,77 @@ def s_pin(dev, cifar) -> dict:
     return {"pass": bool(ok), **res}
 
 
+def s_cs(dev, cifar) -> dict:
+    """Door CS is the exact complement of H: the SAME per-feature running statistic, but the
+    scaling half.  v <- (1-b) v + b * mean_batch(phi(z)^2), and phi divides by sqrt(v)."""
+    R, B, n = 3, E.BATCH, E.DIMS[1]
+    act = E.make_act("CS", beta=0.01)
+    act.init_state(R, dev, key="k")
+    g = torch.Generator(device="cpu").manual_seed(99)
+    v_ref = [torch.ones(R, w) for w in (E.DIMS[1], E.DIMS[2])]
+    for _ in range(50):
+        z1 = torch.randn(R, B, n, generator=g).to(dev) * 2.0
+        z2 = torch.randn(R, B, E.DIMS[2], generator=g).to(dev) * 1.5
+        for i, z in enumerate((z1, z2)):
+            v_ref[i] = 0.99 * v_ref[i] + 0.01 * torch.clamp(z, min=0.0).pow(2).mean(1).cpu()
+        act.update(z1, z2)
+    err = max(float((act.v[i].cpu() - v_ref[i]).abs().max()) for i in (0, 1))
+    scale = max(float(v_ref[i].abs().max()) for i in (0, 1))
+    bound = scale * 50 * np.finfo(np.float32).eps * 4
+    z = torch.randn(R, 7, n, generator=g).to(dev)
+    want = torch.clamp(z, min=0.0) / act.v[0][:, None, :].sqrt()
+    diff = float((act.phi(z, 0) - want).abs().max())
+    # it must NOT centre: the output's per-unit mean stays positive
+    mean_pos = float(act.phi(z, 0).mean(1).min())
+    # mutation: beta = 0 leaves v at 1, i.e. no scaling at all
+    a0 = E.make_act("CS", beta=0.0)
+    a0.init_state(R, dev, key="k")
+    a0.update(z1, z2)
+    mut = float((a0.phi(z, 0) - torch.clamp(z, min=0.0)).abs().max())
+    return {"pass": bool(err <= bound and diff == 0.0 and mean_pos >= 0.0 and mut == 0.0),
+            "ema_max_abs_error": err, "bound": bound, "divides_by_sqrt_v_error": diff,
+            "does_not_centre_min_unit_mean": mean_pos, "mutation_beta0_equals_plain_relu": mut}
+
+
+def s_ln(dev, cifar) -> dict:
+    """Door LN is published LayerNorm: per sample across features, learnable gamma/beta,
+    applied to z before the nonlinearity.  Compare against torch's own F.layer_norm."""
+    import torch.nn.functional as F
+    R, B, n = 2, E.BATCH, E.DIMS[1]
+    act = E.make_act("LN")
+    act.init_state(R, dev, key="k")
+    P = [None] * 6 + act.extra_params(R, dev)
+    act.bind(P)
+    g = torch.Generator(device="cpu").manual_seed(5)
+    with torch.no_grad():                                   # give gamma/beta non-trivial values
+        P[6].copy_(torch.rand(R, n, generator=g).to(dev) + 0.5)
+        P[7].copy_(torch.randn(R, n, generator=g).to(dev) * 0.1)
+    z = torch.randn(R, B, n, generator=g).to(dev) * 3.0 + 1.0
+    got = act.phi(z, 0)
+    want = torch.stack([F.relu(F.layer_norm(z[r], (n,), P[6][r], P[7][r], eps=1e-5))
+                        for r in range(R)])
+    err = float((got - want).abs().max())
+    bound = 4 * np.finfo(np.float32).eps * float(want.abs().max().clamp(min=1.0))
+    # gamma/beta are in P, so the run's Adam optimises them: they must move
+    moved = 0.0
+    with tempfile.TemporaryDirectory() as d:
+        E.run("LN", SEEDS[:1], ["raw"], 1, 2, dev, Path(d), cifar=cifar, progress=quiet,
+              snapshots=True)
+        a = np.load(E.snapshot_path(Path(d), "LN", "raw", SEEDS[0], 0))
+        b = np.load(E.snapshot_path(Path(d), "LN", "raw", SEEDS[0], 1))
+        moved = float(np.abs(b["g1"] - a["g1"]).max())
+        init_g = float(np.abs(a["g1"] - 1.0).max())
+        init_b = float(np.abs(a["bn1"]).max())
+    # mutation: no affine at all differs from the affine version
+    mut = float((want - torch.stack([F.relu(F.layer_norm(z[r], (n,), eps=1e-5))
+                                     for r in range(R)])).abs().max())
+    return {"pass": bool(err <= bound and moved > 0.0 and init_g == 0.0 and init_b == 0.0
+                         and mut > 0.0),
+            "vs_F_layer_norm_error": err, "bound": bound, "gamma_moved_in_one_task": moved,
+            "gamma_init_deviation_from_1": init_g, "beta_init_deviation_from_0": init_b,
+            "mutation_no_affine_differs_by": mut}
+
+
 def s_diverge(dev, cifar) -> dict:
     out = {}
     for tag, ns in (("clean", None), ("nan0", 0)):
@@ -348,7 +419,8 @@ def main() -> None:
     dev = H.setup(a.device)
     cifar = RC.Cifar10()
     fns = {"S-off": s_off, "S-C": s_c, "S-H": s_h, "S-grad": s_grad, "S-B": s_b,
-           "S-pin": s_pin, "S-diverge": s_diverge, "S-resume": s_resume}
+           "S-pin": s_pin, "S-CS": s_cs, "S-LN": s_ln,
+           "S-diverge": s_diverge, "S-resume": s_resume}
     for name in a.only.split(","):
         t0 = time.time()
         if name == "S-cost":

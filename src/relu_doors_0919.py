@@ -46,7 +46,7 @@ N_CLASSES = RC.N_CLASSES
 DEAD_TOL = H.DEAD_TOL
 LR = 1e-3
 CONDS = ("raw", "std")
-ARM_ORDER = ("C", "CH", "CHB", "CHB0")                          # spec §8 launch order
+ARM_ORDER = ("C", "CH", "CHB", "CHB0", "CS", "LN")              # spec §8 / 追補 1
 # spec §2.1/§3: which doors each arm closes.  C = centre the input, H = centre the hidden
 # activations with an EMA, B = the bias policy ("none" | "wd" on b2 | "zero" on b1 and b2).
 # Every arm removes b1 when B is closed, so with C the identity zbar_1i = w_i.xbar + b_1i = 0
@@ -55,7 +55,14 @@ DOORS = {"ref":  dict(c=False, h=False, b="none"),
          "C":    dict(c=True,  h=False, b="none"),
          "CH":   dict(c=True,  h=True,  b="none"),
          "CHB":  dict(c=True,  h=True,  b="wd"),
-         "CHB0": dict(c=True,  h=True,  b="zero")}
+         "CHB0": dict(c=True,  h=True,  b="zero"),
+         # 追補 1 (spec §10): the two controls the literature check called for.
+         # CS is the exact complement of H -- the SCALING half of the same per-feature running
+         # statistic, no centring, no affine (RMSNorm-like).  LN is published LayerNorm:
+         # per-sample across features, with learnable gamma/beta, after the linear map and
+         # before the nonlinearity (the placement Lewandowski et al. state).
+         "CS":   dict(c=True,  h=False, b="none", norm="scale"),
+         "LN":   dict(c=True,  h=False, b="none", norm="layernorm")}
 
 # spec §2.3: Lillo & Cheney's CIFAR-10 Normalize, per channel plane (R, G, B: 1024 each)
 STD_MEAN = (0.4914, 0.4822, 0.4465)
@@ -138,6 +145,8 @@ class ReLUDoors(ReLU):
         d = DOORS[arm]
         self.name, self.arm = arm, arm
         self.door_c, self.door_h, self.door_b = d["c"], d["h"], d["b"]
+        self.norm = d.get("norm", "none")          # "none" | "scale" | "layernorm"
+        self.gb = None                             # LayerNorm's (gamma, beta) per layer
         self.lam, self.beta, self.widths = lam, beta, widths
         if self.door_b == "wd" and not lam > 0:
             raise SystemExit("arm CHB needs --lam > 0 (spec §2.2 derives it from a probe)")
@@ -145,24 +154,62 @@ class ReLUDoors(ReLU):
 
     def init_state(self, R, device, key):
         self.m = [torch.zeros(R, w, device=device) for w in self.widths] if self.door_h else None
+        # the scaling statistic starts at 1 (EMA of the mean square of phi(z))
+        self.v = [torch.ones(R, w, device=device) for w in self.widths] \
+            if self.norm == "scale" else None
+
+    def extra_params(self, R, device):
+        """LayerNorm's gamma/beta, appended to P so the run's own Adam optimises them."""
+        if self.norm != "layernorm":
+            return []
+        out = []
+        for w in self.widths:
+            out += [torch.ones(R, w, device=device), torch.zeros(R, w, device=device)]
+        return out
+
+    def bind(self, P) -> None:
+        """Keep references to the LayerNorm parameters that live in P[6:]."""
+        if self.norm == "layernorm":
+            self.gb = [(P[6 + 2 * i], P[7 + 2 * i]) for i in range(len(self.widths))]
 
     def state(self):
-        return {"m": [v.clone() for v in self.m]} if self.door_h else {}
+        st = {}
+        if self.door_h:
+            st["m"] = [v.clone() for v in self.m]
+        if self.norm == "scale":
+            st["v"] = [v.clone() for v in self.v]
+        return st
 
     def load_state(self, st):
-        if self.door_h and st:
+        if self.door_h and st.get("m") is not None:
             for dst, src in zip(self.m, st["m"]):
+                dst.copy_(src)
+        if self.norm == "scale" and st.get("v") is not None:
+            for dst, src in zip(self.v, st["v"]):
                 dst.copy_(src)
 
     def phi(self, z, layer=0, train=False):
+        if self.norm == "layernorm":                       # before the nonlinearity
+            mu = z.mean(-1, keepdim=True)
+            sd = (z.var(-1, unbiased=False, keepdim=True) + 1e-5).sqrt()
+            g, b = self.gb[layer]
+            z = g[:, None, :] * ((z - mu) / sd) + b[:, None, :]
+            return torch.clamp(z, min=0.0)
         a = torch.clamp(z, min=0.0)
-        return a - self.m[layer][:, None, :] if self.door_h else a
+        if self.door_h:
+            return a - self.m[layer][:, None, :]
+        if self.norm == "scale":                           # the complement of door H
+            return a / self.v[layer][:, None, :].sqrt().clamp(min=1e-12)
+        return a
 
     def update(self, z1, z2) -> None:
-        if not self.door_h:
-            return
-        for mi, z in zip(self.m, (z1, z2)):
-            mi.mul_(1.0 - self.beta).add_(torch.clamp(z, min=0.0).mean(1), alpha=self.beta)
+        if self.door_h:
+            for mi, z in zip(self.m, (z1, z2)):
+                mi.mul_(1.0 - self.beta).add_(torch.clamp(z, min=0.0).mean(1), alpha=self.beta)
+        if self.norm == "scale":
+            for vi, z in zip(self.v, (z1, z2)):
+                vi.mul_(1.0 - self.beta).add_(
+                    torch.clamp(z, min=0.0).pow(2).mean(1), alpha=self.beta)
 
     def post_update(self, P, lr: float) -> None:
         if self.door_b == "none":
@@ -174,9 +221,16 @@ class ReLUDoors(ReLU):
             P[3].mul_(1.0 - lr * self.lam)             # decoupled weight decay on b2
 
     def stats(self, r: int) -> dict:
-        if not self.door_h:
-            return {}
-        return {"m_l1": float(self.m[0][r].mean()), "m_l2": float(self.m[1][r].mean())}
+        out = {}
+        if self.door_h:
+            out |= {"m_l1": float(self.m[0][r].mean()), "m_l2": float(self.m[1][r].mean())}
+        if self.norm == "scale":
+            out |= {"s_l1": float(self.v[0][r].mean().sqrt()),
+                    "s_l2": float(self.v[1][r].mean().sqrt())}
+        if self.norm == "layernorm":
+            out |= {"gamma_l1": float(self.gb[0][0][r].mean()),
+                    "beta_l1": float(self.gb[0][1][r].mean())}
+        return out
 
 
 def make_act(arm: str, lam: float = 0.0, beta: float = 0.01) -> Act:
@@ -212,7 +266,7 @@ def slot_inputs(cifar: RC.Cifar10, seed: int, cond: str, device, center: bool = 
 
 def forward(P, X, act: Act, train: bool = False):
     """P: six stacked tensors (R, ...); X: (R, B, 3072).  Same maps as H.forward, batched."""
-    W1, b1, W2, b2, W3, b3 = P
+    W1, b1, W2, b2, W3, b3 = P[:6]   # P[6:] is LayerNorm's gamma/beta when present
     z1 = torch.baddbmm(b1[:, None, :], X, W1.transpose(1, 2))
     a1 = act.phi(z1, 0, train)
     z2 = torch.baddbmm(b2[:, None, :], a1, W2.transpose(1, 2))
@@ -306,6 +360,9 @@ def write_snapshot(path: Path, P, act: Act, r: int, z=None) -> None:
     bit for bit from the weights by `replay`)."""
     path.parent.mkdir(parents=True, exist_ok=True)
     d = {k: P[i][r].detach().cpu().numpy() for i, k in enumerate(("W1", "b1", "W2", "b2", "W3", "b3"))}
+    for i, k in enumerate(("g1", "bn1", "g2", "bn2")):        # LayerNorm's gamma/beta, when present
+        if len(P) > 6 + i:
+            d[k] = P[6 + i][r].detach().cpu().numpy()
     if act.adaptive:
         d["V1"], d["V2"] = act.V[0][r].cpu().numpy(), act.V[1][r].cpu().numpy()
     if getattr(act, "door_h", False):
@@ -412,8 +469,10 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         P[0] = P[0] * torch.tensor(perturb, dtype=P[0].dtype, device=device)[:, None, None].add(1.0)
     if nan_slot is not None:
         P[0][nan_slot] = float("nan")
-    P = [q.contiguous().requires_grad_(True) for q in P]
     act.init_state(R, device, key=f"{arm}|{seeds}|{conds}")
+    P = P + act.extra_params(R, device)            # LayerNorm's gamma/beta, optimised by the run's Adam
+    P = [q.contiguous().requires_grad_(True) for q in P]
+    act.bind(P)
     adam_m = [torch.zeros_like(q) for q in P]
     adam_v = [torch.zeros_like(q) for q in P]
     tc = 0
