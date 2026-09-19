@@ -1,0 +1,150 @@
+# 扉 H — Joudaki ViT の FFN 出力から per-channel の DC を抜く（spec_joudaki_vit_battle_0919 追補 10）
+
+状態: 事前登録。本走は未開始・値は未観測。
+親 spec: [spec_joudaki_vit_battle_0919.md](spec_joudaki_vit_battle_0919.md)。13 腕の定義・学習条件・主指標・窓・崩壊ラベル・符号検定の作法をすべて継承する。
+
+## 0. 依頼との差分（結果を見る前に記録）
+
+依頼は「13 腕 → 15 腕、本走の開始前に」だった。**本走は依頼を受けた時点で既に 38.5% 進行していた**
+（50/130 run・2000/5200 task・経過 7.3 時間、2026-09-19 18:20 JST）。
+
+`report.py` は run ごとの `provenance.json` を突き合わせ、`source_hashes` が 1 つでも違えば集計を拒否する
+（`report.py` の `Source hashes differ across production runs`）。`source_hashes()` は
+`analysis/joudaki_vit_battle_0919/` 配下の全 `.py` を rglob するので、**腕を足せば既存 50 run は
+新しい run と混ぜられなくなる**。この守りは意図された設計なので曲げない。
+
+したがって選択肢は 2 つしかなかった:
+
+- **A**: 50 run を捨てて 15 腕で最初からやり直す（lab の実測で 22 時間 + 実装検査）
+- **B**: 13 腕を完走させ、**扉 H を別実験として独立に回す**（4 腕 × 10 seed = 5.9 時間、破棄なし）
+
+ユーザーは **B** を選択した（2026-09-19）。本 spec は B の登録である。
+
+**B で失うもの**: 依頼 §6 の「SNA 対 12 腕 → 14 腕に拡張」と「Holm を拡張後の族全体に掛ける」。
+扉 H は 13 腕のランキング表と同じ族には入らない。
+**B で失わないもの**: 依頼の主問である `RH − R` と `GH − GELU` の対応符号検定（依頼 §10 の P2/P3/P4）、
+および §7 の副次読み出し。これらは本実験の中で完結する。
+
+実装は `analysis/joudaki_vit_door_h_0919/`（13 腕実験のディレクトリは 1 バイトも変更しない）。
+生データは `~/Projects/obsidian-research-data/joudaki_vit_door_h_0919/`。
+
+## 1. 動機
+
+別の箱（`relu_doors_0919`、RL-CIFAR × 3072-100-100-10 MLP、正規化層なし）で、
+**φ の出力の DC を per-unit の走行平均で抜くだけ**で ReLU が窓 0.113 → 0.987 になった。
+入力の中心化だけ（0.11）も、分散だけで割る（0.11）も、素の LayerNorm（0.36）も無効で、効いたのはこの 1 本だけ。
+
+13 腕はすべて「φ の形」の軸で、この軸が 1 本も入っていない。
+ViT では pre-LN が入力の中心化と分散の正規化を既に供給しているが、**fc1 の出力の channel ごとの平均**は
+`z̄_j = w_j · mean_batch(LN(x)) + b_j` で依然として自由に動けるので、この扉だけは ViT に無い。
+
+## 2. 扉 H の定義
+
+活性化モジュールが channel ごとのスカラー `M`（長さ = FFN hidden = 1536）を 1 つ持つ。
+
+- **出力**: `out = φ_raw(z) − M`。`φ_raw` は扉なしの元の活性化。`M` は定数として引き、**勾配を流さない**。
+  **train と eval で同じ `M`** を使う（eval 中は更新しない）。
+- **更新**: `M ← .99·M + .01·mean_{batch×token}(φ_raw(z).detach())`、β = .01（適応 V と同値）。
+  標本軸は **batch × 全 token（CLS 含む）** で、既存 V の軸と完全に同じ。
+  平均を取る対象は **`M` を引く前の `φ_raw(z)`**。**`M` の初期値は 0**。
+- **更新の位置**: `optimizer.step()` の後（`update_adaptive` に相乗り）。
+  **compiled forward の中で in-place 更新しない**（追補 5 で KKA の compile 勾配が 2.6e−3 ずれた穴）。
+  forward では `pending_mean` を detach して置くだけ。
+- **置き場所**: `TransformerMLP` の `layers['act']`。`fc1 → act(扉込み) → drop1 → fc2 → drop2` で
+  **引き算は drop1 の前**。学習する 6 ブロックの FFN 全部。attention・LN・head は触らない。
+- **`M` は `register_buffer`** で持つので state_dict に入り、task 境界の再開で EMA が 0 から始まらない。
+
+`src/rlcifar_mlp_battle_0918.py` は変更しない（0918 の走の provenance に sha256 で刺さっている）。
+腕名 `RH`/`GH` は `model.py` 側で「base 腕 `R`/`GELU` ＋ door_h」に解釈し、`make_act` には渡さない。
+
+## 3. 腕（4 本）
+
+| 腕 | 定義 |
+|---|---|
+| `R` | ReLU（対照・再走） |
+| `GELU` | GELU（対照・再走） |
+| `RH` | `R` ＋ 扉 H |
+| `GH` | `GELU` ＋ 扉 H |
+
+いずれも適応 V は持たない（`V is None`）。腕固有 tuning なし。
+**`R` と `GELU` を本ビルドで再走する**のは、4 腕すべてが 1 つの source hash を共有する report に収まるようにするため。
+13 腕実験の `R`/`GELU` とは混ぜない（S-nochange で両ビルドの一致を別途示すが、集計は跨がせない）。
+
+launch 順は `('R', 'GELU', 'RH', 'GH')` × seed0–9 = **40 run**。
+
+## 4. 本走前に通す検査
+
+1. **S-off（同値対照）**: `--door-frozen` で `M` を 0 に固定した `RH` が `R` と**完全 bit 一致**
+   （model・Adam・RNG・診断・保存前活性）。`GH`/`GELU` も同様。`a − 0.0` は IEEE754 で厳密なので許容差ではなく bit 一致。
+   `--door-frozen` は `--smoke` 専用で、`report.py` は `door_frozen` の走を本走フォルダから拒否する。
+2. **S-H（変異対照）**: 扉 on で出力の `mean_{batch×token}` が 0 に寄る。
+   許容差は**算術から導く**（固定値を使わない）:
+   `bound = (2/β + log2(n) + 2)·eps_f32·max|φ_raw(z)| + .99^steps·max|target|`
+   3 項はそれぞれ **EMA の利得 1/β による不動点誤差**・平均の pairwise 縮約・引き算と最終平均の丸め。
+   CPU 実測で残差 2.54e−6 のうち **2.53e−6 が EMA 項**（縮約は 5.5e−8）で、第 1 項が支配的。
+   変異版（`M` の代わりに `2M` を引く）がこの上界の **100 倍以上**測定量を動かすことを要求する。
+3. **S-grad（局所ヤコビアン）**: `M` に非零を入れたうえで、同じ `z`・同じ cotangent を
+   `R`/`RH`・`GELU`/`GH` に通し `∂out/∂z` が **bit 一致**。`M.grad` が `None`。
+4. **S-resume**: `RH`・`GH` で実画像・本番サイズの task 境界再開が、連続実行と
+   **model・Adam・RNG・診断・前活性・`M` まで bit 一致**。`M` が非零であることも確認する（空虚な検査を避ける）。
+5. **S-compile**: 4 腕の eager 対 compile の forward・gradient・EMA（`M` を含む）が `256·eps_f32` の relative L2 以内。
+6. **S-nochange（既存腕の不変）**: `R`・`GELU` を seed0・1 タスク（500 更新）で
+   **本ビルドと 13 腕ビルドの両方**に通し、model・Adam・RNG・診断・前活性が bit 一致。
+   これが通れば、腕の追加が既存腕の乱数列・初期化・軌道を一切動かしていないことが示される。
+7. report 検査: 40 run 未満の拒否・source hash 混在の拒否・`door_frozen` の拒否・窓と Holm の算術。
+
+## 5. 判定（結果を見る前に固定）
+
+主指標・窓（t21–40）・崩壊ラベル（窓 < .5）・対応両側正確符号検定・勝ち条件（逆方向 seed ≤ 1 かつ p < .05）は親 spec のまま。
+
+**登録族はちょうど 2 本**:
+
+- `RH − R`
+- `GH − GELU`
+
+Holm はこの族全体（2 本）に掛け、未補正 p と併記する。未補正順位は探索的。
+非有意は同等性の証明ではない。
+
+登録ラベル: `H_R` / `H_G` を `DOOR_H_HELPS` / `DOOR_H_FREE` / `DOOR_H_HURTS`（各 base 腕名を付す）、
+および `collapsed_R` を `R_COLLAPSES` / `R_SURVIVES`。
+
+## 6. 副次読み出し（記述のみ・判定 endpoint ではない・GPU 費ゼロ）
+
+各タスクで既に保存している固定 16 画像の FFN 前活性から、層別に t1 / t21 / t40 で:
+
+- **`z < 0` の質量割合**
+- **channel ごとの `z̄ / sd(z)` の中央値**（`sd = 0` の channel は除外して数を別記）
+
+理由: LN が常備なので **素の `R` がそもそも沈まない可能性が十分ある**。その場合 `RH − R` は空振りだが、
+この読み出しがあれば「**LN が既に扉 H の役を果たしている**」という結論そのものが取れる。
+
+## 7. 代価
+
+lab（RTX 4090・実測 13.18 s/task）で 4 腕 × 10 seed × 40 task = 1600 task ≈ **5.9 時間**、
+保存は 1 run 約 2.5 GB で **約 100 GB**。`/media/drive` に 6.8 TB 空き。
+既存の「25 GiB 未満で task 境界停止」の規則はそのまま適用する。
+
+## 8. 変えないこと
+
+Tiny ImageNet・5 クラス × 40 タスク × 500 更新・Adam 1e−4・WD なし・float32・TF32 無効・
+compile + fused Adam・dropout 0.1・head リセット・mask・seed0–9・主指標と窓・原典モデルの無改変。
+
+## 9. 予測の登録（本走前）
+
+Claude（依頼元の別セッション）の予測:
+
+| # | 予測 | 確率 |
+|---|---|---|
+| P1 | `R` はこの箱では崩壊しない（窓 ≥ .5）。LN 常備＋本物ラベルのため | 80% |
+| P2 | `RH − R` の符号が正（10 seed 中 6 以上で `RH` が上） | 55% |
+| P3 | `RH − R` が登録の「勝ち」（逆方向 ≤1 seed かつ p<.05）になる | 25% |
+| P4 | `GH − GELU` が登録の「勝ち」になる | 20% |
+| P5 | `R` の t40・最終層の `z<0` 質量が [.2, .8] に収まる（＝沈まず折れ目をまたぐ） | 70% |
+| P6 | `RH`・`GH` のどちらも SNA・KKA を上回らない | 75% |
+
+P6 は本実験に SNA・KKA が居ないため、**13 腕実験の窓の中央値との事後比較**でしか読めない。
+source hash が違うので符号検定はできず、**記述的な並置に留める**ことをここで明記する。
+
+Issa の予測: **未登録**。本走開始前に登録すること。
+
+本セッションの Claude の予測は、上の 6 本に対する独立な見積もりとして本走開始前に追記する。
