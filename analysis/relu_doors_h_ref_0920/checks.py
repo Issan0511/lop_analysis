@@ -310,9 +310,9 @@ def s_verdict(prov):
   else:ff['ref']['online_acc']=.9;expected='NOT_REPRODUCED'
   yes &= S.verdict(ff,**kw)['status']==expected;count+=1
  # Nonuniform paired differences make median(H-ref) differ from median(H)-median(ref).
- f=synthetic();rr=np.array([0.,0.,0.,0.,0.,.2,.2,.2,.2,.2]);hh=np.array([.3,.3,.3,.3,.3,.21,.21,.21,.21,.21])
+ f=synthetic();rr=np.array([0.]*7+[.25]*3);hh=np.array([.125]*4+[.375]*6)
  for arm,w in [('ref',rr),('H',hh)]:f[arm]['online_acc']=f[arm].seed.map(dict(enumerate(w)))
- v=S.verdict(f);yes &= v['median_d_HR']==float(np.median(hh-rr))
+ v=S.verdict(f);yes &= v['median_d_HR']==.125 and float(np.median(hh)-np.median(rr))==.375
  # Layer boundary equality is neither dies nor saved. Nine and eight strict signs differ.
  f=synthetic();f['H']['dead_frac_l1']=S.THETA;yes &= S.verdict(f)['R1_H']=='TIE'
  muts={'boundary_ge':S.classify(9,np.full(10,-S.DELTA))[1]!='C_NEEDED',
@@ -339,7 +339,12 @@ def s_verdict(prov):
  # Sign reversal and dispersion-zero decision fixtures, with prescribed order interval.
  f=synthetic();f['H']['online_acc']=.12;yes &= S.verdict(f)['labels']['D_HR']=='H_HELPS'
  f['H']['online_acc']=.1;yes &= S.verdict(f)['labels']['D_HR']=='H_HURTS'
- return part('S-verdict',yes,muts,count+8,details,prov)
+ for n in (8,9):
+  f=synthetic();f['H']['dead_frac_l1']=f['H'].seed.map(lambda s:.985 if s<n else 0.)
+  yes &= S.verdict(f)['R1_H']==('L1_DIES' if n==9 else 'TIE')
+ f=synthetic();f['H']['online_acc']=.5;yes &= S.verdict(f)['K']['H']==10
+ details['paired_fixture']={'median_paired':.125,'difference_of_medians':.375}
+ return part('S-verdict',yes,muts,count+11,details,prov)
 
 def provenance_pred(folder):
  p=json.loads((folder/'provenance.json').read_text());start=json.loads((folder/'provenance_start.json').read_text())

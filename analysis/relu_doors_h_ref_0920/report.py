@@ -87,6 +87,7 @@ def main():
  'C/CHを旧起動コードと新実装でR10×2tasks×400epochs照合して再利用資格を確認。ref/Hは各R10を初期状態から50tasks、新規run配下へ直列実行した。',
  '全12必須検査と列挙した変異を確認。空・欠落・古いPASSは収集器で拒否。sourceと参照hashを集計時にも照合。',
  '検査attempt1はr_a1の独立計算をseed一括のnormにしていたため数ULP不一致で停止。seedごとの親の演算順へ修正。学習コードと許容誤差は変更していない。旧検査出力は保存。',
+ '検査attempt2では中央値の差を検出する合成fixtureが数学的に同値になっていた。二進で厳密な値の非同値fixture（対応差中央値.125、中央値の差.375）へ修正し、同じ判定式の変異を検出した。',
  'H検査はseed200–209。本走H0–9をprobeしていない。診断gate(z>0)とclampの訓練微分(z=0で1)を区別する。',
  f'登録commit: `{PREREG}`。本走起動commit: `{provs["H"]["git_hash"]}`。起動時git状態を記録し、終了時の状態で差し替えていない。',
  f'実測本走秒数: ref={provs["ref"]["wall_clock_s"]:.3f}、H={provs["H"]["wall_clock_s"]:.3f}。',
