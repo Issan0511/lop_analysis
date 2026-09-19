@@ -11,6 +11,8 @@
 | `CH` | 0.9867 | 0.9861-0.9878 | **10/10** | -0.0100 | 0.566 |
 | `CHB` | 0.9854 | 0.9834-0.9884 | **10/10** | -0.0099 | 0.484 |
 | `CHB0` | 0.9868 | 0.9836-0.9894 | **10/10** | -0.0097 | 0.491 |
+| `CS` | 0.1132 | 0.1120-0.1156 | **0/10** | +0.1994 | 1.000 |
+| `LN` | 0.2062 | 0.1789-0.2483 | **0/10** | +0.8590 | 0.000 |
 
 ## 登録判定
 
@@ -25,8 +27,13 @@
 - **B_ROUTE**: `BIAS_TAKES_OVER` — C_median 0.0019, CH_median 0.1811, median 0.1791, pos 10, n 10, p 0.0020
 - **SKEW_ROUTE**: `NO_SKEW_ROUTE` — median_onesided_frac_l1_t50 {'CHB': 0.0, 'CHB0': 0.0}
 - **ZBAR1**: `PINNED` — max_abs_zbar_l1 {'CHB': 4.720052311e-05, 'CHB0': 2.441406286e-05}
+- **CS_M**: `COLLAPSED` — rescued_seeds 0, median_window 0.1132
+- **LN_M**: `COLLAPSED` — rescued_seeds 0, median_window 0.2062
+- **E1**: `CENTER_NEEDED` — median -0.8739, pos 0, n 10, p 0.0020
+- **E2**: `LN_WORSE` — median -0.7804, pos 0, n 10, p 0.0020
+- **E3**: `ONLY_CENTER` — rescued ['CH']
 
-- P14 の反例（ゲート 1.00 到達後に窓 > 0.5 に戻った走）: {'ref': 0, 'C': 0, 'CH': 0, 'CHB': 0, 'CHB0': 0}
+- P14 の反例（ゲート 1.00 到達後に窓 > 0.5 に戻った走）: {'ref': 0, 'C': 0, 'CH': 0, 'CHB': 0, 'CHB0': 0, 'CS': 0, 'LN': 0}
 
 ## 予測の採点
 
@@ -54,3 +61,23 @@
 | I2 | N in (NEED_CH, NEED_CHB) | yes |
 | I3 | B_ROUTE == BIAS_TAKES_OVER | yes |
 | I4 | SKEW_ROUTE == NO_SKEW_ROUTE | yes |
+
+## 追補 1 の採点（spec §10.4）
+
+**Claude 0/5, Brier 0.465**
+
+| key | 主張 | p | 的中 |
+|---|---|---|---|
+| Q1 | CS_M == RESCUED | 0.70 | no |
+| Q2 | LN_M == RESCUED | 0.75 | no |
+| Q3 | E3 == ALL_THREE | 0.60 | no |
+| Q4 | E1 == SCALE_ENOUGH | 0.65 | no |
+| Q5 | LN's window beats Kumar's RL-MNIST LayerNorm (0.54) by >= 0.3 | 0.70 | no |
+
+**Issa 2/3**
+
+| key | 主張 | 的中 |
+|---|---|---|
+| J1 | CS_M == COLLAPSED | yes |
+| J2 | LN_M == RESCUED and E2 == LN_WORSE | no |
+| J3 | E1 == CENTER_NEEDED | yes |

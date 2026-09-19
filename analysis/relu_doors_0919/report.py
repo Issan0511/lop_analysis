@@ -14,6 +14,7 @@ REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "results" / "relu_doors_0919"
 REF = REPO / "results" / "rlcifar_mlp_battle_0918" / "R" / "per_task.csv"
 LADDER = ("ref", "C", "CH", "CHB", "CHB0")
+EXTRA = ("CS", "LN")          # 追補 1 (spec §10)
 SEEDS = list(range(10))
 WIN, EARLY, LATE = (31, 50), (1, 10), (41, 50)
 
@@ -29,6 +30,18 @@ PRED = {                                   # spec §6, Claude (before implementa
     "P11": ("N == NEED_CHB", 0.50),
     "P13": ("if CHB is rescued, its window beats leaky 0.1 raw (0.726)", 0.35),
     "P14": ("no run recovers after gate_zero_frac_l2 reaches 1.00", 0.90),
+}
+ADD = {                                    # spec §10.4, Claude (2026-09-19 09:50, before the 2 arms)
+    "Q1": ("CS_M == RESCUED", 0.70),
+    "Q2": ("LN_M == RESCUED", 0.75),
+    "Q3": ("E3 == ALL_THREE", 0.60),
+    "Q4": ("E1 == SCALE_ENOUGH", 0.65),
+    "Q5": ("LN's window beats Kumar's RL-MNIST LayerNorm (0.54) by >= 0.3", 0.70),
+}
+ADD_ISSA = {                               # spec §10.4, Issa (2026-09-19 10:25, before the 2 arms)
+    "J1": "CS_M == COLLAPSED",
+    "J2": "LN_M == RESCUED and E2 == LN_WORSE",
+    "J3": "E1 == CENTER_NEEDED",
 }
 ISSA = {                                   # spec §6, Issa (2026-09-19 01:11, before any run)
     "I1": "M == RESCUED",
@@ -63,8 +76,10 @@ def verdict(a, b, lo: str, hi: str, tie: str = "TIE") -> dict:
 
 def load() -> dict:
     d = {}
-    for arm in LADDER:
+    for arm in LADDER + EXTRA:
         f = REF if arm == "ref" else OUT / arm / "per_task.csv"
+        if not f.exists():
+            continue
         t = pd.read_csv(f, float_precision="round_trip")
         if arm == "ref":
             t = t[t.cond == "raw"]
@@ -87,11 +102,12 @@ def at_task(t: pd.DataFrame, col: str, task: int) -> dict:
 
 def main() -> None:
     d = load()
-    win = {a: per_seed(d[a], "online_acc", *WIN) for a in LADDER}
-    early = {a: per_seed(d[a], "online_acc", *EARLY) for a in LADDER}
-    late = {a: per_seed(d[a], "online_acc", *LATE) for a in LADDER}
+    ALL = [a for a in LADDER + EXTRA if a in d]
+    win = {a: per_seed(d[a], "online_acc", *WIN) for a in ALL}
+    early = {a: per_seed(d[a], "online_acc", *EARLY) for a in ALL}
+    late = {a: per_seed(d[a], "online_acc", *LATE) for a in ALL}
     vec = lambda m: [m[s] for s in SEEDS]
-    resc = {a: sum(1 for s in SEEDS if win[a][s] >= 0.5) for a in LADDER}
+    resc = {a: sum(1 for s in SEEDS if win[a][s] >= 0.5) for a in ALL}
 
     L = {}
     L["M"] = {"rescued_seeds": resc["CHB"], "median_window": float(np.median(vec(win["CHB"]))),
@@ -131,7 +147,7 @@ def main() -> None:
                   "max_abs_zbar_l1": zb}
 
     gz = {}
-    for a in LADDER:
+    for a in ALL:
         t = d[a]
         bad = 0
         for s in SEEDS:
@@ -143,6 +159,25 @@ def main() -> None:
         gz[a] = bad
     L["P14_recoveries"] = gz
 
+    if "CS" in d and "LN" in d:
+        lab = lambda a: ("RESCUED" if resc[a] >= 9 else
+                         ("COLLAPSED" if resc[a] <= 1 else "SPLIT"))
+        L["CS_M"] = {"label": lab("CS"), "rescued_seeds": resc["CS"],
+                     "median_window": float(np.median(vec(win["CS"])))}
+        L["LN_M"] = {"label": lab("LN"), "rescued_seeds": resc["LN"],
+                     "median_window": float(np.median(vec(win["LN"])))}
+        e2 = verdict(vec(win["LN"]), vec(win["CH"]), "LN_WORSE", "LN_BETTER")
+        L["E2"] = e2
+        v1 = verdict(vec(win["CS"]), vec(win["CH"]), "CENTER_BETTER", "SCALE_BETTER")
+        L["E1"] = {"label": ("CENTER_NEEDED" if L["CS_M"]["label"] == "COLLAPSED" else
+                             ("SCALE_ENOUGH" if v1["label"] in ("TIE", "SCALE_BETTER")
+                              else "CENTER_BETTER")),
+                   **{k: v1[k] for k in ("median", "pos", "n", "p")}}
+        got_set = tuple(sorted(a for a in ("CH", "CS", "LN") if resc[a] >= 9))
+        L["E3"] = {"label": {("CH", "CS", "LN"): "ALL_THREE", ("CH",): "ONLY_CENTER",
+                             ("CS",): "ONLY_SCALE", ("CH", "LN"): "CENTER_AND_LN",
+                             (): "NONE"}.get(got_set, "OTHER_" + "_".join(got_set)),
+                   "rescued": list(got_set)}
     got = {"P1": L["M"]["label"] == "RESCUED",
            "P2": resc["C"] <= 1,
            "P5": resc["CH"] <= 1,
@@ -166,6 +201,24 @@ def main() -> None:
           "I4": L["SKEW_ROUTE"]["label"] == "NO_SKEW_ROUTE"}
     SI = {k: {"claim": ISSA[k], "hit": bool(gi[k])} for k in ISSA}
     SI["_summary"] = {"n": len(ISSA), "hits": sum(v["hit"] for v in SI.values() if "hit" in v)}
+    SA = SJ = None
+    if "CS_M" in L:
+        ga = {"Q1": L["CS_M"]["label"] == "RESCUED",
+              "Q2": L["LN_M"]["label"] == "RESCUED",
+              "Q3": L["E3"]["label"] == "ALL_THREE",
+              "Q4": L["E1"]["label"] == "SCALE_ENOUGH",
+              "Q5": L["LN_M"]["median_window"] - 0.54 >= 0.3}
+        SA, b2 = {}, []
+        for k, (claim, p) in ADD.items():
+            SA[k] = {"claim": claim, "p": p, "hit": bool(ga[k])}
+            b2.append((p - (1 if ga[k] else 0)) ** 2)
+        SA["_summary"] = {"n": len(b2), "hits": sum(v["hit"] for k, v in SA.items() if k != "_summary"),
+                          "brier": float(np.mean(b2))}
+        gj = {"J1": L["CS_M"]["label"] == "COLLAPSED",
+              "J2": L["LN_M"]["label"] == "RESCUED" and L["E2"]["label"] == "LN_WORSE",
+              "J3": L["E1"]["label"] == "CENTER_NEEDED"}
+        SJ = {k: {"claim": ADD_ISSA[k], "hit": bool(gj[k])} for k in ADD_ISSA}
+        SJ["_summary"] = {"n": len(ADD_ISSA), "hits": sum(v["hit"] for v in SJ.values() if "hit" in v)}
 
     f = lambda v, sp=".4f": "n/a" if v is None or (isinstance(v, float) and math.isnan(v)) else format(v, sp)
     lines = ["# relu_doors_0919 -- ReLU が沈む道を 1 本ずつ塞ぐ", "",
@@ -174,14 +227,17 @@ def main() -> None:
              "## 窓（t31-50 の online、seed 中央値）", "",
              "| 腕 | 窓 | seed の範囲 | 窓 >= 0.5 の seed | 低下 | t50 の第2層ゲート厳密0 |",
              "|---|---|---|---|---|---|"]
-    for a in LADDER:
+    for a in ALL:
         w = vec(win[a])
         gz2 = float(np.median(vec(at_task(d[a], "gate_zero_frac_l2", 50))))
         drop = float(np.median([early[a][s] - late[a][s] for s in SEEDS]))
         lines.append(f"| `{a}` | {f(float(np.median(w)))} | {f(min(w))}-{f(max(w))} | "
                      f"**{resc[a]}/10** | {f(drop, '+.4f')} | {f(gz2, '.3f')} |")
     lines += ["", "## 登録判定", ""]
-    for k in ("M", "N", "D1", "D2", "D3", "D4", "R1", "R2", "B_ROUTE", "SKEW_ROUTE", "ZBAR1"):
+    for k in ("M", "N", "D1", "D2", "D3", "D4", "R1", "R2", "B_ROUTE", "SKEW_ROUTE", "ZBAR1",
+              "CS_M", "LN_M", "E1", "E2", "E3"):
+        if k not in L:
+            continue
         v = L[k]
         det = ", ".join(f"{kk} {f(vv, '.4f') if isinstance(vv, float) else vv}"
                         for kk, vv in v.items() if kk != "label")
@@ -198,10 +254,23 @@ def main() -> None:
     for k, v in SI.items():
         if k != "_summary":
             lines.append(f"| {k} | {v['claim']} | {'yes' if v['hit'] else 'no'} |")
+    if SA:
+        lines += ["", "## 追補 1 の採点（spec §10.4）", "",
+                  f"**Claude {SA['_summary']['hits']}/{SA['_summary']['n']}, Brier "
+                  f"{SA['_summary']['brier']:.3f}**", "", "| key | 主張 | p | 的中 |", "|---|---|---|---|"]
+        for k, v in SA.items():
+            if k != "_summary":
+                lines.append(f"| {k} | {v['claim']} | {v['p']:.2f} | {'yes' if v['hit'] else 'no'} |")
+        lines += ["", f"**Issa {SJ['_summary']['hits']}/{SJ['_summary']['n']}**", "",
+                  "| key | 主張 | 的中 |", "|---|---|---|"]
+        for k, v in SJ.items():
+            if k != "_summary":
+                lines.append(f"| {k} | {v['claim']} | {'yes' if v['hit'] else 'no'} |")
     (OUT / "summary.md").write_text("\n".join(lines) + "\n")
     (OUT / "verdict.json").write_text(json.dumps(
         {"labels": L, "score_claude": S, "score_issa": SI,
-         "window": {a: win[a] for a in LADDER}}, indent=1, default=str))
+         "score_add_claude": SA, "score_add_issa": SJ,
+         "window": {a: win[a] for a in ALL}}, indent=1, default=str))
     print("\n".join(lines))
 
 
