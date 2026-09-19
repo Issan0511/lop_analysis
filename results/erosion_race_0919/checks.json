@@ -1,0 +1,306 @@
+{
+  "pass": true,
+  "pilot_seeds": [
+    9995,
+    9996,
+    9997,
+    9998,
+    9999
+  ],
+  "registered_seeds_used": [],
+  "torch": "2.13.0+cu130",
+  "device": "cuda",
+  "checks": {
+    "helpers": {
+      "pass": true,
+      "adam_component_max_abs": 3.7947076036992655e-19,
+      "projection_max_abs": 6.938893903907228e-18,
+      "reported_displacement_error": 1.3877787807814457e-17,
+      "intervention_window_failures": [],
+      "elapsed_seconds": 0.0030216079903766513
+    },
+    "baseline": {
+      "pass": true,
+      "arms": {
+        "R": {
+          "pass": true,
+          "compared_keys": [
+            "P",
+            "m",
+            "v",
+            "tc",
+            "V",
+            "g_lab",
+            "g_batch"
+          ],
+          "differences": [],
+          "difference_count": 0
+        },
+        "GELU": {
+          "pass": true,
+          "compared_keys": [
+            "P",
+            "m",
+            "v",
+            "tc",
+            "V",
+            "g_lab",
+            "g_batch"
+          ],
+          "differences": [],
+          "difference_count": 0
+        },
+        "ELU": {
+          "pass": true,
+          "compared_keys": [
+            "P",
+            "m",
+            "v",
+            "tc",
+            "V",
+            "g_lab",
+            "g_batch"
+          ],
+          "differences": [],
+          "difference_count": 0
+        },
+        "LR": {
+          "pass": true,
+          "compared_keys": [
+            "P",
+            "m",
+            "v",
+            "tc",
+            "V",
+            "g_lab",
+            "g_batch"
+          ],
+          "differences": [],
+          "difference_count": 0
+        },
+        "LK001": {
+          "pass": true,
+          "compared_keys": [
+            "P",
+            "m",
+            "v",
+            "tc",
+            "V",
+            "g_lab",
+            "g_batch"
+          ],
+          "differences": [],
+          "difference_count": 0
+        },
+        "SNA": {
+          "pass": true,
+          "compared_keys": [
+            "P",
+            "m",
+            "v",
+            "tc",
+            "V",
+            "g_lab",
+            "g_batch"
+          ],
+          "differences": [],
+          "difference_count": 0
+        }
+      },
+      "tasks": 2,
+      "updates_per_task": 75,
+      "seeds": [
+        9995,
+        9996,
+        9997,
+        9998,
+        9999
+      ],
+      "elapsed_seconds": 7.10266800300451
+    },
+    "observer": {
+      "pass": true,
+      "cases": {
+        "SNA/base": {
+          "pass": true,
+          "compared_keys": [
+            "P",
+            "m",
+            "v",
+            "tc",
+            "V",
+            "g_lab",
+            "g_batch",
+            "m_conf",
+            "m_hist"
+          ],
+          "differences": [],
+          "difference_count": 0,
+          "global_rng_bit_equal": true
+        },
+        "GELU/early": {
+          "pass": true,
+          "compared_keys": [
+            "P",
+            "m",
+            "v",
+            "tc",
+            "V",
+            "g_lab",
+            "g_batch",
+            "m_conf",
+            "m_hist"
+          ],
+          "differences": [],
+          "difference_count": 0,
+          "global_rng_bit_equal": true
+        },
+        "GELU/late": {
+          "pass": true,
+          "compared_keys": [
+            "P",
+            "m",
+            "v",
+            "tc",
+            "V",
+            "g_lab",
+            "g_batch",
+            "m_conf",
+            "m_hist"
+          ],
+          "differences": [],
+          "difference_count": 0,
+          "global_rng_bit_equal": true
+        }
+      },
+      "note": "late arm is inactive at 75-step tasks; the helper/window checks cover activation boundaries.",
+      "elapsed_seconds": 4.565562387986574
+    },
+    "graph": {
+      "pass": true,
+      "cases": {
+        "R/base": {
+          "pass": true,
+          "compared_keys": [
+            "P",
+            "m",
+            "v",
+            "tc",
+            "V",
+            "g_lab",
+            "g_batch",
+            "m_conf",
+            "m_hist"
+          ],
+          "differences": [],
+          "difference_count": 0
+        },
+        "SNA/base": {
+          "pass": true,
+          "compared_keys": [
+            "P",
+            "m",
+            "v",
+            "tc",
+            "V",
+            "g_lab",
+            "g_batch",
+            "m_conf",
+            "m_hist"
+          ],
+          "differences": [],
+          "difference_count": 0
+        },
+        "GELU/early": {
+          "pass": true,
+          "compared_keys": [
+            "P",
+            "m",
+            "v",
+            "tc",
+            "V",
+            "g_lab",
+            "g_batch",
+            "m_conf",
+            "m_hist"
+          ],
+          "differences": [],
+          "difference_count": 0
+        },
+        "ELU/early": {
+          "pass": true,
+          "compared_keys": [
+            "P",
+            "m",
+            "v",
+            "tc",
+            "V",
+            "g_lab",
+            "g_batch",
+            "m_conf",
+            "m_hist"
+          ],
+          "differences": [],
+          "difference_count": 0
+        }
+      },
+      "elapsed_seconds": 4.868042291025631
+    },
+    "ce": {
+      "pass": true,
+      "loss_closure_abs": 0.0,
+      "gradient_closure_abs": [
+        4.3021142204224816e-16,
+        1.942890293094024e-16,
+        1.942890293094024e-16,
+        9.020562075079397e-17
+      ],
+      "mutation_wrong_label_sign_error": 1.2748727619365208,
+      "mutation_missing_batch_mean_error": 6.374363809682603,
+      "elapsed_seconds": 0.0009096949943341315
+    },
+    "adam": {
+      "pass": true,
+      "numerator_three_part_max_abs": 3.3306690738754696e-16,
+      "actual_denominator_update_closure_max_abs": 3.2526065174565133e-19,
+      "mutation_omit_history_error": 0.0006072918844457436,
+      "mutation_reset_global_bias_correction_error": 0.003696979080961926,
+      "elapsed_seconds": 0.0016378209693357348
+    },
+    "projection": {
+      "pass": true,
+      "mean_displacement_closure_abs": 9.58434720477186e-18,
+      "parameter_h_orthogonal_component_error": 4.095874873834129e-18,
+      "centered_feature_change_counterexample": 0.005999999999999999,
+      "scope": "Preserves parameter components orthogonal to h, not centered-input features.",
+      "elapsed_seconds": 0.0002122170408256352
+    },
+    "activation": {
+      "pass": true,
+      "matched_positive_branch_gradient_bit_equal": true,
+      "elu_negative_translation_errors": [
+        2.220446049250313e-16,
+        2.7755575615628914e-17,
+        9.71445146547012e-17,
+        3.469446951953614e-18
+      ],
+      "leaky_negative_translation_errors": [
+        5.551115123125783e-17,
+        8.326672684688674e-17
+      ],
+      "leaky_variance_floor_min_slack": {
+        "0.1": 2.8907375709635192,
+        "0.01": 2.6199161422051147
+      },
+      "two_point_centered_variance_derivative_error": 0.0,
+      "elapsed_seconds": 0.14134770300006494
+    },
+    "sna-observer": {
+      "pass": true,
+      "adaptive_variance_state_bit_equal": true,
+      "cpu_rng_bit_equal": true,
+      "elapsed_seconds": 0.0006707309512421489
+    }
+  },
+  "saved_state_recheck": "m_conf/m_hist additionally compared bit-for-bit in saved observer/graph pilots; no trajectories rerun."
+}
