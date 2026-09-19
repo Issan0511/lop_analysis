@@ -73,11 +73,14 @@ production horizons are used by this optimization. Fused arithmetic changes
 rounding order, so the compiled trajectory need not equal the eager trajectory.
 Exact continuation is tested within the chosen engine.
 
-## Paused for migration (2026-09-19)
+## Fresh run on a new machine (2026-09-19)
 
-The original host is stopped after KKA23 seed1 task31 (18 complete runs,
-751 complete tasks). Keep its raw-root STOP file in place. See
+The old host remains stopped after KKA23 seed1 task31 (18 complete runs,
+751 complete tasks). Keep its raw data and STOP file as an archive.
+**Run all 13 activations and seeds 0–9 from scratch on the new machine.**
+Do not transfer old checkpoints or completed runs into the new production
+output. Reuse the code, optimizations, protocol and dataset; validate the new
+environment before starting SNA seed0 task1. See
 [`specs/HANDOFF_joudaki_vit_battle_0919.md`](../../specs/HANDOFF_joudaki_vit_battle_0919.md)
-for data transfer, environment verification, migration records, and resuming on
-a different machine. Approximately 49 GiB of raw data are outside Git and must
-be transferred separately. No automatic restart is scheduled on the old host.
+for setup and fresh-start commands. The old 49 GiB raw data need not be
+transferred for this fresh run and must not be mixed into its final report.
