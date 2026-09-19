@@ -26,6 +26,7 @@ import os
 import subprocess
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
@@ -52,6 +53,7 @@ ARM_ORDER = ("C", "CH", "CHB", "CHB0", "CS", "LN")              # spec §8 / 追
 # Every arm removes b1 when B is closed, so with C the identity zbar_1i = w_i.xbar + b_1i = 0
 # holds exactly for every unit and every task.
 DOORS = {"ref":  dict(c=False, h=False, b="none"),
+         "H":    dict(c=False, h=True,  b="none"),
          "C":    dict(c=True,  h=False, b="none"),
          "CH":   dict(c=True,  h=True,  b="none"),
          "CHB":  dict(c=True,  h=True,  b="wd"),
@@ -440,7 +442,8 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         progress=None, cifar: RC.Cifar10 | None = None,
         debug: dict | None = None, perturb: list[float] | None = None,
         nan_slot: int | None = None, snapshots: bool = True, checkpoint: bool = False,
-        resume: bool = False, graph: bool = True, lifecycle=None) -> dict:
+        resume: bool = False, graph: bool = True,
+        run_id: str | None = None, prereg_commit: str | None = None, lifecycle=None) -> dict:
     """Train R = len(seeds) * len(conds) runs in lockstep and write their rows/hists/snapshots.
 
     Check-only hooks (never used by the main run): `perturb[r]` multiplies slot r's W1 by
@@ -455,12 +458,65 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
     kernels on the same static tensors, so the rows are the eager engine's bit for bit (S-graph),
     without a host round trip per step."""
     t_start = time.time()
+    start_record = None
+    launch_git = git_state()
+    if run_id is not None:
+        if not run_id or Path(run_id).name != run_id or run_id in (".", ".."):
+            raise ValueError("run_id must be one directory name")
+        if not out.resolve().is_relative_to((H.REPO / "results" / run_id).resolve()):
+            raise ValueError("--out must be under results/<run-id>")
+        if not prereg_commit or len(prereg_commit) != 40:
+            raise ValueError("a full --prereg-commit is required for a new run id")
+        subprocess.run(["git", "-C", str(H.REPO), "cat-file", "-e", prereg_commit + "^{commit}"],
+                       check=True, capture_output=True)
+        status = subprocess.run(["git", "-C", str(H.REPO), "status", "--porcelain",
+                                 "--untracked-files=all"], check=True, capture_output=True,
+                                text=True).stdout.splitlines()
+        start_record = {"run_id": run_id, "prereg_commit": prereg_commit, **launch_git,
+                        "started_at": datetime.now(timezone.utc).isoformat(),
+                        "git_status": status, "argv": sys.argv, "arm": arm,
+                        "seeds": seeds, "conds": conds, "tasks": n_tasks, "epochs": epochs,
+                        "lr": lr, "beta": beta, "lam": lam, "doors": DOORS[arm],
+                        "device": str(device), "torch": torch.__version__,
+                        "threads": torch.get_num_threads(), "dtype": "float32",
+                        "cuda_graph_requested": graph,
+                        "cublas_workspace": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
+                        "gpu": torch.cuda.get_device_name(device) if device.type == "cuda" else None}
+        out.mkdir(parents=True, exist_ok=True)
+        start_path = out / "provenance_start.json"
+        if start_path.exists():
+            if not resume or not (out / "ckpt.pt").exists():
+                raise ValueError("existing output requires a checkpoint resume; refusing overwrite")
+            first = json.loads(start_path.read_text())
+            for k in ("run_id", "prereg_commit", "git_hash", "arm", "seeds", "conds",
+                      "epochs", "lr", "beta", "lam", "doors", "device", "torch", "threads"):
+                if first[k] != start_record[k]:
+                    raise ValueError(f"resume provenance mismatch: {k}")
+        else:
+            if (out / "ckpt.pt").exists() or (out / "per_task.csv").exists():
+                raise ValueError("existing output has no launch provenance")
+            start_path.write_text(json.dumps(start_record, indent=2))
+        with (out / "launch_history.jsonl").open("a") as f:
+            f.write(json.dumps(start_record) + "\n")
     progress = progress or (lambda m: print(m, flush=True))   # a redirected stdout is block-buffered
     act = make_act(arm, lam, beta)
     slots = [(s, cd) for s in seeds for cd in conds]
     R = len(slots)
     useeds = list(dict.fromkeys(seeds))       # each seed's streams advance once per draw
     cifar = cifar or RC.Cifar10()
+    if start_record is not None:
+        # Persist data provenance before training, while retaining the original launch state.
+        start_path = out / "provenance_start.json"
+        first = json.loads(start_path.read_text())
+        data_record = {"data_sha256": cifar.sha256,
+                      "subset_sha256": {str(s): hashlib.sha256(
+                          np.sort(RC.subset_idx(s).numpy()).tobytes()).hexdigest() for s in seeds},
+                      "slots": [{"seed": s, "cond": cd} for s, cd in slots], "R": R}
+        for key, value in data_record.items():
+            if key in first and first[key] != value:
+                raise ValueError(f"resume data provenance mismatch: {key}")
+        first.update(data_record)
+        start_path.write_text(json.dumps(first, indent=2))
     X = torch.stack([slot_inputs(cifar, s, cd, device, center=act.door_c)
                      for s, cd in slots])                                        # (R, 1200, 3072)
     init = {s: [q.detach() for q in H.init_params(s, device, DIMS)] for s in useeds}
@@ -490,7 +546,9 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             "lam": lam, "beta": beta, "doors": DOORS[arm],
             "perturb": perturb, "nan_slot": nan_slot}
     ck = out / "ckpt.pt"
-    git_states, resumed, t_first = [git_state()], [], 1
+    if run_id is not None:
+        meta.update({"run_id": run_id, "prereg_commit": prereg_commit})
+    git_states, resumed, t_first = [launch_git], [], 1
     if resume and ck.exists():
         st = torch.load(ck, map_location="cpu", weights_only=False)   # generator states must stay on the cpu
         if st["meta"] != meta:
@@ -666,7 +724,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                  f"{step_ms:.2f} ms/step  {el/60:.0f} min, "
                  f"ETA {el/(t-t_first+1)*(n_tasks-t)/60:.0f} min")
 
-    prov = {"run_id": EXPERIMENT, **git_states[0], "git_states": git_states, "resumed_at_task": resumed,
+    prov = {"run_id": run_id or EXPERIMENT, **git_states[0], "git_states": git_states, "resumed_at_task": resumed,
             "arm": arm, "conds": conds, "seeds": seeds,
             "slots": [{"seed": s, "cond": cd} for s, cd in slots], "R": R, "lr": lr,
             "n_tasks": n_tasks, "epochs_per_task": epochs, "batch": BATCH, "steps_per_task": spt,
@@ -693,6 +751,9 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             "step_ms_last_task": step_ms, "wall_clock_s": time.time() - t_start,
             "divergences": diverged,
             "check_hooks": {"perturb": perturb, "nan_slot": nan_slot, "snapshots": snapshots}}
+    if start_record is not None:
+        prov["prereg_commit"] = prereg_commit
+        prov["launch_provenance"] = json.loads((out / "provenance_start.json").read_text())
     (out / "provenance.json").write_text(json.dumps(prov, indent=2))
     progress(f"wrote {out}/per_task.csv ({len(rows)} rows, {(time.time()-t_start)/60:.1f} min)")
     return prov
@@ -720,15 +781,20 @@ def main() -> None:
     ap.add_argument("--lam", type=float, default=0.0, help="door B: decoupled WD on b2 (spec §2.2)")
     ap.add_argument("--beta", type=float, default=0.01, help="door H: EMA rate")
     ap.add_argument("--out", default=None, help="default results/<experiment>/<arm>")
+    ap.add_argument("--run-id", default=None, help="new result namespace; leaves the learning path unchanged")
+    ap.add_argument("--prereg-commit", default=None)
     ap.add_argument("--device", default="auto")
     ap.add_argument("--threads", type=int, default=2, help="torch cpu threads (eval: eff_rank, histograms)")
     ap.add_argument("--no-resume", action="store_true", help="ignore an existing out/ckpt.pt")
     a = ap.parse_args()
     torch.set_num_threads(a.threads)
     device = H.setup(a.device)
-    out = Path(a.out) if a.out else OUT_ROOT / a.arm
+    if a.arm == "H" and a.run_id is None:
+        ap.error("H requires --run-id; do not write into the registered parent results")
+    out = Path(a.out) if a.out else (H.REPO / "results" / a.run_id / a.arm if a.run_id else OUT_ROOT / a.arm)
     run(a.arm, parse_ints(a.seeds), a.conds.split(","), a.tasks, a.epochs, device, out,
-        lam=a.lam, beta=a.beta, checkpoint=True, resume=not a.no_resume)
+        lam=a.lam, beta=a.beta, checkpoint=True, resume=not a.no_resume,
+        run_id=a.run_id, prereg_commit=a.prereg_commit)
 
 
 if __name__ == "__main__":
