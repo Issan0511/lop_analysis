@@ -78,6 +78,16 @@ def main():
    f"H−CHの順位区間[d₂,d₉]: {v['I_HC']}。固定帯δ={S.DELTA}。",
    f"層別条件: `{json.dumps(v['layer_conditions'])}`。H第1層: {v['R1_H']}。",
    'C_NEEDEDはCH水準の維持にCが要る、C_REDUNDANTは登録帯での非劣性。TIEを同等性とは解釈しない。']
+ lines+=['','## 層別の登録読み出し（seed中央値）','',
+ r'| 腕 | t1 第1層死亡率 | t50 第2層gate=0割合 | t50 z̄₂/sd₂（中央値の比） | t50 unit別mean/sdの中央値 | t50 mean\|b₂\|/median sd₂ | t50 r_a1 |',
+ '|---|---:|---:|---:|---:|---:|---:|']
+ for arm in ('ref','H','C','CH'):
+  tab=pd.DataFrame(layer);a=tab[(tab.arm==arm)&(tab.task==1)];b=tab[(tab.arm==arm)&(tab.task==50)]
+  nums=[a.dead_frac_l1.median(),b.gate_zero_frac_l2.median(),b.ratio_of_medians_l2.median(),b.sink_ratio_l2.median(),b.bias_over_sd_l2.median(),b.r_a1.median()]
+  lines.append('| '+arm+' | '+' | '.join('未定義' if pd.isna(n) else f'{n:.10g}' for n in nums)+' |')
+ lines+=['','r_a1の分母が0となるseedは未定義として保持し、表の中央値は定義されるseedについて表示する。全seedの分子・分母と欠測はsnapshot_diagnostics.csvを参照。',
+ '既存のsink_ratio_l2とbias_over_sd_l2は分母を1e-12で下限処理した列をそのまま表示。SDが0のrefで出る巨大値はこの処理によるもので、無下限の比は未定義。',
+ '層別対応はこの箱での登録した比較を支持する。gate=0を訓練勾配ゼロや永久吸収とは同一視しない。']
  lines+=['','## 予測','']
  for who in ('Issa','Codex'):
   rows=[r for r in predictions if r['person']==who]
@@ -93,6 +103,8 @@ def main():
  f'実測本走秒数: ref={provs["ref"]["wall_clock_s"]:.3f}、H={provs["H"]["wall_clock_s"]:.3f}。',
  '前走のR20→R10不一致を見た後の新規登録。既知C/CHから作った帯・旧ref/Cから作ったθ1を維持し、新refで再推定していない。',
  '予測は前登録から継承。本走中は進捗・生存・資源のみ確認、性能による打切りや判定の変更はしていない。',
+ '別実装のcsv.DictReader+Decimalによる確認でも救済本数・順位区間の向き・層別条件が一致。report_verification.jsonを参照。',
+ 'この事後の数値照合では10桁表示の丸め中点を厳密文字列比較すると1ULP未満の違いで落ちたため、float64平均のγ20と中央値のγ22から導いた誤差上界で検算した。事前のbit一致検査と科学的判定帯は変更していない。',
  '数値と判定の正本は本summaryとverdict.json/verdict.csv。全seedはper_seed.csv、t1/t50の層別量はlayer_table.csv。',
  '新規snapshotからのm、r_a1分子分母、厳密z=0の数はsnapshot_diagnostics.csv。欠損/未定義の比を0に埋めていない。',
  '生データと検査ログの退避先はbackup_manifest.json。単一Codexによる実装・自己検査で独立監査なし。']
