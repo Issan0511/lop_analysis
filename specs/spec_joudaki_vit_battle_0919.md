@@ -120,3 +120,9 @@ seed101・実画像500更新・本番の評価/保存込みの初回タスクは
 これは学習部分の短い合成入力測定であり、実画像読込・評価・保存を含むend-to-end並列測定ではない。通常の複数プロセス化に学習速度の利点が見られないため、本走は既定の1GPU逐次のまま再開する。
 本走の精度・順位はこの判断に使用していない。実験ディレクトリ内の凍結Pythonソースは変更していない。
 スクリプト: analysis/benchmark_joudaki_vit_parallel_0919.py。結果: results/joudaki_vit_battle_0919/parallel_benchmark.json。生ログ: raw/preflight/parallel_benchmark.log。
+
+## 追補8 — ユーザー依頼による停止と別マシン引き継ぎ
+
+2026-09-19、他作業への負荷を避けるためユーザーが一時停止し別マシンでの継続を希望。元マシンはSTOPによりKKA23 seed1のtask31終了で正常停止。18 run・751 task完了。checkpointのtaskと凍結source hashをCPU上で照合済み。
+コード・小さなrun記録・停止状態・環境・転送manifestをGitに保存し、raw約48.83GiBとTiny ImageNetは別途転送する。転送先は未指定・転送未実施。詳細手順は `specs/HANDOFF_joudaki_vit_battle_0919.md`。
+再開・自動再開はしていない。移行先は環境を記録し、新GPU内で検査してからKKA23 seed1 task32より再開する。GPUをまたぐbit一致は未検証で、ハードウェア切替位置を最終報告に明記する。学習条件・ソース・判定条件の変更なし。

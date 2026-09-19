@@ -72,3 +72,12 @@ No half precision, TF32, batch-size changes, reduced seed counts, or shorter
 production horizons are used by this optimization. Fused arithmetic changes
 rounding order, so the compiled trajectory need not equal the eager trajectory.
 Exact continuation is tested within the chosen engine.
+
+## Paused for migration (2026-09-19)
+
+The original host is stopped after KKA23 seed1 task31 (18 complete runs,
+751 complete tasks). Keep its raw-root STOP file in place. See
+[`specs/HANDOFF_joudaki_vit_battle_0919.md`](../../specs/HANDOFF_joudaki_vit_battle_0919.md)
+for data transfer, environment verification, migration records, and resuming on
+a different machine. Approximately 49 GiB of raw data are outside Git and must
+be transferred separately. No automatic restart is scheduled on the old host.

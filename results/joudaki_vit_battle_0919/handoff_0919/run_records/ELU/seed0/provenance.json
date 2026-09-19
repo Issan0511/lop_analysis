@@ -1,0 +1,340 @@
+{
+  "config": {
+    "arm": "ELU",
+    "seed": 0,
+    "tasks": 40,
+    "steps": 500,
+    "batch": 128,
+    "lr": 0.0001,
+    "dtype": "float32",
+    "engine": "compile",
+    "smoke": false,
+    "model": {
+      "img_size": 64,
+      "patch_size": 8,
+      "in_channels": 3,
+      "num_classes": 200,
+      "embed_dim": 384,
+      "depth": 6,
+      "n_heads": 6,
+      "mlp_ratio": 4.0,
+      "qkv_bias": true,
+      "dropout_p": 0.1,
+      "attn_drop_rate": 0.1,
+      "activation": "gelu",
+      "normalization": "layer",
+      "normalization_affine": true
+    }
+  },
+  "git_hash": "89fedb10b10ccaa7a83e284cabc1938f53865b2a",
+  "dirty": "",
+  "source_hashes": {
+    "analysis/joudaki_vit_battle_0919/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/joudaki_vit_battle_0919/benchmark.py": "2352cec0fb03a5c81b72136c42884c9426f721926acdf96c18aa38b8516d8a74",
+    "analysis/joudaki_vit_battle_0919/check_report.py": "5047f9fee0856c3e37f82f0074966b3abc7364d3db8f7f08e0e5d877d58d6d16",
+    "analysis/joudaki_vit_battle_0919/check_speed.py": "2a2af8dc61bfd57ff918b59481033537b52dadfc33696e2f56be801e0b9ed719",
+    "analysis/joudaki_vit_battle_0919/checks.py": "eb0c01e51c11dc204280f8aeb7466625681ca957825810de6cab78902fd1ecef",
+    "analysis/joudaki_vit_battle_0919/data.py": "fafcc4e8493219f2aaecd9f4643d349b0650655ae9e246f4c3f8878192fd4b1b",
+    "analysis/joudaki_vit_battle_0919/launch.py": "7af4b3944505b0a641f285cbe2619f3b3c73bfa13de7b059ba95845118b47a6d",
+    "analysis/joudaki_vit_battle_0919/model.py": "da59693f97169da83d693398ddfa9a925b7f8da4b633232abcd946f3b30acdce",
+    "analysis/joudaki_vit_battle_0919/report.py": "fb631612720d0cd84e146bded894705b0c0907c5f132d85bf78e345f8b2569bf",
+    "analysis/joudaki_vit_battle_0919/run.py": "12f4fe45fe0619ba245e00de1e33423e786cac44c9a56d519aaf09e30ea539ee",
+    "analysis/joudaki_vit_battle_0919/upstream/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/joudaki_vit_battle_0919/upstream/layers.py": "c136bbf6a3a20d5ff33fb09444ca6f97aaf347d01fd603829857a0bfb0a2177c",
+    "analysis/joudaki_vit_battle_0919/upstream/reference/src/utils/masked_loss.py": "d752f0ddb2aefe193b09ae944d0609c601ff2f86cba8037e90f8f23134fb07e2",
+    "analysis/joudaki_vit_battle_0919/upstream/vit.py": "ae0df6fe09287dc8605874a65f858b48ffecdaf70ef2e9c1171a70ca9a316267",
+    "src/rlcifar_mlp_battle_0918.py": "27507ffb32acd33f1d0d3807825900aeddba811546211090d1c11bc8dcfcdf63",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14"
+  },
+  "upstream_commit": "161217078ba52107c94a16602af958a321d62ce3",
+  "torch": "2.13.0+cu130",
+  "cuda": "13.0",
+  "gpu": "NVIDIA GeForce RTX 5060 Ti",
+  "python": "3.12.3",
+  "classes": [
+    [
+      131,
+      181,
+      22,
+      172,
+      144
+    ],
+    [
+      92,
+      97,
+      187,
+      58,
+      93
+    ],
+    [
+      6,
+      70,
+      106,
+      68,
+      153
+    ],
+    [
+      168,
+      179,
+      199,
+      29,
+      46
+    ],
+    [
+      9,
+      142,
+      134,
+      88,
+      193
+    ],
+    [
+      110,
+      26,
+      32,
+      117,
+      112
+    ],
+    [
+      17,
+      39,
+      166,
+      13,
+      94
+    ],
+    [
+      138,
+      109,
+      147,
+      51,
+      101
+    ],
+    [
+      59,
+      188,
+      116,
+      5,
+      170
+    ],
+    [
+      99,
+      100,
+      167,
+      180,
+      146
+    ],
+    [
+      65,
+      1,
+      104,
+      43,
+      38
+    ],
+    [
+      184,
+      123,
+      171,
+      137,
+      162
+    ],
+    [
+      71,
+      44,
+      95,
+      174,
+      12
+    ],
+    [
+      7,
+      54,
+      152,
+      21,
+      47
+    ],
+    [
+      28,
+      176,
+      34,
+      2,
+      132
+    ],
+    [
+      118,
+      42,
+      189,
+      150,
+      14
+    ],
+    [
+      165,
+      41,
+      192,
+      45,
+      82
+    ],
+    [
+      128,
+      63,
+      57,
+      197,
+      160
+    ],
+    [
+      53,
+      75,
+      108,
+      135,
+      121
+    ],
+    [
+      159,
+      183,
+      67,
+      169,
+      50
+    ],
+    [
+      87,
+      69,
+      89,
+      196,
+      115
+    ],
+    [
+      19,
+      148,
+      96,
+      86,
+      11
+    ],
+    [
+      8,
+      60,
+      33,
+      173,
+      78
+    ],
+    [
+      4,
+      119,
+      105,
+      182,
+      127
+    ],
+    [
+      177,
+      30,
+      186,
+      40,
+      49
+    ],
+    [
+      178,
+      76,
+      157,
+      161,
+      73
+    ],
+    [
+      164,
+      151,
+      31,
+      74,
+      191
+    ],
+    [
+      27,
+      125,
+      198,
+      81,
+      20
+    ],
+    [
+      155,
+      114,
+      139,
+      36,
+      61
+    ],
+    [
+      56,
+      145,
+      48,
+      16,
+      83
+    ],
+    [
+      62,
+      85,
+      126,
+      0,
+      102
+    ],
+    [
+      23,
+      3,
+      140,
+      15,
+      195
+    ],
+    [
+      133,
+      113,
+      190,
+      141,
+      52
+    ],
+    [
+      163,
+      156,
+      80,
+      111,
+      90
+    ],
+    [
+      175,
+      143,
+      120,
+      84,
+      18
+    ],
+    [
+      25,
+      79,
+      37,
+      154,
+      136
+    ],
+    [
+      64,
+      158,
+      24,
+      185,
+      72
+    ],
+    [
+      35,
+      129,
+      55,
+      149,
+      91
+    ],
+    [
+      122,
+      77,
+      103,
+      124,
+      130
+    ],
+    [
+      66,
+      10,
+      107,
+      194,
+      98
+    ]
+  ],
+  "dataset": "/home/issan/Projects/obsidian-research-data/datasets/tiny-imagenet-200",
+  "dataset_zip_sha256": "6198c8ae015e2b3e007c7841da39ec069199b9aa3bfa943a462022fe5e43c821",
+  "started": 1789768236.5191617
+}
