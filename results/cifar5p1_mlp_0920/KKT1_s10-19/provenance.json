@@ -1,0 +1,142 @@
+{
+  "run_id": "cifar5p1_mlp_0920",
+  "git_hash": "de0d5fcd7a5d1c1b141ffca5d27d67e530cd3c74",
+  "dirty_src_analysis": [],
+  "arm": "KKT1",
+  "cond": "std",
+  "seeds": [
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "slots": [
+    {
+      "seed": 10
+    },
+    {
+      "seed": 11
+    },
+    {
+      "seed": 12
+    },
+    {
+      "seed": 13
+    },
+    {
+      "seed": 14
+    },
+    {
+      "seed": 15
+    },
+    {
+      "seed": 16
+    },
+    {
+      "seed": 17
+    },
+    {
+      "seed": 18
+    },
+    {
+      "seed": 19
+    }
+  ],
+  "R": 10,
+  "lr": 0.0001,
+  "n_tasks": 30,
+  "steps_per_task": 780,
+  "batch": 32,
+  "hidden": 100,
+  "layer_shapes": [
+    [
+      100,
+      3072
+    ],
+    [
+      100,
+      100
+    ],
+    [
+      100,
+      100
+    ]
+  ],
+  "n_params": 327500,
+  "phi_doubles_width": false,
+  "dims": [
+    3072,
+    100,
+    100,
+    100
+  ],
+  "n_classes": 100,
+  "hard_classes": 5,
+  "per_class_train": 500,
+  "classes_used": 90,
+  "task_parity": "task 1 hard, alternating (the paper's task 0 hard)",
+  "sna_c": 0.6,
+  "sna_beta": 0.01,
+  "alpha_lo": 0.005,
+  "alpha_hi": 3.0,
+  "optimizer": "adam",
+  "weight_decay": 0.0,
+  "intervention": "none",
+  "iv_kind": "none",
+  "iv_lambda": 0.0,
+  "data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "std": {
+    "mean": [
+      0.5071,
+      0.4865,
+      0.4409
+    ],
+    "std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "class_sha256": {
+    "10": "2e424f744b4a8f922524276588838c878c9cc40e23e3663a24d03f56ccad925e",
+    "11": "be6098a4454b4c06fb80a01230cead17a8dbef7ecfbf2b016e936ee3c1dff14e",
+    "12": "b314b7cbca568f96f44ce94bf22d87a79a819b8fbceac02152f00f99afd7040f",
+    "13": "4855b1ac0a2e7f309e8fdcc95a49064bf710054cfff93dbf6ce2d181912e0993",
+    "14": "41d8d8cc6769b9ab465387fbe0a9405dc971f85fd8a0cda388d9afa051406500",
+    "15": "27bc14aa5fa064c1154920bf13ef6bf505e0152a00bbb8cee82c6bbd8786216d",
+    "16": "b68bc83d2004708b227f93f9279bf90b8a5250fa303c51c03f6d33dc2fa44185",
+    "17": "e9563a3103cf6539febddf17b828aaa99070ac5c1712e06a2bd837c3960cd379",
+    "18": "592f9526871e775104876cd0fc6b693f36ab28b1c69d3540faeffddec2fa2245",
+    "19": "d203345ed94358b6af5acdf07920f0e3e0a2062e74fa4cde26baec0b50cdc926"
+  },
+  "rng_roles": [
+    "c51_classes",
+    "c51_batch",
+    "init"
+  ],
+  "rsl_noise_seed": null,
+  "fresh_control": {
+    "task": 29,
+    "n": 10
+  },
+  "engine": "stacked baddbmm from rlcifar_mlp_battle_0918, autograd, elementwise Adam, one step captured as a CUDA graph",
+  "device": "cuda",
+  "torch": "2.13.0+cu126",
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 0.741721727909186,
+  "wall_clock_s": 21.31973123550415,
+  "divergences": [],
+  "check_hooks": {
+    "nan_slot": null
+  },
+  "spec": "specs/spec_cifar5p1_mlp_0920.md"
+}
