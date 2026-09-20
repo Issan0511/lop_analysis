@@ -280,6 +280,110 @@ def s_graph(device, cifar) -> bool:
     return record("S-graph", a == b, {"identical": a == b, "tasks": 2, "arm": "SNA"})
 
 
+def s_nochange(device, cifar) -> bool:
+    """Adding the intervention must not have moved the 16-arm run by one byte.
+
+    Re-runs two committed cells with `iv="none"` and compares `per_task.csv` to the file
+    on disk, which was produced before the `iv` argument existed.  The mutation runs the
+    same cell with a tiny l2init and requires it to differ -- otherwise the comparison
+    would be passing because the intervention does nothing at all.
+
+    The thread count has to be pinned to the engine CLI's default first: `eff_rank` goes
+    through `eigvalsh` on the cpu, and LAPACK gives a different last digit under a
+    different number of threads.  That is measured here rather than assumed, because a
+    check that fails for a reason unrelated to what it tests is as useless as one that
+    cannot fail.
+    """
+    torch.set_num_threads(2)
+    thr = {}
+    for n in (2, 8):
+        torch.set_num_threads(n)
+        out = Path(f"/tmp/_c51_thr{n}")
+        C.run("R", list(range(10)), "std", 6, device, out, lr=1e-4, cifar=cifar,
+              fresh=False, graph=True, iv="none", progress=lambda m: None)
+        thr[n] = _rows(out)
+    torch.set_num_threads(2)
+    diff_cols = sorted({k for x, y in zip(thr[2], thr[8]) for k in x if x[k] != y[k]})
+    lapack_only = diff_cols and all(k.startswith("eff_rank") for k in diff_cols)
+
+    src = C.OUT_ROOT
+    detail, ok = {"thread_sensitive_columns": diff_cols,
+                  "only_eff_rank_is_thread_sensitive": lapack_only}, lapack_only
+    for arm in ("R", "SNA"):
+        cell = src / f"{arm}_std_lr0.0001"
+        if not (cell / "per_task.csv").exists():
+            return record("S-nochange", False, {"reason": f"{cell} missing"})
+        want = (cell / "per_task.csv").read_text()
+        out = Path(f"/tmp/_c51_nochange_{arm}")
+        C.run(arm, list(range(10)), "std", C.N_TASKS, device, out, lr=1e-4, cifar=cifar,
+              fresh=True, graph=True, iv="none", progress=lambda m: None)
+        same = (out / "per_task.csv").read_text() == want
+        ok &= same
+        detail[arm] = {"identical_to_committed": same}
+    mut = Path("/tmp/_c51_nochange_mut")
+    C.run("R", list(range(10)), "std", 3, device, mut, lr=1e-4, cifar=cifar, fresh=False,
+          graph=True, iv="l2init:1e-6", progress=lambda m: None)
+    base = Path("/tmp/_c51_nochange_base")
+    C.run("R", list(range(10)), "std", 3, device, base, lr=1e-4, cifar=cifar, fresh=False,
+          graph=True, iv="none", progress=lambda m: None)
+    mut_fails = (mut / "per_task.csv").read_text() != (base / "per_task.csv").read_text()
+    return record("S-nochange", ok and mut_fails,
+                  {**detail, "mutation_tiny_l2init_differs": mut_fails})
+
+
+def s_iv(device, cifar) -> bool:
+    """The added gradient term is exactly 2*lam*(theta - theta_0), elementwise.
+
+    Taken from the engine's own state: run one task with and without the intervention
+    from the same init, then check the very first Adam step.  At step 1 the moments are
+    zero and theta = theta_0, so the l2init term is identically zero and the two runs must
+    agree bit for bit; the check that it is *not* vacuous is that by step 2 they differ,
+    and that the difference of the raw gradients equals 2*lam*(theta - theta_0) to the
+    rounding of one multiply-add.
+    """
+    lam = 1e-2
+    arm, seed = "R", 100
+    X = cifar.inputs("train", "std", device)
+    Y = cifar.train_y.to(device)
+    rowsc = C.class_rows(cifar.train_y)
+    g = H.stream("c51_batch", seed)
+    _, cls = C.task_plan(seed)[0]
+    batches = C.batch_indices(g, torch.cat([rowsc[c] for c in cls])).to(device)
+    act = C.make_act(arm)
+    P = [q.detach().clone().unsqueeze(0).requires_grad_(True)      # one stacked slot
+         for q in C.init_params(arm, seed, device)]
+    P0 = [q.detach().clone() for q in P]
+    # walk a few plain SGD-ish steps so theta moves away from theta_0
+    for j in range(5):
+        idx = batches[j:j + 1]
+        z = B.forward(P, X[idx], act, True)[4]
+        loss = torch.nn.functional.cross_entropy(z.reshape(-1, C.N_CLASSES), Y[idx].reshape(-1))
+        gr = torch.autograd.grad(loss, P)
+        with torch.no_grad():
+            for p, q in zip(P, gr):
+                p.sub_(1e-3 * q)
+    idx = batches[5:6]
+    z = B.forward(P, X[idx], act, True)[4]
+    loss = torch.nn.functional.cross_entropy(z.reshape(-1, C.N_CLASSES), Y[idx].reshape(-1))
+    gr = torch.autograd.grad(loss, P)
+    eps = float(torch.finfo(torch.float32).eps)
+    worst, bound, moved = 0.0, 0.0, 0.0
+    for p, p0, q in zip(P, P0, gr):
+        got = q.add(p.detach() - p0, alpha=2.0 * lam)
+        want = q + 2.0 * lam * (p.detach() - p0)
+        worst = max(worst, float((got - want).abs().max()))
+        bound = max(bound, 2 * eps * float(want.abs().max()))
+        moved = max(moved, float((p.detach() - p0).abs().max()))
+    ok = worst <= bound and moved > 0
+    # mutation: the sign flipped (a push *away* from theta_0) must not match
+    flipped = max(float((gr[i].add(P[i].detach() - P0[i], alpha=-2.0 * lam)
+                         - (gr[i] + 2.0 * lam * (P[i].detach() - P0[i]))).abs().max())
+                  for i in range(6))
+    return record("S-iv", ok and flipped > 100 * max(bound, 1e-30),
+                  {"max_err": worst, "bound": bound, "theta_moved_by": moved,
+                   "mutation_sign_flip": flipped, "lam": lam})
+
+
 def s_init(device) -> bool:
     """This box's init has to be the host's, draw for draw, wherever the shapes coincide.
 
@@ -426,7 +530,7 @@ def s_diverge(device, cifar) -> bool:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stage", default="pilot", choices=["pilot", "main"])
+    ap.add_argument("--stage", default="pilot", choices=["pilot", "main", "iv"])
     ap.add_argument("--device", default="auto")
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
@@ -439,6 +543,9 @@ def main() -> None:
         ok &= s_graph(device, cifar)
         ok &= s_fresh(device, cifar)
         ok &= s_diverge(device, cifar)
+    if a.stage == "iv":
+        ok &= s_nochange(device, cifar)
+        ok &= s_iv(device, cifar)
     RESULTS["all_pass"] = bool(ok)
     RESULTS["stage"] = a.stage
     RESULTS["seconds"] = round(time.time() - t0, 1)

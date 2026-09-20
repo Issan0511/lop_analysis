@@ -1,0 +1,213 @@
+{
+  "S-data": {
+    "pass": true,
+    "sha256": {
+      "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+    },
+    "per_class_train": 500,
+    "per_class_test": 100,
+    "measured_mean": [
+      0.5071,
+      0.4866,
+      0.4409
+    ],
+    "measured_std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "declared_mean": [
+      0.5071,
+      0.4865,
+      0.4409
+    ],
+    "declared_std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "mutation_drop_one_image_fails": true
+  },
+  "S-plan": {
+    "pass": true,
+    "seed0_first_task": [
+      true,
+      [
+        0,
+        90,
+        75,
+        17,
+        2
+      ]
+    ],
+    "seed1_first_task": [
+      true,
+      [
+        31,
+        8,
+        96,
+        10,
+        95
+      ]
+    ],
+    "seed100_first_task": [
+      true,
+      [
+        39,
+        0,
+        85,
+        94,
+        41
+      ]
+    ],
+    "classes_used": 90,
+    "mutation_6_per_task_fails": true
+  },
+  "S-batch": {
+    "pass": true,
+    "seed0_t1": {
+      "hard": true,
+      "n": 2500,
+      "epochs": 9.98
+    },
+    "seed0_t2": {
+      "hard": false,
+      "n": 500,
+      "epochs": 49.92
+    },
+    "seed0_t3": {
+      "hard": true,
+      "n": 2500,
+      "epochs": 9.98
+    },
+    "seed100_t1": {
+      "hard": true,
+      "n": 2500,
+      "epochs": 9.98
+    },
+    "seed100_t2": {
+      "hard": false,
+      "n": 500,
+      "epochs": 49.92
+    },
+    "seed100_t3": {
+      "hard": true,
+      "n": 2500,
+      "epochs": 9.98
+    },
+    "seeds_differ": true,
+    "mutation_with_replacement_fails": true
+  },
+  "S-head": {
+    "pass": true,
+    "units_are_fresh_each_task": true,
+    "classes_used": 90
+  },
+  "S-init": {
+    "pass": true,
+    "CR": {
+      "shapes": [
+        [
+          100,
+          3072
+        ],
+        [
+          100
+        ],
+        [
+          100,
+          200
+        ],
+        [
+          100
+        ],
+        [
+          100,
+          200
+        ],
+        [
+          100
+        ]
+      ],
+      "n_params": 347500
+    },
+    "DF": {
+      "shapes": [
+        [
+          100,
+          3072
+        ],
+        [
+          100
+        ],
+        [
+          100,
+          200
+        ],
+        [
+          100
+        ],
+        [
+          100,
+          200
+        ],
+        [
+          100
+        ]
+      ],
+      "n_params": 347500
+    },
+    "pointwise_n_params": 327500,
+    "equal_param_hidden_for_wide": 94
+  },
+  "S-act-new": {
+    "pass": true,
+    "LK07": {
+      "vjp_max_err": 0.0,
+      "bound": 1.7429979379812721e-06,
+      "dphi_vs_jacobian_norm": 0.0,
+      "out_width": 1,
+      "in_width": 1
+    },
+    "CR": {
+      "vjp_max_err": 0.0,
+      "bound": 1.801135567802703e-06,
+      "dphi_vs_jacobian_norm": 0.0,
+      "out_width": 2,
+      "in_width": 1
+    },
+    "DF": {
+      "vjp_max_err": 0.0,
+      "bound": 1.734354555082973e-06,
+      "dphi_vs_jacobian_norm": 5.960464477539063e-08,
+      "out_width": 2,
+      "in_width": 1
+    },
+    "mutation_swapped_halves_fails": true
+  },
+  "S-nochange": {
+    "pass": true,
+    "thread_sensitive_columns": [
+      "eff_rank_l2"
+    ],
+    "only_eff_rank_is_thread_sensitive": true,
+    "R": {
+      "identical_to_committed": true
+    },
+    "SNA": {
+      "identical_to_committed": true
+    },
+    "mutation_tiny_l2init_differs": true
+  },
+  "S-iv": {
+    "pass": true,
+    "max_err": 1.862645149230957e-09,
+    "bound": 5.748717768483402e-08,
+    "theta_moved_by": 0.0012626051902770996,
+    "mutation_sign_flip": 5.0514936447143555e-05,
+    "lam": 0.01
+  },
+  "all_pass": true,
+  "stage": "iv",
+  "seconds": 47.0
+}

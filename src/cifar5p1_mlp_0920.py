@@ -182,6 +182,16 @@ def n_params(arm: str, hidden: int = HIDDEN) -> int:
     return sum(o * i + o for o, i in layer_shapes(arm, hidden))
 
 
+def parse_iv(iv: str) -> tuple[str, float]:
+    """"none" | "l2init:<lam>" | "l2:<lam>" -> (kind, lam), the host's spelling."""
+    if iv in ("none", "", None):
+        return "none", 0.0
+    kind, _, lam = iv.partition(":")
+    if kind not in ("l2", "l2init") or not lam:
+        raise SystemExit(f"bad --iv {iv!r}; want none | l2:<lam> | l2init:<lam>")
+    return kind, float(lam)
+
+
 # --------------------------------------------------------------------------
 # data
 # --------------------------------------------------------------------------
@@ -326,7 +336,7 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
         lr: float = LR, c: float = 0.6, beta: float = 0.01, lo: float = 0.005,
         hi: float = 3.0, cifar: Cifar100 | None = None, fresh: bool = True,
         graph: bool = True, progress=None, debug: dict | None = None,
-        nan_slot: int | None = None, hidden: int = HIDDEN) -> dict:
+        nan_slot: int | None = None, hidden: int = HIDDEN, iv: str = "none") -> dict:
     """Train one arm's R = len(seeds) runs in lockstep over the 30-task sequence.
 
     Every slot sees the same task shape at the same time (hard tasks are odd for every
@@ -336,12 +346,20 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
     the last hard task's very batches, to separate "the net adapts worse than a new one"
     from "the task got harder" (the control the ViT box needed; spec §3.2).
 
+    `iv`: "none" | "l2init:<lam>" | "l2:<lam>" (spec addendum 2).  L2 Init adds
+    lam*||theta - theta_0||^2 to the loss, i.e. 2*lam*(theta - theta_0) to the gradient,
+    at every step -- Kumar et al.'s regenerative regularization, whose best reported
+    configuration on this very problem is lam = 1e-2.  "l2" pulls toward the origin
+    instead.  `iv="none"` leaves the arithmetic untouched, which S-nochange checks against
+    the 16-arm run's committed rows byte for byte.
+
     `nan_slot` is a check-only hook (S-diverge, never used by a real run): it poisons that
     slot's W1 at init, so the slot diverges on its first step while the others must carry
     on bit for bit.
     """
     t_start = time.time()
     progress = progress or (lambda m: print(m, flush=True))
+    iv_kind, iv_lam = parse_iv(iv)
     act = make_act(arm, hidden, c, beta, lo, hi)
     R = len(seeds)
     cifar = cifar or Cifar100()
@@ -391,7 +409,11 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
             bad = ~torch.isfinite(lossv)
             bad_step.copy_(torch.where((bad_step < 0) & bad, step_t, bad_step))
             step_t.add_(1)
-            for p, gr, mi, vi in zip(P, grads, adam_m, adam_v):
+            for p, p0, gr, mi, vi in zip(P, P0, grads, adam_m, adam_v):
+                if iv_kind == "l2init":
+                    gr = gr.add(p.detach() - p0, alpha=2.0 * iv_lam)
+                elif iv_kind == "l2":
+                    gr = gr.add(p.detach(), alpha=2.0 * iv_lam)
                 mi.mul_(b1).add_(gr, alpha=1 - b1)
                 vi.mul_(b2).addcmul_(gr, gr, value=1 - b2)
                 p.sub_(lr * (mi * inv_c1) / ((vi * inv_c2).sqrt() + eps))
@@ -491,7 +513,8 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
         H.write_csv(out / "per_task.csv", rows)
         on = acc_sum[alive] / STEPS_PER_TASK
         el = time.time() - t_start
-        progress(f"[{time.strftime('%T')}] {arm}/{cond} task {t:2d}/{n_tasks} "
+        progress(f"[{time.strftime('%T')}] {arm}/{cond}{'' if iv_kind == 'none' else '+' + iv} "
+                 f"task {t:2d}/{n_tasks} "
                  f"{'hard' if hard else 'easy'} alive {int(alive.sum())}/{R} "
                  f"online {float(on.mean()) if len(on) else float('nan'):.3f} "
                  f"test {float(test_acc[alive].mean()) if int(alive.sum()) else float('nan'):.3f} "
@@ -536,7 +559,8 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
             "per_class_train": PER_CLASS_TRAIN, "classes_used": CLASSES_USED,
             "task_parity": "task 1 hard, alternating (the paper's task 0 hard)",
             "sna_c": c, "sna_beta": beta, "alpha_lo": lo, "alpha_hi": hi,
-            "optimizer": "adam", "weight_decay": 0.0, "data_sha256": cifar.sha256,
+            "optimizer": "adam", "weight_decay": 0.0, "intervention": iv,
+            "iv_kind": iv_kind, "iv_lambda": iv_lam, "data_sha256": cifar.sha256,
             "std": {"mean": STD_MEAN, "std": STD_STD, "planes": "R,G,B x 1024"} if cond == "std" else None,
             "class_sha256": {str(s): hashlib.sha256(
                 np.asarray(seed_classes(s), dtype=np.int64).tobytes()).hexdigest() for s in seeds},
@@ -570,6 +594,7 @@ def main() -> None:
     ap.add_argument("--beta", type=float, default=0.01)
     ap.add_argument("--alpha-lo", type=float, default=0.005)
     ap.add_argument("--alpha-hi", type=float, default=3.0)
+    ap.add_argument("--iv", default="none", help="none | l2:<lam> | l2init:<lam> (spec addendum 2)")
     ap.add_argument("--no-fresh", action="store_true", help="skip the fresh-network control")
     ap.add_argument("--no-graph", action="store_true", help="eager steps (checks)")
     ap.add_argument("--out", default=None, help="default results/<experiment>/<arm>_<cond>_lr<lr>")
@@ -578,11 +603,12 @@ def main() -> None:
     a = ap.parse_args()
     torch.set_num_threads(a.threads)
     device = H.setup(a.device)
-    tag = f"{a.arm}_{a.cond}_lr{a.lr:g}" + (f"_h{a.hidden}" if a.hidden != HIDDEN else "")
+    tag = (f"{a.arm}_{a.cond}_lr{a.lr:g}" + (f"_h{a.hidden}" if a.hidden != HIDDEN else "")
+           + ("" if a.iv == "none" else "_" + a.iv.replace(":", "")))
     out = Path(a.out) if a.out else OUT_ROOT / tag
     run(a.arm, B.parse_ints(a.seeds), a.cond, a.tasks, device, out, lr=a.lr, c=a.c,
         beta=a.beta, lo=a.alpha_lo, hi=a.alpha_hi, fresh=not a.no_fresh,
-        graph=not a.no_graph, hidden=a.hidden)
+        graph=not a.no_graph, hidden=a.hidden, iv=a.iv)
 
 
 if __name__ == "__main__":
