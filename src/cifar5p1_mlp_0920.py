@@ -350,7 +350,8 @@ def task_plan(seed: int) -> list[tuple[bool, list[int]]]:
     return plan
 
 
-def batch_indices(g: torch.Generator, rows: torch.Tensor) -> torch.Tensor:
+def batch_indices(g: torch.Generator, rows: torch.Tensor,
+                  steps: int = STEPS_PER_TASK) -> torch.Tensor:
     """(780, 32) row indices for one task: epochs of a fresh permutation, cut into batches.
 
     780 x 32 = 24,960 draws is 9.98 epochs of a hard task and 49.9 of an easy one, which
@@ -358,12 +359,12 @@ def batch_indices(g: torch.Generator, rows: torch.Tensor) -> torch.Tensor:
     from the concatenation of whole permutations, so within the part that is used every
     epoch covers the task's data exactly once.
     """
-    need = STEPS_PER_TASK * BATCH
+    need = steps * BATCH
     parts, have = [], 0
     while have < need:
         parts.append(rows[torch.randperm(len(rows), generator=g)])
         have += len(rows)
-    return torch.cat(parts)[:need].view(STEPS_PER_TASK, BATCH)
+    return torch.cat(parts)[:need].view(steps, BATCH)
 
 
 # --------------------------------------------------------------------------
@@ -416,7 +417,8 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
         hi: float = 3.0, cifar: Cifar100 | None = None, fresh: bool = True,
         graph: bool = True, progress=None, debug: dict | None = None,
         nan_slot: int | None = None, hidden: int = HIDDEN, iv: str = "none",
-        lam: float = 0.0) -> dict:
+        lam: float = 0.0, steps_hard: int = STEPS_PER_TASK,
+        steps_easy: int = STEPS_PER_TASK) -> dict:
     """Train one arm's R = len(seeds) runs in lockstep over the 30-task sequence.
 
     Every slot sees the same task shape at the same time (hard tasks are odd for every
@@ -543,12 +545,12 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
         del keep
 
     def train_task(batches, tc0: int) -> int:
-        """780 steps on (R, 780, 32) global row indices.  Returns the new Adam counter."""
+        """`batches.shape[1]` steps on (R, steps, 32) global row indices.  New Adam counter."""
         tc = tc0
         acc_sum.zero_()
         bad_step.fill_(-1)
         step_t.zero_()
-        for j in range(STEPS_PER_TASK):
+        for j in range(batches.shape[1]):
             static_idx.copy_(batches[:, j])
             tc += 1
             inv_c1.fill_(1.0 / (1 - b1 ** tc))
@@ -573,8 +575,9 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
 
     for t in range(1, n_tasks + 1):
         hard = t % 2 == 1
+        steps = steps_hard if hard else steps_easy
         rows_t = [torch.cat([tr_rows[q] for q in plans[r][t - 1][1]]) for r in range(R)]
-        batches = torch.stack([batch_indices(g_batch[s], rows_t[r])
+        batches = torch.stack([batch_indices(g_batch[s], rows_t[r], steps)
                                for r, s in enumerate(seeds)]).to(device)
         if t == last_hard and fresh:
             saved[t] = batches.clone()
@@ -582,7 +585,7 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
             debug.setdefault("batches", []).append(batches.cpu().clone())
         t0 = time.time()
         tc = train_task(batches, tc)
-        step_ms = 1e3 * (time.time() - t0) / STEPS_PER_TASK
+        step_ms = 1e3 * (time.time() - t0) / steps
 
         with torch.no_grad():
             finite = torch.stack([torch.isfinite(q).flatten(1).all(1) for q in P]).all(0)
@@ -605,11 +608,11 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
         for r in live:
             rows.append({"arm": arm, "cond": cond, "seed": seeds[r], "slot": r, "lr": lr,
                          "task": t, "hard": int(hard), "n_classes": len(plans[r][t - 1][1]),
-                         "online_acc": float(acc_sum[r]) / STEPS_PER_TASK,
+                         "online_acc": float(acc_sum[r]) / steps,
                          "train_acc": m[r]["acc"], "test_acc": float(test_acc[r]), **m[r]})
         rows.sort(key=lambda q: (q["slot"], q["task"]))
         H.write_csv(out / "per_task.csv", rows)
-        on = acc_sum[alive] / STEPS_PER_TASK
+        on = acc_sum[alive] / steps
         el = time.time() - t_start
         progress(f"[{time.strftime('%T')}] {arm}/{cond}{'' if iv_kind == 'none' else '+' + iv} "
                  f"task {t:2d}/{n_tasks} "
@@ -637,7 +640,7 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
         for r in range(R):
             if not bool(alive_f[r]) or seeds[r] not in continual:
                 continue
-            value = float(acc_sum[r]) / STEPS_PER_TASK
+            value = float(acc_sum[r]) / steps_hard
             fresh_rows.append({"arm": arm, "cond": cond, "seed": seeds[r], "lr": lr,
                                "task": last_hard, "fresh_online_acc": value,
                                "continual_online_acc": continual[seeds[r]],
@@ -650,7 +653,8 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
 
     prov = {"run_id": EXPERIMENT, **B.git_state(), "arm": arm, "cond": cond, "seeds": seeds,
             "slots": [{"seed": s} for s in seeds], "R": R, "lr": lr, "n_tasks": n_tasks,
-            "steps_per_task": STEPS_PER_TASK, "batch": BATCH, "hidden": hidden,
+            "steps_per_task": STEPS_PER_TASK, "steps_hard": steps_hard,
+            "steps_easy": steps_easy, "batch": BATCH, "hidden": hidden,
             "layer_shapes": layer_shapes(arm, hidden), "n_params": n_params(arm, hidden),
             "phi_doubles_width": arm in WIDE, "dims": list(DIMS),
             "doors": DOORS.get(arm), "door_lambda": lam, "door_beta": beta,
@@ -695,6 +699,10 @@ def main() -> None:
     ap.add_argument("--beta", type=float, default=0.01)
     ap.add_argument("--alpha-lo", type=float, default=0.005)
     ap.add_argument("--alpha-hi", type=float, default=3.0)
+    ap.add_argument("--steps-hard", type=int, default=STEPS_PER_TASK,
+                    help="updates per HARD task (default 780 = Kumar Table 1)")
+    ap.add_argument("--steps-easy", type=int, default=STEPS_PER_TASK,
+                    help="updates per EASY task")
     ap.add_argument("--lam", type=float, default=0.0,
                     help="door B: decoupled weight decay on b2 (CHB). Derive it, do not guess")
     ap.add_argument("--iv", default="none", help="none | l2:<lam> | l2init:<lam> (spec addendum 2)")
@@ -708,11 +716,14 @@ def main() -> None:
     device = H.setup(a.device)
     tag = (f"{a.arm}_{a.cond}_lr{a.lr:g}" + (f"_h{a.hidden}" if a.hidden != HIDDEN else "")
            + (f"_lam{a.lam:g}" if a.lam else "")
+           + ("" if (a.steps_hard, a.steps_easy) == (STEPS_PER_TASK, STEPS_PER_TASK)
+              else f"_s{a.steps_hard}x{a.steps_easy}")
            + ("" if a.iv == "none" else "_" + a.iv.replace(":", "")))
     out = Path(a.out) if a.out else OUT_ROOT / tag
     run(a.arm, B.parse_ints(a.seeds), a.cond, a.tasks, device, out, lr=a.lr, c=a.c,
         beta=a.beta, lo=a.alpha_lo, hi=a.alpha_hi, fresh=not a.no_fresh,
-        graph=not a.no_graph, hidden=a.hidden, iv=a.iv, lam=a.lam)
+        graph=not a.no_graph, hidden=a.hidden, iv=a.iv, lam=a.lam,
+        steps_hard=a.steps_hard, steps_easy=a.steps_easy)
 
 
 if __name__ == "__main__":
