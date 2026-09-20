@@ -84,7 +84,16 @@ HIDDEN = 100                                        # both papers' MLP hidden wi
 # doubles; LK07 is an ordinary leaky whose slope sits in Lillo & Cheney's reported
 # "Goldilocks zone" of 0.6-0.9, which the 0918 ladder (0.01 / 0.1 / 0.3) misses entirely.
 WIDE = ("CR", "DF")
-ARM_ORDER = B.ARM_ORDER + ("LK07", "CR", "DF")
+# The `relu_doors_0919` arms (spec addendum 4).  These are NOT activations in the sense
+# the other arms are: `C` lives in the data pipeline and `B` in the optimiser step.  Only
+# `H` is a pure (stateful) pointwise activation.  Ported from `src/relu_doors_0919.py`
+# on origin/main, which this branch's merge-base predates.
+DOORS = {"H":    dict(c=False, h=True,  b="none"),
+         "C":    dict(c=True,  h=False, b="none"),
+         "CH":   dict(c=True,  h=True,  b="none"),
+         "CHB":  dict(c=True,  h=True,  b="wd"),
+         "CHB0": dict(c=True,  h=True,  b="zero")}
+ARM_ORDER = B.ARM_ORDER + ("LK07", "CR", "DF") + tuple(DOORS)
 DEAD_TOL = H.DEAD_TOL
 
 # CIFAR-100 channel statistics (the widely used values; CIFAR-10's are a different pair,
@@ -135,9 +144,79 @@ class DeepFourier(B.Act):
         return torch.ones_like(z)        # sqrt(cos^2 + sin^2) = 1
 
 
-def make_act(arm: str, hidden: int = HIDDEN, c=0.6, beta=0.01, lo=0.005, hi=3.0) -> B.Act:
-    """The 13 arms of 0918 plus the three added ones, with the Snake family's per-unit
-    state sized to this box's hidden width rather than 0918's."""
+class ReLUDoors(B.ReLU):
+    """The `relu_doors_0919` arms, ported verbatim (spec addendum 4).
+
+    Three doors, all on top of a plain ReLU:
+
+      C  the input's mean image is subtracted (NOT divided).  Lives in the data
+         pipeline, not here -- see `run(center=...)`.
+      H  the layer's output is phi(z) - m_l, with m_l a per-unit EMA of phi(z)'s batch
+         mean, m_l <- (1-beta) m_l + beta * mean_batch(phi(z)).  `m` is a constant (no
+         gradient) and the SAME value is used in training and evaluation, so there is no
+         train/eval gap.  The EMA tracks the UNCENTRED activation; tracking the centred
+         one would decay to zero and do nothing.
+      B  "wd"   -> b1 held at exactly 0, b2 decayed by (1 - lr*lam) after every Adam step
+         "zero" -> b1 and b2 both held at exactly 0.  b3 is never touched.
+
+    The gate is still 1[z>0]: `m` is a constant offset, so `dphi` is ReLU's.  Note that
+    `zeroout` stops meaning anything for an H arm -- a silent unit outputs -m, not 0.
+    """
+    adaptive = False
+
+    def __init__(self, arm: str, lam: float = 0.0, beta: float = 0.01,
+                 widths=(HIDDEN, HIDDEN)):
+        d = DOORS[arm]
+        self.name, self.arm = arm, arm
+        self.door_c, self.door_h, self.door_b = d["c"], d["h"], d["b"]
+        self.lam, self.beta, self.widths = lam, beta, widths
+        if self.door_b == "wd" and not lam > 0:
+            raise SystemExit("arm CHB needs --lam > 0 (derived from a probe; spec §16.2)")
+        self.m = None
+
+    def init_state(self, R, device, key):
+        self.m = [torch.zeros(R, w, device=device) for w in self.widths] if self.door_h else None
+
+    def state(self):
+        return {"m": [v.clone() for v in self.m]} if self.door_h else {}
+
+    def load_state(self, st):
+        if self.door_h and st.get("m") is not None:
+            for dst, src in zip(self.m, st["m"]):
+                dst.copy_(src)
+
+    def phi(self, z, layer=0, train=False):
+        a = torch.clamp(z, min=0.0)
+        return a - self.m[layer][:, None, :] if self.door_h else a
+
+    @torch.no_grad()
+    def update(self, z1, z2) -> None:
+        if not self.door_h:
+            return
+        for mi, z in zip(self.m, (z1, z2)):
+            mi.mul_(1.0 - self.beta).add_(torch.clamp(z, min=0.0).mean(1), alpha=self.beta)
+
+    @torch.no_grad()
+    def post_update(self, P, lr: float) -> None:
+        if self.door_b == "none":
+            return
+        P[1].zero_()                                   # b1: the layer has no bias at all
+        if self.door_b == "zero":
+            P[3].zero_()                               # b2 too
+        else:
+            P[3].mul_(1.0 - lr * self.lam)             # decoupled weight decay on b2
+
+    def stats(self, r: int) -> dict:
+        if not self.door_h:
+            return {}
+        return {"m_l1": float(self.m[0][r].mean()), "m_l2": float(self.m[1][r].mean())}
+
+
+def make_act(arm: str, hidden: int = HIDDEN, c=0.6, beta=0.01, lo=0.005, hi=3.0,
+             lam: float = 0.0) -> B.Act:
+    """The 13 arms of 0918, the three added ones, and the relu_doors arms."""
+    if arm in DOORS:
+        return ReLUDoors(arm, lam, beta, widths=(hidden, hidden))
     if arm == "CR":
         return ConcatReLU()
     if arm == "DF":
@@ -336,7 +415,8 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
         lr: float = LR, c: float = 0.6, beta: float = 0.01, lo: float = 0.005,
         hi: float = 3.0, cifar: Cifar100 | None = None, fresh: bool = True,
         graph: bool = True, progress=None, debug: dict | None = None,
-        nan_slot: int | None = None, hidden: int = HIDDEN, iv: str = "none") -> dict:
+        nan_slot: int | None = None, hidden: int = HIDDEN, iv: str = "none",
+        lam: float = 0.0) -> dict:
     """Train one arm's R = len(seeds) runs in lockstep over the 30-task sequence.
 
     Every slot sees the same task shape at the same time (hard tasks are odd for every
@@ -360,13 +440,27 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
     t_start = time.time()
     progress = progress or (lambda m: print(m, flush=True))
     iv_kind, iv_lam = parse_iv(iv)
-    act = make_act(arm, hidden, c, beta, lo, hi)
+    act = make_act(arm, hidden, c, beta, lo, hi, lam)
     R = len(seeds)
     cifar = cifar or Cifar100()
     X_all = cifar.inputs("train", cond, device)
     Y_all = cifar.train_y.to(device)
     X_test = cifar.inputs("test", cond, device)
     Y_test = cifar.test_y.to(device)
+    center = getattr(act, "door_c", False)
+    dc = None
+    if center:
+        # Door C.  The parent box subtracts the mean of the seed's own 1200 images, which
+        # there are the SAME images in every task.  Here the images change from task to
+        # task, so a per-task mean would hand the learner the task boundary the protocol
+        # says it never gets ("the agent is not given any indication when a task switches")
+        # and a mean over the run's own 90 classes would use the future.  The mean of the
+        # whole CIFAR-100 training set is the only version that leaks neither; it is a
+        # property of the dataset, not of the sequence.  It is subtracted, never divided,
+        # so the scale stays put and only r = |xbar| / rms|x - xbar| moves (spec §16.1).
+        dc = X_all.mean(0)
+        X_all = X_all - dc
+        X_test = X_test - dc                       # the same vector, or train and test part ways
     tr_rows, te_rows = class_rows(cifar.train_y), class_rows(cifar.test_y)
     plans = [task_plan(s) for s in seeds]
     g_batch = {s: H.stream("c51_batch", s) for s in seeds}
@@ -396,6 +490,8 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
     bad_step = torch.full((R,), -1, dtype=torch.long, device=device)
     last_hit = torch.zeros(R, device=device)
 
+    post = getattr(act, "post_update", None)
+
     def step():
         xb, yb = X_all[static_idx], Y_all[static_idx]            # gathers, no arithmetic
         z1, a1, z2, a2, z3 = B.forward(P, xb, act, train=True)
@@ -418,6 +514,8 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
                 vi.mul_(b2).addcmul_(gr, gr, value=1 - b2)
                 p.sub_(lr * (mi * inv_c1) / ((vi * inv_c2).sqrt() + eps))
             act.update(z1.detach(), z2.detach())
+            if post is not None:
+                post(P, lr)                        # door B: b1 pinned to 0, b2 decayed
 
     use_graph = graph and device.type == "cuda" and debug is None
     cg = None
@@ -555,6 +653,9 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
             "steps_per_task": STEPS_PER_TASK, "batch": BATCH, "hidden": hidden,
             "layer_shapes": layer_shapes(arm, hidden), "n_params": n_params(arm, hidden),
             "phi_doubles_width": arm in WIDE, "dims": list(DIMS),
+            "doors": DOORS.get(arm), "door_lambda": lam, "door_beta": beta,
+            "door_c_vector": ("cifar100 train mean image (3072), subtracted not divided"
+                              if center else None),
             "n_classes": N_CLASSES, "hard_classes": HARD_CLASSES,
             "per_class_train": PER_CLASS_TRAIN, "classes_used": CLASSES_USED,
             "task_parity": "task 1 hard, alternating (the paper's task 0 hard)",
@@ -594,6 +695,8 @@ def main() -> None:
     ap.add_argument("--beta", type=float, default=0.01)
     ap.add_argument("--alpha-lo", type=float, default=0.005)
     ap.add_argument("--alpha-hi", type=float, default=3.0)
+    ap.add_argument("--lam", type=float, default=0.0,
+                    help="door B: decoupled weight decay on b2 (CHB). Derive it, do not guess")
     ap.add_argument("--iv", default="none", help="none | l2:<lam> | l2init:<lam> (spec addendum 2)")
     ap.add_argument("--no-fresh", action="store_true", help="skip the fresh-network control")
     ap.add_argument("--no-graph", action="store_true", help="eager steps (checks)")
@@ -604,11 +707,12 @@ def main() -> None:
     torch.set_num_threads(a.threads)
     device = H.setup(a.device)
     tag = (f"{a.arm}_{a.cond}_lr{a.lr:g}" + (f"_h{a.hidden}" if a.hidden != HIDDEN else "")
+           + (f"_lam{a.lam:g}" if a.lam else "")
            + ("" if a.iv == "none" else "_" + a.iv.replace(":", "")))
     out = Path(a.out) if a.out else OUT_ROOT / tag
     run(a.arm, B.parse_ints(a.seeds), a.cond, a.tasks, device, out, lr=a.lr, c=a.c,
         beta=a.beta, lo=a.alpha_lo, hi=a.alpha_hi, fresh=not a.no_fresh,
-        graph=not a.no_graph, hidden=a.hidden, iv=a.iv)
+        graph=not a.no_graph, hidden=a.hidden, iv=a.iv, lam=a.lam)
 
 
 if __name__ == "__main__":

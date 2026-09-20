@@ -1,0 +1,241 @@
+{
+  "S-data": {
+    "pass": true,
+    "sha256": {
+      "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+    },
+    "per_class_train": 500,
+    "per_class_test": 100,
+    "measured_mean": [
+      0.5071,
+      0.4866,
+      0.4409
+    ],
+    "measured_std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "declared_mean": [
+      0.5071,
+      0.4865,
+      0.4409
+    ],
+    "declared_std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "mutation_drop_one_image_fails": true
+  },
+  "S-plan": {
+    "pass": true,
+    "seed0_first_task": [
+      true,
+      [
+        0,
+        90,
+        75,
+        17,
+        2
+      ]
+    ],
+    "seed1_first_task": [
+      true,
+      [
+        31,
+        8,
+        96,
+        10,
+        95
+      ]
+    ],
+    "seed100_first_task": [
+      true,
+      [
+        39,
+        0,
+        85,
+        94,
+        41
+      ]
+    ],
+    "classes_used": 90,
+    "mutation_6_per_task_fails": true
+  },
+  "S-batch": {
+    "pass": true,
+    "seed0_t1": {
+      "hard": true,
+      "n": 2500,
+      "epochs": 9.98
+    },
+    "seed0_t2": {
+      "hard": false,
+      "n": 500,
+      "epochs": 49.92
+    },
+    "seed0_t3": {
+      "hard": true,
+      "n": 2500,
+      "epochs": 9.98
+    },
+    "seed100_t1": {
+      "hard": true,
+      "n": 2500,
+      "epochs": 9.98
+    },
+    "seed100_t2": {
+      "hard": false,
+      "n": 500,
+      "epochs": 49.92
+    },
+    "seed100_t3": {
+      "hard": true,
+      "n": 2500,
+      "epochs": 9.98
+    },
+    "seeds_differ": true,
+    "mutation_with_replacement_fails": true
+  },
+  "S-head": {
+    "pass": true,
+    "units_are_fresh_each_task": true,
+    "classes_used": 90
+  },
+  "S-init": {
+    "pass": true,
+    "CR": {
+      "shapes": [
+        [
+          100,
+          3072
+        ],
+        [
+          100
+        ],
+        [
+          100,
+          200
+        ],
+        [
+          100
+        ],
+        [
+          100,
+          200
+        ],
+        [
+          100
+        ]
+      ],
+      "n_params": 347500
+    },
+    "DF": {
+      "shapes": [
+        [
+          100,
+          3072
+        ],
+        [
+          100
+        ],
+        [
+          100,
+          200
+        ],
+        [
+          100
+        ],
+        [
+          100,
+          200
+        ],
+        [
+          100
+        ]
+      ],
+      "n_params": 347500
+    },
+    "pointwise_n_params": 327500,
+    "equal_param_hidden_for_wide": 94
+  },
+  "S-act-new": {
+    "pass": true,
+    "LK07": {
+      "vjp_max_err": 0.0,
+      "bound": 2.000666199819534e-06,
+      "dphi_vs_jacobian_norm": 0.0,
+      "out_width": 1,
+      "in_width": 1
+    },
+    "CR": {
+      "vjp_max_err": 0.0,
+      "bound": 1.6915805645112414e-06,
+      "dphi_vs_jacobian_norm": 0.0,
+      "out_width": 2,
+      "in_width": 1
+    },
+    "DF": {
+      "vjp_max_err": 0.0,
+      "bound": 2.2667159100819845e-06,
+      "dphi_vs_jacobian_norm": 5.960464477539063e-08,
+      "out_width": 2,
+      "in_width": 1
+    },
+    "mutation_swapped_halves_fails": true
+  },
+  "S-door-H": {
+    "pass": true,
+    "ema_bit_exact": true,
+    "train_eq_eval": true,
+    "gate_is_relu": true,
+    "no_grad_to_m": true,
+    "m_mean": 1.5224305391311646,
+    "mutation_centred_ema_ratio": 0.5694272518157959
+  },
+  "S-door-C": {
+    "pass": true,
+    "raw": {
+      "r_before": 1.8151271343231201,
+      "r_after": 9.900976039034504e-08,
+      "max_abs_mean_after": 9.086608798725138e-08,
+      "rms_unchanged": true
+    },
+    "std": {
+      "r_before": 0.12872634828090668,
+      "r_after": 1.2845926100624183e-08,
+      "max_abs_mean_after": 6.713867151120212e-08,
+      "rms_unchanged": true
+    },
+    "mutation_divide_fails": true
+  },
+  "S-door-B": {
+    "pass": true,
+    "b1_exactly_zero": true,
+    "b2_decayed_bitwise": true,
+    "b3_untouched": true,
+    "weights_untouched": true,
+    "CHB0_zeroes_both": true,
+    "mutation_CH_touches_nothing": true,
+    "lr": 0.0001,
+    "lam": 0.5
+  },
+  "S-nochange": {
+    "pass": true,
+    "thread_sensitive_columns": [
+      "eff_rank_l2"
+    ],
+    "only_eff_rank_is_thread_sensitive": true,
+    "R": {
+      "identical_to_committed": true
+    },
+    "SNA": {
+      "identical_to_committed": true
+    },
+    "mutation_tiny_l2init_differs": true
+  },
+  "all_pass": true,
+  "stage": "doors",
+  "seconds": 47.5
+}

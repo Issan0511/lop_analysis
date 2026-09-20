@@ -1,0 +1,103 @@
+{
+  "run_id": "cifar5p1_mlp_0920",
+  "git_hash": "bba35b30bf5ccc1ea617dddc93224021b20df209",
+  "dirty_src_analysis": [
+    " M src/cifar5p1_mlp_0920.py",
+    " M src/cifar5p1_mlp_0920_checks.py"
+  ],
+  "arm": "CH",
+  "cond": "raw",
+  "seeds": [
+    100,
+    101,
+    102
+  ],
+  "slots": [
+    {
+      "seed": 100
+    },
+    {
+      "seed": 101
+    },
+    {
+      "seed": 102
+    }
+  ],
+  "R": 3,
+  "lr": 0.0001,
+  "n_tasks": 3,
+  "steps_per_task": 780,
+  "batch": 32,
+  "hidden": 100,
+  "layer_shapes": [
+    [
+      100,
+      3072
+    ],
+    [
+      100,
+      100
+    ],
+    [
+      100,
+      100
+    ]
+  ],
+  "n_params": 327500,
+  "phi_doubles_width": false,
+  "dims": [
+    3072,
+    100,
+    100,
+    100
+  ],
+  "doors": {
+    "c": true,
+    "h": true,
+    "b": "none"
+  },
+  "door_lambda": 0.0,
+  "door_beta": 0.01,
+  "door_c_vector": "cifar100 train mean image (3072), subtracted not divided",
+  "n_classes": 100,
+  "hard_classes": 5,
+  "per_class_train": 500,
+  "classes_used": 90,
+  "task_parity": "task 1 hard, alternating (the paper's task 0 hard)",
+  "sna_c": 0.6,
+  "sna_beta": 0.01,
+  "alpha_lo": 0.005,
+  "alpha_hi": 3.0,
+  "optimizer": "adam",
+  "weight_decay": 0.0,
+  "intervention": "none",
+  "iv_kind": "none",
+  "iv_lambda": 0.0,
+  "data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "std": null,
+  "class_sha256": {
+    "100": "f0f27b396f33d65f355d70a0d32bad2d6c6a0a3dc296793359fa996ee5d539a0",
+    "101": "cfc55bad951170384689785e290646e3b5adf22b5238daf85f0c3c0339c29853",
+    "102": "574c2350f1231ed0a1e7a979aeb874d5dd1a47929dd4c262b596d7b6a670b49d"
+  },
+  "rng_roles": [
+    "c51_classes",
+    "c51_batch",
+    "init"
+  ],
+  "rsl_noise_seed": null,
+  "fresh_control": null,
+  "engine": "stacked baddbmm from rlcifar_mlp_battle_0918, autograd, elementwise Adam, one step captured as a CUDA graph",
+  "device": "cuda",
+  "torch": "2.13.0+cu126",
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 0.4737361883505797,
+  "wall_clock_s": 3.7669217586517334,
+  "divergences": [],
+  "check_hooks": {
+    "nan_slot": null
+  },
+  "spec": "specs/spec_cifar5p1_mlp_0920.md"
+}

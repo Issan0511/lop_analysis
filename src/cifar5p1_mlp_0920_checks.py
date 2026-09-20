@@ -384,6 +384,106 @@ def s_iv(device, cifar) -> bool:
                    "mutation_sign_flip": flipped, "lam": lam})
 
 
+def s_door_h(device) -> bool:
+    """Door H: m is the EMA of the UNCENTRED relu(z), carries no gradient, and is the same
+    in training and evaluation.
+
+    The mutation is the one the parent's docstring warns about: an EMA that tracks the
+    already-centred output decays toward zero and the door stops doing anything.  It has
+    to end up an order of magnitude smaller.
+    """
+    act = C.make_act("H")
+    act.init_state(1, device, key="chk")
+    g = torch.Generator(device="cpu").manual_seed(3)
+    zs = [(torch.randn(1, 32, C.HIDDEN, generator=g) * 3 + 1).to(device) for _ in range(200)]
+    ref = torch.zeros(1, C.HIDDEN, device=device)
+    for z in zs:                                   # independent EMA, same op order
+        ref.mul_(1.0 - act.beta).add_(torch.clamp(z, min=0.0).mean(1), alpha=act.beta)
+        act.update(z, z)
+    exact = bool(torch.equal(act.m[0], ref))
+    # train and eval read the same m
+    z = zs[0]
+    same_mode = bool(torch.equal(act.phi(z, 0, True), act.phi(z, 0, False)))
+    # the constant offset must not reach the gradient: d(relu(z) - m)/dz == 1[z>0]
+    zz = z.clone().requires_grad_(True)
+    (gz,) = torch.autograd.grad(act.phi(zz, 0, True).sum(), zz)
+    gate_ok = bool(torch.equal(gz, (z > 0).to(z.dtype)))
+    m_before = act.m[0].clone()
+    act.phi(zz, 0, True).sum().backward()
+    m_still = bool(torch.equal(act.m[0], m_before))
+    # mutation: track the centred output instead
+    mut = torch.zeros(1, C.HIDDEN, device=device)
+    for z in zs:
+        mut.mul_(1.0 - act.beta).add_((torch.clamp(z, min=0.0) - mut[:, None, :]).mean(1),
+                                      alpha=act.beta)
+    ratio = float(mut.abs().mean() / ref.abs().mean().clamp_min(1e-30))
+    return record("S-door-H", exact and same_mode and gate_ok and m_still and ratio < 0.7,
+                  {"ema_bit_exact": exact, "train_eq_eval": same_mode, "gate_is_relu": gate_ok,
+                   "no_grad_to_m": m_still, "m_mean": float(ref.abs().mean()),
+                   "mutation_centred_ema_ratio": ratio})
+
+
+def s_door_c(device, cifar) -> bool:
+    """Door C: the mean image is subtracted and NOT divided.
+
+    Reports r = |xbar| / rms|x - xbar| before and after, the quantity the parent box moved
+    from 1.911 to 0.121.  The mutation divides by the per-pixel sd, which changes the rms
+    and so is detectable.
+    """
+    detail = {}
+    ok = True
+    for cond in ("raw", "std"):
+        X = cifar.inputs("train", cond, device)
+        dc = X.mean(0)
+        Xc = X - dc
+        r_before = float(X.mean(0).norm() / (X - X.mean(0)).pow(2).mean(0).sum().sqrt())
+        r_after = float(Xc.mean(0).norm() / (Xc - Xc.mean(0)).pow(2).mean(0).sum().sqrt())
+        rms_kept = abs(float(Xc.pow(2).mean().sqrt()) /
+                       float((X - X.mean(0)).pow(2).mean().sqrt()) - 1.0) < 1e-5
+        centred = float(Xc.mean(0).abs().max())
+        scale = float(X.std(0).mean())
+        ok &= rms_kept and centred < 1e-4 * scale and r_after < 1e-3 * max(r_before, 1e-30)
+        detail[cond] = {"r_before": r_before, "r_after": r_after,
+                        "max_abs_mean_after": centred, "rms_unchanged": rms_kept}
+    # mutation: standardising instead of centring changes the rms
+    X = cifar.inputs("train", "std", device)
+    Xs = (X - X.mean(0)) / X.std(0).clamp_min(1e-6)
+    mut_fails = abs(float(Xs.pow(2).mean().sqrt()) /
+                    float((X - X.mean(0)).pow(2).mean().sqrt()) - 1.0) > 1e-3
+    return record("S-door-C", ok and mut_fails, {**detail, "mutation_divide_fails": mut_fails})
+
+
+def s_door_b(device) -> bool:
+    """Door B: b1 pinned to exactly 0, b2 scaled by (1 - lr*lam), b3 never touched."""
+    lr, lam = 1e-4, 0.5
+    shapes = C.layer_shapes("CHB")
+    P = [torch.randn(1, *s, device=device) if len(s) == 2 else torch.randn(1, s[0], device=device)
+         for s in [shapes[0], (shapes[0][0],), shapes[1], (shapes[1][0],),
+                   shapes[2], (shapes[2][0],)]]
+    before = [q.clone() for q in P]
+    C.make_act("CHB", lam=lam).post_update(P, lr)
+    b1_zero = bool((P[1] == 0).all())
+    b2_ok = bool(torch.equal(P[3], before[3] * (1.0 - lr * lam)))
+    b3_untouched = bool(torch.equal(P[5], before[5]))
+    w_untouched = all(bool(torch.equal(P[i], before[i])) for i in (0, 2, 4))
+    # CHB0 zeroes b2 as well
+    P0 = [q.clone() for q in before]
+    C.make_act("CHB0").post_update(P0, lr)
+    zero_ok = bool((P0[1] == 0).all() and (P0[3] == 0).all()
+                   and torch.equal(P0[5], before[5]))
+    # mutations: lam = 0 must leave b2 alone (so the b2 test can fail), and an arm with
+    # door B open must touch nothing
+    Pm = [q.clone() for q in before]
+    C.make_act("CH").post_update(Pm, lr)
+    mut_fails = all(bool(torch.equal(Pm[i], before[i])) for i in range(6))
+    return record("S-door-B", b1_zero and b2_ok and b3_untouched and w_untouched
+                  and zero_ok and mut_fails,
+                  {"b1_exactly_zero": b1_zero, "b2_decayed_bitwise": b2_ok,
+                   "b3_untouched": b3_untouched, "weights_untouched": w_untouched,
+                   "CHB0_zeroes_both": zero_ok, "mutation_CH_touches_nothing": mut_fails,
+                   "lr": lr, "lam": lam})
+
+
 def s_init(device) -> bool:
     """This box's init has to be the host's, draw for draw, wherever the shapes coincide.
 
@@ -530,7 +630,7 @@ def s_diverge(device, cifar) -> bool:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stage", default="pilot", choices=["pilot", "main", "iv"])
+    ap.add_argument("--stage", default="pilot", choices=["pilot", "main", "iv", "doors"])
     ap.add_argument("--device", default="auto")
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
@@ -546,6 +646,11 @@ def main() -> None:
     if a.stage == "iv":
         ok &= s_nochange(device, cifar)
         ok &= s_iv(device, cifar)
+    if a.stage == "doors":
+        ok &= s_door_h(device)
+        ok &= s_door_c(device, cifar)
+        ok &= s_door_b(device)
+        ok &= s_nochange(device, cifar)      # the doors code must not have moved the 16 arms
     RESULTS["all_pass"] = bool(ok)
     RESULTS["stage"] = a.stage
     RESULTS["seconds"] = round(time.time() - t0, 1)
