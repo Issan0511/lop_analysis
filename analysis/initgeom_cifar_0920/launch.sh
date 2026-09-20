@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export PATH=/usr/lib/chatgpt/resources:/usr/local/bin:/usr/bin:/bin
 cd "$(dirname "$0")/../.."
 run=initgeom_cifar_0920
 python_bin=/home/issan/Projects/claude/proj_004_drift/.venv/bin/python
