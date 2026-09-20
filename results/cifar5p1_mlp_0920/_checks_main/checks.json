@@ -1,0 +1,181 @@
+{
+  "S-data": {
+    "pass": true,
+    "sha256": {
+      "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+    },
+    "per_class_train": 500,
+    "per_class_test": 100,
+    "measured_mean": [
+      0.5071,
+      0.4866,
+      0.4409
+    ],
+    "measured_std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "declared_mean": [
+      0.5071,
+      0.4865,
+      0.4409
+    ],
+    "declared_std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "mutation_drop_one_image_fails": true
+  },
+  "S-plan": {
+    "pass": true,
+    "seed0_first_task": [
+      true,
+      [
+        0,
+        90,
+        75,
+        17,
+        2
+      ]
+    ],
+    "seed1_first_task": [
+      true,
+      [
+        31,
+        8,
+        96,
+        10,
+        95
+      ]
+    ],
+    "seed100_first_task": [
+      true,
+      [
+        39,
+        0,
+        85,
+        94,
+        41
+      ]
+    ],
+    "classes_used": 90,
+    "mutation_6_per_task_fails": true
+  },
+  "S-batch": {
+    "pass": true,
+    "seed0_t1": {
+      "hard": true,
+      "n": 2500,
+      "epochs": 9.98
+    },
+    "seed0_t2": {
+      "hard": false,
+      "n": 500,
+      "epochs": 49.92
+    },
+    "seed0_t3": {
+      "hard": true,
+      "n": 2500,
+      "epochs": 9.98
+    },
+    "seed100_t1": {
+      "hard": true,
+      "n": 2500,
+      "epochs": 9.98
+    },
+    "seed100_t2": {
+      "hard": false,
+      "n": 500,
+      "epochs": 49.92
+    },
+    "seed100_t3": {
+      "hard": true,
+      "n": 2500,
+      "epochs": 9.98
+    },
+    "seeds_differ": true,
+    "mutation_with_replacement_fails": true
+  },
+  "S-head": {
+    "pass": true,
+    "units_are_fresh_each_task": true,
+    "classes_used": 90
+  },
+  "S-stack": {
+    "pass": true,
+    "LR": {
+      "z1_max_diff": 5.9604644775390625e-06,
+      "z1_reorder_scale": 0.00032587241564620105,
+      "z1_margin": 54.672319057380946,
+      "z1_mutation": 4.493097305297852,
+      "z1_separation": 13787.903147273433,
+      "logit_rel_diff": 1.0073757365091906e-06,
+      "logit_rel_mutation": 1.880312748527989,
+      "grad_rel_diff": 8.973940466591779e-07,
+      "grad_rel_mutation": 2.351141584177382,
+      "rel_tol_derived": 0.0002790289499826244,
+      "logit_margin": 276.98597441857163,
+      "logit_separation": 6738.772979094388
+    },
+    "SNA": {
+      "z1_max_diff": 5.9604644775390625e-06,
+      "z1_reorder_scale": 0.00032587241564620105,
+      "z1_margin": 54.672319057380946,
+      "z1_mutation": 4.493097305297852,
+      "z1_separation": 13787.903147273433,
+      "logit_rel_diff": 1.2667896768543267e-06,
+      "logit_rel_mutation": 1.901559600745603,
+      "grad_rel_diff": 1.1897529422880446e-06,
+      "grad_rel_mutation": 2.569664228330324,
+      "rel_tol_derived": 0.00042332615372221683,
+      "logit_margin": 334.1724056146511,
+      "logit_separation": 4491.949254789939
+    }
+  },
+  "S-graph": {
+    "pass": true,
+    "identical": true,
+    "tasks": 2,
+    "arm": "SNA"
+  },
+  "S-fresh": {
+    "pass": true,
+    "R": {
+      "one_task": [
+        0.7171875,
+        0.7171875
+      ],
+      "three_tasks": [
+        0.6660657051,
+        0.6701923077
+      ]
+    },
+    "SNA": {
+      "one_task": [
+        0.7622596154,
+        0.7622596154
+      ],
+      "three_tasks": [
+        0.7121394231,
+        0.7122195513
+      ]
+    },
+    "mutation_no_state_restore": [
+      0.7594951923,
+      0.7622596154
+    ],
+    "mutation_fails": true
+  },
+  "S-diverge": {
+    "pass": true,
+    "others_bit_identical": true,
+    "poisoned_slot_has_no_rows": true,
+    "mutation_poison_slot0_fails": true,
+    "n_diverged_rows": 1
+  },
+  "all_pass": true,
+  "stage": "main",
+  "seconds": 19.6
+}
