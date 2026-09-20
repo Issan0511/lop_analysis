@@ -51,6 +51,21 @@ def read_npz(p):
     with np.load(p,allow_pickle=False) as f:return {k:f[k] for k in f.files}
 
 
+def output_artifact(out,relative):
+    """Resolve an archived output through the committed backup manifest."""
+    out=Path(out);relative=Path(relative)
+    assert not relative.is_absolute() and '..' not in relative.parts
+    direct=out/relative
+    if direct.exists():return direct
+    manifest=json.loads((out/'backup_manifest.json').read_text())
+    wanted=str(Path('results')/out.name/relative)
+    matches=[x for x in manifest['files'] if x.get('relative')==wanted]
+    assert len(matches)==1,('archived artifact',wanted)
+    target=Path(matches[0]['backup'])
+    assert target.is_file() and target.stat().st_size==matches[0]['bytes']
+    return target
+
+
 def save_npz(p,data):
     p.parent.mkdir(parents=True,exist_ok=True)
     tmp=p.with_name(p.name+'.tmp')

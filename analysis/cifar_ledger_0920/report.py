@@ -53,7 +53,7 @@ def report(out):
     for arm in R.ARMS:
         shards=[]
         for t in range(51):
-            p=out/'shards'/f'{arm}_t{t:02d}.npz';marker=json.loads(p.with_suffix('.json').read_text())
+            p=R.output_artifact(out,Path('shards')/f'{arm}_t{t:02d}.npz');marker=json.loads(p.with_suffix('.json').read_text())
             assert R.sha(p)==marker['sha256']
             shards.append(R.read_npz(p))
         for k in shards[0]:units[arm+'__'+k]=np.stack([s[k] for s in shards])

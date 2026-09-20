@@ -26,6 +26,8 @@ activation state, unchanged RNG, direct affine reconstruction, four-term closure
 Term calculations use float64 error propagation from the faithful float32 features. Undefined ratios remain undefined.
 
 The scientific results are a registered reanalysis of known trajectories, with no independent audit.
+After archival, report/audit locate state shards through `backup_manifest.json`; the input archive stays read-only.
+Use a new `--out` path for a fresh replay rather than overwriting a completed provenance record.
 
 ## Before first outcome report
 

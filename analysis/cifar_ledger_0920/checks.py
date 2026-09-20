@@ -150,6 +150,10 @@ def run(out):
         R.put(root/'status.json',dict(status='running',completed_states=1))
         from analysis.cifar_ledger_0920.report import report
         mutations['partial_report']=rejected(lambda:report(root))
+        moved=root/'archive'/'state.npz';moved.parent.mkdir();p.rename(moved)
+        R.put(root/'backup_manifest.json',dict(files=[dict(relative=f'results/{root.name}/state.npz',backup=str(moved),bytes=moved.stat().st_size)]))
+        assert R.output_artifact(root,'state.npz')==moved
+        mutations['archive_path_escape']=rejected(lambda:R.output_artifact(root,'../state.npz'))
     results['S-input-resume-stop']=dict(pass_=True)
 
     # Actual phi/dphi wiring on the original CUDA runtime, including z=0 conventions.

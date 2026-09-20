@@ -54,7 +54,7 @@ def run():
     _,state,_=R.compute(arm,1,X,xc,dev,hist,rec,y1,None)
     y2=torch.stack([R.E.RC.task_labels(g) for g in gens]).to(dev)
     resumed,_,ev=R.compute(arm,2,X,xc,dev,hist,rec,y2,state)
-    uninterrupted=R.read_npz(R.OUT/'shards/ELU_t02.npz')
+    uninterrupted=R.read_npz(R.output_artifact(R.OUT,'shards/ELU_t02.npz'))
     equal={k:np.array_equal(v,uninterrupted[k],equal_nan=True) for k,v in resumed.items()}
     result['actual_resume']=dict(all_equal=all(equal.values()),keys=len(equal),checks=ev)
     result['all_pass']=all(x['detected'] for x in result['mutations'].values()) and result['actual_resume']['all_equal']

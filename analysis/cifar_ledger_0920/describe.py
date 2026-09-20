@@ -57,10 +57,10 @@ def main():
             ax.axhline(.5,color='black',lw=.7,alpha=.4)
             ax.set_title(f'{arm} / {cond}');ax.grid(alpha=.15);ax.set_ylim(-.02,1.02)
     axs[0,0].legend(fontsize=9)
-    for ax in axs[:,0]:ax.set_ylabel('Low-response pair fraction / accuracy')
+    fig.supylabel('Low-response pair fraction / online accuracy',fontsize=11)
     for ax in axs[-1]:ax.set_xlabel('Task end (0 = initialization)')
     fig.suptitle('CIFAR A6 | |training derivative| < 1e-6\nLines: seed means; shading: seed range (10 seeds)',fontsize=13)
-    fig.tight_layout(rect=(0,0,1,.94));fig.savefig(out/'low_response.png',dpi=180);plt.close(fig)
+    fig.tight_layout(rect=(.025,0,1,.94));fig.savefig(out/'low_response.png',dpi=180);plt.close(fig)
     section=['','## 登録した補助窓（REPORT_ONLY）','','第2層、std、seed内の比の中央値。主判定の置換には使わない。','',
              '| arm | 窓 | 上流 | 自己 | 交差 | bias | 上流中の伸び |','|---|---|---:|---:|---:|---:|---:|']
     for r in summary:
