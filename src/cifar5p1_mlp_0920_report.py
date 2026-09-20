@@ -54,11 +54,17 @@ def holm(ps: list[float]) -> list[float]:
     return out
 
 
-def load(src: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
-    tasks, fresh, prov = [], [], {}
+def load(src: Path, allow_partial: bool = False) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
+    """`provenance.json` is written only when a cell finishes, so its absence means the
+    cell is still running or died -- report that rather than quietly leaving the arm out
+    of the table."""
+    tasks, fresh, prov, unfinished = [], [], {}, []
     for d in sorted(src.iterdir()):
         f = d / "per_task.csv"
         if not f.exists() or d.name.startswith("_"):
+            continue
+        if not (d / "provenance.json").exists():
+            unfinished.append(d.name)
             continue
         p = json.loads((d / "provenance.json").read_text())
         prov[d.name] = {k: p[k] for k in ("arm", "cond", "lr", "hidden", "n_params",
@@ -73,7 +79,9 @@ def load(src: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
             g["hidden"] = p["hidden"]
             fresh.append(g)
     if not tasks:
-        raise SystemExit(f"no runs under {src}")
+        raise SystemExit(f"no finished runs under {src} (unfinished: {unfinished})")
+    if unfinished and not allow_partial:
+        raise SystemExit(f"unfinished cells: {unfinished}  (pass --allow-partial to report anyway)")
     return pd.concat(tasks, ignore_index=True), pd.concat(fresh, ignore_index=True), prov
 
 
@@ -120,9 +128,11 @@ def f(v, spec=".4f"):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", default="results/cifar5p1_mlp_0920")
+    ap.add_argument("--allow-partial", action="store_true",
+                    help="report on the cells that finished (a look mid-run, not a verdict)")
     a = ap.parse_args()
     src = Path(a.src)
-    tasks, fresh, prov = load(src)
+    tasks, fresh, prov = load(src, a.allow_partial)
     r = per_run(tasks)
     main_cells = sorted(r[r.hidden == C.HIDDEN].cell.unique(),
                         key=lambda c: -r[r.cell == c].window.median())
