@@ -287,3 +287,11 @@ float32の全画像z/a/gを全時点分新たに保存し続けず、再生可�
 終了時は `/home/issan/Projects/claude/CLAUDE.md` §4に従う。今回作った生データを `/home/issan/Projects/obsidian-research-data/cifar_ledger_0920/` へ退避し、manifestをcommit、mainへmergeしてpushし、到達確認後に自分のworktreeとbranchを削除する。元バトルの退避先・他セッションの出力・共有dataのsymlink先は動かさない。push済みcommitのrebase/squash/amendはしない。
 
 **specだけの今回の納品**: 解析出力・生データはまだ無い。文書をcommitしてmainへ統合し、専用worktreeを片付ける。実装GO後は同じ実験の後続作業として最新mainからworktreeを作り直し、このspecのcommitを登録元として参照する。
+
+## 12. 実装・解析の完了記録（判定後の追記）
+
+2026-09-20、§9.2 の GO に従い実装・解析を完了。上の「specだけの今回の納品」は初回起案時の記録。登録した判定規則は変更していない。再生コードは `45b12f2`、初回判定コードは `e3acd44`、結果は `ec1a0dd`。厳密な半数境界の浮動小数丸め修正は結果を見る前に実施し、[実行記録](../analysis/cifar_ledger_0920/EXECUTION.md)へ記載した。
+
+[結果](../results/cifar_ledger_0920/summary.md): ELU/GELU/SiLUはrawでL1_FIRST、stdでL2_FIRST（各10/10）。ELU/stdのR2はMIXED（10/10）。登録主窓の上流比中央値16.5%、交差比60.0%。登録補助窓では上流比t00→t10が72.9%、t10→t50が99.4%（REPORT_ONLY）。ReLUは初期低応答が多数で新たな故障層の先後を判定できない。S4のELU/std・第2層候補を支持するが、S5のcap1/cap2の因果的な選択は未決。
+
+全306束ね状態（6120模型状態）の再生照合・300区間の閉包検査、合成変異25件、実状態変異6件、再開時55配列のbit一致を確認。独立監査は未実施。
