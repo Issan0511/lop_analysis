@@ -81,3 +81,65 @@ Issa の予測: **未登録**。本走開始前に登録すること。
 
 配線確認の smoke で **各セル seed0 の task1–3 を観測済み**（W: .649/.800/.834、N: .481/.712/.806、
 WN: .415/.650/.709、発散なし）。どれも上昇している。上の確率はこれを見た後の値である。
+
+---
+
+## 6. 結果（2026-09-20）
+
+| セル | 窓(t21–40) | C 崩壊 | 早期−後期 | **G fresh gap** | G>0 | 発散 |
+|---|---|---|---|---|---|---|
+| 1536 / LN あり（親） | .9402 | 0/10 | −.0615 | **−.2609** | 0/10 | 0 |
+| **W** 96 / LN あり | .9298 | 0/10 | −.0809 | **−.2783** | 0/10 | 0 |
+| **N** 1536 / LN なし | .2481 | 6/10 | +.3432 | **+.3004** | 6/10 | 0 |
+| **WN** 96 / LN なし | .3199 | 8/10 | +.4973 | **+.2280** | 9/10 | 0 |
+
+登録した読み替えに従えば **「N だけで G > 0 → 正規化が盾」**（W は出ず、N と WN で出た）。
+
+### 機構（副次読み出し・記述）
+
+task40 の 6 層平均:
+
+| セル | `z<0` 質量 | **完全死 channel** |
+|---|---|---|
+| 1536 / LN あり | .736 | **.0005** |
+| W 96 / LN あり | .589 | **.0000** |
+| N 1536 / LN なし | .739 | **.2764** |
+| WN 96 / LN なし | .569 | .1007 |
+
+**疎化の量は同じ（.736 対 .739）なのに死は 550 倍違う。**
+LN は疎化を減らしていない。疎化が **channel ごとの恒久的な死**に変わるのを防いでいる。
+原典 §4 の "keep activations operating in their more dynamic, non-linear range" が、
+独立に組んだ箱で再現された。
+
+**幅は死を作らない**（16 分の 1 にして死 0）。ただし **死をどれだけ許容できるかは決める** —
+WN は死 .101 と N の .276 より少ないのに崩壊は 8/10 対 6/10 と多い。
+
+### 予測の採点
+
+| | W | N | WN |
+|---|---|---|---|
+| Claude（登録） | 25% | 35% | 45% |
+| 結果 | 偽 | **真** | **真** |
+
+順序は合っていたが、起きた 2 つに 50% 未満を置いたので較正としては外し。
+Issa は 2×2 については未登録。
+
+### 登録後に得た情報（予測は動かしていない）
+
+予測を書いた**後**に原典 Appendix B を読み、以下が判明した:
+
+- **プロトコルは完全一致**。"a sequence of 40 tasks, each containing a disjoint subset of 5 classes.
+  **Each task is trained for 500 steps** ... resulting in 20,000 total training steps"（B.1.1）。
+  ViT 既定も patch8/dim384/depth6/heads6/**mlp_ratio 4.0**/**LayerNorm**/**dropout 10%**、
+  **lr は ViT だけ 1e−4**（B.1.3）。**露出量は交絡ではなかった**
+  （姉妹 MLP 箱の 30,000 更新/タスクは原典ではなく `spec_rlcifar_mlp_battle_0918` の設計判断）
+- **原典自身が「正規化が LoP を防ぐ」と主張している**（§4 Preventing LoP with Normalization、
+  Fig B.3「Normalization reduces the number of dead/saturated units」、
+  Fig B.5「without normalization and no dropout」）。
+  よって **LN 付き ViT で LoP が出ないことは原典と矛盾しない**
+
+Claude はこれを読む前に「原典の LoP を再現しなかった」と述べたが、**これは誤り**だった。
+Fig 3.1 の "depending on the architecture" と Fig B.5 の "without normalization" を読み落としていた。
+原典を再現しなかったのではなく、**原典が予測するとおりの結果が出ていた**。
+
+残る差: 原典の LoP 図は "no normalization **and no dropout**" だが、本 spec の N/WN は dropout .1 を残している。
