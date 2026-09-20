@@ -1,6 +1,6 @@
 # initgeom_cifar_0920 — 入力平均の比から初期片側率を予測する（A5）
 
-状態: **起案・推奨設計とCodex予測の記録まで。未実装・未計時・未実行。Issaの設計採用・予測・GO待ち。訓練は行わない。**
+状態: **実装・検査を許可（末尾追補）。検査結果はresults/initgeom_cifar_0920/implementation.jsonを正本とする。本走未実行・本走GO待ち。Issa本人の予測は未記入。**
 
 2026-09-20 / Codex / 起点main `989a24b`。run `initgeom_cifar_0920`、branch `codex/initgeom_cifar_0920`、worktree `wt/initgeom_cifar_0920`。親: vault `背骨CIFAR_S4S5_A3-A6_spec起案プロンプト_0920` A5、`中心主張v11作業リスト_0920` A5、`中心主張v11草案_0920` §1。宿主: [CIFAR battle spec](spec_rlcifar_mlp_battle_0918.md)、`src/pmnist_0905.py:init_params`、`src/pmnist_rlcifar_0907.py`。
 
@@ -178,3 +178,11 @@ rawの既知の小さなずれ、非等方性、一様初期化・biasの無視�
 予定: `analysis/initgeom_cifar_0920/`、`results/initgeom_cifar_0920/`にsummary/verdict、prediction_manifest、per_seed/per_unit/input_stats、layer2_conditional、dial/bias_diagnostics、checks/predictions/provenance、図PNG/PDF。明示したseed/条件/層だけを集計する。
 
 git外の入力抜粋・初期P・z配列・ログ・検査attemptは `/home/issan/Projects/obsidian-research-data/initgeom_cifar_0920/` へサイズ・SHA256を照合して退避し、backup_manifest.jsonをcommitする。共有CIFAR本体・symlink・既存resultsは移さない。CLAUDE.md §4どおりmainへmerge/push・到達確認・自分のworktree/branch削除。spec起案もmainへ統合して片付け、採用後に最新mainから同じrun名で作り直す。
+
+## 実装追補（2026-09-20、科学seed観測前）
+
+Issa「とりあえず実装して」によりA2・A5の実装および合成データ・検査seedでの検証を開始。本走GOやIssa本人の数値予測を代筆した記録ではない。検査は100–101だけを使い、20–39の応答や入力統計は読まない。
+
+`analysis/initgeom_cifar_0920/`にCPU float64で実装。raw/std以外の入力共分散はrawからの平行移動であり、中心化配列の一致を演算誤差境界で確認後、effective rankはrawの参照値を併記する。標準化は宿主float32変換をコピーする。入力変換・二層の前向き誤差を符号区間へ伝播し、r/pの数値幅も保存する。主モデルの中心pに対する帯は登録どおりであり、幅の端点で帯が変わる数値境界例はNUMERIC_UNRESOLVEDとして残す。
+
+初回起動のsource/input/gitと、seedごとの入力予測manifest・全初期P hash・全条件応答・完了manifestを保存。seed境界のstate.jsonをatomic更新する。既存の予測/応答ファイルは同じ内容とhashである場合だけ再利用し、異なる先行出力を上書きしない。較正・訓練・GPUは不要。
