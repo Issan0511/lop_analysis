@@ -295,4 +295,75 @@ Claude（本セッション・先行走の 4 セルを見た後、本走の値�
 
 **この箱で私の機構推論は連敗している**（§6 の注記）。**重みを下げて読むこと。**
 
-Issa の予測: **未登録**。本走はこの登録を待つ。
+Issa の予測（2026-09-20・Claude の登録 commit `4e168a2` の**後**に、それを見たうえで登録）:
+
+| # | Issa | Claude | 差 |
+|---|---|---|---|
+| **P1** R が最下位 | **≥ 85%** | 70% | Issa の方が強気 |
+| **P2** SNA が LR に勝つ | **≥ 70%** | 30% | **正面から食い違う** |
+
+**P2 は分岐点である。** Claude は「Snake の谷はゲートを閉じる側の構造で、0918 の MLP 箱で効いた理由
+（30,000 更新で W が育ち切る）がこの箱（780 更新）に無い」と読み、Issa は逆を読んでいる。
+[[issa-hypotheses-take-seriously]] の通算は Issa 8/8 対 Claude 2/6。
+
+---
+
+## 11. 追補 1: 腕を 3 本足す（2026-09-20・本走の前・値は未観測）
+
+Issa の指示で 13 腕に 3 本足して **16 腕**にする。3 本とも**この箱の文献が報告している腕**であって、
+我々のデータで選んだ値ではない（それは調整になる）。
+
+| 腕 | 定義 | 由来と 5+1 CIFAR での報告値 |
+|---|---|---|
+| `LK07` | leaky、負側の傾き **0.7** | L&C 付録 E: *"a 'Goldilocks zone' for the negative linear sides ... the best values typically land between 0.6 and 0.9"*。Table 2 の Leaky-ReLU **48.86** はこの帯の傾きであり、0918 の梯子（0.01 / 0.1 / 0.3）は**帯に 1 本も無い** |
+| `CR` | Concat ReLU: φ(z) = [relu(z), relu(−z)] | Shang et al. 2016 / Kumar et al. の architectural 手法。L&C v2 Table 2 で **20.56 ± 2.28**（5+1 でだけ崩れる腕。Kumar も *"Concat ReLU does well on all problems except for 5+1 CIFAR"*） |
+| `DF` | Deep Fourier: φ(z) = [sin(z), cos(z)] | Lewandowski, Schuurmans & Machado 2024（arXiv:2410.20634）: *"deep Fourier features, which are the concatenation of a sine and cosine in every layer"*。**L&C v2 Table 2 の 5+1 CIFAR 最高値 72.29 ± 2.11**（2 位 RSL 57.01 を 15 点引き離す） |
+
+### 11.1 幅の扱い（決めて登録する）
+
+`CR` と `DF` は前活性 1 本につき 2 本を出すので、次の層の fan-in が 2 倍になる。
+
+- **本走は 3 本とも hidden=100 で回す**（他の 13 腕と同じ網）。これは L&C の設定（*"two hidden layers,
+  each of width 100"*）と同じで、外部の参照表と並べられる。
+  パラメータは 327,500 → **347,500（+6.1%）**になる。**開示する。**
+- Kumar は CReLU について *"compute the smallest fraction of neurons to remove ... such that the total
+  number of parameters ... is at least as large"* という規則を置き、彼らの CNN では 0.31 削っている。
+  **我々の MLP でこの規則を解くと hidden=94**（347,500 → 325,528 ≤ 327,500。S-init が算出）。
+- したがって **`CR` と `DF` は hidden=94 でも回し、対照として登録する**（1 本 1.5 分なので安い）。
+  **勝敗の判定は hidden=100 側で行い**、94 側は「6% のパラメータ差で説明できるか」だけに使う。
+
+### 11.2 読み出しの但し書き（構成上の恒真）
+
+`CR` と `DF` は **|∂φ/∂z| が恒等的に 1**（CR は z=0 を除く）なので、`dead_frac` と `mob` は
+**構成上一定**で、この 2 腕については何も測っていない。両腕の「死」は `zeroout`（タスクの全画像で
+出力が恒等的に 0 のチャネル）・`eff_rank`・`w_norm` で読む。**これを「死なない腕」の証拠に使わない。**
+
+### 11.3 追加した検査
+
+- **S-init**: pointwise 腕・hidden=100 で、この箱の init が宿主 `H.init_params` と **bit 一致**。
+  `CR`/`DF` は 2・3 層目の fan-in が 200 になり、境界が PyTorch 既定の 1/√200 に一致する。
+  等パラメータ幅 94 もここで算出する。
+- **S-act-new**: 3 腕の微分を autograd と照合。`CR`/`DF` は φ: Rⁿ → R²ⁿ でスカラーの φ′ が無いので、
+  **学習が実際に使う vjp**（乱数の余接ベクトルとの積）で比べ、`dphi` が Jacobian の列ノルムであることも別に見る。
+  実測誤差 0.0（`DF` の列ノルムのみ 5.96e−8）、閾値は 1 回の積和の丸め（4·eps·max|want|）から。
+  変異: `CR` の 2 つの半分を入れ替えると落ちる。
+
+検査は **10 件すべて PASS**（`results/cifar5p1_mlp_0920/_checks_main/checks.json`）。
+
+### 11.4 追加した腕の予測
+
+Claude（本走の値は未観測）:
+
+| # | 予測 | 確率 |
+|---|---|---|
+| **P7** | `DF` が 16 腕の**首位** | **45%** |
+| **P8** | `CR` が下位 4 腕に入る（L&C で 5+1 だけ崩れた腕） | **55%** |
+| **P9** | `LK07` が `LR`（0.1）・`LK03`（0.3）の**両方**に対応差で勝つ | **50%** |
+| **P10** | `CR`/`DF` の hidden=100 と 94 の差が、その腕と隣の腕の差より**小さい**（＝+6.1% で説明できない） | **75%** |
+
+P7 を 45% に留めた理由: L&C の 72.29 は **CNN** の数字で、DF の売りである「半分のユニットが常に線形に
+近い」は深さがあるほど効く。2 隠れ層の MLP では利得が縮む可能性がある。
+なお §10 の P3（首位が leaky 族）は 13 腕のときの登録であり、**DF を足した 16 腕では P7 と排他になる**。
+P3 は「13 腕の中で」と読み替えて採点する。
+
+Issa の追加腕の予測: **未登録**（P1・P2 のみ登録済み）。

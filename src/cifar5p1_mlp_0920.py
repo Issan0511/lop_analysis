@@ -78,7 +78,13 @@ PER_CLASS_TEST = 100
 CLASSES_USED = (N_TASKS // 2) * (HARD_CLASSES + 1)  # 90 of the 100, none repeated
 LR = 1e-4                                           # Kumar Table 4: Baseline + Adam on 5+1 CIFAR
 CONDS = ("raw", "std")
-ARM_ORDER = B.ARM_ORDER
+HIDDEN = 100                                        # both papers' MLP hidden width
+# Three arms beyond the 0918 thirteen, all from the literature on this very box (spec
+# addendum 1): CR and DF emit two numbers per preactivation, so the next layer's fan-in
+# doubles; LK07 is an ordinary leaky whose slope sits in Lillo & Cheney's reported
+# "Goldilocks zone" of 0.6-0.9, which the 0918 ladder (0.01 / 0.1 / 0.3) misses entirely.
+WIDE = ("CR", "DF")
+ARM_ORDER = B.ARM_ORDER + ("LK07", "CR", "DF")
 DEAD_TOL = H.DEAD_TOL
 
 # CIFAR-100 channel statistics (the widely used values; CIFAR-10's are a different pair,
@@ -86,6 +92,94 @@ DEAD_TOL = H.DEAD_TOL
 # itself in S-data.
 STD_MEAN = (0.5071, 0.4865, 0.4409)
 STD_STD = (0.2673, 0.2564, 0.2762)
+
+
+# --------------------------------------------------------------------------
+# the three added arms (spec addendum 1)
+# --------------------------------------------------------------------------
+
+class ConcatReLU(B.Act):
+    """Concatenated ReLU (Shang et al. 2016; Kumar et al.'s architectural baseline).
+
+    phi(z) = [relu(z), relu(-z)]: one of the two branches always passes the gradient, so
+    a unit cannot go dead in the usual sense -- which is why `dead_frac` is 0 by
+    construction for this arm and says nothing.  Read `zeroout` (output channels that are
+    identically zero over the task's data), `eff_rank` and `w_norm` instead.
+    """
+    name = "CR"
+
+    def phi(self, z, layer=0, train=False):
+        return torch.cat([z.clamp(min=0.0), (-z).clamp(min=0.0)], dim=-1)
+
+    def dphi(self, z, layer=0):
+        # norm of d[relu(z), relu(-z)]/dz: exactly 1 away from the kink, 0 at z == 0
+        return (z != 0).to(z.dtype)
+
+
+class DeepFourier(B.Act):
+    """Deep Fourier features (Lewandowski, Schuurmans & Machado 2024, arXiv:2410.20634):
+
+        "we propose deep Fourier features, which are the concatenation of a sine and
+         cosine in every layer" -- Fourier(z) = [sin(z), cos(z)]
+
+    Lillo & Cheney's Table 2 (v2) puts this at 72.29% on 5+1 CIFAR, the best of their 17
+    activations by 15 points, which is why it is here.  |d[sin,cos]/dz| = 1 everywhere, so
+    `dead_frac` and `mob` are constant by construction for this arm too.
+    """
+    name = "DF"
+
+    def phi(self, z, layer=0, train=False):
+        return torch.cat([torch.sin(z), torch.cos(z)], dim=-1)
+
+    def dphi(self, z, layer=0):
+        return torch.ones_like(z)        # sqrt(cos^2 + sin^2) = 1
+
+
+def make_act(arm: str, hidden: int = HIDDEN, c=0.6, beta=0.01, lo=0.005, hi=3.0) -> B.Act:
+    """The 13 arms of 0918 plus the three added ones, with the Snake family's per-unit
+    state sized to this box's hidden width rather than 0918's."""
+    if arm == "CR":
+        return ConcatReLU()
+    if arm == "DF":
+        return DeepFourier()
+    if arm == "LK07":
+        return B.Leaky("LK07", 0.7)
+    kinds = {"SNA": "snake", "KKA": "kk", "KKA23": "kk23", "KKT1": "kkt1"}
+    if arm in kinds:
+        return B.SnakeFamily(arm, kinds[arm], c, beta, lo, hi, widths=(hidden, hidden))
+    if arm == "RSL" and hidden != B.DIMS[1]:
+        # RandSmoothLeaky sizes its noise buffers from the 0918 module's DIMS
+        raise SystemExit("RSL is only wired for hidden=100")
+    return B.make_act(arm, c, beta, lo, hi)
+
+
+def layer_shapes(arm: str, hidden: int = HIDDEN) -> list[tuple[int, int]]:
+    """(out_features, in_features) of the three affine maps."""
+    k = 2 if arm in WIDE else 1
+    return [(hidden, DIMS[0]), (hidden, k * hidden), (N_CLASSES, k * hidden)]
+
+
+def init_params(arm: str, seed: int, device, hidden: int = HIDDEN):
+    """PyTorch nn.Linear default init, U(+-1/sqrt(fan_in)), from the host's `init` stream.
+
+    Identical draws in the identical order to `H.init_params(seed, device, DIMS)` for a
+    pointwise arm at hidden=100 (checked bit for bit in S-init); the width-doubling arms
+    differ only in that layers 2 and 3 have fan-in 2*hidden, which moves both the shape
+    and the bound.
+    """
+    import math
+    g = H.stream("init", seed)
+    params = []
+    for out_f, in_f in layer_shapes(arm, hidden):
+        bound = 1.0 / math.sqrt(in_f)
+        W = (torch.rand((out_f, in_f), generator=g, dtype=torch.float32) * 2 - 1) * bound
+        b = (torch.rand((out_f,), generator=g, dtype=torch.float32) * 2 - 1) * bound
+        params += [W.to(device), b.to(device)]
+    return params
+
+
+def n_params(arm: str, hidden: int = HIDDEN) -> int:
+    return sum(o * i + o for o, i in layer_shapes(arm, hidden))
 
 
 # --------------------------------------------------------------------------
@@ -232,7 +326,7 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
         lr: float = LR, c: float = 0.6, beta: float = 0.01, lo: float = 0.005,
         hi: float = 3.0, cifar: Cifar100 | None = None, fresh: bool = True,
         graph: bool = True, progress=None, debug: dict | None = None,
-        nan_slot: int | None = None) -> dict:
+        nan_slot: int | None = None, hidden: int = HIDDEN) -> dict:
     """Train one arm's R = len(seeds) runs in lockstep over the 30-task sequence.
 
     Every slot sees the same task shape at the same time (hard tasks are odd for every
@@ -248,7 +342,7 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
     """
     t_start = time.time()
     progress = progress or (lambda m: print(m, flush=True))
-    act = B.make_act(arm, c, beta, lo, hi)
+    act = make_act(arm, hidden, c, beta, lo, hi)
     R = len(seeds)
     cifar = cifar or Cifar100()
     X_all = cifar.inputs("train", cond, device)
@@ -259,7 +353,7 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
     plans = [task_plan(s) for s in seeds]
     g_batch = {s: H.stream("c51_batch", s) for s in seeds}
 
-    init = [q.detach() for s in seeds for q in H.init_params(s, device, DIMS)]
+    init = [q.detach() for s in seeds for q in init_params(arm, s, device, hidden)]
     P = [torch.stack(init[i::6]).contiguous() for i in range(6)]
     if nan_slot is not None:
         P[0][nan_slot] = float("nan")
@@ -435,7 +529,9 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
 
     prov = {"run_id": EXPERIMENT, **B.git_state(), "arm": arm, "cond": cond, "seeds": seeds,
             "slots": [{"seed": s} for s in seeds], "R": R, "lr": lr, "n_tasks": n_tasks,
-            "steps_per_task": STEPS_PER_TASK, "batch": BATCH, "dims": list(DIMS),
+            "steps_per_task": STEPS_PER_TASK, "batch": BATCH, "hidden": hidden,
+            "layer_shapes": layer_shapes(arm, hidden), "n_params": n_params(arm, hidden),
+            "phi_doubles_width": arm in WIDE, "dims": list(DIMS),
             "n_classes": N_CLASSES, "hard_classes": HARD_CLASSES,
             "per_class_train": PER_CLASS_TRAIN, "classes_used": CLASSES_USED,
             "task_parity": "task 1 hard, alternating (the paper's task 0 hard)",
@@ -463,7 +559,9 @@ def run(arm: str, seeds: list[int], cond: str, n_tasks: int, device, out: Path,
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("stage", choices=["run"])
-    ap.add_argument("--arm", required=True)
+    ap.add_argument("--arm", required=True, choices=list(ARM_ORDER))
+    ap.add_argument("--hidden", type=int, default=HIDDEN,
+                    help="hidden width; 94 is the equal-parameter width for CR/DF (spec addendum 1)")
     ap.add_argument("--seeds", default="0-9")
     ap.add_argument("--cond", default="std", choices=list(CONDS))
     ap.add_argument("--tasks", type=int, default=N_TASKS)
@@ -480,9 +578,11 @@ def main() -> None:
     a = ap.parse_args()
     torch.set_num_threads(a.threads)
     device = H.setup(a.device)
-    out = Path(a.out) if a.out else OUT_ROOT / f"{a.arm}_{a.cond}_lr{a.lr:g}"
+    tag = f"{a.arm}_{a.cond}_lr{a.lr:g}" + (f"_h{a.hidden}" if a.hidden != HIDDEN else "")
+    out = Path(a.out) if a.out else OUT_ROOT / tag
     run(a.arm, B.parse_ints(a.seeds), a.cond, a.tasks, device, out, lr=a.lr, c=a.c,
-        beta=a.beta, lo=a.alpha_lo, hi=a.alpha_hi, fresh=not a.no_fresh, graph=not a.no_graph)
+        beta=a.beta, lo=a.alpha_lo, hi=a.alpha_hi, fresh=not a.no_fresh,
+        graph=not a.no_graph, hidden=a.hidden)
 
 
 if __name__ == "__main__":

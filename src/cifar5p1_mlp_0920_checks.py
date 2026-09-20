@@ -280,6 +280,84 @@ def s_graph(device, cifar) -> bool:
     return record("S-graph", a == b, {"identical": a == b, "tasks": 2, "arm": "SNA"})
 
 
+def s_init(device) -> bool:
+    """This box's init has to be the host's, draw for draw, wherever the shapes coincide.
+
+    For a pointwise arm at hidden=100 the parameter shapes are exactly the host's DIMS, so
+    every tensor must match bit for bit; for CR/DF layers 2 and 3 have fan-in 200, so they
+    must NOT match, and their bound must be the PyTorch default 1/sqrt(200).
+    """
+    ok, detail = True, {}
+    for arm in ("R", "LK07"):
+        mine = C.init_params(arm, 7, device)
+        host = H.init_params(7, device, C.DIMS)
+        ok &= all(bool(torch.equal(a, b.detach())) for a, b in zip(mine, host))
+    for arm in C.WIDE:
+        p = C.init_params(arm, 7, device)
+        shapes = [tuple(q.shape) for q in p]
+        want = [(100, 3072), (100,), (100, 200), (100,), (100, 200), (100,)]
+        ok &= shapes == want
+        # U(+-1/sqrt(fan_in)): the observed extreme must sit just under the bound
+        for i, fan in ((2, 200), (4, 200)):
+            bound = 1.0 / 200 ** 0.5
+            hi = float(p[i].abs().max())
+            ok &= 0.97 * bound < hi <= bound
+        detail[arm] = {"shapes": shapes, "n_params": C.n_params(arm)}
+    detail["pointwise_n_params"] = C.n_params("R")
+    detail["equal_param_hidden_for_wide"] = max(
+        h for h in range(2, 201) if C.n_params("CR", h) <= C.n_params("R"))
+    return record("S-init", ok, detail)
+
+
+def s_act_new(device) -> bool:
+    """The three added arms' derivatives, against autograd, on a grid.
+
+    LK07 is pointwise, so phi' is compared directly.  CR and DF map n preactivations to
+    2n outputs, so there is no scalar phi': the check is the vector-Jacobian product
+    against a random cotangent, which is what training actually uses.  `dphi` is then
+    checked to be the Jacobian's column norm, the quantity the dead/mob readouts assume.
+    """
+    z = torch.linspace(-60, 60, 4001, device=device).view(1, -1, 1).clone()
+    ok, detail = True, {}
+    for arm in ("LK07", "CR", "DF"):
+        act = C.make_act(arm)
+        zz = z.clone().requires_grad_(True)
+        out = act.phi(zz, 0, True)
+        g = torch.randn_like(out)
+        (vjp,) = torch.autograd.grad((out * g).sum(), zz)
+        if arm == "LK07":
+            want = g * act.dphi(z, 0)
+        elif arm == "CR":
+            want = g[..., :1] * (z > 0).to(z.dtype) - g[..., 1:] * (z < 0).to(z.dtype)
+        else:
+            want = g[..., :1] * torch.cos(z) - g[..., 1:] * torch.sin(z)
+        err = float((vjp - want).abs().max())
+        # the reference is built from the same float32 pieces, so the only slack is the
+        # rounding of one multiply-add: one ulp at the magnitude in play
+        bound = float(torch.finfo(torch.float32).eps) * float(want.abs().max().clamp_min(1.0)) * 4
+        col = act.dphi(z, 0)
+        if arm == "CR":
+            jac = ((z > 0).float() ** 2 + (z < 0).float() ** 2).sqrt()
+        elif arm == "DF":
+            jac = (torch.cos(z) ** 2 + torch.sin(z) ** 2).sqrt()
+        else:
+            jac = act.dphi(z, 0)
+        colerr = float((col - jac).abs().max())
+        ok &= err <= bound and colerr <= 1e-6
+        detail[arm] = {"vjp_max_err": err, "bound": bound, "dphi_vs_jacobian_norm": colerr,
+                       "out_width": out.shape[-1], "in_width": z.shape[-1]}
+    # mutation: CR with the two halves swapped must break the vjp comparison
+    act = C.ConcatReLU()
+    zz = z.clone().requires_grad_(True)
+    out = torch.cat([(-zz).clamp(min=0.0), zz.clamp(min=0.0)], dim=-1)
+    g = torch.randn_like(out)
+    (vjp,) = torch.autograd.grad((out * g).sum(), zz)
+    want = g[..., :1] * (z > 0).to(z.dtype) - g[..., 1:] * (z < 0).to(z.dtype)
+    mut_fails = float((vjp - want).abs().max()) > 1e-3
+    return record("S-act-new", ok and mut_fails,
+                  {**detail, "mutation_swapped_halves_fails": mut_fails})
+
+
 def _rows(out: Path, name="per_task.csv"):
     return list(csv.DictReader((out / name).open()))
 
@@ -355,7 +433,7 @@ def main() -> None:
     device = H.setup(a.device)
     t0 = time.time()
     cifar = C.Cifar100()
-    ok = s_data(cifar) & s_plan() & s_batch(cifar) & s_head()
+    ok = s_data(cifar) & s_plan() & s_batch(cifar) & s_head() & s_init(device) & s_act_new(device)
     if a.stage == "main":
         ok &= s_stack(device, cifar)
         ok &= s_graph(device, cifar)
