@@ -1,0 +1,62 @@
+{
+  "independent_audit": false,
+  "scope": "post-run actual-state mutation and resume checks",
+  "mutations": {
+    "std_as_raw": {
+      "detected": true,
+      "message": "('ELU', 1, 1, 1, 'hist mean', 21.17932152748108, 4.408634140418144e-06)",
+      "changed_preactivation_elements": 120000
+    },
+    "wrong_seed_images": {
+      "detected": true,
+      "message": "('ELU', 1, 0, 1, 'hist mean', 3.816802978515625, 2.1345531422412023e-05)",
+      "changed_preactivation_elements": 120000
+    },
+    "hist_task_shift": {
+      "detected": true,
+      "message": "('ELU', 1, 0, 1, 'hist mean', 458.80156326293945, 0.00011896935757249594)"
+    },
+    "t01_as_t00": {
+      "detected": true,
+      "message": "initial state"
+    },
+    "V_ones": {
+      "detected": true,
+      "message": "('KKT1', 1, 0, 1, 'csv', {'zbar_l1': -2.4807674884796143, 'zsd_l1': 5.803841590881348, 'dead_frac_l1': 0.0, 'mob_l1': 1.069453477859497, 'memo_acc': 0.41083332896232605})",
+      "changed_layer2_elements": 2400000
+    },
+    "V_layers_swapped": {
+      "detected": true,
+      "message": "('KKT1', 1, 0, 1, 'csv', {'zbar_l1': -2.4807674884796143, 'zsd_l1': 5.803841590881348, 'dead_frac_l1': 0.0, 'mob_l1': 0.9552012085914612, 'memo_acc': 0.7800000309944153})",
+      "changed_layer2_elements": 2400000
+    }
+  },
+  "actual_resume": {
+    "all_equal": true,
+    "keys": 55,
+    "checks": {
+      "task": 2,
+      "mean_max_abs_error": 0.0,
+      "mean_max_error_over_bound": 0.0,
+      "z16_exact": true,
+      "csv_exact": true,
+      "alpha_exact": true,
+      "closure_max_abs": 8.526512829121202e-14,
+      "closure_max_error_ratio": 0.0006991105320649807,
+      "all_pass": true,
+      "elapsed_s": 1.7573847770690918,
+      "peak_rss_bytes": 2337832960,
+      "peak_cuda_bytes": 1025625600
+    }
+  },
+  "all_pass": true,
+  "elapsed_s": 6.87086033821106,
+  "source_sha256": {
+    "analysis/cifar_ledger_0920/replay.py": "d3f5ad0a30b0a588b2f9472696770f96383cf99419573f88fff74c275bc272f7",
+    "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
+    "analysis/cifar_ledger_0920/audit.py": "4c47dd08e3c508fe7fb58987a8df948e6abb174010c341d77d99f986e0972964",
+    "analysis/cifar_ledger_0920/report.py": "4433e00d7edb0079541dc66ae45ae0194c30962984b7cb937ca390e831c8faa0",
+    "analysis/cifar_ledger_0920/describe.py": "dcc1a74b71127e821c7cdd02a273cc10a7f1cc6748234a29c075353e9794067a",
+    "analysis/cifar_ledger_0920/checks.py": "b7afe118842561f4123ed87377091bca13e8b7c9166ee2e1aad62c89fc96376b"
+  }
+}

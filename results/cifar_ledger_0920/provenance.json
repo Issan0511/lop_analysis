@@ -1,0 +1,40 @@
+{
+  "run_id": "cifar_ledger_0920",
+  "started_utc": "2026-09-20T05:17:26Z",
+  "started_epoch": 1789881446.6462398,
+  "git_hash": "45b12f22d8e60a6299d2722b9155cb5dc096a18d",
+  "dirty_src_analysis": [],
+  "approval_commit": "4aec348",
+  "spec_sha256": "236353538a20378a7adf0e23dec43c866a9b758a843c8acce938a182ed1cf9e7",
+  "command": [
+    "analysis/cifar_ledger_0920/replay.py"
+  ],
+  "environment": {
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.1",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "cuda": "13.0",
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "driver": "580.173.02",
+    "tf32": false,
+    "matmul_precision": "highest",
+    "deterministic": true,
+    "threads": 2,
+    "cublas": ":4096:8",
+    "cpu_smallest_subnormal_preserved": true,
+    "cuda_smallest_subnormal_preserved": true
+  },
+  "source": {
+    "source_sha256": {
+      "src/rlcifar_mlp_battle_0918.py": "27507ffb32acd33f1d0d3807825900aeddba811546211090d1c11bc8dcfcdf63",
+      "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+      "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+      "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+    },
+    "diffs": {
+      "e7069ac": "diff --git a/src/rlcifar_mlp_battle_0918.py b/src/rlcifar_mlp_battle_0918.py\nindex 9391c9b..67e597c 100644\n--- a/src/rlcifar_mlp_battle_0918.py\n+++ b/src/rlcifar_mlp_battle_0918.py\n@@ -478,7 +478,7 @@ def git_state() -> dict:\n \n def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int, device,\n         out: Path, lr: float = LR, c: float = 0.6, beta: float = 0.01, lo: float = 0.005,\n-        hi: float = 3.0, progress=print, cifar: RC.Cifar10 | None = None,\n+        hi: float = 3.0, progress=None, cifar: RC.Cifar10 | None = None,\n         debug: dict | None = None, perturb: list[float] | None = None,\n         nan_slot: int | None = None, snapshots: bool = True, checkpoint: bool = False,\n         resume: bool = False, graph: bool = True) -> dict:\n@@ -496,6 +496,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,\n     kernels on the same static tensors, so the rows are the eager engine's bit for bit (S-graph),\n     without a host round trip per step.\"\"\"\n     t_start = time.time()\n+    progress = progress or (lambda m: print(m, flush=True))   # a redirected stdout is block-buffered\n     act = make_act(arm, c, beta, lo, hi)\n     slots = [(s, cd) for s in seeds for cd in conds]\n     R = len(slots)\n",
+      "2fa57c3": ""
+    }
+  },
+  "independent_audit": false
+}
