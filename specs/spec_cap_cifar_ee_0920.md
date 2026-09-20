@@ -1,6 +1,6 @@
 # cap_cifar_ee_0920 — CIFAR・ELU/std の重みの成長を層別に止める（S5）
 
-状態: **設計・予測の登録案。Issa は「S4→S5」の順を採用（2026-09-20）。推奨設計の裁定・Issa の予測・実装 GO は未記入。実装・検査・本走は未実施。**
+状態: **2026-09-20 Issaが推奨設計と予測内容を採用し、S4→S5の実装・本走GO。科学的な定義は固定。**
 
 作成: 2026-09-20 / 起草: Codex / 起点: `origin/main=273a6bc`（S4のspec起案まで。S4の実験結果はまだ無い）。
 run: `cap_cifar_ee_0920` / branch: `codex/cap_cifar_ee_0920` / worktree: `wt/cap_cifar_ee_0920`。
@@ -233,3 +233,7 @@ S-projectの合格幅はu・γ_n・絶対量から計算し、観測残差に合
 `CLAUDE.md` §4どおりgit外出力（pycache以外）を `/home/issan/Projects/obsidian-research-data/cap_cifar_ee_0920/` へ退避し、source/backup/bytes/SHA256のmanifestをcommitする。mainへmerge/push・到達確認後に自分のworktree/branchを削除。元バトル、A6/S4、共有data、他セッションのworktreeには触らない。
 
 **今回のspec納品**: 実装・生データなし。文書commitをmainへ統合して片付け、GO後に同じrun名で最新mainからworktreeを作り直す。
+
+## 11. 採用・GO記録（実装前）
+
+2026-09-20T16:09:37.787296+09:00、Issa「推奨設計と予測を採用して、S4→S5の実装・本走へ進めます」。§6の全推奨設計とCodexの予測内容を採用。確率はCodex本人の確率として保持し、Issaの確率には転記しない。上の未記入欄は起案時の記録で、この追記が採用記録となる。S4→S5の順で実装・検査・本走・結果記録・退避・main統合を進める。S5の設計と予測もS4の新規結果を見る前に採用済み。追加のGO確認は不要。
