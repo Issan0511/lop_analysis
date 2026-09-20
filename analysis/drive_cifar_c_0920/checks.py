@@ -67,6 +67,10 @@ def mutated_measure(old,new,args):
 
 def fixtures():
     args,f=fixture();out,cm,hm=N.measure(*args)
+    # softmax rounds p_old to 1 while another class retains positive mass.
+    near=N.decompose(torch.ones(1,16,1),torch.ones(1,16,1),torch.tensor([0.,-37.]).expand(1,16,2),torch.tensor([[[0.],[1.]]]),torch.zeros(1,16,dtype=torch.long),torch.ones(1,16,dtype=torch.long))
+    assert near['eps'].eq(0).all() and near['e'].gt(0).all()
+    assert (near['e'].abs()<=near['eps'][...,None]*near['L']+near['eb']).all()
     assert not out['fail'].any() and not out['nonfinite'].any()
     assert out['S'].abs().sum()>0 and out['U'].abs().sum()>0 and args[6][0].norm()>0
     assert out['cert_down'].sum()+out['cert_up'].sum()>0,'nonvacuous certificates'

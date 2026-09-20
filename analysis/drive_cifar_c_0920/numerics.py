@@ -55,7 +55,7 @@ def decompose(h, z, logits, J, old, new):
     # must pass this scale-aware bound before projection into the certificate.
     absu = torch.bmm(p,J.abs()) + jn.abs()
     gb = gamma(128,U32)*torch.bmm((absu*gate).transpose(1,2),ht.abs())/B + 128*TINY32
-    eb = gamma(64)*(torch.bmm(p,J.abs())+jo.abs()+eps[...,None]*L)+TINY64
+    eb = gamma(64)*(torch.bmm(p,J.abs())+jo.abs()+eps[...,None]*L+L)+TINY64
     return dict(ht=ht,gate=gate,d=d,e=e,eps=eps,L=L,g=g,gconf=gc,gb=gb,eb=eb)
 
 def measure(before, after, mprev, mnew, vnew, gactual, old_features, new_features,

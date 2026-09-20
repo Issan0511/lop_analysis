@@ -209,3 +209,5 @@ Issa「とりあえず実装して」によりA2・A5の実装と検査seedに�
 誤差伝播は`analysis/drive_cifar_c_0920/numerics.py`を正本とする。実測gradient defectはCE再構成の独立gamma128(float32)境界を、moment defectはgamma4、実パラメータ差とdouble Adam候補の差はgamma12境界を通過してから条件の誤差幅へ射影する。float64の内積・和・平均の境界を別途足す。flushされた非正規化数を含む絶対項にはfloat32 tinyを用いる。入力平均は各更新前後のnative全1200枚a1のdouble平均。主条件はfloat32保存状態の実自己変位に対するもの。
 
 固定監査区間は最初/最後epochの開始時全状態・全順列・終了時全状態を保存し、全75更新を再現可能にする。毎epochのatomic checkpointを正本とし、未checkpointのshardは再開時に再計算する。失敗時はepochの再現可能fixtureを先に保存し、eager再走で最初の失敗更新の前後全状態と計測項を保存する。
+
+実装検査の追補: p_oldがdoubleで1に丸められても他クラスの正の質量が残る境界を合成fixtureで固定。epsilon=1−p_oldの絶対誤差をgamma64(float64)×Lとして残差上界の誤差へ伝播する（大きさは観測残差からfitしない）。検査seed t1/e205の最初の失敗fixtureも保存し、修正前の検査をPASSに書き換えない。
