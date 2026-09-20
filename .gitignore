@@ -114,5 +114,61 @@ results/swish_battle_0917/_launch/
 results/avgpool_cnn_0917/**/hist/
 results/avgpool_cnn_0917/_launch/
 
+# erosion_race_0919: preserve raw state/unit arrays and launcher logs in the data archive.
+results/erosion_race_0919/**/final.pt
+results/erosion_race_0919/**/unit_metrics.npz
+results/erosion_race_0919/_launch/
+
+# ch_chb_200_0919: archive raw continuation state after reporting.
+results/ch_chb_200_0919/**/*.pt
+results/ch_chb_200_0919/**/*.npz
+results/ch_chb_200_0919/**/snap/
+results/ch_chb_200_0919/**/hist/
+results/ch_chb_200_0919/logs/
+results/ch_chb_200_0919/checks/frozen_engine.py
+results/ch_chb_200_0919/checks/handshake.log
+# relu_doors_h_ref_0920: archive raw states, check attempts and logs after completion.
+results/relu_doors_h_ref_0920/**/snap/
+results/relu_doors_h_ref_0920/**/hist/
+results/relu_doors_h_ref_0920/**/ckpt.pt
+results/relu_doors_h_ref_0920/_checks/attempt*/
+results/relu_doors_h_ref_0920/_checks/mutants/
+results/relu_doors_h_ref_0920/_checks/frozen/
+results/relu_doors_h_ref_0920/_checks/worker_configs/
+results/relu_doors_h_ref_0920/_checks/worker_logs/
+results/relu_doors_h_ref_0920/_launch/
+results/cifar_ledger_0920/shards/
+results/cifar_ledger_0920/*.npz
+results/cifar_ledger_0920/logs/
+results/relu_doors_h_ref_0920/_smoke/
+# Registered S4 raw state and check attempts are archived after reporting.
+results/resp_cifar_ee_0920/**/*.pt
+results/resp_cifar_ee_0920/**/*.npz
+results/resp_cifar_ee_0920/logs/
+results/_checks_resp_cifar_ee_0920/*/
+results/_checks_resp_cifar_ee_0920/*.log
+# Registered S5 raw state and checks are archived after reporting.
+results/cap_cifar_ee_0920/**/*.pt
+results/cap_cifar_ee_0920/**/*.npz
+results/cap_cifar_ee_0920/logs/
+results/_checks_cap_cifar_ee_0920/*/
+results/_checks_cap_cifar_ee_0920/*.log
+# A2 implementation checks and raw per-epoch observations.
+results/drive_cifar_c_0920/**/*.pt
+results/drive_cifar_c_0920/**/*.npz
+results/drive_cifar_c_0920/logs/
+results/_checks_drive_cifar_c_0920/*/
+results/_checks_drive_cifar_c_0920/*.log
+# A5 initialization geometry arrays and implementation attempts.
+results/initgeom_cifar_0920/**/*.pt
+results/initgeom_cifar_0920/**/*.npz
+results/initgeom_cifar_0920/logs/
+results/_checks_initgeom_cifar_0920/*/
+results/_checks_initgeom_cifar_0920/*.log
+# A2 production input/state shards are archived after final reporting.
+results/drive_cifar_c_0920/run/
+# A5 production initialization arrays and manifests are archived after reporting.
+results/initgeom_cifar_0920/run/
+
 # CIFAR-100 (downloaded; md5 eb9058c3a382ffc7106e4002c42a8d85 = the published one, sha256 in every provenance.json)
 /data

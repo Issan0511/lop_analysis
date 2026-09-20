@@ -1,0 +1,126 @@
+{
+  "all_pass": true,
+  "checks": {
+    "S-identity-direction": {
+      "pass_": true,
+      "nonzero_terms": [
+        "self",
+        "upstream",
+        "cross",
+        "bias",
+        "delta"
+      ],
+      "undefined_direction_preserved": true
+    },
+    "S-readout": {
+      "pass_": true
+    },
+    "S-R1": {
+      "pass_": true,
+      "cases": 14
+    },
+    "S-R2": {
+      "pass_": true,
+      "cases": 9
+    },
+    "S-window": {
+      "pass_": true
+    },
+    "S-input-resume-stop": {
+      "pass_": true
+    },
+    "S-derivative-state": {
+      "pass_": true,
+      "arms": {
+        "ELU0": {
+          "max_train_diag_difference": 0.0,
+          "finite": true
+        },
+        "ELU1": {
+          "max_train_diag_difference": 0.0,
+          "finite": true
+        },
+        "GELU0": {
+          "max_train_diag_difference": 0.0,
+          "finite": true
+        },
+        "GELU1": {
+          "max_train_diag_difference": 0.0,
+          "finite": true
+        },
+        "SILU0": {
+          "max_train_diag_difference": 5.960464477539063e-08,
+          "finite": true
+        },
+        "SILU1": {
+          "max_train_diag_difference": 5.960464477539063e-08,
+          "finite": true
+        },
+        "R0": {
+          "max_train_diag_difference": 1.0,
+          "finite": true
+        },
+        "R1": {
+          "max_train_diag_difference": 1.0,
+          "finite": true
+        },
+        "KKT10": {
+          "max_train_diag_difference": 2.384185791015625e-07,
+          "finite": true
+        },
+        "KKT11": {
+          "max_train_diag_difference": 2.384185791015625e-07,
+          "finite": true
+        },
+        "LR0": {
+          "max_train_diag_difference": 0.0,
+          "finite": true
+        },
+        "LR1": {
+          "max_train_diag_difference": 0.0,
+          "finite": true
+        }
+      }
+    }
+  },
+  "mutations": {
+    "drop_cross": true,
+    "drop_bias": true,
+    "new_not_old_w": true,
+    "wrong_seed_mu_fixed_reference": true,
+    "drop_self_rotation": true,
+    "drop_upstream_rotation": true,
+    "old_direction_not_symmetric": true,
+    "drop_abs": true,
+    "dead_units_not_pairs": true,
+    "median_not_linear": true,
+    "average_fractions_crosses_half": true,
+    "strict_half_threshold": true,
+    "negative_denominator_sign": true,
+    "wrong_window_start": true,
+    "missing_task": true,
+    "duplicate_task": true,
+    "resume_other_commit": true,
+    "resume_other_input": true,
+    "corrupt_shard": true,
+    "partial_report": true,
+    "archive_path_escape": true,
+    "elu_expm1_floor": true,
+    "gelu_tanh": true,
+    "diag_instead_of_train": true,
+    "kkt_state_swap": true
+  },
+  "mutations_detected": 25,
+  "mutations_total": 25,
+  "source_sha256": {
+    "analysis/cifar_ledger_0920/audit.py": "31960b20233a1313760fae0baf195e7ca19553afc83d60f6e823ef931180631a",
+    "analysis/cifar_ledger_0920/checks.py": "a0b114cb376cf6b5555fda5d33b268a669fcf898ebe84f6072bdf8800b93cbda",
+    "analysis/cifar_ledger_0920/describe.py": "a9720249d9c38cecfedf8b8b28a6bf3f8a4a1b2917796dd711ea2057b8bf0309",
+    "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
+    "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
+    "analysis/cifar_ledger_0920/report.py": "81fe34ecee627c9c5d9099d0e81c7c28ba8d8859f3aaa1ec6055b7674c1fce73"
+  },
+  "elapsed_s": 0.7918899059295654,
+  "independent_audit": false,
+  "original_data_read": false
+}

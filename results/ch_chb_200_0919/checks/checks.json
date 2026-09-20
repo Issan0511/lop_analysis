@@ -1,0 +1,136 @@
+{
+  "all_pass": true,
+  "required": [
+    "S-source",
+    "S-continuity",
+    "S-resume",
+    "S-history",
+    "S-observer",
+    "S-columns",
+    "S-gate",
+    "S-H",
+    "S-B",
+    "S-pin",
+    "S-verdict",
+    "S-output",
+    "S-launch",
+    "S-cost"
+  ],
+  "required_mutations": {
+    "S-source": [
+      "CHB_arm",
+      "CHB_lam",
+      "CHB_seeds",
+      "CH_arm",
+      "CH_lam",
+      "CH_seeds",
+      "missing_checkpoint",
+      "one_byte"
+    ],
+    "S-continuity": [
+      "CHB_EMA",
+      "CHB_RNG",
+      "CHB_capture_restore",
+      "CHB_moment",
+      "CHB_t",
+      "CHB_tc",
+      "CHB_v",
+      "CH_EMA",
+      "CH_RNG",
+      "CH_capture_restore",
+      "CH_moment",
+      "CH_t",
+      "CH_tc",
+      "CH_v"
+    ],
+    "S-resume": [
+      "CHB_EMA",
+      "CHB_RNG",
+      "CHB_moment",
+      "CH_EMA",
+      "CH_RNG",
+      "CH_moment"
+    ],
+    "S-history": [
+      "missing_hist",
+      "one_point_missing",
+      "seed_mix",
+      "task_axis_shift"
+    ],
+    "S-observer": [
+      "CHB_layer_swap",
+      "CHB_logger_EMA",
+      "CHB_logger_RNG",
+      "CHB_round_old",
+      "CH_layer_swap",
+      "CH_logger_EMA",
+      "CH_logger_RNG",
+      "CH_round_old"
+    ],
+    "S-columns": [
+      "abs_mean_bias",
+      "divide_lr",
+      "layer_swap",
+      "omit_center",
+      "preH_r",
+      "sink_as_depth",
+      "wrong_axis"
+    ],
+    "S-gate": [
+      "dead_equals_gate",
+      "denominator",
+      "strict_negative"
+    ],
+    "S-H": [
+      "EMA_grad",
+      "beta_zero",
+      "centered_EMA",
+      "eval_updates_m"
+    ],
+    "S-B": [
+      "lambda_zero",
+      "nonzero_b1",
+      "wd_b3"
+    ],
+    "S-pin": [
+      "C_off_fixed_expected",
+      "bias_added"
+    ],
+    "S-verdict": [
+      "8_of_10",
+      "median_mean",
+      "missing_arm",
+      "missing_seed",
+      "missing_task",
+      "nan_zero",
+      "seed_shift",
+      "strict_boundary",
+      "window_shift"
+    ],
+    "S-output": [
+      "final_HEAD_substitution",
+      "old_root",
+      "parent_hash"
+    ],
+    "S-launch": [
+      "PID_only_success",
+      "STOP_ignored",
+      "slash_basename"
+    ],
+    "S-cost": [
+      "other_GPU_job"
+    ]
+  },
+  "positive_count": 69,
+  "mutation_count": 75,
+  "evidence_sha256": "6709bcaf13c73c222227a378f52b0dffa1085cbfc634710dabe88700d1ce4f4c",
+  "tested_source_sha256": {
+    "src/relu_doors_0919.py": "d577175ccfe7740e3966f8e57f5e11f965d0ae1213666f88d40a6d01ddd56f5e",
+    "src/ch_chb_200_0919.py": "5616de9b20bf1d48fb33264f38fc1b84d135ad8db09178fc46cafa4313635569",
+    "analysis/ch_chb_200_0919/checks.py": "e283dd3a1aab7be47cba4a16914379311ded997ed64674e4622ba2295c8f7e09",
+    "analysis/ch_chb_200_0919/report.py": "c95813dd42517c7a1d51631aa0c1f45f6247ea1f606fe4dba61ab4ce938ae312",
+    "analysis/ch_chb_200_0919/launch.py": "d2b6e1629a08a9e365d3692b60ced63e6275d544b73c3fe7c3a5aaa6010a2abd"
+  },
+  "wall_clock_s": 44.291359424591064,
+  "independent_audit": false
+}

@@ -1,0 +1,2746 @@
+{
+  "pre_run": {
+    "all_pass": true,
+    "source_sha256": {
+      "src/cifar_interventions_0920.py": "d079b5185249114d035afcce69d9636ef1db2807e642c3fd879cb2168907f37f",
+      "src/resp_cifar_ee_0920.py": "3b74d0cabba63241738d1988edfdec3fff48ab070e4d8a74e9e21a8e53b1b7eb",
+      "specs/spec_resp_cifar_ee_0920.md": "53313dc5f3467cd375a0a012294840533fc3ac99e6d81ba72d7b3e4f1d367555",
+      "src/rlcifar_mlp_battle_0918.py": "27507ffb32acd33f1d0d3807825900aeddba811546211090d1c11bc8dcfcdf63",
+      "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+      "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+      "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+      "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
+      "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
+      "analysis/resp_cifar_ee_0920/archive.py": "d9c9c5f58752abe3a87e0c34bb2e78f874102cab869c2e81a41f098275934111",
+      "analysis/resp_cifar_ee_0920/checks.py": "720975fed3ea2a3fecdb4eb9f290e3c7d3575eca0f0641a0216b0ebf889d76a7",
+      "analysis/resp_cifar_ee_0920/report.py": "fd495e13e0b7987763a667ecfa68904869b2f94977ddd98e077b8a7583fe20c5",
+      "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0"
+    },
+    "required": [
+      "S-host",
+      "S-branch",
+      "S-field",
+      "S-grad",
+      "S-derivative",
+      "S-reset",
+      "S-isolation",
+      "S-graph",
+      "S-verdict",
+      "S-resume/STOP",
+      "S-cost/CLI"
+    ],
+    "required_mutants": [
+      "lr",
+      "time",
+      "order",
+      "expm1",
+      "drop_anchor",
+      "alias_P0",
+      "wrong_layer",
+      "zero_field",
+      "sign_field",
+      "seed_field",
+      "unit_field",
+      "image_field",
+      "batch_position",
+      "drop_backward_shift",
+      "frozen_grad",
+      "backward_only",
+      "output_plus_one",
+      "reset_m_only",
+      "reset_keep_tc",
+      "epsilon_omitted",
+      "shallow_copy",
+      "diagnostic_rng",
+      "warmup_state",
+      "unpaired",
+      "one_sided",
+      "no_bonferroni",
+      "missing_seed",
+      "nonfinite",
+      "missing_arm",
+      "acc_lost",
+      "field_lost",
+      "different_identity",
+      "fake_done",
+      "bad_hash",
+      "wrong_arm",
+      "wrong_epochs",
+      "missing_provenance"
+    ],
+    "evidence": {
+      "S-derivative": {
+        "all_pass": true,
+        "z": [
+          -200.0,
+          -104.0,
+          -103.0,
+          -100.0,
+          -90.0,
+          -88.0,
+          -40.0,
+          -20.0,
+          -17.0,
+          -16.0,
+          -1.0,
+          -1.0000000116860974e-07,
+          -0.0,
+          0.0,
+          1.0000000116860974e-07,
+          1.0
+        ],
+        "native": [
+          0.0,
+          0.0,
+          1.401298464324817e-45,
+          3.783505853677006e-44,
+          8.194008692231508e-40,
+          6.054601485195952e-39,
+          4.24835413113866e-18,
+          2.061153470123145e-09,
+          4.139937814784389e-08,
+          1.1253517584464134e-07,
+          0.3678794801235199,
+          0.9999998807907104,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "diagnostic": [
+          0.0,
+          0.0,
+          1.401298464324817e-45,
+          3.783505853677006e-44,
+          8.194008692231508e-40,
+          6.054601485195952e-39,
+          4.24835413113866e-18,
+          2.061153470123145e-09,
+          4.139937814784389e-08,
+          1.1253517584464134e-07,
+          0.3678794801235199,
+          0.9999998807907104,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "max_error_ratio": 0.2220521677052542
+      },
+      "S-grad": {
+        "all_pass": true,
+        "max_error_ratio": 7.635304837324539e-06,
+        "independent": "manual float64 CE chain rule",
+        "layers": [
+          1,
+          2
+        ]
+      },
+      "S-verdict": {
+        "all_pass": true,
+        "labels": 7,
+        "quantiles": "independent Simpson integration",
+        "all_ten_required": true
+      },
+      "S-host": {
+        "all_pass": true,
+        "core_bit_exact": true,
+        "online_bit_exact": true,
+        "tasks": 2,
+        "epochs": 400,
+        "stack_R": 10,
+        "seconds_engine": 46.31736159324646,
+        "core_sha256": "c16c3dfec006206b6d0ac5d0f79d59dc51117911636cc959c0ab9c0cb079f1be"
+      },
+      "S-branch": {
+        "all_pass": true,
+        "arms": {
+          "N1": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.0,
+            "g_error_ratio": 0.0,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              }
+            ]
+          },
+          "N10": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.0,
+            "g_error_ratio": 0.0,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              }
+            ]
+          },
+          "N1r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.0,
+            "g_error_ratio": 0.0,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              }
+            ]
+          },
+          "N10r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.0,
+            "g_error_ratio": 0.0,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              }
+            ]
+          },
+          "R1_10": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999992143941865,
+            "g_error_ratio": 0.9921350925469538,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999892630833431,
+                "g_error_ratio": 0.9735450458912212
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999942697692558,
+                "g_error_ratio": 0.9681358246298255
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999983203266991,
+                "g_error_ratio": 0.9641664988245804
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999922835861803,
+                "g_error_ratio": 0.9652296124167381
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999900140863234,
+                "g_error_ratio": 0.9921350925469538
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999946989398869,
+                "g_error_ratio": 0.9755389905432453
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999948120835661,
+                "g_error_ratio": 0.9652332856996061
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999992143941865,
+                "g_error_ratio": 0.9626111904064982
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999892259554168,
+                "g_error_ratio": 0.9605380818980075
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999628649526596,
+                "g_error_ratio": 0.9611139412105568
+              }
+            ]
+          },
+          "R1_10r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999992143941865,
+            "g_error_ratio": 0.9921350925469538,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999892630833431,
+                "g_error_ratio": 0.9735450458912212
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999942697692558,
+                "g_error_ratio": 0.9681358246298255
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999983203266991,
+                "g_error_ratio": 0.9641664988245804
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999922835861803,
+                "g_error_ratio": 0.9652296124167381
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999900140863234,
+                "g_error_ratio": 0.9921350925469538
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999946989398869,
+                "g_error_ratio": 0.9755389905432453
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999948120835661,
+                "g_error_ratio": 0.9652332856996061
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999992143941865,
+                "g_error_ratio": 0.9626111904064982
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999892259554168,
+                "g_error_ratio": 0.9605380818980075
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999628649526596,
+                "g_error_ratio": 0.9611139412105568
+              }
+            ]
+          },
+          "S1_10r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999951267230492,
+            "g_error_ratio": 0.9808508960281618,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999842343726273,
+                "g_error_ratio": 0.9687347213786891
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999517899887246,
+                "g_error_ratio": 0.9678714628186836
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999941625040496,
+                "g_error_ratio": 0.9620632877541364
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999856447995898,
+                "g_error_ratio": 0.9638638995676129
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999456695917351,
+                "g_error_ratio": 0.9543147138027427
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999947485904987,
+                "g_error_ratio": 0.9808508960281618
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999839330807326,
+                "g_error_ratio": 0.9620662303084611
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999756682370381,
+                "g_error_ratio": 0.9557937832031473
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999951267230492,
+                "g_error_ratio": 0.9668265240434231
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999932333219007,
+                "g_error_ratio": 0.962595668278942
+              }
+            ]
+          },
+          "S1_10": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999951267230492,
+            "g_error_ratio": 0.9808508960281618,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999842343726273,
+                "g_error_ratio": 0.9687347213786891
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999517899887246,
+                "g_error_ratio": 0.9678714628186836
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999941625040496,
+                "g_error_ratio": 0.9620632877541364
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999856447995898,
+                "g_error_ratio": 0.9638638995676129
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999456695917351,
+                "g_error_ratio": 0.9543147138027427
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999947485904987,
+                "g_error_ratio": 0.9808508960281618
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999839330807326,
+                "g_error_ratio": 0.9620662303084611
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999756682370381,
+                "g_error_ratio": 0.9557937832031473
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999951267230492,
+                "g_error_ratio": 0.9668265240434231
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999932333219007,
+                "g_error_ratio": 0.962595668278942
+              }
+            ]
+          },
+          "S1u5r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999967247354231,
+            "g_error_ratio": 0.9214274704223944,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999824492232844,
+                "g_error_ratio": 0.8938230511052131
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999967247354231,
+                "g_error_ratio": 0.8797065709839342
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999382627115877,
+                "g_error_ratio": 0.9214274704223944
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999873826006788,
+                "g_error_ratio": 0.8594528051881848
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999897853581138,
+                "g_error_ratio": 0.8614137210538033
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999841166784639,
+                "g_error_ratio": 0.8787511317252371
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999873456873709,
+                "g_error_ratio": 0.8905381780178863
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999789376518141,
+                "g_error_ratio": 0.8632027272921728
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999909484541472,
+                "g_error_ratio": 0.8799726649655326
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999749393578895,
+                "g_error_ratio": 0.842684971020557
+              }
+            ]
+          },
+          "S1u10r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999686861896371,
+            "g_error_ratio": 0.8092460759301803,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9993900579331416,
+                "g_error_ratio": 0.7946894995215014
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9998708124452721,
+                "g_error_ratio": 0.6889665558384728
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999201733999149,
+                "g_error_ratio": 0.3929923650923097
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9997526516235903,
+                "g_error_ratio": 0.3448438005566509
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9993157360944284,
+                "g_error_ratio": 0.5536516391719214
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9995793788387758,
+                "g_error_ratio": 0.36331013370598886
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.999923868311654,
+                "g_error_ratio": 0.6687621517574805
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999386661108824,
+                "g_error_ratio": 0.5831906338819272
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999686861896371,
+                "g_error_ratio": 0.6881485305248917
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9994843654523503,
+                "g_error_ratio": 0.8092460759301803
+              }
+            ]
+          },
+          "S1u20r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9990332317639781,
+            "g_error_ratio": 0.0011832868431619504,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9972858625203134,
+                "g_error_ratio": 0.00027436245547966565
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9671508791321366,
+                "g_error_ratio": 0.00018353065209171572
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9567086070792956,
+                "g_error_ratio": 2.8948264872674325e-05
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9882711170948683,
+                "g_error_ratio": 9.888508881669808e-05
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.98953038902135,
+                "g_error_ratio": 0.0011832868431619504
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9705673133307169,
+                "g_error_ratio": 1.4726748875909072e-05
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9686416108052146,
+                "g_error_ratio": 0.0001582548319441511
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9664667728142463,
+                "g_error_ratio": 0.00047277907363334085
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9705503866011815,
+                "g_error_ratio": 0.00014055109925786673
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9990332317639781,
+                "g_error_ratio": 3.439688048678817e-05
+              }
+            ]
+          },
+          "S1_L1_10r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999996218831684,
+            "g_error_ratio": 0.9719738436225027,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999627000587441,
+                "g_error_ratio": 0.9530169251324584
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999995864929375,
+                "g_error_ratio": 0.9515029712336467
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999875856239228,
+                "g_error_ratio": 0.9607606516830491
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999870086842327,
+                "g_error_ratio": 0.9430686232105598
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999977632342198,
+                "g_error_ratio": 0.9481135165126053
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.999997659724842,
+                "g_error_ratio": 0.9284049932896749
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999956221820839,
+                "g_error_ratio": 0.9719738436225027
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999996218831684,
+                "g_error_ratio": 0.945100019920166
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999965857830233,
+                "g_error_ratio": 0.9510687434613746
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999973946318287,
+                "g_error_ratio": 0.9276208600381319
+              }
+            ]
+          }
+        },
+        "initial_output_bit_exact": true
+      },
+      "S-field": {
+        "all_pass": true,
+        "arms": {
+          "N1": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.0,
+            "g_error_ratio": 0.0,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              }
+            ]
+          },
+          "N10": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.0,
+            "g_error_ratio": 0.0,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              }
+            ]
+          },
+          "N1r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.0,
+            "g_error_ratio": 0.0,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              }
+            ]
+          },
+          "N10r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.0,
+            "g_error_ratio": 0.0,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.0,
+                "g_error_ratio": 0.0
+              }
+            ]
+          },
+          "R1_10": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999992143941865,
+            "g_error_ratio": 0.9921350925469538,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999892630833431,
+                "g_error_ratio": 0.9735450458912212
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999942697692558,
+                "g_error_ratio": 0.9681358246298255
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999983203266991,
+                "g_error_ratio": 0.9641664988245804
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999922835861803,
+                "g_error_ratio": 0.9652296124167381
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999900140863234,
+                "g_error_ratio": 0.9921350925469538
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999946989398869,
+                "g_error_ratio": 0.9755389905432453
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999948120835661,
+                "g_error_ratio": 0.9652332856996061
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999992143941865,
+                "g_error_ratio": 0.9626111904064982
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999892259554168,
+                "g_error_ratio": 0.9605380818980075
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999628649526596,
+                "g_error_ratio": 0.9611139412105568
+              }
+            ]
+          },
+          "R1_10r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999992143941865,
+            "g_error_ratio": 0.9921350925469538,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999892630833431,
+                "g_error_ratio": 0.9735450458912212
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999942697692558,
+                "g_error_ratio": 0.9681358246298255
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999983203266991,
+                "g_error_ratio": 0.9641664988245804
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999922835861803,
+                "g_error_ratio": 0.9652296124167381
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999900140863234,
+                "g_error_ratio": 0.9921350925469538
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999946989398869,
+                "g_error_ratio": 0.9755389905432453
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999948120835661,
+                "g_error_ratio": 0.9652332856996061
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999992143941865,
+                "g_error_ratio": 0.9626111904064982
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999892259554168,
+                "g_error_ratio": 0.9605380818980075
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999628649526596,
+                "g_error_ratio": 0.9611139412105568
+              }
+            ]
+          },
+          "S1_10r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999951267230492,
+            "g_error_ratio": 0.9808508960281618,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999842343726273,
+                "g_error_ratio": 0.9687347213786891
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999517899887246,
+                "g_error_ratio": 0.9678714628186836
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999941625040496,
+                "g_error_ratio": 0.9620632877541364
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999856447995898,
+                "g_error_ratio": 0.9638638995676129
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999456695917351,
+                "g_error_ratio": 0.9543147138027427
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999947485904987,
+                "g_error_ratio": 0.9808508960281618
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999839330807326,
+                "g_error_ratio": 0.9620662303084611
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999756682370381,
+                "g_error_ratio": 0.9557937832031473
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999951267230492,
+                "g_error_ratio": 0.9668265240434231
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999932333219007,
+                "g_error_ratio": 0.962595668278942
+              }
+            ]
+          },
+          "S1_10": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999951267230492,
+            "g_error_ratio": 0.9808508960281618,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999842343726273,
+                "g_error_ratio": 0.9687347213786891
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999517899887246,
+                "g_error_ratio": 0.9678714628186836
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999941625040496,
+                "g_error_ratio": 0.9620632877541364
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999856447995898,
+                "g_error_ratio": 0.9638638995676129
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999456695917351,
+                "g_error_ratio": 0.9543147138027427
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999947485904987,
+                "g_error_ratio": 0.9808508960281618
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999839330807326,
+                "g_error_ratio": 0.9620662303084611
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999756682370381,
+                "g_error_ratio": 0.9557937832031473
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999951267230492,
+                "g_error_ratio": 0.9668265240434231
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999932333219007,
+                "g_error_ratio": 0.962595668278942
+              }
+            ]
+          },
+          "S1u5r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999967247354231,
+            "g_error_ratio": 0.9214274704223944,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999824492232844,
+                "g_error_ratio": 0.8938230511052131
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999967247354231,
+                "g_error_ratio": 0.8797065709839342
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999382627115877,
+                "g_error_ratio": 0.9214274704223944
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999873826006788,
+                "g_error_ratio": 0.8594528051881848
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999897853581138,
+                "g_error_ratio": 0.8614137210538033
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999841166784639,
+                "g_error_ratio": 0.8787511317252371
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999873456873709,
+                "g_error_ratio": 0.8905381780178863
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999789376518141,
+                "g_error_ratio": 0.8632027272921728
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999909484541472,
+                "g_error_ratio": 0.8799726649655326
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999749393578895,
+                "g_error_ratio": 0.842684971020557
+              }
+            ]
+          },
+          "S1u10r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999686861896371,
+            "g_error_ratio": 0.8092460759301803,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9993900579331416,
+                "g_error_ratio": 0.7946894995215014
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9998708124452721,
+                "g_error_ratio": 0.6889665558384728
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999201733999149,
+                "g_error_ratio": 0.3929923650923097
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9997526516235903,
+                "g_error_ratio": 0.3448438005566509
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9993157360944284,
+                "g_error_ratio": 0.5536516391719214
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9995793788387758,
+                "g_error_ratio": 0.36331013370598886
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.999923868311654,
+                "g_error_ratio": 0.6687621517574805
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999386661108824,
+                "g_error_ratio": 0.5831906338819272
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999686861896371,
+                "g_error_ratio": 0.6881485305248917
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9994843654523503,
+                "g_error_ratio": 0.8092460759301803
+              }
+            ]
+          },
+          "S1u20r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9990332317639781,
+            "g_error_ratio": 0.0011832868431619504,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9972858625203134,
+                "g_error_ratio": 0.00027436245547966565
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9671508791321366,
+                "g_error_ratio": 0.00018353065209171572
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9567086070792956,
+                "g_error_ratio": 2.8948264872674325e-05
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9882711170948683,
+                "g_error_ratio": 9.888508881669808e-05
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.98953038902135,
+                "g_error_ratio": 0.0011832868431619504
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9705673133307169,
+                "g_error_ratio": 1.4726748875909072e-05
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9686416108052146,
+                "g_error_ratio": 0.0001582548319441511
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9664667728142463,
+                "g_error_ratio": 0.00047277907363334085
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9705503866011815,
+                "g_error_ratio": 0.00014055109925786673
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9990332317639781,
+                "g_error_ratio": 3.439688048678817e-05
+              }
+            ]
+          },
+          "S1_L1_10r": {
+            "all_pass": true,
+            "batches": 151,
+            "branch_bit_exact": true,
+            "argument_error_ratio": 0.9999996218831684,
+            "g_error_ratio": 0.9719738436225027,
+            "per_seed": [
+              {
+                "seed": 100,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999627000587441,
+                "g_error_ratio": 0.9530169251324584
+              },
+              {
+                "seed": 101,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999995864929375,
+                "g_error_ratio": 0.9515029712336467
+              },
+              {
+                "seed": 102,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999875856239228,
+                "g_error_ratio": 0.9607606516830491
+              },
+              {
+                "seed": 103,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999870086842327,
+                "g_error_ratio": 0.9430686232105598
+              },
+              {
+                "seed": 104,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999977632342198,
+                "g_error_ratio": 0.9481135165126053
+              },
+              {
+                "seed": 105,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.999997659724842,
+                "g_error_ratio": 0.9284049932896749
+              },
+              {
+                "seed": 106,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999956221820839,
+                "g_error_ratio": 0.9719738436225027
+              },
+              {
+                "seed": 107,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999996218831684,
+                "g_error_ratio": 0.945100019920166
+              },
+              {
+                "seed": 108,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999965857830233,
+                "g_error_ratio": 0.9510687434613746
+              },
+              {
+                "seed": 109,
+                "branch_bit_exact": true,
+                "argument_error_ratio": 0.9999973946318287,
+                "g_error_ratio": 0.9276208600381319
+              }
+            ]
+          }
+        }
+      },
+      "S-isolation": {
+        "all_pass": true,
+        "reversed_arm_order": true,
+        "frozen_source_unchanged": true
+      },
+      "S-graph": {
+        "all_pass": true,
+        "eager_graph_bit_exact": true,
+        "warmup_rolled_back": true
+      },
+      "S-resume/STOP": {
+        "all_pass": true,
+        "epoch_boundary": true,
+        "arms": [
+          "N1",
+          "R1_10",
+          "S1_L1_10r"
+        ]
+      },
+      "S-reset": {
+        "all_pass": true,
+        "first_update_bit_exact": true,
+        "analytic_error_ratio": 0.07503908422529967,
+        "zero_gradient": true
+      },
+      "S-cost/CLI": {
+        "all_pass": true,
+        "seconds_short_23_tasks": 17.431888818740845,
+        "peak_rss_bytes": 3198889984,
+        "peak_cuda_bytes": 3007622656,
+        "all_arms": true,
+        "main_epochs": 400
+      }
+    },
+    "mutants": {
+      "expm1": true,
+      "output_plus_one": true,
+      "drop_backward_shift": true,
+      "frozen_grad": true,
+      "backward_only": true,
+      "missing_seed": true,
+      "nonfinite": true,
+      "missing_arm": true,
+      "one_sided": true,
+      "no_bonferroni": true,
+      "unpaired": true,
+      "acc_lost": true,
+      "field_lost": true,
+      "lr": true,
+      "time": true,
+      "order": true,
+      "zero_field": true,
+      "sign_field": true,
+      "seed_field": true,
+      "unit_field": true,
+      "image_field": true,
+      "wrong_layer": true,
+      "alias_P0": true,
+      "drop_anchor": true,
+      "batch_position": true,
+      "epsilon_omitted": true,
+      "reset_m_only": true,
+      "reset_keep_tc": true,
+      "shallow_copy": true,
+      "diagnostic_rng": true,
+      "warmup_state": true,
+      "different_identity": true,
+      "fake_done": true,
+      "bad_hash": true,
+      "missing_provenance": true,
+      "wrong_epochs": true,
+      "wrong_arm": true
+    },
+    "attempt": "results/_checks_resp_cifar_ee_0920/attempt_1789889493631715664",
+    "seconds": 139.10384106636047,
+    "independent_audit": false,
+    "deferred_main_only": {
+      "S-prefix": "Mandatory actual main N1/N10 equality gate in runner, before report."
+    }
+  },
+  "prefix": {
+    "N1": {
+      "all_pass": true,
+      "core_bit_exact": true,
+      "rows_exact": true
+    },
+    "N10": {
+      "all_pass": true,
+      "core_bit_exact": true,
+      "rows_exact": true
+    }
+  },
+  "preflight": {
+    "N1": {
+      "all_pass": true,
+      "batches": 151,
+      "branch_bit_exact": true,
+      "argument_error_ratio": 0.0,
+      "g_error_ratio": 0.0,
+      "per_seed": [
+        {
+          "seed": 0,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 1,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 2,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 3,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 4,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 5,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 6,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 7,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 8,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 9,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        }
+      ]
+    },
+    "N10": {
+      "all_pass": true,
+      "batches": 151,
+      "branch_bit_exact": true,
+      "argument_error_ratio": 0.0,
+      "g_error_ratio": 0.0,
+      "per_seed": [
+        {
+          "seed": 0,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 1,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 2,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 3,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 4,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 5,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 6,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 7,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 8,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 9,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        }
+      ]
+    },
+    "N1r": {
+      "all_pass": true,
+      "batches": 151,
+      "branch_bit_exact": true,
+      "argument_error_ratio": 0.0,
+      "g_error_ratio": 0.0,
+      "per_seed": [
+        {
+          "seed": 0,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 1,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 2,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 3,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 4,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 5,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 6,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 7,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 8,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 9,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        }
+      ]
+    },
+    "N10r": {
+      "all_pass": true,
+      "batches": 151,
+      "branch_bit_exact": true,
+      "argument_error_ratio": 0.0,
+      "g_error_ratio": 0.0,
+      "per_seed": [
+        {
+          "seed": 0,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 1,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 2,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 3,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 4,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 5,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 6,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 7,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 8,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        },
+        {
+          "seed": 9,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.0,
+          "g_error_ratio": 0.0
+        }
+      ]
+    },
+    "R1_10": {
+      "all_pass": true,
+      "batches": 151,
+      "branch_bit_exact": true,
+      "argument_error_ratio": 0.9962183382676542,
+      "g_error_ratio": 0.9617994019386072,
+      "per_seed": [
+        {
+          "seed": 0,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9927781470382555,
+          "g_error_ratio": 0.8742485068995313
+        },
+        {
+          "seed": 1,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9854729767254086,
+          "g_error_ratio": 0.9617994019386072
+        },
+        {
+          "seed": 2,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9741919134168313,
+          "g_error_ratio": 0.9015686214844977
+        },
+        {
+          "seed": 3,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.98203536553553,
+          "g_error_ratio": 0.9205481551972227
+        },
+        {
+          "seed": 4,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9962183382676542,
+          "g_error_ratio": 0.8922957705115706
+        },
+        {
+          "seed": 5,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9896096607621719,
+          "g_error_ratio": 0.9387155527600228
+        },
+        {
+          "seed": 6,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9866721921621167,
+          "g_error_ratio": 0.9154354295525056
+        },
+        {
+          "seed": 7,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9930233653319696,
+          "g_error_ratio": 0.9089836117242291
+        },
+        {
+          "seed": 8,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9930278340471403,
+          "g_error_ratio": 0.8963755415558874
+        },
+        {
+          "seed": 9,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9939800913290462,
+          "g_error_ratio": 0.8936653814789328
+        }
+      ]
+    },
+    "R1_10r": {
+      "all_pass": true,
+      "batches": 151,
+      "branch_bit_exact": true,
+      "argument_error_ratio": 0.9962183382676542,
+      "g_error_ratio": 0.9617994019386072,
+      "per_seed": [
+        {
+          "seed": 0,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9927781470382555,
+          "g_error_ratio": 0.8742485068995313
+        },
+        {
+          "seed": 1,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9854729767254086,
+          "g_error_ratio": 0.9617994019386072
+        },
+        {
+          "seed": 2,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9741919134168313,
+          "g_error_ratio": 0.9015686214844977
+        },
+        {
+          "seed": 3,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.98203536553553,
+          "g_error_ratio": 0.9205481551972227
+        },
+        {
+          "seed": 4,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9962183382676542,
+          "g_error_ratio": 0.8922957705115706
+        },
+        {
+          "seed": 5,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9896096607621719,
+          "g_error_ratio": 0.9387155527600228
+        },
+        {
+          "seed": 6,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9866721921621167,
+          "g_error_ratio": 0.9154354295525056
+        },
+        {
+          "seed": 7,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9930233653319696,
+          "g_error_ratio": 0.9089836117242291
+        },
+        {
+          "seed": 8,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9930278340471403,
+          "g_error_ratio": 0.8963755415558874
+        },
+        {
+          "seed": 9,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9939800913290462,
+          "g_error_ratio": 0.8936653814789328
+        }
+      ]
+    },
+    "S1_10r": {
+      "all_pass": true,
+      "batches": 151,
+      "branch_bit_exact": true,
+      "argument_error_ratio": 0.9994845850179248,
+      "g_error_ratio": 0.3936301493049333,
+      "per_seed": [
+        {
+          "seed": 0,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9967830477988202,
+          "g_error_ratio": 1.6025764759615343e-07
+        },
+        {
+          "seed": 1,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.998605548188589,
+          "g_error_ratio": 6.996757316309076e-10
+        },
+        {
+          "seed": 2,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9978689352919692,
+          "g_error_ratio": 1.151415271223798e-10
+        },
+        {
+          "seed": 3,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9962589145206311,
+          "g_error_ratio": 1.6968525539689992e-08
+        },
+        {
+          "seed": 4,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.999068432170551,
+          "g_error_ratio": 1.9314717379295343e-06
+        },
+        {
+          "seed": 5,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9993683701675242,
+          "g_error_ratio": 0.030688433704025485
+        },
+        {
+          "seed": 6,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9964917616774547,
+          "g_error_ratio": 7.867001726365124e-07
+        },
+        {
+          "seed": 7,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.998800247328922,
+          "g_error_ratio": 1.204979531845733e-07
+        },
+        {
+          "seed": 8,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9994845850179248,
+          "g_error_ratio": 2.1197933733361126e-11
+        },
+        {
+          "seed": 9,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9963651764022916,
+          "g_error_ratio": 0.3936301493049333
+        }
+      ]
+    },
+    "S1_10": {
+      "all_pass": true,
+      "batches": 151,
+      "branch_bit_exact": true,
+      "argument_error_ratio": 0.9994845850179248,
+      "g_error_ratio": 0.3936301493049333,
+      "per_seed": [
+        {
+          "seed": 0,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9967830477988202,
+          "g_error_ratio": 1.6025764759615343e-07
+        },
+        {
+          "seed": 1,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.998605548188589,
+          "g_error_ratio": 6.996757316309076e-10
+        },
+        {
+          "seed": 2,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9978689352919692,
+          "g_error_ratio": 1.151415271223798e-10
+        },
+        {
+          "seed": 3,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9962589145206311,
+          "g_error_ratio": 1.6968525539689992e-08
+        },
+        {
+          "seed": 4,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.999068432170551,
+          "g_error_ratio": 1.9314717379295343e-06
+        },
+        {
+          "seed": 5,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9993683701675242,
+          "g_error_ratio": 0.030688433704025485
+        },
+        {
+          "seed": 6,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9964917616774547,
+          "g_error_ratio": 7.867001726365124e-07
+        },
+        {
+          "seed": 7,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.998800247328922,
+          "g_error_ratio": 1.204979531845733e-07
+        },
+        {
+          "seed": 8,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9994845850179248,
+          "g_error_ratio": 2.1197933733361126e-11
+        },
+        {
+          "seed": 9,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9963651764022916,
+          "g_error_ratio": 0.3936301493049333
+        }
+      ]
+    },
+    "S1u5r": {
+      "all_pass": true,
+      "batches": 151,
+      "branch_bit_exact": true,
+      "argument_error_ratio": 0.9999999459355337,
+      "g_error_ratio": 0.9785017516787793,
+      "per_seed": [
+        {
+          "seed": 0,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999985356764647,
+          "g_error_ratio": 0.9664103068417179
+        },
+        {
+          "seed": 1,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999939826278725,
+          "g_error_ratio": 0.9692144255397597
+        },
+        {
+          "seed": 2,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999996547898764,
+          "g_error_ratio": 0.964317279626531
+        },
+        {
+          "seed": 3,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999993712245987,
+          "g_error_ratio": 0.9767688935328563
+        },
+        {
+          "seed": 4,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999936481336836,
+          "g_error_ratio": 0.9690181262872111
+        },
+        {
+          "seed": 5,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999949673771578,
+          "g_error_ratio": 0.9706417013125977
+        },
+        {
+          "seed": 6,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999990483961749,
+          "g_error_ratio": 0.963400134393413
+        },
+        {
+          "seed": 7,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999982801605662,
+          "g_error_ratio": 0.9593331133567462
+        },
+        {
+          "seed": 8,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999999459355337,
+          "g_error_ratio": 0.9641139679377825
+        },
+        {
+          "seed": 9,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999940842738708,
+          "g_error_ratio": 0.9785017516787793
+        }
+      ]
+    },
+    "S1u10r": {
+      "all_pass": true,
+      "batches": 151,
+      "branch_bit_exact": true,
+      "argument_error_ratio": 0.9999999817874686,
+      "g_error_ratio": 0.9551242497432795,
+      "per_seed": [
+        {
+          "seed": 0,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999862091651971,
+          "g_error_ratio": 0.9468149977432984
+        },
+        {
+          "seed": 1,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999999152496523,
+          "g_error_ratio": 0.9551242497432795
+        },
+        {
+          "seed": 2,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999909435624402,
+          "g_error_ratio": 0.9370056750571424
+        },
+        {
+          "seed": 3,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999989364307283,
+          "g_error_ratio": 0.945045827437088
+        },
+        {
+          "seed": 4,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999696244910046,
+          "g_error_ratio": 0.9330599707217605
+        },
+        {
+          "seed": 5,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999949727459024,
+          "g_error_ratio": 0.9535077919005039
+        },
+        {
+          "seed": 6,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999787657226079,
+          "g_error_ratio": 0.9427819842697965
+        },
+        {
+          "seed": 7,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.999995280365921,
+          "g_error_ratio": 0.9395116170147708
+        },
+        {
+          "seed": 8,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999999817874686,
+          "g_error_ratio": 0.943497134006673
+        },
+        {
+          "seed": 9,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999902405795041,
+          "g_error_ratio": 0.9409580085222322
+        }
+      ]
+    },
+    "S1u20r": {
+      "all_pass": true,
+      "batches": 151,
+      "branch_bit_exact": true,
+      "argument_error_ratio": 0.9999985801341973,
+      "g_error_ratio": 0.9503121063833005,
+      "per_seed": [
+        {
+          "seed": 0,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999965475990591,
+          "g_error_ratio": 0.8896319428988478
+        },
+        {
+          "seed": 1,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999953881117776,
+          "g_error_ratio": 0.9449404360852334
+        },
+        {
+          "seed": 2,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999595077332412,
+          "g_error_ratio": 0.9213571250461381
+        },
+        {
+          "seed": 3,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.999978460834959,
+          "g_error_ratio": 0.8866855904187361
+        },
+        {
+          "seed": 4,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999985801341973,
+          "g_error_ratio": 0.8672353932610073
+        },
+        {
+          "seed": 5,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999820242867886,
+          "g_error_ratio": 0.9071507627861848
+        },
+        {
+          "seed": 6,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999981299077261,
+          "g_error_ratio": 0.9027718427540585
+        },
+        {
+          "seed": 7,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.99999627878742,
+          "g_error_ratio": 0.9029148290379685
+        },
+        {
+          "seed": 8,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999962640798896,
+          "g_error_ratio": 0.9361748450572694
+        },
+        {
+          "seed": 9,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.999991018405559,
+          "g_error_ratio": 0.9503121063833005
+        }
+      ]
+    },
+    "S1_L1_10r": {
+      "all_pass": true,
+      "batches": 151,
+      "branch_bit_exact": true,
+      "argument_error_ratio": 0.9999881881750419,
+      "g_error_ratio": 0.9743957861132903,
+      "per_seed": [
+        {
+          "seed": 0,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999775686671415,
+          "g_error_ratio": 0.9454560533278782
+        },
+        {
+          "seed": 1,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999574697960794,
+          "g_error_ratio": 0.9222167619683298
+        },
+        {
+          "seed": 2,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999171590660223,
+          "g_error_ratio": 0.9310405687195337
+        },
+        {
+          "seed": 3,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9998405986307302,
+          "g_error_ratio": 0.9619909664287941
+        },
+        {
+          "seed": 4,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999859429030454,
+          "g_error_ratio": 0.9743957861132903
+        },
+        {
+          "seed": 5,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999054118212657,
+          "g_error_ratio": 0.9532495556069128
+        },
+        {
+          "seed": 6,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999881881750419,
+          "g_error_ratio": 0.9407891795399698
+        },
+        {
+          "seed": 7,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.999960288118983,
+          "g_error_ratio": 0.9450825538426262
+        },
+        {
+          "seed": 8,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9999596679077799,
+          "g_error_ratio": 0.9270687689774765
+        },
+        {
+          "seed": 9,
+          "branch_bit_exact": true,
+          "argument_error_ratio": 0.9998725795533172,
+          "g_error_ratio": 0.9476763371011052
+        }
+      ]
+    }
+  },
+  "all_pass": true,
+  "independent_audit": false
+}

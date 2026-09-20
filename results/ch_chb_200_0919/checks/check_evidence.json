@@ -1,0 +1,1124 @@
+{
+  "S-source": {
+    "positive": [
+      {
+        "name": "CH",
+        "pass_": true,
+        "values": {
+          "bytes": 38922344,
+          "sha256": "5135c3b634c292177f8d26fb6243ba8a6540b2aa22aaef9f2c9972e7ade9ec97"
+        }
+      },
+      {
+        "name": "CHB",
+        "pass_": true,
+        "values": {
+          "bytes": 38923880,
+          "sha256": "8e43503921212d4239818271a9153c3fc4dc64ff0f8e88ccdf4677d52f8f2866"
+        }
+      }
+    ],
+    "mutations": {
+      "CH_arm": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "meta"
+      },
+      "CH_seeds": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "meta"
+      },
+      "CH_lam": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "meta"
+      },
+      "CHB_arm": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "meta"
+      },
+      "CHB_seeds": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "meta"
+      },
+      "CHB_lam": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "meta"
+      },
+      "one_byte": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "missing_checkpoint": {
+        "detected": true,
+        "exception": "FileNotFoundError",
+        "message": "[Errno 2] No such file or directory: '/home/issan/Projects/claude/wt/ch_chb_200_0919/results/ch_chb_200_0919/checks/absent.pt'"
+      }
+    }
+  },
+  "S-continuity": {
+    "positive": [
+      {
+        "name": "CH_ready_and_RNG",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "CHB_ready_and_RNG",
+        "pass_": true,
+        "values": null
+      }
+    ],
+    "mutations": {
+      "CH_moment": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CH_EMA": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CH_RNG": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CH_v": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CH_tc": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CH_t": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CH_capture_restore": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "continuity"
+      },
+      "CHB_moment": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CHB_EMA": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CHB_RNG": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CHB_v": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CHB_tc": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CHB_t": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CHB_capture_restore": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "continuity"
+      }
+    }
+  },
+  "S-resume": {
+    "positive": [
+      {
+        "name": "CH_bitwise",
+        "pass_": true,
+        "values": {
+          "seeds": [
+            200,
+            201,
+            202,
+            203,
+            204,
+            205,
+            206,
+            207,
+            208,
+            209
+          ],
+          "epochs": 2,
+          "tasks": 3,
+          "state": "7371c81f3cc18a018d5f6b80fc80eda952f2b1dc8600a7c37f67a5541f642ef0"
+        }
+      },
+      {
+        "name": "CHB_bitwise",
+        "pass_": true,
+        "values": {
+          "seeds": [
+            200,
+            201,
+            202,
+            203,
+            204,
+            205,
+            206,
+            207,
+            208,
+            209
+          ],
+          "epochs": 2,
+          "tasks": 3,
+          "state": "b42cb847cb427ac8266f28ecfa211bc427947a039da02f97ec6e2dfc77f81ead"
+        }
+      }
+    ],
+    "mutations": {
+      "CH_moment": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "state differs"
+      },
+      "CH_EMA": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "state differs"
+      },
+      "CH_RNG": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "state differs"
+      },
+      "CHB_moment": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "state differs"
+      },
+      "CHB_EMA": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "state differs"
+      },
+      "CHB_RNG": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "state differs"
+      }
+    }
+  },
+  "S-history": {
+    "positive": [
+      {
+        "name": "CH",
+        "pass_": true,
+        "values": {
+          "seeds": 10,
+          "tasks": 50,
+          "snapshots": 510
+        }
+      },
+      {
+        "name": "CHB",
+        "pass_": true,
+        "values": {
+          "seeds": 10,
+          "tasks": 50,
+          "snapshots": 510
+        }
+      },
+      {
+        "name": "CH_append",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "CHB_append",
+        "pass_": true,
+        "values": null
+      }
+    ],
+    "mutations": {
+      "missing_hist": {
+        "detected": true,
+        "exception": "FileNotFoundError",
+        "message": "[Errno 2] No such file or directory: '/home/issan/Projects/claude/wt/ch_chb_200_0919/results/ch_chb_200_0919/checks/bad_history/hist/CH_raw_seed0.npz'"
+      },
+      "one_point_missing": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "('acc', 0, 50)"
+      },
+      "task_axis_shift": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "seed_mix": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      }
+    }
+  },
+  "S-observer": {
+    "positive": [
+      {
+        "name": "CH_frozen_on_off",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "CHB_frozen_on_off",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "CH_500_old_rows",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "CHB_500_old_rows",
+        "pass_": true,
+        "values": null
+      }
+    ],
+    "mutations": {
+      "CH_logger_EMA": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "continuity"
+      },
+      "CH_logger_RNG": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "continuity"
+      },
+      "CH_round_old": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CH_layer_swap": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CHB_logger_EMA": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "continuity"
+      },
+      "CHB_logger_RNG": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "continuity"
+      },
+      "CHB_round_old": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "CHB_layer_swap": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      }
+    }
+  },
+  "S-columns": {
+    "positive": [
+      {
+        "name": "Wtilde",
+        "pass_": true,
+        "values": {
+          "norm": [
+            5.0990195135927845,
+            7.788880963698615
+          ],
+          "reference": [
+            5.0990195135927845,
+            7.788880963698615
+          ],
+          "bound": 1.037687397835535e-14
+        }
+      },
+      {
+        "name": "omega",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "depth",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "r_formula",
+        "pass_": true,
+        "values": null
+      }
+    ],
+    "mutations": {
+      "omit_center": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "wrong_axis": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "divide_lr": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "layer_swap": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "abs_mean_bias": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "sink_as_depth": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "preH_r": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      }
+    }
+  },
+  "S-gate": {
+    "positive": [
+      {
+        "name": "mixed_and_zero",
+        "pass_": true,
+        "values": [
+          2,
+          6,
+          2
+        ]
+      },
+      {
+        "name": "autograd_at_zero",
+        "pass_": true,
+        "values": [
+          0.0,
+          1.0,
+          1.0
+        ]
+      }
+    ],
+    "mutations": {
+      "dead_equals_gate": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "strict_negative": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "denominator": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      }
+    }
+  },
+  "S-H": {
+    "positive": [
+      {
+        "name": "EMA_recurrence",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "train_eval",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "detached",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "Wm",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "eval_read_only",
+        "pass_": true,
+        "values": null
+      }
+    ],
+    "mutations": {
+      "beta_zero": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "centered_EMA": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "eval_updates_m": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "EMA_grad": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      }
+    }
+  },
+  "S-B": {
+    "positive": [
+      {
+        "name": "actual_policy",
+        "pass_": true,
+        "values": null
+      }
+    ],
+    "mutations": {
+      "nonzero_b1": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "lambda_zero": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "wd_b3": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      }
+    }
+  },
+  "S-pin": {
+    "positive": [
+      {
+        "name": "roundoff",
+        "pass_": true,
+        "values": {
+          "measured": [
+            9.934107462565105e-08,
+            4.967053731282552e-08
+          ],
+          "bound": [
+            1.5770400280484533e-06,
+            7.400911930707452e-07
+          ]
+        }
+      }
+    ],
+    "mutations": {
+      "C_off_fixed_expected": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "bias_added": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      }
+    }
+  },
+  "S-verdict": {
+    "positive": [
+      {
+        "name": "case0",
+        "pass_": true,
+        "values": {
+          "type": "HOLDS",
+          "reasons": [],
+          "omega_compatible": false,
+          "B": 0.987,
+          "W": 0.987,
+          "D": 0.0,
+          "Z": 0,
+          "k": [
+            1.0,
+            1.0
+          ],
+          "gminus": 0.0105,
+          "gplus": 0.021,
+          "dead_t50": 0,
+          "dead_last20_sum": 0,
+          "gate_t50": 50000,
+          "gate_last20_sum": 1000000
+        }
+      },
+      {
+        "name": "case1",
+        "pass_": true,
+        "values": {
+          "type": "GENTLE",
+          "reasons": [],
+          "omega_compatible": true,
+          "B": 0.987,
+          "W": 0.975,
+          "D": 0.01200000000000001,
+          "Z": 0,
+          "k": [
+            1.0,
+            1.0
+          ],
+          "gminus": 0.0105,
+          "gplus": 0.021,
+          "dead_t50": 0,
+          "dead_last20_sum": 0,
+          "gate_t50": 50000,
+          "gate_last20_sum": 1000000
+        }
+      },
+      {
+        "name": "case2",
+        "pass_": true,
+        "values": {
+          "type": "COLLAPSE",
+          "reasons": [
+            "PERFORMANCE_ONLY"
+          ],
+          "omega_compatible": false,
+          "B": 0.987,
+          "W": 0.49,
+          "D": 0.497,
+          "Z": 0,
+          "k": [
+            1.0,
+            1.0
+          ],
+          "gminus": 0.0105,
+          "gplus": 0.021,
+          "dead_t50": 0,
+          "dead_last20_sum": 0,
+          "gate_t50": 50000,
+          "gate_last20_sum": 1000000
+        }
+      },
+      {
+        "name": "case3",
+        "pass_": true,
+        "values": {
+          "type": "COLLAPSE",
+          "reasons": [
+            "DEPTH_ONLY"
+          ],
+          "omega_compatible": false,
+          "B": 0.987,
+          "W": 0.987,
+          "D": 0.0,
+          "Z": -1.6123907100833572,
+          "k": [
+            1.0,
+            1.0
+          ],
+          "gminus": 0.0105,
+          "gplus": 0.021,
+          "dead_t50": 0,
+          "dead_last20_sum": 0,
+          "gate_t50": 50000,
+          "gate_last20_sum": 1000000
+        }
+      },
+      {
+        "name": "case4",
+        "pass_": true,
+        "values": {
+          "type": "UNCLASSIFIED",
+          "reasons": [
+            "RESPONSE_ERODING"
+          ],
+          "omega_compatible": false,
+          "B": 0.987,
+          "W": 0.975,
+          "D": 0.01200000000000001,
+          "Z": 0,
+          "k": [
+            1.0,
+            1.0
+          ],
+          "gminus": 0.0105,
+          "gplus": 0.021,
+          "dead_t50": 0,
+          "dead_last20_sum": 0,
+          "gate_t50": 50000,
+          "gate_last20_sum": 1000001
+        }
+      },
+      {
+        "name": "case5",
+        "pass_": true,
+        "values": {
+          "type": "UNCLASSIFIED",
+          "reasons": [
+            "EXCESS_DROP"
+          ],
+          "omega_compatible": false,
+          "B": 0.987,
+          "W": 0.8,
+          "D": 0.18699999999999994,
+          "Z": 0,
+          "k": [
+            1.0,
+            1.0
+          ],
+          "gminus": 0.0105,
+          "gplus": 0.021,
+          "dead_t50": 0,
+          "dead_last20_sum": 0,
+          "gate_t50": 50000,
+          "gate_last20_sum": 1000000
+        }
+      },
+      {
+        "name": "case6",
+        "pass_": true,
+        "values": {
+          "type": "UNCLASSIFIED",
+          "reasons": [
+            "DEPTH_UNDEFINED"
+          ],
+          "omega_compatible": false,
+          "B": 0.987,
+          "W": 0.987,
+          "D": 0.0,
+          "Z": NaN,
+          "k": [
+            1.0,
+            1.0
+          ],
+          "gminus": 0.0105,
+          "gplus": 0.021,
+          "dead_t50": 0,
+          "dead_last20_sum": 0,
+          "gate_t50": 50000,
+          "gate_last20_sum": 1000000
+        }
+      },
+      {
+        "name": "case7",
+        "pass_": true,
+        "values": {
+          "type": "UNCLASSIFIED",
+          "reasons": [
+            "OMEGA_UNDEFINED"
+          ],
+          "omega_compatible": false,
+          "B": 0.987,
+          "W": 0.975,
+          "D": 0.01200000000000001,
+          "Z": 0,
+          "k": [
+            NaN,
+            1
+          ],
+          "gminus": NaN,
+          "gplus": NaN,
+          "dead_t50": 0,
+          "dead_last20_sum": 0,
+          "gate_t50": 50000,
+          "gate_last20_sum": 1000000
+        }
+      },
+      {
+        "name": "case8",
+        "pass_": true,
+        "values": {
+          "type": "NUMERICAL_FAILURE",
+          "reasons": [],
+          "omega_compatible": false,
+          "B": 0.987,
+          "W": NaN,
+          "D": NaN,
+          "Z": 0,
+          "k": [
+            1.0,
+            1.0
+          ],
+          "gminus": 0.0105,
+          "gplus": 0.021,
+          "dead_t50": 0,
+          "dead_last20_sum": 0,
+          "gate_t50": 50000,
+          "gate_last20_sum": 1000000
+        }
+      },
+      {
+        "name": "case9",
+        "pass_": true,
+        "values": {
+          "type": "HOLDS",
+          "reasons": [],
+          "omega_compatible": false,
+          "B": 0.987,
+          "W": 0.9858469762128947,
+          "D": 0.0011530237871052451,
+          "Z": 0,
+          "k": [
+            1.0,
+            1.0
+          ],
+          "gminus": 0.0105,
+          "gplus": 0.021,
+          "dead_t50": 0,
+          "dead_last20_sum": 0,
+          "gate_t50": 50000,
+          "gate_last20_sum": 1000000
+        }
+      },
+      {
+        "name": "case10",
+        "pass_": true,
+        "values": {
+          "type": "GENTLE",
+          "reasons": [
+            "BASELINE_OFFSET"
+          ],
+          "omega_compatible": false,
+          "B": 0.5,
+          "W": 0.5,
+          "D": 0.0,
+          "Z": -1.6023907100833572,
+          "k": [
+            1.0,
+            1.0
+          ],
+          "gminus": 0.0105,
+          "gplus": 0.021,
+          "dead_t50": 0,
+          "dead_last20_sum": 0,
+          "gate_t50": 50000,
+          "gate_last20_sum": 1000000
+        }
+      },
+      {
+        "name": "case11",
+        "pass_": true,
+        "values": {
+          "type": "GENTLE",
+          "reasons": [
+            "BASELINE_OFFSET"
+          ],
+          "omega_compatible": false,
+          "B": 0.96,
+          "W": 0.97,
+          "D": -0.010000000000000009,
+          "Z": 0,
+          "k": [
+            1.0,
+            1.0
+          ],
+          "gminus": 0.0105,
+          "gplus": 0.021,
+          "dead_t50": 0,
+          "dead_last20_sum": 0,
+          "gate_t50": 50000,
+          "gate_last20_sum": 1000000
+        }
+      },
+      {
+        "name": "HOLDS_HOLDS",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "HOLDS_GENTLE",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "HOLDS_COLLAPSE",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "HOLDS_UNCLASSIFIED",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "GENTLE_HOLDS",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "GENTLE_GENTLE",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "GENTLE_COLLAPSE",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "GENTLE_UNCLASSIFIED",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "COLLAPSE_HOLDS",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "COLLAPSE_GENTLE",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "COLLAPSE_COLLAPSE",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "COLLAPSE_UNCLASSIFIED",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "UNCLASSIFIED_HOLDS",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "UNCLASSIFIED_GENTLE",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "UNCLASSIFIED_COLLAPSE",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "UNCLASSIFIED_UNCLASSIFIED",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "support8",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "support9",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "support10",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "same_seed_support",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "t_quantile_integral",
+        "pass_": true,
+        "values": {
+          "cdf": 0.9499999999997933
+        }
+      },
+      {
+        "name": "beta_units",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "g_arithmetic",
+        "pass_": true,
+        "values": null
+      }
+    ],
+    "mutations": {
+      "8_of_10": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "strict_boundary": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "seed_shift": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "nan_zero": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "missing_arm": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "missing_seed": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "median_mean": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "window_shift": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "missing_task": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      }
+    }
+  },
+  "S-output": {
+    "positive": [
+      {
+        "name": "new_root",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "startup_hash",
+        "pass_": true,
+        "values": null
+      }
+    ],
+    "mutations": {
+      "old_root": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "wrong output root"
+      },
+      "parent_hash": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "final_HEAD_substitution": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      }
+    }
+  },
+  "S-launch": {
+    "positive": [
+      {
+        "name": "basename",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "STOP_checkpoint",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "PID_log_heartbeat",
+        "pass_": true,
+        "values": null
+      }
+    ],
+    "mutations": {
+      "slash_basename": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "log basename"
+      },
+      "STOP_ignored": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      },
+      "PID_only_success": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": ""
+      }
+    }
+  },
+  "S-cost": {
+    "positive": [
+      {
+        "name": "exclusive_fixture",
+        "pass_": true,
+        "values": null
+      },
+      {
+        "name": "measured",
+        "pass_": true,
+        "values": {
+          "wall_clock_s": 1.7902960777282715,
+          "late_hist_200task_s": 11.268605947494507,
+          "step_ms": 0.8249249458312988,
+          "estimated_two_arm_seconds": 10970.778894424438,
+          "snapshot_bytes_per_task": 17568220,
+          "peak_RSS_bytes": 3334127616,
+          "peak_GPU_bytes": 2500579328,
+          "free_disk_bytes": 519852388352,
+          "estimated_snapshots_bytes": 7027288000,
+          "note": "Sequential R=10; startup included in overhead; long-history compression grows. No accuracy displayed."
+        }
+      }
+    ],
+    "mutations": {
+      "other_GPU_job": {
+        "detected": true,
+        "exception": "AssertionError",
+        "message": "Other GPU compute PIDs: [1100713]"
+      }
+    }
+  }
+}

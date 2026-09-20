@@ -1,0 +1,106 @@
+{
+  "run_id": "erosion_race_0919",
+  "git_hash": "8856bab42b3aad4b012566624c3825cdfa0f172b",
+  "dirty_src_analysis": [],
+  "arm": "ELU",
+  "mode": "base",
+  "seeds": [
+    1001,
+    1002,
+    1003,
+    1004,
+    1005
+  ],
+  "R": 5,
+  "conds": [
+    "raw"
+  ],
+  "tasks": 2,
+  "epochs": 400,
+  "steps_per_task": 30000,
+  "completed_steps": 60000,
+  "max_steps": null,
+  "observed": true,
+  "graph": true,
+  "lr": 0.001,
+  "optimizer": "parent elementwise Adam",
+  "batch": 16,
+  "dims": [
+    3072,
+    100,
+    100,
+    10
+  ],
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "source_sha256": {
+    "src/erosion_race_0919.py": "7a88ab8bd5dd059544fe64b7659118a2e92ca206e42211967d40c32d78f0b31e",
+    "src/rlcifar_mlp_battle_0918.py": "27507ffb32acd33f1d0d3807825900aeddba811546211090d1c11bc8dcfcdf63",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "specs/spec_erosion_race_0919.md": "3f306a7c90ddded2c6c8be802c6c261825aa4f51fe36f90ca2de37512f468089"
+  },
+  "initial_params_sha256": "e4bbfe50343ed1943f75c1f7d27a6585ed644bb703e652a06d0330f23d4fc958",
+  "task_stream_sha256": [
+    {
+      "task": 1,
+      "labels": {
+        "1001": "11e029813c51e4d4db1d1ffe0ef3d7a67dcb2665a994fd224b456b9efe9085b4",
+        "1002": "c5b2437a6795611a1f71c5046ea9f36f34b03dacd5e4198a5e300c8dd632d2b1",
+        "1003": "7cee5ba114b0ae4f5f440856290165fe12233c8465fbeb5a854d9a3117c9873a",
+        "1004": "04f9938bcac8f75214ba5d0b3ebaec8bcec802a9be2b7779f21741c9af3a943f",
+        "1005": "57e65d207613363caa285369978b4b41f1fd0478c791206e9e43e32c7997a52a"
+      },
+      "orders": {
+        "1001": "db8600237a9206f7f84ad96db9eb0fcdb2640546f0ce74ec2c6042bc25e33b19",
+        "1002": "ca40e47a96033ae46309c32abcf4b396c0344afd07da39fc5221444f98429f09",
+        "1003": "156f0ab844e245e8cfca8b454c31b85dd84630e1c1e6d64931c037070fac4ad7",
+        "1004": "80beef259bcb74183385e3d120f4b2c1c5c398feaaf321bc213c31d80101dbf4",
+        "1005": "088a4ce9742235a995afd2f975027503b0a147147147aa150b1205fb3159271c"
+      },
+      "order_epochs_drawn": 400
+    },
+    {
+      "task": 2,
+      "labels": {
+        "1001": "1addab2c59e0c21c8a4bd59a318ccb1b4e3c020d4c12df36c333c0c9dac4caa9",
+        "1002": "5719c7e2d43071be5053d3084fe94c7a2a4b9921c0aefa959718e9c42d044c1c",
+        "1003": "ed31dc09cbb690efb59c40f23489ab5bb3f88d540ee8be559b570b8861f3a0a6",
+        "1004": "e1208cd795dd0240b83893a74090f0c99b66d3b17da7873565097717ed91038e",
+        "1005": "a9db9d9e99b71f38c20e354aff7edbe29e2280aabec3edb1be045250678671fa"
+      },
+      "orders": {
+        "1001": "445bdfad14560c9f9636f2bb0a23fdc5cca9c29f2d7d37c1e770054ef52daab4",
+        "1002": "ceb6d7885026ab362849220328b53e7b1d881079d9a16542e1e6d2d6f2fb4fd3",
+        "1003": "5b56292a5862a5a9de856743ec02f72dec4d703ff39dc87799d45bcae5a8a412",
+        "1004": "21603b787996f608146a30d2aba7d2764acbb08e51782a51669b6f42eef852c2",
+        "1005": "8d56a791d9e6b413de16e4b2d44248fb8a630a2e76aae332152896d68c3d0ef8"
+      },
+      "order_epochs_drawn": 400
+    }
+  ],
+  "subset_sha256": {
+    "1001": "818aa7c547d3134e8a606d83068a6fe12dbc38da6ac0f79253ea0c0a2cd26855",
+    "1002": "6514edf7197e41e9e4179a4528b6b53447e54eb79491282292fea09dd0f3b528",
+    "1003": "1ac58930488ab0df4892a8030f463b55e4557161ec7db61289779a3dc7a2f325",
+    "1004": "04ebb1c14377776677c59e0513b327b93658e2d230a5291953c0c72d51808932",
+    "1005": "f2c03ae9ed55ad8cebd2de43219bed560942d7a5da89d0cbae64a832fc1d1769"
+  },
+  "rng_roles": [
+    "rlc_subset",
+    "rlc_labels",
+    "rlc_batch",
+    "init"
+  ],
+  "probe": "first 64 subset images; fixed initial positive L1 mask; initial population sd >= 1e-6",
+  "flux": "window sums of mean perpoint ((Wafter-Wbefore)x+(bafter-bbefore))/sigma0 on fixed initial positive mask; up/down rectify before averaging",
+  "components": "shared actual Adam denominator and global correction; task-reset conf and inherited history",
+  "intervention": "task1 early1:5000 or late5001:10000; remove negative conf mean displacement minimally in W1,b1; moments untouched",
+  "engine": "parent stacked baddbmm + extra conf autograd and independent diagnostics",
+  "state_sha256": "8bcc5f0f8b179623a58c37005fb35e718bff65964d586ffd31527abb2780a74f",
+  "torch": "2.13.0+cu130",
+  "device": "cuda",
+  "cublas_workspace": ":4096:8",
+  "wall_clock_s": 162.87638187408447
+}
