@@ -63,6 +63,16 @@ def run(out):
     assert abs(a.mean()+b.mean()-(a+b).mean())<=L.gamma(8)*(abs(a).mean()+abs(b).mean())
     mutations['median_not_linear']=bool(np.median(a)+np.median(b)!=np.median(a+b))
     results['S-readout']=dict(pass_=True)
+    from analysis.cifar_ledger_0920.report import pair_fraction
+    rng=np.random.default_rng(12)
+    for _ in range(1000):
+        half=rng.integers(1,600,50)
+        counts=np.concatenate([half,1200-half]);rng.shuffle(counts)
+        assert pair_fraction(counts/1200)==.5
+        if (counts/1200).mean()>.5:
+            mutations['average_fractions_crosses_half']=True
+            break
+    assert mutations.get('average_fractions_crosses_half'), 'roundoff case not exercised'
 
     m=np.ones((11,2,3));sd=np.ones_like(m);online=np.ones(11);online[0]=np.nan
     def ev(q,on=online,mm=m,ss=sd):return L.first_event(np.array(q),on,mm,ss)

@@ -26,3 +26,13 @@ activation state, unchanged RNG, direct affine reconstruction, four-term closure
 Term calculations use float64 error propagation from the faithful float32 features. Undefined ratios remain undefined.
 
 The scientific results are a registered reanalysis of known trajectories, with no independent audit.
+
+## Before first outcome report
+
+The full replay completed on implementation commit `45b12f2` in about nine minutes; all 306 states passed.
+During a separate synthetic review, exactly 60,000 low-response pairs out of 120,000 could produce
+`0.5000000000000001` when per-unit fractions were averaged. Before reading any verdicts, the report
+was changed to recover and sum integer pair counts before division. This implements the registered
+strict-majority boundary and does not change its threshold. A regression fixture reproduces the issue.
+Late first crossings, the L2-ledger-when-L1-first annotation, and report-specific provenance were added
+in the same pre-report review. Replay code and its scientific arrays remain unchanged.

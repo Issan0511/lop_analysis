@@ -16,6 +16,13 @@ def write_csv(p,rows):
         for row in rows:w.writerow(R.clean(row))
 
 
+def pair_fraction(per_unit,n_images=1200):
+    # A mean of rounded fractions can be 0.5000000000000001 at exactly half.
+    counts=np.rint(np.asarray(per_unit)*n_images)
+    assert np.all(abs(np.asarray(per_unit)*n_images-counts)<=L.gamma(4)*n_images)
+    return counts.sum(-1)/(n_images*counts.shape[-1])
+
+
 def summarize_window(shards,slot,layer,a,b):
     ww=L.window(shards,slot,layer,a,b);d=ww['delta'];out=dict(start=a,end=b,n_intervals=b-a,delta=float(d.v),delta_error=float(d.e),delta_median=ww['delta_median'])
     for k in L.TERMS+('upstream_growth','upstream_rotation','self_growth','self_rotation'):
@@ -40,6 +47,8 @@ def report(out):
     out=Path(out)
     status=json.loads((out/'status.json').read_text());assert status['status']=='completed' and status['completed_states']==306,'refuse partial report'
     checks=json.loads((out/'checks.json').read_text());assert checks['all_pass']
+    gs=R.E.git_state();assert not gs['dirty_src_analysis'],'commit report before reading outcomes'
+    R.put(out/'report_provenance.json',dict(**gs,spec_sha256=R.sha(R.SPEC),replay_git_hash=json.loads((out/'provenance.json').read_text())['git_hash'],source_sha256={str(p.relative_to(R.ROOT)):R.sha(p) for p in Path(__file__).parent.glob('*.py')},independent_audit=False))
     seed_rows=[];windows=[];task_rows=[];units={};ledgers={}
     for arm in R.ARMS:
         shards=[]
@@ -51,13 +60,19 @@ def report(out):
         for k in shards[1]:
             if k.startswith('ledger_'):ledgers[arm+'__'+k]=np.stack([s[k] for s in shards[1:]])
         for slot,(seed,cond) in enumerate(R.SLOTS):
-            q=np.stack([s['train_low'][slot].mean(-1) for s in shards])
+            q=np.stack([pair_fraction(s['train_low'][slot]) for s in shards])
             online=np.array([s['online'][slot] for s in shards])
             m=np.stack([s['m'][slot] for s in shards]);sd=np.stack([s['sd'][slot] for s in shards])
             me=np.stack([s['m_error'][slot] for s in shards]);se=np.stack([s['sd_error'][slot] for s in shards])
             event=L.first_event(q,online,m,sd,me,se)
             base=dict(arm=arm,cond=cond,seed=seed,R1=event['label'],**{k:v for k,v in event.items() if k not in ('label','initial_low_layers')},initial_low_layers=';'.join(map(str,event['initial_low_layers'])),Q0_l1=q[0,0],Q0_l2=q[0,1])
-            if arm in ('KKT1','LR'):base['R1']='REPORT_ONLY';event['T_star']=None
+            for l in range(2):
+                hits=np.flatnonzero(q[11:,l]>.5)
+                base[f'first_late_low_l{l+1}']=int(hits[0]+11) if len(hits) else None
+                base[f'Q10_l{l+1}']=float(q[10,l])
+            base['R2_context']='L2_LEDGER_WHEN_L1_FIRST' if event['layer']=='L1_FIRST' else 'L2_LEDGER'
+            if arm in ('KKT1','LR'):
+                base['R1']='REPORT_ONLY';base['T_star']=None;event['T_star']=None
             for layer in range(2):
                 for a,b in [(0,10),(0,50),(1,10),(10,50)]:
                     ww,_=summarize_window(shards,slot,layer,a,b)
@@ -101,7 +116,7 @@ def report(out):
         predictions.append(dict(item='R2',arm=arm,cond='std',prediction='UPSTREAM_CARRIES',actual=actual,hit=actual=='UPSTREAM_CARRIES',confidence_codex=prob,issa_agreed=True))
     ee=[r for r in seed_rows if r['arm']=='ELU' and r['cond']=='std']
     for item,key,fn,p in [('R3','upstream_growth_fraction',lambda x:x>=.5,.7),('bias','bias_absolute_share',lambda x:x<.05,.75)]:
-        n=sum(r.get(key) is not None and np.isfinite(r[key]) and fn(r[key]) for r in ee)
+        n=sum(r.get(key) is not None and np.isfinite(r[key]) and fn(r[key]) and (item!='bias' or r['delta']+r['delta_error']<0) for r in ee)
         predictions.append(dict(item=item,arm='ELU',cond='std',prediction='at_least_6_of_10',actual=n,hit=n>=6,confidence_codex=p,issa_agreed=True))
     for name,rows in [('per_seed.csv',seed_rows),('windows.csv',windows),('per_task.csv',task_rows),('verdict.csv',verdict),('predictions.csv',predictions)]:write_csv(out/name,rows)
     R.save_npz(out/'units.npz',units);R.save_npz(out/'ledger_units.npz',ledgers)
