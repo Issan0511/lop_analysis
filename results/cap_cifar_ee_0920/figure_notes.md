@@ -1,0 +1,1 @@
+Curves are means across 10 seeds; shaded bands show the full seed range, not confidence intervals. The pale right-hand window is the registered task31–50 window. The bias panel averages units within each seed before plotting.

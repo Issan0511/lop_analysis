@@ -1,0 +1,315 @@
+{
+  "all_pass": true,
+  "pre_run": {
+    "all_pass": true,
+    "source_sha256": {
+      "src/cifar_interventions_0920.py": "d079b5185249114d035afcce69d9636ef1db2807e642c3fd879cb2168907f37f",
+      "src/cap_cifar_ee_0920.py": "a0c69a5b6c141a06c427f4a42db784962865ee87be4fc4ed3b1737dd0d4af715",
+      "specs/spec_cap_cifar_ee_0920.md": "ee0eb81ec3e4a9ab4bd76a4270dafcd473c681d375b23457f5a05556dc07132b",
+      "src/rlcifar_mlp_battle_0918.py": "27507ffb32acd33f1d0d3807825900aeddba811546211090d1c11bc8dcfcdf63",
+      "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+      "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+      "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+      "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
+      "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
+      "analysis/cap_cifar_ee_0920/checks.py": "16502d44853c28f4783166c825dd013b9653ad8bcbb45783fb771bf47d5ff4fa",
+      "analysis/cap_cifar_ee_0920/report.py": "95696345033ad2216a20dc721cad9082a7d863d4cbc3020f9adea83856452975",
+      "analysis/cap_cifar_ee_0920/stats.py": "689568ab451fd50f3388314fe2c1b2ccdd954082acb1ed14e630d7c5d26ed92b",
+      "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0"
+    },
+    "required": [
+      "S-host/off",
+      "S-radius",
+      "S-project",
+      "S-strength",
+      "S-bfix",
+      "S-branch/RNG",
+      "S-derivative",
+      "S-ledger",
+      "S-graph",
+      "S-resume/STOP",
+      "S-verdict",
+      "S-manifest/CLI",
+      "S-cost"
+    ],
+    "required_mutants": [
+      "lr",
+      "time",
+      "input_order",
+      "radius_initial",
+      "radius_mean",
+      "layer_swap",
+      "inflate",
+      "pre_project",
+      "project_W3",
+      "no_projection",
+      "moment_project",
+      "scale_ignored",
+      "radius_overwritten",
+      "b2_only",
+      "b3_fixed",
+      "bias_zero",
+      "grad_zero",
+      "alias",
+      "diagnostic_rng",
+      "output_plus_one",
+      "expm1",
+      "ledger_cross",
+      "ledger_bias",
+      "ledger_Wnew",
+      "ledger_otherseed",
+      "counter_warmup",
+      "missing_radius",
+      "missing_bfixed",
+      "missing_moment",
+      "missing_acc",
+      "different_identity",
+      "wrong_window",
+      "fixed_floor",
+      "unpaired",
+      "no_bonferroni",
+      "missing_seed",
+      "missing_arm",
+      "missing_task",
+      "duplicate",
+      "fake_done",
+      "bad_hash",
+      "twenty_tasks",
+      "missing_provenance"
+    ],
+    "evidence": {
+      "S-verdict": {
+        "all_pass": true,
+        "labels": true,
+        "boundary_equal_floor": true,
+        "zero_sd": true,
+        "nine_of_ten_gate": true,
+        "censoring": true,
+        "independent_t19_integration": true
+      },
+      "S-ledger": {
+        "all_pass": true,
+        "independent_four_term": true,
+        "symmetric_norm_direction": true
+      },
+      "S-derivative": {
+        "all_pass": true,
+        "z": [
+          -200.0,
+          -104.0,
+          -103.0,
+          -100.0,
+          -90.0,
+          -40.0,
+          -20.0,
+          -17.0,
+          -1.0,
+          -0.0,
+          0.0,
+          1.0
+        ],
+        "native": [
+          0.0,
+          0.0,
+          1.401298464324817e-45,
+          3.783505853677006e-44,
+          8.194008692231508e-40,
+          4.24835413113866e-18,
+          2.061153470123145e-09,
+          4.139937814784389e-08,
+          0.3678794801235199,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "diagnostic": [
+          0.0,
+          0.0,
+          1.401298464324817e-45,
+          3.783505853677006e-44,
+          8.194008692231508e-40,
+          4.24835413113866e-18,
+          2.061153470123145e-09,
+          4.139937814784389e-08,
+          0.3678794801235199,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "B16_vs_B1200_same_state": {
+          "max_abs_difference": [
+            1.5735626220703125e-05,
+            9.238719940185547e-06
+          ],
+          "mean_abs_difference": [
+            1.1421790672399579e-07,
+            2.0734901346968655e-07
+          ],
+          "test_seeds": [
+            100,
+            101,
+            102,
+            103,
+            104,
+            105,
+            106,
+            107,
+            108,
+            109
+          ]
+        }
+      },
+      "S-host/off": {
+        "all_pass": true,
+        "core_bit_exact": true,
+        "online_bit_exact": true,
+        "R": 10,
+        "tasks": 2,
+        "epochs": 400,
+        "seconds": 47.099273681640625,
+        "core_hash": "c16c3dfec006206b6d0ac5d0f79d59dc51117911636cc959c0ab9c0cb079f1be"
+      },
+      "S-radius": {
+        "all_pass": true,
+        "per_row": true,
+        "below_equal_above_zero": true
+      },
+      "S-project": {
+        "all_pass": true,
+        "independent_float64": true,
+        "coordinate_error_ratio": 0.0,
+        "moments_untouched": true,
+        "active_fixture": true
+      },
+      "S-strength": {
+        "all_pass": true,
+        "loose_scale": 1000,
+        "loose_steps": 75,
+        "loose_all_off": true,
+        "tight_scale": 0.5,
+        "tight_all_on": true
+      },
+      "S-bfix": {
+        "all_pass": true,
+        "both_hidden_exact": true,
+        "output_bias_free": true,
+        "raw_gradients_and_moments_match": true,
+        "candidate_displacement_nonzero": true
+      },
+      "S-branch/RNG": {
+        "all_pass": true,
+        "all_five_reversed_order": true,
+        "independent_clone": true,
+        "diagnostic_rng_unchanged": true
+      },
+      "S-graph": {
+        "all_pass": true,
+        "eager_graph_bit_exact": true,
+        "all_counter_warmup_rollback": true
+      },
+      "S-resume/STOP": {
+        "all_pass": true,
+        "epoch_resume_bit_exact": true,
+        "after_cap_resume": true
+      },
+      "S-manifest/CLI": {
+        "all_pass": true,
+        "all_five_arms": true,
+        "tasks": 3,
+        "guarded_cli": true,
+        "partial_reports_rejected": true
+      },
+      "S-cost": {
+        "all_pass": true,
+        "seconds_two_epochs": {
+          "ref": 0.1347675323486328,
+          "cap1": 0.24873113632202148,
+          "cap2": 0.14898061752319336,
+          "cap12": 0.2630894184112549,
+          "cap12_bfix": 0.2699317932128906
+        },
+        "seconds_cli": 7.467207908630371,
+        "peak_rss_bytes": 2873012224,
+        "peak_cuda_bytes": 2733003264,
+        "estimated_training_seconds": 10441.904878616333
+      }
+    },
+    "mutants": {
+      "missing_seed": true,
+      "missing_task": true,
+      "missing_arm": true,
+      "wrong_window": true,
+      "fixed_floor": true,
+      "no_bonferroni": true,
+      "unpaired": true,
+      "ledger_cross": true,
+      "ledger_bias": true,
+      "ledger_Wnew": true,
+      "ledger_otherseed": true,
+      "output_plus_one": true,
+      "expm1": true,
+      "radius_initial": true,
+      "radius_mean": true,
+      "layer_swap": true,
+      "radius_overwritten": true,
+      "inflate": true,
+      "scale_ignored": true,
+      "no_projection": true,
+      "moment_project": true,
+      "b2_only": true,
+      "b3_fixed": true,
+      "bias_zero": true,
+      "project_W3": true,
+      "pre_project": true,
+      "lr": true,
+      "time": true,
+      "input_order": true,
+      "grad_zero": true,
+      "missing_moment": true,
+      "missing_acc": true,
+      "missing_radius": true,
+      "missing_bfixed": true,
+      "counter_warmup": true,
+      "diagnostic_rng": true,
+      "alias": true,
+      "fake_done": true,
+      "bad_hash": true,
+      "different_identity": true,
+      "twenty_tasks": true,
+      "missing_provenance": true,
+      "duplicate": true
+    },
+    "attempt": "results/_checks_cap_cifar_ee_0920/attempt_1789891500591450916",
+    "seconds": 115.10215044021606,
+    "independent_audit": false
+  },
+  "pairing": {
+    "all_pass": true,
+    "arms": [
+      "ref",
+      "cap1",
+      "cap2",
+      "cap12",
+      "cap12_bfix"
+    ],
+    "tasks": 50,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ]
+  },
+  "ledger": {
+    "all_pass": true,
+    "ledger_error_ratio": 0.0009394515972146535,
+    "native_mean_error_ratio": 0.009409250253134115
+  },
+  "independent_audit": false
+}

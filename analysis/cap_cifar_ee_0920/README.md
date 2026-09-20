@@ -15,3 +15,16 @@ Run admission checks using `analysis/cap_cifar_ee_0920/checks.py` in the shared 
 Run the explicit-source report only after all five arms finish. Missing/nonfinite/invalid runs do not get a scientific label. Independent audit: none; these are implementer tests and independent numerical reference calculations.
 
 Admission completed: 13 required checks and 43 mutation controls passed. Earlier attempts exposed mistakes in the test harness's generated method inheritance/indentation; those attempts are retained. The zero-radius rule was also made explicit for nonzero subnormal rows. None of these checks used scientific seeds 0–9. The final short-run estimate is 10,442 seconds (~2.9 hours); peak test RSS ~2.87 GB and CUDA allocations ~2.73 GB.
+
+All five arms completed 50 tasks on 2026-09-20 10:52:51 UTC, in 9,832.37 seconds. The registered primary label is RESCUED. See `results/cap_cifar_ee_0920/interpretation.md` for the complete readout and limitations. Source hashes frozen at implementation commit 318c722 were unchanged during the run and report.
+
+From the repository root, regenerate outputs with the shared Python environment:
+
+```bash
+python analysis/cap_cifar_ee_0920/report.py --src results/cap_cifar_ee_0920
+python analysis/cap_cifar_ee_0920/audit_readout.py
+python analysis/cap_cifar_ee_0920/plot_summary.py
+python analysis/cap_cifar_ee_0920/supplement.py
+```
+
+The audit and plot scripts were prepared under the ignored log directory before outcomes were read, then copied unchanged here. The descriptive supplement was added after outcomes. These scripts do not change registration or training source hashes. Raw-file reads use the archive resolver after cleanup. The audit is an implementer cross-check, not an independent auditor's review.
