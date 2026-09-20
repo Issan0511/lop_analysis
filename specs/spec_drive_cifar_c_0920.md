@@ -1,6 +1,6 @@
 # drive_cifar_c_0920 — 課題間の第2層駆動をAdamの実更新で測る（A2）
 
-状態: **起案・推奨設計とCodex予測の記録まで。未実装・未計時・未実行。Issaの設計採用・予測・本走GO待ち。**
+状態: **実装・検査を許可（末尾追補）。検査結果はresults/drive_cifar_c_0920/implementation.jsonを正本とする。本走未実行・本走GO待ち。Issa本人の予測は未記入。**
 
 2026-09-20 / Codex / 起点main `6bf41b6`。run `drive_cifar_c_0920`、branch `codex/drive_cifar_c_0920`、worktree `wt/drive_cifar_c_0920`。親はvault `背骨CIFAR_S4S5_A3-A6_spec起案プロンプト_0920` A2追補、`中心主張v11作業リスト_0920` A2、`駆動源問題_0909` §12.1–12.7。型: [erosion_race](spec_erosion_race_0919.md)、[relu_doors](spec_relu_doors_0919.md)。
 
@@ -199,3 +199,13 @@ GPU1プロセス・共有lock `/tmp/lop_analysis_gpu.lock`。他ジョブと同�
 予定: `analysis/drive_cifar_c_0920/`、`src/drive_cifar_c_0920.py`、`results/drive_cifar_c_0920/`にsummary.md、verdict.json/csv、per_seed/per_task/per_epoch、window_calibration、certificate/closure/transport/conf_history集計、predictions、checks、provenance/input_manifest。raw/checkpoint/ログ/全検査attemptはgit外、退避先 `/home/issan/Projects/obsidian-research-data/drive_cifar_c_0920/` にサイズ・SHA256付きmanifestで保存。
 
 CLAUDE.md §4どおりmainへmerge/pushし、到達確認後に自分のworktree/branchだけ削除。今回のspec起案もmainへ統合して片付け、GO後に同名runのworktreeを最新mainから作り直す。既存C/S4/S5/A6・共有data・他セッションのファイルは変更しない。
+
+## 実装追補（2026-09-20、科学seed観測前）
+
+Issa「とりあえず実装して」によりA2・A5の実装と検査seedによる検証を開始する。本走GO・Issa本人の数値予測は未記録。本追補は実装許可であり、本走の開始記録ではない。
+
+宿主を読むとReLUは`torch.clamp(z,min=0)`であり、native backwardは厳密なz=0でも微分1を返す。§3の「z=0では0」は宿主の挙動を誤記していた。**宿主不変を優先してnative clampの微分（z>=0）を使う**。ゼロでの挙動を独立autograd fixtureで検査する。`relu_doors`の診断用dphi（z>0）との違いも隠さない。
+
+誤差伝播は`analysis/drive_cifar_c_0920/numerics.py`を正本とする。実測gradient defectはCE再構成の独立gamma128(float32)境界を、moment defectはgamma4、実パラメータ差とdouble Adam候補の差はgamma12境界を通過してから条件の誤差幅へ射影する。float64の内積・和・平均の境界を別途足す。flushされた非正規化数を含む絶対項にはfloat32 tinyを用いる。入力平均は各更新前後のnative全1200枚a1のdouble平均。主条件はfloat32保存状態の実自己変位に対するもの。
+
+固定監査区間は最初/最後epochの開始時全状態・全順列・終了時全状態を保存し、全75更新を再現可能にする。毎epochのatomic checkpointを正本とし、未checkpointのshardは再開時に再計算する。失敗時はepochの再現可能fixtureを先に保存し、eager再走で最初の失敗更新の前後全状態と計測項を保存する。
