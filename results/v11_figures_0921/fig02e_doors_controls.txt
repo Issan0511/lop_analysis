@@ -2,5 +2,6 @@
 H は中間層の中心化だけ、CS は同じ統計量の分散の側だけ（RMSNorm 的・中心化なし）、LN は文献どおりの
 LayerNorm。いずれも後期窓の中央値は ref と同じ床（H 0.113・CS 0.113・LN 0.206）で、
 本文の CH 0.987 に届かない。登録判定 N = NEED_CH（入力と中間層の両方が要る）の対照側。
+H は ref と同じく sd_2 が潰れる型（t50 で 0.079）で、沈んで死ぬのではない。
 LN が正側で線形化して実効階数が潰れる読みは relu_doors 結果ノート §3.2。
 元データ: results/relu_doors_h_ref_0920/H/per_task.csv・results/relu_doors_0919/{CS,LN}/per_task.csv。

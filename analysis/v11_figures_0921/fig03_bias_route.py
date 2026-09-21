@@ -3,6 +3,7 @@
 
 元データ: results/ch_chb_200_0919/{CH,CHB}/per_task.csv
 格: 腕別は登録（CH = SPLIT・CHB = HOLDS）、総合は INCONCLUSIVE を図中に明記
+bias は生の平均絶対値で出す（|b_2|/sd_2 は分母の sd_2 が動く・引用禁止 C）
 集約: seed ごとに転移の時刻が違うので個別線（§2.5-2 の例外）。
       variant="median" は中央値＋全範囲にしたときの見え方（比較用）。
 """
@@ -17,8 +18,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import data as D
 import style as S
 
+# 0922 Issa: |b_2|/sd_2 は分母が動くので生の平均絶対値を出す（引用禁止 C）。
 COLS = [("online_acc", S.AXIS["online"], "(a) 課題をまたぐ学習"),
-        ("bias_over_sd_l2", S.AXIS["bias2"], "(b) 第 2 層の bias"),
+        ("bias_absmean_l2", "第 2 層の $|b_2|$（生・平均絶対値）", "(b) 第 2 層の bias"),
         ("gate_zero_frac_l2", S.AXIS["gate0"], "(c) gate が厳密に 0")]
 
 
