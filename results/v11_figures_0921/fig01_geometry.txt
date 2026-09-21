@@ -1,0 +1,8 @@
+図 1. 幾何と初期配置。
+(a) は模式図で、測定値ではない。前活性 z は共通位置 w・mu + b と揺らぎ w・(x − mu) に分かれ、
+    bias は境界を平行に動かすレバーとして働く。
+(b) 点は seed 1 つずつ（20 seed）。太い縦の帯は登録した予測帯（independent seed Binomial の
+    二つの中央順序統計量に union bound をかけたもの・coverage >= 0.99375）。破線はガウス近似
+    2Phi(-2.33/r) で、予測帯そのものではない。3 条件とも PREDICTED。
+    gamma 梯子（L1_MODEL_MISS）と第 2 層（L2_CONDITIONAL_MODEL_MISS）は付録 C。
+元データ: results/initgeom_cifar_0920/report/{display_rows.csv,verdict.json}。
