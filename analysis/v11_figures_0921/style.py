@@ -68,7 +68,7 @@ def ladder(n: int, cmap: str = "viridis", lo: float = 0.12, hi: float = 0.88) ->
 # 家族ごとに 1 つの連続色の梯子を割り当て、家族の間は色相で分ける（§2.5-8）。
 #   扉（C→H→CH→CHB）= 青の梯子 / Snake・kunekune = 緑の梯子 / leaky = 黄土の梯子
 #   基準（ref・R）= 灰 / 別種の正規化・平滑な活性化 = Okabe-Ito の独立色
-_DOORS = ladder(4, "Blues", 0.42, 0.90)
+_DOORS = ladder(4, "Blues", 0.34, 0.97)
 _SNAKE = ladder(4, "Greens", 0.45, 0.92)
 _LEAKY = ladder(4, "YlOrBr", 0.38, 0.86)
 COLOR = {
@@ -76,6 +76,7 @@ COLOR = {
     "ref": GREY, "R": GREY,
     # 図 2・3・4: 中心化の扉（梯子）と、別種の正規化（独立色・破線）
     "C": _DOORS[0], "H": _DOORS[1], "CH": _DOORS[2], "CHB": _DOORS[3],
+    # CH と CHB は水準がほぼ重なるので、bias の扱いを変えた CHB は破線にして下の線を見せる
     "CHB0": OKABE["sky"], "CS": OKABE["purple"], "LN": OKABE["vermillion"],
     # 図 6b: 成長上限の梯子
     "cap1": None, "cap2": None, "cap12": None, "cap12_bfix": None,
@@ -124,7 +125,7 @@ GRADE = {
 SEED_BAND_NOTE = "帯は seed の全範囲（信頼区間ではない）"
 
 # 線種: 梯子の腕は実線、別種の介入（対照）は破線。重なったときに読めるようにする。
-LS = {"CS": "--", "LN": "--", "CHB0": ":", "cap12_bfix": "--"}
+LS = {"CHB": "--", "CS": "--", "LN": "--", "CHB0": ":", "cap12_bfix": "--"}
 
 
 # --- 描画のヘルパ --------------------------------------------------------

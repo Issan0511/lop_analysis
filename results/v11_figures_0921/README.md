@@ -19,6 +19,11 @@ GRADE を差し替える（§2.5-9）。
 | 図 | 出力 | 残っている選択 |
 |---|---|---|
 | 2 | `fig02_doors_1x4` / `_2x2` | 4 パネルを 1 行に並べるか 2×2 にするか |
+
+本文の図 2 は主張の梯子 `ref → C → CH → CHB` の 4 腕だけ（0921・Issa）。開ける扉を変えた対照
+（`H` 中間層だけ・`CS` 分散だけ・`LN` 素の LayerNorm）は `fig02e_doors_controls` として付録 E に回す。
+D2 = CH − C が `H_HELPS`・N = `NEED_CH` なので、H 単独は床のままであることが対照の中身。
+
 | 3 | `fig03_bias_route_seeds` / `_median` | seed 個別線（規約の既定）か中央値＋帯か |
 | 4 | `fig04_real_doors_dotted` / `_hard_only` | easy 課題を点線で添えるか hard だけにするか |
 | 9 | `fig09_5p1_points` / `_bars` | 16 腕を点＋範囲で出すか棒で出すか |
