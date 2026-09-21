@@ -46,10 +46,15 @@ def build(hard="dotted"):
         S.window_span(ax, S.LATE_5P1[0], S.LATE_5P1[-1])
     S.acc_axis(axes[0])
     axes[0].legend(loc="lower left")
+    axes[2].set_ylim(bottom=0)
+    S.breathe(axes[2])   # 4 腕が 0 に張り付くので軸線から離す
+    axes[2].annotate("H・CH・KKT1・L2 Init は 0 のまま", xy=(0.5, 0.055),
+                     xycoords="axes fraction", ha="center", fontsize=7.5, color="#555555")
     axes[3].set_ylim(bottom=0)
+    S.breathe(axes[3])
     S.grade(axes[0], "registered", "H 対 R", loc="lower right")
     for ax in axes[1:3]:
-        S.grade(ax, "column")
+        S.grade(ax, "column", loc="upper left")
     S.grade(axes[3], "column", "階数は戻らない")
     sub = "実線 = hard（5 クラス CIFAR）" + ("・点線 = easy（1 クラス）" if hard == "dotted" else "のみ")
     fig.suptitle(f"図 4  実ラベルでの扉 — 5+1 CIFAR / MLP・30 課題・10 seed（{sub}）", fontsize=12)
@@ -61,10 +66,15 @@ NOTE = """図 4. 実ラベルでの扉。線は seed 中央値、帯は seed の
 点線が easy。薄い帯は登録窓 = hard の課題 21・23・25・27・29。
 (a) の格は登録（H 対 R）、(b)(c)(d) は登録列の読み。H は第 2 層の沈下と死亡を止めるが、
 実効階数は R と同じところまで落ちる。
+(a) の KKT1 と L2 Init の上下は主張ではない。終盤の hard 課題では L2 Init が上に出る
+（t27 で +0.003・t29 で +0.013・seed 中央値）が、登録窓の対応差は E2 = EQUIVALENT_WITHIN_0.005
+（20 seed で +0.0023・11/20）で、seed 群によって符号が変わる。二つの順位は図 9(b) で
+±0.005 の同等性の帯とともに見る。
 元データ: results/cifar5p1_mlp_0920/{R_std_lr0.0001,H_std_doors,CH_std_doors,KKT1_std_lr0.0001,
 R_std_lr0.0001_l2init1e-3}/per_task.csv。
 """
 
+HARD = "dotted"         # 0922 Issa 決定（easy を点線で添える）
+
 if __name__ == "__main__":
-    for hard in ("dotted", "hard_only"):
-        print(S.save(build(hard), f"fig04_real_doors_{hard}", NOTE))
+    print(S.save(build(HARD), "fig04_real_doors", NOTE))
