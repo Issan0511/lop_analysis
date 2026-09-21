@@ -300,7 +300,7 @@ raw の 6 セルの型ラベル（§5.1）で、次の順に当てはめる。
 - 出力: `results/layer_chimera_cifar_0921/<CELL>/{per_task.csv, provenance.json, hist/, snap/, ckpt.pt}`、`results/layer_chimera_cifar_0921/{summary.md, verdict.json, checks.json, per_seed.csv, windows.csv}`。**数値の正本は `summary.md` と `verdict.json`**。
 - 既存の登録済み `results/rlcifar_mlp_battle_0918/`・`results/cifar_ledger_0920/` は**読むだけ**。1 バイトも書き換えない。
 - 片付け（`CLAUDE.md` §4・結果の commit を済ませたその日のうちに）:
-  1. `git -C <worktree> status --porcelain --ignored --untracked-files=all` で git 外のファイルを洗い出し、`__pycache__` 以外を `/home/issan/Projects/obsidian-research-data/layer_chimera_cifar_0921/` に移す。`results/layer_chimera_cifar_0921/backup_manifest.json`（source・backup・bytes・sha256）を commit する。**snap/ と ckpt.pt（≈ 11 GB）がこれに当たる。symlink は辿らない**（0918 に CIFAR 本体を移して GPU 4 時間を失った）。
+  1. `git -C <worktree> status --porcelain --ignored --untracked-files=all` で git 外のファイルを洗い出し、`__pycache__` 以外を `/home/issan/Projects/obsidian-research-data/layer_chimera_cifar_0921/` に移す。**`data/cifar10/cifar-10-python.tar.gz` は本体ではなく `proj_004_drift/data/` への symlink なので移さない**（0918 に CIFAR 本体を移して GPU 4 時間を失った件の再発防止）。`results/layer_chimera_cifar_0921/backup_manifest.json`（source・backup・bytes・sha256）を commit する。**snap/ と ckpt.pt（≈ 11 GB）がこれに当たる。symlink は辿らない**（0918 に CIFAR 本体を移して GPU 4 時間を失った）。
   2. `fetch` → `merge origin/main` → `push origin HEAD:main`。
   3. `merge-base --is-ancestor` で到達を確認してから worktree と branch（ローカル・origin）を削除。
 - vault: 結果ノートを `可塑性喪失/測定/` に作り、`中心主張v11作業リスト_0920` に 1 行足す（他セッションの編集と衝突しないよう、編集前に `git log` を見る）。
