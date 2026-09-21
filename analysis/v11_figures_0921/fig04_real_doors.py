@@ -46,10 +46,15 @@ def build(hard="dotted"):
         S.window_span(ax, S.LATE_5P1[0], S.LATE_5P1[-1])
     S.acc_axis(axes[0])
     axes[0].legend(loc="lower left")
+    axes[2].set_ylim(bottom=0)
+    S.breathe(axes[2])   # 4 腕が 0 に張り付くので軸線から離す
+    axes[2].annotate("H・CH・KKT1・L2 Init は 0 のまま", xy=(0.5, 0.055),
+                     xycoords="axes fraction", ha="center", fontsize=7.5, color="#555555")
     axes[3].set_ylim(bottom=0)
+    S.breathe(axes[3])
     S.grade(axes[0], "registered", "H 対 R", loc="lower right")
     for ax in axes[1:3]:
-        S.grade(ax, "column")
+        S.grade(ax, "column", loc="upper left")
     S.grade(axes[3], "column", "階数は戻らない")
     sub = "実線 = hard（5 クラス CIFAR）" + ("・点線 = easy（1 クラス）" if hard == "dotted" else "のみ")
     fig.suptitle(f"図 4  実ラベルでの扉 — 5+1 CIFAR / MLP・30 課題・10 seed（{sub}）", fontsize=12)

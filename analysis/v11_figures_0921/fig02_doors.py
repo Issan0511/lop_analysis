@@ -55,9 +55,12 @@ def build(layout="1x4", arms=MAIN_ARMS, title=None, tag="本文"):
     for ax, (col, key) in zip(axes[1:], PANELS):
         for arm in arms:
             t, Y = D.matrix(dd[arm], col)
-            S.band(ax, t, Y, S.COLOR[arm], None, agg="median", ls=S.LS.get(arm, "-"))
+            # ref は他の腕とほぼ同じ高さに重なるので太めに敷いて、上の腕の隙間から見えるようにする
+            S.band(ax, t, Y, S.COLOR[arm], None, agg="median", ls=S.LS.get(arm, "-"),
+                   lw=2.6 if arm == "ref" else 1.7, zorder=1 if arm == "ref" else 2)
         ax.set_ylabel(AX[key])
-        S.grade(ax, "column")
+        S.grade(ax, "column", loc={"zbar2": "upper right", "zsd2": "upper left",
+                                   "dead2": "center right"}[key])
     axes[1].set_title("(b) 第 2 層の沈下")
     axes[2].set_title("(c) 第 2 層の目盛")
     axes[3].set_title("(d) 第 2 層の死亡率")
@@ -65,7 +68,9 @@ def build(layout="1x4", arms=MAIN_ARMS, title=None, tag="本文"):
     axes[1].axhline(0, color="#999999", lw=0.7, zorder=0)
     axes[1].set_yticks([1e1, 1e0, 0, -1e0, -1e1, -1e2])
     axes[2].set_ylim(bottom=0)
-    axes[3].set_ylim(-0.02, 1.02)
+    S.breathe(axes[2])
+    axes[3].set_ylim(0, 1)
+    S.breathe(axes[3])   # 0 と 1 に張り付く腕が軸線に隠れないように
 
     for ax in axes:
         ax.set_xlim(1, 50)

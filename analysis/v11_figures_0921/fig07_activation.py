@@ -94,10 +94,13 @@ def build():
         ax_win.hlines(y + dx, lo[order], hi[order], color=cols, lw=3, alpha=0.30)
         ax_win.scatter(med[order], y + dx, color=cols, s=34, marker=mk, zorder=3,
                        edgecolor="white", linewidth=0.5)
+        # 8 腕が 0.85-0.99 に詰まって順位が読めないので、数値を添える（軸は 0-1 のまま）
+        S.value_labels(ax_win, y + dx, med[order].to_numpy(), "{:.3f}", flip_at=0.55)
     ax_win.axvline(0.5, color="#999999", lw=0.9, ls=":")
     ax_win.annotate("崩壊の線 0.5", xy=(0.5, len(order) - 0.6), fontsize=7, color="#666666", ha="left")
     ax_win.set_yticks(y); ax_win.set_yticklabels(order)
     ax_win.set_xlim(0, 1.02); ax_win.set_xlabel("後期窓のオンライン精度（t31–50）")
+    S.breathe(ax_win, "y", 0.03)
     ax_win.set_title("(b) 13 腕 × raw / std の窓")
     ax_win.grid(axis="y", alpha=0)
     ax_win.legend(handles=[plt.Line2D([], [], marker=m, ls="", color="#555555", label=c)
@@ -140,6 +143,8 @@ NOTE = """図 7. 活性化。(a) は定義図で、実装の alpha は unit ご�
 alpha=1 に固定している（測定値ではない）。
 (b) 点は seed 中央値、線は seed の全範囲（信頼区間ではない）。窓は登録どおり t31-50、丸が raw、
 四角が std。0.5 は登録の崩壊の線。登録判定は両 cond とも A = SNA_BEATEN。
+腕が床（0.10-0.12）と上（0.85-0.99）の二つに分かれて位置から順位が読めないので、軸は 0-1 に
+固定したまま（規約 §2.5-3）数値を点のそばに添えた。
 (c) は cifar_ledger_0920 の per_seed。T* は 1 か 2 しか取らず、先に落ちる層は cond で決まり切って
 いる（raw は第 1 層・std は第 2 層が 10/10・R は同時）ので、分布ではなく腕 x cond の表として描く。
 元データ: results/rlcifar_mlp_battle_0918/<arm>/per_task.csv・results/cifar_ledger_0920/per_seed.csv。

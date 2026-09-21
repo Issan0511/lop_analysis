@@ -46,14 +46,16 @@ def build():
     ax, axp = axes
 
     y = np.arange(len(ARMS))[::-1]
+    ax.set_xlim(0, 1.02)
     for yi, (key, lab, grp) in zip(y, ARMS):
         r = a.loc[key]
         ax.hlines(yi, r.online_min, r.online_max, color=GCOL[grp], lw=4, alpha=0.32)
         ax.scatter(r.online_mean, yi, color=GCOL[grp], s=34, zorder=3)
+    # 6 腕が 0.92-0.97 に、2 腕が 0.10 に詰まるので、軸は 0-1 のまま数値を添える
+    S.value_labels(ax, y, [a.loc[k].online_mean for k, _, _ in ARMS], "{:.3f}", flip_at=0.55)
     ax.set_yticks(y); ax.set_yticklabels([l for _, l, _ in ARMS])
     S.acc_axis(ax, label=False)
     ax.set_ylim(-0.7, len(ARMS) - 0.3)
-    ax.set_xlim(0, 1.02)
     ax.set_xlabel("次課題のオンライン精度")
     ax.grid(axis="y", alpha=0)
     ax.set_title("(a) 12 腕の次課題の学習")
@@ -74,7 +76,8 @@ def build():
     axp.set_xticklabels([l for _, l in metrics], rotation=28, ha="right", fontsize=7.5)
     axp.set_ylabel("対応差（次課題の online）")
     axp.set_title("(b) 登録した対応差（10 seed）")
-    S.grade(axp, "registered", "両方向", loc="lower right")
+    S.grade(axp, "registered", "両方向", loc="upper left")
+    S.breathe(axp)
 
     fig.suptitle("図 8  応答 → 再学習能力 — RL-CIFAR / MLP・S4・10 seed", fontsize=12)
     return fig

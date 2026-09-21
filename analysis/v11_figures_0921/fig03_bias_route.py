@@ -32,7 +32,7 @@ def build(variant="seeds"):
         for arm in ("CH", "CHB"):
             t, Y = D.matrix(dd[arm], col)
             if variant == "seeds":
-                S.seeds_lines(ax, t, Y, S.COLOR[arm], S.LABEL[arm])
+                S.seeds_lines(ax, t, Y, S.COLOR[arm], S.LABEL[arm], ls=S.LS.get(arm, "-"))
             else:
                 S.band(ax, t, Y, S.COLOR[arm], S.LABEL[arm], agg="median")
         ax.set_title(title)

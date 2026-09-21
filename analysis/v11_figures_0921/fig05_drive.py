@@ -59,11 +59,12 @@ def build():
         ax2.hlines(vals.median(), i - 0.16, i + 0.16, color=col, lw=2.4, zorder=4)
     ax2.axhline(0, color="#999999", lw=0.9)
     ax2.set_yscale("symlog", linthresh=0.01)
+    ax2.set_ylim(-40, 3)       # 境界の自己 S が軸の底に張り付かないように
     ax2.set_xticks(range(4))
     ax2.set_xticklabels(["境界\n自己 S", "境界\n上流 U", "後続\n自己 S", "後続\n上流 U"], fontsize=8)
     ax2.set_ylabel("1 更新あたりの寄与")
     ax2.set_title("(b) 自己 S と上流 U（付録 D）")
-    S.grade(ax2, "posthoc", "課題 2–5 をまとめた記述", loc="lower left")
+    S.grade(ax2, "posthoc", "課題 2–5 をまとめた記述", loc="upper left")
 
     fig.suptitle("図 5  駆動 — RL-CIFAR / MLP・C 条件・5 seed", fontsize=12)
     return fig

@@ -63,24 +63,24 @@ def panel_a(ax, ax2, w: pd.DataFrame, variant: str):
     ghi = w.groupby("arm").gap.max()
     cols = [S.COLOR[a] for a in order]
 
+    ax.set_xlim(0, 1.02)
+    ax2.set_xlim(-0.02, 0.72)
     if variant == "points":
         ax.hlines(y, lo[order], hi[order], color=cols, lw=4, alpha=0.30)
         ax.scatter(med[order], y, color=cols, s=30, zorder=3)
-        ax.set_xlim(0, 1.02)
-        ax.set_xlabel(S.AXIS["window"])
         ax2.hlines(y, glo[order], ghi[order], color=cols, lw=4, alpha=0.30)
         ax2.scatter(gmed[order], y, color=cols, s=30, zorder=3)
-        ax2.set_xlabel(S.AXIS["gap"])
-        ax2.axvline(0, color="#999999", lw=0.8)
     else:                                            # "bars"
         ax.barh(y, med[order], color=cols, height=0.62)
         ax.hlines(y, lo[order], hi[order], color="#222222", lw=1.0)
-        ax.set_xlim(0, 1.02)
-        ax.set_xlabel(S.AXIS["window"])
         ax2.barh(y, gmed[order], color=cols, height=0.62)
         ax2.hlines(y, glo[order], ghi[order], color="#222222", lw=1.0)
-        ax2.set_xlabel(S.AXIS["gap"])
-        ax2.axvline(0, color="#999999", lw=0.8)
+    ax.set_xlabel(S.AXIS["window"])
+    ax2.set_xlabel(S.AXIS["gap"])
+    ax2.axvline(0, color="#999999", lw=0.8)
+    # 13 腕が 0.58-0.67 に、fresh gap は 13 腕が 0 の近くに詰まる。軸は動かさず数値を添える。
+    S.value_labels(ax, y, med[order].to_numpy(), "{:.3f}", flip_at=0.62)
+    S.value_labels(ax2, y, gmed[order].to_numpy(), "{:.3f}", flip_at=0.42)
 
     for a in (ax, ax2):
         a.set_yticks(y)
@@ -91,7 +91,7 @@ def panel_a(ax, ax2, w: pd.DataFrame, variant: str):
     ax.set_title("(a) 16 腕の後期窓")
     ax2.set_title("(a) fresh gap")
     S.grade(ax, "registered", "窓 = hard 21–29", loc="lower right")
-    S.grade(ax2, "registered", "全 16 腕が喪失", loc="lower right")
+    S.grade(ax2, "registered", "全 16 腕が喪失", loc="upper right")
 
 
 def panel_b(ax, w5):
@@ -118,10 +118,12 @@ def panel_b(ax, w5):
 
 
 def panel_c(ax, hard="dotted"):
+    # 7 腕ぶんの帯を重ねると濁って線が読めなくなる。seed の散らばりは (a) が出しているので
+    # ここは中央値の線だけにする（§2.5-2 の帯は (a) が担う）。
     for key in PANEL_C:
         d = D.arm5p1(C_FOLDER[key])
         th, Yh = D.matrix(d[d.hard == 1], "online_acc")
-        S.band(ax, th, Yh, S.COLOR[key], C_LABEL[key], agg="median")
+        ax.plot(th, np.median(Yh, 0), color=S.COLOR[key], lw=1.8, label=C_LABEL[key], zorder=2)
         if hard == "dotted":
             te, Ye = D.matrix(d[d.hard == 0], "online_acc")
             ax.plot(te, np.median(Ye, 0), color=S.COLOR[key], lw=0.9, ls=":", zorder=1)
@@ -153,6 +155,9 @@ def build(variant="points", hard="dotted"):
 NOTE = """図 9. 実ラベルの箱。点（棒）は seed 中央値、線（帯）は seed の全範囲（信頼区間ではない）。
 窓は登録どおり hard 課題 21・23・25・27・29 の online の平均。(c) の実線は hard、点線は easy。
 (a) 16 腕すべてが fresh gap > 0、すなわち全腕が可塑性を失っている。順位は窓の中央値。
+    13 腕が 0.58-0.67 に、fresh gap は 13 腕が 0 の近くに詰まって位置から順位が読めないので、
+    軸は動かさず（規約 §2.5-3）数値を点のそばに添えた。
+(c) は中央値の線だけ。7 腕ぶんの帯を重ねると濁るので、seed の散らばりは (a) で見る。
 (b) R との対応差。SNA・KKT1 は原典 λ=1e−3 の L2 Init に 19/20 seed で勝ち、調整 λ=1e−2 とは
     事前登録の同等性の範囲。seed 10–19 は未使用 seed での追試。
 検定は対応差の符号検定（Holm 補正）: SNA − R は中央値 +0.2258・10/10・p_holm 0.0137。

@@ -142,11 +142,11 @@ def band(ax, x, Y, color, label=None, agg="median", lw=1.7, ls="-", alpha=0.16, 
     return centre
 
 
-def seeds_lines(ax, x, Y, color, label=None, lw=0.8, alpha=0.75):
+def seeds_lines(ax, x, Y, color, label=None, lw=0.8, alpha=0.75, ls="-"):
     """seed ごとに転移の時刻が違い、集約が形を壊す図だけ（§2.5-2 の例外・図 3）。"""
     Y = np.asarray(Y, float)
     for i, row in enumerate(Y):
-        ax.plot(x, row, color=color, lw=lw, alpha=alpha, label=label if i == 0 else None)
+        ax.plot(x, row, color=color, lw=lw, ls=ls, alpha=alpha, label=label if i == 0 else None)
 
 
 def acc_axis(ax, label=True):
@@ -170,9 +170,10 @@ def grade(ax, kind, label=None, loc="lower right"):
     face = {"registered": "#e8efe6", "column": "#eef0f4", "posthoc": "#f6efe4"}[kind]
     edge = {"registered": "#7fa06f", "column": "#8b93a5", "posthoc": "#c39a52"}[kind]
     xy = {"lower right": (0.985, 0.03), "lower left": (0.015, 0.03),
-          "upper right": (0.985, 0.965), "upper left": (0.015, 0.965)}[loc]
+          "upper right": (0.985, 0.965), "upper left": (0.015, 0.965),
+          "center right": (0.985, 0.5), "center left": (0.015, 0.5)}[loc]
     ha = "right" if "right" in loc else "left"
-    va = "bottom" if "lower" in loc else "top"
+    va = "bottom" if "lower" in loc else ("top" if "upper" in loc else "center")
     ax.annotate(txt, xy=xy, xycoords="axes fraction", ha=ha, va=va, fontsize=7,
                 color="#33383f", zorder=20,
                 bbox=dict(boxstyle="round,pad=0.28", fc=face, ec=edge, lw=0.6))
@@ -183,6 +184,30 @@ N_TASKS_5P1 = 30
 HARD_5P1 = list(range(1, N_TASKS_5P1 + 1, 2))     # 5 クラス CIFAR
 EASY_5P1 = list(range(2, N_TASKS_5P1 + 1, 2))
 EARLY_5P1, LATE_5P1 = HARD_5P1[:5], HARD_5P1[10:]  # src/cifar5p1_mlp_0920_report.py:31
+
+
+def value_labels(ax, y, values, fmt="{:.3f}", flip_at=0.80, dx=0.012, color="#555555"):
+    """水平の順位図で、点のそばに数値を置く（§2.5-3 で軸を固定したまま順位を読めるように）。
+
+    値が詰まっている帯では点の位置から順位が読めないので、数値そのものを添える。
+    右端に寄った点は左側に出す。
+    """
+    lo, hi = ax.get_xlim()
+    span = hi - lo
+    for yi, v in zip(y, values):
+        right = v < flip_at
+        ax.annotate(fmt.format(v), xy=(v + (dx if right else -dx) * span, yi),
+                    ha="left" if right else "right", va="center",
+                    fontsize=7.5, color=color, family=plt.rcParams["font.family"],
+                    zorder=6)
+
+
+def breathe(ax, axis="y", frac=0.045):
+    """端の値が軸線に張り付くと読めないので、両端に余白を入れる。"""
+    get, set_ = (ax.get_ylim, ax.set_ylim) if axis == "y" else (ax.get_xlim, ax.set_xlim)
+    lo, hi = get()
+    pad = (hi - lo) * frac
+    set_(lo - pad, hi + pad)
 
 
 def save(fig, name: str, note: str | None = None, out: Path | None = None):

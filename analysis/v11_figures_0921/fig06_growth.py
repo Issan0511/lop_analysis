@@ -62,7 +62,9 @@ def build():
     ax_l.set_ylabel("沈下に占める割合")
     ax_l.axhline(0, color="#999999", lw=0.8)
     ax_l.set_title("(a) 帳簿（ELU / std・第 2 層）")
-    ax_l.legend(ncol=2, loc="upper center")
+    ax_l.set_ylim(0, 1.0)
+    ax_l.legend(ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.12),
+                columnspacing=1.1, handlelength=1.2)
     ax_l.grid(axis="x", alpha=0)
     S.grade(ax_l, "registered", "A6 · MIXED", loc="lower right")
 
@@ -84,8 +86,8 @@ def build():
     for ax in (ax_o, ax_m):
         ax.set_xlim(1, 50); ax.set_xlabel(S.AXIS["task"])
         S.window_span(ax, 31, 50)
-    S.grade(ax_o, "registered", v["label"], loc="lower right")
-    S.grade(ax_m, "column", loc="lower right")
+    S.grade(ax_o, "registered", v["label"], loc="center right")
+    S.grade(ax_m, "column", loc="center right")
     fig.suptitle("図 6  W 増大 → 進行 — RL-CIFAR / MLP・ELU / std・10 seed", fontsize=12)
     return fig
 
