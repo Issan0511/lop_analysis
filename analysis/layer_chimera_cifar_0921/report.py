@@ -160,7 +160,10 @@ def q2(r: pd.DataFrame, m: pd.DataFrame) -> dict:
 def q3(m: pd.DataFrame) -> dict:
     mu = m[(m.layer == 2)].pivot_table(index=["cell", "seed"], columns="task", values="mu_norm")
     def at(cell, t):
-        return {s: float(mu.loc[(cell, s), t]) for s in SEEDS if (cell, s) in mu.index}
+        if t not in mu.columns:
+            return {}
+        v = {s: float(mu.loc[(cell, s), t]) for s in SEEDS if (cell, s) in mu.index}
+        return {s: x for s, x in v.items() if np.isfinite(x)}
     ee, el = at("EE", 10), at("EL", 10)
     common = sorted(set(ee) & set(el))
     p3a = call([ee[s] - el[s] for s in common])
@@ -174,7 +177,8 @@ def q3(m: pd.DataFrame) -> dict:
                        "median_t10": float(np.median(list(t10.values()))) if t10 else None,
                        "median_t00": float(np.median(list(t0.values()))) if t0 else None}
     levels = {cell: {f"t{t}": float(np.median(list(at(cell, t).values()) or [np.nan]))
-                     for t in (0, 1, 2, 10, 50)} for cell in CELLS}
+                     for t in (0, 1, 2, 10, 50)} for cell in CELLS
+              if any((cell, s) in mu.index for s in SEEDS)}
     return {"P3a_EE_minus_EL_t10": p3a, "P3b": below, "mu2_median_levels": levels}
 
 

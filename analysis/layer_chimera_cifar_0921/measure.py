@@ -39,12 +39,12 @@ def states(out: Path, cell: str, slots, task: int, device, cifar):
     return P, X, z16
 
 
-def labels(slots, task, device):
+def labels(slots, task, device, shift: int = 0):
     Y = []
     for s, cd in slots:
         g = H.stream("rlc_labels", s)
         y = None
-        for _ in range(task):
+        for _ in range(task + shift):
             y = RC.task_labels(g)
         Y.append(y)
     return torch.stack(Y).to(device) if task else None
@@ -83,7 +83,7 @@ def _layer_rows(z, a, act, layer, h_in):
     return out
 
 
-def run_cell(out: Path, cell: str, tasks: int, device, cifar, check: bool):
+def run_cell(out: Path, cell: str, tasks: int, device, cifar, check: bool, shift: int = 0):
     prov = json.loads((out / "provenance.json").read_text())
     slots = [(q["seed"], q["cond"]) for q in prov["slots"]]
     act = C.make_act(cell)
@@ -93,7 +93,7 @@ def run_cell(out: Path, cell: str, tasks: int, device, cifar, check: bool):
         P, X, z16 = states(out, cell, slots, t, device, cifar)
         z1, a1, z2, a2, logits = C.forward(P, X, act)
         for li, (z, a, h) in enumerate(((z1, a1, X), (z2, a2, a1))):
-            W, b = P[2 * (li + 1)], P[2 * (li + 1) + 1]
+            W = P[2 * li]                                  # li = 0 -> W1, li = 1 -> W2
             mu = h.double().mean(1)
             for r, d in enumerate(_layer_rows(z, a, act, li, h)):
                 wr = W[r].double()
@@ -103,13 +103,13 @@ def run_cell(out: Path, cell: str, tasks: int, device, cifar, check: bool):
                           "w_row_med": float(wr.norm(dim=1).median()), "cos_med": float(cos.median())})
                 rows.append({k: d[k] for k in COLS})
         if check and t > 0:                                     # S4 / S6
-            Y = labels(slots, t, device)
-            acc = (logits.argmax(-1) == Y).double().mean(1)
+            Y = labels(slots, t, device, shift)
+            acc = (logits.argmax(-1) == Y).float().mean(1)      # the engine's own expression/dtype
             for r, (s, cd) in enumerate(slots):
                 probs.append({"task": t, "seed": s, "cond": cd,
                               "z16_exact": bool((z1[r].cpu().numpy().astype(np.float16) == z16[0][r]).all()
                                                 and (z2[r].cpu().numpy().astype(np.float16) == z16[1][r]).all()),
-                              "memo_acc": float(acc[r])})
+                              "memo_acc": f"{float(acc[r]):.10g}"})   # H.write_csv's format
     return rows, probs
 
 
@@ -122,6 +122,7 @@ def main() -> None:
     ap.add_argument("--device", default="auto")
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--check", action="store_true", help="S4/S6: replay equals the saved z and memo_acc")
+    ap.add_argument("--label-shift", type=int, default=0, help="mutation control: use another task's labels")
     a = ap.parse_args()
     torch.set_num_threads(a.threads)
     device = H.setup(a.device)
@@ -129,7 +130,7 @@ def main() -> None:
     src, out = Path(a.src), Path(a.out)
     rows, checks, t0 = [], [], time.time()
     for cell in a.cells.split(","):
-        r, pr = run_cell(src / cell, cell, a.tasks, device, cifar, a.check)
+        r, pr = run_cell(src / cell, cell, a.tasks, device, cifar, a.check, a.label_shift)
         rows += r
         print(f"{cell}: {len(r)} rows ({time.time() - t0:.0f} s)", flush=True)
         if a.check:
@@ -140,7 +141,10 @@ def main() -> None:
             for q in pr:
                 k = (q["seed"], q["cond"], q["task"])
                 q["cell"] = cell
-                q["memo_matches"] = k in reg and abs(float(reg[k]["memo_acc"]) - q["memo_acc"]) <= 5e-10
+                # the engine writes f"{x:.10g}" of a float32-derived value; 10 significant digits
+                # round-trip a float32 exactly, so the registered column must match character for
+                # character -- no tolerance is needed or allowed here
+                q["memo_matches"] = k in reg and reg[k]["memo_acc"] == q["memo_acc"]
             checks += pr
     H.write_csv(out / "measure.csv", rows)
     prov = {"run_id": C.EXPERIMENT, "stage": "measure", **C.git_state(), "cells": a.cells,
@@ -150,8 +154,9 @@ def main() -> None:
     if a.check:
         bad = [q for q in checks if not (q["z16_exact"] and q["memo_matches"])]
         res = {"check": "S4 S-replay / S6 S-floor", "pass": not bad, "states": len(checks),
-               "failures": bad[:20],
-               "mutation": "labels shifted by one task break memo_matches; another seed's mu breaks mu_norm"}
+               "label_shift": a.label_shift, "failures": bad[:20],
+               "mutation": "run again with --label-shift 1: memo_matches must then fail "
+                           "(the labels are what S6's floor is built from)"}
         (out / "checks_measure.json").write_text(json.dumps(res, indent=2))
         print(("PASS" if not bad else f"FAIL ({len(bad)})"), "S4/S6 over", len(checks), "states")
         sys.exit(0 if not bad else 1)

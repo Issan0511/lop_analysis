@@ -279,8 +279,8 @@ raw の 6 セルの型ラベル（§5.1）で、次の順に当てはめる。
 - **ジョブ**: 7 本（`LL`・`EL`・`GL`・`LE`・`EE`・`GE`・`GG`）。1 本 = 1 プロセス = 1 セル × raw × seed 0–9（R=10）。S-off の参照走（**親エンジン**の `LR`・`ELU`・`GELU` × R=10 × 3 タスク、3 本並列で ~20 分）は本走の前に回し、`_soff/` に置く。`--threads 2`（`eff_rank` はスレッド数で桁が変わるのでバトルと同じ 2 に固定し provenance に書く）。
 - **launcher**: `analysis/layer_chimera_cifar_0921/{plan.py,launch.py}`（バトルの複製、`RUNNER` を差し替え）。`plan.json` は `own_max` を S7 の実測で決める（初期値 4、RAM に余裕があれば 6）、`rss_gb 2.0`・`reserve_gb 2.5`・`min_gpu_mb 500`・`retries 3`、起動間隔 25 s。**STOP ファイル** `results/layer_chimera_cifar_0921/_launch/STOP` で新規起動を止める。
 - **起動**: `setsid nohup python3 analysis/layer_chimera_cifar_0921/launch.py --plan PLAN.json > results/layer_chimera_cifar_0921/_launch/launch_0921.log 2>&1 &`。**ログ名に `/` を入れない**（0910 の無言失敗）。
-- **費用**: バトルの実測で 1 腕（R=20・50 タスク）が 7 並列時に 4.9–5.8 h。R=10 でも 1 step の時間はほとんど変わらない（カーネル起動律速）ので 1 本 4–6 h と見込み、7 本を 4–7 並列で **6–10 h**（一晩 1 回）。S7 で実測してから確定する。
-- **ディスク**: snapshot は 1 状態 1.75 MB（W 1.23 MB + z1,z2 float16 0.48 MB）。51 状態 × 10 スロット × 7 セル ≈ **6.3 GB**、S-off の参照走が +0.2 GB（4 状態 × 10 スロット × 3 腕）。`/` は 472 GB 空き。解析段の派生列は CSV で数 MB。
+- **費用（S7 で実測・0922 00:47）**: R=10 の 6 並列で 4.84–4.90 ms/step → **1 セル 2.0 h**、1 本だけなら 0.81 ms/step（混み具合が支配的）。7 本を同時に走らせて**全体 2.0–2.5 h** の見込み。起案時の 6–10 h は R=20 のバトル実測から引いた過大見積りだった。
+- **ディスク**: snapshot は 1 状態 1.75 MB（W 1.23 MB + z1,z2 float16 0.48 MB）。51 状態 × 10 スロット × 7 セル ≈ **6.3 GB**、S-off の参照走と検査走が +0.5 GB（実測）。`/` は 472 GB 空き。解析段の派生列は CSV で数 MB。
 - **解析**: 本走後に `measure.py`（6,120 状態の再生・数分）→ `report.py`（`verdict.json` と `summary.md`）。解析を直したときは**本走の `provenance.json` を書き直さず**、解析側に別の provenance（コード SHA・入力の SHA・時刻）を書く（0910 の「解析を直すとハッシュ不一致」の教訓）。
 - **監視**: `watch.py`（バトルの複製）で per_task の行数と online を 30 分ごとに確認。発散したスロットは打ち切り、救わない。
 - **止め時**: 6 本が `provenance.json` を書いたら終わり。途中で止めた場合も ckpt から再開でき、再開点は provenance の `resumed_at_task` に残る。

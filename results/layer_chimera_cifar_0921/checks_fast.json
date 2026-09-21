@@ -1,0 +1,140 @@
+{
+  "stage": "fast",
+  "all_pass": true,
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "git": {
+    "git_hash": "dcf832d3f1fdcf9af8a77003b9c9ce0faee6de47",
+    "dirty_src_analysis": [
+      "?? src/layer_chimera_cifar_0921.py",
+      "?? src/layer_chimera_cifar_0921_checks.py"
+    ]
+  },
+  "checks": [
+    {
+      "check": "S2 S-layer",
+      "pass": true,
+      "cells": {
+        "LL": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        },
+        "EL": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        },
+        "GL": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        },
+        "LE": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        },
+        "EE": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        },
+        "GE": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        },
+        "GG": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        }
+      },
+      "mutation": "act1<->act2 swapped must change the logits"
+    },
+    {
+      "check": "S3 S-grad",
+      "pass": true,
+      "cells": {
+        "LL": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.0,
+          "caught": true
+        },
+        "EL": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.8178328275680542,
+          "caught": true
+        },
+        "GL": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.47575610876083374,
+          "caught": true
+        },
+        "LE": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.8249236345291138,
+          "caught": true
+        },
+        "EE": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.0,
+          "caught": true
+        },
+        "GE": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.48642799258232117,
+          "caught": true
+        },
+        "GG": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.0,
+          "caught": true
+        }
+      },
+      "tol": 1e-06,
+      "mutation": "layer-1 phi' applied to layer 2"
+    },
+    {
+      "check": "S5 S-gate",
+      "pass": true,
+      "arms": {
+        "LR": {
+          "autograd_vs_dphi_max_abs_diff": 0.0,
+          "any_low": false,
+          "largest_z_with_low_gate": NaN,
+          "extra_fraction_if_abs_dropped": 0.0
+        },
+        "ELU": {
+          "autograd_vs_dphi_max_abs_diff": 0.0,
+          "any_low": true,
+          "largest_z_with_low_gate": -13.815598487854004,
+          "extra_fraction_if_abs_dropped": 0.0
+        },
+        "GELU": {
+          "autograd_vs_dphi_max_abs_diff": 0.0,
+          "any_low": true,
+          "largest_z_with_low_gate": -5.394999027252197,
+          "extra_fraction_if_abs_dropped": 0.029019981622695923
+        }
+      },
+      "dead_tol": 1e-06,
+      "mutation": "dropping abs() adds the negative-gate band (extra_fraction_if_abs_dropped > 0 for GELU)"
+    },
+    {
+      "check": "S8 S-resume",
+      "pass": true,
+      "per_task_identical": true,
+      "snapshots_identical": true,
+      "mutation": "a ckpt without the Adam moments would change task 2"
+    },
+    {
+      "check": "S9 S-diverge",
+      "pass": true,
+      "survivors_identical": true,
+      "only_slot_1_diverged": true,
+      "mutation": "a NaN that leaked across slots would change seeds 100/102"
+    }
+  ]
+}

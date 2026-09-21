@@ -1,0 +1,226 @@
+{
+  "run_id": "layer_chimera_cifar_0921",
+  "stage": "pre-run",
+  "all_pass": true,
+  "checks": [
+    {
+      "check": "S2 S-layer",
+      "pass": true,
+      "cells": {
+        "LL": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        },
+        "EL": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        },
+        "GL": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        },
+        "LE": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        },
+        "EE": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        },
+        "GE": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        },
+        "GG": {
+          "identical_to_reference": true,
+          "swap_differs": true
+        }
+      },
+      "mutation": "act1<->act2 swapped must change the logits"
+    },
+    {
+      "check": "S3 S-grad",
+      "pass": true,
+      "cells": {
+        "LL": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.0,
+          "caught": true
+        },
+        "EL": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.8178328275680542,
+          "caught": true
+        },
+        "GL": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.47575610876083374,
+          "caught": true
+        },
+        "LE": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.8249236345291138,
+          "caught": true
+        },
+        "EE": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.0,
+          "caught": true
+        },
+        "GE": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.48642799258232117,
+          "caught": true
+        },
+        "GG": {
+          "rel_l1": 0.0,
+          "rel_l2": 0.0,
+          "mutation_rel_l2": 0.0,
+          "caught": true
+        }
+      },
+      "tol": 1e-06,
+      "mutation": "layer-1 phi' applied to layer 2"
+    },
+    {
+      "check": "S5 S-gate",
+      "pass": true,
+      "arms": {
+        "LR": {
+          "autograd_vs_dphi_max_abs_diff": 0.0,
+          "any_low": false,
+          "largest_z_with_low_gate": NaN,
+          "extra_fraction_if_abs_dropped": 0.0
+        },
+        "ELU": {
+          "autograd_vs_dphi_max_abs_diff": 0.0,
+          "any_low": true,
+          "largest_z_with_low_gate": -13.815598487854004,
+          "extra_fraction_if_abs_dropped": 0.0
+        },
+        "GELU": {
+          "autograd_vs_dphi_max_abs_diff": 0.0,
+          "any_low": true,
+          "largest_z_with_low_gate": -5.394999027252197,
+          "extra_fraction_if_abs_dropped": 0.029019981622695923
+        }
+      },
+      "dead_tol": 1e-06,
+      "mutation": "dropping abs() adds the negative-gate band (extra_fraction_if_abs_dropped > 0 for GELU)"
+    },
+    {
+      "check": "S8 S-resume",
+      "pass": true,
+      "per_task_identical": true,
+      "snapshots_identical": true,
+      "mutation": "a ckpt without the Adam moments would change task 2"
+    },
+    {
+      "check": "S9 S-diverge",
+      "pass": true,
+      "survivors_identical": true,
+      "only_slot_1_diverged": true,
+      "mutation": "a NaN that leaked across slots would change seeds 100/102"
+    },
+    {
+      "check": "S1 S-off",
+      "pass": true,
+      "cells": {
+        "LL": {
+          "reference_arm": "LR",
+          "per_task_identical": true,
+          "snapshots_identical": true,
+          "hist_identical": true
+        },
+        "EE": {
+          "reference_arm": "ELU",
+          "per_task_identical": true,
+          "snapshots_identical": true,
+          "hist_identical": true
+        },
+        "GG": {
+          "reference_arm": "GELU",
+          "per_task_identical": true,
+          "snapshots_identical": true,
+          "hist_identical": true
+        },
+        "EL_mutation": {
+          "matches": [],
+          "expected": []
+        }
+      },
+      "tasks_compared": 3,
+      "mutation": "EL must match neither LR nor ELU at t01"
+    },
+    {
+      "check": "S4 S-replay / S6 S-floor",
+      "pass": true,
+      "states": 90,
+      "failures": [],
+      "mutation": "labels shifted by one task break memo_matches; another seed's mu breaks mu_norm"
+    },
+    {
+      "check": "S4/S6 mutation (--label-shift 1)",
+      "pass": true,
+      "detail": "30/30 states fail memo_matches when the label stream is advanced one task"
+    },
+    {
+      "check": "S7 S-cost",
+      "pass": true,
+      "concurrency": 6,
+      "runs": {
+        "ELU": {
+          "R": 10,
+          "ms_per_step": 4.897121755282084,
+          "hours_for_50_tasks": 2.0404673980342016
+        },
+        "GELU": {
+          "R": 10,
+          "ms_per_step": 4.903615053494772,
+          "hours_for_50_tasks": 2.043172938956155
+        },
+        "LR": {
+          "R": 10,
+          "ms_per_step": 4.903952010472616,
+          "hours_for_50_tasks": 2.0433133376969232
+        },
+        "EE": {
+          "R": 10,
+          "ms_per_step": 4.835623256365458,
+          "hours_for_50_tasks": 2.0148430234856076
+        },
+        "EL": {
+          "R": 10,
+          "ms_per_step": 0.8099852164586385,
+          "hours_for_50_tasks": 0.3374938401910994
+        },
+        "GG": {
+          "R": 10,
+          "ms_per_step": 4.8409404993057255,
+          "hours_for_50_tasks": 2.0170585413773856
+        },
+        "LL": {
+          "R": 10,
+          "ms_per_step": 4.838265005747477,
+          "hours_for_50_tasks": 2.015943752394782
+        }
+      },
+      "note": "R=10, six jobs at once: 4.84-4.90 ms/step -> ~2.0 h per cell for 50 tasks; EL alone 0.81 ms/step (contention dominates)"
+    }
+  ],
+  "git": {
+    "git_hash": "dcf832d3f1fdcf9af8a77003b9c9ce0faee6de47",
+    "dirty_src_analysis": [
+      "?? src/layer_chimera_cifar_0921.py",
+      "?? src/layer_chimera_cifar_0921_checks.py"
+    ]
+  },
+  "torch": "2.13.0+cu130",
+  "device": "cuda"
+}

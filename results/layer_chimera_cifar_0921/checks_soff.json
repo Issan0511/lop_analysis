@@ -1,0 +1,45 @@
+{
+  "stage": "soff",
+  "all_pass": true,
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "git": {
+    "git_hash": "43b6c688953703a9933eef245beba176f20bf50e",
+    "dirty_src_analysis": [
+      " M analysis/layer_chimera_cifar_0921/measure.py",
+      " M analysis/layer_chimera_cifar_0921/report.py"
+    ]
+  },
+  "checks": [
+    {
+      "check": "S1 S-off",
+      "pass": true,
+      "cells": {
+        "LL": {
+          "reference_arm": "LR",
+          "per_task_identical": true,
+          "snapshots_identical": true,
+          "hist_identical": true
+        },
+        "EE": {
+          "reference_arm": "ELU",
+          "per_task_identical": true,
+          "snapshots_identical": true,
+          "hist_identical": true
+        },
+        "GG": {
+          "reference_arm": "GELU",
+          "per_task_identical": true,
+          "snapshots_identical": true,
+          "hist_identical": true
+        },
+        "EL_mutation": {
+          "matches": [],
+          "expected": []
+        }
+      },
+      "tasks_compared": 3,
+      "mutation": "EL must match neither LR nor ELU at t01"
+    }
+  ]
+}
