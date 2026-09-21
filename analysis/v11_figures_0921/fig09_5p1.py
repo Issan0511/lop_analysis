@@ -22,7 +22,9 @@ import data as D
 import style as S
 
 ARMS = D.ARMS_16
-PANEL_C = ["R", "l2init", "KKT1", "SNA", "ELU", "DF", "CR"]
+# 0922 Issa: Snake・KK 族は KKT1 だけ載せる（E1 で KKT1 = SNA が登録されており代表腕にできる）。
+# (a) は登録の 16 腕の順位そのものなので 16 腕のまま。
+PANEL_C = ["R", "l2init", "KKT1", "ELU", "DF", "CR"]
 C_FOLDER = {"R": "R_std_lr0.0001", "l2init": "R_std_lr0.0001_l2init1e-3",
             "KKT1": "KKT1_std_lr0.0001", "SNA": "SNA_std_lr0.0001",
             "ELU": "ELU_std_lr0.0001", "DF": "DF_std_lr0.0001", "CR": "CR_std_lr0.0001"}
@@ -44,9 +46,9 @@ def windows() -> pd.DataFrame:
 def l2init_pairs() -> dict:
     """登録 E2・E3 の対応差: Snake 族 − L2 Init を λ ごとに、seed 0-9 と追試 10-19 で。"""
     folders = {
-        ("seed 0–9", "SNA"): "SNA_std_lr0.0001", ("seed 0–9", "KKT1"): "KKT1_std_lr0.0001",
+        ("seed 0–9", "KKT1"): "KKT1_std_lr0.0001",
         ("seed 0–9", "1e-3"): "R_std_lr0.0001_l2init1e-3", ("seed 0–9", "1e-2"): "R_std_lr0.0001_l2init1e-2",
-        ("seed 10–19", "SNA"): "SNA_s10-19", ("seed 10–19", "KKT1"): "KKT1_s10-19",
+        ("seed 10–19", "KKT1"): "KKT1_s10-19",
         ("seed 10–19", "1e-3"): "R_s10-19l2init:1e3", ("seed 10–19", "1e-2"): "R_s10-19l2init:1e2",
     }
     return {k: D.window5p1(D.arm5p1(v), S.LATE_5P1) for k, v in folders.items()}
@@ -79,8 +81,14 @@ def panel_a(ax, ax2, w: pd.DataFrame, variant: str):
     ax2.set_xlabel(S.AXIS["gap"])
     ax2.axvline(0, color="#999999", lw=0.8)
     # 13 腕が 0.58-0.67 に、fresh gap は 13 腕が 0 の近くに詰まる。軸は動かさず数値を添える。
-    S.value_labels(ax, y, med[order].to_numpy(), "{:.3f}", flip_at=0.62)
-    S.value_labels(ax2, y, gmed[order].to_numpy(), "{:.3f}", flip_at=0.42)
+    # 棒の版は棒の上に字を置くと濃い色で読めないので、必ず棒の外（右）に出す。
+    if variant == "bars":
+        # 棒の上は濃い色で字が読めず、棒の端は seed 範囲の線と重なるので、範囲の右端の外に出す
+        S.value_labels(ax, y, med[order].to_numpy(), "{:.3f}", flip_at=99, at=hi[order].to_numpy())
+        S.value_labels(ax2, y, gmed[order].to_numpy(), "{:.3f}", flip_at=99, at=ghi[order].to_numpy())
+    else:
+        S.value_labels(ax, y, med[order].to_numpy(), "{:.3f}", flip_at=0.62)
+        S.value_labels(ax2, y, gmed[order].to_numpy(), "{:.3f}", flip_at=0.42)
 
     for a in (ax, ax2):
         a.set_yticks(y)
@@ -96,7 +104,7 @@ def panel_a(ax, ax2, w: pd.DataFrame, variant: str):
 
 def panel_b(ax, w5):
     """(b) 登録 E2・E3: Snake 族 − L2 Init の対応差（±0.005 の同等性帯つき）。"""
-    groups = [("SNA", "1e-3"), ("KKT1", "1e-3"), ("SNA", "1e-2"), ("KKT1", "1e-2")]
+    groups = [("KKT1", "1e-3"), ("KKT1", "1e-2")]
     marks = {"seed 0–9": ("o", "#2f4858"), "seed 10–19": ("s", "#c46a2f")}
     ax.axhspan(-0.005, 0.005, color="#7fa06f", alpha=0.13, lw=0, zorder=0)
     for i, (arm, lam) in enumerate(groups):
@@ -110,7 +118,7 @@ def panel_b(ax, w5):
             ax.hlines(np.median(diff), x - 0.09, x + 0.09, color=col, lw=2.2, zorder=4)
     ax.axhline(0, color="#999999", lw=0.9)
     ax.set_xticks(range(len(groups)))
-    ax.set_xticklabels([f"{a} −\nL2Init λ={l.replace('e-', 'e−')}" for a, l in groups], fontsize=7.5)
+    ax.set_xticklabels([f"{a} −\nL2Init λ={l.replace('e-', 'e−')}" for a, l in groups], fontsize=8.5)
     ax.set_ylabel("後期窓の対応差")
     ax.set_title("(b) L2 Init との対決（帯は ±0.005 の同等性）")
     ax.legend(loc="upper left", ncol=2)
@@ -157,13 +165,16 @@ NOTE = """図 9. 実ラベルの箱。点（棒）は seed 中央値、線（帯
 (a) 16 腕すべてが fresh gap > 0、すなわち全腕が可塑性を失っている。順位は窓の中央値。
     13 腕が 0.58-0.67 に、fresh gap は 13 腕が 0 の近くに詰まって位置から順位が読めないので、
     軸は動かさず（規約 §2.5-3）数値を点のそばに添えた。
-(c) は中央値の線だけ。7 腕ぶんの帯を重ねると濁るので、seed の散らばりは (a) で見る。
-(b) R との対応差。SNA・KKT1 は原典 λ=1e−3 の L2 Init に 19/20 seed で勝ち、調整 λ=1e−2 とは
-    事前登録の同等性の範囲。seed 10–19 は未使用 seed での追試。
+(c) は中央値の線だけ。帯を重ねると濁るので、seed の散らばりは (a) で見る。Snake・KK 族は
+    KKT1 だけ。(a) は登録の 16 腕の順位そのものなので 16 腕を出す。
+(b) KKT1 − L2 Init の対応差。Snake・KK 族は E1 で KKT1 = SNA が登録されているので KKT1 だけを
+    代表に載せる。λ=1e−3（原典の値）とは ±0.005 の同等性の範囲、λ=1e−2（箱ごとに調整した値）
+    には 19/20 seed で勝つ。seed 10–19 は未使用 seed での追試。
 検定は対応差の符号検定（Holm 補正）: SNA − R は中央値 +0.2258・10/10・p_holm 0.0137。
 元データ: results/cifar5p1_mlp_0920/<arm>/per_task.csv・fresh_control.csv・paired_tests.csv。
 """
 
+VARIANT = "bars"        # 0922 Issa 決定（順位と水準が読みやすい）
+
 if __name__ == "__main__":
-    for variant in ("points", "bars"):
-        print(S.save(build(variant), f"fig09_5p1_{variant}", NOTE))
+    print(S.save(build(VARIANT), "fig09_5p1", NOTE))

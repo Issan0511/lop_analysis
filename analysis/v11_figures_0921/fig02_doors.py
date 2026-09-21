@@ -103,9 +103,10 @@ LN が正側で線形化して実効階数が潰れる読みは relu_doors 結�
 元データ: results/relu_doors_h_ref_0920/H/per_task.csv・results/relu_doors_0919/{{CS,LN}}/per_task.csv。
 """
 
+LAYOUT = "2x2"          # 0922 Issa 決定（1 枚が大きく凡例と格が読める）
+
 if __name__ == "__main__":
-    for layout in ("1x4", "2x2"):
-        print(S.save(build(layout), f"fig02_doors_{layout}", NOTE))
+    print(S.save(build(LAYOUT), "fig02_doors", NOTE))
     print(S.save(build("1x4", CTRL_ARMS,
                        "付録 E 図  開ける扉を変えた対照 — H・CS・LN（RL-CIFAR / MLP・10 seed）", "付録"),
                  "fig02e_doors_controls", NOTE_E))

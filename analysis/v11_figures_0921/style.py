@@ -186,17 +186,19 @@ EASY_5P1 = list(range(2, N_TASKS_5P1 + 1, 2))
 EARLY_5P1, LATE_5P1 = HARD_5P1[:5], HARD_5P1[10:]  # src/cifar5p1_mlp_0920_report.py:31
 
 
-def value_labels(ax, y, values, fmt="{:.3f}", flip_at=0.80, dx=0.012, color="#555555"):
+def value_labels(ax, y, values, fmt="{:.3f}", flip_at=0.80, dx=0.012, color="#555555", at=None):
     """水平の順位図で、点のそばに数値を置く（§2.5-3 で軸を固定したまま順位を読めるように）。
 
     値が詰まっている帯では点の位置から順位が読めないので、数値そのものを添える。
-    右端に寄った点は左側に出す。
+    右端に寄った点は左側に出す。`at` を渡すと、字を置く位置だけ別にできる
+    （棒の版で、棒の端ではなく seed 範囲の右端の外に出すため）。
     """
     lo, hi = ax.get_xlim()
     span = hi - lo
-    for yi, v in zip(y, values):
+    at = values if at is None else at
+    for yi, v, a in zip(y, values, at):
         right = v < flip_at
-        ax.annotate(fmt.format(v), xy=(v + (dx if right else -dx) * span, yi),
+        ax.annotate(fmt.format(v), xy=(a + (dx if right else -dx) * span, yi),
                     ha="left" if right else "right", va="center",
                     fontsize=7.5, color=color, family=plt.rcParams["font.family"],
                     zorder=6)
