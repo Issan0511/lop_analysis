@@ -414,8 +414,10 @@ def s4(device) -> bool:
             start_bad.append(s)
     fr = [q for q in csv.DictReader(open(o / "forks.csv"))
           if q["branch"] == "A" and q["t"] == "2"]
+    ck_tc = torch.load(src / "ckpts" / "t02.pt", map_location="cpu", weights_only=False)["tc"]
+    tc_ok = all(int(q["tc"]) == ck_tc + int(q["bundle_steps"]) for q in fr)
     ok = record("S4a the A bundle from ckpts/t02.pt reproduces the main run's task 3",
-                not bad_tr and not bad_hit and not start_bad,
+                not bad_tr and not bad_hit and not start_bad and tc_ok,
                 {"trace_rows_compared": nrows, "cols": list(TRCOLS),
                  "trace_mismatches": bad_tr[:5], "hit_mismatches": bad_hit[:3],
                  "restored_start_differs_for_seeds": start_bad,
@@ -423,6 +425,7 @@ def s4(device) -> bool:
                  "stop_steps": sorted({r["stop_step"] for r in fr}),
                  "forks_csv_rows": len(fr),
                  "parent_sha256": fr[0]["parent_sha256"][:16] if fr else None,
+                 "ckpt_tc": ck_tc, "tc_continues_from_the_ckpt": tc_ok,
                  "stop_snapshots": len(list((o / "snap").glob("*_stop.npz"))),
                  "end_snapshots": len(list((o / "snap").glob("*_end.npz")))})
     # the same machinery on the iid arm, branch "next" (= that run's own task t+1), and the
