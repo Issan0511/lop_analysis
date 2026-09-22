@@ -64,7 +64,8 @@ def build():
     ax_phi = fig.add_subplot(gs[0, 0])
     ax_dphi = fig.add_subplot(gs[1, 0])
     ax_win = fig.add_subplot(gs[:, 1])
-    ax_t = fig.add_subplot(gs[:, 2])
+    ax_raw = fig.add_subplot(gs[0, 2])
+    ax_std = fig.add_subplot(gs[1, 2], sharex=ax_raw, sharey=ax_raw)
 
     # (a) 定義図
     z = np.linspace(-6, 4, 1600)
@@ -107,33 +108,36 @@ def build():
                            for c, m in (("raw", "o"), ("std", "s"))], loc="lower right")
     S.grade(ax_win, "registered", "A = SNA_BEATEN（両 cond）", loc="upper right")
 
-    # (c) 先行層 — T* は 1 か 2 しか取らず、先に落ちる層は cond で決まり切っている。
-    # 分布として描くと空になるので、腕 x cond の表として描く。
+    # (c)(d) 先行層 — 低応答（|phi'| < 1e-6）のユニットの割合が 0.5 を越える時刻。
+    # 登録の T* はこの線を最初に越えた課題で、どちらの層が先かが A6 の判定。
+    pt = pd.read_csv(D.RES / "cifar_ledger_0920" / "per_task.csv")
     ps = pd.read_csv(D.RES / "cifar_ledger_0920" / "per_seed.csv")
-    arms = ["ELU", "GELU", "SILU", "R"]
-    conds = ["raw", "std"]
-    face = {"L1_FIRST": "#dce7f2", "L2_FIRST": "#f5e2d8", "SIMULTANEOUS": "#e9e9ea"}
-    name = {"L1_FIRST": "第 1 層が先", "L2_FIRST": "第 2 層が先", "SIMULTANEOUS": "同時"}
-    for i, arm in enumerate(arms):
-        for j, cond in enumerate(conds):
-            sub = ps[(ps.arm == arm) & (ps.cond == cond)]
-            if len(sub) == 0:
-                continue
-            lab = sub.layer.mode().iloc[0]
-            n = int((sub.layer == lab).sum())
-            ts = sub.T_star.dropna()
-            ax_t.add_patch(plt.Rectangle((j - 0.46, i - 0.42), 0.92, 0.84,
-                                         fc=face[lab], ec=S.COLOR[arm], lw=1.4, zorder=1))
-            ax_t.text(j, i - 0.17, f"{name[lab]}  {n}/{len(sub)}", ha="center", va="center", fontsize=8.5)
-            tstar = "—" if ts.empty else f"{int(ts.median())}"
-            ax_t.text(j, i + 0.15, f"$T^*$ = {tstar}", ha="center", va="center", fontsize=8, color="#555555")
-    ax_t.set_xlim(-0.6, 1.6); ax_t.set_ylim(-0.7, len(arms) - 0.3)
-    ax_t.set_xticks(range(len(conds))); ax_t.set_xticklabels(conds)
-    ax_t.set_yticks(range(len(arms))); ax_t.set_yticklabels(arms)
-    ax_t.invert_yaxis()
-    ax_t.grid(False)
-    ax_t.set_title("(c) 先に落ちる層と崩壊の課題")
-    S.grade(ax_t, "column", loc="lower right")
+    arms = ["ELU", "GELU", "SILU"]
+    for ax, cond, tag in ((ax_raw, "raw", "(c)"), (ax_std, "std", "(d)")):
+        for arm in arms:
+            for layer, ls in ((1, "-"), (2, "--")):
+                s = pt[(pt.arm == arm) & (pt.cond == cond) & (pt.layer == layer) & (pt.task <= 10)]
+                m = s.pivot_table(index="task", columns="seed", values="train_low_mean")
+                ax.plot(m.index, np.median(m.to_numpy(), 1), color=S.COLOR[arm], ls=ls, lw=1.8,
+                        label=arm if layer == 1 else None)
+        ax.axhline(0.5, color="#999999", lw=0.9, ls=":")
+        row = ps[(ps.cond == cond) & (ps.arm.isin(arms))]
+        first = row.layer.mode().iloc[0]
+        n = int((row.layer == first).sum())
+        name = {"L1_FIRST": "第 1 層が先", "L2_FIRST": "第 2 層が先"}[first]
+        ax.set_title(f"{tag} 低応答ユニットの割合 — {cond}")
+        ax.set_ylabel("低応答の割合")
+        ax.set_ylim(0, 1)
+        S.breathe(ax)
+        ax.set_xlim(0, 10)
+        S.grade(ax, "registered", f"{name}　{n}/{len(row)}",
+                loc="center right" if cond == "raw" else "lower right")
+    handles, labels = ax_raw.get_legend_handles_labels()
+    leg = ax_std.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, -0.22), ncol=3,
+                        title="実線 = 第 1 層・破線 = 第 2 層", columnspacing=1.2, handlelength=1.4)
+    leg.get_title().set_fontsize(7.5)
+    ax_std.set_xlabel(S.AXIS["task"])
+    ax_raw.tick_params(labelbottom=False)
 
     fig.suptitle("図 7  活性化 — RL-CIFAR / MLP・50 課題・10 seed", fontsize=12)
     return fig
@@ -145,8 +149,10 @@ alpha=1 に固定している（測定値ではない）。
 四角が std。0.5 は登録の崩壊の線。登録判定は両 cond とも A = SNA_BEATEN。
 腕が床（0.10-0.12）と上（0.85-0.99）の二つに分かれて位置から順位が読めないので、軸は 0-1 に
 固定したまま（規約 §2.5-3）数値を点のそばに添えた。
-(c) は cifar_ledger_0920 の per_seed。T* は 1 か 2 しか取らず、先に落ちる層は cond で決まり切って
-いる（raw は第 1 層・std は第 2 層が 10/10・R は同時）ので、分布ではなく腕 x cond の表として描く。
+(c)(d) 低応答 = 訓練時の微分の絶対値が 1e-6 未満のユニットの割合（層ごと・seed 中央値）。
+登録の T* は、この割合が 0.5 を越えた最初の課題（t1-t10 の範囲で探す）。raw では第 1 層が先に
+越え（3 腕 30/30）、std では第 2 層が先に越える（30/30）。std の第 1 層は 0.5 の線の少し下で
+止まり、越えないことが多い。R は初めから過半が低応答で、この規則では先後が決まらない。
 元データ: results/rlcifar_mlp_battle_0918/<arm>/per_task.csv・results/cifar_ledger_0920/per_seed.csv。
 """
 
