@@ -1,0 +1,14 @@
+{
+  "gpu_max": 5,
+  "own_max": 5,
+  "reserve_gb": 2.5,
+  "min_gpu_mb": 500,
+  "retries": 3,
+  "jobs": [
+    {"arm": "LR_iid",   "stage": "run", "activation": "LR",  "schedule": "iid",  "seeds": "0-9", "conds": "std", "tasks": 50, "device": "cuda", "threads": 2, "rss_gb": 2.0, "hit_every": 100, "keep_ckpts": true},
+    {"arm": "LR_abab",  "stage": "run", "activation": "LR",  "schedule": "abab", "seeds": "0-9", "conds": "std", "tasks": 50, "device": "cuda", "threads": 2, "rss_gb": 2.0, "hit_every": 100, "keep_ckpts": true},
+    {"arm": "LR_aaaa",  "stage": "run", "activation": "LR",  "schedule": "aaaa", "seeds": "0-9", "conds": "std", "tasks": 50, "device": "cuda", "threads": 2, "rss_gb": 2.0, "hit_every": 100, "keep_ckpts": true},
+    {"arm": "SNA_abab", "stage": "run", "activation": "SNA", "schedule": "abab", "seeds": "0-9", "conds": "std", "tasks": 50, "device": "cuda", "threads": 2, "rss_gb": 2.0, "hit_every": 100, "keep_ckpts": true},
+    {"arm": "LR_abc",   "stage": "run", "activation": "LR",  "schedule": "abc",  "seeds": "0-9", "conds": "std", "tasks": 12, "device": "cuda", "threads": 2, "rss_gb": 2.0, "hit_every": 100, "keep_ckpts": true}
+  ]
+}
