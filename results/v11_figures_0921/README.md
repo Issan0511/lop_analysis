@@ -63,3 +63,35 @@ online accuracy は 0–1.02 固定）は動かさず、**数値を点のそば�
 `style.py` に 2 つ足した。`value_labels(ax, y, values)` は水平の順位図で点のそばに数値を置き、
 `breathe(ax)` は端の値が軸線に張り付かないよう両端に余白を入れる。格のラベルは
 `center right` / `center left` にも置けるようにした。
+
+## 付録の図（0922）
+
+付録 A–D・F・J を同じ規約で作った。付録 E は `fig02e_doors_controls`（0922 に図 2 から分けた対照）。
+表 2〜4 の数値は `tables_v11.py` が committed CSV から再計算して `tables_2-4_from_csv.md` に書く
+（vault の転記との照合用。表の正本は vault `論文作成/V11原稿_表1-5_0922`）。
+
+| 付録 | ファイル | 中身 | 格 |
+|---|---|---|---|
+| A | `figA_mnist_chain` | MNIST の移植の鎖 5 本（resp_ee・respdyn・swap・escneff・neffdir）の要約と登録ラベル | 登録（seed 平均） |
+| B | `figB_5p1_budget` | 5+1 の予算 ×10。CH − KKT1 は `LEVEL`、CH − R は符号反転、train 末は追いつく | 登録（seed 中央値） |
+| C | `figC_initgeom_rest` | 初期配置の γ 梯子（`L1_MODEL_MISS`）・第 2 層（`L2_CONDITIONAL_MODEL_MISS`）・bias 0 の副診断 | 登録＋副診断 |
+| D | `figD_drive_full` | 駆動の全体。M1x `NOT_SUPPORTED`・M3x `BOUNDARY_ENRICHED`・課題別の S と U | 登録＋記述 |
+| F | `figF_kunekune_tail` | kunekune の帯の外に出た質量と K1・K3 | 登録列の読み＋登録 |
+| J | `figJ_layer_chimera` | 層別キメラ S-A の 7 セル。online・p⁺・Q・‖µ₂‖ | 登録（Q1 `MIXED`）＋登録列 |
+
+決定 10b（0922）: 図 8 は S4 だけで、MNIST の鎖は付録 A に置き、本文には図を足さない（`BOX_SPECIFIC`）。
+決定 11（保留）: 付録 J は本文に出すか未決のまま先に作ってある。
+
+表 2 の照合で 1 か所直した: 草案 §1 の H の t1 online は 0.136 と書かれていたが CSV では 0.626（memo 0.774）。
+ref の値の写し間違いで、vault 側を 0922 に訂正。
+
+## 0922 図 7 の (c) を描き直し
+
+(c) は腕 × cond の表になっていて、図として読めなかった（Issa「なんの図ですか」）。T* が何なのか、
+「落ちる」が何を指すのかが図の中になかった。元データ `results/cifar_ledger_0920/per_task.csv` に
+課題ごとの `train_low_mean`（訓練時の微分の絶対値が 1e−6 未満のユニットの割合・層別）があるので、
+そのまま曲線にした。
+
+- (c) raw・(d) std の 2 枚。x = 課題 0–10、y = 低応答の割合、実線 = 第 1 層・破線 = 第 2 層。
+- 点線は登録の 0.5 の線。**T* はこの線を最初に越えた課題**で、どちらの層が先に越えるかが A6 の判定。
+- raw は第 1 層が先（3 腕 30/30）、std は第 2 層が先（30/30）。std の第 1 層は 0.5 の少し下で止まる。
