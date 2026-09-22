@@ -1,0 +1,3259 @@
+{
+ "_meta": {
+  "run_id": "altlabels_cifar_0923",
+  "stage": "report",
+  "written": "2026-09-23T03:02:23+0900",
+  "git_hash": "51269ec3b4bad89f39c9cead8844b22b5da42ef2",
+  "git_branch": "claude/altlabels_cifar_0923",
+  "git_dirty": true,
+  "spec_sha256": "37630ef6c338ac46836d90abf4e5f6f5f16ec6021aae88a28cd454d41bd4a3b5",
+  "spec_commit": "c2b6d79",
+  "ledger_dir": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923",
+  "ledger_provenance": {
+   "max_identity_rel": 1.7755361700084668e-15,
+   "max_identity_abs": 3.183231456205249e-11,
+   "identity_ok": true,
+   "max_bandsum_rel": 4.413682550263012e-16,
+   "max_V_sum_rel": 4.424560731230431e-16,
+   "V_mu_max": 0.0,
+   "V_comp_max": 0.0,
+   "sigma_med_vs_trace_max_abs": 1.6951856906644025e-05,
+   "tc_repair_ok": true,
+   "all_arms_have_provenance": true,
+   "steps_vs_last_step_ok": true
+  },
+  "arms_present": [
+   "LR_aaaa",
+   "LR_abab",
+   "LR_abab_stop",
+   "LR_abc",
+   "LR_iid",
+   "LR_iid_ext",
+   "LR_iid_stop",
+   "SNA_abab",
+   "SNA_iid_ext"
+  ],
+  "arms_absent": {},
+  "mixed_fraction": 0.8,
+  "censor_at": 30000,
+  "synthetic_checks": true,
+  "brier_claude": 0.225,
+  "brier_codex": 0.17279411764705882,
+  "n_undecided": 0,
+  "provisional_verdicts": [],
+  "scoring_note": "a _MIXED / _PARTIAL_SEEDS suffix does not change which interval the median fell in, so the predictions are scored on the base label and the suffix is reported next to it"
+ },
+ "thresholds": {
+  "Q1_rho_lo": {
+   "value": 0.5,
+   "origin": "midpoint of 0 and 1"
+  },
+  "Q1_rho_hi": {
+   "value": 1.5,
+   "origin": "operational: 50% faster"
+  },
+  "Q1_comp_abs_slope": {
+   "value": 2.1,
+   "origin": "midpoint of 0 and the fresh-leak 4.2 per task"
+  },
+  "Q1_beta_flag": {
+   "value": 1.5,
+   "origin": "descriptive flag EXP_GT_1.5"
+  },
+  "Q2_mid2_C2": {
+   "value": 0.0774,
+   "origin": "midpoint of OU-F -0.005 and periodic mixture +0.16"
+  },
+  "Q2_low_C2": {
+   "value": 0.059,
+   "origin": "sub"
+  },
+  "Q2_top_C2": {
+   "value": 0.13,
+   "origin": "sub"
+  },
+  "Q3_r_top": {
+   "value": 0.0636,
+   "origin": "midpoint of the exact return 1/45 and the IID 0.105"
+  },
+  "Q4_seeds": {
+   "value": 8,
+   "origin": "consistency flag out of 10 (one-sided sign test p = 0.055)"
+  },
+  "Q4_ratio": {
+   "value": 0.5,
+   "origin": "operational"
+  },
+  "Q4_fast": {
+   "value": 1800,
+   "origin": "the evaluation point after a fresh net's 1767"
+  },
+  "Q5_sigma50": {
+   "value": 60.08,
+   "origin": "midpoint of the fixed-return 20.3 and the IID 82.5"
+  },
+  "Q5_sigma25_record": {
+   "value": 47.7,
+   "origin": "record only (64.3 is an extrapolated proxy)"
+  },
+  "Q6_N_ratio": {
+   "value": 0.8,
+   "origin": "midpoint of the Adam-only null 1.09 and the PMNIST transplant 0.52"
+  },
+  "Q7_C3": {
+   "value": 0.08,
+   "origin": "mixture (-0.08,-0.08,+0.16) vs pure return (-0.5,-0.5,+1)"
+  },
+  "Q7_C2": {
+   "value": 0.08,
+   "origin": "same"
+  },
+  "Q8_sigma50": {
+   "value": 29.36,
+   "origin": "midpoint of the fixed-reuse 20.7 and the IID equilibrium 36"
+  },
+  "Q9_lo": {
+   "value": 0.5,
+   "origin": "operational"
+  },
+  "Q9_hi": {
+   "value": 1.5,
+   "origin": "operational"
+  },
+  "P16_Ntop_ratio": {
+   "value": 1.1,
+   "origin": "N_top(49) / N_top(25)"
+  }
+ },
+ "verdicts": {
+  "Q1": {
+   "statistic": "rho_mid2 = slope(E_mid2, j=14..25) / same for LR_iid, per seed",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 0.5484758596,
+    "1": 0.5584230523,
+    "2": 0.5430154988,
+    "3": 0.6043586215,
+    "4": 0.5152526722,
+    "5": 0.6421977955,
+    "6": 0.633699203,
+    "7": 0.6522141557,
+    "8": 0.5804162258,
+    "9": 0.6513618233
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 0.59238742365,
+   "base_label": "IID_SCALE_GROWTH",
+   "label": "IID_SCALE_GROWTH",
+   "mixed": false,
+   "counts": {
+    "IID_SCALE_GROWTH": 10
+   },
+   "consistency_need": 8,
+   "in_median_interval": 10,
+   "status": "ok",
+   "question": "mid2 growth within 50 tasks (LR_abab vs LR_iid)",
+   "rho_status": {
+    "0": "ok",
+    "1": "ok",
+    "2": "ok",
+    "3": "ok",
+    "4": "ok",
+    "5": "ok",
+    "6": "ok",
+    "7": "ok",
+    "8": "ok",
+    "9": "ok"
+   },
+   "slope_abab": {
+    "0": 413.8144659,
+    "1": 421.1371465,
+    "2": 393.837302,
+    "3": 409.3525289,
+    "4": 391.3789063,
+    "5": 411.4986931,
+    "6": 428.874464,
+    "7": 422.7359694,
+    "8": 421.8705533,
+    "9": 412.9531669
+   },
+   "slope_iid": {
+    "0": 754.480728,
+    "1": 754.1543008,
+    "2": 725.2781971,
+    "3": 677.333812,
+    "4": 759.5863689,
+    "5": 640.766281,
+    "6": 676.7792384,
+    "7": 648.1551584,
+    "8": 726.8414191,
+    "9": 633.9842958
+   },
+   "secondary_rho_per_task": {
+    "0": 0.5459721546,
+    "1": 0.5618254452,
+    "2": 0.5453594574,
+    "3": 0.6058539625,
+    "4": 0.5182920319,
+    "5": 0.6413288604,
+    "6": 0.6330728348,
+    "7": 0.6500984914,
+    "8": 0.5854292655,
+    "9": 0.6487511637
+   }
+  },
+  "Q1_sub_low": {
+   "statistic": "rho_low (registered rule, recorded only)",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 0.7602671797,
+    "1": 0.7528024193,
+    "2": 0.6978163349,
+    "3": 0.7986617182,
+    "4": 0.7395472984,
+    "5": 0.8424781978,
+    "6": 0.8205315535,
+    "7": 0.8909237247,
+    "8": 0.7942855715,
+    "9": 0.8464526425
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 0.79647364485,
+   "base_label": "IID_SCALE_GROWTH",
+   "label": "IID_SCALE_GROWTH",
+   "mixed": false,
+   "counts": {
+    "IID_SCALE_GROWTH": 10
+   },
+   "consistency_need": 8,
+   "in_median_interval": 10,
+   "status": "ok"
+  },
+  "Q1_sub_all": {
+   "statistic": "rho_all (registered rule, recorded only)",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 0.5222618423,
+    "1": 0.5307419365,
+    "2": 0.5140195372,
+    "3": 0.5840340817,
+    "4": 0.4608321198,
+    "5": 0.6565208106,
+    "6": 0.587687306,
+    "7": 0.6764348606,
+    "8": 0.5257846209,
+    "9": 0.6455999962
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 0.5573880091000001,
+   "base_label": "IID_SCALE_GROWTH",
+   "label": "IID_SCALE_GROWTH",
+   "mixed": false,
+   "counts": {
+    "IID_SCALE_GROWTH": 9,
+    "REDUCED_GROWTH": 1
+   },
+   "consistency_need": 8,
+   "in_median_interval": 9,
+   "status": "ok"
+  },
+  "Q1_sub_comp": {
+   "statistic": "rho_comp (registered rule, recorded only)",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 1.210069561,
+    "1": 1.306017819,
+    "2": 1.273381455,
+    "3": 1.294843367,
+    "4": 1.027880898,
+    "5": 1.269142741,
+    "6": 1.193204326,
+    "7": 1.265632909,
+    "8": 1.165728,
+    "9": 1.164099537
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 1.237851235,
+   "base_label": "IID_SCALE_GROWTH",
+   "label": "IID_SCALE_GROWTH",
+   "mixed": false,
+   "counts": {
+    "IID_SCALE_GROWTH": 10
+   },
+   "consistency_need": 8,
+   "in_median_interval": 10,
+   "status": "ok"
+  },
+  "Q1_sub_top": {
+   "statistic": "rho_top (registered rule, recorded only)",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 0.5075051126,
+    "1": 0.2668768105,
+    "2": 0.438008962,
+    "3": 0.2939786188,
+    "4": 0.3076456915,
+    "5": 0.389153039,
+    "6": 0.4059750715,
+    "7": 1.080344191,
+    "8": 0.2493665651,
+    "9": 0.5891509915
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 0.39756405525,
+   "base_label": "REDUCED_GROWTH",
+   "label": "REDUCED_GROWTH_MIXED",
+   "mixed": true,
+   "counts": {
+    "IID_SCALE_GROWTH": 3,
+    "REDUCED_GROWTH": 7
+   },
+   "consistency_need": 8,
+   "in_median_interval": 7,
+   "status": "ok"
+  },
+  "Q1_sub_mid1": {
+   "statistic": "rho_mid1 (registered rule, recorded only)",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 0.3977559262,
+    "1": 0.4295317154,
+    "2": 0.4071124141,
+    "3": 0.4847891145,
+    "4": 0.3191889918,
+    "5": 0.6079420501,
+    "6": 0.4552140851,
+    "7": 0.6021605159,
+    "8": 0.3932547222,
+    "9": 0.5526482083
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 0.44237290025,
+   "base_label": "REDUCED_GROWTH",
+   "label": "REDUCED_GROWTH_MIXED",
+   "mixed": true,
+   "counts": {
+    "REDUCED_GROWTH": 7,
+    "IID_SCALE_GROWTH": 3
+   },
+   "consistency_need": 8,
+   "in_median_interval": 7,
+   "status": "ok"
+  },
+  "Q1_sub_comp_absolute": {
+   "statistic": "comp complete-cycle slope of LR_abab, per task (threshold 2.1; LR_iid measures ~3.9)",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 4.703097829,
+    "1": 4.93969241,
+    "2": 4.740621927,
+    "3": 4.610397331,
+    "4": 3.999393623,
+    "5": 4.509470547,
+    "6": 4.813594501,
+    "7": 5.343003801,
+    "8": 4.290862281,
+    "9": 4.411949922
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 4.656747579999999,
+   "base_label": "COMP_SLOPE_GT_2.1",
+   "label": "COMP_SLOPE_GT_2.1",
+   "mixed": false,
+   "counts": {
+    "COMP_SLOPE_GT_2.1": 10
+   },
+   "consistency_need": 8,
+   "in_median_interval": 10,
+   "status": "ok",
+   "comp_slope_LR_iid": {
+    "0": 3.886634274,
+    "1": 3.782254988,
+    "2": 3.72286082,
+    "3": 3.560583039,
+    "4": 3.890911516,
+    "5": 3.553162622,
+    "6": 4.034174529,
+    "7": 4.221606252,
+    "8": 3.680843457,
+    "9": 3.790010889
+   }
+  },
+  "EXP_GT_1.5": {
+   "statistic": "beta_all = log-log slope of N_all vs t over t6-50 (descriptive flag)",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 0.8384106192,
+    "1": 0.865079268,
+    "2": 0.8325596985,
+    "3": 0.8336053292,
+    "4": 0.8232425916,
+    "5": 0.837960402,
+    "6": 0.8640669972,
+    "7": 0.8345830363,
+    "8": 0.8332229663,
+    "9": 0.8296989907
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 0.8340941827499999,
+   "base_label": "EXP_LE_1.5",
+   "label": "EXP_LE_1.5",
+   "mixed": false,
+   "counts": {
+    "EXP_LE_1.5": 10
+   },
+   "consistency_need": 8,
+   "in_median_interval": 10,
+   "status": "ok"
+  },
+  "Q1_center_vs_diameter": {
+   "statistic": "complete-cycle slope of ||M_j||^2 and of D_j^2 (mid2), LR_abab vs LR_iid",
+   "note": "reported apart so a growing E is not read as a moving centre",
+   "per_arm": {
+    "LR_abab": {
+     "M_sq_slope": {
+      "0": 413.8146069055943,
+      "1": 421.1674866958041,
+      "2": 393.9625426048952,
+      "3": 409.40285423076926,
+      "4": 391.4240714685316,
+      "5": 411.6113262062937,
+      "6": 428.92581463286706,
+      "7": 422.87324916083895,
+      "8": 421.90806279720266,
+      "9": 413.1306447377619
+     },
+     "D_sq_slope": {
+      "0": -0.00014123881118869043,
+      "1": -0.03034008059440539,
+      "2": -0.12524056926573396,
+      "3": -0.050325293199299716,
+      "4": -0.04516522020978995,
+      "5": -0.11263309790209719,
+      "6": -0.051350587499999274,
+      "7": -0.13727982501748182,
+      "8": -0.03750950933566395,
+      "9": -0.1774778502797194
+     }
+    },
+    "LR_iid": {
+     "M_sq_slope": {
+      "0": 753.4203982167828,
+      "1": 752.1142558041959,
+      "2": 722.1503791258741,
+      "3": 674.6788266958042,
+      "4": 757.3912230244753,
+      "5": 638.472882325175,
+      "6": 674.1592316958044,
+      "7": 646.7860240034964,
+      "8": 721.8010135314682,
+      "9": 632.2376609790208
+     },
+     "D_sq_slope": {
+      "0": 1.0603300440559504,
+      "1": 2.040044975524481,
+      "2": 3.1278177451049016,
+      "3": 2.6549852006992998,
+      "4": 2.195146027622387,
+      "5": 2.2933987860139857,
+      "6": 2.6200065835664392,
+      "7": 1.369134413461541,
+      "8": 5.040405457692306,
+      "9": 1.7466348972027996
+     }
+    }
+   }
+  },
+  "Q2": {
+   "statistic": "mid2 C2 (arithmetic mean of Frobenius cosines), LR_abab, late window t26-50",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 0.1813218778,
+    "1": 0.1867836584,
+    "2": 0.1797718106,
+    "3": 0.186604221,
+    "4": 0.1898158277,
+    "5": 0.1917581298,
+    "6": 0.1997530554,
+    "7": 0.18537544,
+    "8": 0.1954792135,
+    "9": 0.1927938465
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 0.18829974305,
+   "base_label": "PERIODIC",
+   "label": "PERIODIC",
+   "mixed": false,
+   "counts": {
+    "PERIODIC": 10
+   },
+   "consistency_need": 8,
+   "in_median_interval": 10,
+   "status": "ok",
+   "C2_minus_C13": {
+    "0": 0.3615437922,
+    "1": 0.3690698339,
+    "2": 0.3578553348,
+    "3": 0.3680033884,
+    "4": 0.3742680216,
+    "5": 0.3795059067,
+    "6": 0.3915259643,
+    "7": 0.3640507289,
+    "8": 0.3810708898,
+    "9": 0.3747642703
+   },
+   "C2_energy": {
+    "0": 0.1808427543,
+    "1": 0.1875344323,
+    "2": 0.1803723612,
+    "3": 0.1878462527,
+    "4": 0.1892689564,
+    "5": 0.1928334658,
+    "6": 0.2008676214,
+    "7": 0.1861785723,
+    "8": 0.1956483699,
+    "9": 0.1935781277
+   },
+   "even_odd_pattern": {
+    "C1": -0.20009114635,
+    "C2": 0.18829974305,
+    "C3": -0.16446525065,
+    "C4": 0.1867082268,
+    "C5": -0.15487100085,
+    "C6": 0.18390693425
+   },
+   "iid_reference_C2": {
+    "0": -0.01675438579,
+    "1": -0.0180555648,
+    "2": -0.01995147366,
+    "3": -0.01752639312,
+    "4": -0.01700513723,
+    "5": -0.01669059872,
+    "6": -0.01665933883,
+    "7": -0.01818714227,
+    "8": -0.01859581463,
+    "9": -0.01765658481
+   }
+  },
+  "Q2_sub_low": {
+   "statistic": "low C2 (late), threshold 0.059",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 0.2054895119,
+    "1": 0.1929081062,
+    "2": 0.2005081936,
+    "3": 0.205817638,
+    "4": 0.214526947,
+    "5": 0.2143642135,
+    "6": 0.2033125624,
+    "7": 0.1995117352,
+    "8": 0.2133849717,
+    "9": 0.2060741821
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 0.20565357495,
+   "base_label": "LOW_PERIODIC",
+   "label": "LOW_PERIODIC",
+   "mixed": false,
+   "counts": {
+    "LOW_PERIODIC": 10
+   },
+   "consistency_need": 8,
+   "in_median_interval": 10,
+   "status": "ok"
+  },
+  "Q2_sub_top": {
+   "statistic": "top C2 (late), threshold 0.13",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 0.415579415,
+    "1": 0.4011842986,
+    "2": 0.3929271058,
+    "3": 0.4193983092,
+    "4": 0.3773301492,
+    "5": 0.4199325283,
+    "6": 0.3974307869,
+    "7": 0.4040723262,
+    "8": 0.4088327539,
+    "9": 0.4256026248
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 0.40645254005,
+   "base_label": "TOP_PERIODIC",
+   "label": "TOP_PERIODIC",
+   "mixed": false,
+   "counts": {
+    "TOP_PERIODIC": 10
+   },
+   "consistency_need": 8,
+   "in_median_interval": 10,
+   "status": "ok"
+  },
+  "Q3": {
+   "statistic": "r_top = ||sum_{t=6..50} dW_t||^2_top / sum ||dW_t||^2_top, LR_abab",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 0.0587739396,
+    "1": 0.0577619772,
+    "2": 0.0567623088,
+    "3": 0.06257482656,
+    "4": 0.06373875945,
+    "5": 0.06206459573,
+    "6": 0.06390138402,
+    "7": 0.05895187487,
+    "8": 0.05769039077,
+    "9": 0.05813019051
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 0.058862907235,
+   "base_label": "LOW_NET_DISPLACEMENT",
+   "label": "LOW_NET_DISPLACEMENT",
+   "mixed": false,
+   "counts": {
+    "LOW_NET_DISPLACEMENT": 8,
+    "HIGH_NET_DISPLACEMENT": 2
+   },
+   "consistency_need": 8,
+   "in_median_interval": 8,
+   "status": "ok",
+   "exact_return_floor": 0.022222222222222223,
+   "iid_reference_r_top": {
+    "0": 0.1046053631,
+    "1": 0.1174980229,
+    "2": 0.1058161297,
+    "3": 0.1162854148,
+    "4": 0.1197434671,
+    "5": 0.1110513385,
+    "6": 0.1169167262,
+    "7": 0.1013139029,
+    "8": 0.1239648786,
+    "9": 0.1089321663
+   }
+  },
+  "Q3b": {
+   "statistic": "median over late odd t of cos(W_t, W_{t-2})_top, minus the seed's own (c_IID + 1)/2 threshold",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 0.007043401224999912,
+    "1": -0.00020687007499997634,
+    "2": 0.006287077224999993,
+    "3": 0.020502493750000017,
+    "4": 0.011917746800000018,
+    "5": 0.02232891495,
+    "6": 0.013183609424999965,
+    "7": 0.01137195550000003,
+    "8": 0.013238965749999942,
+    "9": 0.01884372965000003
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 0.012550678112499991,
+   "base_label": "HIGH_DIRECTIONAL_RETURN",
+   "label": "HIGH_DIRECTIONAL_RETURN",
+   "mixed": false,
+   "counts": {
+    "HIGH_DIRECTIONAL_RETURN": 9,
+    "LOW_DIRECTIONAL_RETURN": 1
+   },
+   "consistency_need": 8,
+   "in_median_interval": 9,
+   "status": "ok",
+   "cos_abab": {
+    "0": 0.8902769213999999,
+    "1": 0.88056083865,
+    "2": 0.8898124983,
+    "3": 0.90328476925,
+    "4": 0.8940016781,
+    "5": 0.8946215489,
+    "6": 0.89162331055,
+    "7": 0.89099262985,
+    "8": 0.8940630166,
+    "9": 0.89595188005
+   },
+   "cos_iid": {
+    "0": 0.76646704035,
+    "1": 0.76153541745,
+    "2": 0.76705084215,
+    "3": 0.765564551,
+    "4": 0.7641678625999999,
+    "5": 0.7445852679,
+    "6": 0.75687940225,
+    "7": 0.7592413487,
+    "8": 0.7616481017000001,
+    "9": 0.7542163008
+   },
+   "threshold_per_seed": {
+    "0": 0.883233520175,
+    "1": 0.880767708725,
+    "2": 0.883525421075,
+    "3": 0.8827822755,
+    "4": 0.8820839313,
+    "5": 0.87229263395,
+    "6": 0.878439701125,
+    "7": 0.87962067435,
+    "8": 0.88082405085,
+    "9": 0.8771081504
+   },
+   "note": "a_t and the residual are in cycle.csv; this is not a claim that the solution is the same"
+  },
+  "Q4": {
+   "statistic": "LR_abab_fork t=48: A vs C, hit999 with the spec's censoring",
+   "fork_set": "LR_abab_fork",
+   "t": 48,
+   "pair": "A vs C",
+   "hit999": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.1452173913,
+    "median_ratio_upper_bound": 0.1452173913,
+    "median_ratio_lower_bound": 0.1452173913,
+    "median_hit999_A_observed": 400.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 400.0,
+      "C": 2500.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 300.0,
+      "C": 2600.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 400.0,
+      "C": 2500.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 300.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 400.0,
+      "C": 2400.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 400.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 300.0,
+      "C": 2400.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 400.0,
+      "C": 3300.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 400.0,
+      "C": 2500.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 300.0,
+      "C": 2400.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "hit_full": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.144723093,
+    "median_ratio_upper_bound": 0.144723093,
+    "median_ratio_lower_bound": 0.144723093,
+    "median_hit_full_A_observed": 400.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 400.0,
+      "C": 2500.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 300.0,
+      "C": 2600.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 400.0,
+      "C": 2900.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 300.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 400.0,
+      "C": 2500.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 400.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 300.0,
+      "C": 2400.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 500.0,
+      "C": 3300.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 500.0,
+      "C": 2600.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 300.0,
+      "C": 2500.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "hit99": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.15,
+    "median_ratio_upper_bound": 0.15,
+    "median_ratio_lower_bound": 0.15,
+    "median_hit99_A_observed": 300.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 300.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 200.0,
+      "C": 2400.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 300.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 300.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 300.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 300.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 300.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 300.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 300.0,
+      "C": 2200.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 200.0,
+      "C": 2000.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "label": "SAVINGS",
+   "STRONG_SAVINGS": true,
+   "FAST_REVISIT": true,
+   "status": "ok",
+   "provisional": false,
+   "provisional_reason": "",
+   "censor_at": 30000,
+   "censoring_note": "hit999 is right-censored at 30,000; hit_full and hit99 at the bundle's own last step.  A pair counts only when its order is determined."
+  },
+  "Q4_sub_t2": {
+   "statistic": "LR_abab_fork t=2: A vs C, hit999 with the spec's censoring",
+   "fork_set": "LR_abab_fork",
+   "t": 2,
+   "pair": "A vs C",
+   "hit999": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": false,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 9,
+     "tie": 0,
+     "C_first": 1,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.7140522875499999,
+    "median_ratio_upper_bound": 0.7140522875499999,
+    "median_ratio_lower_bound": 0.7140522875499999,
+    "median_hit999_A_observed": 1300.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 1300.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 1000.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 1300.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 1200.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 1500.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 1500.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 1200.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 1300.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 2000.0,
+      "C": 1800.0,
+      "sign": 1.0
+     },
+     "9": {
+      "lhs": 1200.0,
+      "C": 2700.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "hit_full": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": false,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.7295321637500001,
+    "median_ratio_upper_bound": 0.7295321637500001,
+    "median_ratio_lower_bound": 0.7295321637500001,
+    "median_hit_full_A_observed": 1300.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 1400.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 1300.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 1300.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 1200.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 1700.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 1600.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 1200.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 1300.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 2000.0,
+      "C": 2500.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 1200.0,
+      "C": 2700.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "hit99": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": false,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.6491228070499999,
+    "median_ratio_upper_bound": 0.6491228070499999,
+    "median_ratio_lower_bound": 0.6491228070499999,
+    "median_hit99_A_observed": 1000.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 1000.0,
+      "C": 1600.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 900.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 1200.0,
+      "C": 1400.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 1100.0,
+      "C": 1500.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 1200.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 1200.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 1000.0,
+      "C": 1500.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 1000.0,
+      "C": 1500.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 900.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 1000.0,
+      "C": 1700.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "label": "SAVINGS",
+   "STRONG_SAVINGS": false,
+   "FAST_REVISIT": true,
+   "status": "ok",
+   "provisional": false,
+   "provisional_reason": "",
+   "censor_at": 30000,
+   "censoring_note": "hit999 is right-censored at 30,000; hit_full and hit99 at the bundle's own last step.  A pair counts only when its order is determined."
+  },
+  "Q4_sub_t10": {
+   "statistic": "LR_abab_fork t=10: A vs C, hit999 with the spec's censoring",
+   "fork_set": "LR_abab_fork",
+   "t": 10,
+   "pair": "A vs C",
+   "hit999": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.24404761905,
+    "median_ratio_upper_bound": 0.24404761905,
+    "median_ratio_lower_bound": 0.24404761905,
+    "median_hit999_A_observed": 500.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 500.0,
+      "C": 2200.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 500.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 500.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 500.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 500.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 500.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 500.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 500.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 500.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 500.0,
+      "C": 2700.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "hit_full": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.25,
+    "median_ratio_upper_bound": 0.25,
+    "median_ratio_lower_bound": 0.25,
+    "median_hit_full_A_observed": 500.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 500.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 600.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 500.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 600.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 500.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 500.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 600.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 500.0,
+      "C": 2200.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 500.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 600.0,
+      "C": 2700.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "hit99": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.2352941176,
+    "median_ratio_upper_bound": 0.2352941176,
+    "median_ratio_lower_bound": 0.2352941176,
+    "median_hit99_A_observed": 400.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 400.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 400.0,
+      "C": 1600.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 400.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 500.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 400.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 400.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 400.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 400.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 500.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 400.0,
+      "C": 1800.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "label": "SAVINGS",
+   "STRONG_SAVINGS": true,
+   "FAST_REVISIT": true,
+   "status": "ok",
+   "provisional": false,
+   "provisional_reason": "",
+   "censor_at": 30000,
+   "censoring_note": "hit999 is right-censored at 30,000; hit_full and hit99 at the bundle's own last step.  A pair counts only when its order is determined."
+  },
+  "Q4_sub_t20": {
+   "statistic": "LR_abab_fork t=20: A vs C, hit999 with the spec's censoring",
+   "fork_set": "LR_abab_fork",
+   "t": 20,
+   "pair": "A vs C",
+   "hit999": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.1818181818,
+    "median_ratio_upper_bound": 0.1818181818,
+    "median_ratio_lower_bound": 0.1818181818,
+    "median_hit999_A_observed": 400.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 400.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 400.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 400.0,
+      "C": 2400.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 400.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 400.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 400.0,
+      "C": 2200.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 400.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 400.0,
+      "C": 2200.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 400.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 300.0,
+      "C": 2000.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "hit_full": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.17424242425,
+    "median_ratio_upper_bound": 0.17424242425,
+    "median_ratio_lower_bound": 0.17424242425,
+    "median_hit_full_A_observed": 400.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 400.0,
+      "C": 2200.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 400.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 400.0,
+      "C": 2500.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 400.0,
+      "C": 2400.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 400.0,
+      "C": 2400.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 500.0,
+      "C": 2200.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 400.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 400.0,
+      "C": 2400.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 500.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 300.0,
+      "C": 2100.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "hit99": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.1666666667,
+    "median_ratio_upper_bound": 0.1666666667,
+    "median_ratio_lower_bound": 0.1666666667,
+    "median_hit99_A_observed": 300.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 300.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 300.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 300.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 300.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 300.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 300.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 300.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 300.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 300.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 300.0,
+      "C": 1800.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "label": "SAVINGS",
+   "STRONG_SAVINGS": true,
+   "FAST_REVISIT": true,
+   "status": "ok",
+   "provisional": false,
+   "provisional_reason": "",
+   "censor_at": 30000,
+   "censoring_note": "hit999 is right-censored at 30,000; hit_full and hit99 at the bundle's own last step.  A pair counts only when its order is determined."
+  },
+  "Q4_sub_t30": {
+   "statistic": "LR_abab_fork t=30: A vs C, hit999 with the spec's censoring",
+   "fork_set": "LR_abab_fork",
+   "t": 30,
+   "pair": "A vs C",
+   "hit999": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.16228070174999998,
+    "median_ratio_upper_bound": 0.16228070174999998,
+    "median_ratio_lower_bound": 0.16228070174999998,
+    "median_hit999_A_observed": 400.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 300.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 400.0,
+      "C": 2800.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 400.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 400.0,
+      "C": 3500.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 300.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 400.0,
+      "C": 2200.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 400.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 300.0,
+      "C": 2400.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 400.0,
+      "C": 2200.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 400.0,
+      "C": 2400.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "hit_full": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.16333333335,
+    "median_ratio_upper_bound": 0.16333333335,
+    "median_ratio_lower_bound": 0.16333333335,
+    "median_hit_full_A_observed": 400.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 400.0,
+      "C": 2700.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 400.0,
+      "C": 2800.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 400.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 400.0,
+      "C": 3600.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 400.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 400.0,
+      "C": 2200.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 400.0,
+      "C": 2400.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 400.0,
+      "C": 2500.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 400.0,
+      "C": 2200.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 400.0,
+      "C": 2800.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "hit99": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.16228070174999998,
+    "median_ratio_upper_bound": 0.16228070174999998,
+    "median_ratio_lower_bound": 0.16228070174999998,
+    "median_hit99_A_observed": 300.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 300.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 300.0,
+      "C": 2200.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 300.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 300.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 300.0,
+      "C": 1700.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 300.0,
+      "C": 1900.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 300.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 300.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 300.0,
+      "C": 1800.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 300.0,
+      "C": 1900.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "label": "SAVINGS",
+   "STRONG_SAVINGS": true,
+   "FAST_REVISIT": true,
+   "status": "ok",
+   "provisional": false,
+   "provisional_reason": "",
+   "censor_at": 30000,
+   "censoring_note": "hit999 is right-censored at 30,000; hit_full and hit99 at the bundle's own last step.  A pair counts only when its order is determined."
+  },
+  "Q4_sub_t40": {
+   "statistic": "LR_abab_fork t=40: A vs C, hit999 with the spec's censoring",
+   "fork_set": "LR_abab_fork",
+   "t": 40,
+   "pair": "A vs C",
+   "hit999": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.15740740739999998,
+    "median_ratio_upper_bound": 0.15740740739999998,
+    "median_ratio_lower_bound": 0.15740740739999998,
+    "median_hit999_A_observed": 400.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 400.0,
+      "C": 2400.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 400.0,
+      "C": 2700.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 300.0,
+      "C": 2500.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 300.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 400.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 300.0,
+      "C": 2700.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 400.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 300.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 400.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 400.0,
+      "C": 2400.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "hit_full": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.15407407405,
+    "median_ratio_upper_bound": 0.15407407405,
+    "median_ratio_lower_bound": 0.15407407405,
+    "median_hit_full_A_observed": 400.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 400.0,
+      "C": 3100.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 400.0,
+      "C": 2700.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 300.0,
+      "C": 2500.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 500.0,
+      "C": 2400.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 400.0,
+      "C": 2300.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 300.0,
+      "C": 2800.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 400.0,
+      "C": 2400.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 300.0,
+      "C": 2500.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 400.0,
+      "C": 2500.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 500.0,
+      "C": 2500.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "hit99": {
+    "label": "SAVINGS",
+    "STRONG_SAVINGS": true,
+    "FAST_REVISIT": true,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "A_first": 10,
+     "tie": 0,
+     "C_first": 0,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.15,
+    "median_ratio_upper_bound": 0.15,
+    "median_ratio_lower_bound": 0.15,
+    "median_hit99_A_observed": 300.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 300.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 300.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 300.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 300.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "4": {
+      "lhs": 300.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "5": {
+      "lhs": 300.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 300.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "7": {
+      "lhs": 200.0,
+      "C": 2000.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 300.0,
+      "C": 2100.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 300.0,
+      "C": 2100.0,
+      "sign": -1.0
+     }
+    }
+   },
+   "label": "SAVINGS",
+   "STRONG_SAVINGS": true,
+   "FAST_REVISIT": true,
+   "status": "ok",
+   "provisional": false,
+   "provisional_reason": "",
+   "censor_at": 30000,
+   "censoring_note": "hit999 is right-censored at 30,000; hit_full and hit99 at the bundle's own last step.  A pair counts only when its order is determined."
+  },
+  "Q4_sub_iid_next_vs_C": {
+   "statistic": "LR_iid_fork t=48: next vs C, hit999 with the spec's censoring",
+   "fork_set": "LR_iid_fork",
+   "t": 48,
+   "pair": "next vs C",
+   "hit999": {
+    "label": "SAVINGS_NOT_ESTABLISHED",
+    "STRONG_SAVINGS": false,
+    "FAST_REVISIT": false,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "next_first": 5,
+     "tie": 1,
+     "C_first": 4,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.9791666666500001,
+    "median_ratio_upper_bound": 0.9791666666500001,
+    "median_ratio_lower_bound": 0.9791666666500001,
+    "median_hit999_next_observed": 4150.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 3600.0,
+      "C": 3600.0,
+      "sign": 0.0
+     },
+     "1": {
+      "lhs": 4500.0,
+      "C": 4700.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 4600.0,
+      "C": 4800.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 4300.0,
+      "C": 3900.0,
+      "sign": 1.0
+     },
+     "4": {
+      "lhs": 3500.0,
+      "C": 3300.0,
+      "sign": 1.0
+     },
+     "5": {
+      "lhs": 4500.0,
+      "C": 4700.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 4200.0,
+      "C": 4000.0,
+      "sign": 1.0
+     },
+     "7": {
+      "lhs": 3800.0,
+      "C": 4600.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 3500.0,
+      "C": 4100.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 4100.0,
+      "C": 3700.0,
+      "sign": 1.0
+     }
+    }
+   },
+   "hit_full": {
+    "label": "SAVINGS_NOT_ESTABLISHED",
+    "STRONG_SAVINGS": false,
+    "FAST_REVISIT": false,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "next_first": 6,
+     "tie": 0,
+     "C_first": 4,
+     "undetermined": 0
+    },
+    "median_ratio_point": 0.9719047620000001,
+    "median_ratio_upper_bound": 0.9128301887000001,
+    "median_ratio_lower_bound": 0.9123809524,
+    "median_hit_full_next_observed": 4200.0,
+    "censoring": {
+     "0": "observed",
+     "1": "C_censored",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "C_censored",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 3600.0,
+      "C": 4600.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 4500.0,
+      "C": -1.0,
+      "sign": -1.0
+     },
+     "2": {
+      "lhs": 4600.0,
+      "C": 5000.0,
+      "sign": -1.0
+     },
+     "3": {
+      "lhs": 4300.0,
+      "C": 4200.0,
+      "sign": 1.0
+     },
+     "4": {
+      "lhs": 3800.0,
+      "C": 3500.0,
+      "sign": 1.0
+     },
+     "5": {
+      "lhs": 4800.0,
+      "C": -1.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 4200.0,
+      "C": 4100.0,
+      "sign": 1.0
+     },
+     "7": {
+      "lhs": 3900.0,
+      "C": 4600.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 3800.0,
+      "C": 4200.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 4200.0,
+      "C": 3800.0,
+      "sign": 1.0
+     }
+    }
+   },
+   "hit99": {
+    "label": "SAVINGS_NOT_ESTABLISHED",
+    "STRONG_SAVINGS": false,
+    "FAST_REVISIT": false,
+    "n_seeds": 10,
+    "need": 8,
+    "counts": {
+     "next_first": 4,
+     "tie": 3,
+     "C_first": 3,
+     "undetermined": 0
+    },
+    "median_ratio_point": 1.0,
+    "median_ratio_upper_bound": 1.0,
+    "median_ratio_lower_bound": 1.0,
+    "median_hit99_next_observed": 3300.0,
+    "censoring": {
+     "0": "observed",
+     "1": "observed",
+     "2": "observed",
+     "3": "observed",
+     "4": "observed",
+     "5": "observed",
+     "6": "observed",
+     "7": "observed",
+     "8": "observed",
+     "9": "observed"
+    },
+    "per_seed": {
+     "0": {
+      "lhs": 3100.0,
+      "C": 3400.0,
+      "sign": -1.0
+     },
+     "1": {
+      "lhs": 4200.0,
+      "C": 3500.0,
+      "sign": 1.0
+     },
+     "2": {
+      "lhs": 4200.0,
+      "C": 4200.0,
+      "sign": 0.0
+     },
+     "3": {
+      "lhs": 3800.0,
+      "C": 3800.0,
+      "sign": 0.0
+     },
+     "4": {
+      "lhs": 3000.0,
+      "C": 3000.0,
+      "sign": 0.0
+     },
+     "5": {
+      "lhs": 3300.0,
+      "C": 4200.0,
+      "sign": -1.0
+     },
+     "6": {
+      "lhs": 3200.0,
+      "C": 2800.0,
+      "sign": 1.0
+     },
+     "7": {
+      "lhs": 3300.0,
+      "C": 3400.0,
+      "sign": -1.0
+     },
+     "8": {
+      "lhs": 3100.0,
+      "C": 3600.0,
+      "sign": -1.0
+     },
+     "9": {
+      "lhs": 4000.0,
+      "C": 3300.0,
+      "sign": 1.0
+     }
+    }
+   },
+   "label": "SAVINGS_NOT_ESTABLISHED",
+   "STRONG_SAVINGS": false,
+   "FAST_REVISIT": false,
+   "status": "ok",
+   "provisional": false,
+   "provisional_reason": "",
+   "censor_at": 30000,
+   "censoring_note": "hit999 is right-censored at 30,000; hit_full and hit99 at the bundle's own last step.  A pair counts only when its order is determined."
+  },
+  "Q5": {
+   "statistic": "sigma_med(50), LR_abab (numpy median over the 100 units of sd(z1_i))",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 54.1386895,
+    "1": 56.32556442,
+    "2": 55.58587344,
+    "3": 55.02398896,
+    "4": 53.06579464,
+    "5": 55.28030316,
+    "6": 55.57271739,
+    "7": 55.87049248,
+    "8": 55.08725677,
+    "9": 54.63100322
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 55.183779965,
+   "base_label": "LOWER_WIDTH_SIDE",
+   "label": "LOWER_WIDTH_SIDE",
+   "mixed": false,
+   "counts": {
+    "LOWER_WIDTH_SIDE": 10
+   },
+   "consistency_need": 8,
+   "in_median_interval": 10,
+   "status": "ok",
+   "sigma_med_25": {
+    "0": 44.63420338,
+    "1": 46.40655471,
+    "2": 45.46535901,
+    "3": 46.26473949,
+    "4": 43.90861577,
+    "5": 45.24300165,
+    "6": 45.76005298,
+    "7": 46.1347405,
+    "8": 47.22355123,
+    "9": 47.45645043
+   },
+   "sigma_med_25_record_threshold": 47.7,
+   "sigma_med_50_LR_iid": {
+    "0": 82.12991965,
+    "1": 85.74263618,
+    "2": 85.16388506,
+    "3": 81.28677676,
+    "4": 83.03906582,
+    "5": 79.47220959,
+    "6": 81.71191183,
+    "7": 76.55307017,
+    "8": 85.64826816,
+    "9": 79.30751705
+   },
+   "V_top_50_ratio": {
+    "0": 0.44245864276392927,
+    "1": 0.46172188545063936,
+    "2": 0.44312789668756153,
+    "3": 0.5053829826311327,
+    "4": 0.43953250316033043,
+    "5": 0.49710906171092334,
+    "6": 0.4749904659195201,
+    "7": 0.5261581803696964,
+    "8": 0.4050257931059178,
+    "9": 0.4796135109702772
+   },
+   "V_mid1_50": {
+    "0": 135986.5488,
+    "1": 143730.8728,
+    "2": 139875.2442,
+    "3": 136016.9781,
+    "4": 125667.7905,
+    "5": 134450.8945,
+    "6": 144019.4018,
+    "7": 139593.6449,
+    "8": 140155.1163,
+    "9": 140168.0206
+   },
+   "V_mid1_50_LR_iid": {
+    "0": 330623.6442,
+    "1": 314824.1971,
+    "2": 306996.5887,
+    "3": 285549.9019,
+    "4": 311921.432,
+    "5": 261110.5064,
+    "6": 308768.2583,
+    "7": 259019.6202,
+    "8": 300730.6484,
+    "9": 271116.9696
+   }
+  },
+  "Q6": {
+   "statistic": "N_all(50) of LR_aaaa over LR_iid, same seed",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 0.26273492248865316,
+    "1": 0.2750125016588329,
+    "2": 0.2656985041229443,
+    "3": 0.3123112117326653,
+    "4": 0.20998285249096768,
+    "5": 0.2210668749828514,
+    "6": 0.22388118640144708,
+    "7": 0.3293269169566121,
+    "8": 0.22968182312787042,
+    "9": 0.2812045424236334
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 0.26421671330579877,
+   "base_label": "CONTINUOUS_FIT_LT_80PCT_IID",
+   "label": "CONTINUOUS_FIT_LT_80PCT_IID",
+   "mixed": false,
+   "counts": {
+    "CONTINUOUS_FIT_LT_80PCT_IID": 10
+   },
+   "consistency_need": 8,
+   "in_median_interval": 10,
+   "status": "ok",
+   "N_all_50_aaaa": {
+    "0": 21048.94255,
+    "1": 21412.60192,
+    "2": 20804.3713,
+    "3": 23375.06024,
+    "4": 16510.54103,
+    "5": 15731.66955,
+    "6": 16961.41538,
+    "7": 23563.36241,
+    "8": 17502.6583,
+    "9": 19954.8547
+   },
+   "N_all_50_iid": {
+    "0": 80114.74969,
+    "1": 77860.4674,
+    "2": 78300.67154,
+    "3": 74845.40856,
+    "4": 78628.04431,
+    "5": 71162.49122,
+    "6": 75760.78925,
+    "7": 71550.06529,
+    "8": 76203.93317,
+    "9": 70962.06387
+   },
+   "axis_note": "1.5 M updates of one label; the time axis is cumulative updates"
+  },
+  "Q7": {
+   "statistic": "mid2 (C1, C2, C3) cosines over the ABC window t4-12",
+   "window": "t4-12",
+   "median_C1": -0.17208824090000002,
+   "median_C2": -0.15528294555,
+   "median_C3": 0.4584647014,
+   "median_C3_minus_C2": 0.6119605653,
+   "base_label": "PERIOD3_PATTERN",
+   "label": "PERIOD3_PATTERN",
+   "mixed": false,
+   "counts": {
+    "PERIOD3_PATTERN": 10
+   },
+   "consistency_need": 8,
+   "n_seeds": 10,
+   "per_seed": {
+    "0": "PERIOD3_PATTERN",
+    "1": "PERIOD3_PATTERN",
+    "2": "PERIOD3_PATTERN",
+    "3": "PERIOD3_PATTERN",
+    "4": "PERIOD3_PATTERN",
+    "5": "PERIOD3_PATTERN",
+    "6": "PERIOD3_PATTERN",
+    "7": "PERIOD3_PATTERN",
+    "8": "PERIOD3_PATTERN",
+    "9": "PERIOD3_PATTERN"
+   },
+   "per_seed_C": {
+    "0": [
+     -0.1700839082,
+     -0.1532928913,
+     0.4578196175
+    ],
+    "1": [
+     -0.1743255256,
+     -0.1574172685,
+     0.4591097853
+    ],
+    "2": [
+     -0.1716901068,
+     -0.1518309252,
+     0.4559072943
+    ],
+    "3": [
+     -0.1719226225,
+     -0.1612315749,
+     0.4625358208
+    ],
+    "4": [
+     -0.1807953226,
+     -0.1585961736,
+     0.4635850718
+    ],
+    "5": [
+     -0.1650713704,
+     -0.1474625509,
+     0.4609294345
+    ],
+    "6": [
+     -0.1729910125,
+     -0.1520722958,
+     0.4572253831
+    ],
+    "7": [
+     -0.1742484471,
+     -0.1583568272,
+     0.4613602478
+    ],
+    "8": [
+     -0.1621417139,
+     -0.1503251756,
+     0.4546135596
+    ],
+    "9": [
+     -0.1722538593,
+     -0.1572729998,
+     0.455535622
+    ]
+   },
+   "reference_mixture": [
+    -0.08,
+    -0.08,
+    0.16
+   ],
+   "reference_pure_return": [
+    -0.5,
+    -0.5,
+    1.0
+   ],
+   "provisional": false,
+   "provisional_reason": "",
+   "status": "ok"
+  },
+  "Q8": {
+   "statistic": "sigma_med(50), SNA_abab",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 24.92112085,
+    "1": 24.62261488,
+    "2": 25.0522338,
+    "3": 25.36930806,
+    "4": 24.89878225,
+    "5": 25.26689426,
+    "6": 25.48646051,
+    "7": 24.79140024,
+    "8": 24.52580822,
+    "9": 25.40285191
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 24.986677325000002,
+   "base_label": "LOWER_SNAKE_WIDTH",
+   "label": "LOWER_SNAKE_WIDTH",
+   "mixed": false,
+   "counts": {
+    "LOWER_SNAKE_WIDTH": 10
+   },
+   "consistency_need": 8,
+   "in_median_interval": 10,
+   "status": "ok",
+   "sigma_med_50_SNA_iid_ext": {
+    "0": 34.43595487,
+    "1": 34.26541695,
+    "2": 34.2499001,
+    "3": 34.62049641,
+    "4": 33.84247414,
+    "5": 34.74093805,
+    "6": 33.42593348,
+    "7": 33.93650346,
+    "8": 34.08977824,
+    "9": 34.60116959
+   },
+   "note": "the SNA IID comparison is the archived R=20 run: a different layout, recorded only"
+  },
+  "Q8_sub_rho_mid2_vs_ext": {
+   "statistic": "SNA_abab mid2 complete-cycle slope over the archived SNA R=20 IID slope (layout differs; recorded only)",
+   "n_seeds": 10,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 1.0743403468664912,
+    "1": 1.1054679614587626,
+    "2": 1.0705944511296512,
+    "3": 1.0500260605168161,
+    "4": 1.1044015917070187,
+    "5": 1.0437203031793243,
+    "6": 1.150308846356931,
+    "7": 1.0625949926423128,
+    "8": 1.0874409847688724,
+    "9": 1.195093721204288
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 1.0808906658176818,
+   "base_label": "IID_SCALE_GROWTH",
+   "label": "IID_SCALE_GROWTH",
+   "mixed": false,
+   "counts": {
+    "IID_SCALE_GROWTH": 10
+   },
+   "consistency_need": 8,
+   "in_median_interval": 10,
+   "status": "ok"
+  },
+  "Q9": {
+   "statistic": "N_all(50) of LR_abab_stop over LR_iid_stop, same seed (seeds 0-4, recorded only)",
+   "n_seeds": 5,
+   "seeds_used": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "seeds_missing_or_nonfinite": [],
+   "per_seed": {
+    "0": 0.4637720131886952,
+    "1": 0.45446932895087583,
+    "2": 0.4427330391405539,
+    "3": 0.4512461158233644,
+    "4": 0.4482752415881767
+   },
+   "provisional": false,
+   "provisional_reason": "",
+   "median": 0.4512461158233644,
+   "base_label": "STOP_N_RATIO_LT_0.5",
+   "label": "STOP_N_RATIO_LT_0.5",
+   "mixed": false,
+   "counts": {
+    "STOP_N_RATIO_LT_0.5": 5
+   },
+   "consistency_need": 4,
+   "in_median_interval": 5,
+   "status": "ok",
+   "slope_cycle_ratio_mid2": {
+    "0": 0.4260922893111237,
+    "1": 0.40514664824381785,
+    "2": 0.41372184280469554,
+    "3": 0.4121038970484964,
+    "4": 0.42344901475282654
+   },
+   "slope_cycle_ratio_all": {
+    "0": 0.4285760239828491,
+    "1": 0.4204093704914676,
+    "2": 0.39942469946690173,
+    "3": 0.41670669030767743,
+    "4": 0.41720650121628594
+   },
+   "cumulative_updates": {
+    "LR_abab_stop": {
+     "t_max": 50,
+     "tc_at_t_max": {
+      "0": 47300.0,
+      "1": 46900.0,
+      "2": 47400.0,
+      "3": 46800.0,
+      "4": 47600.0
+     }
+    },
+    "LR_iid_stop": {
+     "t_max": 50,
+     "tc_at_t_max": {
+      "0": 121800.0,
+      "1": 121100.0,
+      "2": 127900.0,
+      "3": 125200.0,
+      "4": 126800.0
+     }
+    }
+   },
+   "note": "this compares two learning policies that use the same reaching criterion per task; the difference from the full runs is NOT called a post-convergence effect (spec Q9)"
+  }
+ },
+ "predictions": [
+  {
+   "id": "P1",
+   "predicate": "Q1 = IID_SCALE_GROWTH",
+   "claude": 0.5,
+   "codex": 0.5,
+   "outcome": "\u25cb",
+   "measured": "rho_mid2 median = 0.5924 -> IID_SCALE_GROWTH",
+   "note": ""
+  },
+  {
+   "id": "P2",
+   "predicate": "Q1 = FASTER_GROWTH",
+   "claude": 0.3,
+   "codex": 0.15,
+   "outcome": "\u00d7",
+   "measured": "rho_mid2 median = 0.5924 -> IID_SCALE_GROWTH",
+   "note": ""
+  },
+  {
+   "id": "P3",
+   "predicate": "Q1 = REDUCED_GROWTH",
+   "claude": 0.2,
+   "codex": 0.35,
+   "outcome": "\u00d7",
+   "measured": "rho_mid2 median = 0.5924 -> IID_SCALE_GROWTH",
+   "note": ""
+  },
+  {
+   "id": "P4",
+   "predicate": "EXP_GT_1.5 (beta_all > 1.5)",
+   "claude": 0.15,
+   "codex": 0.15,
+   "outcome": "\u00d7",
+   "measured": "beta_all median = 0.8341",
+   "note": ""
+  },
+  {
+   "id": "P5",
+   "predicate": "Q2 = PERIODIC (mid2 C2 >= 0.077)",
+   "claude": 0.6,
+   "codex": 0.85,
+   "outcome": "\u25cb",
+   "measured": "mid2 C2 (late) median = 0.1883",
+   "note": ""
+  },
+  {
+   "id": "P6",
+   "predicate": "Q3 = LOW_NET_DISPLACEMENT (r_top < 0.0636)",
+   "claude": 0.7,
+   "codex": 0.7,
+   "outcome": "\u25cb",
+   "measured": "r_top median = 0.05886",
+   "note": ""
+  },
+  {
+   "id": "P7",
+   "predicate": "Q3b = HIGH_DIRECTIONAL_RETURN",
+   "claude": 0.4,
+   "codex": 0.75,
+   "outcome": "\u25cb",
+   "measured": "median margin over (c_IID+1)/2 = 0.01255",
+   "note": ""
+  },
+  {
+   "id": "P8",
+   "predicate": "Q4 = SAVINGS (t48, A < C in >= 8/10)",
+   "claude": 0.75,
+   "codex": 0.75,
+   "outcome": "\u25cb",
+   "measured": "A earlier than C in 10/10 seeds",
+   "note": ""
+  },
+  {
+   "id": "P9",
+   "predicate": "Q4 = STRONG_SAVINGS",
+   "claude": 0.35,
+   "codex": 0.25,
+   "outcome": "\u25cb",
+   "measured": "median A/C (upper bound) = 0.1452",
+   "note": ""
+  },
+  {
+   "id": "P10",
+   "predicate": "Q5 = LOWER_WIDTH_SIDE (sigma(50) < 60.1)",
+   "claude": 0.45,
+   "codex": 0.5,
+   "outcome": "\u25cb",
+   "measured": "sigma_med(50) median = 55.18",
+   "note": ""
+  },
+  {
+   "id": "P11",
+   "predicate": "Q6 = CONTINUOUS_FIT_GE_80PCT_IID",
+   "claude": 0.45,
+   "codex": 0.45,
+   "outcome": "\u00d7",
+   "measured": "N_all(50) ratio median = 0.2642",
+   "note": ""
+  },
+  {
+   "id": "P12",
+   "predicate": "Q7 = PERIOD3_PATTERN (12 tasks)",
+   "claude": 0.5,
+   "codex": 0.8,
+   "outcome": "\u25cb",
+   "measured": "(C1, C2, C3) = (-0.1721, -0.1553, 0.4585)",
+   "note": ""
+  },
+  {
+   "id": "P13",
+   "predicate": "Q8 = LOWER_SNAKE_WIDTH",
+   "claude": 0.35,
+   "codex": 0.55,
+   "outcome": "\u25cb",
+   "measured": "SNA sigma_med(50) median = 24.99",
+   "note": ""
+  },
+  {
+   "id": "P14",
+   "predicate": "Q9 N ratio < 0.5",
+   "claude": 0.3,
+   "codex": 0.4,
+   "outcome": "\u25cb",
+   "measured": "stop N ratio median = 0.4512",
+   "note": ""
+  },
+  {
+   "id": "P15",
+   "predicate": "Q9 N ratio in [0.5, 1.5]",
+   "claude": 0.5,
+   "codex": 0.55,
+   "outcome": "\u00d7",
+   "measured": "stop N ratio median = 0.4512",
+   "note": ""
+  },
+  {
+   "id": "P16",
+   "predicate": "r_top < 0.0636 and N_top(49)/N_top(25) > 1.10",
+   "claude": 0.5,
+   "codex": 0.55,
+   "outcome": "\u25cb",
+   "measured": "r_top = 0.05886, N_top(49)/N_top(25) median = 1.396",
+   "note": ""
+  },
+  {
+   "id": "P17",
+   "predicate": "comp complete-cycle slope > 2.1 per task",
+   "claude": 0.6,
+   "codex": 0.6,
+   "outcome": "\u25cb",
+   "measured": "comp cycle slope median = 4.657",
+   "note": ""
+  }
+ ]
+}

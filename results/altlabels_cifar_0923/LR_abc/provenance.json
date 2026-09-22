@@ -1,0 +1,623 @@
+{
+  "run_id": "altlabels_cifar_0923",
+  "git_hash": "253b8386393ae4d6a436c6ebc303536b8bc6e1b8",
+  "dirty_src_analysis": [
+    " M analysis/altlabels_cifar_0923/plan.json",
+    "?? analysis/altlabels_cifar_0923/band_ledger.py",
+    "?? analysis/altlabels_cifar_0923/ledger.py",
+    "?? analysis/altlabels_cifar_0923/report.py",
+    "?? analysis/altlabels_cifar_0923/synthetic_checks.py"
+  ],
+  "git_states": [
+    {
+      "git_hash": "253b8386393ae4d6a436c6ebc303536b8bc6e1b8",
+      "dirty_src_analysis": [
+        " M analysis/altlabels_cifar_0923/plan.json",
+        "?? analysis/altlabels_cifar_0923/band_ledger.py",
+        "?? analysis/altlabels_cifar_0923/ledger.py",
+        "?? analysis/altlabels_cifar_0923/report.py",
+        "?? analysis/altlabels_cifar_0923/synthetic_checks.py"
+      ]
+    }
+  ],
+  "resumed_at_task": [],
+  "arm": "LR",
+  "conds": [
+    "std"
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "slots": [
+    {
+      "seed": 0,
+      "cond": "std"
+    },
+    {
+      "seed": 1,
+      "cond": "std"
+    },
+    {
+      "seed": 2,
+      "cond": "std"
+    },
+    {
+      "seed": 3,
+      "cond": "std"
+    },
+    {
+      "seed": 4,
+      "cond": "std"
+    },
+    {
+      "seed": 5,
+      "cond": "std"
+    },
+    {
+      "seed": 6,
+      "cond": "std"
+    },
+    {
+      "seed": 7,
+      "cond": "std"
+    },
+    {
+      "seed": 8,
+      "cond": "std"
+    },
+    {
+      "seed": 9,
+      "cond": "std"
+    }
+  ],
+  "R": 10,
+  "lr": 0.001,
+  "n_tasks": 12,
+  "epochs_per_task": 400,
+  "batch": 16,
+  "steps_per_task": 30000,
+  "n_images": 1200,
+  "train_n": 50000,
+  "dims": [
+    3072,
+    100,
+    100,
+    10
+  ],
+  "n_classes": 10,
+  "sna_c": 0.6,
+  "sna_beta": 0.01,
+  "alpha_lo": 0.005,
+  "alpha_hi": 3.0,
+  "intervention": "none",
+  "optimizer": "adam",
+  "weight_decay": 0.0,
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "subset_sha256": {
+    "0": "202b6701ad8d20a839ab54cd0bac85101c5955096e89d95dc0dbb40d39a0fc4b",
+    "1": "7508bd5f137b2212bfac290ba3c6ff8f49745f9178c66bdbac6f6da572418bfc",
+    "2": "04b54b538d94b446931f173de94c9d6a3bd0edbf53a8e32b8c564d7719e166a8",
+    "3": "a617d87e7116394ddf0f4179463a24be98d9ca390b522fa09654eb3579202629",
+    "4": "65d322853b2a530cd7a015b95528212526dea66acf90ac1fbf44ca7db0195afe",
+    "5": "83a3cbd7d5f7c3e67fa96658b2fa0908630516c29d46272613ba5ce97a8969f6",
+    "6": "c156f06c778c85c2451d70b752d76c286f35bc0617808ea834fa9f7f98e5dc75",
+    "7": "48879a3848b49a6a634da16d14b908358f2dc153a56ca8a0db9f7efcb0ce61ee",
+    "8": "70d65172a6676515243db391bc0f822820ddeeaf269fba1cf9430df93744513e",
+    "9": "d34d5e87249490af22bf4573789912a91cb53a48d7558efb6bb1f193e78ca2d0"
+  },
+  "std": {
+    "mean": [
+      0.4914,
+      0.4822,
+      0.4465
+    ],
+    "std": [
+      0.247,
+      0.2435,
+      0.2616
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "rng_roles": [
+    "rlc_subset",
+    "rlc_labels",
+    "rlc_batch",
+    "init"
+  ],
+  "rsl_noise_seed": null,
+  "hist": {
+    "lo": -512.0,
+    "hi": 256.0,
+    "bins": 7680,
+    "dtype": "int32",
+    "theta": null,
+    "path": "hist/<arm>_<cond>_seed<seed>.npz"
+  },
+  "engine": "stacked baddbmm, autograd, elementwise Adam (spec \u00a72.2), one step captured as a CUDA graph",
+  "snapshots": "snap/<arm>_<cond>_seed<seed>/t<task>.npz: W1,b1,W2,b2,W3,b3 float32 (+V1,V2 for adaptive arms) at init (t00) and every task's end, plus z1,z2 (1200x100, float16, images in subset order) at every task's end; exact float32 z via replay()",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 4.2915238777796425,
+  "wall_clock_s": 1589.7252905368805,
+  "divergences": [],
+  "check_hooks": {
+    "perturb": null,
+    "nan_slot": null,
+    "snapshots": true
+  },
+  "parent": "rlcifar_mlp_battle_0918",
+  "schedule": "abc",
+  "hit_every": 100,
+  "keep_ckpts": true,
+  "stop": null,
+  "stop_need_correct": null,
+  "stop_snap": null,
+  "hit_need_correct": {
+    "hit99": 1188,
+    "hit999": 1199,
+    "of": 1200
+  },
+  "labels_sha256": "778623029c86935cdec23caec9ac140ea9b28e2a0e837dedfbed9e8b89c69822",
+  "labels_source": "labels.npz",
+  "labels_stats": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "A_counts": [
+      [
+        110,
+        121,
+        111,
+        133,
+        137,
+        114,
+        114,
+        108,
+        123,
+        129
+      ],
+      [
+        109,
+        134,
+        116,
+        108,
+        127,
+        119,
+        130,
+        121,
+        104,
+        132
+      ],
+      [
+        118,
+        127,
+        128,
+        100,
+        116,
+        128,
+        113,
+        129,
+        111,
+        130
+      ],
+      [
+        118,
+        111,
+        144,
+        126,
+        117,
+        121,
+        129,
+        101,
+        123,
+        110
+      ],
+      [
+        123,
+        122,
+        126,
+        121,
+        131,
+        121,
+        113,
+        111,
+        122,
+        110
+      ],
+      [
+        132,
+        110,
+        120,
+        125,
+        116,
+        133,
+        131,
+        110,
+        116,
+        107
+      ],
+      [
+        105,
+        127,
+        112,
+        99,
+        127,
+        139,
+        111,
+        125,
+        130,
+        125
+      ],
+      [
+        108,
+        140,
+        128,
+        122,
+        115,
+        124,
+        121,
+        113,
+        122,
+        107
+      ],
+      [
+        120,
+        116,
+        124,
+        128,
+        103,
+        106,
+        116,
+        121,
+        118,
+        148
+      ],
+      [
+        116,
+        130,
+        131,
+        97,
+        129,
+        114,
+        137,
+        127,
+        116,
+        103
+      ]
+    ],
+    "B_counts": [
+      [
+        117,
+        103,
+        116,
+        122,
+        122,
+        121,
+        118,
+        131,
+        117,
+        133
+      ],
+      [
+        131,
+        131,
+        112,
+        111,
+        115,
+        113,
+        112,
+        125,
+        110,
+        140
+      ],
+      [
+        132,
+        134,
+        96,
+        116,
+        124,
+        122,
+        124,
+        136,
+        104,
+        112
+      ],
+      [
+        136,
+        104,
+        122,
+        112,
+        108,
+        134,
+        107,
+        125,
+        136,
+        116
+      ],
+      [
+        116,
+        108,
+        126,
+        107,
+        129,
+        107,
+        116,
+        129,
+        140,
+        122
+      ],
+      [
+        110,
+        127,
+        125,
+        112,
+        132,
+        129,
+        113,
+        124,
+        104,
+        124
+      ],
+      [
+        119,
+        109,
+        126,
+        105,
+        134,
+        112,
+        111,
+        118,
+        125,
+        141
+      ],
+      [
+        127,
+        123,
+        129,
+        126,
+        86,
+        109,
+        127,
+        142,
+        108,
+        123
+      ],
+      [
+        131,
+        116,
+        109,
+        118,
+        109,
+        130,
+        128,
+        119,
+        103,
+        137
+      ],
+      [
+        127,
+        124,
+        127,
+        104,
+        122,
+        127,
+        113,
+        120,
+        115,
+        121
+      ]
+    ],
+    "C_counts": [
+      [
+        106,
+        131,
+        114,
+        141,
+        117,
+        124,
+        123,
+        113,
+        111,
+        120
+      ],
+      [
+        114,
+        137,
+        111,
+        129,
+        114,
+        113,
+        132,
+        130,
+        101,
+        119
+      ],
+      [
+        133,
+        109,
+        102,
+        110,
+        138,
+        120,
+        125,
+        117,
+        121,
+        125
+      ],
+      [
+        102,
+        127,
+        139,
+        131,
+        115,
+        116,
+        117,
+        125,
+        119,
+        109
+      ],
+      [
+        130,
+        119,
+        122,
+        122,
+        104,
+        121,
+        125,
+        107,
+        116,
+        134
+      ],
+      [
+        107,
+        141,
+        132,
+        105,
+        111,
+        119,
+        129,
+        123,
+        113,
+        120
+      ],
+      [
+        133,
+        121,
+        124,
+        131,
+        118,
+        113,
+        109,
+        120,
+        108,
+        123
+      ],
+      [
+        112,
+        118,
+        122,
+        117,
+        123,
+        129,
+        113,
+        137,
+        114,
+        115
+      ],
+      [
+        113,
+        122,
+        122,
+        131,
+        99,
+        132,
+        142,
+        111,
+        115,
+        113
+      ],
+      [
+        111,
+        132,
+        121,
+        112,
+        120,
+        115,
+        120,
+        120,
+        115,
+        134
+      ]
+    ],
+    "agree_AB": [
+      0.095,
+      0.10416666666666667,
+      0.08916666666666667,
+      0.10166666666666667,
+      0.09083333333333334,
+      0.0875,
+      0.1025,
+      0.0975,
+      0.12666666666666668,
+      0.1075
+    ],
+    "agree_AC": [
+      0.09666666666666666,
+      0.0925,
+      0.08416666666666667,
+      0.125,
+      0.08083333333333333,
+      0.11166666666666666,
+      0.09,
+      0.09833333333333333,
+      0.10166666666666667,
+      0.08833333333333333
+    ],
+    "agree_BC": [
+      0.10666666666666667,
+      0.10416666666666667,
+      0.10666666666666667,
+      0.08916666666666667,
+      0.10083333333333333,
+      0.0925,
+      0.11916666666666667,
+      0.11333333333333333,
+      0.09166666666666666,
+      0.08916666666666667
+    ]
+  },
+  "perm_consumption_rule": "rlc_batch: one torch.randperm(1200) per epoch, drawn at the epoch's start; a task that ends mid-epoch has already drawn that epoch's permutation, and one ending exactly on an epoch boundary draws and discards one more (width_replay.py's convention, lines 314-321).  Every task starts a fresh epoch.",
+  "tc_at_task_end": {
+    "1": 30000,
+    "2": 60000,
+    "3": 90000,
+    "4": 120000,
+    "5": 150000,
+    "6": 180000,
+    "7": 210000,
+    "8": 240000,
+    "9": 270000,
+    "10": 300000,
+    "11": 330000,
+    "12": 360000
+  },
+  "trace": {
+    "path": "trace/<arm>_<cond>_seed<seed>.npz",
+    "every": 100,
+    "cols": [
+      "task",
+      "tc",
+      "step",
+      "correct",
+      "ce",
+      "margin_med",
+      "n1",
+      "n2",
+      "n3",
+      "sig_med"
+    ],
+    "step0_row": "one row at step 0 of every task, not eligible for a hit"
+  },
+  "restore": null
+}

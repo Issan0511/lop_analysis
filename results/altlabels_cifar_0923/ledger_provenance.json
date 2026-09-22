@@ -1,0 +1,575 @@
+{
+ "run_id": "altlabels_cifar_0923",
+ "stage": "ledger",
+ "written": "2026-09-23T03:02:19+0900",
+ "git_hash": "51269ec3b4bad89f39c9cead8844b22b5da42ef2",
+ "git_branch": "claude/altlabels_cifar_0923",
+ "git_dirty": true,
+ "band_ledger_copy": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/analysis/altlabels_cifar_0923/band_ledger.py",
+ "band_ledger_copy_sha256": "3e574d8cbe0a70e34155f05b32b23f35f76c367ce35df03a925b54809542d74f",
+ "band_ledger_source": "/home/issan/Projects/obsidian-research-data/rl_ledger_posthoc_0922/band_ledger.py",
+ "band_ledger_source_sha256": "3a3978b607a95222b1067a00bc53e1ce3cfab84e04219a393e052f31d06165c5",
+ "bands": {
+  "top": [
+   0,
+   10
+  ],
+  "mid1": [
+   10,
+   100
+  ],
+  "mid2": [
+   100,
+   439
+  ],
+  "low": [
+   439,
+   1199
+  ],
+  "mu": [
+   1199,
+   1200
+  ],
+  "comp": "3072 - 1200 dims",
+  "all": "3072"
+ },
+ "arms_without_provenance": [],
+ "external_reference_arms": [
+  "LR_iid_ext",
+  "SNA_iid_ext"
+ ],
+ "arms_without_provenance_note": "the engine writes provenance.json when the run ends, so an arm listed here was still running (the archived external references are listed separately: they are finished, keep no provenance.json at that path, and have no trace).  tc_at_task_end was unavailable and the ledger fell back to the trace's own last row (the task-end clock under both engine versions); the step-0 assertion is skipped unless the trace has an unrestored full-run shape.  Every number from such an arm is PROVISIONAL and must be regenerated.",
+ "arms": {
+  "LR_iid": {
+   "act": "LR",
+   "cond": "std",
+   "tasks": 50,
+   "cycle": 2,
+   "schedule": "iid",
+   "root": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923/LR_iid",
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "report_only": false,
+   "windows": {
+    "early": [
+     5,
+     14
+    ],
+    "late": [
+     26,
+     50
+    ],
+    "all": [
+     2,
+     50
+    ]
+   },
+   "cum_window": [
+    6,
+    50
+   ],
+   "growth_tasks": [
+    27,
+    50
+   ]
+  },
+  "LR_abab": {
+   "act": "LR",
+   "cond": "std",
+   "tasks": 50,
+   "cycle": 2,
+   "schedule": "abab",
+   "root": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923/LR_abab",
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "report_only": false,
+   "windows": {
+    "early": [
+     5,
+     14
+    ],
+    "late": [
+     26,
+     50
+    ],
+    "all": [
+     2,
+     50
+    ]
+   },
+   "cum_window": [
+    6,
+    50
+   ],
+   "growth_tasks": [
+    27,
+    50
+   ]
+  },
+  "LR_aaaa": {
+   "act": "LR",
+   "cond": "std",
+   "tasks": 50,
+   "cycle": 2,
+   "schedule": "aaaa",
+   "root": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923/LR_aaaa",
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "report_only": false,
+   "windows": {
+    "early": [
+     5,
+     14
+    ],
+    "late": [
+     26,
+     50
+    ],
+    "all": [
+     2,
+     50
+    ]
+   },
+   "cum_window": [
+    6,
+    50
+   ],
+   "growth_tasks": [
+    27,
+    50
+   ]
+  },
+  "LR_abc": {
+   "act": "LR",
+   "cond": "std",
+   "tasks": 12,
+   "cycle": 3,
+   "schedule": "abc",
+   "root": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923/LR_abc",
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "report_only": false,
+   "windows": {
+    "early": [
+     2,
+     6
+    ],
+    "late": [
+     4,
+     12
+    ],
+    "all": [
+     2,
+     12
+    ]
+   },
+   "cum_window": [
+    4,
+    12
+   ],
+   "growth_tasks": [
+    null,
+    null
+   ]
+  },
+  "SNA_abab": {
+   "act": "SNA",
+   "cond": "std",
+   "tasks": 50,
+   "cycle": 2,
+   "schedule": "abab",
+   "root": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923/SNA_abab",
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "report_only": false,
+   "windows": {
+    "early": [
+     5,
+     14
+    ],
+    "late": [
+     26,
+     50
+    ],
+    "all": [
+     2,
+     50
+    ]
+   },
+   "cum_window": [
+    6,
+    50
+   ],
+   "growth_tasks": [
+    27,
+    50
+   ]
+  },
+  "LR_abab_stop": {
+   "act": "LR",
+   "cond": "std",
+   "tasks": 50,
+   "cycle": 2,
+   "schedule": "abab",
+   "root": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923/LR_abab_stop",
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "report_only": false,
+   "windows": {
+    "early": [
+     5,
+     14
+    ],
+    "late": [
+     26,
+     50
+    ],
+    "all": [
+     2,
+     50
+    ]
+   },
+   "cum_window": [
+    6,
+    50
+   ],
+   "growth_tasks": [
+    27,
+    50
+   ]
+  },
+  "LR_iid_stop": {
+   "act": "LR",
+   "cond": "std",
+   "tasks": 50,
+   "cycle": 2,
+   "schedule": "iid",
+   "root": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923/LR_iid_stop",
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "report_only": false,
+   "windows": {
+    "early": [
+     5,
+     14
+    ],
+    "late": [
+     26,
+     50
+    ],
+    "all": [
+     2,
+     50
+    ]
+   },
+   "cum_window": [
+    6,
+    50
+   ],
+   "growth_tasks": [
+    27,
+    50
+   ]
+  },
+  "LR_iid_ext": {
+   "act": "LR",
+   "cond": "std",
+   "tasks": 50,
+   "cycle": 2,
+   "schedule": "iid",
+   "root": "/home/issan/Projects/obsidian-research-data/rlcifar_mlp_battle_0918/results/rlcifar_mlp_battle_0918/LR",
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "report_only": true,
+   "windows": {
+    "early": [
+     5,
+     14
+    ],
+    "late": [
+     26,
+     50
+    ],
+    "all": [
+     2,
+     50
+    ]
+   },
+   "cum_window": [
+    6,
+    50
+   ],
+   "growth_tasks": [
+    27,
+    50
+   ]
+  },
+  "SNA_iid_ext": {
+   "act": "SNA",
+   "cond": "std",
+   "tasks": 50,
+   "cycle": 2,
+   "schedule": "iid",
+   "root": "/home/issan/Projects/obsidian-research-data/rlcifar_mlp_battle_0918/results/rlcifar_mlp_battle_0918/SNA",
+   "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "report_only": true,
+   "windows": {
+    "early": [
+     5,
+     14
+    ],
+    "late": [
+     26,
+     50
+    ],
+    "all": [
+     2,
+     50
+    ]
+   },
+   "cum_window": [
+    6,
+    50
+   ],
+   "growth_tasks": [
+    27,
+    50
+   ]
+  }
+ },
+ "arms_absent": {},
+ "fork_sets": {
+  "LR_abab_fork": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923/LR_abab_fork",
+  "LR_iid_fork": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923/LR_iid_fork"
+ },
+ "censor_at": 30000,
+ "identity_rtol": 1e-06,
+ "checks": {
+  "max_identity_rel": 1.7755361700084668e-15,
+  "max_identity_abs": 3.183231456205249e-11,
+  "identity_ok": true,
+  "max_bandsum_rel": 4.413682550263012e-16,
+  "max_V_sum_rel": 4.424560731230431e-16,
+  "V_mu_max": 0.0,
+  "V_comp_max": 0.0,
+  "sigma_med_vs_trace_max_abs": 1.6951856906644025e-05,
+  "tc_repair_ok": true,
+  "all_arms_have_provenance": true,
+  "steps_vs_last_step_ok": true
+ },
+ "conventions": {
+  "sigma_med": "numpy median (midpoint) of sd(z1_i) over the 100 units, from W1",
+  "sigma_med_lower": "torch's lower-middle median, only to compare with trace sig_med",
+  "trace_tc": "REPAIRED: tc_at_task_end[t] - task_steps + step (the engine writes the task's final tc on every row)",
+  "hit99/hit999/hit_full": "recomputed from the trace counts (>=1188 / >=1199 / =1200), step > 0 only; per_task.csv's copies kept alongside",
+  "correct_at_hit999_plus_500": "recomputed and flagged when that eval point was never reached (the engine's acc_at_hit_plus_500 falls back to the final count)",
+  "fork_censoring": "hit999 at 30,000; hit99 / hit_full at the bundle's own last step"
+ },
+ "basis_diag": {
+  "std_s0": {
+   "s_last_over_s_first": 2.7964531781752686e-15,
+   "s_1199_over_s_1": 0.0009235008165502179,
+   "mu_perp_norm_over_mu_norm": 0.021622459090284832,
+   "orthonormality_max_err": 2.758969268323863e-14,
+   "lam_band_share": {
+    "top": 0.6500977829940218,
+    "mid1": 0.261623210490398,
+    "mid2": 0.07828816963120305,
+    "low": 0.009990836884377206
+   }
+  },
+  "std_s1": {
+   "s_last_over_s_first": 6.505296552706519e-17,
+   "s_1199_over_s_1": 0.0010037061835871076,
+   "mu_perp_norm_over_mu_norm": 0.017715082793625374,
+   "orthonormality_max_err": 6.687120475412645e-14,
+   "lam_band_share": {
+    "top": 0.6581942355257808,
+    "mid1": 0.25495286908622006,
+    "mid2": 0.07702061715625795,
+    "low": 0.009832278231740993
+   }
+  },
+  "std_s2": {
+   "s_last_over_s_first": 5.903289323289074e-16,
+   "s_1199_over_s_1": 0.0008750982013565437,
+   "mu_perp_norm_over_mu_norm": 0.018350548644521524,
+   "orthonormality_max_err": 5.88118963251727e-14,
+   "lam_band_share": {
+    "top": 0.6555301095243558,
+    "mid1": 0.2582860130745788,
+    "mid2": 0.07646884527718567,
+    "low": 0.009715032123879568
+   }
+  },
+  "std_s3": {
+   "s_last_over_s_first": 2.038340331278386e-16,
+   "s_1199_over_s_1": 0.0009619398567092782,
+   "mu_perp_norm_over_mu_norm": 0.020824160830847715,
+   "orthonormality_max_err": 5.4708624783184057e-14,
+   "lam_band_share": {
+    "top": 0.6564769099599445,
+    "mid1": 0.2572127052641498,
+    "mid2": 0.07661242905295278,
+    "low": 0.009697955722952812
+   }
+  },
+  "std_s4": {
+   "s_last_over_s_first": 3.3313949082356336e-16,
+   "s_1199_over_s_1": 0.0008563696609765001,
+   "mu_perp_norm_over_mu_norm": 0.027129164425771925,
+   "orthonormality_max_err": 4.168280304250871e-14,
+   "lam_band_share": {
+    "top": 0.6611000334028456,
+    "mid1": 0.2521335137475115,
+    "mid2": 0.07690315111787696,
+    "low": 0.009863301731765885
+   }
+  },
+  "std_s5": {
+   "s_last_over_s_first": 1.2661119892773885e-16,
+   "s_1199_over_s_1": 0.0009658609038822702,
+   "mu_perp_norm_over_mu_norm": 0.019581192065578883,
+   "orthonormality_max_err": 5.4836777479971843e-14,
+   "lam_band_share": {
+    "top": 0.6585219478001944,
+    "mid1": 0.255598222332405,
+    "mid2": 0.07606919992239641,
+    "low": 0.009810629945004208
+   }
+  },
+  "std_s6": {
+   "s_last_over_s_first": 3.9393494015066987e-17,
+   "s_1199_over_s_1": 0.001009292612831993,
+   "mu_perp_norm_over_mu_norm": 0.02427152526086678,
+   "orthonormality_max_err": 3.4974627360906396e-14,
+   "lam_band_share": {
+    "top": 0.6510407889650619,
+    "mid1": 0.2608366707827015,
+    "mid2": 0.07813168082285157,
+    "low": 0.009990859429385112
+   }
+  },
+  "std_s7": {
+   "s_last_over_s_first": 1.4293886172281029e-16,
+   "s_1199_over_s_1": 0.0009325552974618662,
+   "mu_perp_norm_over_mu_norm": 0.02139156308361088,
+   "orthonormality_max_err": 5.293066874557939e-14,
+   "lam_band_share": {
+    "top": 0.6538260817030557,
+    "mid1": 0.25955874219663577,
+    "mid2": 0.07674001582127597,
+    "low": 0.009875160279032283
+   }
+  },
+  "std_s8": {
+   "s_last_over_s_first": 1.4668731830869921e-15,
+   "s_1199_over_s_1": 0.0008911038190548741,
+   "mu_perp_norm_over_mu_norm": 0.02192679024058358,
+   "orthonormality_max_err": 6.709791142839316e-14,
+   "lam_band_share": {
+    "top": 0.658008536507741,
+    "mid1": 0.25620664934063025,
+    "mid2": 0.07625055662076742,
+    "low": 0.009534257530861298
+   }
+  },
+  "std_s9": {
+   "s_last_over_s_first": 3.913992467392679e-16,
+   "s_1199_over_s_1": 0.0009384723963745921,
+   "mu_perp_norm_over_mu_norm": 0.021642993633179244,
+   "orthonormality_max_err": 4.028179699522294e-14,
+   "lam_band_share": {
+    "top": 0.6618809322203035,
+    "mid1": 0.25344390659798555,
+    "mid2": 0.07514756152629078,
+    "low": 0.009527599655419938
+   }
+  }
+ },
+ "threads": "8",
+ "numpy": "2.5.2",
+ "pandas": "3.0.5",
+ "wall_clock_s": 162.2380154132843
+}

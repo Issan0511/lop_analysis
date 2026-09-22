@@ -1,0 +1,357 @@
+{
+  "run_id": "altlabels_cifar_0923",
+  "git_hash": "51269ec3b4bad89f39c9cead8844b22b5da42ef2",
+  "dirty_src_analysis": [],
+  "git_states": [
+    {
+      "git_hash": "51269ec3b4bad89f39c9cead8844b22b5da42ef2",
+      "dirty_src_analysis": []
+    }
+  ],
+  "resumed_at_task": [],
+  "arm": "LR",
+  "conds": [
+    "std"
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "slots": [
+    {
+      "seed": 0,
+      "cond": "std"
+    },
+    {
+      "seed": 1,
+      "cond": "std"
+    },
+    {
+      "seed": 2,
+      "cond": "std"
+    },
+    {
+      "seed": 3,
+      "cond": "std"
+    },
+    {
+      "seed": 4,
+      "cond": "std"
+    },
+    {
+      "seed": 5,
+      "cond": "std"
+    },
+    {
+      "seed": 6,
+      "cond": "std"
+    },
+    {
+      "seed": 7,
+      "cond": "std"
+    },
+    {
+      "seed": 8,
+      "cond": "std"
+    },
+    {
+      "seed": 9,
+      "cond": "std"
+    }
+  ],
+  "R": 10,
+  "lr": 0.001,
+  "n_tasks": 1,
+  "epochs_per_task": 400,
+  "batch": 16,
+  "steps_per_task": 30000,
+  "n_images": 1200,
+  "train_n": 50000,
+  "dims": [
+    3072,
+    100,
+    100,
+    10
+  ],
+  "n_classes": 10,
+  "sna_c": 0.6,
+  "sna_beta": 0.01,
+  "alpha_lo": 0.005,
+  "alpha_hi": 3.0,
+  "intervention": "none",
+  "optimizer": "adam",
+  "weight_decay": 0.0,
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "subset_sha256": {
+    "0": "202b6701ad8d20a839ab54cd0bac85101c5955096e89d95dc0dbb40d39a0fc4b",
+    "1": "7508bd5f137b2212bfac290ba3c6ff8f49745f9178c66bdbac6f6da572418bfc",
+    "2": "04b54b538d94b446931f173de94c9d6a3bd0edbf53a8e32b8c564d7719e166a8",
+    "3": "a617d87e7116394ddf0f4179463a24be98d9ca390b522fa09654eb3579202629",
+    "4": "65d322853b2a530cd7a015b95528212526dea66acf90ac1fbf44ca7db0195afe",
+    "5": "83a3cbd7d5f7c3e67fa96658b2fa0908630516c29d46272613ba5ce97a8969f6",
+    "6": "c156f06c778c85c2451d70b752d76c286f35bc0617808ea834fa9f7f98e5dc75",
+    "7": "48879a3848b49a6a634da16d14b908358f2dc153a56ca8a0db9f7efcb0ce61ee",
+    "8": "70d65172a6676515243db391bc0f822820ddeeaf269fba1cf9430df93744513e",
+    "9": "d34d5e87249490af22bf4573789912a91cb53a48d7558efb6bb1f193e78ca2d0"
+  },
+  "std": {
+    "mean": [
+      0.4914,
+      0.4822,
+      0.4465
+    ],
+    "std": [
+      0.247,
+      0.2435,
+      0.2616
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "rng_roles": [
+    "rlc_subset",
+    "rlc_labels",
+    "rlc_batch",
+    "init"
+  ],
+  "rsl_noise_seed": null,
+  "hist": {
+    "lo": -512.0,
+    "hi": 256.0,
+    "bins": 7680,
+    "dtype": "int32",
+    "theta": null,
+    "path": "hist/<arm>_<cond>_seed<seed>.npz"
+  },
+  "engine": "stacked baddbmm, autograd, elementwise Adam (spec \u00a72.2), one step captured as a CUDA graph",
+  "snapshots": "snap/<arm>_<cond>_seed<seed>/t<task>.npz: W1,b1,W2,b2,W3,b3 float32 (+V1,V2 for adaptive arms) at init (t00) and every task's end, plus z1,z2 (1200x100, float16, images in subset order) at every task's end; exact float32 z via replay()",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 2.5133907049894333,
+  "wall_clock_s": 9.065276145935059,
+  "divergences": [],
+  "check_hooks": {
+    "perturb": null,
+    "nan_slot": null,
+    "snapshots": true
+  },
+  "parent": "rlcifar_mlp_battle_0918",
+  "schedule": "aaaa",
+  "hit_every": 100,
+  "keep_ckpts": false,
+  "stop": [
+    0.999,
+    500
+  ],
+  "stop_need_correct": 1199,
+  "stop_snap": "fork_t02_C_seed{seed}_stop.npz",
+  "hit_need_correct": {
+    "hit99": 1188,
+    "hit999": 1199,
+    "of": 1200
+  },
+  "labels_sha256": "22b85e53d2317543db4d8e6ed650d33e797ff828e713dd8dd2f8102e2c87dcc5",
+  "labels_source": "external",
+  "labels_stats": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "A_counts": [
+      [
+        132,
+        111,
+        125,
+        124,
+        134,
+        106,
+        126,
+        122,
+        107,
+        113
+      ],
+      [
+        145,
+        129,
+        136,
+        113,
+        110,
+        125,
+        107,
+        121,
+        104,
+        110
+      ],
+      [
+        126,
+        115,
+        136,
+        120,
+        126,
+        106,
+        132,
+        115,
+        111,
+        113
+      ],
+      [
+        133,
+        125,
+        114,
+        119,
+        118,
+        105,
+        113,
+        119,
+        133,
+        121
+      ],
+      [
+        126,
+        117,
+        109,
+        144,
+        110,
+        117,
+        114,
+        130,
+        112,
+        121
+      ],
+      [
+        125,
+        116,
+        122,
+        127,
+        133,
+        117,
+        117,
+        125,
+        106,
+        112
+      ],
+      [
+        121,
+        131,
+        115,
+        120,
+        120,
+        97,
+        109,
+        130,
+        137,
+        120
+      ],
+      [
+        114,
+        121,
+        134,
+        133,
+        115,
+        117,
+        107,
+        123,
+        125,
+        111
+      ],
+      [
+        119,
+        133,
+        113,
+        110,
+        129,
+        131,
+        104,
+        141,
+        112,
+        108
+      ],
+      [
+        132,
+        111,
+        100,
+        119,
+        115,
+        119,
+        115,
+        126,
+        131,
+        132
+      ]
+    ]
+  },
+  "perm_consumption_rule": "rlc_batch: one torch.randperm(1200) per epoch, drawn at the epoch's start; a task that ends mid-epoch has already drawn that epoch's permutation, and one ending exactly on an epoch boundary draws and discards one more (width_replay.py's convention, lines 314-321).  Every task starts a fresh epoch.",
+  "tc_at_task_end": {
+    "1": 63200
+  },
+  "trace": {
+    "path": "trace/<arm>_<cond>_seed<seed>.npz",
+    "every": 100,
+    "cols": [
+      "task",
+      "tc",
+      "step",
+      "correct",
+      "ce",
+      "margin_med",
+      "n1",
+      "n2",
+      "n3",
+      "sig_med"
+    ],
+    "step0_row": "one row at step 0 of every task, not eligible for a hit",
+    "tc": "the global clock at that row = the task's starting tc + step",
+    "hit_plus": 500,
+    "post_hit_fields": {
+      "correct_at_hit_plus_500": "the count at exactly hit999 + 500, or -1",
+      "hit_plus_500_observed": "0 when the task ended before that step",
+      "min_correct_after_hit": "min over the evals in (hit999, task end]"
+    },
+    "median": "torch.median (lower of the two middle values) over the 100 units / 1200 images, as the parent engine's evaluate() uses",
+    "trace_tc_bug_before_commit": "253b8386393ae4d6a436c6ebc303536b8bc6e1b8",
+    "trace_tc_repair": "tc_row = tc_stored - task_steps + step (task_steps = 30000, or the row's `steps`)"
+  },
+  "restore": {
+    "path": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923/LR_abab/ckpts/t02.pt",
+    "slots": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "sha256": "dc2621acfeddf1f326681d25d10c51e3fd7fab958fd4c5f57850f0b67a02e48f"
+  },
+  "fork": {
+    "src": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923/LR_abab",
+    "t": 2,
+    "branch": "C",
+    "parent_ckpt": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923/LR_abab/ckpts/t02.pt",
+    "parent_sha256": "dc2621acfeddf1f326681d25d10c51e3fd7fab958fd4c5f57850f0b67a02e48f",
+    "label_stream": "rlc_labels_fork_t2",
+    "labels_sha256": "22b85e53d2317543db4d8e6ed650d33e797ff828e713dd8dd2f8102e2c87dcc5"
+  }
+}
