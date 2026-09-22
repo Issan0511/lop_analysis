@@ -1,10 +1,10 @@
 {
   "S2b eps reaches the update (torch.optim.Adam replica)": {
-    "pass": false,
+    "pass": true,
     "eps": 0.001,
-    "max_abs_err_same_eps": 0.20462197065353394,
-    "max_abs_err_eps_1e-8": 0.2071225643157959,
-    "max_abs_move": 0.19978223741054535,
+    "max_abs_err_same_eps": 3.725290298461914e-08,
+    "max_abs_err_eps_1e-8": 0.029194042086601257,
+    "max_abs_move": 0.024520710110664368,
     "rule": "same < 1e-5 and other > 1e-4 and other > 10*same"
   },
   "S4 provenance carries adam_eps": {
@@ -24,10 +24,8 @@
     "first_prov_tasks": 1
   },
   "_git": {
-    "git_hash": "7ba9f5ca7c61b4d14107c6a4503e6737ecdf1ecc",
-    "dirty_src_analysis": [
-      "?? analysis/le_eps_cifar_0922/checks.py"
-    ]
+    "git_hash": "ca06d94585c53309f5c1d7f94c2b62175a9d6e33",
+    "dirty_src_analysis": []
   },
   "S1 --eps 1e-8 reproduces S-A LE (rows)": {
     "pass": true,
