@@ -1,0 +1,830 @@
+{
+  "_git": {
+    "git_hash": "b96e80024c1450933bc53db37d3c9d42b43ebd2a",
+    "dirty_src_analysis": [
+      " M analysis/altlabels_cifar_0923/checks.py",
+      " M analysis/altlabels_cifar_0923/plan_stop.json",
+      " M src/altlabels_cifar_0923.py"
+    ]
+  },
+  "_stages": [
+    "s4"
+  ],
+  "_when": "2026-09-23 01:12:23",
+  "S1a modified engine (defaults) == the unmodified parent script": {
+    "pass": true,
+    "rows": 20,
+    "rows_ref": 20,
+    "rows_differing": 0,
+    "first_diff": null,
+    "snapshots": 30,
+    "snapshots_differing": [],
+    "snapshot_max_abs_diff": 0.0,
+    "ckpt_P_m_v_tc_identical": true,
+    "tc": [
+      60000,
+      60000
+    ],
+    "parent_script": "/home/issan/Projects/claude/proj_004_drift/src/rlcifar_mlp_battle_0918.py"
+  },
+  "S1b abab t1-t2 == iid t1-t2 (rows and snapshots)": {
+    "pass": true,
+    "rows": 20,
+    "rows_differing": 0,
+    "snapshots": 30,
+    "snapshots_differing": []
+  },
+  "S1c LR: --hit-every 100 does not perturb the trajectory": {
+    "pass": true,
+    "rows": 20,
+    "rows_differing": 0,
+    "snapshots": 30,
+    "snapshots_differing": [],
+    "on": "LR_iid",
+    "off": "LR_iid_plain",
+    "keys": "W1,b1,W2,b2,W3,b3"
+  },
+  "S1c SNA: --hit-every 100 does not perturb the trajectory": {
+    "pass": true,
+    "rows": 20,
+    "rows_differing": 0,
+    "snapshots": 30,
+    "snapshots_differing": [],
+    "on": "SNA_abab",
+    "off": "SNA_plain",
+    "keys": "W1,b1,W2,b2,W3,b3,V1,V2"
+  },
+  "S1d vs the archived R=20 (raw+std) battle snapshots [report only]": {
+    "pass": true,
+    "LR": {
+      "max_abs_diff": 0.6337298154830933,
+      "identical_snapshots": 10,
+      "snapshots": 30
+    },
+    "SNA": {
+      "max_abs_diff": 0.6443027257919312,
+      "identical_snapshots": 10,
+      "snapshots": 30
+    },
+    "note": "R = 10 std-only here vs R = 20 raw+std there; the batched-BLAS reduction order depends on the slot layout, so this is a magnitude, not a verdict.  The matched baseline is the LR_iid arm of this experiment."
+  },
+  "S2a labels.npz A/B are the stream's 1st/2nd draw, with counts and agreement": {
+    "pass": true,
+    "seeds": 10,
+    "keys": [
+      "A",
+      "A_counts",
+      "B",
+      "B_counts",
+      "agree_AB",
+      "seeds"
+    ],
+    "bad": [],
+    "shape": [
+      10,
+      1200
+    ],
+    "agree_AB_median": 0.09958333333333333,
+    "agree_AB_min_max": [
+      0.0875,
+      0.12666666666666668
+    ],
+    "A_counts_seed0": [
+      110,
+      121,
+      111,
+      133,
+      137,
+      114,
+      114,
+      108,
+      123,
+      129
+    ],
+    "B_counts_seed0": [
+      117,
+      103,
+      116,
+      122,
+      122,
+      121,
+      118,
+      131,
+      117,
+      133
+    ],
+    "expected_agreement": 0.1
+  },
+  "S2b abab t3 = t1, t4 = t2, t1 != t2": {
+    "pass": true,
+    "t3==t1": true,
+    "t4==t2": true,
+    "t1==t2": false
+  },
+  "S2c aaaa every task = t1": {
+    "pass": true,
+    "t2==t1": true,
+    "t3==t1": true,
+    "t4==t1": true
+  },
+  "S2d abc t4 = t1, t1/t2/t3 pairwise different": {
+    "pass": true,
+    "t4==t1": true,
+    "t1==t2": false,
+    "t2==t3": false,
+    "t1==t3": false
+  },
+  "S2e abab t3 != the iid stream's 3rd draw": {
+    "pass": true,
+    "seeds_equal": []
+  },
+  "S2f abab t3 rows differ from iid t3 rows in every slot (mutation control)": {
+    "pass": true,
+    "slots_differing": 10,
+    "slots": 10
+  },
+  "S3a one trace eval leaves P / Snake V / tc / the streams byte-identical": {
+    "pass": true,
+    "P_V_tc_streams_identical": true,
+    "no_grad_left": true,
+    "note": "the trajectory-level version of this is S1c"
+  },
+  "S3b the reference chain's task-1 stop point on our trace": {
+    "pass": true,
+    "hit999": 1700,
+    "E-stop15_stop_eval": 2000,
+    "abs_diff": 300,
+    "need_correct": 1199,
+    "correct_at_the_reference_step": 1200,
+    "counts_between": [
+      1199,
+      1199,
+      1199
+    ],
+    "all_between_on_the_threshold_count": true,
+    "hit99": 1600,
+    "min_correct_after_hit": 883,
+    "note": "E-stop15 is the R = 1 cuda replay engine, this is R = 10 with a CUDA graph: one image's argmax differs, and because the count sits at exactly 1199 over that stretch the reported hit999 moves with it.  trace/*.npz keeps the raw counts, so any threshold can be recomputed."
+  },
+  "S5 the stop chain (cuda, R = 1, eager; seed 0, iid, t1-15) == E-stop15": {
+    "pass": true,
+    "device": "cuda",
+    "threads": 2,
+    "tasks": 15,
+    "max_abs_dsteps": 0,
+    "max_abs_dhit999": 0,
+    "max_rel_dn1": 2.0213581373703099e-16,
+    "n1_rel_within_1e-6": true,
+    "tc_equals_summed_steps": true,
+    "tc_final": 36700,
+    "wall_s_15_tasks": 31.2,
+    "wall_s_this_run": null,
+    "step_ms": 0.8476591110229492,
+    "per_task": [
+      {
+        "task": 1,
+        "steps": 2500,
+        "steps_ref": 2500,
+        "hit999": 2000,
+        "stop_eval_ref": 2000,
+        "stop_step": 2500,
+        "tc": 2500,
+        "n1_rel": 0.0
+      },
+      {
+        "task": 2,
+        "steps": 2600,
+        "steps_ref": 2600,
+        "hit999": 2100,
+        "stop_eval_ref": 2100,
+        "stop_step": 2600,
+        "tc": 5100,
+        "n1_rel": 1.542499652731885e-16
+      },
+      {
+        "task": 3,
+        "steps": 2400,
+        "steps_ref": 2400,
+        "hit999": 1900,
+        "stop_eval_ref": 1900,
+        "stop_step": 2400,
+        "tc": 7500,
+        "n1_rel": 2.0213581373703099e-16
+      },
+      {
+        "task": 4,
+        "steps": 2700,
+        "steps_ref": 2700,
+        "hit999": 2200,
+        "stop_eval_ref": 2200,
+        "stop_step": 2700,
+        "tc": 10200,
+        "n1_rel": 0.0
+      },
+      {
+        "task": 5,
+        "steps": 2600,
+        "steps_ref": 2600,
+        "hit999": 2100,
+        "stop_eval_ref": 2100,
+        "stop_step": 2600,
+        "tc": 12800,
+        "n1_rel": 0.0
+      },
+      {
+        "task": 6,
+        "steps": 2500,
+        "steps_ref": 2500,
+        "hit999": 2000,
+        "stop_eval_ref": 2000,
+        "stop_step": 2500,
+        "tc": 15300,
+        "n1_rel": 0.0
+      },
+      {
+        "task": 7,
+        "steps": 2300,
+        "steps_ref": 2300,
+        "hit999": 1800,
+        "stop_eval_ref": 1800,
+        "stop_step": 2300,
+        "tc": 17600,
+        "n1_rel": 0.0
+      },
+      {
+        "task": 8,
+        "steps": 2400,
+        "steps_ref": 2400,
+        "hit999": 1900,
+        "stop_eval_ref": 1900,
+        "stop_step": 2400,
+        "tc": 20000,
+        "n1_rel": 0.0
+      },
+      {
+        "task": 9,
+        "steps": 2400,
+        "steps_ref": 2400,
+        "hit999": 1900,
+        "stop_eval_ref": 1900,
+        "stop_step": 2400,
+        "tc": 22400,
+        "n1_rel": 0.0
+      },
+      {
+        "task": 10,
+        "steps": 2300,
+        "steps_ref": 2300,
+        "hit999": 1800,
+        "stop_eval_ref": 1800,
+        "stop_step": 2300,
+        "tc": 24700,
+        "n1_rel": 1.6268231344475174e-16
+      },
+      {
+        "task": 11,
+        "steps": 2400,
+        "steps_ref": 2400,
+        "hit999": 1900,
+        "stop_eval_ref": 1900,
+        "stop_step": 2400,
+        "tc": 27100,
+        "n1_rel": 0.0
+      },
+      {
+        "task": 12,
+        "steps": 2300,
+        "steps_ref": 2300,
+        "hit999": 1800,
+        "stop_eval_ref": 1800,
+        "stop_step": 2300,
+        "tc": 29400,
+        "n1_rel": 1.4018314225743108e-16
+      },
+      {
+        "task": 13,
+        "steps": 2600,
+        "steps_ref": 2600,
+        "hit999": 2100,
+        "stop_eval_ref": 2100,
+        "stop_step": 2600,
+        "tc": 32000,
+        "n1_rel": 0.0
+      },
+      {
+        "task": 14,
+        "steps": 2200,
+        "steps_ref": 2200,
+        "hit999": 1700,
+        "stop_eval_ref": 1700,
+        "stop_step": 2200,
+        "tc": 34200,
+        "n1_rel": 0.0
+      },
+      {
+        "task": 15,
+        "steps": 2500,
+        "steps_ref": 2500,
+        "hit999": 2000,
+        "stop_eval_ref": 2000,
+        "stop_step": 2500,
+        "tc": 36700,
+        "n1_rel": 0.0
+      }
+    ],
+    "note": "width_replay.py's E-stop15 ran on cuda, R = 1, eager; so does this, and steps / stop_eval / n1 all agree"
+  },
+  "S5b the same chain on the cpu [report only: why the chains run on cuda]": {
+    "pass": true,
+    "device": "cpu",
+    "threads": 8,
+    "tasks": 15,
+    "max_abs_dsteps": 500,
+    "max_abs_dhit999": 500,
+    "max_rel_dn1": 0.31722546337564617,
+    "n1_rel_within_1e-6": false,
+    "tc_equals_summed_steps": true,
+    "tc_final": 36300,
+    "wall_s_15_tasks": 25.3,
+    "wall_s_this_run": null,
+    "step_ms": 0.5694335157221014,
+    "per_task": [
+      {
+        "task": 1,
+        "steps": 3000,
+        "steps_ref": 2500,
+        "hit999": 2500,
+        "stop_eval_ref": 2000,
+        "stop_step": 3000,
+        "tc": 3000,
+        "n1_rel": 0.31722546337564617
+      },
+      {
+        "task": 2,
+        "steps": 2300,
+        "steps_ref": 2600,
+        "hit999": 1800,
+        "stop_eval_ref": 2100,
+        "stop_step": 2300,
+        "tc": 5300,
+        "n1_rel": 0.01839307539309165
+      },
+      {
+        "task": 3,
+        "steps": 2800,
+        "steps_ref": 2400,
+        "hit999": 2300,
+        "stop_eval_ref": 1900,
+        "stop_step": 2800,
+        "tc": 8100,
+        "n1_rel": 0.004360731737501509
+      },
+      {
+        "task": 4,
+        "steps": 2200,
+        "steps_ref": 2700,
+        "hit999": 1700,
+        "stop_eval_ref": 2200,
+        "stop_step": 2200,
+        "tc": 10300,
+        "n1_rel": 0.01956237943845864
+      },
+      {
+        "task": 5,
+        "steps": 2500,
+        "steps_ref": 2600,
+        "hit999": 2000,
+        "stop_eval_ref": 2100,
+        "stop_step": 2500,
+        "tc": 12800,
+        "n1_rel": 0.007040814354764442
+      },
+      {
+        "task": 6,
+        "steps": 2300,
+        "steps_ref": 2500,
+        "hit999": 1800,
+        "stop_eval_ref": 2000,
+        "stop_step": 2300,
+        "tc": 15100,
+        "n1_rel": 0.010766233889719897
+      },
+      {
+        "task": 7,
+        "steps": 2300,
+        "steps_ref": 2300,
+        "hit999": 1800,
+        "stop_eval_ref": 1800,
+        "stop_step": 2300,
+        "tc": 17400,
+        "n1_rel": 0.010008487944117787
+      },
+      {
+        "task": 8,
+        "steps": 2400,
+        "steps_ref": 2400,
+        "hit999": 1900,
+        "stop_eval_ref": 1900,
+        "stop_step": 2400,
+        "tc": 19800,
+        "n1_rel": 0.01188123365787753
+      },
+      {
+        "task": 9,
+        "steps": 2400,
+        "steps_ref": 2400,
+        "hit999": 1900,
+        "stop_eval_ref": 1900,
+        "stop_step": 2400,
+        "tc": 22200,
+        "n1_rel": 0.001549182475402657
+      },
+      {
+        "task": 10,
+        "steps": 2300,
+        "steps_ref": 2300,
+        "hit999": 1800,
+        "stop_eval_ref": 1800,
+        "stop_step": 2300,
+        "tc": 24500,
+        "n1_rel": 0.007917918176729386
+      },
+      {
+        "task": 11,
+        "steps": 2400,
+        "steps_ref": 2400,
+        "hit999": 1900,
+        "stop_eval_ref": 1900,
+        "stop_step": 2400,
+        "tc": 26900,
+        "n1_rel": 0.002366667431034513
+      },
+      {
+        "task": 12,
+        "steps": 2300,
+        "steps_ref": 2300,
+        "hit999": 1800,
+        "stop_eval_ref": 1800,
+        "stop_step": 2300,
+        "tc": 29200,
+        "n1_rel": 0.0038699463856360946
+      },
+      {
+        "task": 13,
+        "steps": 2300,
+        "steps_ref": 2600,
+        "hit999": 1800,
+        "stop_eval_ref": 2100,
+        "stop_step": 2300,
+        "tc": 31500,
+        "n1_rel": 0.012202722278520086
+      },
+      {
+        "task": 14,
+        "steps": 2600,
+        "steps_ref": 2200,
+        "hit999": 2100,
+        "stop_eval_ref": 1700,
+        "stop_step": 2600,
+        "tc": 34100,
+        "n1_rel": 0.013521103282856035
+      },
+      {
+        "task": 15,
+        "steps": 2200,
+        "steps_ref": 2500,
+        "hit999": 1700,
+        "stop_eval_ref": 2000,
+        "stop_step": 2200,
+        "tc": 36300,
+        "n1_rel": 0.00316271396289639
+      }
+    ],
+    "note": "same code, same seed, cpu float32 instead of cuda: one image's argmax near the 1199/1200 threshold changes a task's stop step, and because the next task starts from that state the chain drifts.  The spec's cpu chain is therefore run on cuda (R = 1, eager) instead -- 0.9 ms/step, about 2 min a seed, so it costs nothing."
+  },
+  "S6a provenance carries the new settings and tc_at_task_end": {
+    "pass": true,
+    "required": [
+      "run_id",
+      "parent",
+      "schedule",
+      "hit_every",
+      "keep_ckpts",
+      "stop",
+      "labels_sha256",
+      "tc_at_task_end",
+      "perm_consumption_rule"
+    ],
+    "missing": {},
+    "tc_wrong": {},
+    "values": {
+      "LR_abab": {
+        "run_id": "altlabels_cifar_0923",
+        "parent": "rlcifar_mlp_battle_0918",
+        "schedule": "abab",
+        "hit_every": 100,
+        "keep_ckpts": true,
+        "stop": null,
+        "labels_sha256": "28a6540444d7cd62292f18b2f2cf42778b59b5e24113199a639d75e3aba061de",
+        "tc_at_task_end": {
+          "1": 30000,
+          "2": 60000,
+          "3": 90000
+        },
+        "perm_consumption_rule": "(set)"
+      },
+      "LR_iid": {
+        "run_id": "altlabels_cifar_0923",
+        "parent": "rlcifar_mlp_battle_0918",
+        "schedule": "iid",
+        "hit_every": 100,
+        "keep_ckpts": true,
+        "stop": null,
+        "labels_sha256": null,
+        "tc_at_task_end": {
+          "1": 30000,
+          "2": 60000,
+          "3": 90000
+        },
+        "perm_consumption_rule": "(set)"
+      },
+      "LR_iid_plain": {
+        "run_id": "altlabels_cifar_0923",
+        "parent": "rlcifar_mlp_battle_0918",
+        "schedule": "iid",
+        "hit_every": 0,
+        "keep_ckpts": false,
+        "stop": null,
+        "labels_sha256": null,
+        "tc_at_task_end": {
+          "1": 30000,
+          "2": 60000
+        },
+        "perm_consumption_rule": "(set)"
+      },
+      "LR_parent": {
+        "run_id": "rlcifar_mlp_battle_0918"
+      },
+      "SNA_abab": {
+        "run_id": "altlabels_cifar_0923",
+        "parent": "rlcifar_mlp_battle_0918",
+        "schedule": "abab",
+        "hit_every": 100,
+        "keep_ckpts": false,
+        "stop": null,
+        "labels_sha256": "28a6540444d7cd62292f18b2f2cf42778b59b5e24113199a639d75e3aba061de",
+        "tc_at_task_end": {
+          "1": 30000,
+          "2": 60000
+        },
+        "perm_consumption_rule": "(set)"
+      },
+      "SNA_plain": {
+        "run_id": "altlabels_cifar_0923",
+        "parent": "rlcifar_mlp_battle_0918",
+        "schedule": "abab",
+        "hit_every": 0,
+        "keep_ckpts": false,
+        "stop": null,
+        "labels_sha256": "28a6540444d7cd62292f18b2f2cf42778b59b5e24113199a639d75e3aba061de",
+        "tc_at_task_end": {
+          "1": 30000,
+          "2": 60000
+        },
+        "perm_consumption_rule": "(set)"
+      },
+      "fork_bundle": {
+        "run_id": "altlabels_cifar_0923",
+        "parent": "rlcifar_mlp_battle_0918",
+        "schedule": "aaaa",
+        "hit_every": 100,
+        "keep_ckpts": false,
+        "stop": [
+          0.999,
+          500
+        ],
+        "labels_sha256": "d41dd0aa89449ebc4525927af14c5974ba3c5a3188f3e0d258e6b0be717ea408",
+        "tc_at_task_end": {
+          "1": 62500
+        },
+        "perm_consumption_rule": "(set)",
+        "restore": {
+          "slots": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "sha256": "7c83bb136c13de16"
+        }
+      },
+      "stop_chain_seed0": {
+        "run_id": "altlabels_cifar_0923",
+        "parent": "rlcifar_mlp_battle_0918",
+        "schedule": "iid",
+        "hit_every": 100,
+        "keep_ckpts": false,
+        "stop": [
+          0.999,
+          500
+        ],
+        "labels_sha256": null,
+        "tc_at_task_end": {
+          "1": 2500,
+          "2": 5100,
+          "3": 7500,
+          "4": 10200,
+          "5": 12800,
+          "6": 15300,
+          "7": 17600,
+          "8": 20000,
+          "9": 22400,
+          "10": 24700,
+          "11": 27100,
+          "12": 29400,
+          "13": 32000,
+          "14": 34200,
+          "15": 36700
+        },
+        "perm_consumption_rule": "(set)"
+      }
+    }
+  },
+  "S6b a resume refuses another schedule / hit_every / stop": {
+    "pass": true,
+    "schedule": true,
+    "hit_every": true,
+    "stop": true,
+    "same_setting_resumes": true
+  },
+  "S7 cost (with the trace eval on)": {
+    "pass": true,
+    "per_run": {
+      "LR_abab": {
+        "R": 10,
+        "trace": true,
+        "step_ms_per_task": [
+          0.83,
+          0.82,
+          0.82
+        ],
+        "jobs_started_with": 1
+      },
+      "LR_iid": {
+        "R": 10,
+        "trace": true,
+        "step_ms_per_task": [
+          2.61,
+          2.59,
+          0.88
+        ],
+        "jobs_started_with": 3
+      },
+      "LR_iid_plain": {
+        "R": 10,
+        "trace": false,
+        "step_ms_per_task": [
+          1.67,
+          1.67
+        ],
+        "jobs_started_with": 2
+      },
+      "LR_parent": {
+        "R": 10,
+        "trace": false,
+        "step_ms_per_task": [
+          1.67,
+          1.67
+        ],
+        "jobs_started_with": 2
+      },
+      "SNA_abab": {
+        "R": 10,
+        "trace": true,
+        "step_ms_per_task": [
+          2.67,
+          2.62
+        ],
+        "jobs_started_with": 3
+      },
+      "SNA_plain": {
+        "R": 10,
+        "trace": false,
+        "step_ms_per_task": [
+          2.59,
+          2.58
+        ],
+        "jobs_started_with": 3
+      }
+    },
+    "solo_step_ms_R10_trace": 0.82,
+    "mean_step_ms_when_3_share_the_gpu": 2.623333333333333,
+    "per_job_sharing_factor": 1.0663956639566394,
+    "gpu_estimates": {
+      "1_jobs": {
+        "step_ms": 0.8744444444444442,
+        "arm_50_tasks_h": 0.3643518518518518
+      },
+      "4_jobs": {
+        "step_ms": 3.497777777777777,
+        "arm_50_tasks_h": 1.4574074074074073
+      },
+      "5_jobs": {
+        "step_ms": 4.372222222222221,
+        "arm_50_tasks_h": 1.8217592592592586
+      }
+    },
+    "gpu_all_5_arms_wall_h": 1.8217592592592586,
+    "stop_chain": {
+      "device": "cuda, R = 1, eager",
+      "tasks_measured": 15,
+      "mean_steps_per_task": 2446.6666666666665,
+      "step_ms": 0.8476591110229492,
+      "wall_clock_s_15_tasks": 31.225043773651123,
+      "seed_50_tasks_min": 1.734724654091729,
+      "arm_5_seeds_min": 8.673623270458645,
+      "both_arms_min": 17.34724654091729
+    },
+    "note": "the gpu saturates, so N jobs cost about N x solo per step; the 5-arm wall clock is the four 50-task arms (LR_abc is 12 tasks and finishes early).  The forks are ~10 bundles of ~2,500 steps each."
+  },
+  "S4a the A bundle from ckpts/t02.pt reproduces the main run's task 3": {
+    "pass": true,
+    "trace_rows_compared": 260,
+    "cols": [
+      "step",
+      "correct",
+      "ce",
+      "margin_med",
+      "n1",
+      "n2",
+      "n3",
+      "sig_med"
+    ],
+    "trace_mismatches": [],
+    "hit_mismatches": [],
+    "restored_start_differs_for_seeds": [],
+    "bundle_steps": "2500",
+    "stop_steps": [
+      "1500",
+      "1700",
+      "1800",
+      "2000",
+      "2500"
+    ],
+    "forks_csv_rows": 10,
+    "parent_sha256": "7c83bb136c13de16",
+    "stop_snapshots": 30,
+    "end_snapshots": 30
+  },
+  "S4b branch next reproduces the iid run's task 3, and branch C is fixed by (seed, t)": {
+    "pass": true,
+    "trace_rows_compared": 270,
+    "cols": [
+      "step",
+      "correct",
+      "ce",
+      "margin_med",
+      "n1",
+      "n2",
+      "n3",
+      "sig_med"
+    ],
+    "trace_mismatches": [],
+    "hit_mismatches": [],
+    "restored_start_differs_for_seeds": [],
+    "ok": true,
+    "what": "iid arm, branch next = its task 3",
+    "C_hit999_from_abab": [
+      1700,
+      1700,
+      1800,
+      1800,
+      1800,
+      1900,
+      1900,
+      2000,
+      2300,
+      2700
+    ],
+    "C_hit999_from_iid": [
+      1700,
+      1700,
+      1800,
+      1800,
+      1800,
+      1900,
+      1900,
+      2000,
+      2300,
+      2700
+    ],
+    "C_agrees": true,
+    "note": "at t = 2 the abab and iid runs are the same state, and C comes from rlc_labels_fork_t2 either way, so the two C bundles must coincide"
+  }
+}

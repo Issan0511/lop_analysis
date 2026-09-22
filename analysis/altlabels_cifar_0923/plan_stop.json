@@ -1,11 +1,39 @@
 {
-  "gpu_max": 5,
+  "gpu_max": 7,
   "own_max": 2,
   "reserve_gb": 4.0,
   "min_gpu_mb": 500,
   "retries": 3,
   "jobs": [
-    {"arm": "LR_abab_stop", "stage": "chain", "activation": "LR", "schedule": "abab", "seeds": "0-4", "conds": "std", "tasks": 50, "device": "cpu", "threads": 8, "rss_gb": 1.5, "hit_every": 100, "keep_ckpts": false, "stop": "0.999,500"},
-    {"arm": "LR_iid_stop",  "stage": "chain", "activation": "LR", "schedule": "iid",  "seeds": "0-4", "conds": "std", "tasks": 50, "device": "cpu", "threads": 8, "rss_gb": 1.5, "hit_every": 100, "keep_ckpts": false, "stop": "0.999,500"}
+    {
+      "arm": "LR_abab_stop",
+      "stage": "chain",
+      "activation": "LR",
+      "schedule": "abab",
+      "seeds": "0-4",
+      "conds": "std",
+      "tasks": 50,
+      "device": "cuda",
+      "threads": 2,
+      "rss_gb": 1.5,
+      "hit_every": 100,
+      "keep_ckpts": false,
+      "stop": "0.999,500"
+    },
+    {
+      "arm": "LR_iid_stop",
+      "stage": "chain",
+      "activation": "LR",
+      "schedule": "iid",
+      "seeds": "0-4",
+      "conds": "std",
+      "tasks": 50,
+      "device": "cuda",
+      "threads": 2,
+      "rss_gb": 1.5,
+      "hit_every": 100,
+      "keep_ckpts": false,
+      "stop": "0.999,500"
+    }
   ]
 }

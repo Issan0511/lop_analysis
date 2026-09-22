@@ -72,8 +72,17 @@ def sha256_file(p: Path) -> str:
 # fork (spec §1.5): one bundle per (fork point, branch), in the main run's own layout
 # --------------------------------------------------------------------------
 
+def rel(p: Path) -> str:
+    """Repo-relative where it can be, absolute otherwise (--src may point anywhere)."""
+    p = Path(p).resolve()
+    try:
+        return str(p.relative_to(H.REPO.resolve()))
+    except ValueError:
+        return str(p)
+
+
 def do_fork(a, device) -> None:
-    src = Path(a.src)
+    src = Path(a.src).resolve()
     prov = json.loads((src / "provenance.json").read_text())
     slots = [(q["seed"], q["cond"]) for q in prov["slots"]]
     seeds, conds = prov["seeds"], prov["conds"]
@@ -88,7 +97,12 @@ def do_fork(a, device) -> None:
     out.mkdir(parents=True, exist_ok=True)
     cifar = RC.Cifar10()
     stop = B.parse_stop(a.stop)
-    rows: list[dict] = []
+    # keep the rows of fork points / branches this call is not regenerating, so running the
+    # branches in separate invocations still leaves one complete forks.csv
+    want = {(str(t), br) for t in ts for br in branches}
+    rows: list[dict] = ([q for q in csv.DictReader(open(out / "forks.csv"))
+                         if (q["t"], q["branch"]) not in want]
+                        if (out / "forks.csv").exists() else [])
     t_start = time.time()
     for t in ts:
         ckpt = src / "ckpts" / f"t{t:02d}.pt"
@@ -123,16 +137,12 @@ def do_fork(a, device) -> None:
                                                             else f"labels.npz:{br}" if br in "ABC"
                                                             else f"rlc_labels draw {t + 1}"),
                                            "labels_sha256": B.labels_sha256(fixed)}})
-            for src_snap, dst_snap in (
-                    (o / "snap", out / "snap"),):        # per-slot stop snapshots
-                for p in sorted(src_snap.glob("fork_*_stop.npz")):
-                    dst_snap.mkdir(parents=True, exist_ok=True)
-                    shutil.copyfile(p, dst_snap / p.name)
-            for r, (s, cd) in enumerate(slots):
-                p = B.snapshot_path(o, prov["arm"], cd, s, 1)
-                d = out / "snap" / f"fork_t{t:02d}_{br}_seed{s}_end.npz"
-                d.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(p, d)
+            (out / "snap").mkdir(parents=True, exist_ok=True)
+            for p in sorted((o / "snap").glob("fork_*_stop.npz")):   # each slot's own stop point
+                shutil.copyfile(p, out / "snap" / p.name)
+            for s, cd in slots:                                      # end of the bundle
+                shutil.copyfile(B.snapshot_path(o, prov["arm"], cd, s, 1),
+                                out / "snap" / f"fork_t{t:02d}_{br}_seed{s}_end.npz")
             for q in csv.DictReader(open(o / "per_task.csv")):
                 rows.append({"t": t, "branch": br, "seed": int(q["seed"]), "cond": q["cond"],
                              "hit99": q.get("hit99"), "hit999": q.get("hit999"),
@@ -140,7 +150,7 @@ def do_fork(a, device) -> None:
                              "correct_at_stop": q.get("acc_at_hit_plus_500"),
                              "min_correct_after_hit": q.get("min_correct_after_hit"),
                              "memo_acc": q.get("memo_acc"), "online_acc": q.get("online_acc"),
-                             "tc": q.get("tc"), "parent_ckpt": str(ckpt.relative_to(H.REPO)),
+                             "tc": q.get("tc"), "parent_ckpt": rel(ckpt),
                              "parent_sha256": sha,
                              "stop_snap": f"snap/fork_t{t:02d}_{br}_seed{q['seed']}_stop.npz",
                              "end_snap": f"snap/fork_t{t:02d}_{br}_seed{q['seed']}_end.npz"})
