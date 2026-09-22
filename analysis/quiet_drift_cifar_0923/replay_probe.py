@@ -130,6 +130,11 @@ def main() -> None:
     ap.add_argument("--steps", type=int, default=30000)
     ap.add_argument("--out", required=True)
     ap.add_argument("--device", default="cuda")
+    ap.add_argument("--beta2", type=float, default=0.999,
+                    help="pass 3 only: Adam's beta2 from step --beta2-from on (the engine's is "
+                         "0.999; the v in hand is kept and simply decays at the new rate)")
+    ap.add_argument("--beta2-from", type=int, default=1,
+                    help="pass 3 only: the first step (1-based within the task) using --beta2")
     a = ap.parse_args()
     if a.net == "iid" and a.branch not in ("next", "same", "rev2", "C"):
         raise SystemExit("iid net branches: next, same, rev2, C")
@@ -173,7 +178,7 @@ def main() -> None:
         g_batch[s] = torch.Generator(device="cpu")
         g_batch[s].set_state(st["g_batch"][s])
 
-    lr, b1, b2, eps = B.LR, 0.9, 0.999, 1e-8
+    lr, b1, b2, eps = B.LR, 0.9, 0.999, 1e-8          # b2 is switched in the loop (pass 3)
     BATCH, N, NC = B.BATCH, B.N_IMAGES, B.N_CLASSES
     ar = torch.arange(R, device=dev)[:, None]
     static_idx = torch.zeros(R, BATCH, dtype=torch.long, device=dev)
@@ -346,6 +351,7 @@ def main() -> None:
             static_idx.copy_(ORD[:, j * BATCH:(j + 1) * BATCH])
             tc += 1
             ts += 1
+            b2 = a.beta2 if ts >= a.beta2_from else 0.999     # read by step() through the closure
             inv_c1.fill_(1.0 / (1 - b1 ** tc))
             inv_c2.fill_(1.0 / (1 - b2 ** tc))
             act.begin_step(R, BATCH, dev)
@@ -364,7 +370,7 @@ def main() -> None:
     prov = {"experiment": "quiet_drift_cifar_0923", "net": a.net, "branch": a.branch, "t": a.t,
             "steps": S, "ckpt": str(ckpt), "ckpt_sha256": sha256_file(ckpt),
             "labels_sha256": B.labels_sha256({s: [lab[s]] for s in SEEDS}),
-            "tc_start": int(st["tc"]), "tc_end": tc, "hit999": hit999,
+            "tc_start": int(st["tc"]), "tc_end": tc, "hit999": hit999, "beta2": a.beta2, "beta2_from": a.beta2_from,
             "git": B.git_state(), "seconds": time.time() - t0,
             "basis_dir": str(BASIS_DIR), "bands": BANDS,
             "torch": torch.__version__, "device": str(dev)}
