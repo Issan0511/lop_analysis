@@ -1,0 +1,156 @@
+{
+  "run_id": "layer_chimera_cifar_0921",
+  "git_hash": "dbcc6666cd7ee014b3694347e47e07d253474af1",
+  "dirty_src_analysis": [],
+  "git_states": [
+    {
+      "git_hash": "dbcc6666cd7ee014b3694347e47e07d253474af1",
+      "dirty_src_analysis": []
+    }
+  ],
+  "resumed_at_task": [],
+  "cell": "LL",
+  "act1": "LR",
+  "act2": "LR",
+  "arm": "LL",
+  "conds": [
+    "raw"
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "slots": [
+    {
+      "seed": 0,
+      "cond": "raw"
+    },
+    {
+      "seed": 1,
+      "cond": "raw"
+    },
+    {
+      "seed": 2,
+      "cond": "raw"
+    },
+    {
+      "seed": 3,
+      "cond": "raw"
+    },
+    {
+      "seed": 4,
+      "cond": "raw"
+    },
+    {
+      "seed": 5,
+      "cond": "raw"
+    },
+    {
+      "seed": 6,
+      "cond": "raw"
+    },
+    {
+      "seed": 7,
+      "cond": "raw"
+    },
+    {
+      "seed": 8,
+      "cond": "raw"
+    },
+    {
+      "seed": 9,
+      "cond": "raw"
+    }
+  ],
+  "R": 10,
+  "lr": 0.001,
+  "n_tasks": 50,
+  "epochs_per_task": 400,
+  "batch": 16,
+  "steps_per_task": 30000,
+  "n_images": 1200,
+  "train_n": 50000,
+  "dims": [
+    3072,
+    100,
+    100,
+    10
+  ],
+  "n_classes": 10,
+  "sna_c": 0.6,
+  "sna_beta": 0.01,
+  "alpha_lo": 0.005,
+  "alpha_hi": 3.0,
+  "intervention": "none",
+  "optimizer": "adam",
+  "adam_eps": 0.0001,
+  "adam_betas": [
+    0.9,
+    0.999
+  ],
+  "weight_decay": 0.0,
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "subset_sha256": {
+    "0": "202b6701ad8d20a839ab54cd0bac85101c5955096e89d95dc0dbb40d39a0fc4b",
+    "1": "7508bd5f137b2212bfac290ba3c6ff8f49745f9178c66bdbac6f6da572418bfc",
+    "2": "04b54b538d94b446931f173de94c9d6a3bd0edbf53a8e32b8c564d7719e166a8",
+    "3": "a617d87e7116394ddf0f4179463a24be98d9ca390b522fa09654eb3579202629",
+    "4": "65d322853b2a530cd7a015b95528212526dea66acf90ac1fbf44ca7db0195afe",
+    "5": "83a3cbd7d5f7c3e67fa96658b2fa0908630516c29d46272613ba5ce97a8969f6",
+    "6": "c156f06c778c85c2451d70b752d76c286f35bc0617808ea834fa9f7f98e5dc75",
+    "7": "48879a3848b49a6a634da16d14b908358f2dc153a56ca8a0db9f7efcb0ce61ee",
+    "8": "70d65172a6676515243db391bc0f822820ddeeaf269fba1cf9430df93744513e",
+    "9": "d34d5e87249490af22bf4573789912a91cb53a48d7558efb6bb1f193e78ca2d0"
+  },
+  "std": {
+    "mean": [
+      0.4914,
+      0.4822,
+      0.4465
+    ],
+    "std": [
+      0.247,
+      0.2435,
+      0.2616
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "rng_roles": [
+    "rlc_subset",
+    "rlc_labels",
+    "rlc_batch",
+    "init"
+  ],
+  "rsl_noise_seed": null,
+  "hist": {
+    "lo": -512.0,
+    "hi": 256.0,
+    "bins": 7680,
+    "dtype": "int32",
+    "theta": null,
+    "path": "hist/<arm>_<cond>_seed<seed>.npz"
+  },
+  "engine": "stacked baddbmm, autograd, elementwise Adam (spec \u00a72.2), one step captured as a CUDA graph",
+  "snapshots": "snap/<arm>_<cond>_seed<seed>/t<task>.npz: W1,b1,W2,b2,W3,b3 float32 (+V1,V2 for adaptive arms) at init (t00) and every task's end, plus z1,z2 (1200x100, float16, images in subset order) at every task's end; exact float32 z via replay()",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 1.640460236867269,
+  "wall_clock_s": 4951.531921863556,
+  "divergences": [],
+  "check_hooks": {
+    "perturb": null,
+    "nan_slot": null,
+    "snapshots": true
+  }
+}

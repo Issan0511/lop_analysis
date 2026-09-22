@@ -133,4 +133,7 @@ Issa の列は空けてある。解析（§8）の前に埋めればそのまま
 
 ## 8. 記録
 
-（走の後に書く）
+- 13:00 spec commit（57c7b77）。12:5x に Issa「やってほしいです」。Issa の予測列は未記入のまま走に入った（Claude の列のみで採点）。
+- 12:54 検査: S1 rows/snapshots bit 一致（30 行・40 スナップショット）、S2a 10/10 slot の t1 行が変わる、S2b replica 3.7e−8 対 変異 0.029、S3 拒否、S4 adam_eps 記録。`results/le_eps_cifar_0922/checks.json`。
+- 12:54–14:19 本走 4 腕（4 並列、各 82–83 分、3 ms/step）。
+- 14:2x tail → report: **Q1 REDUCED（e3 3.19, e4 4.52, e8 9.14; MONOTONE）**, Q2 SINK_CONTINUES, Q3 INCOHERENT, Q4 NOT_RESCUED, Q5 NO_TAX（e3, e4）。Claude 7/9（P1, P4 外れ）。読みは `results/le_eps_cifar_0922/summary.md` 事後の読み。

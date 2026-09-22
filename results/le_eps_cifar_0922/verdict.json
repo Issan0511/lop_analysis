@@ -1,0 +1,170 @@
+{
+  "Q1": {
+    "label": "REDUCED",
+    "ratio_median": 3.1870669989615905,
+    "ratio_per_seed": [
+      2.63,
+      3.54,
+      2.42,
+      3.94,
+      3.28,
+      3.88,
+      2.41,
+      5.07,
+      3.1,
+      2.61
+    ],
+    "ratio_max": 5.0744207408733795
+  },
+  "Q1_e4": {
+    "label": "REDUCED",
+    "ratio_median": 4.5182875935540565,
+    "ratio_per_seed": [
+      5.39,
+      4.37,
+      4.66,
+      4.71,
+      6.01,
+      4.95,
+      3.89,
+      4.02,
+      3.72,
+      3.42
+    ],
+    "ratio_max": 6.013256809291858
+  },
+  "Q1_e8": {
+    "label": "NOT_ADAM",
+    "ratio_median": 9.144505810084347,
+    "ratio_per_seed": [
+      12.71,
+      11.44,
+      9.74,
+      9.71,
+      8.47,
+      7.65,
+      5.64,
+      9.3,
+      8.07,
+      8.99
+    ],
+    "ratio_max": 12.706460316205629
+  },
+  "Q2": {
+    "label": "SINK_CONTINUES",
+    "mu2_stopped": false,
+    "sink_stopped": false,
+    "mu2_t5_median_e3": 142.2723079,
+    "mu2_t5_median_e8": 697.3301079,
+    "mu2_t2_median_e8(ref)": 48.438462959999995,
+    "mu2_sign": {
+      "median": 531.6903688,
+      "pos": 10,
+      "n": 10,
+      "p": 0.001953125
+    },
+    "zbar2_t5_median_e3": -103.857621,
+    "zbar2_t5_median_e8": -434.91571854999995,
+    "zbar2_t2_median_e8(ref)": -30.5985443
+  },
+  "Q3": {
+    "label": "INCOHERENT",
+    "dcos_t3_median_e3": 0.1170112234,
+    "dcos_t3_median_e8": 0.38025139495,
+    "dcos_t3_median_e4": 0.20365109485
+  },
+  "Q4": {
+    "label": "NOT_RESCUED",
+    "window_median_e3": 0.10110890625475,
+    "window_per_seed": [
+      0.1,
+      0.1,
+      0.102,
+      0.101,
+      0.1,
+      0.1,
+      0.102,
+      0.101,
+      0.101,
+      0.101
+    ],
+    "window_median_e4": 0.10029437499950002,
+    "window_median_e8": 0.10020119791424999,
+    "open_frac_t50_median": {
+      "LE_e8": 0.0,
+      "LE_e4": 5.833333333e-05,
+      "LE_e3": 0.0002875
+    }
+  },
+  "Q5_e3": {
+    "label": "NO_TAX",
+    "median": 0.0011678645850001224,
+    "pos": 7,
+    "n": 10,
+    "p": 0.34375,
+    "window_median": 0.7259388541674999,
+    "window_median_e8": 0.727716562495
+  },
+  "Q5_e4": {
+    "label": "NO_TAX",
+    "median": -0.0013563541700000181,
+    "pos": 4,
+    "n": 10,
+    "p": 0.75390625,
+    "window_median": 0.7244328125049999,
+    "window_median_e8": 0.727716562495
+  },
+  "MONOTONE": true,
+  "predictions": {
+    "P1": {
+      "predicate": "Q1 = AMPLIFIER_IS_ADAM (e3)",
+      "claude": 0.85,
+      "hit": false
+    },
+    "P2": {
+      "predicate": "Q1_e4 in {AMPLIFIER_IS_ADAM, REDUCED}",
+      "claude": 0.8,
+      "hit": true
+    },
+    "P3": {
+      "predicate": "MONOTONE",
+      "claude": 0.85,
+      "hit": true
+    },
+    "P4": {
+      "predicate": "Q2 = BOTH_STOPPED (e3)",
+      "claude": 0.75,
+      "hit": false
+    },
+    "P5": {
+      "predicate": "Q3 = INCOHERENT (e3)",
+      "claude": 0.7,
+      "hit": true
+    },
+    "P6": {
+      "predicate": "Q4 = NOT_RESCUED (e3)",
+      "claude": 0.7,
+      "hit": true
+    },
+    "P7": {
+      "predicate": "Q4 in {PARTIAL_RESCUE, RESCUED} (e3)",
+      "claude": 0.3,
+      "hit": false
+    },
+    "P8": {
+      "predicate": "Q5(e3) in {NO_TAX, SMALL_TAX}",
+      "claude": 0.7,
+      "hit": true
+    },
+    "P9": {
+      "predicate": "Q5(e4) = NO_TAX",
+      "claude": 0.85,
+      "hit": true
+    }
+  },
+  "claude_score": 7,
+  "_git": {
+    "git_hash": "a48ddc4fb75daae075f46ce09b5e2e8e21566817",
+    "dirty_src_analysis": []
+  }
+}
