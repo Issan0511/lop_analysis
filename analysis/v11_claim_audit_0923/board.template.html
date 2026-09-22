@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>V11 論文の骨組み</title>
+<style>
+:root{--ink:#192c40;--muted:#586976;--line:#dce4e8;--paper:#fff;--bg:#f1f5f5;--teal:#126b67;--pale:#edf7f4;--amber:#9b5b13;--amber-bg:#fff7e9;--red:#9d3333;--shadow:0 5px 22px #16384b08}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:var(--bg);font:15px/1.7 system-ui,-apple-system,"Noto Sans JP","Yu Gothic",sans-serif}button,input,select,textarea{font:inherit;color:inherit}button,a,input,select,textarea{touch-action:manipulation}button{cursor:pointer;border:1px solid var(--line);border-radius:7px;background:white;padding:7px 12px;line-height:1.45}button:hover{border-color:var(--teal);background:#f3f9f8}button:disabled{opacity:.38;cursor:default}button.primary{background:var(--teal);color:white;border-color:var(--teal)}button.primary:hover{background:#0f5855}button.small{font-size:12px;padding:5px 8px}button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #76c7b7;outline-offset:3px}input,select,textarea{border:1px solid #bfcdd4;border-radius:7px;background:#fff;padding:9px 11px;width:100%}input:focus,select:focus,textarea:focus{outline:2px solid #91cbbb;outline-offset:1px;border-color:var(--teal)}textarea{resize:vertical;min-height:76px;line-height:1.7}a{color:var(--teal);text-underline-offset:3px}h1,h2,h3,p{margin:0}h1{font-size:clamp(25px,4vw,36px);font-weight:720;letter-spacing:.03em;line-height:1.3}h2{font-size:20px;line-height:1.4}h3{font-size:16px;line-height:1.5}.muted{color:var(--muted)}.small-text{font-size:12px}.eyebrow{font-size:11px;letter-spacing:.18em;font-weight:700;color:var(--teal)}.wrap{max-width:1440px;margin:auto;padding:26px 30px 40px}.header{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:20px}.header p{margin-top:9px;color:var(--muted);max-width:680px}.header-side{text-align:right;flex-shrink:0}.header-side a{font-size:13px}.version{font-size:11px;color:var(--muted);margin-bottom:5px}.toolbar{position:sticky;top:0;z-index:5;background:#f1f5f5f5;backdrop-filter:blur(9px);border-block:1px solid var(--line);padding:11px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:24px}.toolbar .save{margin-left:auto;font-size:12px;display:flex;align-items:center;gap:7px}.save::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--teal)}.save.error{color:var(--red)}.save.error::before{background:var(--red)}.status{border:1px solid var(--line);padding:9px 13px;border-radius:8px;background:white;margin-bottom:18px;font-size:13px}.status[hidden]{display:none}.status.error{border-color:#e1b1a8;color:var(--red)}.panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:var(--shadow)}.hero{margin-bottom:20px}.hero-label{display:flex;justify-content:space-between;gap:15px;margin-bottom:12px}.hero textarea{font-size:18px;min-height:98px;background:#fbfdfc}.field-label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}.hero-help{font-size:12px;color:var(--muted);margin-top:9px}.presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.preset{position:relative;display:block;padding:15px;border:1px solid var(--line);border-radius:9px;cursor:pointer}.preset.selected{border-color:var(--teal);background:var(--pale);box-shadow:0 0 0 1px var(--teal)}.preset input{width:16px;margin:0 7px 0 0;accent-color:var(--teal)}.preset-title{font-size:14px;font-weight:700}.preset p{font-size:12px;color:var(--muted);margin-top:7px}.preset .tradeoff{color:var(--ink);border-top:1px solid #d7e4e1;padding-top:7px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:22px 0 12px}.section-head p{font-size:12px;color:var(--muted);margin-top:4px}.count{font-size:12px;color:var(--muted);white-space:nowrap}.workspace{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(330px,.8fr);gap:22px;align-items:start}.side{position:sticky;top:76px;max-height:calc(100vh - 100px);overflow:auto;scrollbar-width:thin;padding-bottom:4px}.card-list{display:grid;gap:13px}.card{padding:18px;border:1px solid var(--line);border-radius:11px;background:white;box-shadow:var(--shadow);border-left:4px solid var(--teal)}.card[data-placement="appendix"]{border-left-color:#7589a2}.card[data-placement="park"]{border-left-color:#b4bfc5;background:#fafbfc}.card.dragging{opacity:.45}.card.drop-target{outline:2px dashed var(--teal);outline-offset:3px}.card-top{display:flex;justify-content:space-between;gap:10px;align-items:start}.card-id{color:var(--teal);font-size:10px;letter-spacing:.05em;font-weight:750;display:inline-block;margin-bottom:2px}.move-tools{display:flex;gap:4px;flex-shrink:0}.move-tools button{padding:5px 8px;font-size:12px}.drag-handle{cursor:grab;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 7px;user-select:none;line-height:28px}.card-controls{display:flex;align-items:center;gap:12px;margin:12px 0}.card-controls select{font-size:12px;padding:5px 8px;width:120px}.grade{font-size:11px;padding:3px 7px;border-radius:5px;background:#edf2f5;color:#4a5e70}.flag-badge{color:var(--amber);background:var(--amber-bg);font-size:11px;border-radius:5px;padding:3px 7px}.claim-input{font-size:14px}.memo-input{min-height:56px;font-size:13px;background:#fbfcfd}.card .field-label{margin-top:12px}.card details{border-top:1px solid var(--line);margin-top:14px;padding-top:10px;font-size:13px}.card summary{cursor:pointer;font-weight:650;color:var(--teal)}.evidence-content{margin-top:13px;display:grid;gap:13px}.evidence-label{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px}.original{border-left:2px solid #c9d5dc;padding-left:11px;color:#516370;white-space:pre-wrap}.scope{white-space:pre-wrap}.figures{display:flex;gap:5px;flex-wrap:wrap}.figure-tag{background:#f0f4f6;font-size:11px;border-radius:4px;padding:2px 6px}.sources{list-style:none;padding:0;margin:0;display:grid;gap:8px}.source{padding:8px 10px;border:1px solid var(--line);border-radius:6px}.source-line{display:flex;justify-content:space-between;align-items:start;gap:8px}.source a{font-size:12px;overflow-wrap:anywhere}.wiki{display:block;overflow-wrap:anywhere;color:var(--muted);font-size:10px;margin-top:5px;user-select:all}.flag{border-left:3px solid #d5a14a;padding:9px 11px;background:var(--amber-bg);border-radius:0 5px 5px 0}.flag h4{font-size:12px;margin:0 0 4px}.flag p{font-size:12px;white-space:pre-wrap}.flag p+p{margin-top:7px}.suggestion{color:#465b5a}.preview-panel{padding:20px}.preview-note{font-size:12px;color:var(--muted);margin:8px 0 16px}.central-preview{border:1px solid #c7e0d9;background:var(--pale);border-radius:8px;padding:13px;margin-bottom:18px;white-space:pre-wrap;font-size:14px}.preview-list{padding:0;list-style:none;margin:0;display:grid;gap:0;counter-reset:outline}.preview-item{position:relative;padding:0 0 20px 30px;counter-increment:outline}.preview-item::before{content:counter(outline);position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;background:var(--ink);color:white;font-size:11px;text-align:center;line-height:21px}.preview-item:not(:last-child)::after{content:"";position:absolute;left:10px;top:27px;bottom:6px;width:1px;background:var(--line)}.preview-item h3{font-size:13px;margin-bottom:5px}.preview-item p{font-size:13px;white-space:pre-wrap}.preview-item .preview-scope{font-size:11px;color:var(--muted);margin-top:6px}.preview-item .preview-flag{font-size:11px;color:var(--amber);margin-top:5px}.empty{padding:20px 5px;color:var(--muted);font-size:13px}.other-placement{border-top:1px solid var(--line);padding-top:12px;margin-top:3px;font-size:12px;color:var(--muted)}.other-placement strong{color:var(--ink)}.decisions{margin-top:18px}.decision{padding-top:14px;margin-top:14px;border-top:1px solid var(--line)}.decision:first-of-type{margin-top:10px}.decision h3{font-size:14px}.decision .status-text{font-size:11px;color:var(--muted);margin:4px 0 10px}.decision-options{display:grid;gap:7px}.decision-option{display:flex;align-items:start;gap:8px;font-size:12px;cursor:pointer}.decision-option input{width:15px;height:15px;margin:4px 0 0;accent-color:var(--teal);flex-shrink:0}.decision textarea{font-size:12px;min-height:54px;margin-top:10px}.decision-clear{margin-top:8px;font-size:11px}.footer{font-size:12px;color:var(--muted);margin-top:25px;padding-top:16px;border-top:1px solid var(--line)}dialog{border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 90px #162a4055;width:min(820px,92vw);padding:22px;color:var(--ink)}dialog::backdrop{background:#13283e66}dialog textarea{min-height:45vh;font:12px/1.6 ui-monospace,monospace;margin:14px 0}dialog .dialog-buttons{display:flex;gap:8px;justify-content:flex-end}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}@media(max-width:1050px){.wrap{padding:22px 20px}.workspace{grid-template-columns:minmax(0,1fr) minmax(290px,.8fr)}.presets{grid-template-columns:1fr}.preset{padding:12px}.preset .tradeoff{margin-top:5px}.toolbar .save{flex-basis:100%;margin-left:0}.side{top:113px;max-height:calc(100vh - 135px)}}@media(max-width:760px){.wrap{padding:18px 13px 28px}.header{display:block}.header-side{text-align:left;margin-top:12px}.header p{font-size:13px}.workspace{grid-template-columns:1fr}.side{position:static;max-height:none;overflow:visible}.toolbar{gap:6px;padding:9px 0}.toolbar button{font-size:12px;padding:7px 9px}.panel{padding:17px}.card{padding:15px}.hero-label{display:block}.hero textarea{font-size:16px}.card-top h3{font-size:15px}.move-tools{gap:3px}.drag-handle{display:none}.grade{max-width:50%;white-space:normal}.section-head{align-items:start}.preview-panel{margin-top:2px}.toolbar{backdrop-filter:none;background:var(--bg)}}@media print{body{background:white}.toolbar,.header-side,.hero,.presets-panel,.editor,.decisions,.footer{display:none}.workspace{display:block}.side{position:static;max-height:none;overflow:visible}.wrap{max-width:none;padding:0}.panel{box-shadow:none;border:0}.preview-item{break-inside:avoid}.status{display:none}}
+.workspace{grid-template-columns:minmax(0,1.8fr) minmax(320px,.85fr)}.card{padding:14px 16px}.card-top h3{font-size:15px}.card-controls{margin:8px 0;gap:8px}.card .field-label{margin-top:8px}.claim-input{min-height:65px}.card details{margin-top:10px;padding-top:8px}.card details summary{font-size:12px}.presets-panel{padding:15px 20px}.evidence-content{gap:10px}.evidence-content .field-label{margin-bottom:0}.memo-input{margin-top:-5px}.side{margin-top:22px}@media(max-width:1050px){.workspace{grid-template-columns:minmax(0,1.5fr) minmax(290px,.8fr)}}@media(max-width:760px){.workspace{grid-template-columns:1fr}.side{margin-top:0}.card{padding:13px}.presets-panel{padding:13px 17px}}
+.card-controls{flex-wrap:wrap}.position-control{display:inline-flex;align-items:center;gap:5px;color:var(--muted);font-size:12px;white-space:nowrap}.card-controls .position-select{width:82px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="header">
+    <div><div class="eyebrow">V11 / OUTLINE WORKSPACE</div><h1>一文ずつ、論文を組み替える</h1><p>通し稿の各ブロックを一文に圧縮しました。カードを動かして、自分の伝えたい順番を作れます。</p></div>
+    <div class="header-side"><div class="version" id="version"></div><a id="audit-link" href="#">主張と証拠の監査ノートを開く ↗</a></div>
+  </header>
+  <nav class="toolbar" aria-label="保存と書き出し">
+    <button type="button" id="undo" disabled>↶ 元に戻す</button>
+    <button type="button" class="primary" id="export-md">決定メモを Markdown 保存</button>
+    <button type="button" id="copy-md">決定メモをコピー</button>
+    <button type="button" id="export-json">JSON 保存</button>
+    <button type="button" id="import-json">JSON 読込</button>
+    <input type="file" id="import-file" accept="application/json,.json" hidden>
+    <span class="save" id="save-status" role="status" aria-live="polite">保存状態を確認中</span>
+  </nav>
+  <div id="notice" class="status" role="status" aria-live="polite" hidden></div>
+  <section class="panel hero" aria-labelledby="central-heading">
+    <div class="hero-label"><h2 id="central-heading">一番伝えたいこと</h2><span class="muted small-text">ここは自分の言葉で</span></div>
+    <label class="sr-only" for="central-message">論文全体で一番伝えたいこと</label>
+    <textarea id="central-message" placeholder="この論文を読んだ人に、何を持ち帰ってほしいか。まだ一文に絞れなくても大丈夫です。"></textarea>
+    <p class="hero-help">一文は要約案。原稿は変更しません。編集後の文と証拠の対応は、各カードで確認できます。</p>
+  </section>
+  <details class="panel presets-panel"><summary style="cursor:pointer;font-size:14px;font-weight:650;color:var(--teal)">並びの案から始める（任意）</summary><div style="padding-top:15px">
+    <div class="hero-label"><h2 id="presets-heading">並びの出発点</h2><span id="preset-label" class="small-text muted">未選択 · 現行稿の順を仮表示</span></div>
+    <p class="small-text muted">案を選ぶと説明の順番が変わります。本文・付録の配置と編集した文章は引き継がれます。</p>
+    <div id="presets" class="presets" role="radiogroup" aria-label="骨組みの案"></div>
+  </div></details>
+  <div class="workspace">
+    <main class="editor">
+      <div class="section-head"><div><h2>通し稿を一文ずつに</h2><p>順番の番号を選ぶと、その位置へ移動します。↑ ↓ でも並べ替えられます。</p></div><span id="counts" class="count"></span></div>
+      <div id="cards" class="card-list"></div>
+    </main>
+    <aside class="side" aria-label="骨組みのプレビューと判断待ち">
+      <section class="panel preview-panel" aria-labelledby="preview-heading">
+        <h2 id="preview-heading">本文の流れ</h2><p class="preview-note">上から読んだときの説明順です。この並びだけで因果関係が証明されるわけではありません。</p>
+        <div id="central-preview" class="central-preview"></div><ol id="preview" class="preview-list"></ol>
+        <div id="appendix-preview" class="other-placement"></div><div id="park-preview" class="other-placement"></div>
+      </section>
+      <details class="panel decisions"><summary id="decisions-heading" style="cursor:pointer;font-size:15px;font-weight:650;color:var(--teal)">判断待ちの文を検討する（任意）</summary><p class="small-text muted" style="margin-top:7px">選択はまだ入れていません。メモだけ残すこともできます。</p><div id="decisions"></div></details>
+    </aside>
+  </div>
+  <footer class="footer">このブラウザに保存。Vault反映は書き出した決定を確認してから。<br>JSON は編集内容の再読込用、Markdown は決定を共有するためのメモです。ブラウザ外への送信はありません。</footer>
+</div>
+<dialog id="copy-dialog" aria-labelledby="copy-heading"><h2 id="copy-heading">書き出し本文</h2><p id="copy-help" class="small-text muted">本文を選択してコピーできます。</p><textarea id="copy-text" readonly aria-label="コピーする本文"></textarea><div class="dialog-buttons"><button id="select-copy" type="button">すべて選択</button><button id="close-copy" type="button">閉じる</button></div></dialog>
+<script id="board-data" type="application/json">__BOARD_DATA__</script>
+<script>
+'use strict';
+(() => {
+  const DATA = JSON.parse(document.getElementById('board-data').textContent);
+  const $ = id => document.getElementById(id);
+  const cardMap = new Map(DATA.cards.map(card => [card.id, card]));
+  const cardIds = DATA.cards.map(card => card.id);
+  const decisionIds = DATA.decisions.map(decision => decision.id);
+  const placements = {body:'本文',appendix:'付録',park:'保留'};
+  const STORAGE_KEY = 'v11-outline-board:' + DATA.version + ':' + DATA.manuscriptSha;
+  const history = [];
+  let state, dragId = null, saveTimer = null, storageBlocked = false;
+  const clone = value => JSON.parse(JSON.stringify(value));
+  const text = value => value == null ? '' : String(value);
+  function el(tag, className, content) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (content != null) node.textContent = text(content);
+    return node;
+  }
+  function button(label, handler, className) {
+    const node = el('button', className, label); node.type = 'button'; node.addEventListener('click', handler); return node;
+  }
+  function wiki(source) {
+    const path = text(source.path).replace(/\.md$/i,'');
+    return '[[' + path + (source.heading ? '#' + source.heading : '') + ']]';
+  }
+  function obsidianUrl(source) {
+    const file = text(source.path).replace(/\.md$/i,'') + (source.heading ? '#' + source.heading : '');
+    return 'obsidian://open?vault=obsidian-research&file=' + encodeURIComponent(file);
+  }
+  function makeInitial() {
+    return {centralMessage:'',preset:null,order:[...cardIds],cards:Object.fromEntries(DATA.cards.map(card => [card.id,{placement:card.defaultPlacement || 'body',claim:text(card.claim),memo:''}])),decisions:Object.fromEntries(DATA.decisions.map(decision => [decision.id,{choice:'',memo:''}]))};
+  }
+  function envelope() { return {format:'v11-outline-board',version:DATA.version,manuscriptSha:DATA.manuscriptSha,state:clone(state)}; }
+  function sameIds(got, expected) { return Array.isArray(got) && got.length === expected.length && new Set(got).size === expected.length && got.every(id => typeof id === 'string' && expected.includes(id)); }
+  function validString(value, max = 100000) { return typeof value === 'string' && value.length <= max; }
+  function object(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }
+  function validateImport(input) {
+    if (!object(input) || input.format !== 'v11-outline-board') throw new Error('このボードから保存した JSON を選んでください。');
+    if (input.version !== DATA.version || input.manuscriptSha !== DATA.manuscriptSha) throw new Error('原稿またはボードの版が違います。同じ版の JSON が必要です。');
+    const value = input.state;
+    if (!object(value) || !validString(value.centralMessage) || !sameIds(value.order,cardIds)) throw new Error('主張の並びに欠落・重複・未知の ID があります。');
+    if (value.preset !== null && !DATA.presets.some(preset => preset.id === value.preset)) throw new Error('未知の構成案が指定されています。');
+    if (!object(value.cards) || !sameIds(Object.keys(value.cards),cardIds)) throw new Error('カードの ID が一致しません。');
+    if (!object(value.decisions) || !sameIds(Object.keys(value.decisions),decisionIds)) throw new Error('判断項目の ID が一致しません。');
+    const next = makeInitial(); next.centralMessage=value.centralMessage; next.preset=value.preset; next.order=[...value.order];
+    for (const id of cardIds) {
+      const c=value.cards[id];
+      if (!object(c) || (typeof c.placement!=='string' || !Object.hasOwn(placements,c.placement)) || !validString(c.claim) || !validString(c.memo)) throw new Error('カード ' + id + ' の内容が不正です。');
+      next.cards[id]={placement:c.placement,claim:c.claim,memo:c.memo};
+    }
+    for (const decision of DATA.decisions) {
+      const d=value.decisions[decision.id];
+      if (!object(d) || !validString(d.choice) || !validString(d.memo) || (d.choice !== '' && !decision.options.includes(d.choice))) throw new Error('判断 ' + decision.id + ' の選択が不正です。');
+      next.decisions[decision.id]={choice:d.choice,memo:d.memo};
+    }
+    return next;
+  }
+  function notice(message, error=false) { $('notice').textContent=message; $('notice').classList.toggle('error',error); $('notice').hidden=false; }
+  function saved(message, error=false) { $('save-status').textContent=message; $('save-status').classList.toggle('error',error); }
+  function save() {
+    clearTimeout(saveTimer);
+    if(storageBlocked){saved('保存済みデータを保護中 · JSON 保存を使ってください',true);return;}
+    try { localStorage.setItem(STORAGE_KEY,JSON.stringify(envelope())); saved('このブラウザに保存済み ' + new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})); }
+    catch (_) { saved('保存できません · JSON 保存を使ってください',true); }
+  }
+  function scheduleSave() { saved('保存中…'); clearTimeout(saveTimer); saveTimer=setTimeout(save,250); }
+  function checkpoint() {
+    const snapshot=JSON.stringify(state);
+    if (history.at(-1) !== snapshot) history.push(snapshot);
+    if (history.length>40) history.shift();
+    $('undo').disabled=history.length===0;
+  }
+  function edit(mutator, full=true) { checkpoint(); mutator(); if(full) render(); else renderPreview(); save(); }
+  function bindText(node, read, write) {
+    node.value=read();
+    let before=node.value, recorded=false;
+    node.addEventListener('focus',()=>{before=node.value;recorded=false;});
+    node.addEventListener('input',()=>{
+      if(!recorded && node.value!==before){checkpoint();recorded=true;}
+      write(node.value);if(node.classList.contains('claim-input'))fitClaim(node);renderPreview();scheduleSave();
+    });
+    node.addEventListener('blur',()=>{if(node.value!==before)save();});
+  }
+  function fitClaim(node){node.style.height='auto';node.style.height=Math.max(65,node.scrollHeight+2)+'px';}
+  function moveCard(id, nextIndex) {
+    const old=state.order.indexOf(id); const destination=Math.max(0,Math.min(state.order.length-1,nextIndex));
+    if(old===destination)return;
+    edit(()=>{state.order.splice(old,1);state.order.splice(destination,0,id);});
+  }
+  function renderPresets() {
+    const host=$('presets');host.replaceChildren();
+    for(const preset of DATA.presets){
+      const label=el('label','preset'+(state.preset===preset.id?' selected':''));
+      const input=el('input');input.type='radio';input.name='outline-preset';input.value=preset.id;input.checked=state.preset===preset.id;
+      input.addEventListener('change',()=>edit(()=>{
+        state.preset=preset.id;
+        const known=preset.order.filter(id=>cardMap.has(id));
+        state.order=[...new Set(known),...state.order.filter(id=>!known.includes(id))];
+      }));
+      const title=el('span','preset-title');title.append(input,document.createTextNode(preset.title));label.append(title,el('p','',preset.description));
+      if(preset.tradeoff)label.append(el('p','tradeoff',preset.tradeoff));host.append(label);
+    }
+    const preset=DATA.presets.find(item=>item.id===state.preset);
+    $('preset-label').textContent=preset?'出発点: '+preset.title+' · 並びは自由に編集できます':'未選択 · 現行稿の順を仮表示';
+  }
+  function renderCard(card,index) {
+    const current=state.cards[card.id];
+    const article=el('article','card');article.dataset.id=card.id;article.dataset.placement=current.placement;
+    const top=el('div','card-top'),heading=el('div');heading.append(el('span','card-id',card.id+(card.section?' · '+card.section:'')+(card.sourceStart?' · 原稿 '+card.sourceStart+(card.sourceEnd?'–'+card.sourceEnd:'')+' 行':'')),el('h3','',card.title));
+    const moves=el('div','move-tools');
+    const handle=el('span','drag-handle','↕');handle.draggable=true;handle.title='ドラッグで並べ替える';handle.setAttribute('aria-hidden','true');
+    handle.addEventListener('dragstart',event=>{dragId=card.id;event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',card.id);article.classList.add('dragging');});
+    handle.addEventListener('dragend',()=>{dragId=null;document.querySelectorAll('.dragging,.drop-target').forEach(node=>node.classList.remove('dragging','drop-target'));});
+    const up=button('↑',()=>moveCard(card.id,index-1));up.disabled=index===0;up.setAttribute('aria-label',card.title+' を上へ');
+    const down=button('↓',()=>moveCard(card.id,index+1));down.disabled=index===state.order.length-1;down.setAttribute('aria-label',card.title+' を下へ');moves.append(handle,up,down);top.append(heading,moves);
+    article.addEventListener('dragover',event=>{if(dragId&&dragId!==card.id){event.preventDefault();event.dataTransfer.dropEffect='move';article.classList.add('drop-target');}});
+    article.addEventListener('dragleave',event=>{if(!article.contains(event.relatedTarget))article.classList.remove('drop-target');});
+    article.addEventListener('drop',event=>{event.preventDefault();article.classList.remove('drop-target');const id=dragId;if(id&&cardMap.has(id)&&id!==card.id)moveCard(id,state.order.indexOf(card.id));dragId=null;});
+    article.append(top);
+    const controls=el('div','card-controls'),select=el('select');select.setAttribute('aria-label',card.title+' の置き場所');
+    for(const [value,label] of Object.entries(placements)){const option=el('option','',label);option.value=value;select.append(option);}select.value=current.placement;
+    select.addEventListener('change',()=>edit(()=>{current.placement=select.value;}));controls.append(select);
+    const positionLabel=el('label','position-control','順番'),position=el('select','position-select');position.id='position-'+card.id;position.setAttribute('aria-label',card.title+' の移動先の位置');
+    for(let at=0;at<state.order.length;at++){const option=el('option','',(at+1)+' / '+state.order.length);option.value=String(at);position.append(option);}position.value=String(index);positionLabel.append(position);controls.append(positionLabel,el('span','grade',card.grade));
+    position.addEventListener('change',()=>{const destination=Number(position.value);moveCard(card.id,destination);notice('「'+card.title+'」を '+(destination+1)+' 番目へ移動しました。');requestAnimationFrame(()=>{const moved=$('position-'+card.id);if(moved){moved.closest('article').scrollIntoView({block:'center',behavior:'smooth'});moved.focus({preventScroll:true});}});});
+    if(card.flags.length)controls.append(el('span','flag-badge','原稿の監査 '+card.flags.length));const edited=el('span','flag-badge user-edit-badge','編集済み · 未照合');edited.hidden=current.claim!==text(card.claim)?false:true;edited.title='この文は要約案から編集されています。監査は編集後の文には適用していません。';controls.append(edited);article.append(controls);
+    const claimLabel=el('label','field-label','このカードで伝える文');claimLabel.htmlFor='claim-'+card.id;
+    const claim=el('textarea','claim-input');claim.id=claimLabel.htmlFor;claim.rows=2;bindText(claim,()=>current.claim,value=>{current.claim=value;edited.hidden=value===text(card.claim);});
+    const memoLabel=el('label','field-label','自分のメモ');memoLabel.htmlFor='memo-'+card.id;
+    const memo=el('textarea','memo-input');memo.id=memoLabel.htmlFor;memo.rows=2;memo.placeholder='残したい理由、削る部分、つなぎ方など';bindText(memo,()=>current.memo,value=>{current.memo=value;});article.append(claimLabel,claim);
+    const details=el('details');details.append(el('summary','',card.flags.length?'証拠・成立条件・監査 '+card.flags.length+' 件を見る':'証拠・成立条件・元の文を見る'));
+    const content=el('div','evidence-content'),scope=el('div');content.append(memoLabel,memo);scope.append(el('div','evidence-label','成立条件 / 言える範囲'),el('p','scope',card.scope));content.append(scope);
+    if(card.figures.length){const figures=el('div','figures');card.figures.forEach(figure=>figures.append(el('span','figure-tag',figure)));content.append(figures);}
+    const original=el('div');original.append(el('div','evidence-label','元の記述（編集せず保持）'),el('p','original',card.original));content.append(original);
+    for(const flag of card.flags){const block=el('div','flag');block.append(el('h4','',flag.id+' · '+flag.title),el('p','',flag.detail));if(flag.suggestion)block.append(el('p','suggestion','文案の扱い: '+flag.suggestion));content.append(block);}
+    const sources=el('div');sources.append(el('div','evidence-label','Vault の根拠'));
+    const list=el('ul','sources');for(const source of card.sources){const item=el('li','source'),line=el('div','source-line');const link=el('a','',source.label||source.heading||source.path);link.href=obsidianUrl(source);line.append(link,button('リンクをコピー',()=>copyText(wiki(source)),'small'));item.append(line,el('span','wiki',wiki(source)));list.append(item);}sources.append(list);content.append(sources);details.append(content);article.append(details);return article;
+  }
+  function renderCards(){const host=$('cards');host.replaceChildren();state.order.forEach((id,index)=>host.append(renderCard(cardMap.get(id),index)));requestAnimationFrame(()=>host.querySelectorAll('.claim-input').forEach(fitClaim));}
+  function renderPreview(){
+    const counts={body:0,appendix:0,park:0};state.order.forEach(id=>counts[state.cards[id].placement]++);
+    $('counts').textContent='本文 '+counts.body+' / 付録 '+counts.appendix+' / 保留 '+counts.park;
+    $('central-preview').textContent=state.centralMessage.trim()||'一番伝えたいことは、まだ未記入です。';
+    const host=$('preview');host.replaceChildren();
+    for(const id of state.order){const current=state.cards[id],card=cardMap.get(id);if(current.placement!=='body')continue;
+      const item=el('li','preview-item');item.append(el('h3','',card.title),el('p','',current.claim.trim()||'（伝える文は未記入）'),el('p','preview-scope',card.scope));
+      if(card.flags.length)item.append(el('p','preview-flag','監査の確認事項 '+card.flags.length+' 件'));if(current.claim!==text(card.claim))item.append(el('p','preview-flag','編集済みの文 · 証拠との対応は未照合'));host.append(item);
+    }
+    if(!counts.body)host.append(el('li','empty','本文に置くカードを選ぶと、ここに流れが表示されます。'));
+    for(const type of ['appendix','park']){const target=$(type+'-preview');target.replaceChildren(el('strong','',placements[type]+' · '));const titles=state.order.filter(id=>state.cards[id].placement===type).map(id=>cardMap.get(id).title);target.append(document.createTextNode(titles.join(' / ')||'なし'));}
+  }
+  function renderDecisions(){
+    const host=$('decisions');host.replaceChildren();
+    for(const decision of DATA.decisions){const current=state.decisions[decision.id],block=el('section','decision');block.append(el('h3','',decision.id+' · '+decision.title),el('p','status-text',decision.status));
+      const options=el('div','decision-options');options.setAttribute('role','radiogroup');options.setAttribute('aria-label',decision.title);
+      for(const choice of decision.options){const label=el('label','decision-option'),input=el('input');input.type='radio';input.name='decision-'+decision.id;input.value=choice;input.checked=current.choice===choice;input.addEventListener('change',()=>edit(()=>{current.choice=choice;}));label.append(input,el('span','',choice));options.append(label);}block.append(options);
+      if(current.choice)block.append(button('選択を未定に戻す',()=>edit(()=>{current.choice='';}),'small decision-clear'));
+      const memo=el('textarea');memo.rows=2;memo.placeholder='判断の理由・保留中の考え';memo.setAttribute('aria-label',decision.title+' のメモ');bindText(memo,()=>current.memo,value=>{current.memo=value;});block.append(memo);host.append(block);
+    }
+  }
+  function render(){renderPresets();renderCards();renderPreview();renderDecisions();$('central-message').value=state.centralMessage;$('undo').disabled=history.length===0;}
+  function markdown(){
+    const preset=DATA.presets.find(item=>item.id===state.preset);
+    const lines=['# V11 骨組みの決定メモ','', '作成: '+new Date().toLocaleString('ja-JP')+' / ボード版: '+DATA.version,'原稿 SHA-256: `'+DATA.manuscriptSha+'`','監査: '+wiki(DATA.auditNote),'','> 骨組みの下書き。本文の並びは説明順であり、因果関係の証明ではない。Vault の原稿には未反映。','','## 一番伝えたいこと','',state.centralMessage.trim()||'未記入','','構成案の出発点: '+(preset?preset.title:'未選択（現行稿を出発点に編集）'),'','## 判断待ちの選択',''];
+    for(const decision of DATA.decisions){const current=state.decisions[decision.id];lines.push('### '+decision.id+' '+decision.title,'','選択: '+(current.choice||'未定'));if(current.memo.trim())lines.push('','理由・メモ: '+current.memo.trim());lines.push('');}
+    for(const type of ['body','appendix','park']){lines.push('## '+placements[type],'');const ids=state.order.filter(id=>state.cards[id].placement===type);if(!ids.length)lines.push('なし','');
+      ids.forEach((id,index)=>{const card=cardMap.get(id),current=state.cards[id];lines.push('### '+(index+1)+'. '+card.title+' ['+id+']','',current.claim.trim()||'（未記入）','','成立条件: '+card.scope,'証拠の格: '+card.grade);if(current.claim!==text(card.claim))lines.push('編集済みの文：証拠との対応は未照合。');if(card.sourceStart)lines.push('原稿対応: '+card.section+' / '+card.sourceStart+'–'+card.sourceEnd+' 行');if(card.figures.length)lines.push('図表: '+card.figures.join('、'));if(current.memo.trim())lines.push('','メモ: '+current.memo.trim());lines.push('','根拠:');card.sources.forEach(source=>lines.push('- '+wiki(source)));if(card.flags.length){lines.push('','監査の関連項目（詳細は監査ノート）:');card.flags.forEach(flag=>lines.push('- '+flag.id+' '+flag.title));}lines.push('');});
+    }
+    return lines.join('\n');
+  }
+  function filename(extension){return 'V11_骨組み_'+new Date().toLocaleDateString('sv-SE')+'.'+extension;}
+  function download(content, name, mime){
+    const url=URL.createObjectURL(new Blob([content],{type:mime}));const anchor=el('a');anchor.href=url;anchor.download=name;document.body.append(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);notice(name+' を書き出しました。');
+  }
+  function showCopyFallback(value){$('copy-text').value=value;$('copy-help').textContent='自動コピーが使えない場合は、本文を選択して Ctrl+C / ⌘C でコピーしてください。';const dialog=$('copy-dialog');if(!dialog.open)dialog.showModal();$('copy-text').focus();$('copy-text').select();}
+  async function copyText(value){try{if(!navigator.clipboard?.writeText)throw new Error();await navigator.clipboard.writeText(value);notice('コピーしました。');}catch(_){showCopyFallback(value);}}
+  $('undo').addEventListener('click',()=>{if(!history.length)return;state=JSON.parse(history.pop());render();save();notice('直前の変更を元に戻しました。');});
+  $('export-md').addEventListener('click',()=>download(markdown(),filename('md'),'text/markdown;charset=utf-8'));
+  $('copy-md').addEventListener('click',()=>copyText(markdown()));
+  $('export-json').addEventListener('click',()=>download(JSON.stringify(envelope(),null,2),filename('json'),'application/json;charset=utf-8'));
+  $('import-json').addEventListener('click',()=>$('import-file').click());
+  $('import-file').addEventListener('change',async event=>{
+    const file=event.target.files[0];event.target.value='';if(!file)return;
+    try{if(file.size>4*1024*1024)throw new Error('JSON が大きすぎます（上限 4 MB）。');const next=validateImport(JSON.parse(await file.text()));storageBlocked=false;edit(()=>{state=next;});notice('JSON を読み込みました。「元に戻す」で読込前へ戻せます。');}
+    catch(error){notice('読み込めませんでした: '+(error instanceof SyntaxError?'JSON の形式が壊れています。':error.message)+' 現在の編集は保持しています。',true);}
+  });
+  $('select-copy').addEventListener('click',()=>{$('copy-text').focus();$('copy-text').select();});$('close-copy').addEventListener('click',()=>$('copy-dialog').close());
+  window.addEventListener('pagehide',save);
+  $('version').textContent=DATA.version+' · 原稿 '+text(DATA.manuscriptSha).slice(0,10);
+  $('audit-link').href=obsidianUrl(DATA.auditNote);$('audit-link').title=wiki(DATA.auditNote);
+  state=makeInitial();let loaded=false,loadError=false;
+  try{const stored=localStorage.getItem(STORAGE_KEY);if(stored){state=validateImport(JSON.parse(stored));loaded=true;}}catch(error){loadError=true;storageBlocked=true;notice('保存済みデータを読み込めませんでした。保存領域を上書きせず、初期表示に戻しています。手元の JSON から再読込できます。',true);}
+  bindText($('central-message'),()=>state.centralMessage,value=>{state.centralMessage=value;});render();
+  if(loadError)saved('保存データの読込に失敗 · JSON 保存を使ってください',true);else if(loaded)saved('このブラウザの前回の編集を復元しました');else save();
+})();
+</script>
+</body>
+</html>
