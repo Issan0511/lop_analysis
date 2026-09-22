@@ -305,9 +305,14 @@ def read_per_task(arm: Arm, seed: int) -> dict:
     for _, r in df.iterrows():
         d = {}
         for k in ("hit99", "hit999", "tc", "steps", "stop_step",
-                  "acc_at_hit_plus_500", "min_correct_after_hit", "memo_acc", "online_acc"):
-            if k in df.columns and pd.notna(r[k]):
-                d[k] = float(r[k])
+                  "acc_at_hit_plus_500",          # the engine's name before commit 0a9c457
+                  "correct_at_hit_plus_500", "hit_plus_500_observed",
+                  "min_correct_after_hit", "memo_acc", "online_acc"):
+            if k in df.columns and pd.notna(r[k]) and r[k] != "":
+                try:
+                    d[k] = float(r[k])
+                except (TypeError, ValueError):
+                    pass
         d["diverged"] = bool(pd.isna(r.get("acc", 0.0)))
         out[int(r["task"])] = d
     return out
@@ -715,9 +720,13 @@ def trace_tables(tr: Path, prov: dict, spt_default: int = 30000) -> dict:
         steps = (tc_end - tce[t - 1]) if (t - 1) in tce else last
         tc0 = tc_end - steps
         rec["tc_repaired"] = tc0 + step
+        stored = rec["tc"].astype(np.int64)
         rec["_meta"] = {
             "last_step": last, "steps": int(steps), "tc_start": int(tc0), "tc_end": int(tc_end),
             "steps_vs_last_step_ok": bool(steps == last),
+            # engines after commit 0a9c457 write the per-row tc themselves; before it they
+            # wrote the task's final tc on every row.  Either way the repair is independent.
+            "tc_column_already_per_row": bool(np.array_equal(stored, rec["tc_repaired"])),
             "tc0_expected": (spt * (t - 1)) if not stopped else None,
             "tc0_ok": (bool(tc0 == spt * (t - 1)) if not stopped and prov.get("restore") is None
                        else None),
@@ -767,6 +776,7 @@ def trace_phase_rows(arm: Arm, seed: int, tt: dict | None = None) -> list:
             "task_steps": meta["steps"], "tc_start": meta["tc_start"], "tc_end": meta["tc_end"],
             "tc_start_expected_ok": meta["tc0_ok"],
             "steps_vs_last_step_ok": meta["steps_vs_last_step_ok"],
+            "tc_column_already_per_row": meta["tc_column_already_per_row"],
             "hit99": h99, "hit999": h999, "hit_full": hfull,
             "hit999_tc": tc_at(h999) if h999 >= 0 else -1,
             "horizon_step": last,
@@ -794,6 +804,16 @@ def trace_phase_rows(arm: Arm, seed: int, tt: dict | None = None) -> list:
 # ==========================================================================
 # forks
 # ==========================================================================
+
+def fint(x, default: int = -1) -> int:
+    """forks.csv writes "" (not a number) where a slot has no value, so int() needs a guard."""
+    try:
+        if x is None or (isinstance(x, float) and not np.isfinite(x)) or x == "":
+            return default
+        return int(float(x))
+    except (TypeError, ValueError):
+        return default
+
 
 def fork_trace_hits(bundle: Path, act: str, cond: str, seed: int) -> dict:
     """hit99 / hit999 / hit_full and the OBSERVATION HORIZON, from the bundle's own trace.
@@ -867,11 +887,11 @@ def fork_rows(name: str, fdir: Path, main: Arm, Qlam: dict, seeds) -> tuple:
             row = gb.iloc[0]
             bundle = fdir / "_bundles" / f"t{t:02d}_{br}"
             tr = fork_trace_hits(bundle, main.act, main.cond, seed)
-            h999 = int(tr["hit999"]) if tr.get("trace") else int(row.get("hit999", -1))
-            h99 = int(tr["hit99"]) if tr.get("trace") else int(row.get("hit99", -1))
+            h999 = int(tr["hit999"]) if tr.get("trace") else fint(row.get("hit999"))
+            h99 = int(tr["hit99"]) if tr.get("trace") else fint(row.get("hit99"))
             hfull = int(tr["hit_full"]) if tr.get("trace") else -1
-            horizon = int(tr["horizon"]) if tr.get("trace") else int(
-                row.get("bundle_steps", CENSOR) or CENSOR)
+            horizon = int(tr["horizon"]) if tr.get("trace") else fint(
+                row.get("bundle_steps"), CENSOR)
             # hit999 is censored at 30,000 (a slot that never hits keeps the bundle running);
             # hit_full / hit99 are censored at the bundle's own last step
             per[br] = {"hit999": (h999, CENSOR), "hit99": (h99, horizon),
@@ -885,9 +905,12 @@ def fork_rows(name: str, fdir: Path, main: Arm, Qlam: dict, seeds) -> tuple:
             r[f"stop_step_{br}"] = row.get("stop_step", np.nan)
             r[f"bundle_steps_{br}"] = row.get("bundle_steps", np.nan)
             r[f"correct_at_stop_{br}"] = row.get("correct_at_stop", np.nan)
+            # the engine only fills the hit+500 count when that eval really happened
+            r[f"stop_observed_{br}"] = row.get("stop_observed", np.nan)
             r[f"min_correct_after_hit_{br}"] = row.get("min_correct_after_hit", np.nan)
             r[f"memo_acc_{br}"] = row.get("memo_acc", np.nan)
             r[f"tc_{br}"] = row.get("tc", np.nan)
+            r[f"slot_status_{br}"] = row.get("status", "")
             r[f"parent_sha256_{br}"] = row.get("parent_sha256", "")
             # --- the band ledger at this branch's stop and end snapshots
             Q, lam = Qlam[seed]
@@ -1097,6 +1120,7 @@ def main() -> None:
                     errs.append(abs(float(rec["sig_med"][j]) - S["sig_med_lo"][t]))
                 sig_err = float(max(errs)) if errs else np.nan
                 tc_bad = [q["task"] for q in tpr if q["tc_start_expected_ok"] is False]
+                tc_raw_ok = all(q["tc_column_already_per_row"] for q in tpr) if tpr else None
                 st_bad = [q["task"] for q in tpr if not q["steps_vs_last_step_ok"]]
                 diag_rows.append({
                     "arm": n, "seed": seed, "T_present": S["T"],
@@ -1112,6 +1136,7 @@ def main() -> None:
                     "V_comp_max": float(np.nanmax(np.abs(S["V"][:, BANDNAMES.index("comp")]))),
                     "sigma_med_vs_trace_max_abs": sig_err,
                     "tc_repair_bad_tasks": ";".join(map(str, tc_bad)),
+                    "trace_tc_column_already_per_row": tc_raw_ok,
                     "steps_vs_last_step_bad_tasks": ";".join(map(str, st_bad)),
                     "nonfinite_snapshots": ";".join(map(str, S["nonfinite"])),
                 })
