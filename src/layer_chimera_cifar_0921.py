@@ -528,7 +528,8 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         hi: float = 3.0, progress=None, cifar: RC.Cifar10 | None = None,
         debug: dict | None = None, perturb: list[float] | None = None,
         nan_slot: int | None = None, snapshots: bool = True, checkpoint: bool = False,
-        resume: bool = False, graph: bool = True, eps: float = 1e-8) -> dict:
+        resume: bool = False, graph: bool = True, eps: float = 1e-8,
+        freeze_steps: int = 0, freeze_where: str = "none") -> dict:
     """Train R = len(seeds) * len(conds) runs in lockstep and write their rows/hists/snapshots.
 
     `arm` is a cell name from CELLS; the per_task rows keep the parent engine's column name
@@ -547,7 +548,13 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
     without a host round trip per step.
 
     `eps` is Adam's epsilon (le_eps_cifar_0922 §1); the default 1e-8 is the parent's constant,
-    so the default path is the parent's step bit for bit (check S1 of that spec)."""
+    so the default path is the parent's step bit for bit (check S1 of that spec).
+
+    `freeze_steps` > 0 takes W1, b1, W2, b2 out of the optimizer (parameter and Adam moments
+    alike) for that many updates of every task -- at the switch (`freeze_where="switch"`, the
+    task's first updates) or in the middle (`"mid"`, centred on the task); W3, b3 always train.
+    switch_push_cifar_0922 §2.  freeze_steps = 0 leaves every parameter on the parent's own
+    update expression, so the default path stays bit for bit the parent's (check S1)."""
     t_start = time.time()
     progress = progress or (lambda m: print(m, flush=True))   # a redirected stdout is block-buffered
     act = make_act(arm, c, beta, lo, hi)
@@ -579,7 +586,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
     step_ms = float("nan")
     meta = {"arm": arm, "seeds": seeds, "conds": conds, "epochs": epochs, "lr": lr, "c": c,
             "beta": beta, "lo": lo, "hi": hi, "perturb": perturb, "nan_slot": nan_slot,
-            "eps": eps}
+            "eps": eps, "freeze_steps": freeze_steps, "freeze_where": freeze_where}
     ck = out / "ckpt.pt"
     git_states, resumed, t_first = [git_state()], [], 1
     if resume and ck.exists():
@@ -617,6 +624,18 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
 
     # ---- one training step on static tensors (eager, or captured once and replayed)
     b1, b2 = 0.9, 0.999
+    if freeze_where not in ("none", "switch", "mid"):
+        raise SystemExit(f"freeze_where: {freeze_where}")
+    if bool(freeze_steps) != (freeze_where != "none"):
+        raise SystemExit("freeze_steps and freeze_where must be set together")
+    if freeze_steps > spt:
+        raise SystemExit(f"freeze_steps {freeze_steps} > steps per task {spt}")
+    FREEZE_IDX = (0, 1, 2, 3)                        # W1, b1, W2, b2 (W3, b3 always train)
+    w_first = 0 if freeze_where == "switch" else (spt - freeze_steps) // 2
+    frz = torch.ones((), device=device)              # 1 = update as usual, 0 = frozen
+    dec1 = torch.full((), b1, device=device)         # frozen: decay 1 instead of beta
+    dec2 = torch.full((), b2, device=device)
+    n_frozen = 0
     static_idx = torch.zeros(R, BATCH, dtype=torch.long, device=device)
     Ydev = torch.zeros(R, N_IMAGES, dtype=torch.long, device=device)
     inv_c1 = torch.zeros((), device=device)          # x / c (python float) == x * float32(1/c), bit for bit
@@ -639,10 +658,18 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             bad = ~torch.isfinite(lossv)
             bad_step.copy_(torch.where((bad_step < 0) & bad, step_t, bad_step))
             step_t.add_(1)
-            for p, gr, mi, vi in zip(P, grads, adam_m, adam_v):
-                mi.mul_(b1).add_(gr, alpha=1 - b1)
-                vi.mul_(b2).addcmul_(gr, gr, value=1 - b2)
-                p.sub_(lr * (mi * inv_c1) / ((vi * inv_c2).sqrt() + eps))
+            for i, (p, gr, mi, vi) in enumerate(zip(P, grads, adam_m, adam_v)):
+                if freeze_steps and i in FREEZE_IDX:
+                    # frz = 1 -> every factor is an exact 1.0, so these are the parent's own
+                    # three lines bit for bit (check S2a); frz = 0 -> decay 1 and increment 0,
+                    # so p, mi and vi keep their bits (check S2b)
+                    mi.mul_(dec1).add_(gr * frz, alpha=1 - b1)
+                    vi.mul_(dec2).addcmul_(gr * frz, gr, value=1 - b2)
+                    p.sub_(frz * (lr * (mi * inv_c1) / ((vi * inv_c2).sqrt() + eps)))
+                else:
+                    mi.mul_(b1).add_(gr, alpha=1 - b1)
+                    vi.mul_(b2).addcmul_(gr, gr, value=1 - b2)
+                    p.sub_(lr * (mi * inv_c1) / ((vi * inv_c2).sqrt() + eps))
             act.update(z1.detach(), z2.detach())
 
     use_graph = graph and device.type == "cuda" and debug is None
@@ -652,7 +679,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         # put back in place afterwards (the graph keeps pointers to these very tensors)
         keep = [q.detach().clone() for q in (*P, *adam_m, *adam_v, acc_sum, bad_step, step_t, last_hit)]
         keep_act = act.state()
-        inv_c1.fill_(1.0); inv_c2.fill_(1.0)
+        inv_c1.fill_(1.0); inv_c2.fill_(1.0); frz.fill_(1.0); dec1.fill_(b1); dec2.fill_(b2)
         side = torch.cuda.Stream()
         side.wait_stream(torch.cuda.current_stream())
         with torch.cuda.stream(side):
@@ -690,6 +717,15 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                 tc += 1
                 inv_c1.fill_(1.0 / (1 - b1 ** tc))
                 inv_c2.fill_(1.0 / (1 - b2 ** tc))
+                k = e * STEPS_PER_EPOCH + j                  # this task's update index
+                if freeze_steps:
+                    on = not (w_first <= k < w_first + freeze_steps)
+                    frz.fill_(1.0 if on else 0.0)
+                    dec1.fill_(b1 if on else 1.0)
+                    dec2.fill_(b2 if on else 1.0)
+                    n_frozen += not on
+                    if debug is not None:
+                        debug.setdefault("frz", []).append(1.0 if on else 0.0)
                 act.begin_step(R, BATCH, device)
                 if cg is not None:
                     cg.replay()
@@ -756,6 +792,10 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             "n_images": N_IMAGES, "train_n": RC.TRAIN_N, "dims": list(DIMS), "n_classes": N_CLASSES,
             "sna_c": c, "sna_beta": beta, "alpha_lo": lo, "alpha_hi": hi, "intervention": "none",
             "optimizer": "adam", "adam_eps": eps, "adam_betas": [b1, b2], "weight_decay": 0.0,
+            "freeze": {"steps": freeze_steps, "where": freeze_where, "params": ["W1", "b1", "W2", "b2"],
+                       "window_first_update": w_first if freeze_steps else None,
+                       "frozen_updates_total": n_frozen,
+                       "frozen_updates_per_task": n_frozen / max(n_tasks - t_first + 1, 1)},
             "data_sha256": cifar.sha256,
             "subset_sha256": {str(s): hashlib.sha256(
                 np.sort(RC.subset_idx(s).numpy()).tobytes()).hexdigest() for s in seeds},
@@ -806,6 +846,8 @@ def main() -> None:
     ap.add_argument("--alpha-lo", type=float, default=0.005)
     ap.add_argument("--alpha-hi", type=float, default=3.0)
     ap.add_argument("--eps", type=float, default=1e-8, help="Adam epsilon (le_eps_cifar_0922)")
+    ap.add_argument("--freeze-steps", type=int, default=0, help="switch_push_cifar_0922 §2")
+    ap.add_argument("--freeze-where", default="none", choices=["none", "switch", "mid"])
     ap.add_argument("--out", default=None, help="default results/<experiment>/<cell>")
     ap.add_argument("--device", default="auto")
     ap.add_argument("--threads", type=int, default=2, help="torch cpu threads (eval: eff_rank, histograms)")
@@ -816,7 +858,7 @@ def main() -> None:
     out = Path(a.out) if a.out else OUT_ROOT / a.cell
     run(a.cell, parse_ints(a.seeds), a.conds.split(","), a.tasks, a.epochs, device, out,
         c=a.c, beta=a.beta, lo=a.alpha_lo, hi=a.alpha_hi, checkpoint=True, resume=not a.no_resume,
-        eps=a.eps)
+        eps=a.eps, freeze_steps=a.freeze_steps, freeze_where=a.freeze_where)
 
 
 if __name__ == "__main__":
