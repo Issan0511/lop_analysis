@@ -38,11 +38,11 @@ OU-F・周期的書き込み・残差書き込み・収束後成長を競合す�
 | SNA_abab | Snake 適応 α | std | abab | 0–9 | 10 | 50 | なし | GPU |
 | LR_abab_fork | leaky | std | fork | 0–9 | 10 | 1 | 0.999,500 | GPU、主走の後。§1.5 |
 | LR_iid_fork | leaky | std | fork | 0–9 | 10 | 1 | 0.999,500 | GPU、t = 48 だけ |
-| LR_abab_stop | leaky | std | abab | 0–4 | 1 | 50 | 0.999,500 | CPU eager、seed 直列 |
-| LR_iid_stop | leaky | std | iid | 0–4 | 1 | 50 | 0.999,500 | CPU |
+| LR_abab_stop | leaky | std | abab | 0–4 | 1 | 50 | 0.999,500 | **GPU eager R=1**、seed 直列（`chain` stage。CPU では 1 画像の argmax の反転で課題長が 500 ずれて E-stop15 と一致しない: S5b） |
+| LR_iid_stop | leaky | std | iid | 0–4 | 1 | 50 | 0.999,500 | 同上 |
 | （外部参照）IID R=20 | leaky / Snake | raw+std | iid | 0–9 | 20 | 50 | なし | 親の走（`obsidian-research-data/rlcifar_mlp_battle_0918/`）。配置が違うので bit 一致は仮定せず、差は S1d で記録 |
 
-GPU 5 ジョブ並列（le_eps の実測は 4 並列で 3 ms/step・82 分/腕。trace 込みで S7 で測り直す）。stop 連結は 1 課題 2,000–6,000 更新なので CPU（再生の実測 1.2 ms/step）で seed 1 本 ≈ 5 分、2 腕 × 5 seed を 2 プロセス（8 スレッドずつ）。fork は 20 束 × ≤ 30,000 更新（実際は最遅スロットの hit999 + 500 まで）。AAAA_stop と SNA の stop は無し（Codex: 人工境界の残りを捨てる意味が無い／leaky が固まってから）。
+GPU 5 ジョブ並列（S7 の実測: trace 込みで R=10 単独 0.82 ms/step、3 本共有で 2.62 → 5 並列の見積り 4.37 ms/step ≈ 1.8 時間）。stop 連結は GPU の R=1 eager で seed 1 本 1.7 分、2 腕で 17 分（主走と並走）。fork は 20 束 × ≤ 30,000 更新（実際は最遅スロットの hit999 + 500 まで）。主走の保存 ≈ 13 GB。AAAA_stop と SNA の stop は無し（Codex: 人工境界の残りを捨てる意味が無い／leaky が固まってから）。
 
 ## 3. 測るもの（`analysis/altlabels_cifar_0923/`）
 
@@ -77,6 +77,7 @@ GPU 5 ジョブ並列（le_eps の実測は 4 並列で 3 ms/step・82 分/腕�
 - `SAVINGS` かつ hit999_A/hit999_C の seed 中央値 < 0.5 → `STRONG_SAVINGS`（観測値か打ち切り上限で確定する場合だけ）
 - 加えて hit999_A の中央値 ≤ 1,800（fresh 網 1,767 の次の評価点）かつ A < C → `FAST_REVISIT`
 副: t = 2, 10, 20, 30, 40 の同じ量の時系列、B 継続対照（hit は 100 で stop 600 になるはず）、LR_iid の next 対 C（fresh 同士のばらつき）。fork 点を独立標本として合算しない。
+頑健性: hit999（正解数 ≥ 1,199）は 1 画像で数百更新動く刃の上の統計量（検査の smoke: seed 0 課題 1 は更新 1,700–1,900 で 1,199 のまま、2,000 で 1,200。R=1 の再生は 2,000、R=10 は 1,700 と報告する）。登録は hit999 のまま、`hit_full`（1,200/1,200 に最初に達する更新）と hit99 でも同じ判定を出して併記する。
 
 **Q5 幅**（LR_abab, t50, 副）: σ_med の seed 中央値 < 60.1（固定復帰 20.3 と IID 82.5 の分散の中点 60.08）→ `LOWER_WIDTH_SIDE`、以上 → `IID_WIDTH_SIDE`。記録: t25 を 47.7（64.3 は外挿の代理）で、V_top(50)/V_top,iid(50)（境界なし）、mid1 の分散。
 
@@ -135,4 +136,6 @@ Claude の理由: 遅い帯の「fresh」な部分は写像 H が課題ごとに
 ## 8. 記録
 
 - 00:40 草案。01:1x Codex（gpt-6-astra、xhigh、read-only、4,245 トークン相当の返答 347 行）の批評: 設計の欠陥 8 件（R=20 対 R=10・「有界」の名の付け過ぎ・Q4 の連言・AAAA_stop・stop の乱数消費規則 ほか）、閾値の検算（0.077/0.059/0.13/0.0636/60.1/47.7/29.4 は算術どおり、0.5/1.5/1,800/0.80 は運用値、top V の 0.5 は導出不能 → 登録外）、S 検査の作り直し、予測列、削る順（ABC50 → AAAA_stop → Snake → AAAA の seed → fork 点 → stop の seed）。v2 に反映: IID の同配置対照を追加、判定名を測ったものに、Q1 を周期平均の傾きに、Q4 を t48 の対に、fork を同配置の束に、stop を再生規則に、ABC を 12 課題に、AAAA_stop を削除。
-- 01:2x v2 確定。実装は Opus（同時進行、修正点は 01:1x に送付）。Codex には実装後の diff と checks.json の独立レビューをさせてから起動する。
+- 01:2x v2 確定。実装は Opus（同時進行、修正点は 01:1x に送付）。Codex には実装後の diff と checks.json の独立レビューをさせる（本走と並走。致命的な指摘が出たら止めて走り直す）。
+- 01:5x Opus 実装完了（commit b96e800–891fca2）。checks.json 20/20: S1a 親の未改変スクリプトと bit 一致（行・30 スナップショット・ckpt の P/m/v/tc）、S1b/c、S1d 外部参照 R=20 との最大絶対差 0.63（同配置対照 LR_iid が必要だった）、S2a–f、S3a、S4a（A 束が主走の課題 3 を 260 行の trace で再現）、S4b、S5（E-stop15 と 15 課題厳密一致、n1 相対差 2e−16）、S6、S7。実装上の逸脱: stop 連結は CUDA R=1（§2）、`chain` stage 追加、`tc` は provenance と trace に（per_task.csv には stop のときだけ）。**予測固定前に見えてしまった観測**: 検査 S4 の smoke fork（t = 2）で A の hit999 1,000–2,000・fresh C 1,700–2,700・B 継続は 100（全 10 seed）。P8/P9 は変えていない（登録は t = 48）。
+- spec を commit して sha256 を `results/altlabels_cifar_0923/PREDICTIONS.sha256` に記録してから起動。
