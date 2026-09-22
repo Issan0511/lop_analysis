@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """付録 A  MNIST の移植の鎖 — resp_ee・respdyn・swap・escneff・neffdir の要約（図表一覧 §4 A）。
 
-第二の箱（RL-MNIST ELU→ELU・100-100）で登録した 5 本。本文の図 8 は背骨の S4 だけで、
+第二の箱（RL-MNIST ELU→ELU・100-100）で登録した 5 本。本文の図 9 は背骨の S4 だけで、
 この 5 本はラベルを文で書く（決定 10b・0922）。大きさは箱をまたがない（BOX_SPECIFIC）。
 元データ: results/{resp_ee_0917,respdyn_ee_0917}/runs/s*/arms.csv・verdict.csv
           results/{swap_ee_0917,escneff_ee_0917,neffdir_ee_0918}/{paired.csv,verdict.csv}
@@ -158,7 +158,7 @@ def panel_text(ax):
         "",
         "大きさは箱をまたがない（BOX_SPECIFIC）: 復元／沈降の非対称は",
         "  MNIST +76 / +26 pt、CIFAR の S4 は +47 / +68 pt で向きが逆。並べて比べない。",
-        "本文の図 8 は背骨の S4 だけ（決定 10b）。",
+        "本文の図 9 は背骨の S4 だけ（決定 10b）。",
     ]
     ax.text(0.0, 0.98, "\n".join(lines), va="top", ha="left", fontsize=7.6,
             transform=ax.transAxes, linespacing=1.45)
@@ -185,7 +185,7 @@ NOTE = """付録 A. MNIST の移植の鎖（第二の箱・RL-MNIST ELU→ELU・
     減った量は n̄_eff の減りと seed 間で r = +0.92。未使用 seed 10–19 で登録。NEFF_TRACKS。
 (e) neffdir: 担い手 n̄_eff を足す介入だけが n̄_eff を動かし、学習能力が +0.13 上がる（比例予測を上回る）。
     落とす介入は網が補償して n̄_eff が動かず、NOT_MANIPULATED。ADD_H_MOVES_E。
-大きさは箱をまたがない（neff_pred BOX_SPECIFIC）。本文の図 8 は S4 だけ（決定 10b・0922）。
+大きさは箱をまたがない（neff_pred BOX_SPECIFIC）。本文の図 9 は S4 だけ（決定 10b・0922）。
 元データ: results/{resp_ee_0917,respdyn_ee_0917}/runs/s*/arms.csv、
           results/{swap_ee_0917,escneff_ee_0917,neffdir_ee_0918}/paired.csv。
 """

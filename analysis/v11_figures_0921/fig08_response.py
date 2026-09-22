@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""図 8 応答 -> 再学習 — S4 の 12 腕（図表一覧 §2）。
+"""図 9 応答 -> 再学習 — S4 の 12 腕（図表一覧 §2）。
 
 分岐 t1 末 / t10 末から、第 2 層の応答の場を入れ替えたときの次課題 online。
 元データ: results/resp_cifar_ee_0920/{arm_table.csv,paired.csv,verdict.json}
@@ -79,7 +79,7 @@ def build():
     S.grade(axp, "registered", "両方向", loc="upper left")
     S.breathe(axp)
 
-    fig.suptitle("図 8  応答 → 再学習能力 — RL-CIFAR / MLP・S4・10 seed", fontsize=12)
+    fig.suptitle("図 9  応答 → 再学習能力 — RL-CIFAR / MLP・S4・10 seed", fontsize=12)
     return fig
 
 
@@ -88,7 +88,7 @@ def plt_line(color, label):
     return plt.Line2D([], [], marker="o", ls="", color=color, label=label)
 
 
-NOTE = """図 8. 応答から再学習能力へ。
+NOTE = """図 9. 応答から再学習能力へ。
 (a) 点は seed 平均、線は seed の全範囲（信頼区間ではない・resp_cifar_ee の登録が平均と sd の
     区間なので平均を描く）。r のついた腕は出力 head を初期化してある。
 (b) 登録した対応差。P1 = 復元（t10 の網に t1 の応答の場を移すと次課題が学べるように戻る）、

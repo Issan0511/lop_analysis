@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""図 9 実ラベルの箱 — 5+1 CIFAR の 16 腕・L2 Init・課題別（図表一覧 §2）。
+"""図 10 実ラベルの箱 — 5+1 CIFAR の 16 腕・L2 Init・課題別（図表一覧 §2）。
 
 元データ: results/cifar5p1_mlp_0920/
 格: 登録（窓は hard 課題だけの平均・対応差の符号検定・Holm）
@@ -156,11 +156,11 @@ def build(variant="points", hard="dotted"):
     panel_a(axa, axg, w, variant)
     panel_b(axb, w5)
     panel_c(axc, hard)
-    fig.suptitle("図 9  実ラベルの箱 — 5+1 CIFAR / MLP・30 課題・10 seed", fontsize=12)
+    fig.suptitle("図 10  実ラベルの箱 — 5+1 CIFAR / MLP・30 課題・10 seed", fontsize=12)
     return fig
 
 
-NOTE = """図 9. 実ラベルの箱。点（棒）は seed 中央値、線（帯）は seed の全範囲（信頼区間ではない）。
+NOTE = """図 10. 実ラベルの箱。点（棒）は seed 中央値、線（帯）は seed の全範囲（信頼区間ではない）。
 窓は登録どおり hard 課題 21・23・25・27・29 の online の平均。(c) の実線は hard、点線は easy。
 (a) 16 腕すべてが fresh gap > 0、すなわち全腕が可塑性を失っている。順位は窓の中央値。
     13 腕が 0.58-0.67 に、fresh gap は 13 腕が 0 の近くに詰まって位置から順位が読めないので、
@@ -168,7 +168,7 @@ NOTE = """図 9. 実ラベルの箱。点（棒）は seed 中央値、線（帯
 (c) は中央値の線だけ。帯を重ねると濁るので、seed の散らばりは (a) で見る。Snake・KK 族は
     KKT1 だけ。(a) は登録の 16 腕の順位そのものなので 16 腕を出す。
 (b) KKT1 − L2 Init の対応差。Snake・KK 族は E1 で KKT1 = SNA が登録されているので KKT1 だけを
-    代表に載せる。λ=1e−3（原典の値）とは ±0.005 の同等性の範囲、λ=1e−2（箱ごとに調整した値）
+    代表に載せる。λ=1e−3（箱ごとに調整した値）とは ±0.005 の同等性の範囲、λ=1e−2（原典の値）
     には 19/20 seed で勝つ。seed 10–19 は未使用 seed での追試。
 検定は対応差の符号検定（Holm 補正）: SNA − R は中央値 +0.2258・10/10・p_holm 0.0137。
 元データ: results/cifar5p1_mlp_0920/<arm>/per_task.csv・fresh_control.csv・paired_tests.csv。

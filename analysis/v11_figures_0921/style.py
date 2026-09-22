@@ -78,9 +78,9 @@ COLOR = {
     "C": _DOORS[0], "H": _DOORS[1], "CH": _DOORS[2], "CHB": _DOORS[3],
     # CH と CHB は水準がほぼ重なるので、bias の扱いを変えた CHB は破線にして下の線を見せる
     "CHB0": OKABE["sky"], "CS": OKABE["purple"], "LN": OKABE["vermillion"],
-    # 図 6b: 成長上限の梯子
+    # 図 7b: 成長上限の梯子
     "cap1": None, "cap2": None, "cap12": None, "cap12_bfix": None,
-    # 図 7・9: 活性化。Snake 族と leaky 族はそれぞれ梯子、平滑な活性化は独立色
+    # 図 8・10: 活性化。Snake 族と leaky 族はそれぞれ梯子、平滑な活性化は独立色
     "SNA": _SNAKE[0], "KKA": _SNAKE[1], "KKA23": _SNAKE[2], "KKT1": _SNAKE[3],
     "LK001": _LEAKY[0], "LR": _LEAKY[1], "LK03": _LEAKY[2], "LK07": _LEAKY[3],
     "ELU": "#E15759", "SILU": "#B07AA1", "GELU": "#9467BD",
