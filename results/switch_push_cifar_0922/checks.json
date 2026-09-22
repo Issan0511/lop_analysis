@@ -1,0 +1,125 @@
+{
+  "S3 the freeze window sits where the spec says": {
+    "pass": true,
+    "switch": {
+      "frozen": 40,
+      "first_frozen": 0,
+      "schedule_matches": true,
+      "window_first": 0
+    },
+    "mid": {
+      "frozen": 40,
+      "first_frozen": 55,
+      "schedule_matches": true,
+      "window_first": 55
+    }
+  },
+  "S4 both positions freeze the same number of updates": {
+    "pass": true,
+    "K": 40,
+    "switch": 40,
+    "mid": 40
+  },
+  "S2b frz=0 freezes W1,b1,W2,b2 bit for bit while W3,b3 train (mutation control)": {
+    "pass": true,
+    "W1": true,
+    "b1": true,
+    "W2": true,
+    "b2": true,
+    "W3": false,
+    "b3": false
+  },
+  "S5 resume refuses another freeze configuration": {
+    "pass": true,
+    "refused": true,
+    "resumed_at_task": [
+      2
+    ],
+    "freeze": {
+      "steps": 40,
+      "where": "switch",
+      "params": [
+        "W1",
+        "b1",
+        "W2",
+        "b2"
+      ],
+      "window_first_update": 0,
+      "frozen_updates_total": 40,
+      "frozen_updates_per_task": 40.0
+    }
+  },
+  "_git": {
+    "git_hash": "69be5a439fa3ab84cddc441e7765baf7953523d6",
+    "dirty_src_analysis": [
+      "?? analysis/switch_push_cifar_0922/launch.py",
+      "?? analysis/switch_push_cifar_0922/plan.json",
+      "?? analysis/switch_push_cifar_0922/report.py",
+      "?? analysis/switch_push_cifar_0922/tail.py"
+    ]
+  },
+  "_note": "the freeze is exact while gradients are finite; a non-finite gradient would propagate through 0 * inf, and the engine marks such slots diverged per task",
+  "S2a masked update: frz=1 is the parent bit for bit, frz=0 changes nothing": {
+    "pass": true,
+    "elements_differing_at_frz_1": {
+      "1e-06": {
+        "m": 0,
+        "v": 0,
+        "p": 0
+      },
+      "0.001": {
+        "m": 0,
+        "v": 0,
+        "p": 0
+      },
+      "1.0": {
+        "m": 0,
+        "v": 0,
+        "p": 0
+      },
+      "1000.0": {
+        "m": 0,
+        "v": 0,
+        "p": 0
+      }
+    },
+    "unchanged_at_frz_0": {
+      "1e-06": {
+        "m": true,
+        "v": true,
+        "p": true
+      },
+      "0.001": {
+        "m": true,
+        "v": true,
+        "p": true
+      },
+      "1.0": {
+        "m": true,
+        "v": true,
+        "p": true
+      },
+      "1000.0": {
+        "m": true,
+        "v": true,
+        "p": true
+      }
+    }
+  },
+  "S1 --freeze-steps 0 reproduces S-A LE (rows)": {
+    "pass": true,
+    "rows": 30,
+    "rows_ref": 30
+  },
+  "S1 --freeze-steps 0 reproduces S-A LE (snapshots bit-identical)": {
+    "pass": true,
+    "snapshots": 40
+  },
+  "S6 switch and mid differ from the parent and from each other at t1": {
+    "pass": true,
+    "switch_vs_ref": 10,
+    "mid_vs_ref": 10,
+    "switch_vs_mid": 10,
+    "slots": 10
+  }
+}
