@@ -1,12 +1,21 @@
 {
   "_git": {
-    "git_hash": "a81dc3a674b154763eed392ce131d8826cc13174",
-    "dirty_src_analysis": []
+    "git_hash": "0a9c4578a298fd02bd838a152ae902b047b9c2a3",
+    "dirty_src_analysis": [
+      " M analysis/altlabels_cifar_0923/plan.json"
+    ]
   },
   "_stages": [
-    "s4"
+    "s1",
+    "s2",
+    "s3",
+    "s4",
+    "s5",
+    "s6",
+    "s7",
+    "s8"
   ],
-  "_when": "2026-09-23 01:16:41",
+  "_when": "2026-09-23 02:07:38",
   "S1a modified engine (defaults) == the unmodified parent script": {
     "pass": true,
     "rows": 20,
@@ -777,8 +786,8 @@
     "parent_sha256": "7c83bb136c13de16",
     "ckpt_tc": 60000,
     "tc_continues_from_the_ckpt": true,
-    "stop_snapshots": 30,
-    "end_snapshots": 30
+    "stop_snapshots": 20,
+    "end_snapshots": 20
   },
   "S4b branch next reproduces the iid run's task 3, and branch C is fixed by (seed, t)": {
     "pass": true,
@@ -824,5 +833,33 @@
     ],
     "C_agrees": true,
     "note": "at t = 2 the abab and iid runs are the same state, and C comes from rlc_labels_fork_t2 either way, so the two C bundles must coincide"
+  },
+  "S8 a resumed run equals the uninterrupted one, and a refused resume touches nothing": {
+    "pass": true,
+    "rows": 4,
+    "rows_identical": true,
+    "snapshots": 6,
+    "snapshots_differing": [],
+    "trace_differing": [],
+    "labels_npz_identical": true,
+    "labels_npz_untouched_by_the_refusals": true,
+    "refused": {
+      "schedule": true,
+      "hit_every": true,
+      "device": true
+    },
+    "resumed_at_task": [
+      2
+    ]
+  },
+  "S2a2 the run's captured generator states are exactly the schedule's draws": {
+    "pass": true,
+    "ckpt_fixed_lab_matches_labels_npz": true,
+    "rlc_labels_state_wrong": [],
+    "rlc_batch_state_wrong": [],
+    "label_draws": 2,
+    "permutations": 1200,
+    "tasks": 3,
+    "note": "abab draws A and B once and never touches rlc_labels again; rlc_batch advances once per epoch of every task"
   }
 }
