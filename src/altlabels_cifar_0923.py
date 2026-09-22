@@ -199,7 +199,9 @@ def do_chain(a, device) -> None:
          "arm": a.arm, "schedule": a.schedule, "seeds": seeds, "conds": a.conds.split(","),
          "n_tasks": a.tasks, "epochs_per_task": a.epochs, "hit_every": a.hit_every,
          "keep_ckpts": a.keep_ckpts, "stop": list(stop) if stop else None,
-         "labels_sha256": None, "R_per_seed": 1, "engine": "eager, R = 1, one seed at a time",
+         "labels_sha256": {str(s): json.loads((out / f"seed{s}" / "provenance.json").read_text())
+                           .get("labels_sha256") for s in done},
+         "R_per_seed": 1, "engine": "eager, R = 1, one seed at a time",
          "perm_consumption_rule": B.PERM_RULE, "device": str(device), "torch": torch.__version__,
          "seed_dirs": [f"seed{s}" for s in done],
          "wall_clock_s": time.time() - t0}, indent=2))
