@@ -466,9 +466,7 @@ def rows_cycle(arm: Arm, seed: int, S: dict) -> list:
                                          if np.isfinite(coef) else np.nan)
                     r[f"cos_{tag}"] = (a / math.sqrt(ncur * nprev)
                                        if ncur > 0 and nprev > 0 else np.nan)
-                else:
-                    for s in ("_t", "", "a_", "resid_", "cos_"):
-                        pass
+                else:                       # no earlier same-label task to return to
                     r[f"ret_{tag}_t"] = t
                     r[f"ret_{tag}"] = r[f"a_{tag}"] = r[f"resid_{tag}"] = r[f"cos_{tag}"] = np.nan
             r["status"] = "ok"
