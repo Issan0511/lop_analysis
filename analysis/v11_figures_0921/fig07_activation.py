@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""図 7 活性化 — 定義・13 腕のバトル・先行層（図表一覧 §2）。
+"""図 8 活性化 — 定義・13 腕のバトル・先行層（図表一覧 §2）。
 
 (a) Snake・KKA・KKT1 の phi と phi'（定義図・alpha=1 に固定して形だけを見せる）
 (b) 13 腕 × raw/std の窓（点と seed 範囲）
@@ -139,11 +139,11 @@ def build():
     ax_std.set_xlabel(S.AXIS["task"])
     ax_raw.tick_params(labelbottom=False)
 
-    fig.suptitle("図 7  活性化 — RL-CIFAR / MLP・50 課題・10 seed", fontsize=12)
+    fig.suptitle("図 8  活性化 — RL-CIFAR / MLP・50 課題・10 seed", fontsize=12)
     return fig
 
 
-NOTE = """図 7. 活性化。(a) は定義図で、実装の alpha は unit ごとに c/W で動くが、ここでは形を見せるため
+NOTE = """図 8. 活性化。(a) は定義図で、実装の alpha は unit ごとに c/W で動くが、ここでは形を見せるため
 alpha=1 に固定している（測定値ではない）。
 (b) 点は seed 中央値、線は seed の全範囲（信頼区間ではない）。窓は登録どおり t31-50、丸が raw、
 四角が std。0.5 は登録の崩壊の線。登録判定は両 cond とも A = SNA_BEATEN。

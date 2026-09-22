@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""図 6 W 増大 -> 進行 — A6 の帳簿と S5 の層別上限（図表一覧 §2）。
+"""図 7 W 増大 -> 進行 — A6 の帳簿と S5 の層別上限（図表一覧 §2）。
 
 (a) ELU/std 第 2 層の 4 項（主窓 = 0->T* と補助窓 = 10-50 の積み上げ）
 (b) S5 の 5 腕の課題別 online と ||mu_2||
@@ -88,11 +88,11 @@ def build():
         S.window_span(ax, 31, 50)
     S.grade(ax_o, "registered", v["label"], loc="center right")
     S.grade(ax_m, "column", loc="center right")
-    fig.suptitle("図 6  W 増大 → 進行 — RL-CIFAR / MLP・ELU / std・10 seed", fontsize=12)
+    fig.suptitle("図 7  W 増大 → 進行 — RL-CIFAR / MLP・ELU / std・10 seed", fontsize=12)
     return fig
 
 
-NOTE = """図 6. W 増大から進行へ。
+NOTE = """図 7. W 増大から進行へ。
 (a) A6 の帳簿。ELU/std の第 2 層の沈下を 4 項に割ったときの各項の割合（seed 中央値）。
     主窓は登録の 0→T*（T* 中央値 t2）、補助窓は固定窓 0-10 と 10-50（REPORT_ONLY で主判定を
     置き換えない）。登録判定は MIXED: 主窓では交差項が 60% で最大、自己 23%、上流 16.5%。
