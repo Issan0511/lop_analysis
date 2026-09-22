@@ -108,7 +108,7 @@ def build():
                            for c, m in (("raw", "o"), ("std", "s"))], loc="lower right")
     S.grade(ax_win, "registered", "A = SNA_BEATEN（両 cond）", loc="upper right")
 
-    # (c)(d) 先行層 — 低応答（|phi'| < 1e-6）のユニットの割合が 0.5 を越える時刻。
+    # (c)(d) 先行層 — 低応答（|phi'| < 1e-6）の（画像, ユニット）対の割合が 0.5 を越える時刻。
     # 登録の T* はこの線を最初に越えた課題で、どちらの層が先かが A6 の判定。
     pt = pd.read_csv(D.RES / "cifar_ledger_0920" / "per_task.csv")
     ps = pd.read_csv(D.RES / "cifar_ledger_0920" / "per_seed.csv")
@@ -125,7 +125,7 @@ def build():
         first = row.layer.mode().iloc[0]
         n = int((row.layer == first).sum())
         name = {"L1_FIRST": "第 1 層が先", "L2_FIRST": "第 2 層が先"}[first]
-        ax.set_title(f"{tag} 低応答ユニットの割合 — {cond}")
+        ax.set_title(f"{tag} 低応答の（画像, ユニット）対の割合 — {cond}")
         ax.set_ylabel("低応答の割合")
         ax.set_ylim(0, 1)
         S.breathe(ax)
@@ -149,11 +149,11 @@ alpha=1 に固定している（測定値ではない）。
 四角が std。0.5 は登録の崩壊の線。登録判定は両 cond とも A = SNA_BEATEN。
 腕が床（0.10-0.12）と上（0.85-0.99）の二つに分かれて位置から順位が読めないので、軸は 0-1 に
 固定したまま（規約 §2.5-3）数値を点のそばに添えた。
-(c)(d) 低応答 = 訓練時の微分の絶対値が 1e-6 未満のユニットの割合（層ごと・seed 中央値）。
+(c)(d) 低応答 = 訓練時の微分の絶対値が 1e-6 未満の（画像, ユニット）対の割合（層ごと・seed 中央値）。
 登録の T* は、この割合が 0.5 を越えた最初の課題（t1-t10 の範囲で探す）。raw では第 1 層が先に
 越え（3 腕 30/30）、std では第 2 層が先に越える（30/30）。std の第 1 層は 0.5 の線の少し下で
 止まり、越えないことが多い。R は初めから過半が低応答で、この規則では先後が決まらない。
-元データ: results/rlcifar_mlp_battle_0918/<arm>/per_task.csv・results/cifar_ledger_0920/per_seed.csv。
+元データ: results/rlcifar_mlp_battle_0918/<arm>/per_task.csv・results/cifar_ledger_0920/per_task.csv（train_low_mean）。
 """
 
 if __name__ == "__main__":

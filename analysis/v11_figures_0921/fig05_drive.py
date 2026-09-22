@@ -29,8 +29,8 @@ def build():
     d["task"] = d["task"].astype(str)
     v = json.loads((D.RES / "drive_cifar_c_0920" / "report" / "verdict.json").read_text())
 
-    fig, axes = S.grid(1, 2, 11.0, 4.2)
-    ax, ax2 = axes
+    fig, axes = S.grid(1, 1, 7.0, 4.2)
+    ax = axes[0]
 
     # (a) 課題別の下向き条件率
     for j, (win, (lab, col)) in enumerate(WCOL.items()):
@@ -44,39 +44,21 @@ def build():
     ax.set_xticklabels([f"課題 {t}" for t in TASKS])
     ax.set_ylabel("下向きの条件が立つ割合")
     ax.set_ylim(0, 0.88)
-    ax.set_title("(a) 誤差修正が自分を押し下げる割合")
+    ax.set_title("切替直後に下向きの条件が集中する")
     ax.legend(loc="upper right")
     m3 = v["M3x"]
     S.grade(ax, "registered", f"M3x = {m3['label']}（{m3['positive']}/{m3['nonzero']}）", loc="upper left")
-
-    # (b) 自己 S と上流 U（1 更新あたり）
-    lab_pos = {("boundary", "S"): 0, ("boundary", "U"): 1, ("later", "S"): 2, ("later", "U"): 3}
-    for (win, term), i in lab_pos.items():
-        sub = d[(d.window == win) & (d.task == "all_tasks2to5")]
-        vals = sub[f"{term}_sum_per_model_update"]
-        col = WCOL[win][1]
-        ax2.scatter(np.full(len(vals), i), vals, s=24, color=col, alpha=0.75, zorder=3)
-        ax2.hlines(vals.median(), i - 0.16, i + 0.16, color=col, lw=2.4, zorder=4)
-    ax2.axhline(0, color="#999999", lw=0.9)
-    ax2.set_yscale("symlog", linthresh=0.01)
-    ax2.set_ylim(-40, 3)       # 境界の自己 S が軸の底に張り付かないように
-    ax2.set_xticks(range(4))
-    ax2.set_xticklabels(["境界\n自己 S", "境界\n上流 U", "後続\n自己 S", "後続\n上流 U"], fontsize=8)
-    ax2.set_ylabel("1 更新あたりの寄与")
-    ax2.set_title("(b) 自己 S と上流 U（付録 D）")
-    S.grade(ax2, "posthoc", "課題 2–5 をまとめた記述", loc="upper left")
 
     fig.suptitle("図 5  駆動 — RL-CIFAR / MLP・C 条件・5 seed", fontsize=12)
     return fig
 
 
 NOTE = """図 5. 駆動。点は seed 1 つずつ（5 seed）、横線は中央値。
-(a) 誤差修正が自分のユニットを押し下げる十分条件が立った更新の割合。課題 2-5 をまとめると
+誤差修正が自分のユニットを押し下げる十分条件が立った更新の割合。課題 2-5 をまとめると
     境界（切替直後 75 更新）で 50-57%、後続では 6.5-9%。課題別に見ると境界の値は課題 2 の 0.76 から
     課題 5 の 0.35 へ下がる（記述・登録ではない）。登録判定は M3x = BOUNDARY_ENRICHED（5/5・片側 p = 0.031）。
     M1x（後続でも下向きが優勢）は NOT_SUPPORTED。
-(b) は付録 D に回す 1 枚。境界では自己 S が大きく負、後続では正味がほぼ 0 になる。事後の記述で、
-    因果でも正味の沈下の分解でもない（verdict の limitations のとおり）。
+自己 S と上流 U の課題別の記述は付録 D に置く。
 元データ: results/drive_cifar_c_0920/report/transport_by_window.csv。
 """
 

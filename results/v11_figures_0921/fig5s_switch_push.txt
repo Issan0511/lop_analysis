@@ -1,0 +1,14 @@
+図 6. 凍結窓の位置。乱数ラベル CIFAR × 二隠れ層 MLP、raw、LE = leaky 0.1→ELU。
+(a) 両隠れ層の重み・bias と Adam の m, v を各課題の同じ 750 更新だけ止め、切替直後と課題中央を比較。
+点は seed、接続線は同じ seed（10 対）、黒線は中央値。第 5 課題末の ‖µ₂‖ は 141 対 672、無凍結参照は 697。
+課題中央−切替直後の対応差の中央値は 539、10/10、両側符号検定 p=0.001953125。
+主比較は事前登録の Q1（単一比較、Holm 補正なし）で、半減基準を満たす SWITCH_MAKES_THE_PUSH。
+(b) 線は seed 中央値、帯は seed の全範囲（信頼区間ではない）。薄い背景は登録窓 t31–50。
+曲線は登録列の記述で、主判定 Q1 と救命判定 Q4 を分ける。切替直後の K=750 は NOT_RESCUED
+（窓 0.178）、K=7500 は PARTIAL_RESCUE（0.272）。初期の成長を抑えても完全救済にはならない。
+実験全体は LE 6 腕＋LL 2 腕の追加 8 腕、各 10 seed。出力層は常に訓練。
+無凍結参照は S-A の既存軌道を再利用しており、新しい標本には数えない。
+LL の Q5 は LL_REVERSED（‖µ₂‖(t5) は切替 58.0 対課題中央 30.3）で、この向きは一般化しない。
+std・MNIST は未検証。W₁・W₂・読み出し適応の寄与を単独には分離していない。
+元データ: results/switch_push_cifar_0922/tail.csv（task=5, mu2）、各腕の per_task.csv（task=1–50, online_acc）、
+results/layer_chimera_cifar_0921/LE/per_task.csv。判定: switch_push_cifar_0922/verdict.json の Q1・Q4・Q5。
