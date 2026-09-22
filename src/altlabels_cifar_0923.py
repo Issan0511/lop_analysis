@@ -10,11 +10,13 @@ parent's (check S1a), so nothing in the battle's results changes meaning.
         --hit-every 100 --keep-ckpts --out results/altlabels_cifar_0923/LR_abab
 
     # a stop chain: seeds run one after another in this process, R = 1 and eager each,
-    # every task ending 500 steps after the eval that first sees 1199/1200 right
+    # every task ending 500 steps after the eval that first sees 1199/1200 right.  cuda, not
+    # cpu: check S5b shows cpu float32 moves images across the threshold and the chain drifts.
     python3 src/altlabels_cifar_0923.py chain --arm LR --schedule iid --seeds 0-4 --tasks 50 \
-        --device cpu --threads 8 --stop 0.999,500 --out results/altlabels_cifar_0923/LR_iid_stop
+        --device cuda --threads 2 --stop 0.999,500 --out results/altlabels_cifar_0923/LR_iid_stop
 
     # forks: from each ckpts/t<NN>.pt one bundle per branch, in the main run's own R = 10 layout
+    # (--stop defaults to 0.999,500 and implies --hit-every 100; a fork without them is refused)
     python3 src/altlabels_cifar_0923.py fork --src results/altlabels_cifar_0923/LR_abab \
         --t 2,10,20,30,40,48 --branches A,B,C --out results/altlabels_cifar_0923/LR_abab_fork
 """
@@ -81,7 +83,36 @@ def rel(p: Path) -> str:
         return str(p)
 
 
+def check_cached(o: Path, fp: dict, stop, hit_every: int, device) -> bool:
+    """Is the finished bundle in `o` the one this request asks for?
+
+    A directory with a provenance.json is only reused when every part of the configuration
+    that could change its numbers matches -- source run, fork point, branch, parent checkpoint
+    digest, labelling digest, stop rule, trace grid, device.  A mismatch is refused, never
+    silently regenerated and never silently reused under this request's provenance.
+    """
+    p = o / "provenance.json"
+    if not p.exists():
+        return False
+    d = json.loads(p.read_text())
+    got = {**{k: d.get("fork", {}).get(k) for k in fp},
+           "stop": tuple(d.get("stop") or ()), "hit_every": d.get("hit_every"),
+           "device": (d.get("device") or "").split(":")[0]}
+    want = {**fp, "stop": tuple(stop or ()), "hit_every": hit_every,
+            "device": device.type}
+    bad = {k: (got[k], want[k]) for k in want if got[k] != want[k]}
+    if bad:
+        raise SystemExit(f"{o} already holds a bundle built with another configuration "
+                         f"{bad} (got, wanted); move it aside or point --out elsewhere")
+    if not (o / "per_task.csv").exists():
+        raise SystemExit(f"{o} has a provenance.json but no per_task.csv; it is incomplete")
+    return True
+
+
 def do_fork(a, device) -> None:
+    if not a.stop or not a.hit_every:
+        raise SystemExit("fork needs --stop ACC,EXTRA and --hit-every N: without them a bundle "
+                         "runs the full 30,000 steps and records no hits or stop snapshots")
     src = Path(a.src).resolve()
     prov = json.loads((src / "provenance.json").read_text())
     slots = [(q["seed"], q["cond"]) for q in prov["slots"]]
@@ -122,7 +153,10 @@ def do_fork(a, device) -> None:
                     fixed[s] = [torch.from_numpy(lab[br][lseeds.index(s)].astype(np.int64))]
             name = f"t{t:02d}_{br}"
             o = out / "_bundles" / name
-            if not (o / "provenance.json").exists():
+            fp = {"src": str(src), "t": t, "branch": br, "parent_sha256": sha,
+                  "labels_sha256": B.labels_sha256(fixed)}
+            done = check_cached(o, fp, stop, a.hit_every, device)
+            if not done:
                 shutil.rmtree(o, ignore_errors=True)
                 B.run(prov["arm"], seeds, conds, 1, prov["epochs_per_task"], device, o,
                       lr=prov["lr"], c=prov["sna_c"], beta=prov["sna_beta"],
@@ -136,26 +170,43 @@ def do_fork(a, device) -> None:
                                            "label_stream": (FORK_STREAM.format(t=t) if br == "C"
                                                             else f"labels.npz:{br}" if br in "ABC"
                                                             else f"rlc_labels draw {t + 1}"),
-                                           "labels_sha256": B.labels_sha256(fixed)}})
+                                           "labels_sha256": fp["labels_sha256"]}})
+            # the parent hash reported for these rows comes from the bundle that was actually
+            # trained, never from this request (a reused bundle may predate it)
+            bprov = json.loads((o / "provenance.json").read_text())
+            bsha = bprov["fork"]["parent_sha256"]
             (out / "snap").mkdir(parents=True, exist_ok=True)
             for p in sorted((o / "snap").glob("fork_*_stop.npz")):   # each slot's own stop point
                 shutil.copyfile(p, out / "snap" / p.name)
-            for s, cd in slots:                                      # end of the bundle
-                shutil.copyfile(B.snapshot_path(o, prov["arm"], cd, s, 1),
-                                out / "snap" / f"fork_t{t:02d}_{br}_seed{s}_end.npz")
-            for q in csv.DictReader(open(o / "per_task.csv")):
-                rows.append({"t": t, "branch": br, "seed": int(q["seed"]), "cond": q["cond"],
-                             "hit99": q.get("hit99"), "hit999": q.get("hit999"),
-                             "stop_step": q.get("stop_step"), "bundle_steps": q.get("steps"),
-                             "correct_at_stop": q.get("acc_at_hit_plus_500"),
-                             "min_correct_after_hit": q.get("min_correct_after_hit"),
-                             "memo_acc": q.get("memo_acc"), "online_acc": q.get("online_acc"),
-                             "tc": q.get("tc"), "parent_ckpt": rel(ckpt),
-                             "parent_sha256": sha,
-                             "stop_snap": f"snap/fork_t{t:02d}_{br}_seed{q['seed']}_stop.npz",
-                             "end_snap": f"snap/fork_t{t:02d}_{br}_seed{q['seed']}_end.npz"})
+            by_seed = {int(q["seed"]): q for q in csv.DictReader(open(o / "per_task.csv"))}
+            for s, cd in slots:
+                q = by_seed.get(s, {})
+                # a slot can be dead in the parent checkpoint or diverge inside the bundle: it
+                # gets a row with its status and empty snapshot paths, and never stops the export
+                status = ("diverged" if (not q or q.get("memo_acc") in (None, "")) else "alive")
+                end_src = B.snapshot_path(o, prov["arm"], cd, s, 1)
+                end_rel = ""
+                if end_src.exists():
+                    end_rel = f"snap/fork_t{t:02d}_{br}_seed{s}_end.npz"
+                    shutil.copyfile(end_src, out / end_rel)
+                stop_rel = f"snap/fork_t{t:02d}_{br}_seed{s}_stop.npz"
+                if not (out / stop_rel).exists():
+                    stop_rel = ""                        # never reached hit999 + 500
+                rows.append({"t": t, "branch": br, "seed": s, "cond": cd, "status": status,
+                             "hit99": q.get("hit99", ""), "hit999": q.get("hit999", ""),
+                             "stop_step": q.get("stop_step", ""),
+                             "bundle_steps": q.get("steps", ""),
+                             "correct_at_stop": q.get("correct_at_hit_plus_500", ""),
+                             "stop_observed": q.get("hit_plus_500_observed", ""),
+                             "min_correct_after_hit": q.get("min_correct_after_hit", ""),
+                             "memo_acc": q.get("memo_acc", ""), "online_acc": q.get("online_acc", ""),
+                             "tc": q.get("tc", ""), "parent_ckpt": rel(ckpt),
+                             "parent_sha256": bsha, "reused": int(bool(done)),
+                             "stop_snap": stop_rel, "end_snap": end_rel})
             H.write_csv(out / "forks.csv", rows)
-            print(f"[{time.strftime('%T')}] fork {name}: bundle {rows[-1]['bundle_steps']} steps "
+            print(f"[{time.strftime('%T')}] fork {name}: bundle {rows[-1]['bundle_steps']} steps, "
+                  f"{sum(1 for q in rows[-len(slots):] if q['status'] != 'alive')} not alive"
+                  f"{' (reused)' if done else ''} "
                   f"({(time.time() - t_start) / 60:.1f} min)", flush=True)
     (out / "provenance.json").write_text(json.dumps(
         {"run_id": EXPERIMENT, "stage": "fork", "parent": PARENT, **B.git_state(),
@@ -183,9 +234,21 @@ def do_chain(a, device) -> None:
     cifar = RC.Cifar10()
     t0 = time.time()
     done = []
+    want = {"arm": a.arm, "schedule": a.schedule, "n_tasks": a.tasks,
+            "epochs_per_task": a.epochs, "hit_every": a.hit_every,
+            "stop": list(stop) if stop else None, "conds": a.conds.split(",")}
     for s in seeds:
         o = out / f"seed{s}"
         if (o / "provenance.json").exists():
+            # a finished seed is only kept when it was run under this configuration, so a
+            # chain whose settings changed can never mix old seeds with new ones
+            d = json.loads((o / "provenance.json").read_text())
+            bad = {k: (d.get(k), v) for k, v in want.items() if d.get(k) != v}
+            if (d.get("device") or "").split(":")[0] != device.type:
+                bad["device"] = (d.get("device"), device.type)
+            if bad:
+                raise SystemExit(f"{o} was run with another configuration {bad} (got, wanted); "
+                                 f"move it aside or point --out elsewhere")
             done.append(s)
             continue
         B.run(a.arm, [s], a.conds.split(","), a.tasks, a.epochs, device, o,
@@ -237,6 +300,9 @@ def main() -> None:
     ap.add_argument("--no-resume", action="store_true")
     ap.add_argument("--no-graph", action="store_true")
     a = ap.parse_args()
+    if a.stage == "fork" and not a.stop:    # a fork without the stop rule is never what is wanted
+        a.stop = "0.999,500"
+        print(f"fork: --stop defaults to {a.stop}", flush=True)
     if a.stop and not a.hit_every:      # the stop rule lives on the trace grid (spec §1.4)
         a.hit_every = 100
         print(f"--stop {a.stop} implies --hit-every {a.hit_every}", flush=True)

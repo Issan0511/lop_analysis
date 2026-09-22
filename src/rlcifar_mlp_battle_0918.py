@@ -19,6 +19,7 @@ Nothing in pmnist_0905 / pmnist_rlmnist_0906 / pmnist_rlcifar_0907 is modified.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import math
@@ -366,7 +367,8 @@ def labels_stats(fixed: dict[int, list[torch.Tensor]]) -> dict:
 
 def write_labels(path: Path, fixed: dict[int, list[torch.Tensor]]) -> None:
     """labels.npz: A/B/C as (n_seeds, 1200) int64 where the schedule has them, plus seeds,
-    each labeling's class counts and the pairwise agreement fractions."""
+    each labeling's class counts and the pairwise agreement fractions.  Written through a
+    temporary file so an interrupted write cannot leave a half-written labelling behind."""
     seeds = sorted(fixed)
     d = {"seeds": np.asarray(seeds, dtype=np.int64)}
     for i, name in enumerate(("A", "B", "C")):
@@ -375,8 +377,37 @@ def write_labels(path: Path, fixed: dict[int, list[torch.Tensor]]) -> None:
     for k, v in labels_stats(fixed).items():
         if k != "seeds":
             d[k] = np.asarray(v)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    np.savez(path, **d)
+    savez_atomic(path, **d)
+
+
+def read_labels(path: Path) -> dict[int, list[torch.Tensor]]:
+    """The fixed labelings back out of a labels.npz, in the draw order write_labels used."""
+    d = np.load(path)
+    seeds = [int(x) for x in d["seeds"]]
+    return {s: [torch.from_numpy(d[nm][i].astype(np.int64))
+                for nm in ("A", "B", "C") if nm in d.files] for i, s in enumerate(seeds)}
+
+
+def publish_labels(path: Path, fixed: dict[int, list[torch.Tensor]], sha: str,
+                   strict: bool) -> None:
+    """Write labels.npz, or -- when one is already there -- leave it alone after checking it.
+
+    `strict` (a run that is resuming from a checkpoint) turns a digest mismatch into a refusal:
+    the labelling an existing run was trained on is an artifact, never something to overwrite.
+    """
+    if path.exists():
+        try:
+            have = labels_sha256(read_labels(path))
+        except Exception as e:                                   # unreadable / truncated
+            if strict:
+                raise SystemExit(f"{path} cannot be read ({e}); refusing to overwrite it")
+            have = None
+        if have == sha:
+            return                                               # already correct, untouched
+        if strict:
+            raise SystemExit(f"{path} holds another labelling ({have} != {sha}); refusing to "
+                             f"overwrite the labels this run was trained on")
+    write_labels(path, fixed)
 
 
 def parse_stop(s: str | None) -> tuple[float, int] | None:
@@ -394,6 +425,10 @@ def need_correct(acc: float) -> int:
 
 
 TRACE_COLS = ("correct", "ce", "margin_med", "n1", "n2", "n3", "sig_med")
+HIT_PLUS = 500                     # the post-hit window the rows report (spec §1.2)
+# traces written before this commit put the task's FINAL tc on every row; repair them with
+#   tc_row = tc_stored - task_steps + step        (task_steps = 30,000, or the row's `steps`)
+TRACE_TC_BUG_BEFORE = "253b8386393ae4d6a436c6ebc303536b8bc6e1b8"
 PERM_RULE = ("rlc_batch: one torch.randperm(1200) per epoch, drawn at the epoch's start; a task "
              "that ends mid-epoch has already drawn that epoch's permutation, and one ending "
              "exactly on an epoch boundary draws and discards one more (width_replay.py's "
@@ -556,8 +591,32 @@ def write_hist(path: Path, hs: list[dict], accs: list[float]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     keys = list(hs[0].keys())
     extra = {"th_edges": TH_EDGES} if "th1" in keys else {}
-    np.savez_compressed(path, edges=RC.HIST_EDGES, acc=np.asarray(accs, dtype=np.float64),
-                        **{k: np.stack([h[k] for h in hs]) for k in keys}, **extra)
+    # these files are cumulative and rewritten every task, so an interrupted write would
+    # destroy the earlier tasks: build the new one beside it and swap it in
+    savez_atomic(path, compressed=True, edges=RC.HIST_EDGES,
+                 acc=np.asarray(accs, dtype=np.float64),
+                 **{k: np.stack([h[k] for h in hs]) for k in keys}, **extra)
+
+
+def save_atomic(obj, path: Path) -> None:
+    """torch.save through a temporary file in the same directory, then os.replace."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    torch.save(obj, tmp)
+    os.replace(tmp, path)
+
+
+def savez_atomic(path: Path, compressed: bool = False, **arrays) -> None:
+    """np.savez[_compressed] into a temporary file beside `path`, then os.replace.
+
+    The temporary file is opened as a handle: handed a *name* without a .npz suffix numpy
+    appends one, and the replace would then miss the file it just wrote.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "wb") as fh:
+        (np.savez_compressed if compressed else np.savez)(fh, **arrays)
+    os.replace(tmp, path)
 
 
 # --------------------------------------------------------------------------
@@ -658,7 +717,8 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
     if fixed_lab is None and SCHEDULES[schedule]:
         fixed_lab = {s: [RC.task_labels(g_lab[s]) for _ in range(SCHEDULES[schedule])]
                      for s in useeds}
-        write_labels(out / "labels.npz", fixed_lab)
+    # drawn, not published: labels.npz is written only after the checkpoint has been validated,
+    # so a refused resume leaves the artifacts of the run it refused untouched
     lab_sha = labels_sha256(fixed_lab) if fixed_lab is not None else None
     ar = torch.arange(R, device=device)[:, None]
     spt = STEPS_PER_EPOCH * epochs
@@ -671,11 +731,21 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
     step_ms = float("nan")
     meta = {"arm": arm, "seeds": seeds, "conds": conds, "epochs": epochs, "lr": lr, "c": c,
             "beta": beta, "lo": lo, "hi": hi, "perturb": perturb, "nan_slot": nan_slot}
-    # every setting that changes the trajectory, so a resume refuses a checkpoint from another one
+    # every setting that changes the trajectory, so a resume refuses a checkpoint from another
+    # one -- device and the execution mode included, since S5b shows cuda and cpu diverge
     meta = {**meta, "schedule": schedule, "stop": stop, "hit_every": hit_every,
-            "labels_sha256": lab_sha}
+            "labels_sha256": lab_sha, "device": device.type,
+            "graph": bool(graph and device.type == "cuda" and debug is None)}
     tc_end: dict[str, int] = {}
     ck = out / "ckpt.pt"
+    # one writer per output directory (the launcher can adopt, retry and be started twice)
+    lock_fh = open(out / ".lock", "w")
+    try:
+        fcntl.flock(lock_fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        raise SystemExit(f"{out} is already being written by another process (.lock is held)")
+    lock_fh.write(f"{os.getpid()} {time.strftime('%F %T')}\n")
+    lock_fh.flush()
     git_states, resumed, t_first = [git_state()], [], 1
     if restore is not None:
         st = torch.load(restore["path"], map_location="cpu", weights_only=False)
@@ -702,10 +772,21 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         alive = st["alive"][idx].to(device)
         progress(f"[{time.strftime('%T')}] {arm} restored slots {js} of {restore['path']} "
                  f"(task {st['t']}, tc {tc})")
-    if resume and ck.exists():
+    resuming = bool(resume and ck.exists())
+    if resuming:
         st = torch.load(ck, map_location="cpu", weights_only=False)   # generator states must stay on the cpu
+        # validate FIRST: nothing in `out` has been written yet, so a refusal is inert
         if st["meta"] != meta:
             raise SystemExit(f"{ck} belongs to another configuration: {st['meta']}")
+        if st.get("fixed_lab") is not None:              # the labelling the run was trained on
+            ck_lab = {int(s): [y.cpu() for y in st["fixed_lab"][s]] for s in st["fixed_lab"]}
+            ck_sha = labels_sha256(ck_lab)
+            if ck_sha != lab_sha:
+                raise SystemExit(f"{ck} was trained on another labelling ({ck_sha} != {lab_sha})")
+            fixed_lab = ck_lab                           # restored, not redrawn
+        if keep_ckpts and not (out / "ckpts" / f"t{st['t']:02d}.pt").exists():
+            raise SystemExit(f"{ck} is at task {st['t']} but {out}/ckpts/t{st['t']:02d}.pt is "
+                             f"missing; the fork points of that task cannot be rebuilt")
         with torch.no_grad():
             for dst, src in ((P, st["P"]), (adam_m, st["m"]), (adam_v, st["v"])):
                 for q, v in zip(dst, src):
@@ -737,7 +818,10 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                 keep = d["task"] <= st["t"]
                 traces[r] = {k: d[k][keep] for k in d.files}
         progress(f"[{time.strftime('%T')}] {arm} resumed from {ck} at task {t_first}")
-    elif snapshots:
+    # the checkpoint (if any) has been accepted: now the labelling may be published
+    if fixed_lab is not None and labels_fixed is None:
+        publish_labels(out / "labels.npz", fixed_lab, lab_sha, strict=resuming)
+    if not resuming and snapshots:
         for r, (s, cd) in enumerate(slots):
             write_snapshot(snapshot_path(out, arm, cd, s, 0), P, act, r)      # t00 = init
 
@@ -890,27 +974,33 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         step_ms = 1e3 * (time.time() - t0) / max(ts, 1)
 
         # ---- the trace: counts in, hit99/hit999/stop bookkeeping out (§1.2)
-        tr = TR[:len(TR_step)].cpu().numpy()                     # (E, R, 7)
+        # .copy() is load-bearing: on cpu, .cpu() is a no-op and .numpy() SHARES TR's memory, so
+        # the rows this task hands to `traces` would be overwritten by the next task's evals
+        tr = TR[:len(TR_step)].cpu().numpy().copy()              # (E, R, 7)
         ev = np.asarray(TR_step, dtype=np.int64)                 # (E,)
-        h99, h999, hplus, hmin = [-1] * R, [-1] * R, [-1] * R, [-1] * R
+        h99, h999 = [-1] * R, [-1] * R
+        hplus, hseen, hmin = [-1] * R, [0] * R, [-1] * R
         if hit_every:
-            elig = ev > 0
+            elig = ev > 0                       # step 0 is recorded but never a hit
             cnt = tr[:, :, 0].astype(np.int64)
             for r in range(R):
                 for need, dst in ((need_correct(0.99), h99), (need_correct(0.999), h999)):
                     w = np.nonzero(elig & (cnt[:, r] >= need))[0]
                     dst[r] = int(ev[w[0]]) if len(w) else -1
-                hplus[r] = int(cnt[-1, r])
                 if h999[r] >= 0:
-                    w = np.nonzero(ev == h999[r] + 500)[0]
+                    # the count at exactly hit999 + HIT_PLUS, and -1 with hseen = 0 when the
+                    # task ended (stop rule or the 30,000 cap) before that step was evaluated
+                    w = np.nonzero(ev == h999[r] + HIT_PLUS)[0]
                     if len(w):
-                        hplus[r] = int(cnt[w[0], r])
-                    after = cnt[ev > h999[r], r]
+                        hplus[r], hseen[r] = int(cnt[w[0], r]), 1
+                    after = cnt[ev > h999[r], r]        # window: after the hit, to the task's end
                     hmin[r] = int(after.min()) if len(after) else int(cnt[ev == h999[r], r][0])
             for r in range(R):
                 s_, cd_ = slots[r]
                 old = traces[r]
-                new = {"task": np.full(len(ev), t, dtype=np.int64), "tc": np.full(len(ev), tc, dtype=np.int64),
+                # tc is the global clock AT THAT ROW: the task's starting clock plus the step.
+                # For a fork that starting clock is the parent checkpoint's tc (restore set it).
+                new = {"task": np.full(len(ev), t, dtype=np.int64), "tc": (tc - ts) + ev,
                        "step": ev, **{k: tr[:, r, i] for i, k in enumerate(TRACE_COLS)}}
                 new["correct"] = new["correct"].astype(np.int64)
                 traces[r] = {k: (np.concatenate([old[k], new[k]]) if old else new[k]) for k in new}
@@ -935,7 +1025,9 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                 extra["tc"] = tc
             if hit_every:
                 extra["hit99"], extra["hit999"] = h99[r], h999[r]
-                extra["acc_at_hit_plus_500"], extra["min_correct_after_hit"] = hplus[r], hmin[r]
+                extra["correct_at_hit_plus_500"] = hplus[r]        # -1 unless it was observed
+                extra["hit_plus_500_observed"] = hseen[r]
+                extra["min_correct_after_hit"] = hmin[r]           # window: (hit999, task end]
             rows.append({"arm": arm, "cond": cd, "seed": s, "slot": r, "lr": lr, "task": t,
                          "iv": "none", "online_acc": float(acc_sum[r]) / ts,
                          "memo_acc": m[r]["acc"], **m[r], **extra})
@@ -953,27 +1045,30 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             if traces[r]:
                 s, cd = slots[r]
                 (out / "trace").mkdir(parents=True, exist_ok=True)
-                np.savez_compressed(out / "trace" / f"{arm}_{cd}_seed{s}.npz", **traces[r])
+                # cumulative: build beside it and swap, never overwrite in place
+                savez_atomic(out / "trace" / f"{arm}_{cd}_seed{s}.npz", compressed=True,
+                             **traces[r])
         if checkpoint or keep_ckpts:
-            st = {"t": t, "meta": meta, "P": [q.detach() for q in P], "m": adam_m, "v": adam_v,
-                  "tc": tc, "V": act.V if act.adaptive else None,
-                  "rsl_state": act.gen.get_state() if act.stochastic else None,
-                  "g_lab": {s: g_lab[s].get_state() for s in useeds},
-                  "g_batch": {s: g_batch[s].get_state() for s in useeds},
-                  "alive": alive.cpu(), "rows": rows, "diverged": diverged, "step_ms": step_ms,
+            # an independent payload: detached cpu clones, so nothing the next task mutates
+            # can reach into a file that is being written (S8)
+            cpu = lambda qs: [q.detach().cpu().clone() for q in qs]
+            st = {"t": t, "meta": meta, "P": cpu(P), "m": cpu(adam_m), "v": cpu(adam_v),
+                  "tc": tc, "V": cpu(act.V) if act.adaptive else None,
+                  "rsl_state": act.gen.get_state().clone() if act.stochastic else None,
+                  "g_lab": {s: g_lab[s].get_state().clone() for s in useeds},
+                  "g_batch": {s: g_batch[s].get_state().clone() for s in useeds},
+                  "alive": alive.detach().cpu().clone(), "rows": rows, "diverged": diverged,
+                  "step_ms": step_ms,
                   "git_states": git_states, "resumed": resumed, "tc_end": tc_end,
                   "slots": [{"seed": s, "cond": cd} for s, cd in slots], "schedule": schedule,
-                  "fixed_lab": ({s: [y.cpu() for y in fixed_lab[s]] for s in fixed_lab}
-                                if fixed_lab is not None else None)}
-            if checkpoint:
-                tmp = out / "ckpt.pt.tmp"
-                torch.save(st, tmp)
-                os.replace(tmp, ck)
+                  "fixed_lab": ({s: [y.detach().cpu().clone() for y in fixed_lab[s]]
+                                 for s in fixed_lab} if fixed_lab is not None else None)}
+            # the per-task checkpoint is published FIRST: ckpt.pt is what a resume trusts, and
+            # it must never point past a task whose fork checkpoint is missing
             if keep_ckpts:                        # §1.3: one per task, everything a fork needs
-                (out / "ckpts").mkdir(parents=True, exist_ok=True)
-                tmp = out / "ckpts" / f"t{t:02d}.pt.tmp"
-                torch.save(st, tmp)
-                os.replace(tmp, out / "ckpts" / f"t{t:02d}.pt")
+                save_atomic(st, out / "ckpts" / f"t{t:02d}.pt")
+            if checkpoint:
+                save_atomic(st, ck)
         on = acc_sum[alive] / ts
         memo = torch.tensor([m[r]["acc"] for r in range(R) if alive[r]])
         el = time.time() - t_start
@@ -1029,7 +1124,18 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             "tc_at_task_end": tc_end,
             "trace": ({"path": "trace/<arm>_<cond>_seed<seed>.npz", "every": hit_every,
                        "cols": ["task", "tc", "step"] + list(TRACE_COLS),
-                       "step0_row": "one row at step 0 of every task, not eligible for a hit"}
+                       "step0_row": "one row at step 0 of every task, not eligible for a hit",
+                       "tc": "the global clock at that row = the task's starting tc + step",
+                       "hit_plus": HIT_PLUS,
+                       "post_hit_fields": {
+                           "correct_at_hit_plus_500": "the count at exactly hit999 + 500, or -1",
+                           "hit_plus_500_observed": "0 when the task ended before that step",
+                           "min_correct_after_hit": "min over the evals in (hit999, task end]"},
+                       "median": "torch.median (lower of the two middle values) over the 100 "
+                                 "units / 1200 images, as the parent engine's evaluate() uses",
+                       "trace_tc_bug_before_commit": TRACE_TC_BUG_BEFORE,
+                       "trace_tc_repair": "tc_row = tc_stored - task_steps + step "
+                                          "(task_steps = 30000, or the row's `steps`)"}
                       if hit_every else None),
             "restore": ({"path": str(restore["path"]),
                          "slots": list(restore.get("slots") or range(R)),
@@ -1037,6 +1143,8 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                         if restore is not None else None),
             **(extra_prov or {})}
     (out / "provenance.json").write_text(json.dumps(prov, indent=2))
+    fcntl.flock(lock_fh, fcntl.LOCK_UN)
+    lock_fh.close()
     progress(f"wrote {out}/per_task.csv ({len(rows)} rows, {(time.time()-t_start)/60:.1f} min)")
     return prov
 

@@ -28,6 +28,8 @@ S6  provenance carries schedule / hit_every / keep_ckpts / stop / labels_sha256 
     tc_at_task_end / perm_consumption_rule; tc == 30,000 * t (full runs) or the summed steps
     (stop chains); a resume refuses a checkpoint written under another schedule/stop/hit setting.
 S7  cost, with the trace eval on: one task's wall clock x 50, solo and in parallel.
+S8  a run interrupted after task 1 and resumed reproduces the uninterrupted one bit for bit
+    (rows, snapshots, trace), and the resumes it refuses leave labels.npz byte-identical.
 """
 from __future__ import annotations
 
@@ -197,7 +199,8 @@ def s1() -> bool:
     # (c) trace on vs off
     for arm, on, off, tmax in (("LR", "LR_iid", "LR_iid_plain", 2),
                                ("SNA", "SNA_abab", "SNA_plain", 2)):
-        drop = ("hit99", "hit999", "acc_at_hit_plus_500", "min_correct_after_hit")
+        drop = ("hit99", "hit999", "acc_at_hit_plus_500", "correct_at_hit_plus_500",
+                "hit_plus_500_observed", "min_correct_after_hit")
         a = keyed(rows_of(SMOKE / on / "per_task.csv", tmax=tmax, drop=drop))
         b = keyed(rows_of(SMOKE / off / "per_task.csv", tmax=tmax, drop=drop))
         diff = [k for k in b if a.get(k) != b[k]]
@@ -254,6 +257,31 @@ def s2() -> bool:
                   "agree_AB_min_max": [min(agree), max(agree)],
                   "A_counts_seed0": st["A_counts"][0], "B_counts_seed0": st["B_counts"][0],
                   "expected_agreement": 1.0 / B.N_CLASSES})
+    # the same question asked of the state the run itself captured, not of two fresh generators:
+    # the checkpoint holds the labelling it trained on and both generators as the run left them
+    ck = torch.load(SMOKE / "LR_abab" / "ckpt.pt", map_location="cpu", weights_only=False)
+    n_draw, n_task = B.SCHEDULES["abab"], int(ck["t"])
+    lab_ok = B.labels_sha256({int(s): [y for y in ck["fixed_lab"][s]] for s in ck["fixed_lab"]}) \
+        == B.labels_sha256(B.read_labels(SMOKE / "LR_abab" / "labels.npz"))
+    lab_bad, bat_bad = [], []
+    for s in seeds:
+        g = H.stream("rlc_labels", s)                # abab draws exactly twice, ever
+        for _ in range(n_draw):
+            RC.task_labels(g)
+        if not torch.equal(g.get_state(), ck["g_lab"][s]):
+            lab_bad.append(s)
+        g = H.stream("rlc_batch", s)                 # one permutation per epoch, every task
+        for _ in range(n_task * prov["epochs_per_task"]):
+            torch.randperm(B.N_IMAGES, generator=g)
+        if not torch.equal(g.get_state(), ck["g_batch"][s]):
+            bat_bad.append(s)
+    ok &= record("S2a2 the run's captured generator states are exactly the schedule's draws",
+                 lab_ok and not lab_bad and not bat_bad,
+                 {"ckpt_fixed_lab_matches_labels_npz": lab_ok, "rlc_labels_state_wrong": lab_bad,
+                  "rlc_batch_state_wrong": bat_bad, "label_draws": n_draw,
+                  "permutations": n_task * prov["epochs_per_task"], "tasks": n_task,
+                  "note": "abab draws A and B once and never touches rlc_labels again; "
+                          "rlc_batch advances once per epoch of every task"})
     # which labelling each task gets, from the engine's debug hook (75 steps a task is enough:
     # the question is which labelling task t is handed, not how it trains)
     dev = torch.device("cpu")
@@ -387,7 +415,7 @@ def s4(device) -> bool:
     prov = json.loads((src / "provenance.json").read_text())
     if not (o / "_bundles" / "t02_A" / "provenance.json").exists():
         shutil.rmtree(o, ignore_errors=True)
-        p = launch("fork", RUNNER, ["fork", "--src", str(src), "--t", "2", "--branches", "A",
+        p = launch("fork", RUNNER, ["fork", "--src", str(src), "--t", "2", "--branches", "A,C",
                                     "--stop", "0.999,500", "--hit-every", "100",
                                     "--device", str(device), "--threads", "2", "--out", str(o)])
         if p.wait() != 0:
@@ -567,6 +595,65 @@ def s6() -> bool:
                   {**refused, "same_setting_resumes": same}) and ok
 
 
+def s8() -> bool:
+    """A run interrupted after task 1 and resumed must equal the uninterrupted one, and a
+    refused resume must leave the artifacts of the run it refused exactly as they were."""
+    dev = torch.device("cpu")
+    kw = dict(graph=False, progress=lambda m: None, schedule="abab", hit_every=100,
+              keep_ckpts=True, checkpoint=True, run_id=A.EXPERIMENT)
+    whole, part = SMOKE / "_resume8" / "whole", SMOKE / "_resume8" / "part"
+    for o in (whole, part):
+        shutil.rmtree(o, ignore_errors=True)
+    B.run("LR", [0, 1], ["std"], 2, 4, dev, whole, **kw)              # uninterrupted
+    B.run("LR", [0, 1], ["std"], 1, 4, dev, part, **kw)               # "killed" after task 1
+    lab = part / "labels.npz"
+    before = (lab.stat().st_mtime_ns, lab.read_bytes())
+    refused = {}
+    for tag, over in (("schedule", {"schedule": "aaaa"}), ("hit_every", {"hit_every": 50}),
+                      ("device", {})):
+        try:
+            k2 = {**kw, **over}
+            if tag == "device":                       # cuda vs cpu changes the trajectory (S5b)
+                if not torch.cuda.is_available():
+                    refused[tag] = None
+                    continue
+                B.run("LR", [0, 1], ["std"], 2, 4, torch.device("cuda"), part, resume=True, **k2)
+            else:
+                B.run("LR", [0, 1], ["std"], 2, 4, dev, part, resume=True, **k2)
+            refused[tag] = False
+        except SystemExit as e:
+            refused[tag] = "another configuration" in str(e)
+    after = (lab.stat().st_mtime_ns, lab.read_bytes())
+    untouched = before == after
+    B.run("LR", [0, 1], ["std"], 2, 4, dev, part, resume=True, **kw)   # the real resume
+    a, b = rows_of(whole / "per_task.csv"), rows_of(part / "per_task.csv")
+    rows_same = keyed(a) == keyed(b)
+    snaps, bad = 0, []
+    for s in (0, 1):
+        for t in range(3):
+            same, _ = snap_diff(B.snapshot_path(whole, "LR", "std", s, t),
+                                B.snapshot_path(part, "LR", "std", s, t))
+            snaps += 1
+            if not same:
+                bad.append(f"seed{s}/t{t:02d}")
+    tr_bad = []
+    for s in (0, 1):
+        p, q = (np.load(o / "trace" / f"LR_std_seed{s}.npz") for o in (whole, part))
+        for k in ("task", "tc", "step") + TRCOLS[1:]:
+            if not np.array_equal(p[k], q[k]):
+                tr_bad.append(f"seed{s}:{k}")
+    lab_same = (whole / "labels.npz").read_bytes() == lab.read_bytes()
+    return record("S8 a resumed run equals the uninterrupted one, and a refused resume touches "
+                  "nothing", rows_same and not bad and not tr_bad and lab_same and untouched
+                  and all(v for v in refused.values() if v is not None),
+                  {"rows": len(a), "rows_identical": rows_same, "snapshots": snaps,
+                   "snapshots_differing": bad, "trace_differing": tr_bad,
+                   "labels_npz_identical": lab_same,
+                   "labels_npz_untouched_by_the_refusals": untouched,
+                   "refused": refused, "resumed_at_task":
+                       json.loads((part / "provenance.json").read_text())["resumed_at_task"]})
+
+
 def log_step_ms(name: str) -> list[float]:
     """The per-task ms/step the runner printed, in order (provenance only keeps the last task,
     and by then the jobs that shared the GPU may already have finished)."""
@@ -623,13 +710,14 @@ def s7() -> bool:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("stages", nargs="+",
-                    choices=["all", "smoke", "s1", "s2", "s3", "s4", "s5", "s6", "s7"])
+                    choices=["all", "smoke", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
+                             "s8"])
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--threads", type=int, default=4)
     a = ap.parse_args()
     torch.set_num_threads(a.threads)
     device = H.setup(a.device)
-    stages = (["smoke", "s1", "s2", "s3", "s4", "s5", "s6", "s7"] if "all" in a.stages
+    stages = (["smoke", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"] if "all" in a.stages
               else a.stages)
     OUT.mkdir(parents=True, exist_ok=True)
     f = OUT / "checks.json"
@@ -640,7 +728,7 @@ def main() -> None:
         elif st == "s4":
             s4(device)
         else:
-            {"s1": s1, "s2": s2, "s3": s3, "s5": s5, "s6": s6, "s7": s7}[st]()
+            {"s1": s1, "s2": s2, "s3": s3, "s5": s5, "s6": s6, "s7": s7, "s8": s8}[st]()
     prev.update(RES)
     prev["_git"] = B.git_state()
     prev["_stages"] = stages
@@ -648,6 +736,7 @@ def main() -> None:
     f.write_text(json.dumps(prev, indent=2, default=str))
     bad = [k for k, v in prev.items() if not k.startswith("_") and not v["pass"]]
     print(f"\nwrote {f}\nall pass: {not bad}" + (f"  FAILED: {bad}" if bad else ""))
+    sys.exit(1 if bad else 0)
 
 
 if __name__ == "__main__":

@@ -14,12 +14,16 @@ The GPU may be shared with another launcher, so the cap counts every CUDA comput
 at least `min_gpu_mb` (the desktop's small CUDA clients sit near 100 MB) together with this
 launcher's own runs; a job starts only while that count is below gpu_max, this launcher runs fewer
 than own_max jobs, and MemAvailable - rss_gb >= reserve_gb.  Jobs start in list order, 25 s apart.
-A job whose provenance.json exists is done; plan runs already alive are adopted; a run that dies is
-restarted up to `retries` times and resumes from its per-task ckpt.pt (the runner resumes by
-default).  The plan is re-read every cycle; touch <out>/_launch/STOP to stop starting new jobs.
+A job counts as done only when its provenance.json agrees with the planned configuration (see
+done()); a mismatch is refused rather than adopted.  Plan runs already alive are adopted by their
+--out path; a run that dies is restarted up to `retries` times and resumes from its per-task
+ckpt.pt (the runner resumes by default, and refuses a checkpoint from another setting).  The
+runner also takes an exclusive lock on its output directory, so two launchers cannot both write
+one.  The plan is re-read every cycle; touch <out>/_launch/STOP to stop starting new jobs.
 
-A `"device": "cpu"` job does not count against gpu_max (plan_stop.json: the three R = 1 stop
-chains, one process per seed, which run beside the GPU arms).
+A `"device": "cpu"` job does not count against gpu_max.  plan_stop.json's two stop chains run on
+cuda (R = 1, eager, one seed after another in one process): check S5b shows the cpu reproduces
+neither the reference chain nor itself once the stop rule feeds task lengths forward.
 """
 from __future__ import annotations
 
@@ -66,6 +70,36 @@ def job_dir(j: dict) -> Path:
     return OUT / j["arm"]
 
 
+# what a finished job's provenance must agree with before it counts as done.  Without this a
+# plan edited between launcher runs would adopt results produced under the old settings.
+JOB_KEYS = {"run": (("arm", "activation"), ("schedule", "schedule"), ("n_tasks", "tasks"),
+                    ("hit_every", "hit_every"), ("keep_ckpts", "keep_ckpts")),
+            "chain": (("arm", "activation"), ("schedule", "schedule"), ("n_tasks", "tasks"),
+                      ("hit_every", "hit_every"))}
+
+
+def done(j: dict) -> bool:
+    """True when job_dir(j) holds a finished run of THIS configuration; refuse a mismatch."""
+    p = job_dir(j) / "provenance.json"
+    if not p.exists():
+        return False
+    d = json.loads(p.read_text())
+    stage = j.get("stage", "run")
+    bad = {pk: (d.get(pk), j.get(jk)) for pk, jk in JOB_KEYS[stage]
+           if jk in j and d.get(pk) != j[jk]}
+    want_stop = [float(x) if i == 0 else int(x)
+                 for i, x in enumerate(str(j["stop"]).split(","))] if j.get("stop") else None
+    if (d.get("stop") or None) != want_stop:
+        bad["stop"] = (d.get("stop"), want_stop)
+    if (d.get("device") or "").split(":")[0] != ("cuda" if j.get("device", "auto") != "cpu"
+                                                 else "cpu"):
+        bad["device"] = (d.get("device"), j.get("device"))
+    if bad:
+        raise SystemExit(f"{job_dir(j)} was produced with another configuration {bad} "
+                         f"(found, planned); move it aside or rename the job")
+    return True
+
+
 def log(ev: dict) -> None:
     ev = {"t": time.strftime("%F %T"), **ev}
     with open(L / "events.jsonl", "a") as fh:
@@ -100,13 +134,20 @@ def scan_runs() -> dict[str, int]:
         except OSError:
             continue
         argv = [x.decode(errors="replace") for x in argv if x]
-        if len(argv) < 3 or not argv[1].endswith("altlabels_cifar_0923.py"):
-            continue
-        if argv[2] not in ("run", "chain"):
+        # the script may sit anywhere in argv (python -u script.py run ...), and the stage
+        # token is whatever follows it
+        ix = next((i for i, x in enumerate(argv) if x.endswith("altlabels_cifar_0923.py")), None)
+        if ix is None or ix + 1 >= len(argv) or argv[ix + 1] not in ("run", "chain"):
             continue
         if "--out" not in argv:
             continue
-        o = str(Path(argv[argv.index("--out") + 1]).resolve())
+        o = Path(argv[argv.index("--out") + 1])
+        if not o.is_absolute():                 # relative to THAT process's cwd, not ours
+            try:
+                o = Path(os.readlink(f"/proc/{p}/cwd")) / o
+            except OSError:
+                continue
+        o = str(o.resolve())
         if o.startswith(root + os.sep):
             found[o] = int(p)
     return found
@@ -156,7 +197,7 @@ def main() -> None:
                     continue
                 rc = None
             del running[name]
-            ok = (rc in (0, None)) and (job_dir(r["job"]) / "provenance.json").exists()
+            ok = (rc in (0, None)) and done(r["job"])
             if not ok:
                 tries[name] = tries.get(name, 0) + 1
                 if tries[name] > plan.get("retries", 2):
@@ -164,8 +205,7 @@ def main() -> None:
             log({"ev": "done" if ok else "FAILED", "job": name, "rc": rc, "tries": tries.get(name, 0),
                  "minutes": round((time.time() - r["t0"]) / 60, 1)})
         pending = [j for n, j in jobs.items()
-                   if n not in running and n not in failed
-                   and not (job_dir(j) / "provenance.json").exists()]
+                   if n not in running and n not in failed and not done(j)]
         if not pending and not running:
             log({"ev": "launcher_exit", "failed": sorted(failed)})
             return
