@@ -528,7 +528,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         hi: float = 3.0, progress=None, cifar: RC.Cifar10 | None = None,
         debug: dict | None = None, perturb: list[float] | None = None,
         nan_slot: int | None = None, snapshots: bool = True, checkpoint: bool = False,
-        resume: bool = False, graph: bool = True) -> dict:
+        resume: bool = False, graph: bool = True, eps: float = 1e-8) -> dict:
     """Train R = len(seeds) * len(conds) runs in lockstep and write their rows/hists/snapshots.
 
     `arm` is a cell name from CELLS; the per_task rows keep the parent engine's column name
@@ -544,7 +544,10 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
 
     `graph` (cuda only) captures one training step as a CUDA graph and replays it: the same
     kernels on the same static tensors, so the rows are the eager engine's bit for bit (S-graph),
-    without a host round trip per step."""
+    without a host round trip per step.
+
+    `eps` is Adam's epsilon (le_eps_cifar_0922 §1); the default 1e-8 is the parent's constant,
+    so the default path is the parent's step bit for bit (check S1 of that spec)."""
     t_start = time.time()
     progress = progress or (lambda m: print(m, flush=True))   # a redirected stdout is block-buffered
     act = make_act(arm, c, beta, lo, hi)
@@ -575,7 +578,8 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         debug["init"] = [q.detach().cpu().clone() for q in P]
     step_ms = float("nan")
     meta = {"arm": arm, "seeds": seeds, "conds": conds, "epochs": epochs, "lr": lr, "c": c,
-            "beta": beta, "lo": lo, "hi": hi, "perturb": perturb, "nan_slot": nan_slot}
+            "beta": beta, "lo": lo, "hi": hi, "perturb": perturb, "nan_slot": nan_slot,
+            "eps": eps}
     ck = out / "ckpt.pt"
     git_states, resumed, t_first = [git_state()], [], 1
     if resume and ck.exists():
@@ -612,7 +616,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             write_snapshot(snapshot_path(out, arm, cd, s, 0), P, act, r)      # t00 = init
 
     # ---- one training step on static tensors (eager, or captured once and replayed)
-    b1, b2, eps = 0.9, 0.999, 1e-8
+    b1, b2 = 0.9, 0.999
     static_idx = torch.zeros(R, BATCH, dtype=torch.long, device=device)
     Ydev = torch.zeros(R, N_IMAGES, dtype=torch.long, device=device)
     inv_c1 = torch.zeros((), device=device)          # x / c (python float) == x * float32(1/c), bit for bit
@@ -751,7 +755,8 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             "n_tasks": n_tasks, "epochs_per_task": epochs, "batch": BATCH, "steps_per_task": spt,
             "n_images": N_IMAGES, "train_n": RC.TRAIN_N, "dims": list(DIMS), "n_classes": N_CLASSES,
             "sna_c": c, "sna_beta": beta, "alpha_lo": lo, "alpha_hi": hi, "intervention": "none",
-            "optimizer": "adam", "weight_decay": 0.0, "data_sha256": cifar.sha256,
+            "optimizer": "adam", "adam_eps": eps, "adam_betas": [b1, b2], "weight_decay": 0.0,
+            "data_sha256": cifar.sha256,
             "subset_sha256": {str(s): hashlib.sha256(
                 np.sort(RC.subset_idx(s).numpy()).tobytes()).hexdigest() for s in seeds},
             "std": {"mean": STD_MEAN, "std": STD_STD, "planes": "R,G,B x 1024"},
@@ -800,6 +805,7 @@ def main() -> None:
     ap.add_argument("--beta", type=float, default=0.01)
     ap.add_argument("--alpha-lo", type=float, default=0.005)
     ap.add_argument("--alpha-hi", type=float, default=3.0)
+    ap.add_argument("--eps", type=float, default=1e-8, help="Adam epsilon (le_eps_cifar_0922)")
     ap.add_argument("--out", default=None, help="default results/<experiment>/<cell>")
     ap.add_argument("--device", default="auto")
     ap.add_argument("--threads", type=int, default=2, help="torch cpu threads (eval: eff_rank, histograms)")
@@ -809,7 +815,8 @@ def main() -> None:
     device = H.setup(a.device)
     out = Path(a.out) if a.out else OUT_ROOT / a.cell
     run(a.cell, parse_ints(a.seeds), a.conds.split(","), a.tasks, a.epochs, device, out,
-        c=a.c, beta=a.beta, lo=a.alpha_lo, hi=a.alpha_hi, checkpoint=True, resume=not a.no_resume)
+        c=a.c, beta=a.beta, lo=a.alpha_lo, hi=a.alpha_hi, checkpoint=True, resume=not a.no_resume,
+        eps=a.eps)
 
 
 if __name__ == "__main__":
