@@ -1,0 +1,212 @@
+{
+  "G1": {
+    "pass": true,
+    "t1_memo_median": {
+      "LE_ref": 1.0,
+      "LL_ref": 1.0,
+      "LE_sw75": 1.0,
+      "LE_md75": 1.0,
+      "LE_sw750": 1.0,
+      "LE_md750": 1.0,
+      "LE_sw7500": 1.0,
+      "LE_md7500": 1.0,
+      "LL_sw750": 1.0,
+      "LL_md750": 1.0
+    },
+    "rule": ">= 0.9"
+  },
+  "G2": {
+    "pass": true,
+    "reference_band_LE_ref_t5": [
+      470.591643,
+      863.6407713
+    ],
+    "mu2_t5_median": {
+      "LE_md75": 673.6746209,
+      "LE_md750": 671.5821522,
+      "LE_md7500": 512.6714738000001
+    }
+  },
+  "Q1": {
+    "label": "SWITCH_MAKES_THE_PUSH",
+    "halved": true,
+    "pair": "LE_md750 - LE_sw750",
+    "median": 538.7057563999999,
+    "pos": 10,
+    "n": 10,
+    "p": 0.001953125,
+    "call": "A_WINS",
+    "median_LE_sw750": 141.2354402,
+    "median_LE_md750": 671.5821522
+  },
+  "Q2": {
+    "label": "MONOTONE",
+    "mu2_t5_median_switch": {
+      "75": 587.8511212000001,
+      "750": 141.2354402,
+      "7500": 116.1228193
+    },
+    "mu2_t5_median_mid": {
+      "75": 673.6746209,
+      "750": 671.5821522,
+      "7500": 512.6714738000001
+    },
+    "mu2_t5_median_ref": 697.3301079
+  },
+  "Q3": {
+    "label": "ANTI_ALIGN_REDUCED",
+    "pair": "LE_sw750 - LE_md750",
+    "median": 0.05241871655000002,
+    "pos": 10,
+    "n": 10,
+    "p": 0.001953125,
+    "call": "A_WINS",
+    "median_LE_md750": -0.26818738435,
+    "median_LE_sw750": -0.20522090675
+  },
+  "Q4": {
+    "LE_sw75": {
+      "label": "NOT_RESCUED",
+      "window_median": 0.10020119791424999,
+      "T_A_median": 3.0,
+      "T_A_per_seed": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ]
+    },
+    "LE_sw750": {
+      "label": "NOT_RESCUED",
+      "window_median": 0.178226197915,
+      "T_A_median": 8.0,
+      "T_A_per_seed": [
+        8,
+        7,
+        9,
+        8,
+        10,
+        8,
+        10,
+        7,
+        4,
+        9
+      ]
+    },
+    "LE_sw7500": {
+      "label": "PARTIAL_RESCUE",
+      "window_median": 0.27178078125000005,
+      "T_A_median": 13.5,
+      "T_A_per_seed": [
+        13,
+        13,
+        14,
+        14,
+        13,
+        15,
+        13,
+        13,
+        15,
+        14
+      ]
+    },
+    "LE_md750": {
+      "label": "NOT_RESCUED",
+      "window_median": 0.10009791666250001,
+      "T_A_median": 3.0,
+      "T_A_per_seed": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        2,
+        3,
+        3,
+        3
+      ]
+    },
+    "LE_ref": {
+      "label": "NOT_RESCUED",
+      "window_median": 0.10020119791424999,
+      "T_A_median": 3.0,
+      "T_A_per_seed": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ]
+    }
+  },
+  "Q5": {
+    "label": "LL_REVERSED",
+    "pair": "LL_md750 - LL_sw750",
+    "median": -29.308546205,
+    "pos": 0,
+    "n": 10,
+    "p": 0.001953125,
+    "call": "B_WINS",
+    "median_LL_sw750": 58.03085161,
+    "median_LL_md750": 30.306455655
+  },
+  "predictions": {
+    "P1": {
+      "predicate": "Q1 = SWITCH_MAKES_THE_PUSH",
+      "claude": 0.85,
+      "hit": true
+    },
+    "P2": {
+      "predicate": "Q2 = MONOTONE",
+      "claude": 0.8,
+      "hit": true
+    },
+    "P3": {
+      "predicate": "G2 holds (md ~ reference)",
+      "claude": 0.75,
+      "hit": true
+    },
+    "P4": {
+      "predicate": "Q3 = ANTI_ALIGN_REDUCED",
+      "claude": 0.7,
+      "hit": true
+    },
+    "P5": {
+      "predicate": "Q4: LE_sw7500 window >= 0.5",
+      "claude": 0.3,
+      "hit": false
+    },
+    "P6": {
+      "predicate": "Q4: LE_sw7500 T_A > 3",
+      "claude": 0.85,
+      "hit": true
+    },
+    "P7": {
+      "predicate": "Q5 = LL_SAME_MECHANISM",
+      "claude": 0.75,
+      "hit": false
+    },
+    "P8": {
+      "predicate": "G1 holds for every arm",
+      "claude": 0.9,
+      "hit": true
+    }
+  },
+  "claude_score": 7,
+  "_git": {
+    "git_hash": "77ca6687d329a22be7d646cff77cfa087717caa2",
+    "dirty_src_analysis": []
+  }
+}

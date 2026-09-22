@@ -106,4 +106,8 @@ P5 が低いのは、切替の押しを塞いでも課題を覚える過程自�
 
 ## 8. 記録
 
-（走の後に書く）
+- 15:2x 走の前の測定（§1、scratchpad `within_task.py` / `within_fine.py`）で K を導出。
+- 15:5x 検査 S1–S6 すべて通過（`results/switch_push_cifar_0922/checks.json`）。S2a はマスク式を書き直して達成（最初の式は相殺で親と 3444 ulp ずれた）。
+- 15:55–19:35 本走 8 腕（4 並列・各 107–111 分）。
+- 20:0x tail → report: **Q1 SWITCH_MAKES_THE_PUSH（141 対 672・10/10・p=0.002・半減）**、Q2 MONOTONE（588 / 141 / 116）、Q3 ANTI_ALIGN_REDUCED、Q4 LE_sw7500 は PARTIAL_RESCUE（窓 0.272・T_A 13.5）、**Q5 LL_REVERSED**、G1・G2 成立。Claude 6/8（P5・P7 外れ）。
+- 事後の読みは `results/switch_push_cifar_0922/summary.md`。要点は「切替は押しの速さを決めるが唯一の源ではない」「源を塞ぐ介入は遅らせるだけで、量に上限を置く介入だけが救う」。
