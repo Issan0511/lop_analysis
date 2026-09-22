@@ -706,6 +706,17 @@ def trace_tables(tr: Path, prov: dict, spt_default: int = 30000) -> dict:
     tce = {int(k): int(v) for k, v in (prov.get("tc_at_task_end") or {}).items()}
     spt = int(prov.get("steps_per_task", spt_default))
     stopped = prov.get("stop") is not None
+    have_prov = bool(prov)
+    # A run in progress has not written provenance.json yet (the engine writes it at the end),
+    # so tc_at_task_end is missing and the repair falls back to the trace's own last row --
+    # which is the task's END clock under BOTH the old and the new engine.  That is still
+    # correct, but the step-0 assertion is only meaningful when we can see this is an
+    # unrestored, full-length run: task 1 present and every task exactly steps_per_task long.
+    tasks_all = sorted(set(int(x) for x in d["task"].tolist()))
+    full_shape = (min(tasks_all) == 1) and all(
+        int(d["step"][d["task"] == t].max()) == spt for t in tasks_all)
+    assertable = ((prov.get("restore") is None and not stopped) if have_prov
+                  else full_shape)
     out = {}
     for t in sorted(set(int(x) for x in d["task"].tolist())):
         m = d["task"] == t
@@ -727,9 +738,12 @@ def trace_tables(tr: Path, prov: dict, spt_default: int = 30000) -> dict:
             # engines after commit 0a9c457 write the per-row tc themselves; before it they
             # wrote the task's final tc on every row.  Either way the repair is independent.
             "tc_column_already_per_row": bool(np.array_equal(stored, rec["tc_repaired"])),
-            "tc0_expected": (spt * (t - 1)) if not stopped else None,
-            "tc0_ok": (bool(tc0 == spt * (t - 1)) if not stopped and prov.get("restore") is None
-                       else None),
+            "tc0_expected": (spt * (t - 1)) if assertable else None,
+            "tc0_ok": bool(tc0 == spt * (t - 1)) if assertable else None,
+            "provenance_present": have_prov,
+            "tc_source": ("tc_at_task_end diff" if (t - 1) in tce else
+                          "trace last row" if have_prov else
+                          "trace last row (no provenance.json: run in progress)"),
         }
         out[t] = rec
     return out
@@ -777,6 +791,7 @@ def trace_phase_rows(arm: Arm, seed: int, tt: dict | None = None) -> list:
             "tc_start_expected_ok": meta["tc0_ok"],
             "steps_vs_last_step_ok": meta["steps_vs_last_step_ok"],
             "tc_column_already_per_row": meta["tc_column_already_per_row"],
+            "tc_source": meta["tc_source"],
             "hit99": h99, "hit999": h999, "hit_full": hfull,
             "hit999_tc": tc_at(h999) if h999 >= 0 else -1,
             "horizon_step": last,
@@ -840,9 +855,19 @@ def fork_trace_hits(bundle: Path, act: str, cond: str, seed: int) -> dict:
     def first(need):
         w = np.nonzero(elig & (cnt >= need))[0]
         return int(step[w[0]]) if len(w) else -1
-    return {"trace": True, "hit99": first(NEED99), "hit999": first(NEED999),
+    h999 = first(NEED999)
+    want = h999 + 500 if h999 >= 0 else -1
+    at = {int(x): i for i, x in enumerate(step)}
+    seen = want >= 0 and want in at
+    after = cnt[step > h999] if h999 >= 0 else np.array([], dtype=np.int64)
+    return {"trace": True, "hit99": first(NEED99), "hit999": h999,
             "hit_full": first(NEED_FULL), "horizon": int(step[-1]),
-            "last_correct": int(cnt[-1]), "n1_last": float(n1[-1])}
+            "last_correct": int(cnt[-1]), "n1_last": float(n1[-1]),
+            # recomputed here, not taken from the run's own column (which substitutes the
+            # final count when hit999 + 500 was never evaluated)
+            "correct_at_hit999_plus_500": int(cnt[at[want]]) if seen else -1,
+            "hit_plus_500_observed": bool(seen),
+            "min_correct_after_hit999": int(after.min()) if after.size else -1}
 
 
 def censored_ratio(a: float, c: float, a_cens: bool, c_cens: bool,
@@ -879,7 +904,7 @@ def fork_rows(name: str, fdir: Path, main: Arm, Qlam: dict, seeds) -> tuple:
         if seed not in seeds:
             continue
         r = {"fork_set": name, "src_arm": main.name, "t": t, "seed": seed}
-        per = {}
+        per, alive = {}, {}
         for br in ("A", "B", "C", "next"):
             gb = g[g["branch"] == br]
             if gb.empty:
@@ -902,6 +927,10 @@ def fork_rows(name: str, fdir: Path, main: Arm, Qlam: dict, seeds) -> tuple:
             r[f"hit_full_source_{br}"] = "bundle_trace" if tr.get("trace") else "unavailable"
             r[f"horizon_{br}"] = horizon
             r[f"last_correct_{br}"] = tr.get("last_correct", np.nan)
+            r[f"correct_at_hit999_plus_500_{br}"] = tr.get("correct_at_hit999_plus_500", np.nan)
+            r[f"hit_plus_500_observed_{br}"] = tr.get("hit_plus_500_observed", np.nan)
+            r[f"min_correct_after_hit999_{br}"] = tr.get("min_correct_after_hit999", np.nan)
+            alive[br] = str(row.get("status", "alive") or "alive") == "alive"
             r[f"stop_step_{br}"] = row.get("stop_step", np.nan)
             r[f"bundle_steps_{br}"] = row.get("bundle_steps", np.nan)
             r[f"correct_at_stop_{br}"] = row.get("correct_at_stop", np.nan)
@@ -937,7 +966,7 @@ def fork_rows(name: str, fdir: Path, main: Arm, Qlam: dict, seeds) -> tuple:
         pairs = [("A", "C", "AC"), ("next", "C", "nextC")]
         for key in ("hit999", "hit99", "hit_full"):
           for lhs, rhs, tag in pairs:
-            if lhs in per and rhs in per:
+            if lhs in per and rhs in per and alive.get(lhs, True) and alive.get(rhs, True):
                 (a, ah), (c, ch) = per[lhs][key], per[rhs][key]
                 ac, cc = a < 0, c < 0
                 a = ah if ac else a
@@ -952,8 +981,10 @@ def fork_rows(name: str, fdir: Path, main: Arm, Qlam: dict, seeds) -> tuple:
                 for suf in ("_lo", "_hi", ""):
                     r[f"ratio_{tag}_{key}{suf}"] = np.nan
                 r[f"sign_{tag}_{key}"] = np.nan
-                r[f"censoring_{tag}_{key}"] = "branch_missing"
-        r["status"] = ("ok" if ("A" in per and "C" in per) else
+                r[f"censoring_{tag}_{key}"] = (
+                    "slot_not_alive" if (lhs in per and rhs in per) else "branch_missing")
+        r["status"] = ("slot_not_alive" if any(not v for v in alive.values()) else
+                       "ok" if ("A" in per and "C" in per) else
                        "iid_fork_next_vs_C" if ("next" in per and "C" in per) else
                        "incomplete_branches")
         wide.append(r)
@@ -1124,6 +1155,9 @@ def main() -> None:
                 st_bad = [q["task"] for q in tpr if not q["steps_vs_last_step_ok"]]
                 diag_rows.append({
                     "arm": n, "seed": seed, "T_present": S["T"],
+                    "provenance_present": bool(prov_slot),
+                    "provenance_path": str(arm.slot_dir(seed) / "provenance.json"),
+                    "tc_source": ";".join(sorted({q["tc_source"] for q in tpr})) or "no trace",
                     "max_identity_abs": float(np.nanmax(np.abs(S["res"]))),
                     "max_identity_rel": float(np.nanmax(relres)) if relres.size else np.nan,
                     "max_bandsum_err": float(np.nanmax(np.abs(bandsum))),
@@ -1142,7 +1176,9 @@ def main() -> None:
                 })
                 print(f"[{time.time()-t0:7.1f}s]   {n:14s} seed{seed} T={S['T']:2d} "
                       f"res {diag_rows[-1]['max_identity_rel']:.1e} "
-                      f"sig-vs-trace {sig_err:.2e} ({time.time()-ts:.1f}s)", flush=True)
+                      f"sig-vs-trace {sig_err:.2e}"
+                      f"{'  [no provenance.json: run still going]' if not prov_slot else ''}"
+                      f" ({time.time()-ts:.1f}s)", flush=True)
                 del S
             del Q, lam
             Qlam.pop(seed, None)
@@ -1204,6 +1240,14 @@ def main() -> None:
             "3a3978b607a95222b1067a00bc53e1ce3cfab84e04219a393e052f31d06165c5",
         "bands": {n: list(BAND_RANGE[n]) for n in BAND_RANGE} | {"comp": "3072 - 1200 dims",
                                                                  "all": "3072"},
+        "arms_without_provenance": sorted(set(
+            str(q["arm"]) for q in diag_rows if not q["provenance_present"])),
+        "arms_without_provenance_note":
+            "the engine writes provenance.json when the run ends, so an arm listed here was "
+            "still running.  tc_at_task_end was unavailable and the ledger fell back to the "
+            "trace's own last row (the task-end clock under both engine versions); the "
+            "step-0 assertion is skipped unless the trace has an unrestored full-run shape.  "
+            "Every number from such an arm is PROVISIONAL and must be regenerated.",
         "arms": {n: {"act": arm.act, "cond": arm.cond, "tasks": arm.tasks,
                      "cycle": arm.cycle, "schedule": arm.schedule, "root": str(arm.root),
                      "seeds": sd, "report_only": arm.report_only,
@@ -1224,6 +1268,7 @@ def main() -> None:
             "sigma_med_vs_trace_max_abs":
                 float(d["sigma_med_vs_trace_max_abs"].max()) if len(d) else None,
             "tc_repair_ok": bool(len(d) and (d["tc_repair_bad_tasks"] == "").all()),
+            "all_arms_have_provenance": bool(len(d) and d["provenance_present"].all()),
             "steps_vs_last_step_ok": bool(len(d) and (d["steps_vs_last_step_bad_tasks"] == "").all()),
         },
         "conventions": {

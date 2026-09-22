@@ -733,6 +733,14 @@ def write_summary(V: dict, P: list, D: Data, meta: dict, out: Path, sfx: str) ->
     if miss:
         w("")
         w("未着手/未検出: " + ", ".join(f"`{k}`" for k in miss))
+    nop = D.prov.get("arms_without_provenance") or []
+    if nop:
+        w("")
+        w("**provenance.json がまだ無い腕**（エンジンは走り終わりに書くので、走行中）: "
+          + ", ".join(f"`{k}`" for k in nop)
+          + "。これらの数値はすべて暫定で、走が終わってから出し直す必要がある。"
+            "tc は trace の最終行（課題終端の時計）から復元しており、"
+            "step 0 の照合はフル走の形が確認できる場合だけ行っている。")
     w("")
     prov = [k for k, v in V.items() if isinstance(v, dict) and v.get("provisional")]
     if prov:
