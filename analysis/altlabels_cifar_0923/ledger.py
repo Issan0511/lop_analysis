@@ -1156,6 +1156,7 @@ def main() -> None:
                 diag_rows.append({
                     "arm": n, "seed": seed, "T_present": S["T"],
                     "provenance_present": bool(prov_slot),
+                    "report_only": bool(arm.report_only),
                     "provenance_path": str(arm.slot_dir(seed) / "provenance.json"),
                     "tc_source": ";".join(sorted({q["tc_source"] for q in tpr})) or "no trace",
                     "max_identity_abs": float(np.nanmax(np.abs(S["res"]))),
@@ -1241,10 +1242,14 @@ def main() -> None:
         "bands": {n: list(BAND_RANGE[n]) for n in BAND_RANGE} | {"comp": "3072 - 1200 dims",
                                                                  "all": "3072"},
         "arms_without_provenance": sorted(set(
-            str(q["arm"]) for q in diag_rows if not q["provenance_present"])),
+            str(q["arm"]) for q in diag_rows
+            if not q["provenance_present"] and not q["report_only"])),
+        "external_reference_arms": sorted(set(
+            str(q["arm"]) for q in diag_rows if q["report_only"])),
         "arms_without_provenance_note":
             "the engine writes provenance.json when the run ends, so an arm listed here was "
-            "still running.  tc_at_task_end was unavailable and the ledger fell back to the "
+            "still running (the archived external references are listed separately: they are "
+            "finished, keep no provenance.json at that path, and have no trace).  tc_at_task_end was unavailable and the ledger fell back to the "
             "trace's own last row (the task-end clock under both engine versions); the "
             "step-0 assertion is skipped unless the trace has an unrestored full-run shape.  "
             "Every number from such an arm is PROVISIONAL and must be regenerated.",
@@ -1268,7 +1273,8 @@ def main() -> None:
             "sigma_med_vs_trace_max_abs":
                 float(d["sigma_med_vs_trace_max_abs"].max()) if len(d) else None,
             "tc_repair_ok": bool(len(d) and (d["tc_repair_bad_tasks"] == "").all()),
-            "all_arms_have_provenance": bool(len(d) and d["provenance_present"].all()),
+            "all_arms_have_provenance": bool(
+                len(d) and d.loc[~d["report_only"], "provenance_present"].all()),
             "steps_vs_last_step_ok": bool(len(d) and (d["steps_vs_last_step_bad_tasks"] == "").all()),
         },
         "conventions": {
