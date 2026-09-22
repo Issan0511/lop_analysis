@@ -19,6 +19,7 @@ Nothing in pmnist_0905 / pmnist_rlmnist_0906 / pmnist_rlcifar_0907 is modified.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import math
@@ -316,6 +317,125 @@ def make_act(arm: str, c=0.6, beta=0.01, lo=0.005, hi=3.0) -> Act:
 
 
 # --------------------------------------------------------------------------
+# label schedules (altlabels_cifar_0923 §1.1).  "iid" is the parent's: one fresh
+# draw from the seed's rlc_labels stream per task.  The others draw A (1st), B
+# (2nd), C (3rd) once up front -- the same first draws the iid run makes -- and
+# replay them, so abab's tasks 1 and 2 are the iid run's tasks 1 and 2.
+# --------------------------------------------------------------------------
+
+SCHEDULES = {"iid": 0, "abab": 2, "aaaa": 1, "abc": 3}          # name -> fixed labelings needed
+
+
+def schedule_index(schedule: str, t: int) -> int:
+    """0-based index into the fixed labelings [A, B, C] for task t (1-based).
+
+    abab: t odd -> A, t even -> B;  aaaa: always A;  abc: t mod 3 = 1/2/0 -> A/B/C.
+    """
+    n = SCHEDULES[schedule]
+    if n == 0:
+        raise ValueError("the iid schedule has no fixed labelings")
+    return (t - 1) % n
+
+
+def labels_sha256(fixed: dict[int, list[torch.Tensor]]) -> str:
+    """One digest over every fixed labeling, seed by seed, in draw order."""
+    h = hashlib.sha256()
+    for s in sorted(fixed):
+        for y in fixed[s]:
+            h.update(np.ascontiguousarray(y.cpu().numpy().astype(np.int64)).tobytes())
+    return h.hexdigest()
+
+
+def labels_stats(fixed: dict[int, list[torch.Tensor]]) -> dict:
+    """Per seed: the class histogram of each labeling and the pairwise agreement fractions.
+
+    Two independent uniform labelings over 10 classes agree on 1/10 of the images, so these are
+    the descriptive numbers the analysis quotes when it says A and B are "different labelings".
+    """
+    seeds = sorted(fixed)
+    names = ("A", "B", "C")
+    out: dict[str, list] = {"seeds": [int(s) for s in seeds]}
+    y = {s: [q.cpu().numpy().astype(np.int64) for q in fixed[s]] for s in seeds}
+    for i, nm in enumerate(names):
+        if all(len(y[s]) > i for s in seeds):
+            out[f"{nm}_counts"] = [np.bincount(y[s][i], minlength=N_CLASSES).tolist() for s in seeds]
+    for i, j in ((0, 1), (0, 2), (1, 2)):
+        if all(len(y[s]) > max(i, j) for s in seeds):
+            out[f"agree_{names[i]}{names[j]}"] = [float((y[s][i] == y[s][j]).mean()) for s in seeds]
+    return out
+
+
+def write_labels(path: Path, fixed: dict[int, list[torch.Tensor]]) -> None:
+    """labels.npz: A/B/C as (n_seeds, 1200) int64 where the schedule has them, plus seeds,
+    each labeling's class counts and the pairwise agreement fractions.  Written through a
+    temporary file so an interrupted write cannot leave a half-written labelling behind."""
+    seeds = sorted(fixed)
+    d = {"seeds": np.asarray(seeds, dtype=np.int64)}
+    for i, name in enumerate(("A", "B", "C")):
+        if all(len(fixed[s]) > i for s in seeds):
+            d[name] = np.stack([fixed[s][i].cpu().numpy().astype(np.int64) for s in seeds])
+    for k, v in labels_stats(fixed).items():
+        if k != "seeds":
+            d[k] = np.asarray(v)
+    savez_atomic(path, **d)
+
+
+def read_labels(path: Path) -> dict[int, list[torch.Tensor]]:
+    """The fixed labelings back out of a labels.npz, in the draw order write_labels used."""
+    d = np.load(path)
+    seeds = [int(x) for x in d["seeds"]]
+    return {s: [torch.from_numpy(d[nm][i].astype(np.int64))
+                for nm in ("A", "B", "C") if nm in d.files] for i, s in enumerate(seeds)}
+
+
+def publish_labels(path: Path, fixed: dict[int, list[torch.Tensor]], sha: str,
+                   strict: bool) -> None:
+    """Write labels.npz, or -- when one is already there -- leave it alone after checking it.
+
+    `strict` (a run that is resuming from a checkpoint) turns a digest mismatch into a refusal:
+    the labelling an existing run was trained on is an artifact, never something to overwrite.
+    """
+    if path.exists():
+        try:
+            have = labels_sha256(read_labels(path))
+        except Exception as e:                                   # unreadable / truncated
+            if strict:
+                raise SystemExit(f"{path} cannot be read ({e}); refusing to overwrite it")
+            have = None
+        if have == sha:
+            return                                               # already correct, untouched
+        if strict:
+            raise SystemExit(f"{path} holds another labelling ({have} != {sha}); refusing to "
+                             f"overwrite the labels this run was trained on")
+    write_labels(path, fixed)
+
+
+def parse_stop(s: str | None) -> tuple[float, int] | None:
+    """'0.999,500' -> (0.999, 500); None/'' -> None."""
+    if not s:
+        return None
+    a, b = s.split(",")
+    return float(a), int(b)
+
+
+def need_correct(acc: float) -> int:
+    """How many of the 1200 images an accuracy threshold asks for: 0.99 -> 1188, 0.999 -> 1199
+    (0.999 * 1200 = 1198.8).  The hit logic counts images, never float32 accuracies."""
+    return int(math.ceil(acc * N_IMAGES - 1e-9))
+
+
+TRACE_COLS = ("correct", "ce", "margin_med", "n1", "n2", "n3", "sig_med")
+HIT_PLUS = 500                     # the post-hit window the rows report (spec §1.2)
+# traces written before this commit put the task's FINAL tc on every row; repair them with
+#   tc_row = tc_stored - task_steps + step        (task_steps = 30,000, or the row's `steps`)
+TRACE_TC_BUG_BEFORE = "253b8386393ae4d6a436c6ebc303536b8bc6e1b8"
+PERM_RULE = ("rlc_batch: one torch.randperm(1200) per epoch, drawn at the epoch's start; a task "
+             "that ends mid-epoch has already drawn that epoch's permutation, and one ending "
+             "exactly on an epoch boundary draws and discards one more (width_replay.py's "
+             "convention, lines 314-321).  Every task starts a fresh epoch.")
+
+
+# --------------------------------------------------------------------------
 # data (spec §2.3)
 # --------------------------------------------------------------------------
 
@@ -422,11 +542,16 @@ def snapshot_path(out: Path, arm: str, cond: str, seed: int, task: int) -> Path:
 
 @torch.no_grad()
 def replay_stack(out: Path, arm: str, slots: list[tuple[int, str]], task: int, device=None,
-                 cifar: RC.Cifar10 | None = None, c=0.6, beta=0.01, lo=0.005, hi=3.0):
+                 cifar: RC.Cifar10 | None = None, c=0.6, beta=0.01, lo=0.005, hi=3.0,
+                 schedule: str = "iid", labels: Path | None = None):
     """Rebuild stacked (z1, a1, z2, a2, logits, Y) on each slot's 1200 images from the saved
     snapshots.  With the run's own slot list (provenance "slots", same order) this is the
     forward `evaluate` ran, bit for bit on the same device (S-snap); other layouts differ by
-    batched-BLAS round-off (up to ~1e-4 absolute at |z| ~ 50)."""
+    batched-BLAS round-off (up to ~1e-4 absolute at |z| ~ 50).
+
+    WARNING: the default regenerates the labels by TASK NUMBER off the iid stream.  A run under
+    schedule abab/aaaa/abc repeats A/B/C instead, so pass that run's `schedule` and its
+    `labels.npz` (provenance "schedule" / <out>/labels.npz) or the labels are simply wrong."""
     device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
     cifar = cifar or RC.Cifar10()
     ds = [np.load(snapshot_path(out, arm, cd, s, task)) for s, cd in slots]
@@ -438,6 +563,13 @@ def replay_stack(out: Path, arm: str, slots: list[tuple[int, str]], task: int, d
         act.V = [torch.stack([torch.from_numpy(d[k]) for d in ds]).to(device) for k in ("V1", "V2")]
     X = torch.stack([slot_inputs(cifar, s, cd, device) for s, cd in slots])
     Y = []
+    if schedule != "iid":
+        lab = np.load(labels if labels is not None else out / "labels.npz")
+        lseeds = list(lab["seeds"])
+        name = ("A", "B", "C")[schedule_index(schedule, task)]
+        for s, cd in slots:
+            Y.append(torch.from_numpy(lab[name][lseeds.index(s)].astype(np.int64)))
+        return (*forward(P, X, act, train=False), torch.stack(Y).to(device))
     for s, cd in slots:
         g = H.stream("rlc_labels", s)
         for _ in range(task):
@@ -459,8 +591,32 @@ def write_hist(path: Path, hs: list[dict], accs: list[float]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     keys = list(hs[0].keys())
     extra = {"th_edges": TH_EDGES} if "th1" in keys else {}
-    np.savez_compressed(path, edges=RC.HIST_EDGES, acc=np.asarray(accs, dtype=np.float64),
-                        **{k: np.stack([h[k] for h in hs]) for k in keys}, **extra)
+    # these files are cumulative and rewritten every task, so an interrupted write would
+    # destroy the earlier tasks: build the new one beside it and swap it in
+    savez_atomic(path, compressed=True, edges=RC.HIST_EDGES,
+                 acc=np.asarray(accs, dtype=np.float64),
+                 **{k: np.stack([h[k] for h in hs]) for k in keys}, **extra)
+
+
+def save_atomic(obj, path: Path) -> None:
+    """torch.save through a temporary file in the same directory, then os.replace."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    torch.save(obj, tmp)
+    os.replace(tmp, path)
+
+
+def savez_atomic(path: Path, compressed: bool = False, **arrays) -> None:
+    """np.savez[_compressed] into a temporary file beside `path`, then os.replace.
+
+    The temporary file is opened as a handle: handed a *name* without a .npz suffix numpy
+    appends one, and the replace would then miss the file it just wrote.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "wb") as fh:
+        (np.savez_compressed if compressed else np.savez)(fh, **arrays)
+    os.replace(tmp, path)
 
 
 # --------------------------------------------------------------------------
@@ -481,7 +637,12 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         hi: float = 3.0, progress=None, cifar: RC.Cifar10 | None = None,
         debug: dict | None = None, perturb: list[float] | None = None,
         nan_slot: int | None = None, snapshots: bool = True, checkpoint: bool = False,
-        resume: bool = False, graph: bool = True) -> dict:
+        resume: bool = False, graph: bool = True,
+        schedule: str = "iid", hit_every: int = 0, keep_ckpts: bool = False,
+        stop: tuple[float, int] | None = None, stop_snap: str | None = None,
+        labels_fixed: dict[int, list[torch.Tensor]] | None = None,
+        restore: dict | None = None, run_id: str = EXPERIMENT,
+        extra_prov: dict | None = None) -> dict:
     """Train R = len(seeds) * len(conds) runs in lockstep and write their rows/hists/snapshots.
 
     Check-only hooks (never used by the main run): `perturb[r]` multiplies slot r's W1 by
@@ -494,12 +655,46 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
 
     `graph` (cuda only) captures one training step as a CUDA graph and replays it: the same
     kernels on the same static tensors, so the rows are the eager engine's bit for bit (S-graph),
-    without a host round trip per step."""
+    without a host round trip per step.
+
+    altlabels_cifar_0923 §1 (every default leaves the parent's path bit for bit):
+      `schedule`    iid (parent) / abab / aaaa / abc -- see SCHEDULES.
+      `hit_every`   >0: a read-only trace eval every that many steps (and once at step 0 of every
+                    task, recorded but not eligible for a hit): per slot the correct count out of
+                    1200, mean CE, median margin, n1/n2/n3 and sig_med (median over the 100 units
+                    of z1's std over images), into trace/<arm>_<cond>_seed<s>.npz.  hit99/hit999
+                    (the first step >= hit_every with >= 1188 / >= 1199 correct, -1 = never),
+                    acc_at_hit_plus_500 and min_correct_after_hit go into the rows.  It runs
+                    outside the CUDA graph, touches no static tensor and mutates nothing (S3).
+      `keep_ckpts`  also write ckpts/t<NN>.pt (everything a fork needs) after every task.
+      `stop`        (acc, extra): every slot gets its own stop step, `extra` after the first trace
+                    eval at or above `acc` (capped at the task's steps); the task ends when every
+                    slot has passed its own -- for R = 1 that is width_replay.py's rule exactly.
+                    Slots are never frozen.  `steps`/`stop_step`/`tc` go into the rows and `tc`
+                    keeps counting across tasks.
+      `stop_snap`   a file name template ("fork_t02_A_seed{seed}_stop.npz") written under
+                    out/snap/ at each slot's own stop step.
+      `labels_fixed`  {seed: [A, B, C]} supplied from outside instead of drawn (fork).
+      `restore`     {"path": ckpts/t<NN>.pt} (optionally "slots": [j, ...], one per slot here):
+                    start from that checkpoint's weights, Adam moments, tc, per-seed streams and
+                    alpha state instead of from the initialization.
+      `run_id` / `extra_prov`  what provenance.json records the run as."""
     t_start = time.time()
     progress = progress or (lambda m: print(m, flush=True))   # a redirected stdout is block-buffered
     act = make_act(arm, c, beta, lo, hi)
     slots = [(s, cd) for s in seeds for cd in conds]
     R = len(slots)
+    if schedule not in SCHEDULES:
+        raise SystemExit(f"unknown schedule {schedule!r}; known: {','.join(SCHEDULES)}")
+    if hit_every < 0:
+        raise SystemExit(f"--hit-every must be >= 0; got {hit_every}")
+    stop_need = None
+    if stop is not None:
+        if not (0.0 < stop[0] <= 1.0) or stop[1] < 0:
+            raise SystemExit(f"--stop wants (0 < acc <= 1, extra >= 0); got {stop}")
+        if not hit_every:
+            raise SystemExit("--stop needs --hit-every (the stop rule reads that eval grid)")
+        stop_need = need_correct(stop[0])
     useeds = list(dict.fromkeys(seeds))       # each seed's streams advance once per draw
     cifar = cifar or RC.Cifar10()
     X = torch.stack([slot_inputs(cifar, s, cd, device) for s, cd in slots])      # (R, 1200, 3072)
@@ -516,22 +711,82 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
     tc = 0
     g_lab = {s: H.stream("rlc_labels", s) for s in useeds}
     g_batch = {s: H.stream("rlc_batch", s) for s in useeds}
+    # the fixed labelings: the schedule's first SCHEDULES[schedule] draws of the seed's own
+    # rlc_labels stream, taken up front and never drawn again (iid keeps drawing per task)
+    fixed_lab = labels_fixed
+    if fixed_lab is None and SCHEDULES[schedule]:
+        fixed_lab = {s: [RC.task_labels(g_lab[s]) for _ in range(SCHEDULES[schedule])]
+                     for s in useeds}
+    # drawn, not published: labels.npz is written only after the checkpoint has been validated,
+    # so a refused resume leaves the artifacts of the run it refused untouched
+    lab_sha = labels_sha256(fixed_lab) if fixed_lab is not None else None
     ar = torch.arange(R, device=device)[:, None]
     spt = STEPS_PER_EPOCH * epochs
     alive = torch.ones(R, dtype=torch.bool, device=device)
     rows, hists, diverged = [], [[] for _ in range(R)], []
+    traces: list[dict[str, np.ndarray]] = [{} for _ in range(R)]
     out.mkdir(parents=True, exist_ok=True)
     if debug is not None:
         debug["init"] = [q.detach().cpu().clone() for q in P]
     step_ms = float("nan")
     meta = {"arm": arm, "seeds": seeds, "conds": conds, "epochs": epochs, "lr": lr, "c": c,
             "beta": beta, "lo": lo, "hi": hi, "perturb": perturb, "nan_slot": nan_slot}
+    # every setting that changes the trajectory, so a resume refuses a checkpoint from another
+    # one -- device and the execution mode included, since S5b shows cuda and cpu diverge
+    meta = {**meta, "schedule": schedule, "stop": stop, "hit_every": hit_every,
+            "labels_sha256": lab_sha, "device": device.type,
+            "graph": bool(graph and device.type == "cuda" and debug is None)}
+    tc_end: dict[str, int] = {}
     ck = out / "ckpt.pt"
+    # one writer per output directory (the launcher can adopt, retry and be started twice)
+    lock_fh = open(out / ".lock", "w")
+    try:
+        fcntl.flock(lock_fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        raise SystemExit(f"{out} is already being written by another process (.lock is held)")
+    lock_fh.write(f"{os.getpid()} {time.strftime('%F %T')}\n")
+    lock_fh.flush()
     git_states, resumed, t_first = [git_state()], [], 1
-    if resume and ck.exists():
+    if restore is not None:
+        st = torch.load(restore["path"], map_location="cpu", weights_only=False)
+        js = list(restore.get("slots") or range(R))       # ckpt slot for each slot here
+        if len(js) != R:
+            raise SystemExit(f"restore wants one checkpoint slot per slot: {len(js)} vs R = {R}")
+        cks = [(q["seed"], q["cond"]) for q in (st.get("slots") or [])]
+        if cks and [cks[j] for j in js] != slots:
+            raise SystemExit(f"{restore['path']} slots {[cks[j] for j in js]} are not this run's "
+                             f"{slots}")
+        idx = torch.as_tensor(js, dtype=torch.long)
+        with torch.no_grad():
+            for dst, src in ((P, st["P"]), (adam_m, st["m"]), (adam_v, st["v"])):
+                for q, v in zip(dst, src):
+                    q.copy_(v[idx].to(q.device))
+        tc = st["tc"]
+        if act.adaptive:
+            act.load_state({"V": [v[idx].to(device) for v in st["V"]]})
+        if act.stochastic:
+            act.gen.set_state(st["rsl_state"])
+        for s in useeds:
+            g_lab[s].set_state(st["g_lab"][s])
+            g_batch[s].set_state(st["g_batch"][s])
+        alive = st["alive"][idx].to(device)
+        progress(f"[{time.strftime('%T')}] {arm} restored slots {js} of {restore['path']} "
+                 f"(task {st['t']}, tc {tc})")
+    resuming = bool(resume and ck.exists())
+    if resuming:
         st = torch.load(ck, map_location="cpu", weights_only=False)   # generator states must stay on the cpu
+        # validate FIRST: nothing in `out` has been written yet, so a refusal is inert
         if st["meta"] != meta:
             raise SystemExit(f"{ck} belongs to another configuration: {st['meta']}")
+        if st.get("fixed_lab") is not None:              # the labelling the run was trained on
+            ck_lab = {int(s): [y.cpu() for y in st["fixed_lab"][s]] for s in st["fixed_lab"]}
+            ck_sha = labels_sha256(ck_lab)
+            if ck_sha != lab_sha:
+                raise SystemExit(f"{ck} was trained on another labelling ({ck_sha} != {lab_sha})")
+            fixed_lab = ck_lab                           # restored, not redrawn
+        if keep_ckpts and not (out / "ckpts" / f"t{st['t']:02d}.pt").exists():
+            raise SystemExit(f"{ck} is at task {st['t']} but {out}/ckpts/t{st['t']:02d}.pt is "
+                             f"missing; the fork points of that task cannot be rebuilt")
         with torch.no_grad():
             for dst, src in ((P, st["P"]), (adam_m, st["m"]), (adam_v, st["v"])):
                 for q, v in zip(dst, src):
@@ -549,6 +804,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         git_states = st["git_states"] + git_states
         resumed = st["resumed"] + [st["t"] + 1]
         t_first = st["t"] + 1
+        tc_end = dict(st.get("tc_end") or {})
         for r, (s, cd) in enumerate(slots):             # histories up to the checkpointed task
             f = out / "hist" / f"{arm}_{cd}_seed{s}.npz"
             n_done = sum(1 for q in rows if q["slot"] == r and "memo_acc" in q)
@@ -556,8 +812,16 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                 d = np.load(f)
                 keys = [k for k in d.files if k not in ("edges", "acc", "th_edges")]
                 hists[r] = [{k: d[k][i] for k in keys} for i in range(n_done)]
+            f = out / "trace" / f"{arm}_{cd}_seed{s}.npz"
+            if f.exists() and hit_every:                # trace rows up to the checkpointed task
+                d = np.load(f)
+                keep = d["task"] <= st["t"]
+                traces[r] = {k: d[k][keep] for k in d.files}
         progress(f"[{time.strftime('%T')}] {arm} resumed from {ck} at task {t_first}")
-    elif snapshots:
+    # the checkpoint (if any) has been accepted: now the labelling may be published
+    if fixed_lab is not None and labels_fixed is None:
+        publish_labels(out / "labels.npz", fixed_lab, lab_sha, strict=resuming)
+    if not resuming and snapshots:
         for r, (s, cd) in enumerate(slots):
             write_snapshot(snapshot_path(out, arm, cd, s, 0), P, act, r)      # t00 = init
 
@@ -571,6 +835,34 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
     acc_sum = torch.zeros(R, device=device)
     bad_step = torch.full((R,), -1, dtype=torch.long, device=device)
     last_hit = torch.zeros(R, device=device)
+
+    # ---- the trace eval (§1.2): its own tensors, none of them the graph's
+    n_ev = (spt // hit_every + 2) if hit_every else 1
+    TR = torch.zeros(n_ev, R, len(TRACE_COLS), dtype=torch.float64, device=device)
+    TR_step: list[int] = []
+
+    @torch.no_grad()
+    def trace_eval(ts: int) -> torch.Tensor:
+        """Read only.  An eval-mode forward over the slot's own 1200 images; it allocates its own
+        activations and never writes P, the Adam moments, tc, the activation's state (no
+        begin_step, no update), the generators or any tensor the captured graph owns (S3)."""
+        z1, a1, z2, a2, logits = forward(P, X, act, train=False)
+        correct = (logits.argmax(-1) == Ydev).sum(1)                     # (R,) counts, not floats
+        i = len(TR_step)
+        TR[i, :, 0] = correct
+        TR[i, :, 1] = F.cross_entropy(logits.reshape(-1, N_CLASSES), Ydev.reshape(-1),
+                                      reduction="none").view(R, N_IMAGES).mean(1)
+        cor = logits.gather(2, Ydev[:, :, None]).squeeze(2)
+        oth = logits.clone()
+        oth.scatter_(2, Ydev[:, :, None], float("-inf"))
+        marg = cor - oth.amax(2)
+        # median without a dim is CUDA-deterministic, median(dim) is not (see evaluate())
+        TR[i, :, 2] = torch.stack([marg[r].median() for r in range(R)])
+        for k, q in enumerate((P[0], P[2], P[4])):
+            TR[i, :, 3 + k] = (q.double() ** 2).flatten(1).sum(1)        # n1, n2, n3
+        TR[i, :, 6] = torch.stack([z1[r].std(0, unbiased=True).median() for r in range(R)])
+        TR_step.append(ts)
+        return correct
 
     def step():
         xb, yb = X[ar, static_idx], Ydev[ar, static_idx]                # gathers, no arithmetic
@@ -617,7 +909,11 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         del keep
 
     for t in range(t_first, n_tasks + 1):
-        lab = {s: RC.task_labels(g_lab[s]) for s in useeds}               # once per seed per task
+        if fixed_lab is None:
+            lab = {s: RC.task_labels(g_lab[s]) for s in useeds}           # once per seed per task
+        else:
+            k = schedule_index(schedule, t)
+            lab = {s: fixed_lab[s][k] for s in useeds}
         Y = torch.stack([lab[s] for s, cd in slots]).to(device)           # (R, 1200)
         Ydev.copy_(Y)
         if debug is not None:
@@ -625,15 +921,32 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         acc_sum.zero_()
         bad_step.fill_(-1)
         step_t.zero_()
+        TR_step.clear()
+        ts, done = 0, False
+        stop_at: list[int | None] = [None] * R          # per slot; the task ends when all passed
+        snapped = [False] * R
+        live = alive.cpu().tolist()                     # a diverged slot never reaches a hit
         t0 = time.time()
+        if hit_every:
+            trace_eval(0)          # the state each task starts from; never eligible for a hit
         for e in range(epochs):
+            if done:
+                break
             order = {s: torch.randperm(N_IMAGES, generator=g_batch[s]) for s in useeds}
             ORD = torch.stack([order[s] for s, cd in slots]).to(device)  # (R, 1200)
             if debug is not None:
                 debug.setdefault("orders", []).append(ORD.cpu().clone())
             for j in range(STEPS_PER_EPOCH):
+                # the stop check sits at the top of the minibatch loop, after the epoch's
+                # permutation has been drawn (PERM_RULE; width_replay.py lines 314-321)
+                if stop is not None and any(live) and all(
+                        stop_at[r] is not None and ts >= stop_at[r]
+                        for r in range(R) if live[r]):
+                    done = True
+                    break
                 static_idx.copy_(ORD[:, j * BATCH:(j + 1) * BATCH])
                 tc += 1
+                ts += 1
                 inv_c1.fill_(1.0 / (1 - b1 ** tc))
                 inv_c2.fill_(1.0 / (1 - b2 ** tc))
                 act.begin_step(R, BATCH, device)
@@ -643,17 +956,61 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                     step()
                 if debug is not None:
                     debug.setdefault("online", []).append(last_hit.cpu().clone())
+                if hit_every and ts % hit_every == 0:
+                    correct = trace_eval(ts)
+                    if stop is not None:
+                        cc = correct.cpu().tolist()
+                        for r in range(R):
+                            if stop_at[r] is None and cc[r] >= stop_need:
+                                stop_at[r] = min(ts + stop[1], spt)
+                            if stop_at[r] == ts and not snapped[r] and stop_snap:
+                                # the slot's own stop point; it keeps training with the bundle
+                                s_, cd_ = slots[r]
+                                write_snapshot(out / "snap" / stop_snap.format(seed=s_, cond=cd_,
+                                                                              slot=r), P, act, r)
+                                snapped[r] = True
         if device.type == "cuda":
             torch.cuda.synchronize()
-        step_ms = 1e3 * (time.time() - t0) / spt
+        step_ms = 1e3 * (time.time() - t0) / max(ts, 1)
 
+        # ---- the trace: counts in, hit99/hit999/stop bookkeeping out (§1.2)
+        # .copy() is load-bearing: on cpu, .cpu() is a no-op and .numpy() SHARES TR's memory, so
+        # the rows this task hands to `traces` would be overwritten by the next task's evals
+        tr = TR[:len(TR_step)].cpu().numpy().copy()              # (E, R, 7)
+        ev = np.asarray(TR_step, dtype=np.int64)                 # (E,)
+        h99, h999 = [-1] * R, [-1] * R
+        hplus, hseen, hmin = [-1] * R, [0] * R, [-1] * R
+        if hit_every:
+            elig = ev > 0                       # step 0 is recorded but never a hit
+            cnt = tr[:, :, 0].astype(np.int64)
+            for r in range(R):
+                for need, dst in ((need_correct(0.99), h99), (need_correct(0.999), h999)):
+                    w = np.nonzero(elig & (cnt[:, r] >= need))[0]
+                    dst[r] = int(ev[w[0]]) if len(w) else -1
+                if h999[r] >= 0:
+                    # the count at exactly hit999 + HIT_PLUS, and -1 with hseen = 0 when the
+                    # task ended (stop rule or the 30,000 cap) before that step was evaluated
+                    w = np.nonzero(ev == h999[r] + HIT_PLUS)[0]
+                    if len(w):
+                        hplus[r], hseen[r] = int(cnt[w[0], r]), 1
+                    after = cnt[ev > h999[r], r]        # window: after the hit, to the task's end
+                    hmin[r] = int(after.min()) if len(after) else int(cnt[ev == h999[r], r][0])
+            for r in range(R):
+                s_, cd_ = slots[r]
+                old = traces[r]
+                # tc is the global clock AT THAT ROW: the task's starting clock plus the step.
+                # For a fork that starting clock is the parent checkpoint's tc (restore set it).
+                new = {"task": np.full(len(ev), t, dtype=np.int64), "tc": (tc - ts) + ev,
+                       "step": ev, **{k: tr[:, r, i] for i, k in enumerate(TRACE_COLS)}}
+                new["correct"] = new["correct"].astype(np.int64)
+                traces[r] = {k: (np.concatenate([old[k], new[k]]) if old else new[k]) for k in new}
         with torch.no_grad():
             finite = torch.stack([torch.isfinite(q).flatten(1).all(1) for q in P]).all(0)
             newly = alive & ((bad_step >= 0) | ~finite)
             for r in torch.nonzero(newly).flatten().tolist():
                 s, cd = slots[r]
                 diverged.append({"diverged": True, "task": t,
-                                 "step": (t - 1) * spt + max(int(bad_step[r]), 0),
+                                 "step": tc - ts + max(int(bad_step[r]), 0),
                                  "seed": s, "cond": cd, "arm": arm})
                 rows.append({"arm": arm, "cond": cd, "seed": s, "slot": r, "lr": lr, "task": t,
                              "iv": "none", "acc": float("nan")})
@@ -661,30 +1018,58 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             m, hs, zs = evaluate(P, X, Y, act, torch.nonzero(alive).flatten().tolist())
         for r in torch.nonzero(alive).flatten().tolist():
             s, cd = slots[r]
+            extra = {}                       # only when the feature is on: the default csv is the parent's
+            if stop is not None:
+                extra["steps"] = ts
+                extra["stop_step"] = stop_at[r] if stop_at[r] is not None else -1
+                extra["tc"] = tc
+            if hit_every:
+                extra["hit99"], extra["hit999"] = h99[r], h999[r]
+                extra["correct_at_hit_plus_500"] = hplus[r]        # -1 unless it was observed
+                extra["hit_plus_500_observed"] = hseen[r]
+                extra["min_correct_after_hit"] = hmin[r]           # window: (hit999, task end]
             rows.append({"arm": arm, "cond": cd, "seed": s, "slot": r, "lr": lr, "task": t,
-                         "iv": "none", "online_acc": float(acc_sum[r]) / spt,
-                         "memo_acc": m[r]["acc"], **m[r]})
+                         "iv": "none", "online_acc": float(acc_sum[r]) / ts,
+                         "memo_acc": m[r]["acc"], **m[r], **extra})
             hists[r].append(hs[r])
             if snapshots:
                 write_snapshot(snapshot_path(out, arm, cd, s, t), P, act, r, zs)
         rows.sort(key=lambda q: (q["slot"], q["task"]))
         H.write_csv(out / "per_task.csv", rows)
+        tc_end[str(t)] = tc
         for r in range(R):
             if hists[r] and snapshots:
                 s, cd = slots[r]
                 write_hist(out / "hist" / f"{arm}_{cd}_seed{s}.npz", hists[r],
                            [q["memo_acc"] for q in rows if q["slot"] == r and "memo_acc" in q])
-        if checkpoint:
-            tmp = out / "ckpt.pt.tmp"
-            torch.save({"t": t, "meta": meta, "P": [q.detach() for q in P], "m": adam_m, "v": adam_v,
-                        "tc": tc, "V": act.V if act.adaptive else None,
-                        "rsl_state": act.gen.get_state() if act.stochastic else None,
-                        "g_lab": {s: g_lab[s].get_state() for s in useeds},
-                        "g_batch": {s: g_batch[s].get_state() for s in useeds},
-                        "alive": alive.cpu(), "rows": rows, "diverged": diverged, "step_ms": step_ms,
-                        "git_states": git_states, "resumed": resumed}, tmp)
-            os.replace(tmp, ck)
-        on = acc_sum[alive] / spt
+            if traces[r]:
+                s, cd = slots[r]
+                (out / "trace").mkdir(parents=True, exist_ok=True)
+                # cumulative: build beside it and swap, never overwrite in place
+                savez_atomic(out / "trace" / f"{arm}_{cd}_seed{s}.npz", compressed=True,
+                             **traces[r])
+        if checkpoint or keep_ckpts:
+            # an independent payload: detached cpu clones, so nothing the next task mutates
+            # can reach into a file that is being written (S8)
+            cpu = lambda qs: [q.detach().cpu().clone() for q in qs]
+            st = {"t": t, "meta": meta, "P": cpu(P), "m": cpu(adam_m), "v": cpu(adam_v),
+                  "tc": tc, "V": cpu(act.V) if act.adaptive else None,
+                  "rsl_state": act.gen.get_state().clone() if act.stochastic else None,
+                  "g_lab": {s: g_lab[s].get_state().clone() for s in useeds},
+                  "g_batch": {s: g_batch[s].get_state().clone() for s in useeds},
+                  "alive": alive.detach().cpu().clone(), "rows": rows, "diverged": diverged,
+                  "step_ms": step_ms,
+                  "git_states": git_states, "resumed": resumed, "tc_end": tc_end,
+                  "slots": [{"seed": s, "cond": cd} for s, cd in slots], "schedule": schedule,
+                  "fixed_lab": ({s: [y.detach().cpu().clone() for y in fixed_lab[s]]
+                                 for s in fixed_lab} if fixed_lab is not None else None)}
+            # the per-task checkpoint is published FIRST: ckpt.pt is what a resume trusts, and
+            # it must never point past a task whose fork checkpoint is missing
+            if keep_ckpts:                        # §1.3: one per task, everything a fork needs
+                save_atomic(st, out / "ckpts" / f"t{t:02d}.pt")
+            if checkpoint:
+                save_atomic(st, ck)
+        on = acc_sum[alive] / ts
         memo = torch.tensor([m[r]["acc"] for r in range(R) if alive[r]])
         el = time.time() - t_start
         progress(f"[{time.strftime('%T')}] {arm} task {t:2d}/{n_tasks} alive {int(alive.sum())}/{R} "
@@ -692,9 +1077,12 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                  f"(min {float(on.min()) if len(on) else float('nan'):.3f}) "
                  f"memo min {float(memo.min()) if len(memo) else float('nan'):.3f} "
                  f"{step_ms:.2f} ms/step  {el/60:.0f} min, "
-                 f"ETA {el/(t-t_first+1)*(n_tasks-t)/60:.0f} min")
+                 f"ETA {el/(t-t_first+1)*(n_tasks-t)/60:.0f} min"
+                 + (f"  steps {ts}" if stop is not None else "")
+                 + (f"  hit999 med {int(np.median([q for q in h999 if q >= 0]))}"
+                    if hit_every and any(q >= 0 for q in h999) else ""))
 
-    prov = {"run_id": EXPERIMENT, **git_states[0], "git_states": git_states, "resumed_at_task": resumed,
+    prov = {"run_id": run_id, **git_states[0], "git_states": git_states, "resumed_at_task": resumed,
             "arm": arm, "conds": conds, "seeds": seeds,
             "slots": [{"seed": s, "cond": cd} for s, cd in slots], "R": R, "lr": lr,
             "n_tasks": n_tasks, "epochs_per_task": epochs, "batch": BATCH, "steps_per_task": spt,
@@ -720,8 +1108,43 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             "cublas_workspace": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
             "step_ms_last_task": step_ms, "wall_clock_s": time.time() - t_start,
             "divergences": diverged,
-            "check_hooks": {"perturb": perturb, "nan_slot": nan_slot, "snapshots": snapshots}}
+            "check_hooks": {"perturb": perturb, "nan_slot": nan_slot, "snapshots": snapshots},
+            # altlabels_cifar_0923 §1 (the parent's path is schedule iid, no hit/ckpts/stop)
+            "parent": EXPERIMENT if run_id != EXPERIMENT else None,
+            "schedule": schedule, "hit_every": hit_every, "keep_ckpts": keep_ckpts,
+            "stop": list(stop) if stop is not None else None,
+            "stop_need_correct": stop_need, "stop_snap": stop_snap,
+            "hit_need_correct": {"hit99": need_correct(0.99), "hit999": need_correct(0.999),
+                                 "of": N_IMAGES},
+            "labels_sha256": lab_sha,
+            "labels_source": ("external" if labels_fixed is not None else
+                              ("labels.npz" if fixed_lab is not None else "rlc_labels per task")),
+            "labels_stats": labels_stats(fixed_lab) if fixed_lab is not None else None,
+            "perm_consumption_rule": PERM_RULE,
+            "tc_at_task_end": tc_end,
+            "trace": ({"path": "trace/<arm>_<cond>_seed<seed>.npz", "every": hit_every,
+                       "cols": ["task", "tc", "step"] + list(TRACE_COLS),
+                       "step0_row": "one row at step 0 of every task, not eligible for a hit",
+                       "tc": "the global clock at that row = the task's starting tc + step",
+                       "hit_plus": HIT_PLUS,
+                       "post_hit_fields": {
+                           "correct_at_hit_plus_500": "the count at exactly hit999 + 500, or -1",
+                           "hit_plus_500_observed": "0 when the task ended before that step",
+                           "min_correct_after_hit": "min over the evals in (hit999, task end]"},
+                       "median": "torch.median (lower of the two middle values) over the 100 "
+                                 "units / 1200 images, as the parent engine's evaluate() uses",
+                       "trace_tc_bug_before_commit": TRACE_TC_BUG_BEFORE,
+                       "trace_tc_repair": "tc_row = tc_stored - task_steps + step "
+                                          "(task_steps = 30000, or the row's `steps`)"}
+                      if hit_every else None),
+            "restore": ({"path": str(restore["path"]),
+                         "slots": list(restore.get("slots") or range(R)),
+                         "sha256": hashlib.sha256(Path(restore["path"]).read_bytes()).hexdigest()}
+                        if restore is not None else None),
+            **(extra_prov or {})}
     (out / "provenance.json").write_text(json.dumps(prov, indent=2))
+    fcntl.flock(lock_fh, fcntl.LOCK_UN)
+    lock_fh.close()
     progress(f"wrote {out}/per_task.csv ({len(rows)} rows, {(time.time()-t_start)/60:.1f} min)")
     return prov
 

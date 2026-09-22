@@ -1,0 +1,221 @@
+{
+ "C1_fixed_AB_endpoints": {
+  "what": "W_t alternates between two fixed endpoints; 45 increments over t = 6..50",
+  "expect": {
+   "same_label_return": 0.0,
+   "center_disp": 0.0,
+   "r_6_50": 0.022222222222222223,
+   "C1_cos": -1.0,
+   "C2_cos": 1.0
+  },
+  "per_band": {
+   "top": {
+    "max_same_label_return": 0.0,
+    "max_center_disp": 0.0,
+    "r_6_50": 0.02222222222222222,
+    "C1_cos": -1.0,
+    "C2_cos": 1.0,
+    "max_E_identity_residual": 1.5631940186722204e-13
+   },
+   "mid1": {
+    "max_same_label_return": 0.0,
+    "max_center_disp": 0.0,
+    "r_6_50": 0.022222222222222223,
+    "C1_cos": -1.0,
+    "C2_cos": 1.0,
+    "max_E_identity_residual": 0.0
+   },
+   "mid2": {
+    "max_same_label_return": 0.0,
+    "max_center_disp": 0.0,
+    "r_6_50": 0.022222222222222223,
+    "C1_cos": -1.0,
+    "C2_cos": 1.0,
+    "max_E_identity_residual": 7.275957614183426e-12
+   },
+   "low": {
+    "max_same_label_return": 0.0,
+    "max_center_disp": 0.0,
+    "r_6_50": 0.022222222222222223,
+    "C1_cos": -1.0,
+    "C2_cos": 1.0,
+    "max_E_identity_residual": 1.8189894035458565e-11
+   },
+   "mu": {
+    "max_same_label_return": 0.0,
+    "max_center_disp": 0.0,
+    "r_6_50": 0.022222222222222223,
+    "C1_cos": -1.0,
+    "C2_cos": 1.0,
+    "max_E_identity_residual": 1.9539925233402755e-14
+   },
+   "comp": {
+    "max_same_label_return": 0.0,
+    "max_center_disp": 0.0,
+    "r_6_50": 0.022222222222222223,
+    "C1_cos": -1.0,
+    "C2_cos": 1.0,
+    "max_E_identity_residual": 1.2732925824820995e-11
+   },
+   "all": {
+    "max_same_label_return": 0.0,
+    "max_center_disp": 0.0,
+    "r_6_50": 0.02222222222222222,
+    "C1_cos": -1.0,
+    "C2_cos": 1.0,
+    "max_E_identity_residual": 4.3655745685100555e-11
+   }
+  },
+  "pass": true,
+  "r_6_50_exact": 0.022222222222222223
+ },
+ "C2_growing_two_cycle": {
+  "what": "W_t = R_t u_{A/B} with R_t ~ t^0.5: a growing alternation",
+  "expect": "r small (the walk keeps cancelling) while N(50)/N(25) = 2 exactly",
+  "N50_over_N25": 2.0,
+  "N50_over_N25_exact": 2.0,
+  "sigma_free_note": "amplitude grows by sqrt(2) in norm; r stays near the 1/45 floor",
+  "per_band": {
+   "top": {
+    "r_6_50": 0.022188229138306207,
+    "C1_cos": -0.9981322413762648,
+    "C2_cos": 0.9998525906927302
+   },
+   "mid1": {
+    "r_6_50": 0.022355737586614126,
+    "C1_cos": -0.9982318797931214,
+    "C2_cos": 0.9998612123564092
+   },
+   "mid2": {
+    "r_6_50": 0.02232582496047606,
+    "C1_cos": -0.9982275862463634,
+    "C2_cos": 0.9998607979018773
+   },
+   "low": {
+    "r_6_50": 0.022177888205508364,
+    "C1_cos": -0.9982230244808273,
+    "C2_cos": 0.9998601239323481
+   },
+   "mu": {
+    "r_6_50": 0.021086725184345127,
+    "C1_cos": -0.9989442955950176,
+    "C2_cos": 0.9999174010077299
+   },
+   "comp": {
+    "r_6_50": 0.022252131009501155,
+    "C1_cos": -0.9982288418642327,
+    "C2_cos": 0.9998607550442813
+   },
+   "all": {
+    "r_6_50": 0.022244150602056364,
+    "C1_cos": -0.9982273663323483,
+    "C2_cos": 0.9998606168605474
+   }
+  },
+  "pass": true
+ },
+ "C3_zero_increments": {
+  "what": "W never moves: every increment is exactly zero",
+  "expect": "cosine undefined (NaN, not 0 and not 1); r has a non-positive denominator",
+  "per_band": {
+   "top": {
+    "C1_cos": NaN,
+    "C1_energy": NaN,
+    "r_b": NaN,
+    "r_status": "denom_nonpositive",
+    "n_cos_1": 0
+   },
+   "mid1": {
+    "C1_cos": NaN,
+    "C1_energy": NaN,
+    "r_b": NaN,
+    "r_status": "denom_nonpositive",
+    "n_cos_1": 0
+   },
+   "mid2": {
+    "C1_cos": NaN,
+    "C1_energy": NaN,
+    "r_b": NaN,
+    "r_status": "denom_nonpositive",
+    "n_cos_1": 0
+   },
+   "low": {
+    "C1_cos": NaN,
+    "C1_energy": NaN,
+    "r_b": NaN,
+    "r_status": "denom_nonpositive",
+    "n_cos_1": 0
+   },
+   "mu": {
+    "C1_cos": NaN,
+    "C1_energy": NaN,
+    "r_b": NaN,
+    "r_status": "denom_nonpositive",
+    "n_cos_1": 0
+   },
+   "comp": {
+    "C1_cos": NaN,
+    "C1_energy": NaN,
+    "r_b": NaN,
+    "r_status": "denom_nonpositive",
+    "n_cos_1": 0
+   },
+   "all": {
+    "C1_cos": NaN,
+    "C1_energy": NaN,
+    "r_b": NaN,
+    "r_status": "denom_nonpositive",
+    "n_cos_1": 0
+   }
+  },
+  "pass": true
+ },
+ "C4_identity": {
+  "what": "dN_b = d_b + e_b on 51 independent random W (d and e come from an independent projection of dW, so this tests the projection too)",
+  "max_abs_residual": 7.450580596923828e-09,
+  "max_rel_residual": 9.476579304446445e-16,
+  "tolerance": 1e-06,
+  "pass": true
+ },
+ "C5_band_sum": {
+  "what": "top + mid1 + mid2 + low + mu + comp = all, at every t",
+  "max_abs_err": 1.862645149230957e-09,
+  "max_rel_err": 2.154816326398457e-16,
+  "pass": true
+ },
+ "C6_variance_split": {
+  "what": "V over the 4 eigen bands = the total pre-activation variance; mu_perp and the complement carry none",
+  "max_abs_err": 3.725290298461914e-09,
+  "max_rel_err": 2.561912912466762e-16,
+  "V_mu_max": 0.0,
+  "V_comp_max": 0.0,
+  "pass": true
+ },
+ "C7_window_pairing": {
+  "what": "late = t26-50: 25 increments, so lag k has 25 - k pairs, both inside",
+  "n_increments": 25,
+  "n_pairs": {
+   "k1": 24,
+   "k2": 23,
+   "k3": 22,
+   "k4": 21,
+   "k5": 20,
+   "k6": 19
+  },
+  "pass": true
+ },
+ "_meta": {
+  "run_id": "altlabels_cifar_0923",
+  "stage": "synthetic_checks",
+  "written": "2026-09-23T02:59:33+0900",
+  "git_hash": "51269ec3b4bad89f39c9cead8844b22b5da42ef2",
+  "git_branch": "claude/altlabels_cifar_0923",
+  "git_dirty": true,
+  "basis": "random orthonormal 3072x1200 (numpy default_rng seed 0), 1199 random decreasing eigenvalues",
+  "n_units": 100,
+  "tmax": 50,
+  "numpy": "2.5.2",
+  "wall_clock_s": 8.82801079750061,
+  "all_pass": true
+ }
+}

@@ -1,0 +1,224 @@
+{
+  "run_id": "altlabels_cifar_0923",
+  "git_hash": "253b8386393ae4d6a436c6ebc303536b8bc6e1b8",
+  "dirty_src_analysis": [
+    "?? analysis/altlabels_cifar_0923/band_ledger.py",
+    "?? analysis/altlabels_cifar_0923/ledger.py"
+  ],
+  "git_states": [
+    {
+      "git_hash": "253b8386393ae4d6a436c6ebc303536b8bc6e1b8",
+      "dirty_src_analysis": [
+        "?? analysis/altlabels_cifar_0923/band_ledger.py",
+        "?? analysis/altlabels_cifar_0923/ledger.py"
+      ]
+    }
+  ],
+  "resumed_at_task": [],
+  "arm": "LR",
+  "conds": [
+    "std"
+  ],
+  "seeds": [
+    4
+  ],
+  "slots": [
+    {
+      "seed": 4,
+      "cond": "std"
+    }
+  ],
+  "R": 1,
+  "lr": 0.001,
+  "n_tasks": 50,
+  "epochs_per_task": 400,
+  "batch": 16,
+  "steps_per_task": 30000,
+  "n_images": 1200,
+  "train_n": 50000,
+  "dims": [
+    3072,
+    100,
+    100,
+    10
+  ],
+  "n_classes": 10,
+  "sna_c": 0.6,
+  "sna_beta": 0.01,
+  "alpha_lo": 0.005,
+  "alpha_hi": 3.0,
+  "intervention": "none",
+  "optimizer": "adam",
+  "weight_decay": 0.0,
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "subset_sha256": {
+    "4": "65d322853b2a530cd7a015b95528212526dea66acf90ac1fbf44ca7db0195afe"
+  },
+  "std": {
+    "mean": [
+      0.4914,
+      0.4822,
+      0.4465
+    ],
+    "std": [
+      0.247,
+      0.2435,
+      0.2616
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "rng_roles": [
+    "rlc_subset",
+    "rlc_labels",
+    "rlc_batch",
+    "init"
+  ],
+  "rsl_noise_seed": null,
+  "hist": {
+    "lo": -512.0,
+    "hi": 256.0,
+    "bins": 7680,
+    "dtype": "int32",
+    "theta": null,
+    "path": "hist/<arm>_<cond>_seed<seed>.npz"
+  },
+  "engine": "stacked baddbmm, autograd, elementwise Adam (spec \u00a72.2), eager",
+  "snapshots": "snap/<arm>_<cond>_seed<seed>/t<task>.npz: W1,b1,W2,b2,W3,b3 float32 (+V1,V2 for adaptive arms) at init (t00) and every task's end, plus z1,z2 (1200x100, float16, images in subset order) at every task's end; exact float32 z via replay()",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 2.5657309426201715,
+  "wall_clock_s": 138.74336552619934,
+  "divergences": [],
+  "check_hooks": {
+    "perturb": null,
+    "nan_slot": null,
+    "snapshots": true
+  },
+  "parent": "rlcifar_mlp_battle_0918",
+  "schedule": "abab",
+  "hit_every": 100,
+  "keep_ckpts": false,
+  "stop": [
+    0.999,
+    500
+  ],
+  "stop_need_correct": 1199,
+  "stop_snap": null,
+  "hit_need_correct": {
+    "hit99": 1188,
+    "hit999": 1199,
+    "of": 1200
+  },
+  "labels_sha256": "626aedacea4460634ad421a9c66a5211d6f5d38b1f974b45f47915d66a88326e",
+  "labels_source": "labels.npz",
+  "labels_stats": {
+    "seeds": [
+      4
+    ],
+    "A_counts": [
+      [
+        123,
+        122,
+        126,
+        121,
+        131,
+        121,
+        113,
+        111,
+        122,
+        110
+      ]
+    ],
+    "B_counts": [
+      [
+        116,
+        108,
+        126,
+        107,
+        129,
+        107,
+        116,
+        129,
+        140,
+        122
+      ]
+    ],
+    "agree_AB": [
+      0.09083333333333334
+    ]
+  },
+  "perm_consumption_rule": "rlc_batch: one torch.randperm(1200) per epoch, drawn at the epoch's start; a task that ends mid-epoch has already drawn that epoch's permutation, and one ending exactly on an epoch boundary draws and discards one more (width_replay.py's convention, lines 314-321).  Every task starts a fresh epoch.",
+  "tc_at_task_end": {
+    "1": 2200,
+    "2": 5000,
+    "3": 6700,
+    "4": 7800,
+    "5": 9000,
+    "6": 10000,
+    "7": 11200,
+    "8": 12200,
+    "9": 13200,
+    "10": 14200,
+    "11": 15200,
+    "12": 16100,
+    "13": 17000,
+    "14": 17900,
+    "15": 18800,
+    "16": 19600,
+    "17": 20400,
+    "18": 21200,
+    "19": 22000,
+    "20": 22900,
+    "21": 23800,
+    "22": 24600,
+    "23": 25400,
+    "24": 26300,
+    "25": 27100,
+    "26": 27900,
+    "27": 28700,
+    "28": 29500,
+    "29": 30400,
+    "30": 31200,
+    "31": 32100,
+    "32": 32900,
+    "33": 33700,
+    "34": 34500,
+    "35": 35300,
+    "36": 36200,
+    "37": 37000,
+    "38": 37900,
+    "39": 38700,
+    "40": 39500,
+    "41": 40300,
+    "42": 41100,
+    "43": 41900,
+    "44": 42700,
+    "45": 43500,
+    "46": 44300,
+    "47": 45100,
+    "48": 45900,
+    "49": 46700,
+    "50": 47600
+  },
+  "trace": {
+    "path": "trace/<arm>_<cond>_seed<seed>.npz",
+    "every": 100,
+    "cols": [
+      "task",
+      "tc",
+      "step",
+      "correct",
+      "ce",
+      "margin_med",
+      "n1",
+      "n2",
+      "n3",
+      "sig_med"
+    ],
+    "step0_row": "one row at step 0 of every task, not eligible for a hit"
+  },
+  "restore": null
+}

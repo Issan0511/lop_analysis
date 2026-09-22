@@ -1,0 +1,183 @@
+{
+  "run_id": "altlabels_cifar_0923",
+  "git_hash": "253b8386393ae4d6a436c6ebc303536b8bc6e1b8",
+  "dirty_src_analysis": [],
+  "git_states": [
+    {
+      "git_hash": "253b8386393ae4d6a436c6ebc303536b8bc6e1b8",
+      "dirty_src_analysis": []
+    }
+  ],
+  "resumed_at_task": [],
+  "arm": "LR",
+  "conds": [
+    "std"
+  ],
+  "seeds": [
+    0
+  ],
+  "slots": [
+    {
+      "seed": 0,
+      "cond": "std"
+    }
+  ],
+  "R": 1,
+  "lr": 0.001,
+  "n_tasks": 50,
+  "epochs_per_task": 400,
+  "batch": 16,
+  "steps_per_task": 30000,
+  "n_images": 1200,
+  "train_n": 50000,
+  "dims": [
+    3072,
+    100,
+    100,
+    10
+  ],
+  "n_classes": 10,
+  "sna_c": 0.6,
+  "sna_beta": 0.01,
+  "alpha_lo": 0.005,
+  "alpha_hi": 3.0,
+  "intervention": "none",
+  "optimizer": "adam",
+  "weight_decay": 0.0,
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "subset_sha256": {
+    "0": "202b6701ad8d20a839ab54cd0bac85101c5955096e89d95dc0dbb40d39a0fc4b"
+  },
+  "std": {
+    "mean": [
+      0.4914,
+      0.4822,
+      0.4465
+    ],
+    "std": [
+      0.247,
+      0.2435,
+      0.2616
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "rng_roles": [
+    "rlc_subset",
+    "rlc_labels",
+    "rlc_batch",
+    "init"
+  ],
+  "rsl_noise_seed": null,
+  "hist": {
+    "lo": -512.0,
+    "hi": 256.0,
+    "bins": 7680,
+    "dtype": "int32",
+    "theta": null,
+    "path": "hist/<arm>_<cond>_seed<seed>.npz"
+  },
+  "engine": "stacked baddbmm, autograd, elementwise Adam (spec \u00a72.2), eager",
+  "snapshots": "snap/<arm>_<cond>_seed<seed>/t<task>.npz: W1,b1,W2,b2,W3,b3 float32 (+V1,V2 for adaptive arms) at init (t00) and every task's end, plus z1,z2 (1200x100, float16, images in subset order) at every task's end; exact float32 z via replay()",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 2.4649006128311157,
+  "wall_clock_s": 302.62180256843567,
+  "divergences": [],
+  "check_hooks": {
+    "perturb": null,
+    "nan_slot": null,
+    "snapshots": true
+  },
+  "parent": "rlcifar_mlp_battle_0918",
+  "schedule": "iid",
+  "hit_every": 100,
+  "keep_ckpts": false,
+  "stop": [
+    0.999,
+    500
+  ],
+  "stop_need_correct": 1199,
+  "stop_snap": null,
+  "hit_need_correct": {
+    "hit99": 1188,
+    "hit999": 1199,
+    "of": 1200
+  },
+  "labels_sha256": null,
+  "labels_source": "rlc_labels per task",
+  "labels_stats": null,
+  "perm_consumption_rule": "rlc_batch: one torch.randperm(1200) per epoch, drawn at the epoch's start; a task that ends mid-epoch has already drawn that epoch's permutation, and one ending exactly on an epoch boundary draws and discards one more (width_replay.py's convention, lines 314-321).  Every task starts a fresh epoch.",
+  "tc_at_task_end": {
+    "1": 2500,
+    "2": 5100,
+    "3": 7500,
+    "4": 10200,
+    "5": 12800,
+    "6": 15300,
+    "7": 17600,
+    "8": 20000,
+    "9": 22400,
+    "10": 24700,
+    "11": 27100,
+    "12": 29400,
+    "13": 32000,
+    "14": 34200,
+    "15": 36700,
+    "16": 38800,
+    "17": 41300,
+    "18": 43600,
+    "19": 46100,
+    "20": 48300,
+    "21": 50700,
+    "22": 53100,
+    "23": 55400,
+    "24": 57800,
+    "25": 60200,
+    "26": 62500,
+    "27": 64800,
+    "28": 67100,
+    "29": 69700,
+    "30": 72000,
+    "31": 74400,
+    "32": 76900,
+    "33": 79700,
+    "34": 82200,
+    "35": 84700,
+    "36": 87200,
+    "37": 89600,
+    "38": 92000,
+    "39": 94300,
+    "40": 96800,
+    "41": 99100,
+    "42": 101700,
+    "43": 104400,
+    "44": 107200,
+    "45": 109800,
+    "46": 112200,
+    "47": 114700,
+    "48": 117100,
+    "49": 119400,
+    "50": 121800
+  },
+  "trace": {
+    "path": "trace/<arm>_<cond>_seed<seed>.npz",
+    "every": 100,
+    "cols": [
+      "task",
+      "tc",
+      "step",
+      "correct",
+      "ce",
+      "margin_med",
+      "n1",
+      "n2",
+      "n3",
+      "sig_med"
+    ],
+    "step0_row": "one row at step 0 of every task, not eligible for a hit"
+  },
+  "restore": null
+}

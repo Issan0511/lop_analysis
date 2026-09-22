@@ -1,0 +1,52 @@
+{
+  "run_id": "altlabels_cifar_0923",
+  "stage": "chain",
+  "parent": "rlcifar_mlp_battle_0918",
+  "git_hash": "253b8386393ae4d6a436c6ebc303536b8bc6e1b8",
+  "dirty_src_analysis": [
+    "?? analysis/altlabels_cifar_0923/band_ledger.py",
+    "?? analysis/altlabels_cifar_0923/ledger.py",
+    "?? analysis/altlabels_cifar_0923/report.py",
+    "?? analysis/altlabels_cifar_0923/synthetic_checks.py"
+  ],
+  "arm": "LR",
+  "schedule": "iid",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "conds": [
+    "std"
+  ],
+  "n_tasks": 50,
+  "epochs_per_task": 400,
+  "hit_every": 100,
+  "keep_ckpts": false,
+  "stop": [
+    0.999,
+    500
+  ],
+  "labels_sha256": {
+    "0": null,
+    "1": null,
+    "2": null,
+    "3": null,
+    "4": null
+  },
+  "R_per_seed": 1,
+  "engine": "eager, R = 1, one seed at a time",
+  "perm_consumption_rule": "rlc_batch: one torch.randperm(1200) per epoch, drawn at the epoch's start; a task that ends mid-epoch has already drawn that epoch's permutation, and one ending exactly on an epoch boundary draws and discards one more (width_replay.py's convention, lines 314-321).  Every task starts a fresh epoch.",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "seed_dirs": [
+    "seed0",
+    "seed1",
+    "seed2",
+    "seed3",
+    "seed4"
+  ],
+  "wall_clock_s": 1487.077710866928
+}

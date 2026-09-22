@@ -1,0 +1,91 @@
+{
+  "run_id": "altlabels_cifar_0923",
+  "stage": "fork",
+  "parent": "rlcifar_mlp_battle_0918",
+  "git_hash": "51269ec3b4bad89f39c9cead8844b22b5da42ef2",
+  "dirty_src_analysis": [],
+  "src": "/home/issan/Projects/claude/wt/altlabels_cifar_0923/results/altlabels_cifar_0923/LR_iid",
+  "src_run_id": "altlabels_cifar_0923",
+  "src_schedule": "iid",
+  "arm": "LR",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "conds": [
+    "std"
+  ],
+  "slots": [
+    {
+      "seed": 0,
+      "cond": "std"
+    },
+    {
+      "seed": 1,
+      "cond": "std"
+    },
+    {
+      "seed": 2,
+      "cond": "std"
+    },
+    {
+      "seed": 3,
+      "cond": "std"
+    },
+    {
+      "seed": 4,
+      "cond": "std"
+    },
+    {
+      "seed": 5,
+      "cond": "std"
+    },
+    {
+      "seed": 6,
+      "cond": "std"
+    },
+    {
+      "seed": 7,
+      "cond": "std"
+    },
+    {
+      "seed": 8,
+      "cond": "std"
+    },
+    {
+      "seed": 9,
+      "cond": "std"
+    }
+  ],
+  "t": [
+    48
+  ],
+  "branches": [
+    "next",
+    "C"
+  ],
+  "schedule": "fork",
+  "hit_every": 100,
+  "keep_ckpts": false,
+  "stop": [
+    0.999,
+    500
+  ],
+  "labels_sha256": null,
+  "fork_label_stream": "rlc_labels_fork_t{t}",
+  "perm_consumption_rule": "rlc_batch: one torch.randperm(1200) per epoch, drawn at the epoch's start; a task that ends mid-epoch has already drawn that epoch's permutation, and one ending exactly on an epoch boundary draws and discards one more (width_replay.py's convention, lines 314-321).  Every task starts a fresh epoch.",
+  "epochs_per_task": 400,
+  "lr": 0.001,
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "n_rows": 20,
+  "wall_clock_s": 27.76618981361389
+}
