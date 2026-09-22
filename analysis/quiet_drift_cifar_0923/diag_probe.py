@@ -134,6 +134,16 @@ def main() -> None:
                 rec(f"{nm}_cosGW", (g * p).sum(dims) / (gn * pn + 1e-300))
                 rec(f"{nm}_cosuW", (u * p).sum(dims) / (un * pn + 1e-300))
                 rec(f"{nm}_norm", pn)
+                # pass 2b: where Adam's direction loses the gradient -- the momentum (a noisy
+                # EMA of minibatch gradients) or the per-coordinate division by sqrt(v)
+                mn = mh.pow(2).sum(dims).sqrt()
+                gp = g / (vh.sqrt() + eps)                                   # preconditioned G
+                gpn = gp.pow(2).sum(dims).sqrt()
+                rec(f"{nm}_cosGm", (g * mh).sum(dims) / (gn * mn + 1e-300))
+                rec(f"{nm}_cosGGp", (g * gp).sum(dims) / (gn * gpn + 1e-300))
+                rec(f"{nm}_cosmu", (mh * u).sum(dims) / (mn * un + 1e-300))
+                rec(f"{nm}_cosGpu", (gp * u).sum(dims) / (gpn * un + 1e-300))
+                rec(f"{nm}_m", mn)
             # per-image gradient norms of the weight matrices (outer products) and radial parts
             a1d, a2d = a1.detach(), a2.detach()
             pim = {"W1": d1.pow(2).sum(2).sqrt() * xnorm,
