@@ -1,0 +1,50 @@
+{
+  "purpose": "Independent input-space reconstruction: direct sample preactivation changes versus stored centered covariance. Selected seed/task only. No training or outcome threshold changes.",
+  "passed": true,
+  "rows": [
+    {
+      "environment": "rl_LR",
+      "seed": 100,
+      "transition": 50,
+      "mean_max_abs_error": 1.1102230246251565e-16,
+      "cov_max_abs_error": 3.552713678800501e-15,
+      "Q_direct": 1193.0465122514017,
+      "Q_covariance": 1193.046512251401,
+      "V_direct": 5448.67467141149,
+      "V_covariance": 5448.674671411486
+    },
+    {
+      "environment": "pm_LR",
+      "seed": 100,
+      "transition": 50,
+      "mean_max_abs_error": 1.1102230246251565e-16,
+      "cov_max_abs_error": 3.372302437298913e-14,
+      "Q_direct": 10.107401224239958,
+      "Q_covariance": 10.107401224239796,
+      "V_direct": 324.450249985361,
+      "V_covariance": 324.450249985359
+    },
+    {
+      "environment": "conda",
+      "arm": "k1",
+      "seed": 100,
+      "transition": 100,
+      "Q_direct": 0.7724440089553268,
+      "Q_covariance": 0.7724440089553268,
+      "mean_update_energy": 21.109882719984295,
+      "full_change_direct": 21.882326728939624,
+      "full_change_formula": 21.88232672893962
+    },
+    {
+      "environment": "conda",
+      "arm": "m40_r10_k1",
+      "seed": 100,
+      "transition": 100,
+      "Q_direct": 0.8600340278933596,
+      "Q_covariance": 0.8600340278933596,
+      "mean_update_energy": 17.938461743429063,
+      "full_change_direct": 18.798495771322422,
+      "full_change_formula": 18.798495771322422
+    }
+  ]
+}
