@@ -426,6 +426,27 @@ def need_correct(acc: float) -> int:
 
 TRACE_COLS = ("correct", "ce", "margin_med", "n1", "n2", "n3", "sig_med")
 HIT_PLUS = 500                     # the post-hit window the rows report (spec §1.2)
+POSTFIT_MODES = ("adam", "adam_restore", "freeze", "sgd", "adam_ce")   # sgd_postfit_cifar_0923 §1
+
+
+def postfit_update(P, grads, adam_m, adam_v, post, m_pin, v_pin, sgd_eta, lr, b1, b2, eps,
+                   inv_c1, inv_c2) -> None:
+    """The step of sgd_postfit_cifar_0923's masked modes, in place.
+
+    Every slot first gets the engine's Adam arithmetic, op for op (so a slot with post False ends
+    bit for bit where the plain step puts it).  A slot with post True then keeps, per tensor:
+    p -= sgd_eta * g (sgd) or p unchanged (sgd_eta None: freeze), and m, v pinned to m_pin, v_pin.
+    torch.where only selects, so it adds no rounding to either side."""
+    R = post.shape[0]
+    for i, (p, gr, mi, vi) in enumerate(zip(P, grads, adam_m, adam_v)):
+        mi.mul_(b1).add_(gr, alpha=1 - b1)
+        vi.mul_(b2).addcmul_(gr, gr, value=1 - b2)
+        ua = lr * (mi * inv_c1) / ((vi * inv_c2).sqrt() + eps)
+        pm = post.view((R,) + (1,) * (p.dim() - 1))
+        alt = gr * sgd_eta if sgd_eta is not None else torch.zeros_like(ua)
+        p.sub_(torch.where(pm, alt, ua))
+        mi.copy_(torch.where(pm, m_pin[i], mi))
+        vi.copy_(torch.where(pm, v_pin[i], vi))
 # traces written before this commit put the task's FINAL tc on every row; repair them with
 #   tc_row = tc_stored - task_steps + step        (task_steps = 30,000, or the row's `steps`)
 TRACE_TC_BUG_BEFORE = "253b8386393ae4d6a436c6ebc303536b8bc6e1b8"
@@ -642,7 +663,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         stop: tuple[float, int] | None = None, stop_snap: str | None = None,
         labels_fixed: dict[int, list[torch.Tensor]] | None = None,
         restore: dict | None = None, run_id: str = EXPERIMENT,
-        extra_prov: dict | None = None) -> dict:
+        extra_prov: dict | None = None, postfit: dict | None = None) -> dict:
     """Train R = len(seeds) * len(conds) runs in lockstep and write their rows/hists/snapshots.
 
     Check-only hooks (never used by the main run): `perturb[r]` multiplies slot r's W1 by
@@ -678,7 +699,28 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
       `restore`     {"path": ckpts/t<NN>.pt} (optionally "slots": [j, ...], one per slot here):
                     start from that checkpoint's weights, Adam moments, tc, per-seed streams and
                     alpha state instead of from the initialization.
-      `run_id` / `extra_prov`  what provenance.json records the run as."""
+      `run_id` / `extra_prov`  what provenance.json records the run as.
+
+    sgd_postfit_cifar_0923 §1 (None leaves every path above bit for bit):
+      `postfit`     {"mode", "acc", "extra", "eta"}: every slot gets its own switch step
+                    s_sw = `extra` after the first trace eval at or above `acc` (never capped: past
+                    the task's steps there is no switch).  Steps 1..s_sw are the engine's Adam in
+                    every mode; after step s_sw the slot is post-fit until the task ends:
+                      adam          Adam unchanged (the control; only the bookkeeping is added)
+                      adam_restore  Adam unchanged, and at the task's end the slot's m and v are
+                                    put back to their values right after step s_sw
+                      freeze        no update of the slot's parameters; m and v frozen at s_sw
+                      sgd           p -= eta * g (the same minibatch gradient, all six tensors,
+                                    no momentum, no weight decay); m and v frozen at s_sw
+                      adam_ce       Adam unchanged until the first trace eval after s_sw whose
+                                    ce_st <= ce_st(s_sw) * exp(-x), then frozen there as in freeze
+                                    (never reached: Adam to the task's end)
+                    tc stays one scalar per run and counts every step (1/(1 - b2^tc) is 1.0 in
+                    float32 from tc = 16,628 on).  The trace gets one more column, ce_st: the
+                    mean over images of log1p(sum_{k != y} exp(z_k - z_y)) in float64 from the
+                    float32 logits (no cancellation, never 0 at the float32 CE floor).  The rows
+                    get switch_step, pin_step, the post-fit displacement of W1/W2/W3 and the
+                    freeze flags."""
     t_start = time.time()
     progress = progress or (lambda m: print(m, flush=True))   # a redirected stdout is block-buffered
     act = make_act(arm, c, beta, lo, hi)
@@ -695,6 +737,24 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         if not hit_every:
             raise SystemExit("--stop needs --hit-every (the stop rule reads that eval grid)")
         stop_need = need_correct(stop[0])
+    pf_mode = pf_need = pf_extra = pf_eta = pf_x = None
+    if postfit is not None:
+        pf_mode = postfit["mode"]
+        if pf_mode not in POSTFIT_MODES:
+            raise SystemExit(f"unknown postfit mode {pf_mode!r}; known: {','.join(POSTFIT_MODES)}")
+        if stop is not None or not hit_every:
+            raise SystemExit("postfit needs --hit-every and no --stop (every task runs its steps)")
+        if postfit["extra"] < 0 or postfit["extra"] % hit_every:
+            raise SystemExit(f"postfit extra must be a multiple of hit_every: {postfit['extra']}")
+        pf_need, pf_extra = need_correct(postfit["acc"]), int(postfit["extra"])
+        if pf_mode == "sgd":
+            pf_eta = float(postfit["eta"])
+            if not pf_eta > 0:
+                raise SystemExit(f"postfit sgd wants eta > 0; got {pf_eta}")
+        if pf_mode == "adam_ce":
+            pf_x = float(postfit["x"])
+            if not pf_x > 0:
+                raise SystemExit(f"postfit adam_ce wants x > 0 (e-folds); got {pf_x}")
     useeds = list(dict.fromkeys(seeds))       # each seed's streams advance once per draw
     cifar = cifar or RC.Cifar10()
     X = torch.stack([slot_inputs(cifar, s, cd, device) for s, cd in slots])      # (R, 1200, 3072)
@@ -736,6 +796,9 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
     meta = {**meta, "schedule": schedule, "stop": stop, "hit_every": hit_every,
             "labels_sha256": lab_sha, "device": device.type,
             "graph": bool(graph and device.type == "cuda" and debug is None)}
+    if postfit is not None:           # only then: the checkpoints of earlier runs keep their meta
+        meta["postfit"] = {"mode": pf_mode, "acc": postfit["acc"], "extra": pf_extra,
+                           "eta": pf_eta, "x": pf_x}
     tc_end: dict[str, int] = {}
     ck = out / "ckpt.pt"
     # one writer per output directory (the launcher can adopt, retry and be started twice)
@@ -836,9 +899,23 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
     bad_step = torch.full((R,), -1, dtype=torch.long, device=device)
     last_hit = torch.zeros(R, device=device)
 
+    # ---- sgd_postfit_cifar_0923 §1: which slots are past their switch step, and every slot's
+    # parameters and Adam moments right after it (written outside the graph at the switch eval;
+    # the graph only reads them).  Only freeze/sgd change the step itself.
+    post = torch.zeros(R, dtype=torch.bool, device=device)
+    pf_mask = pf_mode in ("freeze", "sgd", "adam_ce")
+    if postfit is not None:
+        # m_pin/v_pin/P_pin: the state a masked slot is held at (s_sw, or adam_ce's pin step);
+        # P_sw: the parameters at s_sw (the post-fit displacement is measured from there)
+        m_pin = [torch.zeros_like(q) for q in P]
+        v_pin = [torch.zeros_like(q) for q in P]
+        P_pin = [torch.zeros_like(q) for q in P]
+        P_sw = [torch.zeros_like(q) for q in P]
+
     # ---- the trace eval (§1.2): its own tensors, none of them the graph's
+    tcols = TRACE_COLS + (("ce_st",) if postfit is not None else ())
     n_ev = (spt // hit_every + 2) if hit_every else 1
-    TR = torch.zeros(n_ev, R, len(TRACE_COLS), dtype=torch.float64, device=device)
+    TR = torch.zeros(n_ev, R, len(tcols), dtype=torch.float64, device=device)
     TR_step: list[int] = []
 
     @torch.no_grad()
@@ -861,6 +938,12 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         for k, q in enumerate((P[0], P[2], P[4])):
             TR[i, :, 3 + k] = (q.double() ** 2).flatten(1).sum(1)        # n1, n2, n3
         TR[i, :, 6] = torch.stack([z1[r].std(0, unbiased=True).median() for r in range(R)])
+        if postfit is not None:
+            # ce_st: log1p(sum_{k != y} exp(z_k - z_y)) in float64 from the float32 logits -- the
+            # float32 CE above cancels to exactly 0 once 1 - p_y < ~6e-8; this does not
+            d = logits.double() - logits.double().gather(2, Ydev[:, :, None])
+            d.scatter_(2, Ydev[:, :, None], float("-inf"))
+            TR[i, :, 7] = torch.log1p(torch.exp(d).sum(2)).mean(1)
         TR_step.append(ts)
         return correct
 
@@ -877,10 +960,14 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             bad = ~torch.isfinite(lossv)
             bad_step.copy_(torch.where((bad_step < 0) & bad, step_t, bad_step))
             step_t.add_(1)
-            for p, gr, mi, vi in zip(P, grads, adam_m, adam_v):
-                mi.mul_(b1).add_(gr, alpha=1 - b1)
-                vi.mul_(b2).addcmul_(gr, gr, value=1 - b2)
-                p.sub_(lr * (mi * inv_c1) / ((vi * inv_c2).sqrt() + eps))
+            if not pf_mask:
+                for p, gr, mi, vi in zip(P, grads, adam_m, adam_v):
+                    mi.mul_(b1).add_(gr, alpha=1 - b1)
+                    vi.mul_(b2).addcmul_(gr, gr, value=1 - b2)
+                    p.sub_(lr * (mi * inv_c1) / ((vi * inv_c2).sqrt() + eps))
+            else:          # freeze / sgd / adam_ce: the slots past their pin leave Adam
+                postfit_update(P, grads, adam_m, adam_v, post, m_pin, v_pin, pf_eta, lr, b1, b2,
+                               eps, inv_c1, inv_c2)
             act.update(z1.detach(), z2.detach())
 
     use_graph = graph and device.type == "cuda" and debug is None
@@ -925,6 +1012,10 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         ts, done = 0, False
         stop_at: list[int | None] = [None] * R          # per slot; the task ends when all passed
         snapped = [False] * R
+        sw_at: list[int | None] = [None] * R            # postfit: each slot's own switch step
+        sw_done = [False] * R
+        pinned, pin_at, ce0 = [False] * R, [-1] * R, [float("nan")] * R
+        post.zero_()
         live = alive.cpu().tolist()                     # a diverged slot never reaches a hit
         t0 = time.time()
         if hit_every:
@@ -969,14 +1060,76 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                                 write_snapshot(out / "snap" / stop_snap.format(seed=s_, cond=cd_,
                                                                               slot=r), P, act, r)
                                 snapped[r] = True
+                    if postfit is not None and any(
+                            live[r] and not pinned[r] and (sw_at[r] is None or sw_at[r] <= spt)
+                            for r in range(R)):
+                        cc = correct.cpu().tolist()
+                        ce_now = TR[len(TR_step) - 1, :, 7].cpu().tolist()
+                        for r in range(R):
+                            if sw_at[r] is None and cc[r] >= pf_need:
+                                sw_at[r] = ts + pf_extra
+                            if sw_at[r] == ts and not sw_done[r]:
+                                # step s_sw is done: every later step of this slot is post-fit
+                                # (the stop chain's last step is this same s_sw)
+                                with torch.no_grad():
+                                    for i in range(6):
+                                        P_sw[i][r].copy_(P[i][r])
+                                sw_done[r] = True
+                                ce0[r] = ce_now[r]
+                            if sw_done[r] and not pinned[r] and (
+                                    pf_mode != "adam_ce" or ce_now[r] <= ce0[r] * math.exp(-pf_x)):
+                                # the pin: the state right after this step, which the masked
+                                # modes hold from the next step on (at s_sw except adam_ce)
+                                with torch.no_grad():
+                                    for i in range(6):
+                                        m_pin[i][r].copy_(adam_m[i][r])
+                                        v_pin[i][r].copy_(adam_v[i][r])
+                                        P_pin[i][r].copy_(P[i][r])
+                                if pf_mask:
+                                    post[r] = True
+                                pinned[r], pin_at[r] = True, ts
         if device.type == "cuda":
             torch.cuda.synchronize()
         step_ms = 1e3 * (time.time() - t0) / max(ts, 1)
 
+        # ---- postfit bookkeeping (sgd_postfit_cifar_0923 §3, §5 C4): measured equalities, so
+        # each flag can fail (a mode that moves the slot after s_sw must show False)
+        pf_rows: list[dict] = [{} for _ in range(R)]
+        if postfit is not None:
+            with torch.no_grad():
+                nan = float("nan")
+                for r in range(R):
+                    if not sw_done[r]:
+                        pf_rows[r] = {"switch_step": -1, "pin_step": -1, "pf_disp_l1": nan,
+                                      "pf_disp_l2": nan, "pf_disp_l3": nan,
+                                      "pf_P_same": -1, "pf_mv_same": -1, "pf_mv_restored": -1}
+                        continue
+                    q = {"switch_step": sw_at[r], "pin_step": pin_at[r]}
+                    for k, i in ((1, 0), (2, 2), (3, 4)):
+                        q[f"pf_disp_l{k}"] = float(((P[i][r].double() - P_sw[i][r].double()) ** 2)
+                                                   .sum())
+                    if not pinned[r]:                 # adam_ce that never reached its target
+                        q.update({"pf_P_same": -1, "pf_mv_same": -1, "pf_mv_restored": -1})
+                        pf_rows[r] = q
+                        continue
+                    q["pf_P_same"] = int(all(torch.equal(P[i][r], P_pin[i][r]) for i in range(6)))
+                    q["pf_mv_same"] = int(all(torch.equal(adam_m[i][r], m_pin[i][r]) and
+                                              torch.equal(adam_v[i][r], v_pin[i][r])
+                                              for i in range(6)))
+                    if pf_mode == "adam_restore":
+                        for i in range(6):
+                            adam_m[i][r].copy_(m_pin[i][r])
+                            adam_v[i][r].copy_(v_pin[i][r])
+                    q["pf_mv_restored"] = int(all(torch.equal(adam_m[i][r], m_pin[i][r]) and
+                                                  torch.equal(adam_v[i][r], v_pin[i][r])
+                                                  for i in range(6)))
+                    pf_rows[r] = q
+            post.zero_()
+
         # ---- the trace: counts in, hit99/hit999/stop bookkeeping out (§1.2)
         # .copy() is load-bearing: on cpu, .cpu() is a no-op and .numpy() SHARES TR's memory, so
         # the rows this task hands to `traces` would be overwritten by the next task's evals
-        tr = TR[:len(TR_step)].cpu().numpy().copy()              # (E, R, 7)
+        tr = TR[:len(TR_step)].cpu().numpy().copy()              # (E, R, len(tcols))
         ev = np.asarray(TR_step, dtype=np.int64)                 # (E,)
         h99, h999 = [-1] * R, [-1] * R
         hplus, hseen, hmin = [-1] * R, [0] * R, [-1] * R
@@ -1001,7 +1154,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                 # tc is the global clock AT THAT ROW: the task's starting clock plus the step.
                 # For a fork that starting clock is the parent checkpoint's tc (restore set it).
                 new = {"task": np.full(len(ev), t, dtype=np.int64), "tc": (tc - ts) + ev,
-                       "step": ev, **{k: tr[:, r, i] for i, k in enumerate(TRACE_COLS)}}
+                       "step": ev, **{k: tr[:, r, i] for i, k in enumerate(tcols)}}
                 new["correct"] = new["correct"].astype(np.int64)
                 traces[r] = {k: (np.concatenate([old[k], new[k]]) if old else new[k]) for k in new}
         with torch.no_grad():
@@ -1028,6 +1181,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                 extra["correct_at_hit_plus_500"] = hplus[r]        # -1 unless it was observed
                 extra["hit_plus_500_observed"] = hseen[r]
                 extra["min_correct_after_hit"] = hmin[r]           # window: (hit999, task end]
+            extra.update(pf_rows[r])                               # postfit only, else empty
             rows.append({"arm": arm, "cond": cd, "seed": s, "slot": r, "lr": lr, "task": t,
                          "iv": "none", "online_acc": float(acc_sum[r]) / ts,
                          "memo_acc": m[r]["acc"], **m[r], **extra})
@@ -1080,7 +1234,9 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                  f"ETA {el/(t-t_first+1)*(n_tasks-t)/60:.0f} min"
                  + (f"  steps {ts}" if stop is not None else "")
                  + (f"  hit999 med {int(np.median([q for q in h999 if q >= 0]))}"
-                    if hit_every and any(q >= 0 for q in h999) else ""))
+                    if hit_every and any(q >= 0 for q in h999) else "")
+                 + (f"  switched {sum(sw_done)}/{R} pinned {sum(pinned)}/{R}"
+                    if postfit is not None else ""))
 
     prov = {"run_id": run_id, **git_states[0], "git_states": git_states, "resumed_at_task": resumed,
             "arm": arm, "conds": conds, "seeds": seeds,
@@ -1123,7 +1279,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             "perm_consumption_rule": PERM_RULE,
             "tc_at_task_end": tc_end,
             "trace": ({"path": "trace/<arm>_<cond>_seed<seed>.npz", "every": hit_every,
-                       "cols": ["task", "tc", "step"] + list(TRACE_COLS),
+                       "cols": ["task", "tc", "step"] + list(tcols),
                        "step0_row": "one row at step 0 of every task, not eligible for a hit",
                        "tc": "the global clock at that row = the task's starting tc + step",
                        "hit_plus": HIT_PLUS,
@@ -1141,6 +1297,25 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                          "slots": list(restore.get("slots") or range(R)),
                          "sha256": hashlib.sha256(Path(restore["path"]).read_bytes()).hexdigest()}
                         if restore is not None else None),
+            # sgd_postfit_cifar_0923 §1 (absent -> None: the parent's path)
+            "postfit": ({**meta["postfit"],
+                         "switch": "s_sw = the first trace eval (step >= hit_every) with >= "
+                                   f"{pf_need} correct, + extra; steps 1..s_sw are Adam in every "
+                                   "mode, later steps follow the mode; no switch when s_sw > "
+                                   "the task's steps",
+                         "tc": "one scalar per run, counts every step in every mode",
+                         "rows": {"switch_step": "s_sw, or -1 when the slot did not switch",
+                                  "pin_step": "the eval step whose state the masked modes hold "
+                                              "(s_sw, or adam_ce's CE target; -1 = never)",
+                                  "pf_disp_l<k>": "||W_k(task end) - W_k(s_sw)||^2 (float64)",
+                                  "pf_P_same": "all six tensors at the task end == at the pin",
+                                  "pf_mv_same": "m and v at the task end == right after the pin "
+                                                "(before any restore)",
+                                  "pf_mv_restored": "the same after adam_restore's reset "
+                                                    "(== pf_mv_same in the other modes)"},
+                         "ce_st": "trace column: mean_i log1p(sum_{k != y} exp(z_k - z_y)), "
+                                  "float64 from the float32 logits"}
+                        if postfit is not None else None),
             **(extra_prov or {})}
     (out / "provenance.json").write_text(json.dumps(prov, indent=2))
     fcntl.flock(lock_fh, fcntl.LOCK_UN)
