@@ -67,9 +67,10 @@ def done(j: dict) -> bool:
     d = json.loads(p.read_text())
     pf = d.get("postfit") or {}
     want = {"mode": j["mode"], "eta": j.get("eta"), "x": j.get("x"), "n_tasks": j["tasks"],
-            "keep_ckpts": bool(j.get("keep_ckpts"))}
+            "keep_ckpts": bool(j.get("keep_ckpts")), "schedule": j.get("schedule", "iid")}
     got = {"mode": pf.get("mode", "none") if d.get("postfit") else "none", "eta": pf.get("eta"),
-           "x": pf.get("x"), "n_tasks": d.get("n_tasks"), "keep_ckpts": bool(d.get("keep_ckpts"))}
+           "x": pf.get("x"), "n_tasks": d.get("n_tasks"), "keep_ckpts": bool(d.get("keep_ckpts")),
+           "schedule": d.get("schedule", "iid")}
     bad = {k: (got[k], want[k]) for k in want if got[k] != want[k]}
     if bad:
         raise SystemExit(f"{job_dir(j)} was produced with another configuration {bad} "
@@ -143,6 +144,8 @@ def cmd_of(j: dict) -> list[str]:
         c += ["--keep-ckpts"]
     if j.get("restore"):
         c += ["--restore", str(j["restore"])]
+    if j.get("schedule"):
+        c += ["--schedule", j["schedule"]]
     return c
 
 

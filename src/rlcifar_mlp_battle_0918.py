@@ -426,7 +426,8 @@ def need_correct(acc: float) -> int:
 
 TRACE_COLS = ("correct", "ce", "margin_med", "n1", "n2", "n3", "sig_med")
 HIT_PLUS = 500                     # the post-hit window the rows report (spec §1.2)
-POSTFIT_MODES = ("adam", "adam_restore", "freeze", "sgd", "adam_ce")   # sgd_postfit_cifar_0923 §1
+POSTFIT_MODES = ("adam", "adam_restore", "freeze", "sgd", "adam_ce",
+                 "sgd_all")                    # sgd_postfit_cifar_0923 §1, 追補 1
 
 
 def postfit_update(P, grads, adam_m, adam_v, post, m_pin, v_pin, sgd_eta, lr, b1, b2, eps,
@@ -715,6 +716,8 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
                       adam_ce       Adam unchanged until the first trace eval after s_sw whose
                                     ce_st <= ce_st(s_sw) * exp(-x), then frozen there as in freeze
                                     (never reached: Adam to the task's end)
+                      sgd_all       (追補 1) no Adam at all: every step of every task is
+                                    p -= eta * g, and m, v stay pinned at zero
                     tc stays one scalar per run and counts every step (1/(1 - b2^tc) is 1.0 in
                     float32 from tc = 16,628 on).  The trace gets one more column, ce_st: the
                     mean over images of log1p(sum_{k != y} exp(z_k - z_y)) in float64 from the
@@ -747,7 +750,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         if postfit["extra"] < 0 or postfit["extra"] % hit_every:
             raise SystemExit(f"postfit extra must be a multiple of hit_every: {postfit['extra']}")
         pf_need, pf_extra = need_correct(postfit["acc"]), int(postfit["extra"])
-        if pf_mode == "sgd":
+        if pf_mode in ("sgd", "sgd_all"):
             pf_eta = float(postfit["eta"])
             if not pf_eta > 0:
                 raise SystemExit(f"postfit sgd wants eta > 0; got {pf_eta}")
@@ -903,7 +906,7 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
     # parameters and Adam moments right after it (written outside the graph at the switch eval;
     # the graph only reads them).  Only freeze/sgd change the step itself.
     post = torch.zeros(R, dtype=torch.bool, device=device)
-    pf_mask = pf_mode in ("freeze", "sgd", "adam_ce")
+    pf_mask = pf_mode in ("freeze", "sgd", "adam_ce", "sgd_all")
     if postfit is not None:
         # m_pin/v_pin/P_pin: the state a masked slot is held at (s_sw, or adam_ce's pin step);
         # P_sw: the parameters at s_sw (the post-fit displacement is measured from there)
@@ -1016,6 +1019,9 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
         sw_done = [False] * R
         pinned, pin_at, ce0 = [False] * R, [-1] * R, [float("nan")] * R
         post.zero_()
+        if pf_mode == "sgd_all":          # SGD from the task's first step, moments held at 0
+            post.fill_(True)
+            pinned, pin_at = [True] * R, [0] * R
         live = alive.cpu().tolist()                     # a diverged slot never reaches a hit
         t0 = time.time()
         if hit_every:
@@ -1099,6 +1105,13 @@ def run(arm: str, seeds: list[int], conds: list[str], n_tasks: int, epochs: int,
             with torch.no_grad():
                 nan = float("nan")
                 for r in range(R):
+                    if pf_mode == "sgd_all":
+                        mv0 = int(all(torch.equal(adam_m[i][r], m_pin[i][r]) and
+                                      torch.equal(adam_v[i][r], v_pin[i][r]) for i in range(6)))
+                        pf_rows[r] = {"switch_step": -1, "pin_step": 0, "pf_disp_l1": nan,
+                                      "pf_disp_l2": nan, "pf_disp_l3": nan, "pf_P_same": -1,
+                                      "pf_mv_same": mv0, "pf_mv_restored": mv0}
+                        continue
                     if not sw_done[r]:
                         pf_rows[r] = {"switch_step": -1, "pin_step": -1, "pf_disp_l1": nan,
                                       "pf_disp_l2": nan, "pf_disp_l3": nan,

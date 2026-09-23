@@ -1,0 +1,45 @@
+{
+ "gpu_max": 13,
+ "own_max": 4,
+ "reserve_gb": 4.0,
+ "min_gpu_mb": 500,
+ "retries": 1,
+ "jobs": [
+  {
+   "name": "_pilot_abab/sa_eta0.01",
+   "mode": "sgd_all",
+   "eta": 0.01,
+   "tasks": 4,
+   "schedule": "abab",
+   "keep_ckpts": false,
+   "rss_gb": 2.0
+  },
+  {
+   "name": "_pilot_abab/sa_eta0.03",
+   "mode": "sgd_all",
+   "eta": 0.03,
+   "tasks": 4,
+   "schedule": "abab",
+   "keep_ckpts": false,
+   "rss_gb": 2.0
+  },
+  {
+   "name": "_pilot_abab/sa_eta0.1",
+   "mode": "sgd_all",
+   "eta": 0.1,
+   "tasks": 4,
+   "schedule": "abab",
+   "keep_ckpts": false,
+   "rss_gb": 2.0
+  },
+  {
+   "name": "_pilot_abab/sa_eta0.3",
+   "mode": "sgd_all",
+   "eta": 0.3,
+   "tasks": 4,
+   "schedule": "abab",
+   "keep_ckpts": false,
+   "rss_gb": 2.0
+  }
+ ]
+}

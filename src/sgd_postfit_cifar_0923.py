@@ -128,7 +128,9 @@ def main() -> None:
     ap.add_argument("stage", choices=["run", "xfork"])
     ap.add_argument("--mode", default=None, choices=MODES,
                     help="none = no hook (the parent's path); else the post-fit mode")
-    ap.add_argument("--eta", type=float, default=None, help="sgd: the post-fit learning rate")
+    ap.add_argument("--eta", type=float, default=None, help="sgd / sgd_all: the SGD learning rate")
+    ap.add_argument("--schedule", default="iid", choices=["iid", "abab"],
+                    help="label schedule (追補 1 runs abab with sgd_all)")
     ap.add_argument("--x", type=float, default=None, help="adam_ce: the CE drop in e-folds")
     ap.add_argument("--acc", type=float, default=0.999, help="the hit that starts the clock")
     ap.add_argument("--extra", type=int, default=500, help="s_sw = hit + extra")
@@ -153,15 +155,15 @@ def main() -> None:
         return do_xfork(a, device)
     if a.mode is None:
         raise SystemExit("run needs --mode")
-    if (a.mode == "sgd") != (a.eta is not None):
-        raise SystemExit("--eta goes with --mode sgd, and only with it")
+    if (a.mode in ("sgd", "sgd_all")) != (a.eta is not None):
+        raise SystemExit("--eta goes with --mode sgd / sgd_all, and only with them")
     if (a.mode == "adam_ce") != (a.x is not None):
         raise SystemExit("--x goes with --mode adam_ce, and only with it")
     postfit = (None if a.mode == "none" else
                {"mode": a.mode, "acc": a.acc, "extra": a.extra, "eta": a.eta, "x": a.x})
     B.run("LR", B.parse_ints(a.seeds), a.conds.split(","), a.tasks, a.epochs, device,
           Path(a.out), checkpoint=True, resume=not a.no_resume, graph=not a.no_graph,
-          schedule="iid", hit_every=a.hit_every, keep_ckpts=a.keep_ckpts,
+          schedule=a.schedule, hit_every=a.hit_every, keep_ckpts=a.keep_ckpts,
           restore={"path": a.restore} if a.restore else None, run_id=EXPERIMENT,
           postfit=postfit)
 
