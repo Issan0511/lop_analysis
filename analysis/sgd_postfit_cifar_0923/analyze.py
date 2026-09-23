@@ -71,8 +71,12 @@ def load(root: Path, arm: str) -> dict:
             if sw >= 0:
                 i = int(np.nonzero(step == sw)[0][0])
                 ce_sw, ce_end = at("ce_st", sw), at("ce_st", STEPS)
+                ce_min = float(col["ce_st"][i:].min())
                 rec.update({"ce_sw": ce_sw, "ce_end": ce_end, "correct_sw": at("correct", sw),
                             "efolds": (math.log(ce_sw / ce_end) if ce_end > 0 else math.inf),
+                            # to the lowest CE of the segment: Adam's float32-floor burst lifts
+                            # the task-end CE back up, so `efolds` undercounts Adam's descent
+                            "efolds_max": (math.log(ce_sw / ce_min) if ce_min > 0 else math.inf),
                             "post_updates": STEPS - sw,
                             "min_correct_after_sw": (int(col["correct"][i + 1:].min())
                                                      if i + 1 < len(step) else -1)})
@@ -108,6 +112,7 @@ def seed_stats(per: dict) -> dict:
         "G2": (math.inf if per[50]["dead"] else per[50]["n2_end"]),
         "G3": (math.inf if per[50]["dead"] else per[50]["n3_end"]),
         "efolds_mid": nanmed([r["efolds"] for r in sw]),
+        "efolds_max_mid": nanmed([r["efolds_max"] for r in sw]),
         "dn1_post_mid": nanmed([r["n1_end"] - r["n1_sw"] for r in sw]),
         "disp_l1_mid": nanmed([r["disp_l1"] for r in sw]),
         "min_correct_after_sw_mid": nanmed([r["min_correct_after_sw"] for r in sw]),
@@ -163,6 +168,7 @@ def main() -> None:
          "n_dead": {x: sum(st[x][s]["dead"] for s in SEEDS) for x in arms},
          "first_dead_task": {x: [st[x][s]["first_dead_task"] for s in SEEDS] for x in arms}}
     for k in ("H", "G", "H_early", "H_minus_early", "H99", "Hfull", "G2", "G3", "efolds_mid",
+              "efolds_max_mid",
               "dn1_post_mid", "disp_l1_mid", "min_correct_after_sw_mid", "correct_sw_mid",
               "post_updates_mid", "slope_n1_mid", "H_censored", "n_noswitch"):
         v[k] = {x: med(x, k) for x in arms}
@@ -281,7 +287,8 @@ def main() -> None:
                             min((r["min_correct_after_sw"] for r in live
                                  if "min_correct_after_sw" in r), default=-1),
                             len(recs) - len(live), sum(1 for r in live if r["switch"] < 0)])
-    show = ("n_dead", "H", "G", "H_survivors", "H_early", "efolds_mid", "dn1_post_mid",
+    show = ("n_dead", "H", "G", "H_survivors", "H_early", "efolds_mid", "efolds_max_mid",
+            "dn1_post_mid",
             "ref_gap", "rho", "rhoW", "rho_per_seed_median", "rho_per_seed_counts", "boot90",
             "ledger_mid", "A_ce_match", "verdict")
     for k in show:

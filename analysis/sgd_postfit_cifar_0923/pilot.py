@@ -48,6 +48,8 @@ def slot_stats(tr: dict, t: int, sw: int) -> dict:
             "ce_sw": ce_sw, "ce_end": ce_end,
             "ce_max_after_sw": float(ce[i_sw + 1:].max()) if i_end > i_sw else ce_sw,
             "efolds": (math.log(ce_sw / ce_end) if ce_end > 0 else math.inf),
+            "efolds_max": (math.log(ce_sw / float(ce[i_sw:].min())) if ce[i_sw:].min() > 0
+                           else math.inf),
             "dn1": float(n1[i_end] - n1[i_sw]), "n1_sw": float(n1[i_sw]),
             "correct_end": int(cor[i_end]),
             "min_correct_after_sw": int(cor[i_sw + 1:].min()) if i_end > i_sw else int(cor[i_sw])}
@@ -138,29 +140,40 @@ def main() -> None:
             stab[tag(eta)]["t49_stable"] = ok49
             stab[tag(eta)]["t49_why"] = why49[:10]
             table.append({"leg": "S t49 (descriptive)", "eta": eta, "task": 49, **summ(des[1])})
-    complete = all(stab[tag(e)]["stable"] is not None for e in GRID)
-    hi = None
+    complete = all(stab[tag(e)]["stable"] is not None and "t49_stable" in stab[tag(e)]
+                   for e in GRID)
+    hi = lo49 = None
     for eta in GRID:                     # contiguous from the bottom of the grid
         if stab[tag(eta)]["stable"]:
             hi = eta
         else:
             break
+    for eta in GRID:                     # v2.1: also stable on the Adam-inflated t49 net
+        if stab[tag(eta)]["stable"] and stab[tag(eta)].get("t49_stable"):
+            lo49 = eta
+        else:
+            break
     if complete:
-        choice = ({"eta_hi": hi, "eta_lo": round(hi / 10, 10),
-                   "rule": "largest grid value stable together with every smaller one; "
-                           "eta_lo = eta_hi / 10",
-                   "eta_lo_stable_in_pilot": stab.get(tag(round(hi / 10, 10)), {}).get("stable"),
-                   "top_of_grid": hi == GRID[-1]}
-                  if hi is not None else {"eta_hi": None, "note": "no stable eta: no S arms"})
+        if hi is None:
+            choice = {"eta_hi": None, "note": "no stable eta: no S arms"}
+        else:
+            lo = lo49 if (lo49 is not None and lo49 < hi) else round(hi / 10, 10)
+            choice = {"eta_hi": hi, "eta_lo": lo,
+                      "rule": "eta_hi: largest grid value stable (with every smaller one) on "
+                              "tasks 1-2; eta_lo (v2.1): the same on tasks 1-2 and the t49 leg "
+                              "if below eta_hi, else eta_hi / 10",
+                      "eta_lo_source": ("t49-stable" if (lo49 is not None and lo49 < hi)
+                                        else "eta_hi/10"),
+                      "largest_t49_stable": lo49, "top_of_grid": hi == GRID[-1]}
     res = {"grid": GRID, "stability": stab, "choice": choice, "complete": complete,
            "table": table}
     Path(a.out).write_text(json.dumps(res, indent=2, default=float) + "\n")
-    print(f"{'leg':22s} {'eta':>6s} {'t':>3s} {'efolds':>7s} {'dn1':>9s} {'minC':>5s} "
+    print(f"{'leg':22s} {'eta':>6s} {'t':>3s} {'efolds':>7s} {'efmax':>6s} {'dn1':>9s} {'minC':>5s} "
           f"{'ce_sw':>9s} {'ce_end':>9s} {'dead':>4s}")
     for q in table:
         eta_s = "" if q["eta"] is None else f"{q['eta']:g}"
         print(f"{q['leg']:22s} {eta_s:>6s} "
-              f"{q['task']:3d} {q['efolds_med']:7.2f} {q['dn1_med']:9.1f} "
+              f"{q['task']:3d} {q['efolds_med']:7.2f} {q['efolds_max_med']:6.2f} {q['dn1_med']:9.1f} "
               f"{q['min_correct_after_sw_min']:5d} {q['ce_sw_med']:9.2e} {q['ce_end_med']:9.2e} "
               f"{q.get('n_dead', 0):4d}")
     for e in GRID:
@@ -170,7 +183,8 @@ def main() -> None:
 
 def summ(per: list[dict]) -> dict:
     sw = [q for q in per if q.get("switched")]
-    return {"efolds_med": med(per, "efolds"), "dn1_med": med(per, "dn1"),
+    return {"efolds_med": med(per, "efolds"), "efolds_max_med": med(per, "efolds_max"),
+            "dn1_med": med(per, "dn1"),
             "min_correct_after_sw_min": min((q["min_correct_after_sw"] for q in sw), default=-1),
             "ce_sw_med": med(per, "ce_sw"), "ce_end_med": med(per, "ce_end"),
             "n_dead": sum(1 for q in per if not q.get("alive", True))}
