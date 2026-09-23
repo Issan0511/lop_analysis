@@ -1,0 +1,27 @@
+{
+ "gpu_max": 13,
+ "own_max": 2,
+ "reserve_gb": 4.0,
+ "min_gpu_mb": 500,
+ "retries": 2,
+ "jobs": [
+  {
+   "name": "SA_abab",
+   "mode": "sgd_all",
+   "eta": 0.01,
+   "schedule": "abab",
+   "tasks": 50,
+   "keep_ckpts": false,
+   "rss_gb": 2.0
+  },
+  {
+   "name": "SA_iid",
+   "mode": "sgd_all",
+   "eta": 0.01,
+   "schedule": "iid",
+   "tasks": 50,
+   "keep_ckpts": false,
+   "rss_gb": 2.0
+  }
+ ]
+}
