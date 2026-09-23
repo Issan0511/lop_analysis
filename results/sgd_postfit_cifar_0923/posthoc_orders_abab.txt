@@ -1,0 +1,16 @@
+switch interval s_sw(t)->s_sw(t+1), W1, medians per t:
+t                10      20      30      40      48
+first_with   -306.2  -793.8 -1076.4 -1318.1 -1749.1
+second_with  1968.8  2353.0  2714.5  2975.1  3092.9
+net_with     1653.9  1645.9  1744.3  1713.7  1386.6
+first_no    -1177.4 -1818.7 -2113.7 -2672.5 -3079.7
+second_no    1418.6  1672.5  1914.8  2211.6  2211.3
+net_no        239.4  -156.1  -208.8  -483.3  -877.7
+cos_R_R0        0.6     0.6     0.6     0.6     0.6
+normR          40.1    43.7    47.1    49.8    51.8
+normR0         37.7    40.9    43.8    47.0    47.0
+normW         119.9   174.0   211.6   243.0   265.0
+
+Adam LR_abab (cycles 14-24, median): cos(R_AB, R_BA) -0.398  |R_AB+R_BA|^2/|R_AB|^2 1.199  cos(dM, D) 0.255  cos(dM, M) 0.104  per cycle: |dM|^2 656.0 radial 970.6
+
+SGD SA_abab (cycles 14-24, median): cos(R_AB, R_BA) -0.926  |R_AB+R_BA|^2/|R_AB|^2 0.147  cos(dM, D) 0.085  cos(dM, M) 0.199  per cycle: |dM|^2 0.6 radial 5.1
