@@ -20,7 +20,7 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parents[2]
-ARMS = ("A", "AR", "F", "S_lo", "S_hi", "A_ce")
+ARMS = ("A", "AR", "F", "S_lo", "S_mid", "S_hi", "A_ce")
 SEEDS = tuple(range(10))
 STEPS = 30000
 LATE = range(41, 51)            # E1 window
@@ -228,13 +228,18 @@ def main() -> None:
 
         verdict["Q1_S_hi"] = q_arm("S_hi", "rho", ("SGD_RESCUE", "PARTIAL", "NO_RESCUE"))
         verdict["Q2_S_lo"] = q_arm("S_lo", "rho", ("SGD_RESCUE", "PARTIAL", "NO_RESCUE"))
+        verdict["Q2b_S_mid"] = q_arm("S_mid", "rho", ("SGD_RESCUE", "PARTIAL", "NO_RESCUE"))
         verdict["Q3_S_hi_W"] = q_arm("S_hi", "rhoW", ("SGD_RESCUE_W", "PARTIAL_W", "NO_RESCUE_W"))
         verdict["Q4_AR"] = q_arm("AR", "rho", ("RESET_RESCUE", "PARTIAL", "NO_RESCUE"))
         verdict["Q5_AR_W"] = q_arm("AR", "rhoW", ("RESET_RESCUE_W", "PARTIAL_W", "NO_RESCUE_W"))
         v["H_F_seeds04"] = med("F", "H", seeds=range(5))
         verdict["Q6_F_minus_stop_seeds04"] = v["H_F_seeds04"] - STOP_H_SEEDS04
-        if "A_ce" in arms and "S_hi" in arms and v["ref_gap"]["H_ok"]:
-            rs, ra = v["rho"]["S_hi"], v["rho"]["A_ce"]
+        # Q7's reference arm (v2.2): S_hi unless fewer than 8 of its seeds live through t50
+        ref_arm = next((x for x in ("S_hi", "S_mid", "S_lo")
+                        if x in arms and 10 - v["n_dead"][x] >= 8), None)
+        v["Q7_reference_arm"] = ref_arm
+        if "A_ce" in arms and ref_arm and v["ref_gap"]["H_ok"]:
+            rs, ra = v["rho"][ref_arm], v["rho"]["A_ce"]
             if rs >= 0.75 and ra >= 0.75:
                 q7 = "MATCHED_CE_HARMLESS"
             elif rs <= 0.25 and ra <= 0.25:
@@ -250,7 +255,7 @@ def main() -> None:
             n_pin = sum(r["pin"] >= 0 for s in SEEDS for t in MID
                         for r in [data["A_ce"][s][t]] if not r["dead"])
             v["A_ce_match"] = {"efolds_mid_A_ce": v["efolds_mid"]["A_ce"],
-                               "efolds_mid_S_hi": v["efolds_mid"]["S_hi"],
+                               "efolds_mid_ref": v["efolds_mid"][ref_arm],
                                "pinned_frac_mid": n_pin / max(n_sw, 1),
                                "match_ok": n_pin / max(n_sw, 1) >= 0.8}
             verdict["Q7_matched_ce"] = q7 + ("" if v["A_ce_match"]["match_ok"] else

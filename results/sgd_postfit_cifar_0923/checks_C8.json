@@ -1,0 +1,29 @@
+{
+  "device": "cuda",
+  "cases": {
+    "freeze_vs_reference": true,
+    "freeze_idle_vs_plain_adam": true,
+    "freeze_unswitched_slots_vs_plain": true,
+    "sgd_vs_reference": true,
+    "sgd_idle_vs_plain_adam": true,
+    "sgd_unswitched_slots_vs_plain": true
+  },
+  "mutations": {
+    "freeze": {
+      "mask_shifted_one_slot": true,
+      "switch_disabled": true,
+      "biases_left_on_adam": true,
+      "moments_not_pinned": true,
+      "freeze_takes_a_tiny_sgd_step": true
+    },
+    "sgd": {
+      "mask_shifted_one_slot": true,
+      "switch_disabled": true,
+      "biases_left_on_adam": true,
+      "moments_not_pinned": true,
+      "eta_doubled": true,
+      "sign_flipped": true
+    }
+  },
+  "ok": true
+}
