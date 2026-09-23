@@ -12,7 +12,10 @@ const katex=req(path.join(deps,'katex'));
 const {chromium}=req(path.join(process.argv[3],'playwright'));
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const out=path.join(root,'output/pdf');fs.mkdirSync(out,{recursive:true});
-let source=fs.readFileSync(path.join(root,'results/v11_completion_0923/V11_integrated_0923.md'),'utf8');
+const corrected=process.argv.includes('--corrected');
+const runDir=corrected?'results/v11_corrections_0923':'results/v11_completion_0923';
+const sourceName=corrected?'V11_corrected_0923.md':'V11_integrated_0923.md';
+let source=fs.readFileSync(path.join(root,runDir,sourceName),'utf8');
 source=source.split('## 編集・照合記録')[0];
 source=source.replace(/^親:.*\n/m,'').replace(/^読み方:.*\n/m,'');
 source=source.replace(/\[\[([^\]]+)\]\]/g,'$1');
@@ -40,7 +43,7 @@ content=content.replace(/(<h2>付録 [A-FJ][^<]*<\/h2>)\s*(<figure[^>]*>)/g,'$2$
 content=content.replace(/【(B2・B8|決定 9)([\s\S]*?)】/g,'<span class="pending">【$1$2】</span>');
 let css=fs.readFileSync(path.join(deps,'katex/dist/katex.min.css'),'utf8');
 css=css.replace(/url\(fonts\/([^)]*)\)/g,(a,f)=>`url(data:font/woff2;base64,${fs.readFileSync(path.join(deps,'katex/dist/fonts',f)).toString('base64')})`);
-const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><title>V11 図表統合稿 0923</title><style>${css}
+const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><title>V11 ${corrected?'監査訂正反映稿':'図表統合稿'} 0923</title><style>${css}
 @page {size:A4 portrait;margin:17mm 17mm 19mm;}
 @page wide {size:A4 landscape;margin:15mm 17mm 19mm;}
 @page portrait {size:A4 portrait;margin:17mm 17mm 19mm;}
@@ -64,12 +67,12 @@ th{background:#e7eef2;color:#163b50;font-weight:600;} tbody tr:nth-child(even){b
 table code{font-size:8pt;} table p{margin:0;}.katex{font-size:1.02em;}.katex-display{margin:5mm 0;}
 blockquote{margin:3mm 0;padding-left:4mm;border-left:2px solid #c8d5da;font-size:9.5pt;} hr{border:0;border-top:1px solid #d1dde2;margin:5mm 0;}
 li{margin-bottom:2mm;}.notice{font-size:9pt;color:#556773;margin-bottom:6mm;}
-</style></head><body><div class="notice">2026-09-23 / 日本語・図表統合稿 / 黄色の【 】は判断保留</div>${content}</body></html>`;
+</style></head><body><div class="notice">2026-09-23 / 日本語・${corrected?'監査訂正反映稿':'図表統合稿'} / 黄色の【 】は判断保留</div>${content}</body></html>`;
 const htmlPath=path.join(out,'V11_review_0923.html');fs.writeFileSync(htmlPath,html);
 const browser=await chromium.launch({executablePath:'/usr/bin/google-chrome',headless:true,args:['--no-sandbox']});
 const page=await browser.newPage();await page.goto('file://'+htmlPath,{waitUntil:'load'});await page.evaluate(()=>document.fonts.ready);
 const errors=await page.evaluate(()=>({brokenImages:[...document.images].filter(i=>!i.complete||!i.naturalWidth).map(i=>i.alt),mathErrors:document.querySelectorAll('.katex-error').length,figures:document.querySelectorAll('figure').length,tables:document.querySelectorAll('table').length,refs:document.querySelectorAll('[id^="ref-"]').length}));
 if(errors.brokenImages.length||errors.mathErrors||errors.figures!==17||errors.refs!==13)throw Error(JSON.stringify(errors));
 await page.pdf({path:path.join(out,'V11_review_0923.pdf'),printBackground:true,preferCSSPageSize:true,displayHeaderFooter:true,headerTemplate:'<div></div>',footerTemplate:'<div style="font-size:8px;width:100%;text-align:center;color:#667788;">V11 · 2026-09-23 · <span class="pageNumber"></span> / <span class="totalPages"></span></div>'});
-fs.writeFileSync(path.join(root,'results/v11_completion_0923/render_checks.json'),JSON.stringify(errors,null,2)+'\n');
+fs.writeFileSync(path.join(root,runDir,'render_checks.json'),JSON.stringify(errors,null,2)+'\n');
 await browser.close();console.log(JSON.stringify(errors));

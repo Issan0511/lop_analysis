@@ -21,18 +21,18 @@ import style as S
 
 # (表示名, 群)  群: 自然 / 復元（t1 の場を t10 へ） / 沈降（t10 の場を t1 へ） / 一様
 ARMS = [
-    ("N1r",       "t1 末・自然", "自然"),
-    ("N10r",      "t10 末・自然", "自然"),
-    ("N1",        "t1 末・自然（head 保持）", "自然"),
-    ("N10",       "t10 末・自然（head 保持）", "自然"),
-    ("R1_10r",    "t10 に t1 の場（復元）", "復元"),
-    ("R1_10",     "t10 に t1 の場（head 保持）", "復元"),
-    ("S1_10r",    "t1 に t10 の場（沈降）", "沈降"),
-    ("S1_10",     "t1 に t10 の場（head 保持）", "沈降"),
-    ("S1_L1_10r", "t1 に t10 の第 1 層の場", "沈降"),
-    ("S1u5r",     "t1 に一様 u=5", "一様"),
-    ("S1u10r",    "t1 に一様 u=10", "一様"),
-    ("S1u20r",    "t1 に一様 u=20", "一様"),
+    ("N1r",       "t1 末・自然 [r]", "自然"),
+    ("N10r",      "t10 末・自然 [r]", "自然"),
+    ("N1",        "t1 末・自然（Adam 継続）", "自然"),
+    ("N10",       "t10 末・自然（Adam 継続）", "自然"),
+    ("R1_10r",    "t10 に t1 の場（復元） [r]", "復元"),
+    ("R1_10",     "t10 に t1 の場（Adam 継続）", "復元"),
+    ("S1_10r",    "t1 に t10 の場（沈降） [r]", "沈降"),
+    ("S1_10",     "t1 に t10 の場（Adam 継続）", "沈降"),
+    ("S1_L1_10r", "t1 に t10 の第 1 層の場 [r]", "沈降"),
+    ("S1u5r",     "t1 に一様 u=5 [r]", "一様"),
+    ("S1u10r",    "t1 に一様 u=10 [r]", "一様"),
+    ("S1u20r",    "t1 に一様 u=20 [r]", "一様"),
 ]
 GCOL = {"自然": "#7a7a7a", "復元": "#2f6b8f", "沈降": "#c05a3c", "一様": "#8a5aa8"}
 
@@ -58,14 +58,14 @@ def build():
     ax.set_ylim(-0.7, len(ARMS) - 0.3)
     ax.set_xlabel("次課題のオンライン精度")
     ax.grid(axis="y", alpha=0)
-    ax.set_title("(a) 12 腕の次課題の学習")
+    ax.set_title("(a) 次課題の学習（[r]: Adam 履歴初期化）")
     handles = [plt_line(c, g) for g, c in GCOL.items()]
     ax.legend(handles=handles, loc="lower left")
     S.grade(ax, "registered", v["label"], loc="upper left")
 
     # (b) 登録の対応差
-    metrics = [("P1", "復元 R1_10r − N10r"), ("P2", "沈降 N1r − S1_10r"),
-               ("restore_reset", "復元（head 保持との差）"), ("sink_keep", "沈降（head 保持との差）"),
+    metrics = [("P1", "復元 R1_10 − N10"), ("P2", "沈降 N1r − S1_10r"),
+               ("restore_reset", "復元 R1_10r − N10r"), ("sink_keep", "沈降 N1 − S1_10"),
                ("sink_L1", "第 1 層の場での沈降"), ("layer_difference", "層の差")]
     for i, (m, lab) in enumerate(metrics):
         d = p[p.metric == m].difference.to_numpy()
@@ -90,9 +90,9 @@ def plt_line(color, label):
 
 NOTE = """図 9. 応答から再学習能力へ。
 (a) 点は seed 平均、線は seed の全範囲（信頼区間ではない・resp_cifar_ee の登録が平均と sd の
-    区間なので平均を描く）。r のついた腕は出力 head を初期化してある。
-(b) 登録した対応差。P1 = 復元（t10 の網に t1 の応答の場を移すと次課題が学べるように戻る）、
-    P2 = 沈降（t1 の網に t10 の場を移すと学べなくなる）。登録判定は RESPONSE_BOTH_WAYS。
+区間なので平均を描く）。r は Adam の全 m/v/tc を初期化した腕。重み・bias は初期化しない。
+(b) 登録した対応差。P1 = R1_10 − N10（Adam 継続での復元）（t10 の網に t1 の応答の場を移すと次課題が学べるように戻る）、
+P2 = N1r − S1_10r（両腕 Adam 初期化での沈降）（t1 の網に t10 の場を移すと学べなくなる）。登録判定は RESPONSE_BOTH_WAYS。
 元データ: results/resp_cifar_ee_0920/{arm_table.csv,paired.csv,verdict.json}。
 """
 

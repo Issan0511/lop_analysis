@@ -86,7 +86,7 @@ def panel_bias0(ax, g, conds):
     ax.set_xticklabels([NAME[c] for c in ORDER], fontsize=7, rotation=20, ha="right")
     ax.set_ylabel("第 2 層の初期片側率 $f$")
     ax.set_ylim(-0.03, 0.75)
-    ax.set_title("(c) 第 2 層の bias を 0 にすると（点線は登録の予測帯）")
+    ax.set_title("(c) 両層 bias=0：第 2 層の片側率")
     ax.legend(loc="upper left", fontsize=7)
     S.grade(ax, "posthoc", "副診断（主判定を置き換えない）", loc="lower right")
 
@@ -105,10 +105,10 @@ NOTE = """付録 C. 初期配置の残り（A5 initgeom_cifar_0920・未使用 s
 点は seed 1 つずつ（20 seed）。太い縦の帯は登録した予測帯（independent seed Binomial の二つの中央順序統計量に
 union bound・coverage >= 0.99375）。青は PREDICTED、赤は帯外（OFF_LOW / OFF_HIGH）。
 (a) 第 1 層。raw・std・C と γ .25・.5・2 は帯内、γ .75 は帯より低く γ 1.5 は帯より高い。家族ラベル
-    L1_MODEL_MISS（6/8 帯内・γ 梯子の標本中央値は単調）。
+L1_MODEL_MISS（6/8 帯内・γ 梯子の標本中央値は単調）。
 (b) 第 2 層。8/8 が帯より高い（L2_CONDITIONAL_MODEL_MISS）。予測は測った a1 に条件付けたもので、
-    bias を省略した分の限界。
-(c) 第 2 層の bias を 0 にした副診断。C の第 2 層が .12 → 0 に落ちる。主判定を置き換えない。
+bias 省略の限界と整合するが、非等方性などから寄与を分離してはいない。
+(c) 両隠れ層の bias を 0 にした副診断での第 2 層の結果。C の第 2 層が .12 → 0 に落ちる。主判定を置き換えない。
 元データ: results/initgeom_cifar_0920/report/{display_rows.csv,verdict.json}。
 """
 

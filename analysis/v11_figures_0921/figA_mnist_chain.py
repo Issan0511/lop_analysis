@@ -84,7 +84,7 @@ def panel_respdyn(ax):
     m = E.mean()
     rho_fix = (m["N2r"] - m["S2_10r"]) / (m["N2r"] - m["N10r"])
     rho_dyn = (m["N2r"] - m["S2dyn_10r"]) / (m["N2r"] - m["N10r"])
-    ax.set_title("(b) 動く場 respdyn: 媒介率 %.2f → %.2f、床の上に %.2f" % (rho_fix, rho_dyn, m["S2dyn_10r"] - m["S2u30r"]))
+    ax.set_title("(b) 動く場 respdyn: 介入差の比 %.2f → %.2f、床の上に %.2f" % (rho_fix, rho_dyn, m["S2dyn_10r"] - m["S2u30r"]))
     S.grade(ax, "registered", "PARTIAL", loc="upper right")
 
 
@@ -151,8 +151,8 @@ def panel_text(ax):
         "第二の箱: 乱数ラベル MNIST・784-100-100-10・両層 ELU・Adam 1e−3",
         "鎖の 5 本（すべて事前登録・10 seed）",
         "  resp_ee   固定した場を両方向に移植  RESPONSE_BOTH_WAYS",
-        "  respdyn   動く場の移植             PARTIAL（媒介率 0.47 → 0.72・残り 0.11）",
-        "  swap      cap12 と ref の場を交換  BOTH_WAYS（救命のほぼ全部が第 2 層の場）",
+        "  respdyn   動く場の移植             PARTIAL（介入差の報告比 0.47 → 0.72・残り 0.11）",
+        "  swap      cap12 と ref の場を交換  BOTH_WAYS（対照差の 0.96 / 1.06 倍）",
         "  escneff   成長を止めて残りを測る    NEFF_TRACKS（未使用 seed 10–19）",
         "  neffdir   担い手 n̄_eff を直接動かす ADD_H_MOVES_E（落とす側は補償される）",
         "",
@@ -175,19 +175,19 @@ def build():
 NOTE = """付録 A. MNIST の移植の鎖（第二の箱・RL-MNIST ELU→ELU・10 seed）。5 本とも事前登録。
 点は seed 1 つずつ、横線は seed 平均（各走の登録判定が平均と sd の区間なので平均を描く）。
 (a) resp_ee: 帯は seed の全範囲（信頼区間ではない）。自然な継続 N_t、t の網に t2 の場を戻す
-    復元 R_{2,t}、t2 の網に t の場を渡す沈降 S_{2,t}。P1 = R_{2,10} − N_10 = +0.76、
-    P2 = N_2r − S_{2,10}r = +0.26（両比較の平均の 97.5% 区間の下端が正、対応差も各 10/10 で正）。登録判定 RESPONSE_BOTH_WAYS。
+復元 R_{2,t}、t2 の網に t の場を渡す沈降 S_{2,t}。P1 = R_{2,10} − N_10 = +0.76、
+P2 = N_2r − S_{2,10}r = +0.26（両比較の平均の 97.5% 区間の下端が正、対応差も各 10/10 で正）。登録判定 RESPONSE_BOTH_WAYS。
 (b) respdyn: 移植元の場を移植元の網の継続に追随させると、固定した場より深く落ちる（0.46 → 0.32）。
-    自然な劣化の媒介率は 0.47 → 0.72。応答の床（一様 −30）には届かず 0.11 残る。PARTIAL。
+人工介入差を自然対照差で割った報告の比は固定場 0.47・動く場 0.72。自然な喪失の厳密な媒介率ではない。応答の床（一様 −30）の上に 0.11 残る。PARTIAL。
 (c) swap: cap12（両層の上限で救われた網）と ref の第 2 層の場を入れ替える。失う量 L_S と得る量 G_R
-    は総量 TE の 0.96 倍と 1.06 倍。BOTH_WAYS。
-(d) escneff: t2 の網の成長を止めると（c1・c2・c12・c12b）、応答の床からの残り R が減る。
-    減った量は n̄_eff の減りと seed 間で r = +0.92。未使用 seed 10–19 で登録。NEFF_TRACKS。
-(e) neffdir: 担い手 n̄_eff を足す介入だけが n̄_eff を動かし、学習能力が +0.13 上がる（比例予測を上回る）。
-    落とす介入は網が補償して n̄_eff が動かず、NOT_MANIPULATED。ADD_H_MOVES_E。
-大きさは箱をまたがない（neff_pred BOX_SPECIFIC）。本文の図 9 は S4 だけ（決定 10b・0922）。
+は自然対照差 TE の 0.96 倍と 1.06 倍（人工介入の効果の報告比）。BOTH_WAYS。
+(d) escneff: t2 の網へ t10 の低応答の動く場を移植した状態で成長を止めると（c1・c2・c12・c12b）、応答の床からの残り R が減る。
+減った量は n̄_eff の減りと seed 間で r = +0.92。未使用 seed 10–19 で登録。NEFF_TRACKS。
+(e) neffdir: 課題全体では担い手 n̄_eff を足す介入だけが登録方向へ n̄_eff を動かし、学習能力が +0.13 上がる（比例予測を上回る）。
+落とす介入は網が補償して n̄_eff が動かず、NOT_MANIPULATED。ADD_H_MOVES_E。
+n̄_eff 単独の必要十分性・比例則は示していない。大きさは箱をまたがない（neff_pred BOX_SPECIFIC）。本文の図 9 は S4 だけ（決定 10b・0922）。
 元データ: results/{resp_ee_0917,respdyn_ee_0917}/runs/s*/arms.csv、
-          results/{swap_ee_0917,escneff_ee_0917,neffdir_ee_0918}/paired.csv。
+results/{swap_ee_0917,escneff_ee_0917,neffdir_ee_0918}/paired.csv。
 """
 
 if __name__ == "__main__":

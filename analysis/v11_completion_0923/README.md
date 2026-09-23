@@ -1,5 +1,7 @@
 # V11 図表統合・校正（0923）
 
+> この手順は監査前の統合記録。現在のPDFは監査訂正反映版で、再生成は `analysis/v11_corrections_0923/README.md` に従い `--corrected` を指定する。
+
 実験は実行しない。入力は committed CSV/JSON と Vault の原稿、成果物は日本語の確認稿。
 
 - `results/v11_completion_0923/V11_integrated_0923.md`: Vault 通し稿の統合時点のスナップショット。

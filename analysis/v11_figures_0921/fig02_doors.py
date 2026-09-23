@@ -54,6 +54,8 @@ def build(layout="1x4", arms=MAIN_ARMS, title=None, tag="本文"):
 
     for ax, (col, key) in zip(axes[1:], PANELS):
         for arm in arms:
+            if arm == "LN" and col == "dead_frac_l2":
+                continue  # This saved diagnostic evaluates pre-LN z, not the ReLU gate.
             t, Y = D.matrix(dd[arm], col)
             # ref は他の腕とほぼ同じ高さに重なるので太めに敷いて、上の腕の隙間から見えるようにする
             S.band(ax, t, Y, S.COLOR[arm], None, agg="median", ls=S.LS.get(arm, "-"),
@@ -63,7 +65,10 @@ def build(layout="1x4", arms=MAIN_ARMS, title=None, tag="本文"):
                                    "dead2": "center right"}[key])
     axes[1].set_title("(b) 第 2 層の沈下")
     axes[2].set_title("(c) 第 2 層の目盛")
-    axes[3].set_title("(d) 第 2 層の死亡率")
+    axes[3].set_title("(d) 第 2 層の死亡率" if "LN" not in arms else "(d) 死亡率（LN は診断対象外）")
+    if "LN" in arms:
+        axes[1].set_title("(b) 前活性の平均（LN は正規化前）")
+        axes[2].set_title("(c) 前活性の幅（LN は正規化前）")
     axes[1].set_yscale("symlog", linthresh=1.0)
     axes[1].axhline(0, color="#999999", lw=0.7, zorder=0)
     axes[1].set_yticks([1e1, 1e0, 0, -1e0, -1e1, -1e2])
@@ -80,8 +85,8 @@ def build(layout="1x4", arms=MAIN_ARMS, title=None, tag="本文"):
     return fig
 
 
-NOTE = f"""図 2. 中心化の扉。本文に出すのは主張の梯子 ref -> C -> CH -> CHB の 4 腕。
-線は seed 中央値、{S.SEED_BAND_NOTE}。薄い帯は登録窓 t31-50。
+NOTE = """図 2. 中心化の扉。本文に出すのは主張の梯子 ref -> C -> CH -> CHB の 4 腕。
+線は seed 中央値、帯は seed の全範囲（信頼区間ではない）。薄い帯は登録窓 t31-50。
 (b)(c) は生の量。正規化した沈下比 z_bar_2/sd_2 と |b_2|/sd_2 は本文に出さない: ref は t50 で
 sd_2 = 0・z_bar_2 = -0.037 なので、比が -3.7e10 や 1.5e11 になるのは分母がゼロに落ちたためで、
 生の量は動いていない（引用禁止 C）。ref が死ぬのは沈んだからではなく目盛が潰れたため、が (b)(c)
@@ -89,18 +94,18 @@ sd_2 = 0・z_bar_2 = -0.037 なので、比が -3.7e10 や 1.5e11 になるの�
 (a) の格は登録（M = RESCUED・N = NEED_CH）、(b)-(d) の 3 枚は登録列の読み。
 符号検定は D2 = H_HELPS（中央値 +0.874・10/10・p = 0.00195）、D1/D3/D4 = TIE。
 B_ROUTE = BIAS_TAKES_OVER（中央値 +0.179・10/10・p = 0.00195）。
-H（中間層だけ）・CS（分散だけ）・LN（素の LayerNorm）はどれも床のままで、付録 E に回した。
+H（中間層だけ）・CS（分散だけ）・LN（素の LayerNorm）は登録救済基準を満たさず、付録 E に回した。
 bias の経路は図 3 で生の |b_2| を見る。
-元データ: results/relu_doors_h_ref_0920/{{ref,H}}/per_task.csv・results/relu_doors_0919/<arm>/per_task.csv。
+元データ: results/relu_doors_h_ref_0920/{ref,H}/per_task.csv・results/relu_doors_0919/<arm>/per_task.csv。
 """
 
-NOTE_E = f"""付録 E 図. 開ける扉を変えた対照。線は seed 中央値、{S.SEED_BAND_NOTE}。薄い帯は登録窓 t31-50。
+NOTE_E = """付録 E 図. 開ける扉を変えた対照。線は seed 中央値、帯は seed の全範囲（信頼区間ではない）。薄い帯は登録窓 t31-50。
 H は中間層の中心化だけ、CS は同じ統計量の分散の側だけ（RMSNorm 的・中心化なし）、LN は文献どおりの
-LayerNorm。いずれも後期窓の中央値は ref と同じ床（H 0.113・CS 0.113・LN 0.206）で、
+LayerNorm。後期窓は H 0.113・CS 0.113・LN 0.206 で、いずれも登録救済基準を満たさず、
 本文の CH 0.987 に届かない。登録判定 N = NEED_CH（入力と中間層の両方が要る）の対照側。
 H は ref と同じく sd_2 が潰れる型（t50 で 0.079）で、沈んで死ぬのではない。
-LN が正側で線形化して実効階数が潰れる読みは relu_doors 結果ノート §3.2。
-元データ: results/relu_doors_h_ref_0920/H/per_task.csv・results/relu_doors_0919/{{CS,LN}}/per_task.csv。
+LN の (b)(c) は LN 前の z の量。(d) の死亡率では LN を除外した。保存 dphi は実際の LN 後の ReLU ゲートを表さず、正側線形化という機構解釈には用いない。
+元データ: results/relu_doors_h_ref_0920/H/per_task.csv・results/relu_doors_0919/{CS,LN}/per_task.csv。
 """
 
 LAYOUT = "2x2"          # 0922 Issa 決定（1 枚が大きく凡例と格が読める）
