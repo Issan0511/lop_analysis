@@ -1,0 +1,24 @@
+(1) within-arm log-log slopes, t>=6, median over seeds
+  A       D_S vs W_S 0.45 | plain D vs plain W 0.28 | D_S vs plain W 0.33
+  F       D_S vs W_S 0.49 | plain D vs plain W 0.13 | D_S vs plain W 0.33
+  S_hi    D_S vs W_S 0.91 | plain D vs plain W -0.19 | D_S vs plain W -0.10
+  SA_iid  D_S vs W_S 0.55 | plain D vs plain W 0.28 | D_S vs plain W 0.30
+  LL_e8   D_S vs W_S 0.40 | D_S vs plain W 0.35
+  LL_e6   D_S vs W_S 0.57 | D_S vs plain W 0.32
+  LL_e4   D_S vs W_S 0.39 | D_S vs plain W 0.30
+  LL_e3   D_S vs W_S 0.27 | D_S vs plain W 0.16
+
+(2) across arms
+   arm window     W_S     D_S  W_plain    c_S  rho_S  W_S/D_S  1/(2|c|)  2|c|
+SA_iid t41-50 111.176  56.104   29.716 -0.244  0.507    1.982     2.053 0.487
+  S_hi t41-50 220.891 155.461   82.477 -0.346  0.713    1.421     1.443 0.693
+     F t41-50 440.062 257.758  137.989 -0.280  0.585    1.707     1.788 0.559
+     A t41-50 836.609 417.085  261.077 -0.236  0.493    2.006     2.120 0.472
+ LL_e3 t11-20 261.679 191.609   72.341 -0.347    NaN    1.366     1.443 0.693
+ LL_e4 t11-20 353.414 250.484   94.678 -0.334    NaN    1.411     1.496 0.668
+ LL_e6 t11-20 341.386 253.871  121.669 -0.348    NaN    1.345     1.435 0.697
+ LL_e8 t11-20 569.651 343.041  157.721 -0.252    NaN    1.661     1.985 0.504
+  t41-50: across-arm log-log slope of W_S on D_S 1.00
+  t11-20: across-arm log-log slope of W_S on D_S 1.34
+
+(3) crossover fork (50 cases): W_S ratio 1.049, next-refit D_S ratio 1.120 (>1 in 50/50), elasticity 2.47
