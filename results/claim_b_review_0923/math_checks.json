@@ -1,0 +1,68 @@
+{
+  "classification": "deterministic mathematical sanity checks; no new empirical training run",
+  "implementation": "src/rlcifar_mlp_battle_0918.py:SnakeFamily; KKT1 theta in [-2pi,pi]",
+  "scale_identity": {
+    "0.5": {
+      "value_abs_error": 0.0,
+      "derivative_abs_error": 0.0,
+      "alpha": 1.2
+    },
+    "2.0": {
+      "value_abs_error": 0.0,
+      "derivative_abs_error": 0.0,
+      "alpha": 0.3
+    },
+    "10.0": {
+      "value_abs_error": 3.552713678800501e-15,
+      "derivative_abs_error": 8.881784197001252e-16,
+      "alpha": 0.06
+    },
+    "100.0": {
+      "value_abs_error": 3.552713678800501e-15,
+      "derivative_abs_error": 8.881784197001252e-16,
+      "alpha": 0.006
+    }
+  },
+  "autograd_vs_dphi_max_error": 4.440892098500626e-16,
+  "clip_derivative_error": 1.5408383197646658,
+  "EMA_lag_derivative_error": 1.4579437843773235,
+  "KKT1_zero_and_negative_tail_derivatives": [
+    0.0,
+    1.0
+  ],
+  "translation_derivative_variance": 0.0,
+  "SGD_counterexample": {
+    "input_mean": 1.5,
+    "initial_w": 0.5,
+    "min_w": 0.5,
+    "max_w": 1.5714285714285712,
+    "last_two_w": [
+      1.4285714285714284,
+      1.5714285714285712
+    ],
+    "updates": 1000,
+    "proof": "positive convex combination; invariant interval [0.5,2]"
+  },
+  "width_and_negative_mean_counterexample": [
+    {
+      "scale": 1.0,
+      "mean_z": -0.5,
+      "sd_z": 1.5,
+      "ELU_mean_derivative": 0.5676676416183064
+    },
+    {
+      "scale": 10.0,
+      "mean_z": -5.0,
+      "sd_z": 15.0,
+      "ELU_mean_derivative": 0.5000000010305768
+    },
+    {
+      "scale": 100.0,
+      "mean_z": -50.0,
+      "sd_z": 150.0,
+      "ELU_mean_derivative": 0.5
+    }
+  ],
+  "scaled_EMA_max_error": 1.4210854715202004e-14,
+  "passed": true
+}
