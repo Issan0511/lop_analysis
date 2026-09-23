@@ -103,6 +103,12 @@ def plot_activity(summary: pd.DataFrame, out: Path) -> Path | None:
         ax.set_ylabel("late -2 sum X / sum Q")
         if (part.late_activity > 0).all():
             ax.set_xscale("log")
+        balance = part.late_nearbalance.to_numpy(dtype=float)
+        off_scale = np.isfinite(balance) & (np.abs(balance) > 2)
+        if np.isfinite(balance).any() and np.nanmax(np.abs(balance)) > 10:
+            ax.set_ylim(-2, 2)
+            ax.text(.02, .98, f"{off_scale.sum()} balance points beyond ±2; exact values in CSV",
+                    transform=ax.transAxes, va="top", fontsize=7)
         ax.grid(alpha=.2)
         ax.legend(fontsize=6, ncol=2)
     fig.suptitle("Activity and balance are separate conditions")

@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import json
 import math
+import sys
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -180,6 +181,9 @@ def _mnist_diagnostics(s: Series) -> dict[int, dict]:
 
 @lru_cache(maxsize=2)
 def _cifar_dataset(data_dir: str):
+    repo = str(Path(__file__).resolve().parents[2])
+    if repo not in sys.path:
+        sys.path.insert(0, repo)
     from src import pmnist_rlcifar_0907 as RC
     RC.DATA_DIR = Path(data_dir)
     return RC.Cifar10()
@@ -188,8 +192,9 @@ def _cifar_dataset(data_dir: str):
 def _cifar_factor(seed: int, cond: str, data_dir: Path) -> np.ndarray:
     """Recreate the archived seed's input bank; factor uses population N."""
     import torch
+    dataset = _cifar_dataset(str(data_dir))
     from src import rlcifar_mlp_battle_0918 as B
-    images = B.slot_inputs(_cifar_dataset(str(data_dir)), seed, cond,
+    images = B.slot_inputs(dataset, seed, cond,
                            torch.device("cpu")).numpy().astype(np.float64)
     centered = images - images.mean(axis=0)
     return centered.T / math.sqrt(len(images))
@@ -364,10 +369,10 @@ def _unit_regression(units: pd.DataFrame) -> float:
 def low_response_onset(table: pd.DataFrame) -> int | None:
     """First task of the first three consecutive low-response endpoints."""
     ordered = table.sort_values("task")
-    if "derivative_absmean" in ordered:
+    if ordered.environment.iloc[0] == "conda":
         low = ((ordered.derivative_absmean.to_numpy(dtype=float) < 1e-8)
                | (ordered.activeunit_frac.to_numpy(dtype=float) < .1))
-    elif "derivative_abs_mean_l1" in ordered:
+    elif ordered.environment.iloc[0].startswith("mnist_"):
         low = np.zeros(len(ordered), dtype=bool)
         for layer in (1, 2):
             low |= (ordered[f"derivative_abs_mean_l{layer}"].to_numpy(dtype=float) < 1e-8)
@@ -638,6 +643,25 @@ def write_summary(path: Path, completion: pd.DataFrame, summary: pd.DataFrame,
              "PM Adam is an explicit change from the old canonical SGD setup; the SGD LR run is a reference. CondA adaptive Snake uses analytic conditional variance, while MNIST uses minibatch preactivation variance. Comparisons across m20 and m40 use independently dimensioned teachers and initializations.", ""]
     if not summary.empty:
         response = summary[summary.metric.isin(["effective", "reference"])]
+        rl = response[response.environment == "mnist_rl"]
+        if not rl.empty:
+            rl_columns = ["late_task_start_acc", "late_train_acc",
+                          "late_grad_w1_start_norm", "late_grad_w1_end_norm",
+                          "late_grad_w2_start_norm", "late_grad_w2_end_norm"]
+            rl_group = rl.groupby("arm", as_index=False)[rl_columns].median()
+            onset = rl[rl.response_censoring == "LOW_RESPONSE"].groupby("arm").agg(
+                low_response_seeds=("seed", "count"),
+                median_onset_task=("low_response_onset_task", "median"))
+            rl_group = rl_group.join(onset, on="arm")
+            rl_group["low_response_seeds"] = rl_group.low_response_seeds.fillna(0).astype(int)
+            for question in ("P1", "P2", "P3"):
+                decisions = verdict[(verdict.environment == "mnist_rl")
+                                    & (verdict.question == question)].set_index("arm").verdict
+                rl_group[question] = rl_group.arm.map(decisions)
+            lines += ["## RL: registered verdicts and learning context", "",
+                      "Medians are across five seeds. Accuracy and raw first-16-example probe-gradient norms are measured on the current task; a small end gradient alone does not establish loss of task response. Onset counts use the registered three-task LOW_RESPONSE rule.", "",
+                      _markdown_table(rl_group, ["arm", "P1", "P2", "P3", "low_response_seeds",
+                                                 "median_onset_task", *rl_columns]), ""]
         lines += ["## Low-response context", "",
                   "Onset is the first of three consecutive task ends where either hidden layer has mean absolute derivative below 1e-8 or active-unit fraction below 0.1. This is an operational LOW_RESPONSE marker, not proof of loss of plasticity. Full-horizon verdicts remain unchanged. The last 20 transitions before onset are reported only when available.", "",
                   _markdown_table(response, ["environment", "arm", "seed", "response_censoring",
@@ -646,10 +670,22 @@ def write_summary(path: Path, completion: pd.DataFrame, summary: pd.DataFrame,
                                              "active_window_loglog_slope"]), "",
                   "Task-start to task-end accuracy or MSE gain and probe gradients are context, not causal evidence; see `seed_summary.csv`.", ""]
         lines += ["## Seed dynamics", "",
-                  "STOPPED uses the registered activity condition. DIVERGED cases appear in `completion.csv`; neither is counted as an active plateau.", "",
+                  "STOPPED means low update supply relative to width under the registered activity rule. It does not imply zero raw gradient or inability to learn a task; task-start/end performance and probe gradients are reported separately. DIVERGED cases appear in `completion.csv`; neither is counted as an active plateau.", "",
                   _markdown_table(response, ["environment", "arm", "seed", "dynamics_label",
                                              "response_censoring", "late_activity", "late_nearbalance",
                                              "late_loglog_slope"]), ""]
+        adaptive = response[(response.environment == "mnist_rl")
+                            & response.arm.isin(["SNA03", "SNA06", "SNA1"])]
+        alpha_columns = ["late_adaptive_alpha_median_l1", "late_adaptive_alpha_median_l2",
+                         "late_adaptive_alpha_clip_frac_l1", "late_adaptive_alpha_clip_frac_l2"]
+        if not adaptive.empty and all(column in adaptive for column in alpha_columns):
+            alpha = adaptive.groupby("arm", as_index=False)[alpha_columns].median()
+            lines += ["## RL adaptive-alpha context (late tasks 41–50)", "",
+                      "These are medians of seed-level late-window summaries. Alpha clipping is descriptive; a passing width criterion alone does not show that adaptation caused the plateau.", "",
+                      _markdown_table(alpha, ["arm", *alpha_columns]), ""]
+            sna = response[(response.environment == "mnist_rl") & (response.arm == "SNA03")]
+            if len(sna) == 5:
+                lines += [f"SNA03 passes P2/P4 in five seeds, but its late alpha is at the lower clip (median layer-1/layer-2 clip fractions {sna.late_adaptive_alpha_clip_frac_l1.median():.3g}/{sna.late_adaptive_alpha_clip_frac_l2.median():.3g}); this does not isolate an adaptive-alpha effect. Its P3 model MAPE median {sna.heldout_mape.median():.3g} is worse than the constant-split median {sna.constant_split_mape.median():.3g}, so the closure fails despite the low absolute model error.", ""]
     if not summary.empty and "actual" in summary.metric.values:
         actual = summary[summary.metric == "actual"]
         lines += ["## PM actual moving covariance (diagnostic only)", "",

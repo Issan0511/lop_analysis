@@ -41,6 +41,23 @@ def test_low_response_first_three_and_conditional_window():
     assert low_response_onset(_task_table(tasks=50, low_at=None)) is None
 
 
+def test_low_response_uses_mnist_layers_in_mixed_transition_frame():
+    conda = _task_table(tasks=50, low_at=None)
+    mnist = conda.copy()
+    mnist["environment"] = "mnist_rl"
+    mnist["arm"] = "R"
+    mnist["derivative_absmean"] = np.nan
+    mnist["activeunit_frac"] = np.nan
+    mnist["derivative_abs_mean_l1"] = 1.
+    mnist["active_unit_frac_l1"] = 1.
+    mnist["derivative_abs_mean_l2"] = 1.
+    mnist["active_unit_frac_l2"] = 1.
+    mnist.loc[mnist.task >= 32, "active_unit_frac_l2"] = 0.
+    mixed = pd.concat([conda, mnist], ignore_index=True)
+    assert low_response_onset(mixed[mixed.environment == "mnist_rl"]) == 32
+    assert low_response_onset(mixed[mixed.environment == "conda"]) is None
+
+
 def test_seed_summary_p4_and_closure_uninformative():
     effective = _task_table()
     raw = effective.copy()
