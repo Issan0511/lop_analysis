@@ -69,7 +69,7 @@ def run(args: argparse.Namespace) -> None:
     if len(set(args.seeds)) != len(args.seeds):
         raise ValueError("duplicate seeds")
     if not args.smoke and (args.tasks != TASKS or args.epochs != EPOCHS
-                           or tuple(args.seeds) != SEEDS or args.hidden not in HIDDENS):
+                           or not set(args.seeds) <= set(SEEDS) or args.hidden not in HIDDENS):
         raise ValueError("nonregistered task/epoch/seed/hidden settings require --smoke")
     if args.smoke and args.tasks > 2:
         raise ValueError("smoke is limited to two tasks")
