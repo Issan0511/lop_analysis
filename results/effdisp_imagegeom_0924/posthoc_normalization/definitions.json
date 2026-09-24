@@ -1,0 +1,20 @@
+{
+  "status": "POSTHOC_DESCRIPTIVE_ONLY; no preregistered verdict",
+  "order": "per-task correction -> median of tasks 6\u201315 or 41\u201350 within seed -> geometry/rgb32 paired ratio -> median/min/max over five seeds",
+  "R": "sqrt(V) for W at transition start; V=tr(W Sigma W.T)",
+  "D_eff": "sqrt(Q) for task transition; Q=tr(DeltaW Sigma DeltaW.T)",
+  "R_div_sqrt_d": "R/sqrt(input dimension d)",
+  "R_div_sqrt_trace": "R/sqrt(tr Sigma)",
+  "raw_W_RMS": "sqrt(||W||F^2/(h*d)), h=100",
+  "A_width": "R/[raw_W_RMS*sqrt(h*tr Sigma)]",
+  "D_div_sqrt_d": "D_eff/sqrt(d)",
+  "D_div_sqrt_trace": "D_eff/sqrt(tr Sigma)",
+  "delta_W_RMS": "sqrt(||DeltaW||F^2/(h*d)), h=100",
+  "A_displacement": "D_eff/[delta_W_RMS*sqrt(h*tr Sigma)]",
+  "exact_squared_identities": [
+    "V=raw_W_RMS^2*h*trSigma*A_width^2",
+    "Q=delta_W_RMS^2*h*trSigma*A_displacement^2"
+  ],
+  "actual_initial_width_growth": "R0 is actual transition1 previous width; R_t for t>0 is POST-task transition t R_next. Correct POST-task R_t/R0 per task first, then median over tasks6\u201315 or41\u201350 within seed, then geometry/rgb32 paired ratio, then five-seed median/min/max. R50 uses transition50 R_next.",
+  "caveat": "sqrt(d) is a fixed-coordinate-amplitude benchmark, not a causal correction. For native fan-in uniform initialization E[R^2]=h*trSigma/(3d). Correlated inputs, optimizer coordinates, information content, and initialization also differ. Do not multiply medians to claim a decomposition. Width-growth ratios are descriptive, not convergence verdicts."
+}

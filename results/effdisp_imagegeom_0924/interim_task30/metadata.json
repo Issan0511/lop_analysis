@@ -1,0 +1,54 @@
+{
+  "status": "DESCRIPTIVE_INTERIM_TASK30",
+  "source_git_hash": "273c3fa3b52dc0c954eaaa58a4e711183c259770",
+  "source_sha256": "7944cfd752fd5bf28efa92f3f4909cd9cedd7939276e30b88cc0c4daa5adcbcd",
+  "script_path": "/tmp/imagegeom_interim30_0924.py",
+  "script_sha256": "66ac3f6a76b3017a3f9f559a3f4f31bd9fdd8ee0b9aac5bc70b04703b9dc2623",
+  "raw_root": "/home/issan/Projects/obsidian-research-data/effdisp_imagegeom_0924/raw",
+  "raw_metadata_sha256": "0225ef56000053d17838c9afb10133b62efeefccf79f0b659fc1d121a4e7c943",
+  "rgb_bank_sha256": {
+    "300": "98c4e0e245d2c64db42e6f8c9c8085969430e752658875b7268fb1927c371bde",
+    "301": "2112e0a2e35a35cff9e883e9fa637f3924ce6de8866a1f00486d45f2ec5b3cac",
+    "302": "11e1ea5496072bb8acc028c096f6c1a67b69b231a0ca7ac5ba6c134104f547bf",
+    "303": "378136f863be9ccd579ded6369472aaa8a5ad7debcece952876bfab7744569ff",
+    "304": "f3befc05dbb3083296a6c5ab1dea9436f2f3b1ee6f982fcc127586c5ecd26b26"
+  },
+  "geometries": [
+    "rgb32",
+    "dup64",
+    "dup64_half"
+  ],
+  "optimizers": [
+    "adam",
+    "sgd"
+  ],
+  "seeds": [
+    300,
+    301,
+    302,
+    303,
+    304
+  ],
+  "task_points": [
+    10,
+    20,
+    30
+  ],
+  "transition_window": [
+    26,
+    27,
+    28,
+    29,
+    30
+  ],
+  "definitions": {
+    "R": "sqrt(tr(W1 Sigma W1.T)) on the centered fixed 1200-image bank",
+    "raw_W_F": "Frobenius norm of stored full ambient W1",
+    "D_eff": "sqrt(tr(DeltaW1 Sigma DeltaW1.T))",
+    "c": "X/sqrt(Vprev Q)",
+    "Rstar_local": "D_eff/(2*abs(c)) only when c<0; descriptive local ratio, not convergence",
+    "R_over_Rstar_local": "R_prev/Rstar_local",
+    "window_statistic": "median across tasks26..30 within seed, then paired geometry/rgb32 ratio, then five-seed median"
+  },
+  "caveat": "Interim descriptive comparison; task26-30 is not registered late41-50 and no convergence verdict is made."
+}
