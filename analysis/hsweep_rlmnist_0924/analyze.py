@@ -85,7 +85,7 @@ def analyze_series(d: Path, hidden: int, seed: int) -> dict:
             if s + 1 + k <= T:
                 dW = W[s + 1 + k] - W[s]
                 rl.append(sigma_ip(dW, Dr @ S) / qr)
-                ul.append(sigma_ip(dW, Du @ S) / qu if qu > 0 else np.nan)
+                ul.append(sigma_ip(dW, Du @ S) / qu if qu > 1e-9 * (qr + qu) else np.nan)   # h=8: no unread subspace
     out = dict(hidden=hidden, seed=seed, tasks=T,
                late_train_acc=float(late.train_acc.median()), late_task_start_acc=float(late.task_start_acc.median()),
                late_B=float(B), late_supply=float(supply), late_negc=neg, late_loglog=float(slope), late_halves=float(halves),

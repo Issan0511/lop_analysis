@@ -1,0 +1,54 @@
+{
+  "run_id": "hsweep_rlmnist_0924",
+  "mode": "hsweep_mnist_x0y1",
+  "activation": "LR",
+  "cell": "X0Y1",
+  "input_permutation": "fixed",
+  "random_labels": "moving",
+  "hidden": 16,
+  "dims": [
+    784,
+    16,
+    16,
+    10
+  ],
+  "tasks": 50,
+  "seeds": [
+    200
+  ],
+  "epochs": 400,
+  "steps_per_task": 30000,
+  "batch": 16,
+  "n_images": 1200,
+  "optimizer": "adam",
+  "lr": 0.001,
+  "betas": [
+    0.9,
+    0.999
+  ],
+  "eps": 1e-08,
+  "weight_decay": 0.0,
+  "smoke": false,
+  "threads": 1,
+  "git_hash": "63746e091544f472cb12ef35304ab1729d9a5be7",
+  "spec_sha256": {
+    "specs/spec_hsweep_rlmnist_0924.md": "545c1bdb741188f6506a84770e3f4405c972a38388b8beef3e1f510ba054c16e"
+  },
+  "data_sha256": {
+    "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+    "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+    "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+  },
+  "data_dir": "/home/issan/Projects/claude/proj_004_drift/data/mnist",
+  "torch": "2.13.0+cu130",
+  "device": "cpu",
+  "engine_origin": "codex/effdisp_inputscope_0924 src/effdisp_inputscope_mnist_0924.py (0277e4d), hidden width added",
+  "subset_role": "rl_subset",
+  "labels_role": "effdisp_inputscope_labels",
+  "batch_role": "effdisp_inputscope_batch",
+  "input_bank": "seed_N/input_bank.npz has normalized float32 images[1200,784], population covariance/mean/subset_idx; identity permutation in every task",
+  "snapshot": "state_000 initialization; state_t exactly after task t, before the next task's label change",
+  "gradient_probe": "W1/W2 mean-CE gradient norms on first 16 unshuffled current-task images at task start/end",
+  "wall_s": 765.7521951198578
+}
