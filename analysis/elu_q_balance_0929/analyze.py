@@ -170,6 +170,7 @@ def main():
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     rows, checks, states, joins, trajectories, transitions = [], [], [], [], [], []
+    long_trajectory = []
     source_paths = set()
     for act in ('ELU', 'LR'):
         for seed in (0,1):
@@ -190,6 +191,31 @@ def main():
                         joins.append(dict(seed=seed, task=task, phase=phase, bit_identical=same))
                         if not same:
                             raise RuntimeError('Cannot join unmatched norm trajectory')
+                chimpath = args.data_root/f'push_lift_ladder_1layer_0928/chimera/runs_chim/EE_s{seed}.npz'
+                source_paths.add(chimpath)
+                with np.load(chimpath) as source:
+                    chim = {k:source[k] for k in source.files}
+                for first, second in (('task_zmax','end_top'),('task_s','end_s')):
+                    same = np.array_equal(norms[first].astype(np.float32), chim[second])
+                    joins.append(dict(seed=seed, phase='chimera_200_tasks', metric=first, bit_identical=same))
+                    if not same:
+                        raise RuntimeError('Long trajectory join mismatch')
+                if not np.array_equal(np.rint(norms['task_pplus']*1200), chim['end_k']):
+                    raise RuntimeError('Long trajectory open-count mismatch')
+                for task in (10,20,50,100,200):
+                    idx=task-1
+                    r=norms['task_wnorm'][idx].astype(float)**2+norms['task_bias'][idx].astype(float)**2
+                    v2=chim[f'V_t{task}_ck4000'].astype(float)**2
+                    if task in (10,20):
+                        exact=(data[f't{task}_W2'].astype(float)**2).sum(0)
+                        err=float(np.max(np.abs(np.sqrt(v2)-np.sqrt(exact))))
+                        joins.append(dict(seed=seed, task=task, phase='chimera_vnorm', max_error=err))
+                        if err > 2e-7:
+                            raise RuntimeError('Long trajectory v norm mismatch')
+                    for unit in range(100):
+                        long_trajectory.append(dict(seed=seed, task=task, unit=unit, R=r[unit], V=v2[unit],
+                            ratio=v2[unit]/r[unit], top=float(chim['end_top'][idx,unit]),
+                            alive=bool(chim['end_k'][idx,unit]>0)))
             for task in data['snap']:
                 task = int(task)
                 end_v = data[f't{task}_W2'].astype(float)
@@ -253,9 +279,29 @@ def main():
                     delta_B=(b['V']-b['R'])-(a['V']-a['R']),
                     delta_ratio=b['ratio']-a['ratio']))
     summary=aggregate(rows)
+    norm_summary=[]
+    for seed in (0,1):
+        for task in (10,20,50,100,200):
+            block=[r for r in long_trajectory if r['seed']==seed and r['task']==task]
+            for population in ('all','alive'):
+                sub=[r for r in block if population=='all' or r['alive']]
+                norm_summary.append(dict(seed=seed,task=task,population=population,n=len(sub),
+                    **{k+'_median':float(np.median([r[k] for r in sub])) for k in ('R','V','ratio','top')}))
+    transition_summary=[]
+    for seed in (0,1):
+        sub=[r for r in transitions if r['seed']==seed]
+        get=lambda k:np.array([r[k] for r in sub])
+        transition_summary.append(dict(seed=seed,n=len(sub),window='10-20,20-30,30-40',
+            R_increase_fraction=float(np.mean(get('delta_R')>0)),
+            V_increase_fraction=float(np.mean(get('delta_V')>0)),
+            ratio_increase_fraction=float(np.mean(get('delta_ratio')>0)),
+            Q_deltaB_sign_agreement=float(np.mean(np.sign(get('Q_start'))==np.sign(get('delta_B')))),
+            rawqdot_deltaq_sign_agreement=float(np.mean(np.sign(get('qdot_sgd_start'))==np.sign(get('delta_ratio'))))))
     for name, content in [('units.csv',rows), ('summary.csv',summary),
                           ('states.csv',states),('finite_difference.csv',checks),
-                          ('norm_trajectory.csv',trajectories),('transitions.csv',transitions)]:
+                          ('norm_trajectory.csv',trajectories),('transitions.csv',transitions),
+                          ('long_norm_trajectory.csv',long_trajectory),('long_norm_summary.csv',norm_summary),
+                          ('transition_summary.csv',transition_summary)]:
         write_csv(args.out/name, content)
     (args.out/'join_checks.json').write_text(json.dumps(joins,indent=2)+'\n')
     provenance=dict(tier='posthoc', data_root=str(args.data_root), numpy=np.__version__,
@@ -272,6 +318,24 @@ def main():
            '|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|']
     for r in summary:
         lines.append(f"| {r['act']} | {r['seed']} | {r['phase']} | {r['population']} | {r['n']} | {r['Q_median']:.6g} | {r['Q_positive_fraction']:.3f} | {r['Sr_median']:.6g} | {r['Sv_median']:.6g} | {r['Qcomp_to_Q_l1']:.4g} | {r['Q_Qdc_sign_agreement']:.3f} |")
+    lines += ['', 'The Qcomp/Q and Q/DC columns are meaningful here only for ELU; LR is the Q=0 control.',
+              '', '## Actual Adam norm trajectory (all units; median of per-unit ratios)', '',
+              '| seed | task | R | V | V/R | top |', '|---|---:|---:|---:|---:|---:|']
+    for r in norm_summary:
+        if r['population']=='all':
+            lines.append(f"| {r['seed']} | {r['task']} | {r['R_median']:.5g} | {r['V_median']:.5g} | {r['ratio_median']:.6g} | {r['top_median']:.5g} |")
+    lines += ['', '## Output-bias-only fit (input and readout weights held fixed)', '',
+              '| seed | task | sum abs Q before | after | after/before | Q sign flips | CE before | CE after |',
+              '|---|---:|---:|---:|---:|---:|---:|---:|']
+    for r in states:
+        if r['act']=='ELU':
+            ratio=r['Q_l1_after_bias_fit']/r['Q_l1_before']
+            lines.append(f"| {r['seed']} | {r['task']} | {r['Q_l1_before']:.6g} | {r['Q_l1_after_bias_fit']:.6g} | {ratio:.5f} | {r['Q_sign_flip_fraction']:.2f} | {r['loss_before']:.6f} | {r['loss_after']:.6f} |")
+    lines += ['', '## Endpoint gradient versus the following ten-task interval (descriptive only)', '',
+              '| seed | observations | R increases | V increases | ratio increases | Q vs delta B sign | raw qdot vs delta q sign |',
+              '|---|---:|---:|---:|---:|---:|---:|']
+    for r in transition_summary:
+        lines.append(f"| {r['seed']} | {r['n']} | {r['R_increase_fraction']:.3f} | {r['V_increase_fraction']:.3f} | {r['ratio_increase_fraction']:.3f} | {r['Q_deltaB_sign_agreement']:.3f} | {r['rawqdot_deltaq_sign_agreement']:.3f} |")
     lines += ['', '## Checks', '', f"Maximum Sv-Sr-Q residual: {max(r['identity_max'] for r in summary):.3g}.",
               f"Maximum ELU finite-difference relative L1 error: {max(r['l1_relative_error'] for r in checks if r['act']=='ELU'):.3g}.",
               f"Maximum LR finite-difference absolute error: {max(r['max_absolute_error'] for r in checks if r['act']=='LR'):.3g}.",
