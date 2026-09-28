@@ -126,7 +126,7 @@ def write_csv(path, rows):
         return
     fields = list(dict.fromkeys(k for r in rows for k in r))
     with path.open('w', newline='') as f:
-        w = csv.DictWriter(f, fields)
+        w = csv.DictWriter(f, fields, lineterminator='\n')
         w.writeheader()
         w.writerows(rows)
 
