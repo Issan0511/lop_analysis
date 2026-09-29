@@ -399,6 +399,11 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
     act, seed, L, K = cfg["act"], cfg["seed"], cfg["layers"], cfg["K"]
     T = cfg["T"]
     X, ytrue, subset = load_mnist(seed)
+    ink_mean = None
+    if cfg.get("ink"):                          # round 1 R6: every image scaled to the subset's mean ink (sum of pixels)
+        ink = X.sum(1, keepdim=True)
+        ink_mean = float(ink.mean())
+        X = X * (ink.mean() / ink)
     X64 = X.double()
     dims = (784,) + (H,) * L + (K,)
     glabel, gbatch = stream("env_labels_0913", seed), stream("env_batch_0913", seed)
@@ -406,6 +411,7 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
     P = [q.requires_grad_(True) for q in initial("init", seed, dims)]
     opt = Adam(P, cfg["lr"], 0.9, cfg["b2"], 1e-8) if cfg["opt"] == "adam" else SGD(P, cfg["lr"])
     task0, y_cur = 1, None
+    wcap = None
     perm = torch.arange(784)
     if fork is not None:                                   # R5: continue from a checkpoint
         ck = torch.load(fork["ckpt"], weights_only=False)
@@ -467,6 +473,8 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
                     opt.m[i].zero_(); opt.v[i].zero_()
                     opt.tm[i] = 0; opt.tv[i] = 0
         v_sw = [q.clone() for q in opt.v] if (cfg["vrestore"] and y_old is not None) else None
+        if cfg.get("wcap_from") and task == cfg["wcap_from"]:     # round 1 R1: cap W1 row norms at this task's start
+            wcap = P[0].detach().norm(dim=1).clone()
         prev_z = None
         U = {}
         S_list = []
@@ -503,6 +511,10 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
             online += int((logits.detach().argmax(-1) == y_new[idx]).sum())
             grads = torch.autograd.grad(loss, P)
             opt.step(grads)
+            if wcap is not None:
+                with torch.no_grad():
+                    nr = P[0].norm(dim=1)
+                    P[0].mul_(torch.clamp(wcap / nr, max=1.0)[:, None])
             if v_sw is not None and s + 1 == cfg["vrestore_at"]:
                 with torch.no_grad():
                     for q, v0 in zip(opt.v, v_sw):
@@ -547,7 +559,7 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
     (out / "rows.json").write_text(json.dumps(rows))
     prov = {"experiment": EXPERIMENT, **git_state(), "cfg": {k: v for k, v in cfg.items()},
             "fork": fork, "torch": torch.__version__, "threads": torch.get_num_threads(),
-            "wall_s": time.time() - t_start, "zc": ZC, "phi_min": PHI_MIN}
+            "wall_s": time.time() - t_start, "zc": ZC, "phi_min": PHI_MIN, "ink_mean": ink_mean}
     (out / "provenance.json").write_text(json.dumps(prov, indent=1, default=str))
     return {"rows": rows}
 
@@ -656,6 +668,8 @@ def main():
     ap.add_argument("--bwmode", default=None, choices=[None, "floor", "abs"])
     ap.add_argument("--bw-from", type=int, default=200)
     ap.add_argument("--probes", default="full", choices=["full", "ends"])
+    ap.add_argument("--ink-normalize", action="store_true", help="round 1 R6: scale every image to the mean ink")
+    ap.add_argument("--wcap-from", type=int, default=0, help="round 1 R1: cap W1 row norms from this task's start")
     ap.add_argument("--snap-before", type=int, nargs="*", default=[])
     ap.add_argument("--ckpt-after", type=int, nargs="*", default=[])
     ap.add_argument("--fork-ckpt", default=None)
@@ -671,7 +685,8 @@ def main():
            "tasks": a.tasks, "T": a.T, "lr": lr, "opt": a.opt, "b2": a.b2, "tau": a.tau, "ls": a.ls,
            "cap": a.cap, "sq": a.sq, "vreset": a.vreset, "adamreset": a.adamreset, "vrestore": bool(a.vrestore), "vrestore_at": a.vrestore,
            "bwmode": a.bwmode, "bw_from": a.bw_from, "probes": a.probes,
-           "snap_before": a.snap_before, "ckpt_after": a.ckpt_after}
+           "snap_before": a.snap_before, "ckpt_after": a.ckpt_after,
+           "ink": a.ink_normalize, "wcap_from": a.wcap_from}
     fork = {"ckpt": a.fork_ckpt, "mode": a.fork_mode} if a.fork_ckpt else None
     out = Path(a.out) if a.out else ROOT / "results" / EXPERIMENT / "runs" / a.name
     run(cfg, out, fork)
