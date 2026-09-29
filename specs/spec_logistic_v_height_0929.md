@@ -66,6 +66,8 @@ Interpretation is conditional on native A producing the target effect in this sh
 
 The theory module predicts the first post-intervention update from saved state with no fitted parameters, including a common-gradient-only counterfactual, previous-moment/current-gradient projections onto the tail direction, and the sign conditions for selective top-input alignment. It must distinguish an exact first-step prediction from explanation of three-task or long-term effects. The historical tasks151-200 effect is not claimed identified by a short-window test.
 
+For that read-only first-state analysis, use the source lower-middle median and sample SD, evaluate per-input projected contributions (current maximum input, open set,closed set) using the realized Adam denominator, and report that deleting an input would also change the denominator. Primary analytic arithmetic may be float64 with the source float32 preactivations/gates held fixed; report this precision convention and mismatch against native float32 updates. A separately labeled derivative-only comparison to exp(z) measures the difference from the source's quantized expm1(z)+1 backward. No coefficients are fitted and no long-term causal claim is made from these first-step projections.
+
 Stop after this registered two-seed,three-task intervention matrix and necessary implementation checks. Do not expand seeds, horizons or geometry based on desired signs. If resources make reconstruction impractical, preserve the pilot and state the limitation instead of substituting a different system.
 
 ## Required output and stopping
