@@ -55,7 +55,15 @@ def jobs(s_eta=None):
                       "cmd": R7 + ["--arm", "S", "--eta", str(s_eta), "--out", str(out), "--device", "cpu",
                                    "--threads", "1", "--seeds", str(s), "--no-keep-ckpts"]})
         return J
-    # R7 pilot first (it gates the S mains), then the long mains
+    # R7: A and F first (the registered main comparison), then F99, then the eta pilot for S
+    # (on the CPU a CIFAR step is memory-bound and ~5x slower under load; the order puts the main
+    # question first)
+    for arm in ["A", "F", "F99"]:
+        for s in range(10):
+            out = RAW / "r7" / arm / f"s{s}"
+            J.append({"name": f"R7_{arm}_s{s}", "group": "r7", "done": out / "provenance.json", "dep": None,
+                      "out": out, "cmd": R7 + ["--arm", arm, "--out", str(out), "--device", "cpu", "--threads", "1",
+                                               "--seeds", str(s), "--no-keep-ckpts"]})
     for eta in ETA_GRID:
         for s in range(10):
             out = RAW / "r7" / "_pilot" / f"eta{eta}" / f"s{s}"
@@ -63,12 +71,6 @@ def jobs(s_eta=None):
                       "dep": None, "out": out,
                       "cmd": R7 + ["--arm", "S", "--eta", str(eta), "--tasks", "2", "--pilot", "--out", str(out),
                                    "--device", "cpu", "--threads", "1", "--seeds", str(s), "--no-keep-ckpts"]})
-    for arm in ["A", "F", "F99"]:
-        for s in range(10):
-            out = RAW / "r7" / arm / f"s{s}"
-            J.append({"name": f"R7_{arm}_s{s}", "group": "r7", "done": out / "provenance.json", "dep": None,
-                      "out": out, "cmd": R7 + ["--arm", arm, "--out", str(out), "--device", "cpu", "--threads", "1",
-                                               "--seeds", str(s), "--no-keep-ckpts"]})
     # R3 (the parent waits for it)
     arms = {"base": ["--snap-before", "2", "5", "10", "20", "30"], "b2_099": ["--b2", "0.99"],
             "b2_09": ["--b2", "0.9"], "T1k": ["--T", "1000"], "T16k": ["--T", "16000"],
