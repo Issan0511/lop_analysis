@@ -1,0 +1,24 @@
+# Two-group logistic: solve before measuring (2026-09-29)
+
+User asks to redo mechanism identification after the earlier broad audit failed to close the sign. This is a new theoretical investigation, not a preregistered confirmation of the actual ELU mechanism. The closed-form construction below was derived before this run's numerical results. The previous four-atom Adam example is not counted as new evidence.
+
+## Model and prediction
+
+One shared hidden neuron z=w1*x1+r*x2+b, readout a>0, free output intercept c, binary cross entropy with fixed soft targets. Rare input xA=(d,0) has mass p and target qA. Bulk inputs xB=(0,u), u=-1,0,1, have conditional masses 1/4,1/2,1/4 and common target qB. In the primary fixed-branch saturation model, activation is z on A and -1 on B. Record physical sign validity; do not use this discontinuous approximation to describe gate crossings.
+
+Use d=4, p=.02, qA=.8, qB=.2, initial h=d*w1+b=1, b=-12, r=2, c=a+logit(qB). Gains a=.1,.3,1,2. The distinct c initializations deliberately equalize the initial bulk prediction; endpoints, not equal-time superiority, are primary. Exact gradient flow conserves r and w1-d*b. Thus b=b0+(h-h0)/(d²+1), rare logit contrast is a(h+1), and h*=Delta/a-1 with Delta=logit(qA)-logit(qB). Both signs and the shared-weight realization are tested.
+
+For p<1/3 the mixture median is b while branches hold. D=h-b, sigma_B²=r²/2, T=D/sqrt((1-p)*sigma_B²+p*(1-p)*D²). Its derivative in D is positive for r !=0. Predict small-a T is larger on the admissible branch interval, with no Adam or noise required. Bulk width zero is a negative control: the mixture's standardized shape is constant. A deliberately uniformly rescaled preactivation family is the separate pure-scale negative control.
+
+## Bounded verification
+
+1. Independently solve full shared-parameter gradient flow and reduced equations; compare finite fixed points, conservation laws, actual weighted medians/variances, analytic T derivative, and local relaxation eigenvalues. Use an adaptive integration horizon set by the analytic slow linearized rate; report actual residual tolerance. No selected best seed or geometry search.
+2. Check scalar Adam scale/equality consequences only for this geometry: zero initial moments and epsilon0 imply proportional gradients in w1/b, hence equal normalized displacements for d>0, preserving w1-b. With nonzero epsilon, report the deviation rather than assert exact conservation. Test a small fixed deterministic trajectory, not a convergence theorem for constant-step Adam.
+3. True ELU leakage control at the same geometry: quantify deviations at the finite horizon. A deeper body or finite precision can delay leakage; epsilon0 Adam can remove small-gradient suppression. Do not claim exponential smallness of raw gradients alone freezes Adam parameters. Distinguish exact saturation, finite-time metastability, and the infinite-time finite-target optimum (bulk r=0 is possible there).
+4. Read-only audit of previous actual-system states, seeds0/1, task50 and task51/53, A and C gains. No new MNIST training. Freeze the initial deep-bulk set z0<=-8, separately the initial open set z0>0, and measure raw height, body SD, shift-adjusted body change, gate retention, and per-unit cross-gain differences. Summaries are descriptive compatibility tests for the theory's required asymmetry; no claim of mediator causality or fixed target-logit gap. Preserve units with insufficient group size as unavailable. No fitted coefficients used to claim prediction.
+
+## Deliverables and limits
+
+Derivation, small reproducible verification scripts, numerical CSV/JSON, static scientific figure, and a Japanese report leading with the closed mechanism and its assumptions. Avoid unexplained covariance/Hessian symbols as the final explanation. A two-level distribution has fixed standardized shape, so a bulk with nonzero width is mathematically necessary for this construction. Do not fit p=.02 as an outcome or claim an explanation of p selection. Do not expand to new MNIST training, seeds, datasets, or intervention matrices.
+
+Repository worktree: wt/two_group_logistic_0929, branch codex/two_group_logistic_0929. Source main983436c. Follow CLAUDE.md for raw-data preservation, main integration, and cleanup. All small output tables and source are tracked; large intermediate arrays, if any, go to the external research-data directory with a manifest.
