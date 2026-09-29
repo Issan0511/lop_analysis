@@ -32,6 +32,10 @@ The saved-data audit established that the actual intervention retains Adam momen
 
 Add a finite-optimum logistic control with soft target q=.8 (equivalently contradictory binary labels at the same covariate), whose unique margin is log(4). Verify analytically and numerically that a readout gain change can cause both upward and downward movement here. Use GD for convergence checking and default Adam for finite-horizon response; do not assume constant-rate Adam converges exactly. This extension was chosen from source/theory inspection before viewing the expanded outputs, not from fitting their results.
 
+## Post-hoc constructive geometry test
+
+Chosen AFTER the Gaussian shared-input matrix showed that smaller v does not universally increase standardized tail height. Purpose is a sufficiency/counterexample construction, not fitting RL-MNIST or a confirmatory test of its mechanism. Use four symmetric atoms: +/-A e1 with total mass p and +/-e2 with mass 1-p; labels are the sign of the nonzero coordinate. Loss is p*softplus(-v*A*w1)+(1-p)*softplus(-v*w2). w starts0, bias0, fixed v=.1,1,10. Cross A=1,2,5,10 and p=.5,1/16,1/64 with default Adam and instantaneous normalization, eps0, eta=.001,4000 steps. Record analytic population SD and interpolated median0. Derive independent coordinate reduction, verify one PyTorch case with eps1e-8 and correctly weight-adjusted epsilon, and record input-weight direction. A=1 and instantaneous normalization are negative controls for gain-dependent standardized shape. The constructed model cannot reproduce decreasing raw maxima after increasing v because both coordinates grow monotonically; state that limitation. No additional geometry search is authorized by this supplement.
+
 ## C. Existing RL-MNIST records
 
 Read only saved vfreeze results and scripts; audit v definitions, optimizer settings, measurement windows, and availability of parameters, errors, and Adam moments. Where raw data permit, independently reproduce the 2-seed summaries. Separate missing measurements from negative results. This is post-hoc validation of already published observations.

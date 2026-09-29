@@ -76,7 +76,6 @@ def run_log_sweep(configs, marks):
     diverged_at = np.zeros(n, int)
     records = []
     checkpoints = set(marks) | set(horizon.tolist())
-    old_logexp = np.logaddexp(0., v*z)
     last_growth = np.zeros(n)
     for t in range(1, int(horizon.max())+1):
         active = (~diverged) & (t <= horizon)
@@ -116,9 +115,11 @@ def run_log_sweep(configs, marks):
                     epsilon_over_rms=float(np.exp(min(700., leps[k]-.5*(lq[k]-corr2[k])))),
                     exp_margin_increment=float(last_growth[k]),
                     exp_margin_over_t=float(np.exp(m-math.log(t))) if m-math.log(t)<700 else float('inf'),
-                    status='diverged' if diverged[k] else 'ok',
-                    diverged_at=int(diverged_at[k]),
-                    ordinary_gradient_underflows=bool(lv[k]-np.logaddexp(0.,m)<math.log(np.finfo(float).tiny)))
+                    status='stopped_large_update' if diverged[k] else 'ok',
+                    stop_step=int(diverged_at[k]),
+                    gradient_below_normal=bool(lv[k]-np.logaddexp(0.,m)<math.log(np.finfo(float).tiny)),
+                    gradient_below_smallest_subnormal=bool(lv[k]-np.logaddexp(0.,m)<math.log(np.nextafter(0.,1.))),
+                    squared_gradient_below_smallest_subnormal=bool(2*(lv[k]-np.logaddexp(0.,m))<math.log(np.nextafter(0.,1.))))
                 records.append(row)
     return records
 
@@ -185,8 +186,8 @@ def warmstart():
         t=0
         def advance(z,m,q,t,v):
             margin=v*z
-            p=math.exp(-float(np.logaddexp(0.,-margin)))
-            g=v*(p-target)
+            residual=math.exp(-float(np.logaddexp(0.,margin)))
+            g=v*((1-target)-residual)
             m=.9*m+.1*g
             q=.999*q+.001*g*g
             t+=1
@@ -243,7 +244,7 @@ def traveling_delta(v,eta=.001,b1=.9,b2=.999):
 def write_summary(out, records, checks, warm, torch_rows, asym):
     lines=['# Frozen-v scalar logistic audit','',
         'Replicates the prior three-point toy, then audits broad controls. These are scalar mechanistic models, not RL-MNIST experiments.',
-        'All entries are float64; log-domain Adam avoids arithmetic underflow. Unstable controls are flagged, not silently clipped.', '',
+        'All entries are float64; log-domain Adam avoids arithmetic underflow. stopped_large_update means an update exceeded 1e6 or was nonfinite; it is an operational stopping rule, not a divergence theorem.', '',
         '## Prior example and optimizer controls at 4000 steps', '',
         '| optimizer | epsilon | v | z | final step / eta | loss | status |',
         '|---|---:|---:|---:|---:|---:|---|']
