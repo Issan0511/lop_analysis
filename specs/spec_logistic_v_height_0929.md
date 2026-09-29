@@ -70,6 +70,10 @@ For that read-only first-state analysis, use the source lower-middle median and 
 
 Stop after this registered two-seed,three-task intervention matrix and necessary implementation checks. Do not expand seeds, horizons or geometry based on desired signs. If resources make reconstruction impractical, preserve the pilot and state the limitation instead of substituting a different system.
 
+### Post-hoc precision check for the residual-replay null
+
+Primary E results had almost-zero median paired T differences but large deviations in a minority of units, while output bias remained bit-identical. This triggers a numerical correctness investigation, not a new mechanism search. Repeat only the c=1 reference and E at c=.1,10 for the same two seeds and same task51-53 plans in float64. Cast the original task50 parameters/moments to float64 before exact scale transformations, preserve counters, and use matched epsilon. Record maximum/median parameter and T deviations and affected-unit counts. Because float64 expm1+1 has a different deep-negative zero cutoff from source float32, this shadow verifies scale-equivariance precision rather than replaying the original network trajectory. Do not replace the primary float32 measurements or declare the mathematical null observed in every original unit. No further precision escalation unless an implementation defect is found.
+
 ## Required output and stopping
 
 Reproducible code, exact scalar and synthetic CSVs, checks/provenance JSON, theory derivation, plots, and a Japanese synthesis stating which prior claims survive. Stop after the registered matrices and necessary correctness checks; any additional experiments must target a concrete unresolved conclusion and be labeled post-hoc. No rerun through 200 MNIST tasks or extension to other datasets is part of this audit.
