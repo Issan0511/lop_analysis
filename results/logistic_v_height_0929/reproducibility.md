@@ -49,4 +49,4 @@ PYTHON=/home/issan/Projects/claude/proj_004_drift/.venv/bin/python
 
 task50状態・入力・task51–53ラベルとバッチ計画、各対照の全parameters/moments、Fの全step長さ監査をNPZへ保存した。生ログも保存した。Fの長さ監査は総量が大きいが、ゼロ例外と丸めを省略せず検算するため残している。
 
-この実行環境では外部データ退避先へ書き込めないため、今回の新規生データもGitへ含めて保持する。GitHub接続は名前解決に失敗しており、remote反映を確認するまでworktreeとbranchを削除しない。
+この実行環境では外部データ退避先へ書き込めないため、今回の新規生データもGitへ含めて保持した。初期のGitHub接続は名前解決に失敗したが、最終pushは成功し、実験commit `216e2f4` をremote mainへ反映できた。Git外の生データが残っていないこととremoteへの取り込みを確認したうえで、実験worktreeとbranchを削除する。
