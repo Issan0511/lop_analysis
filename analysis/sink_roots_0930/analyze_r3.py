@@ -113,6 +113,32 @@ def main():
             pu = np.nanmedian([r["push_open"] for r in rr if r]); re_ = np.nanmedian([r["ret_open"] for r in rr if r])
             print(f"{act:5s} {arm:10s} {np.round(rm, 3)} | {np.round(ru, 3)} | {np.round(ra, 3)} | {pu:+.2f} {re_:+.2f} | {lab}{extra}")
     (RES / "R3_labels.json").write_text(json.dumps(labels, indent=1))
+    # time shape of the return (descriptive): -median_t median_i (m(s) - m(200)) / median_t median_i P, units open at switch
+    shape_rows = []
+    print("\ntime shape: return fraction -R(s)/P at s (ratio of medians over tasks 5-30, open units)")
+    for act in ACTS:
+        for arm in ("base", "T16k", "b2_09", "vrestore", "ls01", "sq003", "adamreset"):
+            for s_ in SEEDS:
+                d = RAW / f"R3_{arm}_{act}_s{s_}"
+                if not (d / "provenance.json").exists():
+                    continue
+                a = np.load(d / "arrays.npz")
+                m, k, g = a["u_m1"], a["u_k1"], list(a["grid"])
+                i0, i200 = g.index(0), g.index(200)
+                pts = [x for x in (500, 1000, 2000, 3000, 4000, 8000, 12000, 16000) if x in g]
+                Pm = np.median([np.median((m[t - 1, i200] - m[t - 1, i0])[k[t - 1, i0] > 0]) for t in TASKS])
+                row = {"act": act, "arm": arm, "seed": s_}
+                for x in pts:
+                    Rm = np.median([np.median((m[t - 1, g.index(x)] - m[t - 1, i200])[k[t - 1, i0] > 0]) for t in TASKS])
+                    row[f"frac_{x}"] = float(-Rm / Pm)
+                shape_rows.append(row)
+            rr = [r for r in shape_rows if r["act"] == act and r["arm"] == arm]
+            if rr:
+                keys = [kk for kk in rr[0] if kk.startswith("frac_")]
+                print(f"{act:5s} {arm:10s}", {kk[5:]: [round(r[kk], 2) for r in rr] for kk in keys})
+    keys = list(dict.fromkeys(kk for r in shape_rows for kk in r))
+    with open(RES / "R3_time_shape.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=keys); w.writeheader(); w.writerows(shape_rows)
 
 
 if __name__ == "__main__":
