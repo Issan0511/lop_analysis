@@ -64,7 +64,8 @@ def rates(gain):
     aa, bb = P*QA*(1-QA), (1-P)*QB*(1-QB)
     k = D*D+1
     mat = np.array([[k*gain*gain*aa, k*gain*aa], [gain*aa, aa+bb]])
-    eigen = np.linalg.eigvals(mat)
+    eigen = np.real_if_close(np.linalg.eigvals(mat))
+    assert not np.iscomplexobj(eigen)
     assert np.all(eigen > 0)
     return float(eigen.min()), float(eigen.max())
 
