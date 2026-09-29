@@ -266,7 +266,7 @@ def intervene(seed, X, P, opt, plans, out):
     all_diag = {}
     archive_checks = []
     archived_runs = {}
-    for tag, source in ((ref['tag'], 'EEQ'), ('A_c0p1', 'VF0.1'), ('A_c10p0', 'VF10')):
+    for tag, source in ((ref['tag'], 'VF1'), ('A_c0p1', 'VF0.1'), ('A_c10p0', 'VF10')):
         with np.load(SOURCE_ROOT / 'vfreeze' / 'runs_vf' / f'{source}_s{seed}.npz') as saved:
             archived_runs[tag] = {k: saved[k] for k in saved.files if k.startswith(('sw_', 'mid_', 'end_', 'ce_end'))}
     initial_states = {'arm_names': np.array([a['tag'] for a in arms]), 'gains': np.array([a['scale'] for a in arms]), 'policies': np.array([a['mode'] for a in arms])}
@@ -364,6 +364,75 @@ def intervene(seed, X, P, opt, plans, out):
 
 
 def summarize(out):
+    # Read-only reporting correction: the common c=1 reference freezes W2 and
+    # must be compared to archived VF1, not EEQ (which continues learning W2).
+    # The training runner committed as 008302c used EEQ only in this diagnostic
+    # comparison. No gradients, states or scientific contrasts depend on it.
+    sensitivity, numerical_null = [], []
+    for seed in (0, 1):
+        with (out / f'real_s{seed}_unit_diagnostics.csv').open() as f: unit_rows = list(csv.DictReader(f))
+        with (out / f'real_s{seed}_summary.csv').open() as f: summary_rows = list(csv.DictReader(f))
+        check = []
+        for tag, source in (('REF_c1p0', 'VF1'), ('A_c0p1', 'VF0.1'), ('A_c10p0', 'VF10')):
+            with np.load(SOURCE_ROOT / 'vfreeze' / 'runs_vf' / f'{source}_s{seed}.npz') as saved:
+                for task, step in ((51, 0), (51, 500), (51, 4000), (52, 4000), (53, 4000)):
+                    rows = sorted([r for r in unit_rows if r['arm'] == tag and int(r['task']) == task and int(r['step']) == step], key=lambda r: int(r['unit']))
+                    phase = {0: 'sw', 500: 'mid', 4000: 'end'}[step]
+                    for key in ('top', 'q99', 'q95', 'q90', 'body', 'k', 's'):
+                        current = np.array([float(r[key]) for r in rows], dtype=np.float32)
+                        old = saved[f'{phase}_{key}'][task - 1]
+                        check.append({'seed': seed, 'arm': tag, 'task': task, 'step': step, 'metric': key,
+                                      'bit_equal': bool(np.array_equal(current, old)), 'max_abs_error': float(np.max(abs(current.astype(float) - old)))})
+        csv_write(out / f'real_s{seed}_archive_checks.csv', check)
+        with np.load(out / f'real_s{seed}_t51_initial_states.npz') as initial_state:
+            for task in (51, 53):
+                with np.load(out / f'real_s{seed}_t{task}_states.npz') as final_state:
+                    for tag in final_state['arm_names']:
+                        rows = sorted([r for r in unit_rows if r['arm'] == tag and int(r['task']) == task and int(r['step']) == 4000], key=lambda r: int(r['unit']))
+                        summ = next(r for r in summary_rows if r['arm'] == tag and int(r['task']) == task and int(r['step']) == 4000)
+                        w0 = initial_state[f'{tag}__W1'].astype(float); b0 = initial_state[f'{tag}__b1'].astype(float)
+                        w = final_state[f'{tag}__W1'].astype(float); b = final_state[f'{tag}__b1'].astype(float)
+                        dw = np.sqrt(np.sum((w - w0) ** 2, axis=1) + (b - b0) ** 2)
+                        source_norm = np.sqrt(np.sum(w0 ** 2, axis=1) + b0 ** 2)
+                        arrays = [final_state[f'{tag}__{prefix}{name}'] for name in NAMES for prefix in ('', 'm_', 'q_')]
+                        step_number = float(final_state[f'{tag}__step_W1'])
+                        epsilon = float(final_state[f'{tag}__eps'])
+                        last_update = []
+                        for name in ('W1', 'b1'):
+                            mhat = final_state[f'{tag}__m_{name}'].astype(float) / (1 - BETAS[0] ** step_number)
+                            qhat = final_state[f'{tag}__q_{name}'].astype(float) / (1 - BETAS[1] ** step_number)
+                            last_update.append(-LR * mhat / (np.sqrt(qhat) + epsilon))
+                        last_step_norm = np.sqrt(np.sum(last_update[0] ** 2, axis=1) + last_update[1] ** 2)
+                        sensitivity.append({'seed': seed, 'task': task, 'arm': str(tag), 'policy': summ['policy'], 'gain': summ['gain'],
+                                            'ce': float(summ['ce']), 'median_raw_top': float(summ['median_raw_top_all']),
+                                            'median_s': float(summ['median_s_all']), 'median_T': float(summ['median_T_all']),
+                                            'mean_pplus': float(summ['mean_pplus_all']), 'median_wnorm': float(np.median(np.linalg.norm(w, axis=1))),
+                                            'median_initial_to_end_hidden_displacement': float(np.median(dw)),
+                                            'max_initial_to_end_hidden_displacement': float(np.max(dw)),
+                                            'median_displacement_over_initial_hidden_norm': float(np.median(dw / source_norm)),
+                                            'median_last_hidden_step_l2_from_moments': float(np.median(last_step_norm)),
+                                            'max_last_hidden_step_l2_from_moments': float(np.max(last_step_norm)),
+                                            'all_parameters_and_moments_finite': all(bool(np.all(np.isfinite(a))) for a in arrays)})
+                    for gain in (.1, 10.):
+                        tag = f'E_c{str(gain).replace(".", "p")}'
+                        E = sorted([r for r in unit_rows if r['arm'] == tag and int(r['task']) == task and int(r['step']) == 4000], key=lambda r: int(r['unit']))
+                        R = sorted([r for r in unit_rows if r['arm'] == 'REF_c1p0' and int(r['task']) == task and int(r['step']) == 4000], key=lambda r: int(r['unit']))
+                        dt = np.array([float(e['T']) - float(r['T']) for e, r in zip(E, R)])
+                        dw = final_state[f'{tag}__W1'].astype(float) - final_state['REF_c1p0__W1'].astype(float)
+                        db = final_state[f'{tag}__b1'].astype(float) - final_state['REF_c1p0__b1'].astype(float)
+                        numerical_null.append({'seed': seed, 'task': task, 'arm': tag, 'units': H,
+                                               'median_abs_T_difference': float(np.median(abs(dt))), 'p90_abs_T_difference': float(np.quantile(abs(dt), .9)),
+                                               'max_abs_T_difference': float(np.max(abs(dt))),
+                                               'units_T_difference_gt_1e_minus6': int((abs(dt) > 1e-6).sum()),
+                                               'units_T_difference_gt_1e_minus3': int((abs(dt) > 1e-3).sum()),
+                                               'units_T_difference_gt_001': int((abs(dt) > .01).sum()),
+                                               'units_T_difference_gt_01': int((abs(dt) > .1).sum()),
+                                               'median_hidden_l2_difference': float(np.median(np.sqrt(np.sum(dw * dw, axis=1) + db * db))),
+                                               'max_hidden_l2_difference': float(np.max(np.sqrt(np.sum(dw * dw, axis=1) + db * db))),
+                                               'max_output_bias_difference': float(np.max(abs(final_state[f'{tag}__b2'] - final_state['REF_c1p0__b2'])))})
+    csv_write(out / 'real_trajectory_sensitivity.csv', sensitivity)
+    csv_write(out / 'real_null_unit_sensitivity.csv', numerical_null)
+    assert all(r['all_parameters_and_moments_finite'] for r in sensitivity)
     summaries = []
     for seed in (0, 1):
         with (out / f'real_s{seed}_contrasts.csv').open() as f: rows = list(csv.DictReader(f))
@@ -396,7 +465,29 @@ def summarize(out):
                   '- Eは通常の自分自身の損失最小化ではない。理論上hidden軌道が同じになる対照で、長期float32差があれば同一状態の一歩の検算と区別する。output biasはexact replayのためbit一致をassertした。',
                   '- グラフの符号が同じという再現だけで機構同定とは呼ばない。第一歩の状態からの予測と媒介経路を固定した対照をあわせて解釈する。', '',
                   'full parameters/moments/counters: real_s*_t50.npz、real_s*_t51_initial_states.npz、real_s*_t51_states.npz、real_s*_t53_states.npz。固定入力Xはt50に一度だけ保存。初回native勾配・logitsと更新後状態はreal_s*_t51_step1.npz。'])
+    lines.extend(['', '## Dによる軌道の離脱（task53）', '',
+                  'Dは単なる小さい媒介変数変更ではなかった。以下を主対比と併記し、符号反転を自然軌道での単一機構同定や寄与率に読み替えない。', '',
+                  '| seed | arm | CE | raw top | s | w norm | initial→end hidden displacement | displacement/initial norm | last step L2 |',
+                  '|---|---|---|---|---|---|---|---|---|'])
+    for r in sensitivity:
+        if r['task'] == 53 and r['policy'] in ('C', 'D'):
+            lines.append('| ' + ' | '.join(str(r[k]) if k in ('seed', 'arm') else f'{r[k]:.6g}' for k in ('seed', 'arm', 'ce', 'median_raw_top', 'median_s', 'median_wnorm', 'median_initial_to_end_hidden_displacement', 'median_displacement_over_initial_hidden_norm', 'median_last_hidden_step_l2_from_moments')) + ' |')
+    lines.extend(['', '全stateとmomentsはfiniteを確認した。Dでは特にc=.1の幅と重みが大幅に増える。基準のRMSがその腕自身の新しい勾配を適切に規格化しなくなった結果も含まれ、自然な二次履歴の特定の時間成分が対象効果を作ったという証明にはならない。', '',
+                  '## Eの一部unitの分岐（task53）', '',
+                  '| seed | arm | median abs ΔT | p90 abs ΔT | max abs ΔT | units > .01 | units > .1 | max hidden L2 difference |',
+                  '|---|---|---|---|---|---|---|---|'])
+    for r in numerical_null:
+        if r['task'] == 53:
+            lines.append('| ' + ' | '.join(str(r[k]) if k in ('seed', 'arm', 'units_T_difference_gt_001', 'units_T_difference_gt_01') else f'{r[k]:.6g}' for k in ('seed', 'arm', 'median_abs_T_difference', 'p90_abs_T_difference', 'max_abs_T_difference', 'units_T_difference_gt_001', 'units_T_difference_gt_01', 'max_hidden_l2_difference')) + ' |')
+    lines.extend(['', '全hidden軌道の数値的一致は達成していない。Eのgain間paired中央値がほぼ0であることと、全unitが基準と一致することを区別する。厳密な代数は実数演算上の予測であり、元のfloat32 expm1+1の丸めを含む系では微小なscale等価性の破れが残る。初回同一状態のnative比較と独立理論予測を併せて判断する。b2は全checkpointでbit一致。', '',
+                  '報告の訂正：実行版008302cの補助archive比較では凍結REFを学習継続EEQと比較していた。再集計では正しいVF1へ直した。学習・state・主対比には影響しない。これは保存CSV/stateだけのread-only再集計であり、追加の学習はしていない。'])
     (out / 'real_report.md').write_text('\n'.join(lines) + '\n')
+    provenance = {'reporting_source_sha256': RUNNER_SHA, 'status': 'read-only summary; no new fitting',
+                  'runner_training_commit': '008302c',
+                  'correction': 'compare frozen REF to source VF1, not learning EEQ; training unaffected',
+                  'executed_source_sha256_by_seed': {str(seed): json.loads((out / f'real_s{seed}_provenance.json').read_text())['source_sha256'] for seed in (0, 1)},
+                  'source_npz': [{'path': str(p), 'bytes': p.stat().st_size, 'sha256': sha(p)} for seed in (0, 1) for p in sorted(out.glob(f'real_s{seed}_*.npz'))]}
+    (out / 'real_reporting_provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
     print(json.dumps(summaries), flush=True)
 
 

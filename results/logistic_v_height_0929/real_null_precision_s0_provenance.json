@@ -1,0 +1,25 @@
+{
+  "seed": 0,
+  "seconds": 22.583500721957535,
+  "dtype": "float64",
+  "code_sha256": "4aa38277afe79d30dabd7c369a1340cebfe628293294d9ffd5df293da9f2109c",
+  "implementation_dependency_sha256": "5cc409b730e5631fd7a72d7c5e23774ff3993a70601335c377de4b3b8ae2c250",
+  "source_checkpoint_sha256": "4bbdd8f56a90ec27c0d66ef07436f502a916278e6d515165056bcfcaa88a199a",
+  "source_task_plan_sha256": "214fad372cdfd2d71ff7bddf450f395773bae2abfc1b4abd3ee84a353ac094b0",
+  "scope": "Numerical scale-equivariance shadow only; not reproduction of the original float32 trajectory.",
+  "backward": "float64 expm1(z)+1; quantization/zero cutoff differs from float32.",
+  "initialization": "Promote saved float32 P/M/S to float64 before readout and hidden moment scaling.",
+  "step_counter": "Preserved from task50; no reset.",
+  "output_bias": "Unscaled moments/epsilon, reference exact CE logits gradient; bit-equality asserted.",
+  "tasks": [
+    51,
+    52,
+    53
+  ],
+  "updates": 12000,
+  "gains": [
+    0.1,
+    10.0
+  ],
+  "registration_commit": "616cbef"
+}

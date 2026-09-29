@@ -10,6 +10,7 @@ import hashlib
 import io
 import json
 import math
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -186,6 +187,46 @@ def pointwise_compensation_check():
     return cases
 
 
+def actual_artifact_checks():
+    """Check preserved execution source and checkpoint identities, without fits."""
+    result = {}
+    def historical_sha(commit, name):
+        raw = subprocess.check_output(['git', 'show', f'{commit}:{CODE/name}'])
+        return hashlib.sha256(raw).hexdigest()
+    execution = historical_sha('008302c', 'real_interventions.py')
+    direction = historical_sha('f11cf4d', 'real_direction_control.py')
+    # Reporting-only corrections were in the working copy during F and the
+    # precision shadow; their exact dependency hash is preserved in this bundle.
+    runner = sha(CODE/'real_interventions.py')
+    for seed in (0, 1):
+        original = json.loads((OUT/f'real_s{seed}_provenance.json').read_text())
+        final = json.loads((OUT/f'real_direction_s{seed}_provenance.json').read_text())
+        precision = json.loads((OUT/f'real_null_precision_s{seed}_provenance.json').read_text())
+        assert original['source_sha256'] == execution
+        assert final['source_sha256'] == direction
+        assert final['native_runner_sha256'] == runner
+        assert final['task50_sha256'] == sha(OUT/f'real_s{seed}_t50.npz')
+        assert final['task_plan_sha256'] == sha(OUT/f'real_s{seed}_task_plan.npz')
+        assert final['all_length_rounding_bounds_verified']
+        assert final['frozen_readouts_unchanged']
+        assert all(all(d.values()) for d in final['reference_and_C_bit_equal_to_original'].values())
+        assert precision['code_sha256'] == sha(CODE/'real_null_precision.py')
+        assert precision['implementation_dependency_sha256'] == runner
+        assert precision['source_checkpoint_sha256'] == final['task50_sha256']
+        assert precision['source_task_plan_sha256'] == final['task_plan_sha256']
+        result[str(seed)] = dict(execution_source_preserved=True, source_checkpoints_match=True,
+            direction_reference_and_natural_states_bit_equal=True,
+            actual_step_length_rounding_bounds_pass=True)
+    prediction = json.loads((OUT/'real_prediction_provenance.json').read_text())
+    assert prediction['source_sha256'] == sha(CODE/'real_state_predictions.py')
+    for entry in prediction['inputs']:
+        assert entry['sha256'] == sha(OUT/Path(entry['path']).name)
+    result['first_state_prediction_sources_match'] = True
+    result['execution_commits'] = dict(primary='008302c', direction_driver='f11cf4d',
+        direction_and_precision_dependency_sha256=runner)
+    return result
+
+
 def main():
     normalize_csv_line_endings()
     sources = {}
@@ -232,6 +273,7 @@ def main():
                   matched_loss_identity_max_error=loss_error,
                   matched_loss_cases=loss_rows, exact_response_checks=response,
                   frozen_branch_checks=branch,
+                  actual_artifact_checks=actual_artifact_checks(),
                   conditional_pointwise_psi_compensation=pointwise_compensation_check())
     (OUT/'validation.json').write_text(json.dumps(checks, indent=2)+'\n')
     print(json.dumps({k: v for k, v in checks.items() if k != 'matched_loss_cases'}))

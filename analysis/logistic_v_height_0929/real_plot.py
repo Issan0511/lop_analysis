@@ -27,6 +27,47 @@ def read(name):
         return list(csv.DictReader(f))
 
 
+def direction_control():
+    """Read the completed final control; do not run additional optimization."""
+    fig, axes = plt.subplots(2, 2, figsize=(11, 7.8), layout='constrained')
+    endpoints = []
+    for seed in (0, 1):
+        contrasts = read(f'real_direction_s{seed}_contrasts.csv')
+        summary = read(f'real_direction_s{seed}_summary.csv')
+        for policy, color in [('C', '#9b73b4'), ('F', '#2465a8')]:
+            rows = [r for r in contrasts if r['policy'] == policy]
+            axes[0, seed].plot([int(r['task']) for r in rows],
+                [float(r['paired_median_T_small_minus_large']) for r in rows],
+                color=color, marker='o', linewidth=2, label=policy)
+            endpoints.append(dict(seed=seed, policy=policy,
+                **{k: float(rows[-1][k]) for k in ['paired_median_T_small_minus_large',
+                    'paired_median_raw_top_small_minus_large', 'fraction_T_small_greater']}))
+            for gain, style in [(0.1, '-'), (10.0, '--')]:
+                rows = [r for r in summary if r['policy'] == policy and float(r['gain']) == gain]
+                axes[1, seed].plot([int(r['task']) for r in rows],
+                    [float(r['median_s_all']) for r in rows], color=color,
+                    linestyle=style, marker='o', linewidth=2, label=f'{policy}, c={gain:g}')
+        axes[0, seed].set_title(f'Seed {seed}', fontweight='bold')
+        axes[0, seed].set_ylabel('Median paired difference in centered tail T')
+        axes[0, seed].axhline(0, color='.6', linewidth=.8)
+        axes[0, seed].set_ylim(bottom=0)
+        axes[0, seed].legend(title='C: natural; F: matched lengths', frameon=False)
+        axes[1, seed].set_ylabel('Median preactivation SD across units')
+        axes[1, seed].set_xlabel('Task (4000 updates each)')
+        axes[1, seed].legend(ncol=2, frameon=False)
+        for ax in axes[:, seed]:
+            ax.set_xticks([51, 52, 53])
+            ax.grid(alpha=.2)
+            ax.spines[['top', 'right']].set_visible(False)
+    fig.suptitle('The positive small-readout tail contrast survives the final control\n'
+                 'F: reference RMS direction with natural per-unit hidden step lengths',
+                 fontsize=13, fontweight='bold')
+    fig.savefig(OUT/'real_direction.png', dpi=180, bbox_inches='tight')
+    fig.savefig(OUT/'real_direction.pdf', bbox_inches='tight')
+    plt.close(fig)
+    (OUT/'real_direction_aggregate.json').write_text(json.dumps(endpoints, indent=2)+'\n')
+
+
 def main():
     data = {seed: read(f'real_s{seed}_contrasts.csv') for seed in (0, 1)}
     plt.rcParams.update({'font.size': 10, 'pdf.fonttype': 42})
@@ -107,6 +148,8 @@ def main():
                      f'output bias {row["max_abs_output_bias_difference"]:.6g}.')
     (OUT/'real_aggregate.md').write_text('\n'.join(lines)+'\n')
     print(json.dumps(dict(endpoint_contrasts=endpoint, numerical_null=numerical_null)))
+    if (OUT/'real_direction_s1_provenance.json').exists():
+        direction_control()
 
 
 if __name__ == '__main__':
