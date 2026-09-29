@@ -64,13 +64,8 @@ def jobs(s_eta=None):
             J.append({"name": f"R7_{arm}_s{s}", "group": "r7", "done": out / "provenance.json", "dep": None,
                       "out": out, "cmd": R7 + ["--arm", arm, "--out", str(out), "--device", "cpu", "--threads", "1",
                                                "--seeds", str(s), "--no-keep-ckpts"]})
-    for eta in ETA_GRID:
-        for s in range(10):
-            out = RAW / "r7" / "_pilot" / f"eta{eta}" / f"s{s}"
-            J.append({"name": f"R7_pilot_eta{eta}_s{s}", "group": "r7", "done": out / "provenance.json",
-                      "dep": None, "out": out,
-                      "cmd": R7 + ["--arm", "S", "--eta", str(eta), "--tasks", "2", "--pilot", "--out", str(out),
-                                   "--device", "cpu", "--threads", "1", "--seeds", str(s), "--no-keep-ckpts"]})
+    # the eta pilot is decided: eta = 0.001 already fails for seed 4 (spec_postfit_elu_cifar_0924 §2 rule 3),
+    # so no eta_S exists and S is not run (spec §2: 'if no eta is stable, S is not run')
     # R3 (the parent waits for it)
     arms = {"base": ["--snap-before", "2", "5", "10", "20", "30"], "b2_099": ["--b2", "0.99"],
             "b2_09": ["--b2", "0.9"], "T1k": ["--T", "1000"], "T16k": ["--T", "16000"],
