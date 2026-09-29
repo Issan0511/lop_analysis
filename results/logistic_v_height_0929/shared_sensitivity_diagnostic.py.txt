@@ -1,0 +1,44 @@
+"""Bounded post-hoc numerical-sensitivity diagnostic. No primary matrix rerun."""
+import importlib.util,json,csv,hashlib
+from pathlib import Path
+import numpy as np
+ROOT=Path(__file__).resolve().parents[2]
+OUT=ROOT/'results/logistic_v_height_0929'
+spec=importlib.util.spec_from_file_location('shared_models',ROOT/'analysis/logistic_v_height_0929/shared_models.py')
+module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+design=dict(np.load(OUT/'shared_design.npz'))
+meta,x,y,params,v=module.batch_design(design,'linear')
+ix=[j for j,r in enumerate(meta) if r['dataset']=='random_labels' and r['gain']==10]
+meta=[meta[j] for j in ix];x=x[ix];y=y[ix];params=[a[ix].copy() for a in params];v=v[ix]
+gain=10.;scale=[gain,gain,1.]
+control=[a*s for a,s in zip(params,scale)]
+first,second=[[np.zeros_like(a) for a in params] for _ in range(2)]
+cf,cs=[[np.zeros_like(a) for a in params] for _ in range(2)]
+thresholds=[1e-12,1e-9,1e-6,1e-3];seen=set();rows=[];loss_history=[];last=[]
+for step in range(4001):
+ grads,(z,ll,_,loss)=module.gradients(x,y,*params,v,'linear')
+ cg,(cz,cll,_,closs)=module.gradients(x,y,*control,np.ones_like(v),'linear')
+ delta=np.max(abs(ll-cll),axis=1);loss_history.append(loss.copy())
+ for j,r in enumerate(meta):
+  for th in thresholds:
+   if delta[j]>th and (j,th) not in seen:
+    seen.add((j,th))
+    rms=np.sqrt(second[0][j]/(1-.999**step)) if step else np.zeros_like(second[0][j])
+    gh=np.concatenate([a[j].ravel() for a in grads])
+    recent=np.array(loss_history[-100:])[:,j]
+    prob=np.exp(-np.logaddexp(0.,-ll[j]));hessian=(gain**2/128)*(x[j].T@(x[j]*(prob*(1-prob))[:,None]))
+    preconditioner=.001/(rms.reshape(-1)+1e-8);root_p=np.sqrt(preconditioner);preconditioned_hessian=root_p[:,None]*hessian*root_p[None,:];spectral=float(np.linalg.eigvalsh(preconditioned_hessian)[-1])
+    rows.append(dict(seed=r['seed'],step=step,threshold=th,max_logit_difference=float(delta[j]),loss=float(loss[j]),loss_difference=float(abs(loss[j]-closs[j])),loss_range_last100=float(np.ptp(recent)),gradient_l2=float(np.linalg.norm(gh)),hidden_gradient_absmax=float(np.max(abs(grads[0][j]))),hidden_rms_min=float(rms.min()),hidden_rms_median=float(np.median(rms)),hidden_rms_max=float(rms.max()),frozen_rms_hessian_max_eigenvalue=spectral,frozen_rms_momentum_stability_threshold=38.))
+ if step==4000:
+  for j,r in enumerate(meta):
+   zz=z[j,:,0]; cc=cz[j,:,0]/gain
+   last.append(dict(seed=r['seed'],logit_max_difference=float(delta[j]),loss_difference=float(abs(loss[j]-closs[j])),raw_max_difference=float(zz.max()-cc.max()),max_over_s_difference=float(zz.max()/zz.std()-cc.max()/cc.std()),centered_tail_difference=float((zz.max()-np.median(zz))/zz.std()-(cc.max()-np.median(cc))/cc.std()),pplus_difference=float(np.mean(zz>0)-np.mean(cc>0))))
+  break
+ module.adam_update(params,grads,first,second,step+1,[.001]*3,[1e-8]*3)
+ module.adam_update(control,cg,cf,cs,step+1,[.01,.01,.001],[1e-9,1e-9,1e-8])
+for name,data in [('crossings',rows),('endpoint_effects',last)]:
+ with (OUT/f'shared_sensitivity_{name}.csv').open('w',newline='') as f:
+  writer=csv.DictWriter(f,fieldnames=list(data[0]));writer.writeheader();writer.writerows(data)
+provenance={'status':'post-hoc numerical diagnostic; repeat only five random-label linear gain10 conditions; preserve primary files','source_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'float_dtype':'float64','thresholds':thresholds,'rows':rows,'endpoint_effects':last}
+(OUT/'shared_sensitivity_diagnostic.json').write_text(json.dumps(provenance,indent=2)+'\n')
+print(json.dumps(provenance,indent=2))

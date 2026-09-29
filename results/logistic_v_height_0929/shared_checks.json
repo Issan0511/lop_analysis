@@ -1,0 +1,60 @@
+{
+  "torch_version": "2.13.0+cu130",
+  "selected_seed": 2,
+  "selected_dataset": "rare_separable",
+  "selected_gain": 10.0,
+  "comparison": "Numpy gradients versus torch autograd and central finite differences; 32 Adam steps versus torch.optim.Adam for all three models",
+  "linear": {
+    "gradient_max_absolute_error": 1.1102230246251565e-15,
+    "central_difference_max_absolute_error": 4.754727722655616e-10,
+    "adam_32_step_max_parameter_error": 4.163336342344337e-17,
+    "first_moment_max_error": 1.3322676295501878e-15,
+    "second_moment_max_error": 6.661338147750939e-16
+  },
+  "elu1": {
+    "gradient_max_absolute_error": 8.881784197001252e-16,
+    "central_difference_max_absolute_error": 3.9944270113778657e-10,
+    "adam_32_step_max_parameter_error": 2.7755575615628914e-17,
+    "first_moment_max_error": 6.661338147750939e-16,
+    "second_moment_max_error": 5.551115123125783e-16
+  },
+  "elu8": {
+    "gradient_max_absolute_error": 4.440892098500626e-16,
+    "central_difference_max_absolute_error": 4.102829187502266e-11,
+    "adam_32_step_max_parameter_error": 4.85722573273506e-17,
+    "first_moment_max_error": 2.7755575615628914e-16,
+    "second_moment_max_error": 7.632783294297951e-17
+  },
+  "linear_matched_effective_rate_all_steps_max_error": {
+    "logits": 0.01458927444448549,
+    "scaled_w": 0.0047971370621012754,
+    "scaled_b": 4.796163466380676e-14,
+    "output_c": 3.9968028886505635e-15,
+    "loss": 1.626593261527809e-06,
+    "one_step_mapping_gradient_error": 2.220446049250313e-16,
+    "one_step_mapping_parameter_error": 1.7763568394002505e-15
+  },
+  "extended_precision_equivalence_audit": {
+    "status": "post-hoc numerical correctness audit after float64 equivalence divergence",
+    "dtype": "float128",
+    "mantissa_bits": 63,
+    "dataset": "random_labels",
+    "gain": 10,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "steps": 4000,
+    "max_logit_error_per_seed": [
+      0.01847853391095011,
+      1.328147661294743e-18,
+      0.00939202935768685,
+      1.1689054672109345e-18,
+      1.3010426069826053e-18
+    ],
+    "max_loss_error": 1.56789878785475e-06
+  }
+}

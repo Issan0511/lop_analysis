@@ -1,0 +1,131 @@
+{
+  "plan": "specs/spec_logistic_v_height_0929.md section B",
+  "dtype": "float64",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "N": 128,
+  "D": 8,
+  "steps": 4000,
+  "learning_rate": 0.001,
+  "betas": [
+    0.9,
+    0.999
+  ],
+  "epsilon": 1e-08,
+  "gains": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "models": [
+    "linear",
+    "elu1",
+    "elu8"
+  ],
+  "datasets": [
+    "balanced_separable",
+    "rare_separable",
+    "random_labels"
+  ],
+  "checkpoints": [
+    0,
+    10,
+    100,
+    500,
+    1000,
+    2000,
+    4000
+  ],
+  "batch": "deterministic full dataset",
+  "dataset_definition": "X = concatenate(G, -G); G is 64x8 iid standard Gaussian from default_rng(seed). Balanced labels are X[:,0]>0. Rare labels are top 8 X[:,0]. Random labels are 64 ones, 64 zeros shuffled with default_rng(1000+seed). Same X and labels across models/gains.",
+  "initialization": "W8 = default_rng(2000+seed).normal((8,8)) * 0.2/sqrt(8); b=0,c=0. Linear and ELU1 use first W8 row. Frozen v=gain for H=1; ELU8 v=gain*[+1,-1,+1,-1,+1,-1,+1,-1]/sqrt(8). No weight decay.",
+  "linear_control": "Compare v=g to v=1 with w'=g*w,b'=g*b,c'=c at initialization. Control hidden learning_rate=g*eta, hidden epsilon=epsilon/g; output c learning_rate=eta and epsilon=epsilon unchanged. All moments initialized at zero. Expected logits, losses, c identical; w'=g*w,b'=g*b at every step.",
+  "s_definition": "population standard deviation across all 128 inputs, per hidden unit",
+  "metrics": "raw max, min, mean, median, population s, max/s, (max-median)/s, raw and median-centered standardized quantiles, pplus, loss and accuracy. Unit means within each run are descriptive only.",
+  "numerical_policy": "Compute logistic residual as -signed_y*sigmoid(-signed_y*logit). Reduce bias gradients in antipodal input pairs. For linear paired X with balanced labels and exactly b=c=0, preserve analytically exact zero bias gradients. See shared_numerical_revision.json for prior roundoff artifact.",
+  "data_hashes": [
+    {
+      "seed": 0,
+      "x_sha256": "bb14bfa33690831fd14adf34b7770fda9ac938a796b96037421af22964d81757",
+      "labels_sha256": {
+        "balanced_separable": "a8744eded3cb7b62d3e20ba235254bbaeab320473760fecece910f488197eef3",
+        "rare_separable": "86dcccc91fc676efb668c66c00450c9e082e190e41866ebf3c6fb3fd5ce6256c",
+        "random_labels": "3d9a2e1e40c38ae257a2448e43e50206f54bc3eea83c2ec09d7ec0d7d5dfc6a5"
+      },
+      "initial_w_sha256": "b8d20f412c1b4af7c6b40de7d5c8a6b870bf02dadc2cf23c52853238b483819d",
+      "positive_counts": [
+        64,
+        8,
+        64
+      ]
+    },
+    {
+      "seed": 1,
+      "x_sha256": "443bed391b7b0f9655116a39947105612a1bbb51b3057cca731ec87b8d00d4d5",
+      "labels_sha256": {
+        "balanced_separable": "ef4ddd29b9ffd8116ef5b73881047995626ed35c821d3a290a0a9e2c69eaaaef",
+        "rare_separable": "31341df3616aa37858a9c4e658d629730a08b0b5be04822f0f248e7c29a8914e",
+        "random_labels": "5dd81f5dfb8a0c0f94d75138f336713a8b0755fa2987567e000320b84d66c7c4"
+      },
+      "initial_w_sha256": "410e55be77ec717a704ce560d31c4955ff7ec467fd8e3bfc19eed863fc49d44b",
+      "positive_counts": [
+        64,
+        8,
+        64
+      ]
+    },
+    {
+      "seed": 2,
+      "x_sha256": "79f2b8216666907a6332797f54eab8bdda55df5a6037d73743686907401d7ff6",
+      "labels_sha256": {
+        "balanced_separable": "0e81a95c5605a08203324f37977f42f2c6c36cf7cbf7b752944704f96b0aac76",
+        "rare_separable": "6215c1945abf1b24a0a801873d7bfe214cf5d8acb303ba9e3a3059b6e51a18ce",
+        "random_labels": "e32581ff627e665cab5ad45ec0d4447843120dff16be1771a90464b8a10b63eb"
+      },
+      "initial_w_sha256": "a97c40146d4453802cda544e608e37191da03f825064cc481866f01202f8d239",
+      "positive_counts": [
+        64,
+        8,
+        64
+      ]
+    },
+    {
+      "seed": 3,
+      "x_sha256": "390ae3d136860625646834d174288c58767f9dc0a253182ece77efb441008ff8",
+      "labels_sha256": {
+        "balanced_separable": "a636f86f4876aa5cfad80236975af8aa6ff6c10d6a834383e99120f75cee9299",
+        "rare_separable": "a5c5586d85a674a18e923038859158836efc912ab32e1130472a9e2a77dfff5b",
+        "random_labels": "39c3a01e534290f4a5128947d2ac485f63e78232a78119e9037ffb757d5d2a88"
+      },
+      "initial_w_sha256": "ac9be8dc4179f2b78128fb43f2928c43c36984d6246a3565bfa34897024bae3a",
+      "positive_counts": [
+        64,
+        8,
+        64
+      ]
+    },
+    {
+      "seed": 4,
+      "x_sha256": "784303cbba2f7bfeed69dbe4f7905367aa32915dda9a3465f38637e0ad4b0641",
+      "labels_sha256": {
+        "balanced_separable": "846310e39235d9246fec132e6cc0e2ddf32485addcf32455d99a68b6ce24c8b6",
+        "rare_separable": "0b18c37d6909b0a339e593c2e987e225a475a1ac24382ed3a5f438fe98a2fff5",
+        "random_labels": "93674378c284da2295002ffe586ce1963e1da3badb38695d3912d3eb5552e32e"
+      },
+      "initial_w_sha256": "fce7ba033b823114b3b561412b1092b975cb58c3156d85f3c342b270d67bbe3f",
+      "positive_counts": [
+        64,
+        8,
+        64
+      ]
+    }
+  ],
+  "design_file_sha256": "e82ed4826459561d77d76ca9d8e7a298f7b2aa669dce4d80b2d9904a74980bc4",
+  "code_sha256": "2b7fa235f689f38ae1206c4e2a11b42f6b4d478eedd41248afe12b22685e8e49",
+  "frozen_before_first_update": true
+}

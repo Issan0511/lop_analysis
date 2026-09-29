@@ -1,0 +1,11 @@
+{
+  "reason": "Matched linear parameterization yielded max logit difference 0.014002539929387936 under naive p-y reduction. In paired balanced data the exactly zero bias gradient acquired roundoff that Adam amplified. Stable signed-label residual and paired summation used in final implementation; no dataset, initialization, model or optimizer hyperparameters changed. The original strict all-time trajectory assertion is replaced by explicit one-step algebraic mapping checks plus actual finite-precision trajectory errors.",
+  "initial_failure": {
+    "logits": 0.014002539929387936,
+    "scaled_w": 0.0028658021598129343,
+    "scaled_b": 0.01273530068143917,
+    "output_c": 0.0012741557349979088,
+    "loss": 3.743449884074934e-06
+  },
+  "final_policy": "Preserve exact zero linear bias gradients for paired X, balanced labels and b=c=0. This eliminates early intercept roundoff amplification. Late random-label gain10 equivalence remains numerically sensitive; explicit trajectory errors and one-step recurrence checks are reported. Extended precision did not eliminate divergence in two seeds."
+}

@@ -40,6 +40,10 @@ Chosen AFTER the Gaussian shared-input matrix showed that smaller v does not uni
 
 Read only saved vfreeze results and scripts; audit v definitions, optimizer settings, measurement windows, and availability of parameters, errors, and Adam moments. Where raw data permit, independently reproduce the 2-seed summaries. Separate missing measurements from negative results. This is post-hoc validation of already published observations.
 
+## User-steered theoretical identification supplement
+
+After the numerical matrix, the user explicitly clarified that theoretical mechanism identification, rather than reproducing the phenomenon, is the objective. The synthesis must not treat a constructed example as identification in the actual ELU system. Add exact same-state readout response for multiclass ELU/Adam, conditional sign lemmas for centered-tail growth, the fixed-gate saturated-branch scale symmetry, and its violation by exact ELU. Derive what could distinguish optimizer/transient explanations from stationary objective/branch explanations; state when no sign can be predicted. Independently verify the algebra at seeded arbitrary states, without counting this as actual-network evidence. Document up to three discriminating interventions and missing measurements. Do not run additional endpoint-fitting models or claim that these future interventions were performed.
+
 ## Required output and stopping
 
 Reproducible code, exact scalar and synthetic CSVs, checks/provenance JSON, theory derivation, plots, and a Japanese synthesis stating which prior claims survive. Stop after the registered matrix and necessary correctness checks; any additional experiments must target a concrete unresolved conclusion and be labeled post-hoc. No extensive MNIST retraining is part of this audit.

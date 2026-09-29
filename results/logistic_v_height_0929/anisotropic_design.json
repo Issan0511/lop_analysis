@@ -1,0 +1,61 @@
+{
+  "status": "post-hoc constructed sufficiency example, chosen after Gaussian synthetic outputs",
+  "features": "mass p/2 each at +(A,0), -(A,0); mass (1-p)/2 each at +(0,1), -(0,1)",
+  "labels": "sign of the nonzero coordinate, in {-1,+1}",
+  "parameters": "w=(0,0), fixed v>0, no hidden/output bias, no noise, full deterministic loss",
+  "loss": "p softplus(-v A w1) + (1-p) softplus(-v w2)",
+  "A": [
+    1.0,
+    2.0,
+    5.0,
+    10.0
+  ],
+  "p": [
+    0.5,
+    0.0625,
+    0.015625
+  ],
+  "v": [
+    0.1,
+    1.0,
+    10.0
+  ],
+  "optimizers": {
+    "adam": [
+      0.9,
+      0.999
+    ],
+    "instantaneous": [
+      0.0,
+      0.0
+    ]
+  },
+  "steps": 4000,
+  "learning_rate": 0.001,
+  "epsilon": 0.0,
+  "checkpoints": [
+    1,
+    10,
+    100,
+    500,
+    1000,
+    2000,
+    4000
+  ],
+  "population_sd": "sqrt(p*(A*w1)^2 + (1-p)*w2^2)",
+  "body": "symmetry midpoint median=0; no sample-median tie convention",
+  "independent_torch_check": {
+    "A": 10.0,
+    "p": 0.015625,
+    "v": 1.0,
+    "epsilon": 1e-08,
+    "steps": 4000
+  },
+  "limits": [
+    "No real-data mechanism identification",
+    "No claim that finite-time level is an equilibrium",
+    "Cannot model downward post-v-increase trajectories because each coordinate grows monotonically",
+    "No task changes or existing Adam history",
+    "All inputs share two coordinates but pairs on different axes do not interact in the gradient"
+  ]
+}

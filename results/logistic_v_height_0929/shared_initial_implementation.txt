@@ -1,0 +1,318 @@
+"""Frozen-readout, shared-input logistic controls. Run the preregistered section B.
+
+All arrays are float64. Dataset definitions, actual samples, initialization and
+configuration are persisted before any optimizer update. No stochastic training.
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import json
+import platform
+import subprocess
+import time
+from pathlib import Path
+
+import numpy as np
+
+
+DATASETS = ["balanced_separable", "rare_separable", "random_labels"]
+MODELS = ["linear", "elu1", "elu8"]
+GAINS = [0.1, 1.0, 10.0]
+CHECKPOINTS = [0, 10, 100, 500, 1000, 2000, 4000]
+
+
+def digest(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def array_digest(a):
+    return hashlib.sha256(np.ascontiguousarray(a).tobytes()).hexdigest()
+
+
+def write_csv(path, rows):
+    with Path(path).open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def forward(x, y, w, b, c, v, activation):
+    z = x @ w.transpose(0, 2, 1) + b[:, None, :]
+    phi = z if activation == "linear" else np.where(z > 0, z, np.expm1(np.minimum(z, 0)))
+    logits = (phi * v[:, None, :]).sum(axis=2) + c[:, None]
+    p = np.exp(-np.logaddexp(0.0, -logits))
+    loss = np.mean(np.logaddexp(0.0, logits) - y * logits, axis=1)
+    return z, logits, p, loss
+
+
+def gradients(x, y, w, b, c, v, activation):
+    z, logits, p, loss = forward(x, y, w, b, c, v, activation)
+    error = (p - y) / x.shape[1]
+    slope = np.ones_like(z) if activation == "linear" else np.exp(np.minimum(z, 0))
+    dz = error[:, :, None] * v[:, None, :] * slope
+    dw = dz.transpose(0, 2, 1) @ x
+    db = dz.sum(axis=1)
+    dc = error.sum(axis=1)
+    return (dw, db, dc), (z, logits, p, loss)
+
+
+def make_design(out):
+    xs, labels, init_w = [], [], []
+    data_hashes = []
+    for seed in range(5):
+        rng = np.random.default_rng(seed)
+        half = rng.normal(size=(64, 8))
+        x = np.concatenate([half, -half], axis=0)
+        y_balanced = (x[:, 0] > 0).astype(np.float64)
+        y_rare = np.zeros(128, dtype=np.float64)
+        y_rare[np.argsort(x[:, 0])[-8:]] = 1.0
+        # Random assignment independent of x, with class count held at 64/64.
+        y_random = np.concatenate([np.ones(64), np.zeros(64)])
+        np.random.default_rng(1000 + seed).shuffle(y_random)
+        ys = np.stack([y_balanced, y_rare, y_random])
+        w = np.random.default_rng(2000 + seed).normal(size=(8, 8)) * (0.2 / np.sqrt(8))
+        xs.append(x)
+        labels.append(ys)
+        init_w.append(w)
+        data_hashes.append({"seed": seed, "x_sha256": array_digest(x),
+                            "labels_sha256": {n: array_digest(ys[j]) for j, n in enumerate(DATASETS)},
+                            "initial_w_sha256": array_digest(w),
+                            "positive_counts": ys.sum(axis=1).astype(int).tolist()})
+    design = {"x": np.stack(xs), "y": np.stack(labels), "initial_w": np.stack(init_w),
+              "initial_b": np.zeros((5, 8)), "initial_c": np.zeros(5),
+              "readout8": np.array([1, -1, 1, -1, 1, -1, 1, -1], dtype=float) / np.sqrt(8)}
+    np.savez_compressed(out / "shared_design.npz", **design)
+    config = {"plan": "specs/spec_logistic_v_height_0929.md section B", "dtype": "float64",
+              "seeds": list(range(5)), "N": 128, "D": 8, "steps": 4000, "learning_rate": 0.001,
+              "betas": [0.9, 0.999], "epsilon": 1e-8, "gains": GAINS, "models": MODELS,
+              "datasets": DATASETS, "checkpoints": CHECKPOINTS, "batch": "deterministic full dataset",
+              "dataset_definition": "X = concatenate(G, -G); G is 64x8 iid standard Gaussian from default_rng(seed). Balanced labels are X[:,0]>0. Rare labels are top 8 X[:,0]. Random labels are 64 ones, 64 zeros shuffled with default_rng(1000+seed). Same X and labels across models/gains.",
+              "initialization": "W8 = default_rng(2000+seed).normal((8,8)) * 0.2/sqrt(8); b=0,c=0. Linear and ELU1 use first W8 row. Frozen v=gain for H=1; ELU8 v=gain*[+1,-1,+1,-1,+1,-1,+1,-1]/sqrt(8). No weight decay.",
+              "linear_control": "Compare v=g to v=1 with w'=g*w,b'=g*b,c'=c at initialization. Control hidden learning_rate=g*eta, hidden epsilon=epsilon/g; output c learning_rate=eta and epsilon=epsilon unchanged. All moments initialized at zero. Expected logits, losses, c identical; w'=g*w,b'=g*b at every step.",
+              "s_definition": "population standard deviation across all 128 inputs, per hidden unit",
+              "metrics": "raw max, min, mean, median, population s, max/s, (max-median)/s, raw and median-centered standardized quantiles, pplus, loss and accuracy. Unit means within each run are descriptive only.",
+              "data_hashes": data_hashes, "design_file_sha256": digest(out / "shared_design.npz"),
+              "code_sha256": digest(__file__), "frozen_before_first_update": True}
+    (out / "shared_config.json").write_text(json.dumps(config, indent=2) + "\n")
+    return design, config
+
+
+def batch_design(design, model):
+    metadata, xs, ys, ws = [], [], [], []
+    for seed in range(5):
+        for d, dataset in enumerate(DATASETS):
+            for gain in GAINS:
+                metadata.append({"seed": seed, "dataset": dataset, "model": model, "gain": gain})
+                xs.append(design["x"][seed]); ys.append(design["y"][seed, d])
+                ws.append(design["initial_w"][seed, :8 if model == "elu8" else 1])
+    w = np.stack(ws).copy()
+    b, c = np.zeros(w.shape[:2]), np.zeros(len(metadata))
+    gain = np.array([row["gain"] for row in metadata])
+    base_v = design["readout8"] if model == "elu8" else np.ones(1)
+    v = gain[:, None] * base_v[None, :]
+    return metadata, np.stack(xs), np.stack(ys), [w, b, c], v
+
+
+def metrics(meta, step, z, logits, y, loss, params, v):
+    unit_rows, run_rows = [], []
+    for j, item in enumerate(meta):
+        common = dict(item, step=step)
+        within = []
+        for unit in range(z.shape[2]):
+            values = z[j, :, unit]
+            s = float(np.std(values)); median = float(np.median(values)); rawmax = float(values.max())
+            denom = s if s > 1e-12 else np.nan
+            row = dict(common, unit=unit, readout=float(v[j, unit]),
+                       raw_max=rawmax, raw_min=float(values.min()), mean=float(values.mean()),
+                       median=median, s=s, max_over_s=rawmax / denom,
+                       centered_max_over_s=(rawmax - median) / denom,
+                       pplus=float(np.mean(values > 0)), degenerate_s=int(s <= 1e-12),
+                       hidden_w_norm=float(np.linalg.norm(params[0][j, unit])),
+                       hidden_b=float(params[1][j, unit]))
+            for q in [0.01, 0.05, 0.25, 0.75, 0.95, 0.99]:
+                quant = float(np.quantile(values, q)); label = f"q{int(100*q):02d}"
+                row[label] = quant; row[label + "_centered_over_s"] = (quant - median) / denom
+            unit_rows.append(row); within.append(row)
+        summary = dict(common, loss=float(loss[j]), accuracy=float(np.mean((logits[j] > 0) == (y[j] > 0.5))),
+                       output_bias=float(params[2][j]), readout_norm=float(np.linalg.norm(v[j])),
+                       logit_min=float(logits[j].min()), logit_max=float(logits[j].max()))
+        for key in ["raw_max", "s", "median", "max_over_s", "centered_max_over_s", "pplus"]:
+            summary["unit_mean_" + key] = float(np.mean([r[key] for r in within]))
+        run_rows.append(summary)
+    return unit_rows, run_rows
+
+
+def adam_update(params, grads, first, second, step, rates, epsilons):
+    for i in range(3):
+        first[i] *= 0.9; first[i] += 0.1 * grads[i]
+        second[i] *= 0.999; second[i] += 0.001 * grads[i] ** 2
+        params[i] -= rates[i] * (first[i] / (1 - 0.9 ** step)) / (np.sqrt(second[i] / (1 - 0.999 ** step)) + epsilons[i])
+
+
+def train_model(design, model):
+    meta, x, y, params, v = batch_design(design, model)
+    activation = "linear" if model == "linear" else "elu"
+    first, second = [[np.zeros_like(a) for a in params] for _ in range(2)]
+    rates, epsilons = [0.001] * 3, [1e-8] * 3
+    unit_rows, run_rows, states = [], [], {}
+    matched = None
+    max_errors = {"logits": 0.0, "scaled_w": 0.0, "scaled_b": 0.0, "output_c": 0.0, "loss": 0.0}
+    if model == "linear":
+        gain = v[:, 0]
+        matched = [params[0] * gain[:, None, None], params[1] * gain[:, None], params[2].copy()]
+        mf, ms = [[np.zeros_like(a) for a in matched] for _ in range(2)]
+        mrates = [0.001 * gain[:, None, None], 0.001 * gain[:, None], 0.001]
+        meps = [1e-8 / gain[:, None, None], 1e-8 / gain[:, None], 1e-8]
+    for step in range(4001):
+        grads, (z, logits, p, loss) = gradients(x, y, *params, v, activation)
+        if matched is not None:
+            mg, (_, ml, _, mloss) = gradients(x, y, *matched, np.ones_like(v), activation)
+            errors = {"logits": np.max(np.abs(logits - ml)), "scaled_w": np.max(np.abs(params[0] * gain[:, None, None] - matched[0])),
+                      "scaled_b": np.max(np.abs(params[1] * gain[:, None] - matched[1])),
+                      "output_c": np.max(np.abs(params[2] - matched[2])), "loss": np.max(np.abs(loss - mloss))}
+            max_errors = {k: max(max_errors[k], float(value)) for k, value in errors.items()}
+        if step in CHECKPOINTS:
+            ur, rr = metrics(meta, step, z, logits, y, loss, params, v)
+            unit_rows.extend(ur); run_rows.extend(rr)
+            for name, a in zip(["w", "b", "c"], params): states[f"{name}_t{step}"] = a.copy()
+            if matched is not None:
+                for name, a in zip(["w", "b", "c"], matched): states[f"control_{name}_t{step}"] = a.copy()
+        if step == 4000: break
+        adam_update(params, grads, first, second, step + 1, rates, epsilons)
+        if matched is not None: adam_update(matched, mg, mf, ms, step + 1, mrates, meps)
+    for name, grad, m, vv in zip(["w", "b", "c"], grads, first, second):
+        states[f"gradient_{name}_end"] = grad; states[f"first_moment_{name}_end"] = m; states[f"second_moment_{name}_end"] = vv
+    states["v"] = v
+    return meta, unit_rows, run_rows, states, max_errors
+
+
+def audit_implementation(design):
+    import torch
+    torch.set_num_threads(1)
+    torch.set_default_dtype(torch.float64)
+    checks = {"torch_version": torch.__version__, "selected_seed": 2, "selected_dataset": "rare_separable", "selected_gain": 10.0,
+              "comparison": "Numpy gradients versus torch autograd and central finite differences; 32 Adam steps versus torch.optim.Adam for all three models"}
+    for model in MODELS:
+        meta, x, y, params, v = batch_design(design, model)
+        j = next(j for j, m in enumerate(meta) if m["seed"] == 2 and m["dataset"] == "rare_separable" and m["gain"] == 10)
+        x, y, v = x[j:j+1], y[j:j+1], v[j:j+1]
+        params = [a[j:j+1].copy() for a in params]
+        activation = "linear" if model == "linear" else "elu"
+        npgrad, _ = gradients(x, y, *params, v, activation)
+        tp = [torch.tensor(a, requires_grad=True) for a in params]
+        tx, ty, tv = [torch.tensor(a) for a in (x, y, v)]
+        def torch_loss():
+            zz = tx @ tp[0].transpose(1, 2) + tp[1][:, None, :]
+            pp = zz if activation == "linear" else torch.nn.functional.elu(zz)
+            ll = (pp * tv[:, None, :]).sum(dim=2) + tp[2][:, None]
+            return torch.nn.functional.binary_cross_entropy_with_logits(ll, ty)
+        tl = torch_loss(); tl.backward()
+        grad_error = max(float(np.max(np.abs(g - t.grad.numpy()))) for g, t in zip(npgrad, tp))
+        fd_error = 0.0
+        for which, flatindex in [(0, 0), (0, params[0].size-1), (1, 0), (2, 0)]:
+            h = 1e-5
+            params[which].flat[flatindex] += h
+            lp = forward(x, y, *params, v, activation)[-1][0]
+            params[which].flat[flatindex] -= 2*h
+            lm = forward(x, y, *params, v, activation)[-1][0]
+            params[which].flat[flatindex] += h
+            fd_error = max(fd_error, abs((lp-lm)/(2*h) - npgrad[which].flat[flatindex]))
+        optim = torch.optim.Adam(tp, lr=0.001, betas=(0.9, 0.999), eps=1e-8)
+        first, second = [[np.zeros_like(a) for a in params] for _ in range(2)]
+        max_step_error = 0.0
+        for step in range(1, 33):
+            ng, _ = gradients(x, y, *params, v, activation)
+            adam_update(params, ng, first, second, step, [0.001]*3, [1e-8]*3)
+            optim.zero_grad(); torch_loss().backward(); optim.step()
+            max_step_error = max(max_step_error, max(float(np.max(np.abs(a - t.detach().numpy()))) for a, t in zip(params, tp)))
+        checks[model] = {"gradient_max_absolute_error": grad_error, "central_difference_max_absolute_error": fd_error,
+                         "adam_32_step_max_parameter_error": max_step_error,
+                         "first_moment_max_error": max(float(np.max(np.abs(m-optim.state[t]["exp_avg"].numpy()))) for m,t in zip(first,tp)),
+                         "second_moment_max_error": max(float(np.max(np.abs(m-optim.state[t]["exp_avg_sq"].numpy()))) for m,t in zip(second,tp))}
+        assert grad_error < 1e-12 and fd_error < 1e-7 and max_step_error < 1e-11, checks[model]
+    return checks
+
+
+def summaries(out, rows):
+    final = [r for r in rows if r["step"] == 4000]
+    summary = []
+    for model in MODELS:
+        for dataset in DATASETS:
+            for gain in GAINS:
+                group = [r for r in final if r["model"] == model and r["dataset"] == dataset and r["gain"] == gain]
+                row = {"model": model, "dataset": dataset, "gain": gain, "seeds": len(group)}
+                for name in ["loss", "accuracy", "unit_mean_raw_max", "unit_mean_s", "unit_mean_median", "unit_mean_max_over_s", "unit_mean_centered_max_over_s", "unit_mean_pplus"]:
+                    values = [r[name] for r in group]
+                    row[name+"_mean"] = float(np.mean(values)); row[name+"_min"] = min(values); row[name+"_max"] = max(values)
+                summary.append(row)
+    write_csv(out / "shared_summary.csv", summary)
+    pairs=[]
+    for model in MODELS:
+        for dataset in DATASETS:
+            for seed in range(5):
+                g = {r["gain"]:r for r in final if r["model"]==model and r["dataset"]==dataset and r["seed"]==seed}
+                row={"model":model,"dataset":dataset,"seed":seed}
+                for name in ["loss","unit_mean_raw_max","unit_mean_s","unit_mean_median","unit_mean_max_over_s","unit_mean_centered_max_over_s","unit_mean_pplus"]:
+                    row[name+"_small_minus_large"]=g[0.1][name]-g[10.0][name]
+                    row[name+"_small_minus_reference"]=g[0.1][name]-g[1.0][name]
+                pairs.append(row)
+    write_csv(out / "shared_paired.csv", pairs)
+    return summary, pairs
+
+
+def plot_results(out, rows):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    fig, axes = plt.subplots(3, 3, figsize=(12, 10), constrained_layout=True)
+    colors = {"balanced_separable":"#2563eb", "rare_separable":"#ea580c", "random_labels":"#16a34a"}
+    metrics = ["unit_mean_raw_max", "unit_mean_max_over_s", "unit_mean_centered_max_over_s"]
+    labels = ["Raw hidden maximum", "Maximum / standard deviation", "(Maximum - median) / standard deviation"]
+    for i, model in enumerate(MODELS):
+        for j, metric in enumerate(metrics):
+            ax = axes[i,j]
+            for dataset in DATASETS:
+                values=[]
+                for seed in range(5):
+                    subset={r["gain"]:r[metric] for r in rows if r["model"]==model and r["dataset"]==dataset and r["seed"]==seed and r["step"]==4000}
+                    arr=[subset[g] for g in GAINS]; values.append(arr)
+                    ax.plot(GAINS,arr,color=colors[dataset],alpha=.18,linewidth=1)
+                ax.plot(GAINS,np.mean(values,axis=0),color=colors[dataset],marker="o",label=dataset.replace("_"," "))
+            ax.set_xscale("log"); ax.set_xticks(GAINS, ["0.1","1","10"]); ax.grid(alpha=.18)
+            ax.set_title(model+": "+labels[j],fontsize=10); ax.set_xlabel("Frozen readout multiplier")
+            if i==0 and j==0: ax.legend(fontsize=8)
+    fig.suptitle("Shared-input synthetic logistic models: 4,000 full-batch Adam steps\nFaint lines: paired seeds; solid: five-seed mean; ELU8 averages units within each seed",fontsize=12)
+    fig.savefig(out / "shared_shapes.png", dpi=150); plt.close(fig)
+
+
+def main():
+    parser=argparse.ArgumentParser(); parser.add_argument("--out",type=Path,default=Path("results/logistic_v_height_0929")); args=parser.parse_args()
+    out=args.out; out.mkdir(parents=True,exist_ok=True)
+    start=time.time()
+    design, config=make_design(out)
+    # Design is frozen on disk before audits or fitting; audits themselves train.
+    checks=audit_implementation(design)
+    all_unit,all_run=[],[]
+    for model in MODELS:
+        meta, ur, rr, states, errors=train_model(design,model)
+        all_unit.extend(ur); all_run.extend(rr)
+        np.savez_compressed(out/f"shared_states_{model}.npz",**states)
+        (out/f"shared_metadata_{model}.json").write_text(json.dumps(meta,indent=2)+"\n")
+        if model=="linear":
+            checks["linear_matched_effective_rate_all_steps_max_error"]=errors
+            assert max(errors.values())<1e-9,errors
+        print(model,"completed",round(time.time()-start,2),"s",flush=True)
+    write_csv(out/"shared_units.csv",all_unit); write_csv(out/"shared_runs.csv",all_run)
+    summaries(out,all_run); plot_results(out,all_run)
+    (out/"shared_checks.json").write_text(json.dumps(checks,indent=2)+"\n")
+    provenance={"python":platform.python_version(),"numpy":np.__version__,"code_sha256":digest(__file__),"git_hash":subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip(),
+                "elapsed_seconds":time.time()-start,"configuration_sha256":digest(out/"shared_config.json"),"design_sha256":digest(out/"shared_design.npz"),
+                "jobs":135,"linear_equivalence_control_jobs":45,"updates_per_job":4000,
+                "scope":"Synthetic deterministic controls only. No direct replication or causal identification in RL-MNIST."}
+    (out/"shared_provenance.json").write_text(json.dumps(provenance,indent=2)+"\n")
+    print(json.dumps({"runtime_seconds":provenance["elapsed_seconds"],"checks":checks},indent=2),flush=True)
+
+
+if __name__=="__main__": main()
