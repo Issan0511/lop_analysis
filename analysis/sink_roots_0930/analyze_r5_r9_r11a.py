@@ -169,7 +169,9 @@ def r11a():
                         continue
                     P = float(np.median(m[ti, i200][sel] - m[ti, i0][sel]))
                     gam = (float(a["s_p_old"][ti, i0]) - 0.1) / 0.9
-                    Aold = float(np.median(a["u_A_old"][ti, i0][sel])) if "u_A_old" in a.files else np.nan
+                    # u_A_old exists only for tasks with a previous labeling (task >= 2): its row 0 is task 2
+                    off = m.shape[0] - a["u_A_old"].shape[0] if "u_A_old" in a.files else 0
+                    Aold = float(np.median(a["u_A_old"][ti - off, i0][sel])) if "u_A_old" in a.files else np.nan
                     pairs.append((tau, t, P, gam, Aold))
                     out.append({"act": act, "seed": s, "tau": tau, "task": t, "push_med": P, "gamma_hat": gam,
                                 "A_old_med": Aold})
