@@ -7,7 +7,7 @@
 A job starts only when its dependency file exists; `results/sink_roots_0930/STOP` stops new starts.
 Finished jobs (their `done` file exists) are skipped, so a relaunch resumes the queue.
 """
-import argparse, json, subprocess, sys, time
+import argparse, json, os, subprocess, sys, time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -16,6 +16,23 @@ RES = ROOT / "results" / "sink_roots_0930"
 STOP = RES / "STOP"
 LOG = RES / "launch_log.jsonl"
 MAX_ALL, MAX_R7 = 10, 7
+CAPS = RES / "caps.json"          # {"all": n, "r7": n} read every loop, so the caps can change mid-queue
+
+
+def alive(pid):
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def caps():
+    try:
+        c = json.loads(CAPS.read_text())
+        return int(c["all"]), int(c["r7"])
+    except Exception:
+        return MAX_ALL, MAX_R7
 ENG = [sys.executable, str(ROOT / "src" / "sink_roots_mnist_0930.py")]
 R7 = [sys.executable, str(ROOT / "src" / "postfit_elu_cifar_0924.py")]
 ACTS = ["ELU", "GELU", "SILU", "LR"]
@@ -123,22 +140,41 @@ def main():
     RES.mkdir(parents=True, exist_ok=True)
     (RAW / "logs").mkdir(parents=True, exist_ok=True)
     running = {}
+    # adopt jobs a previous launcher started (out/.running holds the pid)
+    for j in list(J):
+        lock = Path(j["out"]) / ".running"
+        if lock.exists():
+            pid = int(lock.read_text().split()[0])
+            if alive(pid):
+                running[j["name"]] = (pid, j, time.time(), None)
+                J.remove(j)
+            else:
+                lock.unlink()
+    print(f"adopted {len(running)} running jobs; {len(J)} to start", flush=True)
     while J or running:
         for name, (p, j, t0, fh) in list(running.items()):
-            rc = p.poll()
+            if fh is None:
+                rc = None if alive(p) else (0 if Path(j["done"]).exists() else -1)
+            else:
+                rc = p.poll()
             if rc is not None:
-                fh.close()
+                if fh is not None:
+                    fh.close()
+                lock = Path(j["out"]) / ".running"
+                if lock.exists():
+                    lock.unlink()
                 with LOG.open("a") as f:
                     f.write(json.dumps({"name": name, "rc": rc, "start": t0, "end": time.time(),
                                         "cmd": j["cmd"]}) + "\n")
                 del running[name]
         if not STOP.exists():
+            max_all, max_r7 = caps()
             for j in list(J):
                 n_all = len(running)
                 n_r7 = sum(1 for v in running.values() if v[1]["group"] == "r7")
                 mn_left = any(x["group"] == "mnist" for x in J)
-                cap_r7 = MAX_R7 if mn_left else MAX_ALL
-                if n_all >= MAX_ALL:
+                cap_r7 = max_r7 if mn_left else max_all
+                if n_all >= max_all:
                     break
                 if j["group"] == "r7" and n_r7 >= cap_r7:
                     continue
@@ -148,6 +184,7 @@ def main():
                 fh = open(RAW / "logs" / f"{j['name']}.log", "w")
                 p = subprocess.Popen(j["cmd"], stdout=fh, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
                                      cwd=ROOT)
+                (Path(j["out"]) / ".running").write_text(f"{p.pid}\n")
                 running[j["name"]] = (p, j, time.time(), fh)
                 J.remove(j)
         elif not running:
