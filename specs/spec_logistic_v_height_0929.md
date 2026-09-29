@@ -26,6 +26,12 @@ Independent worker owns a bounded matrix using fixed paired seeds 0..4, readout 
 
 No claim that a synthetic effect reproduces the RL-MNIST mechanism. Failure to reproduce normalized-tail inflation is an informative result. New noise is not needed for the primary deterministic runs; no claim that noise is unnecessary in the actual network follows.
 
+## Source/theory-informed supplement (before scalar sweeps)
+
+The saved-data audit established that the actual intervention retains Adam moments and raises or lowers an already-existing upper tail. Add scalar warm-start tests: pretrain v=1 for 4000 updates, then multiply v by .1,1,10 and continue 20000 updates with retained, reset, or scale-adjusted moments. The separable scalar model should have strictly increasing z, so it cannot reproduce a falling preactivation after raising v. This is a limitation test, not a claim of equivalence to RL-MNIST.
+
+Add a finite-optimum logistic control with soft target q=.8 (equivalently contradictory binary labels at the same covariate), whose unique margin is log(4). Verify analytically and numerically that a readout gain change can cause both upward and downward movement here. Use GD for convergence checking and default Adam for finite-horizon response; do not assume constant-rate Adam converges exactly. This extension was chosen from source/theory inspection before viewing the expanded outputs, not from fitting their results.
+
 ## C. Existing RL-MNIST records
 
 Read only saved vfreeze results and scripts; audit v definitions, optimizer settings, measurement windows, and availability of parameters, errors, and Adam moments. Where raw data permit, independently reproduce the 2-seed summaries. Separate missing measurements from negative results. This is post-hoc validation of already published observations.
