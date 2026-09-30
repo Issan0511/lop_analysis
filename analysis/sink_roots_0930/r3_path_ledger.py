@@ -55,6 +55,7 @@ def main():
          "cos_mu | cos_w median | test n (both cos >= 0.8) within 0.2 | |dw|/|w0| median | cos(dw,dmu) med | cos(w0,dmu) med"]
     out = {}
     agg = {"task": [], "all": []}
+    agg_all = {}
     for fn in sorted(glob.glob(str(RAW / "ledger_ELU_std_s*.npz"))):
         seed = int(re.search(r"_s(\d+)\.npz", fn).group(1))
         d = np.load(fn); task, W, bb, mu, k2 = d["task"], d["W2"], d["b2"], d["mu2"], d["k2"]
@@ -72,10 +73,17 @@ def main():
                      f"{ok.sum()} {np.mean(within[ok]) if ok.any() else float('nan'):.2f} | {np.median(r['rel_dw']):.2f} | {np.median(r['cos_dw_dmu']):+.2f} | {np.median(r['cos_w0_dmu']):+.2f}")
             out[f"s{seed}_{name}"] = {k: (v.tolist() if isinstance(v, np.ndarray) else v) for k, v in r.items()}
             agg["all" if name == "tasks 1-3" else "task"].append((ok.sum(), within[ok].sum() if ok.any() else 0))
+            fin = np.isfinite(r["share"])                            # descriptive, outside the registration: every unit-window
+            agg_all.setdefault("all" if name == "tasks 1-3" else "task", []).append(
+                (fin.sum(), within[fin].sum(), np.abs(r["share"] - r["igdf"])[fin]))
     for key, v in agg.items():
         n = sum(a for a, _ in v); w = sum(b for _, b in v)
         L.append(f"\nregistered test ({'each task' if key == 'task' else 'tasks 1-3 window'}): unit-windows with both cos >= 0.8: {n}; "
                  f"|share - int g df| <= 0.2 in {w} ({w / n if n else float('nan'):.2f})")
+    for key, v in agg_all.items():
+        n = sum(a for a, _, _ in v); w = sum(b for _, b, _ in v); dd = np.concatenate([c for _, _, c in v])
+        L.append(f"[descriptive, outside the registration] {'each task' if key == 'task' else 'tasks 1-3 window'}: all unit-windows {n}; "
+                 f"|share - int g df| <= 0.2 in {w} ({w / n if n else float('nan'):.2f}); median |share - int g df| {np.median(dd):.2f}")
     txt = "\n".join(L); print(txt)
     (RES / "round3_R1p_path_ledger.txt").write_text(txt + "\n")
     (RES / "round3_R1p_path_ledger.json").write_text(json.dumps(out))
