@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """sink_roots_0930 round 2 (spec_sink_roots_0930_round2.md): one queue for the 10 requests.
 A job starts when its dependencies' `.done` markers exist and the number of my experiment processes on the machine
-(python processes running a script under this worktree's src/, i.e. R7, round 1b and round 2) is below the budget
+(python processes running a script under this worktree's src/, i.e. R7, round 1b and round 2; paused ones not counted) is below the budget
 `total` of results/sink_roots_0930/caps_round2.json (read every loop).  `.done` is written on rc 0.
 results/sink_roots_0930/STOP_round2 stops new starts."""
 import json, os, subprocess, sys, time
@@ -38,7 +38,12 @@ def my_procs():
         except OSError:
             continue
         if args and b"python" in args[0] and any(MARK.encode() in x for x in args[1:3]):
-            n += 1
+            try:
+                state = (p / "stat").read_text().rsplit(")", 1)[1].split()[0]
+            except OSError:
+                continue
+            if state not in ("T", "t"):              # a job paused with SIGSTOP does not use a core
+                n += 1
     return n
 
 
