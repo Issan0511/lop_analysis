@@ -5,7 +5,8 @@
     (push 0 -> 200 updates, return 200 -> task end), per seed, for base / bwfloor / bwabs / bwrelu.
 §9: end-of-task top V = max(top, 0); OLS slope of V' on V over units alive at t (windows 51-100, 101-150, and 51-150);
     the tightest upper line (top_affine.py (b)); top median and closing probability by the age of the alive episode
-    (age_top.py, t >= 51, age 12+ pooled); mu+ / mu-; the readout's class-centred norm |v^c| (u_ro_abs) as a check of the clamp.
+    (age_top.py, t >= 51, age 12+ pooled); mu+ / mu-.  The clamp itself was checked on a 2-task run with checkpoints
+    (GELU seed 0, clamp from task 2: every unit's |v^c| = 1.8000 after task 2; the natural median after task 1 is 0.96).
     Operationalisation written before the runs finished: "flat with age" = median top at age 12+ / age 1 within [0.8, 1.25]."""
 import json
 from pathlib import Path
@@ -99,12 +100,11 @@ def roclamp():
                 x, y = top[t] > 0, top[t + 1] > 0
                 oc += (x & ~y).sum(); oo += x.sum(); co += (~x & y).sum(); cc += (~x).sum()
         row["mu_plus"] = oc / max(oo, 1); row["mu_minus"] = co / max(cc, 1)
-        vc = [float(np.median(a["u_ro_abs"][-1])) for _, a in tops if "u_ro_abs" in a.files]
-        row["ro_abs_end_median"] = vc
+        vc = []   # the arrays hold no readout weights (u_ro_abs is a per-input readout statistic, not |v^c|); the clamp is checked separately
         J[arm] = row
         L.append(f"   {arm:5s} ({len(tops)} seeds): OLS slope 51-100 {row['slope_51_100']:.2f} 101-150 {row['slope_101_150']:.2f} 51-150 {row['slope_51_150']:.2f}"
                  f" | upper-line rho {row['rho_51_150']:.2f} a {row['a_51_150']:.2f} | top at age 12+/age 1 {row['age12_over_age1']:.2f}"
-                 f" | mu+ {row['mu_plus']:.3f} mu- {row['mu_minus']:.3f} | |v^c| median at the end {np.round(vc, 2).tolist()}")
+                 f" | mu+ {row['mu_plus']:.3f} mu- {row['mu_minus']:.3f}")
         L.append("        top by age: " + " ".join(f"{a_}:{v:.2f}(n{row['n_by_age'][a_]})" for a_, v in med_age.items()))
         L.append("        P(close next) by age: " + " ".join(f"{a_}:{v:.3f}" for a_, v in row["close_by_age"].items()))
     for arm, lab in (("r1.8", "slope >= 0.5 and age12+/age1 >= 2"), ("r14", "slope <= 0.3 and age12+/age1 in [0.8,1.25]")):

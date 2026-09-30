@@ -1,0 +1,22 @@
+## §1 R3prime_bwrelu: survivors, tasks 5-30 (ratio of sums; f_top = -sum dtop_R / sum dtop_P)
+   GELU base    : ratio(surv) 0.376 0.373 0.352 | f_top 0.924 0.936 0.944
+   GELU bwfloor : ratio(surv) -0.231 -0.128 -0.239 | f_top 1.004 0.967 0.970
+   GELU bwabs   : ratio(surv) 0.791 0.780 0.784 | f_top 0.976 0.983 0.975
+   GELU bwrelu  : ratio(surv) 0.473 0.479 0.432 | f_top 0.965 0.960 0.915
+   SILU base    : ratio(surv) 0.521 0.530 0.518 | f_top 0.939 0.954 0.940
+   SILU bwfloor : ratio(surv) -0.115 -0.079 -0.228 | f_top 1.029 1.048 1.029
+   SILU bwabs   : ratio(surv) 0.896 0.906 0.906 | f_top 1.013 1.013 1.012
+   SILU bwrelu  : ratio(surv) 0.499 0.509 0.493 | f_top 0.976 0.951 0.965
+
+## §9 R3_readout_scale_clamp (GELU, clamp of |v^c| from task 51)
+   none  (2 seeds): OLS slope 51-100 0.17 101-150 0.24 51-150 0.20 | upper-line rho 0.22 a 2.43 | top at age 12+/age 1 1.08 | mu+ 0.273 mu- 0.158
+        top by age: 1:3.66(n1981) 2:3.55(n1423) 3:3.55(n1042) 4:3.72(n736) 5:3.87(n537) 6:3.38(n394) 7:3.78(n295) 8:3.58(n227) 9:3.55(n174) 10:4.64(n123) 11:3.79(n94) 12:3.97(n374)
+        P(close next) by age: 1:0.287 2:0.272 3:0.296 4:0.280 5:0.264 6:0.263 7:0.242 8:0.243 9:0.292 10:0.254 11:0.245 12:0.195
+   r1.8  (2 seeds): OLS slope 51-100 0.43 101-150 0.45 51-150 0.44 | upper-line rho 0.37 a 4.84 | top at age 12+/age 1 1.04 | mu+ 0.143 mu- 0.165
+        top by age: 1:9.17(n1537) 2:8.14(n1244) 3:7.88(n958) 4:8.38(n758) 5:8.63(n609) 6:8.50(n495) 7:8.14(n420) 8:8.81(n364) 9:8.10(n317) 10:9.14(n281) 11:9.28(n253) 12:9.57(n3410)
+        P(close next) by age: 1:0.195 2:0.232 3:0.213 4:0.202 5:0.184 6:0.159 7:0.135 8:0.130 9:0.111 10:0.101 11:0.126 12:0.055
+   r14   (2 seeds): OLS slope 51-100 0.20 101-150 0.17 51-150 0.19 | upper-line rho 0.18 a 2.34 | top at age 12+/age 1 0.81 | mu+ 0.270 mu- 0.139
+        top by age: 1:3.39(n1823) 2:3.09(n1272) 3:3.40(n922) 4:3.24(n664) 5:3.44(n509) 6:3.06(n383) 7:3.00(n280) 8:3.16(n224) 9:2.84(n166) 10:2.84(n126) 11:2.36(n108) 12:2.74(n361)
+        P(close next) by age: 1:0.302 2:0.279 3:0.285 4:0.239 5:0.250 6:0.278 7:0.201 8:0.266 9:0.239 10:0.160 11:0.333 12:0.203
+   prediction r1.8: slope >= 0.5 and age12+/age1 >= 2 -> MISS
+   prediction r14: slope <= 0.3 and age12+/age1 in [0.8,1.25] -> HIT
