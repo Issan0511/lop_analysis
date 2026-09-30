@@ -6,7 +6,7 @@ import numpy as np
 
 RAW = Path("/home/issan/Projects/obsidian-research-data/sink_roots_0930/mnist")
 RES = Path(__file__).resolve().parents[2] / "results" / "sink_roots_0930"
-ARMS = ["base", "b2_099", "b2_09", "T1k", "T16k", "adamreset", "vrestore", "ls01", "sq003", "bwfloor", "bwabs"]
+ARMS = ["base", "b2_099", "b2_09", "T1k", "T16k", "adamreset", "vrestore", "ls01", "sq003", "bwfloor", "bwabs", "bwrelu"]   # bwrelu: round 2
 ACTS = ["ELU", "GELU", "SILU", "LR"]
 SEEDS = [0, 1, 2]
 TASKS = range(5, 31)
