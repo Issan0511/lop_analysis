@@ -51,8 +51,24 @@
    silu N1200 s0 against SS_s0.npz: identical end tops for 0 of 200 tasks (first differing task 1)
 
 ## §10 S_small_checks (2): count map (tasks 51-100, units alive at the switch; push loss k_sw - k_mid = a_p k_sw + c_p; lift k_end - k_mid = a_g k_mid + c_g)
+      gelu lr 1e-3 run: open at the task end t1 1.00 t5 0.91 t10 0.73 t100 0.32 | first task with every unit closed None | accuracy t1 0.99 t10 0.37 t100 0.14
+      gelu lr 1e-3 run: open at the task end t1 1.00 t5 0.94 t10 0.72 t100 0.41 | first task with every unit closed None | accuracy t1 0.99 t10 0.38 t100 0.17
    gelu lr 1e-3  (2 runs, n 4104): a_p +0.60 c_p -0.65 | a_g -0.00 c_g -0.03 | alive k median (switch) 1.0
+      gelu lr 1e-2 run: open at the task end t1 0.20 t5 0.00 t10 0.00 t100 0.00 | first task with every unit closed 5 | accuracy t1 0.33 t10 0.11 t100 0.12
+      gelu lr 1e-2 run: open at the task end t1 0.27 t5 0.01 t10 0.01 t100 0.00 | first task with every unit closed 4 | accuracy t1 0.36 t10 0.10 t100 0.11
+   gelu lr 1e-2: too few alive units (0)
+      gelu lr 3e-2 run: open at the task end t1 0.03 t5 0.00 t10 0.00 t100 0.00 | first task with every unit closed 2 | accuracy t1 0.12 t10 0.10 t100 0.10
+      gelu lr 3e-2 run: open at the task end t1 0.00 t5 0.00 t10 0.00 t100 0.00 | first task with every unit closed 1 | accuracy t1 0.11 t10 0.10 t100 0.11
+   gelu lr 3e-2: too few alive units (0)
+      silu lr 1e-3 run: open at the task end t1 1.00 t5 0.99 t10 0.93 t100 0.54 | first task with every unit closed None | accuracy t1 0.97 t10 0.68 t100 0.22
+      silu lr 1e-3 run: open at the task end t1 1.00 t5 0.99 t10 0.90 t100 0.55 | first task with every unit closed None | accuracy t1 0.97 t10 0.69 t100 0.22
    silu lr 1e-3  (2 runs, n 6240): a_p +0.63 c_p -1.04 | a_g +0.01 c_g +0.03 | alive k median (switch) 2.0
+      silu lr 1e-2 run: open at the task end t1 0.34 t5 0.00 t10 0.03 t100 0.02 | first task with every unit closed 5 | accuracy t1 0.49 t10 0.11 t100 0.12
+      silu lr 1e-2 run: open at the task end t1 0.47 t5 0.04 t10 0.05 t100 0.02 | first task with every unit closed 7 | accuracy t1 0.64 t10 0.11 t100 0.12
+   silu lr 1e-2  (2 runs, n 82): a_p +1.04 c_p -0.28 | a_g -0.21 c_g -0.00 | alive k median (switch) 1.0
+      silu lr 3e-2 run: open at the task end t1 0.01 t5 0.00 t10 0.00 t100 0.00 | first task with every unit closed 2 | accuracy t1 0.11 t10 0.10 t100 0.11
+      silu lr 3e-2 run: open at the task end t1 0.04 t5 0.00 t10 0.01 t100 0.00 | first task with every unit closed 2 | accuracy t1 0.12 t10 0.10 t100 0.10
+   silu lr 3e-2: too few alive units (0)
 
 ## §10 S_small_checks (1): codex_rerun (full-batch GD 0.01 rows: crosses z_c but max top < 0?)
    GELU start -1.5 seed 0: first step top>z_c 12 | first top>0 21 | max top 0.506 | final -0.14

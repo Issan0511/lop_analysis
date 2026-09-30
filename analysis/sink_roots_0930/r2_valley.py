@@ -136,6 +136,11 @@ def lr_ladder():
             a, b, c = d["sw_k"][50:100].astype(float), d["mid_k"][50:100].astype(float), d["end_k"][50:100].astype(float)
             al = a > 0; ks += list(a[al]); km += list(b[al]); ke += list(c[al])
         ks, km, ke = map(np.array, (ks, km, ke))
+        for d in runs[(act, lr)]:                      # survival: the fraction of units open at the task end, and accuracy
+            al = (d["end_top"] > 0).mean(1); acc = d["acc_end"]
+            first = next((t + 1 for t in range(len(al)) if al[t] == 0), None)
+            L.append(f"      {act} lr {lr} run: open at the task end t1 {al[0]:.2f} t5 {al[4]:.2f} t10 {al[9]:.2f} t100 {al[99]:.2f} | "
+                     f"first task with every unit closed {first} | accuracy t1 {acc[0]:.2f} t10 {acc[9]:.2f} t100 {acc[99]:.2f}")
         if len(ks) < 10:
             L.append(f"   {act} lr {lr}: too few alive units ({len(ks)})"); continue
         ap, cp = np.polyfit(ks, ks - km, 1); ag, cg = np.polyfit(km, ke - km, 1)
