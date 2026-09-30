@@ -70,6 +70,11 @@ def main():
                 if len(sel) >= 20:
                     row.append(f"start {e0 + 1}-{e0 + 100}: S_C(10) {km_at([l for l, _ in sel], [ev for _, ev in sel], 10):.3f} (n {len(sel)})")
             L.append(f"   {'touching' if touched else 'not touching'} the wall: " + " | ".join(row))
+            if not touched and len(row) >= 3:                       # (c): rank correlation of the start bin and S_C(10)
+                sc = [float(x.split("S_C(10) ")[1].split(" ")[0]) for x in row]
+                rk = lambda v: np.argsort(np.argsort(v)).astype(float)
+                rho = float(np.corrcoef(rk(np.arange(len(sc))), rk(np.array(sc)))[0, 1])
+                L.append(f"      (c) Spearman(start bin, S_C(10)) over {len(sc)} bins {rho:+.2f}; first bin {sc[0]:.3f}, last bin {sc[-1]:.3f}")
         old = [(l, ev) for u, st, l, ev, mn in P if l >= 100]
         at_risk = sum(l - 100 for l, ev in old) + sum(1 for l, ev in old if ev)
         events = sum(1 for l, ev in old if ev)
