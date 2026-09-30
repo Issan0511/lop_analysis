@@ -1,0 +1,82 @@
+## RR-1 replay_factors (actual labels, full arm, 200 updates)
+   L2_ELU_K10_s0_t002: replay fidelity 0.0e+00 | t1: share real 0.770 A6B 0.816 (d -0.046) | own real/A6B 0.88 up 0.67 | t2: share real 0.733 A6B 0.780 (d -0.047) | own real/A6B 0.98 up 0.75 | t3: share real 0.650 A6B 0.723 (d -0.073) | own real/A6B 1.01 up 0.72 | P1-1 MISS
+      P1-2 corr(path upstream, uniform-shift predictor) tau50 +0.955 tau200 +0.953 | P1-3 C(1) 0.030 C(25) 0.070 drop -1.38 | P1-4 mean |ratio - G C| / ratio over 11-50 updates 6.17 | G(1)->G(50) 0.577->0.273 E(1)->E(50) 0.194->0.017
+   L2_ELU_K10_s0_t003: replay fidelity 0.0e+00 | t1: share real 0.673 A6B 0.667 (d +0.007) | own real/A6B 1.11 up 1.14 | t2: share real 0.655 A6B 0.648 (d +0.007) | own real/A6B 0.96 up 0.99 | t3: share real 0.646 A6B 0.634 (d +0.011) | own real/A6B 0.96 up 1.01 | P1-1 HIT
+      P1-2 corr(path upstream, uniform-shift predictor) tau50 +0.984 tau200 +0.983 | P1-3 C(1) 0.026 C(25) 0.082 drop -2.21 | P1-4 mean |ratio - G C| / ratio over 11-50 updates 4.04 | G(1)->G(50) 0.416->0.214 E(1)->E(50) 0.211->0.010
+   L2_ELU_K10_s1_t002: replay fidelity 0.0e+00 | t1: share real 0.866 A6B 0.808 (d +0.058) | own real/A6B 1.12 up 1.73 | t2: share real 0.847 A6B 0.806 (d +0.041) | own real/A6B 1.00 up 1.33 | t3: share real 0.829 A6B 0.790 (d +0.040) | own real/A6B 1.05 up 1.36 | P1-1 MISS
+      P1-2 corr(path upstream, uniform-shift predictor) tau50 +0.976 tau200 +0.976 | P1-3 C(1) 0.028 C(25) 0.106 drop -2.76 | P1-4 mean |ratio - G C| / ratio over 11-50 updates 13.62 | G(1)->G(50) 0.619->0.231 E(1)->E(50) 0.209->0.016
+   L2_ELU_K10_s1_t003: replay fidelity 0.0e+00 | t1: share real 0.638 A6B 0.552 (d +0.087) | own real/A6B 1.14 up 1.63 | t2: share real 0.617 A6B 0.503 (d +0.114) | own real/A6B 1.05 up 1.66 | t3: share real 0.566 A6B 0.469 (d +0.097) | own real/A6B 1.08 up 1.60 | P1-1 MISS
+      P1-2 corr(path upstream, uniform-shift predictor) tau50 +0.981 tau200 +0.981 | P1-3 C(1) 0.032 C(25) 0.077 drop -1.43 | P1-4 mean |ratio - G C| / ratio over 11-50 updates 4.34 | G(1)->G(50) 0.403->0.191 E(1)->E(50) 0.206->0.018
+   L2_LR_K10_s0_t002: replay fidelity 0.0e+00 | t1: share real 0.828 A6B 0.826 (d +0.002) | own real/A6B 0.78 up 0.79 | t2: share real 0.810 A6B 0.814 (d -0.005) | own real/A6B 0.90 up 0.87 | t3: share real 0.812 A6B 0.811 (d +0.001) | own real/A6B 0.97 up 0.97 | P1-1 MISS
+      P1-2 corr(path upstream, uniform-shift predictor) tau50 +0.946 tau200 +0.944 | P1-3 C(1) 0.056 C(25) 0.067 drop -0.18 | P1-4 mean |ratio - G C| / ratio over 11-50 updates 8.67 | G(1)->G(50) 0.466->0.140 E(1)->E(50) 0.204->0.024
+   L2_SILU_K10_s0_t002: replay fidelity 0.0e+00 | t1: share real 0.923 A6B 0.916 (d +0.007) | own real/A6B 0.82 up 0.89 | t2: share real 0.916 A6B 0.911 (d +0.005) | own real/A6B 0.86 up 0.91 | t3: share real 0.914 A6B 0.910 (d +0.004) | own real/A6B 0.92 up 0.97 | P1-1 MISS
+      P1-2 corr(path upstream, uniform-shift predictor) tau50 +0.972 tau200 +0.971 | P1-3 C(1) 0.072 C(25) 0.139 drop -0.93 | P1-4 mean |ratio - G C| / ratio over 11-50 updates 4.71 | G(1)->G(50) 0.488->-0.002 E(1)->E(50) 0.205->0.055
+
+## RR-2 gate_frozen_backward (16 label draws, 200 updates; F1 ledger, label means)
+   L2_ELU_K10_s0_t002: up share tau50 nat 0.336 frozen 0.407 | tau200 nat 0.335 frozen 0.411 | up amount frozen/nat 1.44 | dm1 median nat -1.686 frozen -1.492 (frozen - nat +0.194) | dm2 down nat 1.000 frozen 1.000
+   L2_ELU_K10_s0_t003: up share tau50 nat 0.481 frozen 0.511 | tau200 nat 0.477 frozen 0.510 | up amount frozen/nat 1.19 | dm1 median nat -2.102 frozen -1.605 (frozen - nat +0.497) | dm2 down nat 1.000 frozen 1.000
+   L2_ELU_K10_s1_t002: up share tau50 nat 0.591 frozen 0.750 | tau200 nat 0.583 frozen 0.747 | up amount frozen/nat 2.08 | dm1 median nat -1.838 frozen -1.405 (frozen - nat +0.434) | dm2 down nat 1.000 frozen 1.000
+   L2_ELU_K10_s1_t003: up share tau50 nat 0.465 frozen 0.498 | tau200 nat 0.461 frozen 0.496 | up amount frozen/nat 1.20 | dm1 median nat -2.009 frozen -1.756 (frozen - nat +0.253) | dm2 down nat 1.000 frozen 1.000
+
+## RR-3 center_input_full (actual labels, 200 updates; the original arms from round 1's replay)
+   L2_ELU_K10_s0_t002: push median orig full -3.535 centred full -2.977 (ratio 0.84) | down orig full 1.00 orig up 0.62 centred full 0.98 centred up 0.62
+   L2_ELU_K10_s0_t003: push median orig full -5.996 centred full -5.050 (ratio 0.84) | down orig full 1.00 orig up 0.77 centred full 0.98 centred up 0.77
+   L2_ELU_K10_s0_t004: push median orig full -7.783 centred full -6.529 (ratio 0.84) | down orig full 1.00 orig up 0.90 centred full 1.00 centred up 0.90
+   L2_ELU_K10_s0_t006: push median orig full -13.746 centred full -11.111 (ratio 0.81) | down orig full 1.00 orig up 0.96 centred full 1.00 centred up 0.96
+   L2_ELU_K10_s1_t002: push median orig full -3.937 centred full -4.031 (ratio 1.02) | down orig full 0.99 orig up 0.60 centred full 0.98 centred up 0.60
+   L2_ELU_K10_s1_t003: push median orig full -4.990 centred full -3.797 (ratio 0.76) | down orig full 0.99 orig up 0.71 centred full 0.94 centred up 0.71
+   L2_ELU_K10_s1_t004: push median orig full -6.618 centred full -5.355 (ratio 0.81) | down orig full 1.00 orig up 0.76 centred full 0.99 centred up 0.76
+   L2_ELU_K10_s1_t006: push median orig full -11.544 centred full -8.807 (ratio 0.76) | down orig full 1.00 orig up 0.97 centred full 1.00 centred up 0.97
+   L2_LR_K10_s0_t002: push median orig full -1.818 centred full -2.758 (ratio 1.52) | down orig full 0.99 orig up 0.99 centred full 1.00 centred up 0.99
+   L2_LR_K10_s0_t003: push median orig full -3.301 centred full -3.935 (ratio 1.19) | down orig full 1.00 orig up 0.97 centred full 1.00 centred up 0.97
+   L2_LR_K10_s0_t004: push median orig full -3.933 centred full -3.456 (ratio 0.88) | down orig full 1.00 orig up 0.94 centred full 1.00 centred up 0.92
+   L2_LR_K10_s0_t006: push median orig full -5.366 centred full -4.538 (ratio 0.85) | down orig full 1.00 orig up 0.98 centred full 1.00 centred up 0.98
+   L2_LR_K10_s1_t002: push median orig full -2.323 centred full -4.191 (ratio 1.80) | down orig full 1.00 orig up 1.00 centred full 1.00 centred up 1.00
+   L2_LR_K10_s1_t003: push median orig full -2.684 centred full -2.805 (ratio 1.05) | down orig full 1.00 orig up 0.95 centred full 1.00 centred up 0.95
+   L2_LR_K10_s1_t004: push median orig full -3.354 centred full -2.672 (ratio 0.80) | down orig full 1.00 orig up 0.94 centred full 1.00 centred up 0.94
+   L2_LR_K10_s1_t006: push median orig full -3.691 centred full -2.795 (ratio 0.76) | down orig full 1.00 orig up 0.96 centred full 1.00 centred up 0.96
+   L2_SILU_K10_s0_t002: push median orig full -1.917 centred full -2.863 (ratio 1.49) | down orig full 1.00 orig up 1.00 centred full 1.00 centred up 1.00
+   L2_SILU_K10_s0_t003: push median orig full -2.975 centred full -4.248 (ratio 1.43) | down orig full 1.00 orig up 0.98 centred full 0.99 centred up 0.98
+   L2_SILU_K10_s0_t004: push median orig full -10.494 centred full -8.735 (ratio 0.83) | down orig full 1.00 orig up 0.98 centred full 1.00 centred up 0.98
+   L2_SILU_K10_s0_t006: push median orig full -9.837 centred full -9.052 (ratio 0.92) | down orig full 1.00 orig up 1.00 centred full 1.00 centred up 1.00
+   L2_SILU_K10_s1_t002: push median orig full -2.268 centred full -3.469 (ratio 1.53) | down orig full 1.00 orig up 1.00 centred full 1.00 centred up 1.00
+   L2_SILU_K10_s1_t003: push median orig full -3.048 centred full -4.193 (ratio 1.38) | down orig full 1.00 orig up 1.00 centred full 1.00 centred up 1.00
+   L2_SILU_K10_s1_t004: push median orig full -9.932 centred full -9.084 (ratio 0.91) | down orig full 1.00 orig up 0.98 centred full 1.00 centred up 0.98
+   L2_SILU_K10_s1_t006: push median orig full -9.330 centred full -8.432 (ratio 0.90) | down orig full 1.00 orig up 1.00 centred full 1.00 centred up 1.00
+
+## RR-4 refit_2layer (12 label draws, 6,000 updates; means over draws)
+   L2_ELU_K10_s0_t002: end S2>0 / S2oh>0 / acc vc 0.545/0.521/0.28 | l2 0.812/0.837/0.91 | full 0.999/0.999/1.00 | full at acc 0.28 (update 825): S2oh>0 1.000
+   L2_ELU_K10_s0_t003: end S2>0 / S2oh>0 / acc vc 0.549/0.547/0.29 | l2 0.935/0.943/0.89 | full 0.998/0.998/1.00 | full at acc 0.29 (update 650): S2oh>0 1.000
+   L2_ELU_K10_s0_t006: end S2>0 / S2oh>0 / acc vc 0.883/0.862/0.30 | l2 0.988/0.988/0.74 | full 0.977/0.975/0.96 | full at acc 0.29 (update 1525): S2oh>0 0.977
+   L2_LR_K10_s0_t002: end S2>0 / S2oh>0 / acc vc 0.547/0.548/0.26 | l2 0.930/0.937/0.96 | full 1.000/1.000/1.00 | full at acc 0.25 (update 500): S2oh>0 0.937
+   L2_LR_K10_s0_t003: end S2>0 / S2oh>0 / acc vc 0.588/0.593/0.28 | l2 0.936/0.934/0.82 | full 1.000/1.000/1.00 | full at acc 0.28 (update 425): S2oh>0 0.790
+   L2_LR_K10_s0_t006: end S2>0 / S2oh>0 / acc vc 0.775/0.755/0.29 | l2 0.771/0.844/0.51 | full 0.993/0.997/0.98 | full at acc 0.29 (update 600): S2oh>0 0.614
+   L2_SILU_K10_s0_t002: end S2>0 / S2oh>0 / acc vc 0.505/0.499/0.25 | l2 0.983/0.983/0.99 | full 0.998/0.998/1.00 | full at acc 0.25 (update 325): S2oh>0 0.988
+   L2_SILU_K10_s0_t003: end S2>0 / S2oh>0 / acc vc 0.565/0.559/0.26 | l2 0.950/0.957/0.97 | full 0.982/0.982/1.00 | full at acc 0.26 (update 350): S2oh>0 0.928
+   L2_SILU_K10_s0_t006: end S2>0 / S2oh>0 / acc vc 0.896/0.805/0.19 | l2 0.900/0.893/0.91 | full 0.648/0.644/0.99 | full at acc 0.19 (update 500): S2oh>0 0.951
+
+## G6 cap_shrink_ledger (replay_geom --arm wcap + v_top ledger, ELU, tasks 5-30; medians over units, means over tasks)
+   ELU_s0: -sum ln f per task 0.114 | dm shrink +0.511 Adam -0.696 sum -0.157 | dv_top Adam +0.439 shrink -1.058 sum -0.673 | shrink events per unit-task 2603
+   ELU_s1: -sum ln f per task 0.113 | dm shrink +0.497 Adam -0.698 sum -0.190 | dv_top Adam +0.523 shrink -1.070 sum -0.613 | shrink events per unit-task 2598
+   ELU_s2: -sum ln f per task 0.113 | dm shrink +0.491 Adam -0.657 sum -0.138 | dv_top Adam +0.492 shrink -1.050 sum -0.630 | shrink events per unit-task 2609
+
+## K_sweep_label_luck (v4 GELU, tasks 51-100 switches; favourable = v_i.(e_y - p) > 0)
+   K 2: f-bar 0.499 | q1 0.514 vs (1-f)^k 0.501 (n 1869, d +0.013) q2 0.265 vs (1-f)^k 0.251 (n 889, d +0.015) q3 0.116 vs (1-f)^k 0.126 (n 467, d -0.010) q4 0.089 vs (1-f)^k 0.063 (n 337, d +0.026) | top input favourable 0.487 | mu+ (51-100) 0.334
+   K 5: f-bar 0.307 | q1 0.685 vs (1-f)^k 0.693 (n 2022, d -0.007) q2 0.458 vs (1-f)^k 0.480 (n 902, d -0.022) q3 0.375 vs (1-f)^k 0.332 (n 413, d +0.043) q4 0.261 vs (1-f)^k 0.230 (n 203, d +0.031) | top input favourable 0.285 | mu+ (51-100) 0.321
+   K10: f-bar 0.260 | q1 0.737 vs (1-f)^k 0.740 (n 2607, d -0.003) q2 0.551 vs (1-f)^k 0.547 (n 817, d +0.004) q3 0.398 vs (1-f)^k 0.404 (n 334, d -0.006) q4 0.293 vs (1-f)^k 0.299 (n 157, d -0.006) | top input favourable 0.231 | mu+ (51-100) 0.274
+   K20: f-bar 0.266 | q1 0.707 vs (1-f)^k 0.734 (n 3325, d -0.027) q2 0.555 vs (1-f)^k 0.539 (n 1035, d +0.016) q3 0.441 vs (1-f)^k 0.395 (n 331, d +0.046) q4 0.336 vs (1-f)^k 0.290 (n 128, d +0.046) | top input favourable 0.255 | mu+ (51-100) 0.167
+   (c) mu+ K20 > K10 > K2: 0.167 > 0.274 > 0.334 -> False
+
+## RR4 two-layer caps (2-layer ELU from task 5; |mu2| = norm of the mean layer-1 output, |w2| = median row norm, a2 = w2 . mu2_hat)
+   R9_V3rl2_ELU s0: |mu2| x5.73 (5->10), |w2| x1.46, a2/|w2| -0.096 -> -0.167 | dm2 per task: tasks 6-10 -8.165, tasks 6-20 -7.092
+   R9_V3rl2_ELU s1: |mu2| x6.41 (5->10), |w2| x1.55, a2/|w2| -0.099 -> -0.157 | dm2 per task: tasks 6-10 -7.122, tasks 6-20 -6.567
+   R9_V3rl2_ELU s2: |mu2| x5.98 (5->10), |w2| x1.51, a2/|w2| -0.119 -> -0.159 | dm2 per task: tasks 6-10 -8.059, tasks 6-20 -6.786
+   RR4tl_L1cap_ELU s0: |mu2| x2.76 (5->10), |w2| x1.57, a2/|w2| -0.096 -> -0.164 | dm2 per task: tasks 6-10 -3.420, tasks 6-20 -3.850
+   RR4tl_L1cap_ELU s1: |mu2| x3.15 (5->10), |w2| x1.63, a2/|w2| -0.099 -> -0.149 | dm2 per task: tasks 6-10 -3.650, tasks 6-20 -3.645
+   RR4tl_L1cap_ELU s2: |mu2| x3.05 (5->10), |w2| x1.59, a2/|w2| -0.119 -> -0.147 | dm2 per task: tasks 6-10 -3.093, tasks 6-20 -3.811
+   RR4tl_L2cap_ELU s0: |mu2| x4.87 (5->10), |w2| x0.99, a2/|w2| -0.096 -> -0.170 | dm2 per task: tasks 6-10 -4.722, tasks 6-20 -4.960
+   RR4tl_L2cap_ELU s1: |mu2| x4.97 (5->10), |w2| x1.00, a2/|w2| -0.099 -> -0.158 | dm2 per task: tasks 6-10 -3.498, tasks 6-20 -5.196
+   RR4tl_L2cap_ELU s2: |mu2| x5.34 (5->10), |w2| x1.00, a2/|w2| -0.119 -> -0.188 | dm2 per task: tasks 6-10 -5.225, tasks 6-20 -5.317
+   RR4tl_L12cap_ELU s0: |mu2| x2.23 (5->10), |w2| x1.00, a2/|w2| -0.096 -> -0.158 | dm2 per task: tasks 6-10 -1.428, tasks 6-20 -0.896
+   RR4tl_L12cap_ELU s1: |mu2| x2.05 (5->10), |w2| x1.00, a2/|w2| -0.099 -> -0.160 | dm2 per task: tasks 6-10 -0.932, tasks 6-20 -0.752
+   RR4tl_L12cap_ELU s2: |mu2| x2.08 (5->10), |w2| x1.00, a2/|w2| -0.119 -> -0.176 | dm2 per task: tasks 6-10 -1.111, tasks 6-20 -0.739

@@ -14,7 +14,9 @@ sys.path.insert(0, str(ROOT))
 from src import rlcifar_mlp_battle_0918 as B          # noqa: E402
 from src import pmnist_rlcifar_0907 as RC             # noqa: E402
 
-RAW = Path("/home/issan/Projects/obsidian-research-data/sink_roots_0930/r7")
+GPU = "--gpu" in sys.argv          # after the reboot: one R = 10 run per arm (r7gpu/<arm>/, all seeds in one per_task.csv)
+RAW = Path("/home/issan/Projects/obsidian-research-data/sink_roots_0930/" + ("r7gpu" if GPU else "r7"))
+TAG = "R7gpu" if GPU else "R7"
 RES = ROOT / "results" / "sink_roots_0930"
 SEEDS = list(range(10))
 ARMS = ["A", "F", "F99", "S"]
@@ -26,10 +28,10 @@ torch.set_num_threads(4)
 
 
 def per_task(arm, s):
-    f = RAW / arm / f"s{s}" / "per_task.csv"
-    if not f.exists():
+    f = RAW / arm / "per_task.csv" if GPU else RAW / arm / f"s{s}" / "per_task.csv"
+    if not f.exists() or (GPU and not (RAW / arm / "provenance.json").exists()):
         return None
-    return {int(r["task"]): r for r in csv.DictReader(open(f))}
+    return {int(r["task"]): r for r in csv.DictReader(open(f)) if not GPU or int(r["seed"]) == s}
 
 
 _cifar = None
@@ -39,7 +41,7 @@ def snap_stats(arm, s, t):
     """G2, Q2, |mu2|, V_Sigma(W1), |W1|^2 at the end of task t (float64 means)."""
     global _cifar
     _cifar = _cifar or RC.Cifar10()
-    out = RAW / arm / f"s{s}"
+    out = RAW / arm if GPU else RAW / arm / f"s{s}"
     if not B.snapshot_path(out, "ELU", "std", s, t).exists():
         return None
     z1, a1, z2, a2, logits, Y = B.replay(out, "ELU", "std", s, t, device=torch.device("cpu"), cifar=_cifar)
@@ -172,9 +174,9 @@ def main():
     for (arm, s, t), st in sorted(stats.items()):
         traj.append({"arm": arm, "seed": s, "task": t, "online": float(rows[(arm, s)][t]["online_acc"]), **st})
     if traj:
-        with open(RES / "R7_trajectories.csv", "w", newline="") as f:
+        with open(RES / f"{TAG}_trajectories.csv", "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=list(traj[0])); w.writeheader(); w.writerows(traj)
-    (RES / "R7_verdict.json").write_text(json.dumps(res, indent=1, default=str))
+    (RES / f"{TAG}_verdict.json").write_text(json.dumps(res, indent=1, default=str))
     print(json.dumps({k: v for k, v in res.items() if k != "U_s"}, indent=1, default=str)[:4000])
 
 
