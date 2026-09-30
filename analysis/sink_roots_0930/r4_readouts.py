@@ -90,7 +90,7 @@ def fmt(x):
 def main():
     L, J = [], {}
     groups = sorted({re.sub(r"_s\d$", "", Path(d).name) for d in glob.glob(str(RAW / "*_s[0-9]"))
-                     if re.match(r"(G1a|G1b|G1c|RR1|capL|G3tail|RR3bfloor|G2same|RR2noise|G4cap|BSD|CAPABS)_", Path(d).name)}
+                     if re.match(r"(G1a|G1b|G1c|RR1_|capL|G3tail|RR3bfloor|G2same|RR2noise|G4cap|BSD_|CAPABS)", Path(d).name)}
                     | {"R3_base_ELU", "R5_main_ELU", "R3_base_GELU", "R3_base_SILU", "R3_base_LR"})
     for gname in groups:
         runs = [(s, load(f"{gname}_s{s}")) for s in (0, 1, 2)]
