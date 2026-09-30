@@ -469,6 +469,7 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     last_task = task0 + cfg["tasks"] - 1
     y_first, r_ref, rescale_lambda, rr1_m5, rr1_s5 = None, None, None, None, None      # round 4
+    wcap2 = None                                                   # round 6 RR4: row caps of layer 2 (2-layer nets)
     mhat_run = X64.mean(0).float(); mhat_run = mhat_run / mhat_run.norm()
     gnoise = stream("noise_0930", seed) if cfg.get("noise_sigma") else None
     lit = (X.sum(0) > 0).float()                                   # pixels lit in some image of the subset
@@ -539,6 +540,8 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
             with torch.no_grad():                             # so that the median over images of z is at least bias_floor
                 zmed = (Xt64 @ P[0].double().T + P[1].double()).median(0).values
                 P[1].add_((cfg["bias_floor"] - zmed).clamp_min(0.0).float())
+        if cfg.get("wcap2_from") and task == cfg["wcap2_from"]:   # round 6 RR4: cap the layer-2 row norms at this task's start
+            wcap2 = P[2].detach().norm(dim=1).clone()
         if cfg.get("wcap_from") and task == cfg["wcap_from"]:     # round 1 R1: cap W1 row norms at this task's start
             W0 = P[0].detach()
             mhat = X64.mean(0).float(); mhat = mhat / mhat.norm()
@@ -626,6 +629,9 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
                         else:
                             npp = perp.norm(dim=1)
                             P[0].copy_(par[:, None] * mhat[None, :] + perp * torch.clamp(wcap / npp, max=1.0)[:, None])
+            if wcap2 is not None:
+                with torch.no_grad():
+                    P[2].mul_(torch.clamp(wcap2 / P[2].norm(dim=1), max=1.0)[:, None])
             if gnoise is not None and task >= cfg["noise_from_task"] and s + 1 > cfg["noise_from_step"]:
                 with torch.no_grad():                         # round 4 RR2: isotropic noise on the lit pixels' weights
                     P[0].add_(torch.randn(P[0].shape, generator=gnoise) * cfg["noise_sigma"] * lit[None, :])
@@ -804,6 +810,7 @@ def main():
     ap.add_argument("--noise-from-step", type=int, default=200)
     ap.add_argument("--bias-floor", type=float, default=-8.0, help="round 5 bias_shift_depth: the median z every unit is lifted to")
     ap.add_argument("--bias-floor-from", type=int, default=0, help="round 5: apply --bias-floor at the start of every task from this one")
+    ap.add_argument("--wcap2-from", type=int, default=0, help="round 6 RR4: cap layer 2's row norms (2-layer nets) from this task's start")
     ap.add_argument("--snap-before", type=int, nargs="*", default=[])
     ap.add_argument("--ckpt-after", type=int, nargs="*", default=[])
     ap.add_argument("--fork-ckpt", default=None)
@@ -825,7 +832,8 @@ def main():
            "stop": a.stop, "stop_at": a.stop_at, "stop_min": a.stop_min, "stop_every": a.stop_every,
            "same_labels": a.same_labels, "rescale_at": a.rescale_at, "rescale_ref": a.rescale_ref,
            "rr1": a.rr1, "rr1_from": a.rr1_from, "noise_sigma": a.noise_sigma, "noise_from_task": a.noise_from_task,
-           "noise_from_step": a.noise_from_step, "bias_floor": a.bias_floor, "bias_floor_from": a.bias_floor_from}
+           "noise_from_step": a.noise_from_step, "bias_floor": a.bias_floor, "bias_floor_from": a.bias_floor_from,
+           "wcap2_from": a.wcap2_from}
     fork = {"ckpt": a.fork_ckpt, "mode": a.fork_mode} if a.fork_ckpt else None
     out = Path(a.out) if a.out else ROOT / "results" / EXPERIMENT / "runs" / a.name
     run(cfg, out, fork)
