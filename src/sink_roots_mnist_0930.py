@@ -474,7 +474,17 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
                     opt.tm[i] = 0; opt.tv[i] = 0
         v_sw = [q.clone() for q in opt.v] if (cfg["vrestore"] and y_old is not None) else None
         if cfg.get("wcap_from") and task == cfg["wcap_from"]:     # round 1 R1: cap W1 row norms at this task's start
-            wcap = P[0].detach().norm(dim=1).clone()
+            W0 = P[0].detach()
+            mhat = X64.mean(0).float(); mhat = mhat / mhat.norm()
+            par0 = W0 @ mhat
+            if cfg.get("wcap_mode", "row") == "row":
+                wcap = W0.norm(dim=1).clone() * cfg.get("wcap_scale", 1.0)
+            elif cfg["wcap_mode"] == "par":                        # R1b-3a: cap only |w . mu_hat|
+                wcap = par0.abs().clone() * cfg.get("wcap_scale", 1.0)
+            elif cfg["wcap_mode"] == "perp":                       # R1b-3b: cap only |w - (w . mu_hat) mu_hat|
+                wcap = (W0 - par0[:, None] * mhat[None, :]).norm(dim=1).clone() * cfg.get("wcap_scale", 1.0)
+            else:
+                raise ValueError(cfg["wcap_mode"])
         prev_z = None
         U = {}
         S_list = []
@@ -513,8 +523,19 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
             opt.step(grads)
             if wcap is not None:
                 with torch.no_grad():
-                    nr = P[0].norm(dim=1)
-                    P[0].mul_(torch.clamp(wcap / nr, max=1.0)[:, None])
+                    mode = cfg.get("wcap_mode", "row")
+                    if mode == "row":
+                        nr = P[0].norm(dim=1)
+                        P[0].mul_(torch.clamp(wcap / nr, max=1.0)[:, None])
+                    else:
+                        par = P[0] @ mhat
+                        perp = P[0] - par[:, None] * mhat[None, :]
+                        if mode == "par":
+                            newpar = torch.sign(par) * torch.minimum(par.abs(), wcap)
+                            P[0].copy_(perp + newpar[:, None] * mhat[None, :])
+                        else:
+                            npp = perp.norm(dim=1)
+                            P[0].copy_(par[:, None] * mhat[None, :] + perp * torch.clamp(wcap / npp, max=1.0)[:, None])
             if v_sw is not None and s + 1 == cfg["vrestore_at"]:
                 with torch.no_grad():
                     for q, v0 in zip(opt.v, v_sw):
@@ -670,6 +691,8 @@ def main():
     ap.add_argument("--probes", default="full", choices=["full", "ends"])
     ap.add_argument("--ink-normalize", action="store_true", help="round 1 R6: scale every image to the mean ink")
     ap.add_argument("--wcap-from", type=int, default=0, help="round 1 R1: cap W1 row norms from this task's start")
+    ap.add_argument("--wcap-mode", default="row", choices=["row", "par", "perp"], help="R1b: which W1 component to cap")
+    ap.add_argument("--wcap-scale", type=float, default=1.0, help="R1b-4: cap = scale x the value at the start of --wcap-from")
     ap.add_argument("--snap-before", type=int, nargs="*", default=[])
     ap.add_argument("--ckpt-after", type=int, nargs="*", default=[])
     ap.add_argument("--fork-ckpt", default=None)
@@ -686,7 +709,7 @@ def main():
            "cap": a.cap, "sq": a.sq, "vreset": a.vreset, "adamreset": a.adamreset, "vrestore": bool(a.vrestore), "vrestore_at": a.vrestore,
            "bwmode": a.bwmode, "bw_from": a.bw_from, "probes": a.probes,
            "snap_before": a.snap_before, "ckpt_after": a.ckpt_after,
-           "ink": a.ink_normalize, "wcap_from": a.wcap_from}
+           "ink": a.ink_normalize, "wcap_from": a.wcap_from, "wcap_mode": a.wcap_mode, "wcap_scale": a.wcap_scale}
     fork = {"ckpt": a.fork_ckpt, "mode": a.fork_mode} if a.fork_ckpt else None
     out = Path(a.out) if a.out else ROOT / "results" / EXPERIMENT / "runs" / a.name
     run(cfg, out, fork)
