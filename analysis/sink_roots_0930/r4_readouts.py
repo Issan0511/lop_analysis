@@ -90,7 +90,8 @@ def fmt(x):
 def main():
     L, J = [], {}
     groups = sorted({re.sub(r"_s\d$", "", Path(d).name) for d in glob.glob(str(RAW / "*_s[0-9]"))
-                     if re.match(r"(G1a|G1b|G1c|RR1|capL|G3tail|RR3bfloor|G2same|RR2noise)", Path(d).name)} | {"R3_base_ELU", "R5_main_ELU"})
+                     if re.match(r"(G1a|G1b|G1c|RR1|capL|G3tail|RR3bfloor|G2same|RR2noise|G4cap|BSD|CAPABS)_", Path(d).name)}
+                    | {"R3_base_ELU", "R5_main_ELU", "R3_base_GELU", "R3_base_SILU", "R3_base_LR"})
     for gname in groups:
         runs = [(s, load(f"{gname}_s{s}")) for s in (0, 1, 2)]
         runs = [(s, x) for s, x in runs if x is not None]
@@ -116,11 +117,12 @@ def main():
                 row["cap_first_task_over_half"] = int(hit[0] + 1) if len(hit) else -1
             if nt >= 200:
                 mp, mm = rates(a, 151, 200); row["mu_plus_151_200"], row["mu_minus_151_200"] = float(mp), float(mm)
+            if a["cover"].size:                                   # inputs that no unit opens at the last task's end, and their accuracy
                 cov, cor = a["cover"], a["correct_end"]
                 unc = cov[-1, 1] == 0
-                row["acc_uncovered_t200"] = float(cor[-1][unc].mean()) if unc.any() else float("nan")
-                row["n_uncovered_t200"] = int(unc.sum())
-            if re.match(r"(G3tail|RR3bfloor|G2same|RR1|G1)", gname):
+                row[f"acc_uncovered_t{nt}"] = float(cor[-1][unc].mean()) if unc.any() else float("nan")
+                row[f"n_uncovered_t{nt}"] = int(unc.sum())
+            if re.match(r"(G3tail|RR3bfloor|G2same|RR1|G1|R3_base)", gname):
                 row["components"] = components(f"{gname}_s{s}", s, (5, 10, 20, 30, 50, 55, 60, 80, 100))
             J[f"{gname}_s{s}"] = row
         keys = [k for k in J[f"{gname}_s{runs[0][0]}"] if k != "components"]
