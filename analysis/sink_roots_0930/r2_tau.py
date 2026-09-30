@@ -34,7 +34,7 @@ def group(rs):
     tf = np.array([r["tfit"] for r in rs]); tf90 = np.array([r["tfit90"] for r in rs])
     T = rs[0]["T"]
     out = dict(n=len(rs), obs_oh=float(np.mean([r["Soh_pos"] for r in rs])), obs_S=float(np.mean([r["S_pos"] for r in rs])),
-               taul1_best=float(FACS[j]), err_best=float(err[j]), tau_best=float(FACS[j] / l1), lambda1=float(l1),
+               taul1_best=float(FACS[j]), err_best=float(err[j]), tau_best=float(FACS[j] / l1), lambda1=float(l1), edge=bool(j in (0, 40)),
                err_nat=float(np.mean([abs(r[TAG]["rows"][41]["meanP"] - r["Soh_pos"]) for r in rs])),
                err_natK=float(np.mean([abs(r[TAG]["rows"][42]["meanP"] - r["Soh_pos"]) for r in rs])),
                tfit_defined=float(np.mean(tf > 0)), tfit_med=float(np.median(tf[tf > 0])) if (tf > 0).any() else float("nan"),
@@ -54,7 +54,7 @@ def main():
         s = S[k]
         lines.append(f"{k[0]:4s} K{k[1]:2d} T{k[2]:5d} | {s['n']:2d} | {s['obs_oh']:.2f} ({s['obs_S']:.2f}) | {s['taul1_best']:.1e} ({s['err_best']:.3f}) | "
                      f"{s['err_nat']:.3f}, {s['err_natK']:.3f} | {s['tau_best']:.2e} | {s['tfit_med']:.0f} ({s['tfit_defined']:.2f}) | {s['tfit90_med']:.0f} | "
-                     f"{s['r']:.3g} | {s['r90']:.3g} | {s['rT']:.3g} | {s['acc_old']:.2f}")
+                     f"{s['r']:.3g} | {s['r90']:.3g} | {s['rT']:.3g} | {s['acc_old']:.2f}" + (" | EDGE (argmin at the end of the grid)" if s['edge'] else ""))
     # (a) spread of r across groups with t_fit defined, against the spread of rT over the same groups
     ok = [k for k in S if np.isfinite(S[k]["r"])]
     r = np.array([S[k]["r"] for k in ok]); rT = np.array([S[k]["rT"] for k in ok])
@@ -62,6 +62,10 @@ def main():
     a_lab = "SUPPORTED" if (spr <= 3 and spr < sprT) else "NOT_SUPPORTED"
     lines.append(f"\n(a) groups with t_fit defined: {len(ok)} of {len(S)}; spread max/min of r {spr:.2f} vs of rT {sprT:.2f} -> {a_lab}"
                  f"  (grid step x1.78; r range {r.min():.3g}..{r.max():.3g})" if len(ok) >= 2 else "\n(a) fewer than 2 groups with t_fit defined")
+    okn = [k for k in ok if not S[k]["edge"]]
+    if len(okn) >= 2 and len(okn) < len(ok):
+        rn = np.array([S[k]["r"] for k in okn]); rTn = np.array([S[k]["rT"] for k in okn])
+        lines.append(f"    without groups whose argmin is at the grid's end: {len(okn)} groups, spread of r {rn.max() / rn.min():.2f} (rT {rTn.max() / rTn.min():.2f})")
     ok4 = [k for k in ok if k[2] == 4000]
     if len(ok4) >= 2:
         r4 = np.array([S[k]["r"] for k in ok4]); rT4 = np.array([S[k]["rT"] for k in ok4])
