@@ -4,18 +4,19 @@ import csv, json, sys
 from pathlib import Path
 import numpy as np
 
-RAW = Path("/home/issan/Projects/obsidian-research-data/sink_roots_0930/r7/_pilot")
+GPU = "--gpu" in sys.argv          # after the reboot: R = 10 in one run per eta (r7gpu/_pilot/eta<eta>/, all seeds)
+RAW = Path("/home/issan/Projects/obsidian-research-data/sink_roots_0930/" + ("r7gpu" if GPU else "r7") + "/_pilot")
 GRID = [0.001, 0.003, 0.01, 0.03, 0.1]
 NEED99, NEED999 = 1188, 1199
 
 
-def check_seed(d: Path):
-    """Returns (stable, reasons) for one seed's 2-task pilot."""
+def check_seed(d: Path, seed=None):
+    """Returns (stable, reasons) for one seed's 2-task pilot (seed given: the GPU layout, all seeds in one run)."""
     why = []
     if not (d / "provenance.json").exists():
         return None, ["missing"]
-    rows = [r for r in csv.DictReader(open(d / "per_task.csv"))]
-    tr = np.load(next((d / "trace").glob("*.npz")))
+    rows = [r for r in csv.DictReader(open(d / "per_task.csv")) if seed is None or int(r["seed"]) == seed]
+    tr = np.load(next((d / "trace").glob("*.npz")) if seed is None else d / "trace" / f"ELU_std_seed{seed}.npz")
     if len(rows) < 2 or any(r.get("diverged") in ("True", "1") for r in rows):
         why.append("diverged or incomplete")
     if not np.isfinite(tr["ce"]).all() or not np.isfinite(tr["ce_st"]).all():
@@ -52,7 +53,7 @@ def main():
     for eta in GRID:
         per = {}
         for s in range(10):
-            ok, why = check_seed(RAW / f"eta{eta}" / f"s{s}")
+            ok, why = check_seed(RAW / f"eta{eta}", s) if GPU else check_seed(RAW / f"eta{eta}" / f"s{s}")
             per[s] = {"stable": ok, "why": why}
         complete = all(v["stable"] is not None for v in per.values())
         res[eta] = {"complete": complete, "stable": complete and all(v["stable"] for v in per.values()),
@@ -69,7 +70,7 @@ def main():
             break
     all_done = all(res[e]["complete"] for e in GRID)
     print("eta_S =", eta_s, "(all grid points complete)" if all_done else "(pilot not complete)")
-    out = Path(__file__).resolve().parents[2] / "results" / "sink_roots_0930" / "R7_eta_pilot.json"
+    out = Path(__file__).resolve().parents[2] / "results" / "sink_roots_0930" / ("R7gpu_eta_pilot.json" if GPU else "R7_eta_pilot.json")
     out.write_text(json.dumps({"eta_S": eta_s, "complete": all_done, "grid": {str(k): v for k, v in res.items()}},
                               indent=1))
 
