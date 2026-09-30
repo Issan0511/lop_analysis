@@ -80,6 +80,11 @@ def activ(z, act):
         return z * 0.5 * (1.0 + torch.erf(z / SQRT2))
     if act == "SILU":
         return z * torch.sigmoid(z)
+    if act == "ELUT":                 # round 4 G3 / RR3(a): ELU above -3, a slope-0.1 tail below (continuous at -3)
+        return torch.where(z > 0, z, torch.where(z > -3.0, torch.expm1(z.clamp(-3.0, 0.0)),
+                                                 (math.exp(-3.0) - 1.0) + 0.1 * (z + 3.0)))
+    if act == "LRF":                  # round 4 RR3(b): leaky 0.1 above -3, the constant -0.3 below
+        return torch.where(z > 0, z, torch.where(z > -3.0, 0.1 * z, torch.full_like(z, -0.3)))
     raise ValueError(act)
 
 
@@ -96,6 +101,11 @@ def dphi(z, act):
     if act == "SILU":
         s = torch.sigmoid(z)
         return s * (1.0 + z * (1.0 - s))
+    if act == "ELUT":
+        return torch.where(z > 0, torch.ones_like(z), torch.where(z > -3.0, torch.expm1(z.clamp(-3.0, 0.0)) + 1.0,
+                                                                  torch.full_like(z, 0.1)))
+    if act == "LRF":
+        return torch.where(z > 0, torch.ones_like(z), torch.where(z > -3.0, torch.full_like(z, 0.1), torch.zeros_like(z)))
     raise ValueError(act)
 
 
@@ -218,6 +228,17 @@ def forward(P, x, act, n_layers, mod=None):
         h = a
     logits = h @ P[2 * n_layers].T + P[2 * n_layers + 1]
     return zs, as_, logits
+
+
+@torch.no_grad()
+def wcap_frac(W, wcap, mode, mhat):
+    """round 4: share of units whose capped quantity sits at its cap (row norm, |w . mu_hat| or the perpendicular norm)."""
+    if mode == "row":
+        q = W.norm(dim=1)
+    else:
+        par = W @ mhat
+        q = par.abs() if mode == "par" else (W - par[:, None] * mhat[None, :]).norm(dim=1)
+    return float((q >= wcap * (1.0 - 1e-5)).double().mean())
 
 
 @torch.no_grad()
@@ -447,6 +468,10 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
     ckpts = set(cfg.get("ckpt_after", []))
     out.mkdir(parents=True, exist_ok=True)
     last_task = task0 + cfg["tasks"] - 1
+    y_first, r_ref, rescale_lambda, rr1_m5, rr1_s5 = None, None, None, None, None      # round 4
+    mhat_run = X64.mean(0).float(); mhat_run = mhat_run / mhat_run.norm()
+    gnoise = stream("noise_0930", seed) if cfg.get("noise_sigma") else None
+    lit = (X.sum(0) > 0).float()                                   # pixels lit in some image of the subset
     for task in range(task0, last_task + 1):
         y_draw = torch.randint(K, (N,), generator=glabel)
         steps = T
@@ -462,6 +487,10 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
                 y_new = torch.where(keep, y_cur, y_draw)
             else:
                 y_new = y_draw
+            if cfg.get("same_labels"):                       # round 4 G2: every task keeps the first task's labels
+                if y_first is None:
+                    y_first = y_new.clone()
+                y_new = y_first
         Xt = X[:, perm] if cfg["env"] == "pm" else X
         Xt64 = Xt.double()
         mu_in = Xt64.mean(0)
@@ -488,6 +517,24 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
                     opt.m[i].zero_(); opt.v[i].zero_()
                     opt.tm[i] = 0; opt.tv[i] = 0
         v_sw = [q.clone() for q in opt.v] if (cfg["vrestore"] and y_old is not None) else None
+        if cfg.get("rescale_at"):                             # round 4 G1(c): (w_i, b_i) *= r_i(ref) / r_i(now) at rescale_at
+            if task == cfg["rescale_ref"]:
+                r_ref = P[0].detach().norm(dim=1).clone()
+            if task == cfg["rescale_at"]:
+                with torch.no_grad():
+                    lam = r_ref / P[0].norm(dim=1)
+                    P[0].mul_(lam[:, None])
+                    P[1].mul_(lam)
+                rescale_lambda = lam.numpy().copy()
+        if cfg.get("rr1") and task >= cfg["rr1_from"]:        # round 4 RR1: move only the bias at each switch
+            with torch.no_grad():
+                z = Xt64 @ P[0].double().T + P[1].double()
+                m_i, s_i = z.mean(0), z.std(0)
+                if task == cfg["rr1_from"]:
+                    rr1_m5, rr1_s5 = m_i.clone(), s_i.clone()
+                else:
+                    target = rr1_m5 if cfg["rr1"] == "A" else rr1_m5 / rr1_s5 * s_i
+                    P[1].add_((target - m_i).float())
         if cfg.get("wcap_from") and task == cfg["wcap_from"]:     # round 1 R1: cap W1 row norms at this task's start
             W0 = P[0].detach()
             mhat = X64.mean(0).float(); mhat = mhat / mhat.norm()
@@ -530,6 +577,8 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
                 prev_z = zs
                 for k2, v2 in u.items():
                     U.setdefault(k2, []).append(v2)
+                if wcap is not None:
+                    sc["wcap_at"] = wcap_frac(P[0].detach(), wcap, cfg.get("wcap_mode", "row"), mhat_run)
                 S_list.append(sc)
                 if s == 0:
                     cov_sw = cov
@@ -573,6 +622,9 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
                         else:
                             npp = perp.norm(dim=1)
                             P[0].copy_(par[:, None] * mhat[None, :] + perp * torch.clamp(wcap / npp, max=1.0)[:, None])
+            if gnoise is not None and task >= cfg["noise_from_task"] and s + 1 > cfg["noise_from_step"]:
+                with torch.no_grad():                         # round 4 RR2: isotropic noise on the lit pixels' weights
+                    P[0].add_(torch.randn(P[0].shape, generator=gnoise) * cfg["noise_sigma"] * lit[None, :])
             if v_sw is not None and s + 1 == cfg["vrestore_at"]:
                 with torch.no_grad():
                     for q, v0 in zip(opt.v, v_sw):
@@ -610,6 +662,8 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
     arrays.update({f"s_{k}": np.array([d.get(k, [float("nan")] * len(grid)) for d in task_sc], dtype=np.float64)
                    for k in allk})
     arrays["grid"] = np.array(grid)
+    if rescale_lambda is not None:
+        arrays["rescale_lambda"] = rescale_lambda
     arrays["cover"] = np.stack(cover) if cover else np.zeros(0)
     arrays["correct_end"] = np.stack(correct) if correct else np.zeros(0)
     arrays["tasks"] = np.arange(task0, task0 + len(unit_store.get(f"m{L}", [])))
@@ -736,6 +790,14 @@ def main():
     ap.add_argument("--stop-at", type=float, default=0.0)
     ap.add_argument("--stop-min", type=int, default=500)
     ap.add_argument("--stop-every", type=int, default=25)
+    ap.add_argument("--same-labels", action="store_true", help="round 4 G2: every task keeps the first task's labels")
+    ap.add_argument("--rescale-at", type=int, default=0, help="round 4 G1(c): scale (w_i, b_i) by r_i(ref)/r_i(now) at this task's start")
+    ap.add_argument("--rescale-ref", type=int, default=5)
+    ap.add_argument("--rr1", default=None, choices=[None, "A", "B"], help="round 4 RR1: at each switch move b so that m (A) or m/s (B) returns to its value at --rr1-from")
+    ap.add_argument("--rr1-from", type=int, default=5)
+    ap.add_argument("--noise-sigma", type=float, default=0.0, help="round 4 RR2: N(0, sigma^2) on the lit pixels' W1 after every update past --noise-from-step")
+    ap.add_argument("--noise-from-task", type=int, default=5)
+    ap.add_argument("--noise-from-step", type=int, default=200)
     ap.add_argument("--snap-before", type=int, nargs="*", default=[])
     ap.add_argument("--ckpt-after", type=int, nargs="*", default=[])
     ap.add_argument("--fork-ckpt", default=None)
@@ -754,7 +816,10 @@ def main():
            "snap_before": a.snap_before, "ckpt_after": a.ckpt_after,
            "ink": a.ink_normalize, "wcap_from": a.wcap_from, "wcap_mode": a.wcap_mode, "wcap_scale": a.wcap_scale,
            "ro_clamp": a.ro_clamp, "ro_clamp_from": a.ro_clamp_from,
-           "stop": a.stop, "stop_at": a.stop_at, "stop_min": a.stop_min, "stop_every": a.stop_every}
+           "stop": a.stop, "stop_at": a.stop_at, "stop_min": a.stop_min, "stop_every": a.stop_every,
+           "same_labels": a.same_labels, "rescale_at": a.rescale_at, "rescale_ref": a.rescale_ref,
+           "rr1": a.rr1, "rr1_from": a.rr1_from, "noise_sigma": a.noise_sigma, "noise_from_task": a.noise_from_task,
+           "noise_from_step": a.noise_from_step}
     fork = {"ckpt": a.fork_ckpt, "mode": a.fork_mode} if a.fork_ckpt else None
     out = Path(a.out) if a.out else ROOT / "results" / EXPERIMENT / "runs" / a.name
     run(cfg, out, fork)
