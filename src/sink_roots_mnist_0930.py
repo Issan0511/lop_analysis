@@ -132,6 +132,8 @@ class ModAct(torch.autograd.Function):
             d = torch.where(z > 0, d, torch.clamp_min(d, 0.1))
         elif ctx.mode == "abs":
             d = d.abs()
+        elif ctx.mode == "relu":                   # round 2 R3prime: max(phi', 0) -- the valley's negative sign removed, its smallness kept
+            d = torch.clamp_min(d, 0.0)
         else:
             raise ValueError(ctx.mode)
         return g * d, None, None
@@ -521,6 +523,12 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
             online += int((logits.detach().argmax(-1) == y_new[idx]).sum())
             grads = torch.autograd.grad(loss, P)
             opt.step(grads)
+            if cfg.get("ro_clamp") and task >= cfg["ro_clamp_from"]:
+                with torch.no_grad():                      # round 2 R3_readout_scale_clamp: class-centred readout norm per unit -> r
+                    Wo = P[2 * L]
+                    mean_k = Wo.mean(0, keepdim=True)
+                    Vc = Wo - mean_k
+                    Wo.copy_(mean_k + Vc * (cfg["ro_clamp"] / Vc.norm(dim=0, keepdim=True).clamp_min(1e-30)))
             if wcap is not None:
                 with torch.no_grad():
                     mode = cfg.get("wcap_mode", "row")
@@ -686,13 +694,15 @@ def main():
     ap.add_argument("--adamreset", action="store_true", help="m, v and both clocks to 0 at each switch")
     ap.add_argument("--sq", type=float, default=0.0, help="logit squeeze: + sq * mean sum_c (f_c - fbar)^2")
     ap.add_argument("--vrestore", type=int, default=0, help="restore v at this update of each task")
-    ap.add_argument("--bwmode", default=None, choices=[None, "floor", "abs"])
+    ap.add_argument("--bwmode", default=None, choices=[None, "floor", "abs", "relu"])
     ap.add_argument("--bw-from", type=int, default=200)
     ap.add_argument("--probes", default="full", choices=["full", "ends"])
     ap.add_argument("--ink-normalize", action="store_true", help="round 1 R6: scale every image to the mean ink")
     ap.add_argument("--wcap-from", type=int, default=0, help="round 1 R1: cap W1 row norms from this task's start")
     ap.add_argument("--wcap-mode", default="row", choices=["row", "par", "perp"], help="R1b: which W1 component to cap")
     ap.add_argument("--wcap-scale", type=float, default=1.0, help="R1b-4: cap = scale x the value at the start of --wcap-from")
+    ap.add_argument("--ro-clamp", type=float, default=0.0, help="round 2: after every update from --ro-clamp-from, set each unit's class-centred readout norm to this value")
+    ap.add_argument("--ro-clamp-from", type=int, default=51)
     ap.add_argument("--snap-before", type=int, nargs="*", default=[])
     ap.add_argument("--ckpt-after", type=int, nargs="*", default=[])
     ap.add_argument("--fork-ckpt", default=None)
@@ -709,7 +719,8 @@ def main():
            "cap": a.cap, "sq": a.sq, "vreset": a.vreset, "adamreset": a.adamreset, "vrestore": bool(a.vrestore), "vrestore_at": a.vrestore,
            "bwmode": a.bwmode, "bw_from": a.bw_from, "probes": a.probes,
            "snap_before": a.snap_before, "ckpt_after": a.ckpt_after,
-           "ink": a.ink_normalize, "wcap_from": a.wcap_from, "wcap_mode": a.wcap_mode, "wcap_scale": a.wcap_scale}
+           "ink": a.ink_normalize, "wcap_from": a.wcap_from, "wcap_mode": a.wcap_mode, "wcap_scale": a.wcap_scale,
+           "ro_clamp": a.ro_clamp, "ro_clamp_from": a.ro_clamp_from}
     fork = {"ckpt": a.fork_ckpt, "mode": a.fork_mode} if a.fork_ckpt else None
     out = Path(a.out) if a.out else ROOT / "results" / EXPERIMENT / "runs" / a.name
     run(cfg, out, fork)
