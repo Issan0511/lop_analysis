@@ -47,7 +47,7 @@ def replay(path, arm, steps=200):
     train_idx = {"full": list(range(2 * L + 2)), "own": [li, li + 1], "up": list(range(li)),
                  "head": list(range(2 * L)), "sgd": list(range(2 * L + 2))}[arm]
     params = [P[i] for i in train_idx]
-    if arm == "sgd":
+    if arm == "sgd" or not params:
         opt = None
     else:
         opt = torch.optim.Adam(params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8)
@@ -55,6 +55,9 @@ def replay(path, arm, steps=200):
             opt.state[P[i]] = {"step": torch.tensor(float(d["step"])), "exp_avg": torch.tensor(d[f"m{i}"]).float().clone(),
                                "exp_avg_sq": torch.tensor(d[f"v{i}"]).float().clone()}
     m0 = means(P, X, act, L); rec = {}
+    if not params:                                  # sink_roots_0930: 'up' has no layer to train in a 1-layer net
+        z0 = [np.zeros(x.shape) for x in m0]
+        return {50: z0, 200: z0}, d["dm"], L
     lr_sgd = None
     for it in range(steps):
         idx = order[it]; a = X[idx]

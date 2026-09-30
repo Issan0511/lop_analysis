@@ -53,7 +53,8 @@ def jobs():
         J.append(job(f"replay_{i}", [PY, str(SR / "sign" / "replay.py")] + [str(S / f) for f in g],
                      R1 / "replay" / f"g{i}", env={"REPLAY_OUT": str(R1 / "replay")}))
     A6 = [PY, str(SR / "adam" / "twolayer_a6_probe.py")]                 # 4 F1
-    J.append(job("F1_dry", A6 + ["--steps", "50", "--probe", "2", "--R", "2", "--out", str(R1 / "F1_dry")], R1 / "F1_dry" / "job"))
+    # the requested dry run (--steps 50) cannot work: the probe replays 200 updates of the task; smoke-test with R 2 instead
+    J.append(job("F1_dry", A6 + ["--probe", "2", "--R", "2", "--out", str(R1 / "F1_dry")], R1 / "F1_dry" / "job"))
     J.append(job("F1_s0_p23", A6 + ["--seed", "0", "--probe", "2,3", "--R", "16", "--out", str(R1 / "F1")], R1 / "F1" / "s0_p23"))
     J.append(job("F1_s1_p23", A6 + ["--seed", "1", "--probe", "2,3", "--R", "16", "--out", str(R1 / "F1")], R1 / "F1" / "s1_p23"))
     J.append(job("F1_s0_p10", A6 + ["--seed", "0", "--probe", "10", "--R", "12", "--out", str(R1 / "F1")], R1 / "F1" / "s0_p10"))
