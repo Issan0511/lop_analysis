@@ -74,6 +74,7 @@ def nladder():
         act, N, seed = re.match(r"(\w+?)_N(\d+)_s(\d)", Path(f).stem).groups()
         D[(act, int(N), int(seed))] = np.load(f)
     J = {}
+    meank_all = {}
     for act in ("gelu", "silu"):
         k0 = 2 if act == "gelu" else 3
         Ns = sorted({k[1] for k in D if k[0] == act})
@@ -90,14 +91,18 @@ def nladder():
                     m = k[t] >= k0; dr += list(k[t + 1][m] - k[t][m])
                 cl = top[50:200] <= 0; mins.append(float(top[50:200][cl].min()) if cl.any() else float("nan"))
                 clo.append(float((top[150:200] <= 0).mean()))
-            medk[N] = med(ks)
-            J[f"{act}_N{N}"] = dict(k_alive_med=med(ks), k_sw_alive_med=med(kss), drift=float(np.mean(dr)) if dr else float("nan"),
+            medk[N] = med(ks); meank = float(np.mean(ks)) if ks else float("nan")
+            meank_all.setdefault(act, {})[N] = meank
+            J[f"{act}_N{N}"] = dict(k_alive_med=med(ks), k_alive_mean=meank, k_sw_alive_med=med(kss), drift=float(np.mean(dr)) if dr else float("nan"),
                                     n_drift=len(dr), min_closed_top=mins, allclosed_151_200=clo)
             L.append(f"   {act} N{N:5d}: alive k median (t151-200, end) {med(ks):.1f} (switch {med(kss):.1f}) | drift E[k'-k | k>={k0}] {J[f'{act}_N{N}']['drift']:+.3f} (n {len(dr)})"
                      f" | min closed top per seed {np.round(mins, 2).tolist()} | all-closed t151-200 {np.round(clo, 3).tolist()}")
         if len(medk) >= 2 and all(v > 0 for v in medk.values()):
             sl = np.polyfit(np.log10(list(medk)), np.log10(list(medk.values())), 1)[0]
             L.append(f"   {act}: (a) medians {medk} in [1,2]; log-log slope {sl:+.3f} (|.| < 0.2)")
+            mk = meank_all[act]
+            sl2 = np.polyfit(np.log10(list(mk)), np.log10(list(mk.values())), 1)[0]
+            L.append(f"   {act}: [descriptive] alive k mean {{{', '.join(f'{n}: {v:.2f}' for n, v in mk.items())}}}; log-log slope of the mean {sl2:+.3f}")
             J[f"{act}_slope"] = float(sl)
         if act == "gelu" and (act, 300, 0) in D and (act, 2400, 0) in D:
             d300 = np.nanmean(J["gelu_N300"]["min_closed_top"]); d2400 = np.nanmean(J["gelu_N2400"]["min_closed_top"])
