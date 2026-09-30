@@ -220,6 +220,19 @@ def forward(P, x, act, n_layers, mod=None):
     return zs, as_, logits
 
 
+@torch.no_grad()
+def stop_value(P, X64, act, n_layers, y, kind):
+    """round 3 R3p: the task's own fit on all images, float64 as in probe(): 'pold' = mean p of the current label
+    (p_old at the next switch), 'lsd' = mean over images of the class-centred logit RMS (probe's logit_sd)."""
+    h = X64
+    for l in range(n_layers):
+        h = activ(h @ P[2 * l].double().T + P[2 * l + 1].double(), act)
+    f = h @ P[2 * n_layers].double().T + P[2 * n_layers + 1].double()
+    if kind == "pold":
+        return float(f.softmax(-1)[torch.arange(len(y)), y].mean())
+    return float((f - f.mean(-1, keepdim=True)).pow(2).mean(-1).sqrt().mean())
+
+
 def effective_logits(logits, cap):
     return logits if cap is None else cap * torch.tanh(logits / cap)
 
@@ -494,7 +507,23 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
         diverged = False
         gi = 0
         cov_sw = None
+        n_upd = steps
         for s in range(steps + 1):
+            if (cfg.get("stop") and s >= cfg["stop_min"] and s % cfg["stop_every"] == 0 and s < steps
+                    and stop_value(P, Xt64, act, L, y_new, cfg["stop"]) >= cfg["stop_at"]):
+                # round 3 R3p: the task ends here; the final probe goes to the last grid slot, the slots between are NaN
+                u, sc, zs, cov, corr = probe(P, Xt64, act, L, K, y_new, y_old, cfg["cap"], cfg["ls"], opt,
+                                            mu_in, prev_z, cfg["sq"])
+                n_left = len(grid) - gi
+                for k2, v2 in u.items():
+                    U.setdefault(k2, []).extend([np.full_like(v2, np.nan)] * (n_left - 1) + [v2])
+                S_list.extend([{k2: float("nan") for k2 in sc}] * (n_left - 1) + [sc])
+                if cov_sw is None:
+                    cov_sw = cov
+                cover.append(np.stack([cov_sw, cov]))
+                correct.append(corr)
+                n_upd = s
+                break
             if gi < len(grid) and grid[gi] == s:
                 u, sc, zs, cov, corr = probe(P, Xt64, act, L, K, y_new, y_old, cfg["cap"], cfg["ls"], opt,
                                             mu_in, prev_z, cfg["sq"])
@@ -559,7 +588,7 @@ def run(cfg: dict, out: Path, fork: dict | None = None) -> dict:
         keys = sorted(set().union(*[set(d) for d in S_list]))
         S = {k2: [d.get(k2, float("nan")) for d in S_list] for k2 in keys}
         task_sc.append(S)
-        row = {"task": task, "online_acc": online / (steps * BATCH), "acc_end": S["acc"][-1],
+        row = {"task": task, "online_acc": online / (n_upd * BATCH), "acc_end": S["acc"][-1], "steps_used": n_upd,
                "ce_end": S["ce"][-1], "pplus_end": float(np.mean(U[f"k{L}"][-1]) / N),
                "allclosed_end": float(np.mean(U[f"k{L}"][-1] == 0))}
         if y_old is not None:
@@ -703,6 +732,10 @@ def main():
     ap.add_argument("--wcap-scale", type=float, default=1.0, help="R1b-4: cap = scale x the value at the start of --wcap-from")
     ap.add_argument("--ro-clamp", type=float, default=0.0, help="round 2: after every update from --ro-clamp-from, set each unit's class-centred readout norm to this value")
     ap.add_argument("--ro-clamp-from", type=int, default=51)
+    ap.add_argument("--stop", default=None, choices=[None, "pold", "lsd"], help="round 3 R3p: end each task when the fit reaches --stop-at")
+    ap.add_argument("--stop-at", type=float, default=0.0)
+    ap.add_argument("--stop-min", type=int, default=500)
+    ap.add_argument("--stop-every", type=int, default=25)
     ap.add_argument("--snap-before", type=int, nargs="*", default=[])
     ap.add_argument("--ckpt-after", type=int, nargs="*", default=[])
     ap.add_argument("--fork-ckpt", default=None)
@@ -720,7 +753,8 @@ def main():
            "bwmode": a.bwmode, "bw_from": a.bw_from, "probes": a.probes,
            "snap_before": a.snap_before, "ckpt_after": a.ckpt_after,
            "ink": a.ink_normalize, "wcap_from": a.wcap_from, "wcap_mode": a.wcap_mode, "wcap_scale": a.wcap_scale,
-           "ro_clamp": a.ro_clamp, "ro_clamp_from": a.ro_clamp_from}
+           "ro_clamp": a.ro_clamp, "ro_clamp_from": a.ro_clamp_from,
+           "stop": a.stop, "stop_at": a.stop_at, "stop_min": a.stop_min, "stop_every": a.stop_every}
     fork = {"ckpt": a.fork_ckpt, "mode": a.fork_mode} if a.fork_ckpt else None
     out = Path(a.out) if a.out else ROOT / "results" / EXPERIMENT / "runs" / a.name
     run(cfg, out, fork)
