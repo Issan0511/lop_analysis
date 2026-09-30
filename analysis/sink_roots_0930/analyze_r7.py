@@ -97,6 +97,13 @@ def main():
     def sgn(lo, hi):
         return "+" if lo > 0 else ("-" if hi < 0 else "0")
 
+    # condition B (spec §4.1): A at the floor in the main window in >= 9/10 seeds, and the upper end of A's E2 95% interval < 0
+    if all(("A", s) in rows and s in U and all(("A", s, t) in stats for t in W) and ("A", s, 1) in stats for s in SEEDS):
+        nfA = sum(np.mean([float(rows[("A", s)][t]["online_acc"]) for t in W]) <= U[s] for s in SEEDS)
+        e2 = [np.mean([stats[("A", s, t)]["G2"] for t in W]) - stats[("A", s, 1)]["G2"] for s in SEEDS]
+        m2, sd2 = float(np.mean(e2)), float(np.std(e2, ddof=1))
+        hi2 = m2 + T9_975 * sd2 / math.sqrt(10)
+        res["condition_B"] = {"A_at_floor": int(nfA), "E2_A_mean": m2, "E2_A_ci_hi": hi2, "pass": bool(nfA >= 9 and hi2 < 0)}
     for arm, tq in (("F", T9_9875), ("F99", T9_975), ("S", T9_975)):
         stt = arm_state(arm)
         if stt is None or any((arm, s, t) not in stats for s in SEEDS for t in W):
