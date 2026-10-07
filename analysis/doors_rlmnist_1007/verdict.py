@@ -688,6 +688,51 @@ def summary_md(res: dict, missing: list, env: dict, scores: dict, rid: dict | No
     return "\n".join(L) + "\n"
 
 
+# --------------------------------------------------------------------------
+# post hoc (added AFTER the main run, 2026-10-07; unregistered, never a label): where each arm stands at
+# the end of the window -- the online trend inside the window and how much of each layer's derivative is
+# exactly 0.  analyze() and the labels are untouched by this.
+# --------------------------------------------------------------------------
+
+POSTHOC_WINS = ((51, 75), (76, 100), (91, 100))
+
+
+def posthoc(shards: dict, valid: list) -> list[dict]:
+    out = []
+    for arm in ARMS:
+        acc: dict = {}
+        for s in valid:
+            sh = shards[(arm, s)]
+            on = sh["per_task"].set_index("task")["online_acc"].astype(float)
+            for w in POSTHOC_WINS:
+                acc.setdefault(f"online_{w[0]}_{w[1]}", []).append(float(on.loc[w[0]:w[1]].mean()))
+            u, ends = sh["units"], task_ends(sh["units"])
+            for t in (10, 50, 100):
+                for li in (1, 2):
+                    z = np.asarray(u[f"dtrain_zero_l{li}"][ends[t]], float)
+                    acc.setdefault(f"zero_pairs_l{li}_t{t}", []).append(float(z.mean()))      # (image, unit) pairs
+                    acc.setdefault(f"dead_units_l{li}_t{t}", []).append(float((z == 1.0).mean()))  # 0 on every image
+            for key in ("b1", "zbar_l1", "b2", "zbar_l2"):
+                acc.setdefault(f"{key}_t100", []).append(unit_mean(u[key][ends[100]])[0])
+        out.append({"arm": arm, **{k: float(np.mean(v)) for k, v in acc.items()},
+                    "online_76_100_min_seed": float(np.min(acc["online_76_100"])) if acc else float("nan"),
+                    "online_76_100_max_seed": float(np.max(acc["online_76_100"])) if acc else float("nan")})
+    return out
+
+
+def posthoc_md(ph: list[dict]) -> str:
+    keys = [k for k in ph[0] if k != "arm"]
+    L = [f"# {RUN_ID} — 事後の読み（未登録・判定に使わない）", "",
+         "> 本走の後に `analysis/doors_rlmnist_1007/verdict.py` の `posthoc()` として足した集計（2026-10-07、本走の結果を見た後）。"
+         "登録したラベル・窓・予測には触れない。seed 平均（10 seed）。", "",
+         "- `online_a_b`: 課題 a–b の online の平均。`zero_pairs_l*`: 課題終端で訓練の微分が厳密に 0 の（画像, unit）の割合。"
+         "`dead_units_l*`: 全画像で 0 の unit の割合。`*_t100`: 課題 100 の終端のユニット平均。", "",
+         "| 量 | " + " | ".join(r["arm"] for r in ph) + " |", "|---|" + "---|" * len(ph)]
+    for k in keys:
+        L.append(f"| {k} | " + " | ".join(f"{r[k]:.4f}" for r in ph) + " |")
+    return "\n".join(L) + "\n"
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", default=str(REPO / "results" / RUN_ID / "runs"))
@@ -710,6 +755,8 @@ def main() -> None:
     pd.DataFrame(res["timing"]).to_csv(out / "timing.csv", index=False)
     pd.DataFrame(res["secondary"]).to_csv(out / "secondary.csv", index=False)
     (out / "summary.md").write_text(summary_md(res, missing, env, scores, rid))
+    if res["valid_seeds"]:
+        (out / "posthoc.md").write_text(posthoc_md(posthoc(shards, res["valid_seeds"])))
     (out / "provenance.json").write_text(json.dumps({
         "run_id": RUN_ID, "aggregated_at": dt.datetime.now().astimezone().isoformat(), "head": head,
         "run_commits": run_commits, "src": str(src), "n_shards": len(shards), "missing": missing,
