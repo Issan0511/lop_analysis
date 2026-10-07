@@ -1,0 +1,627 @@
+{
+  "run_id": "cap_cifar5p1_1007",
+  "spec": "specs/spec_cap_cifar5p1_1007.md",
+  "source_sha256": {
+    "src/cap_cifar5p1_1007.py": "94d3afabfde60a4d7d5bf48b1abd50645f3bef92b9614210237f6e2a836580aa",
+    "analysis/cap_cifar5p1_1007/checks.py": "14660301b7b692082746cc990ed201ed92e8db827c517eb8f5b4cb0382dfbcff",
+    "analysis/cap_cifar5p1_1007/verdict.py": "3377852b0e30ed343256b544f1ab48802d56af947fdb72e08e8d5ca8c71f885e"
+  },
+  "git_head": "5ad33aa4b9e486a7fccc3663a00c5aaa8b995662",
+  "torch": "2.13.0+cu130",
+  "cuda": "13.0",
+  "threads": 2,
+  "scratch": "/tmp/claude-1000/-home-issan-Projects-claude/82c19680-97c3-4ca4-9feb-4a5b9dc70183/scratchpad/cap_cifar5p1_1007_checks",
+  "started": "2026-10-07T22:15:02+0900",
+  "S-verdict": {
+    "title": "labels, endpoints, SD 0, IMPAIRED, Bonferroni, (A)(B)(C) on synthetic fixtures",
+    "target": "analysis/cap_cifar5p1_1007/verdict.py",
+    "threshold_derivation": "exact expected labels; t quantiles vs the printed table to 1e-4 (4-decimal table)",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "t_975_table": true,
+      "t_9875_table": true,
+      "endpoint_zero_is_0": true,
+      "sd0_signs": true,
+      "sd0_degenerate_point": true,
+      "label_table": true,
+      "all_labels_via_judge": true,
+      "bonferroni_cap12_only": true,
+      "paired_not_unpaired": true,
+      "impaired_flags": true,
+      "B_fails_not_reproduced": true,
+      "C_fails_inapplicable": true,
+      "A_incomplete": true,
+      "A_inconsistent": true,
+      "interaction_definition": true,
+      "windows": true
+    },
+    "labels_via_judge": {
+      "RESCUED": [
+        "RESCUED",
+        "RESCUED",
+        "RESCUED"
+      ],
+      "LEVEL_ONLY": [
+        "LEVEL_ONLY",
+        "LEVEL_ONLY",
+        "LEVEL_ONLY"
+      ],
+      "LEVEL_UP_GAP_UP": [
+        "LEVEL_UP_GAP_UP",
+        "LEVEL_UP_GAP_UP",
+        "LEVEL_UP_GAP_UP"
+      ],
+      "GAP_ONLY": [
+        "GAP_ONLY",
+        "GAP_ONLY",
+        "GAP_ONLY"
+      ],
+      "NO_EFFECT": [
+        "NO_EFFECT",
+        "NO_EFFECT",
+        "NO_EFFECT"
+      ],
+      "GAP_UP": [
+        "GAP_UP",
+        "GAP_UP",
+        "GAP_UP"
+      ],
+      "WORSE": [
+        "WORSE",
+        "WORSE",
+        "WORSE"
+      ]
+    },
+    "mutations": [
+      {
+        "mutation": "M-v1: no Bonferroni (cap12 at 95 %)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "bonferroni_cap12_only"
+          ]
+        }
+      },
+      {
+        "mutation": "M-v2: late window hard 19-27",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "windows"
+          ]
+        }
+      },
+      {
+        "mutation": "M-v3: pairing broken (reference seeds shuffled)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "bonferroni_cap12_only",
+            "paired_not_unpaired",
+            "impaired_flags"
+          ]
+        }
+      },
+      {
+        "mutation": "M-v4: an endpoint at 0 counts as a sign (>=)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "endpoint_zero_is_0",
+            "sd0_signs"
+          ]
+        }
+      },
+      {
+        "mutation": "M-v5: IMPAIRED judged at 97.5 %",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "impaired_flags"
+          ]
+        }
+      },
+      {
+        "mutation": "M-v6: IMPAIRED judged on the mean",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "impaired_flags"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.4
+  },
+  "all_pass": true,
+  "n_checks": 7,
+  "n_mutations": 24,
+  "n_mutations_detected": 24,
+  "S-cap": {
+    "title": "projection: under rows bit-unchanged, over rows at the radius with direction kept, nothing else written, tallies, second application",
+    "target": "src/cap_cifar5p1_1007.py",
+    "threshold_derivation": "spec 7.2: per-row bound from u32 (ratio and product roundings), the measured error theta of the float32 norm, gamma64_{d+1} for the float64 checker and sqrt(d)*tiny32 for underflow; 1 - cos <= u32^2/2 + 4 gamma64_{2d+2}; rem within gamma64_rows * sum",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "d100_under_equal_zero_rows_bit_identical": true,
+      "d100_returned_norm_is_row_norm": true,
+      "d100_over_rows_at_radius": true,
+      "d100_over_rows_max_rel_eps32": 0.46769904904067516,
+      "d100_over_rows_direction_kept": true,
+      "d100_rows_tally": true,
+      "d100_rem_tally": true,
+      "d100_finite": true,
+      "d100_second_application_within_bound": true,
+      "d100_second_application_rows_rewritten": 0,
+      "d3072_under_equal_zero_rows_bit_identical": true,
+      "d3072_returned_norm_is_row_norm": true,
+      "d3072_over_rows_at_radius": true,
+      "d3072_over_rows_max_rel_eps32": 0.553621293976903,
+      "d3072_over_rows_direction_kept": true,
+      "d3072_rows_tally": true,
+      "d3072_rem_tally": true,
+      "d3072_finite": true,
+      "d3072_second_application_within_bound": true,
+      "d3072_second_application_rows_rewritten": 0,
+      "engine_steps_verified": 400,
+      "engine_all_steps_ok": true,
+      "engine_nonvacuous_over_and_under_rows": true
+    },
+    "engine_failures": [],
+    "engine_n_failures": 0,
+    "engine_over_rows": [
+      35014,
+      39591
+    ],
+    "engine_under_rows": [
+      84986,
+      80409
+    ],
+    "engine_rows_exactly_at_radius": [
+      1,
+      545
+    ],
+    "engine_max_rel_err_eps32": [
+      1.0275819329544902,
+      1.1225209906697273
+    ],
+    "engine_max_1_minus_cos": [
+      7.771561172376096e-16,
+      7.771561172376096e-16
+    ],
+    "engine_within_4eps32": true,
+    "engine_second_application_rows_rewritten": [
+      3768,
+      4758
+    ],
+    "mutations": [
+      {
+        "mutation": "M-c1: the radius is the initial row norm",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "engine_n_failures": 4790,
+          "engine_within_4eps32": false,
+          "failed_items": [
+            "engine_all_steps_ok"
+          ]
+        }
+      },
+      {
+        "mutation": "M-c2: the bias of a written row is scaled too",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "engine_n_failures": 796,
+          "engine_within_4eps32": true,
+          "failed_items": [
+            "engine_all_steps_ok"
+          ]
+        }
+      },
+      {
+        "mutation": "M-c3: small rows are inflated to the radius",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "engine_n_failures": 5200,
+          "engine_within_4eps32": true,
+          "failed_items": [
+            "d100_under_equal_zero_rows_bit_identical",
+            "d100_rows_tally",
+            "d3072_under_equal_zero_rows_bit_identical",
+            "d3072_rows_tally",
+            "engine_all_steps_ok",
+            "engine_nonvacuous_over_and_under_rows"
+          ]
+        }
+      },
+      {
+        "mutation": "M-c4: rows equal to the radius count as over (>=)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "engine_n_failures": 176,
+          "engine_within_4eps32": true,
+          "failed_items": [
+            "d100_under_equal_zero_rows_bit_identical",
+            "d100_rows_tally",
+            "d100_finite",
+            "d100_second_application_within_bound",
+            "d3072_under_equal_zero_rows_bit_identical",
+            "d3072_rows_tally",
+            "d3072_finite",
+            "d3072_second_application_within_bound",
+            "engine_all_steps_ok"
+          ]
+        }
+      },
+      {
+        "mutation": "M-c5: the removed norm is not clamped at 0",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "engine_n_failures": 800,
+          "engine_within_4eps32": true,
+          "failed_items": [
+            "d100_rem_tally",
+            "d3072_rem_tally",
+            "engine_all_steps_ok"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 20.6
+  },
+  "S-radius": {
+    "title": "radius = task-1-end row norms, +inf through task 1, active from task 2's first update",
+    "target": "src/cap_cifar5p1_1007.py",
+    "threshold_derivation": "bit equality",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "radius_event_after_task1": true,
+      "radius_equals_task1_end_norms": true,
+      "task1_radius_inf": true,
+      "task2_first_update_capped": true,
+      "tasks2_3_radius_fixed": true,
+      "task1_rows_written_zero": true,
+      "task2_rows_written_positive": true,
+      "task1_rows_identical_to_ref": true,
+      "saved_radii_are_task1_end_norms": true
+    },
+    "rows_written_task2": {
+      "W1": 23894,
+      "W2": 26943
+    },
+    "mutations": [
+      {
+        "mutation": "M-r1: radius from task 2's end, cap from task 3",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "radius_event_after_task1",
+            "radius_equals_task1_end_norms",
+            "task2_first_update_capped",
+            "tasks2_3_radius_fixed",
+            "task2_rows_written_positive",
+            "saved_radii_are_task1_end_norms"
+          ]
+        }
+      },
+      {
+        "mutation": "M-r2: radius from task 1's end, cap from task 3",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "task2_first_update_capped",
+            "tasks2_3_radius_fixed",
+            "task2_rows_written_positive"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 8.3
+  },
+  "S-fresh": {
+    "title": "fresh control: the host's procedure, no cap",
+    "target": "src/cap_cifar5p1_1007.py",
+    "threshold_derivation": "byte equality with the host's unmodified run() under the same configuration",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "ref_fresh_file_identical_to_host": true,
+      "ref_fresh_online_identical_to_host": true,
+      "ref_fresh_rows_written_zero": true,
+      "cap12_fresh_online_identical_to_host": true,
+      "cap12_fresh_rows_written_zero": true,
+      "hook_saw_fresh_start": true,
+      "fresh_radius_inf": true,
+      "fresh_starts_from_init": true,
+      "fresh_moments_zero": true
+    },
+    "mutations": [
+      {
+        "mutation": "M-f1: the cap stays on for the fresh network",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "cap12_fresh_online_identical_to_host",
+            "cap12_fresh_rows_written_zero",
+            "fresh_radius_inf"
+          ]
+        }
+      },
+      {
+        "mutation": "M-f2: the Adam moments are not reset for the fresh network",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_fresh_file_identical_to_host",
+            "ref_fresh_online_identical_to_host",
+            "cap12_fresh_online_identical_to_host",
+            "fresh_moments_zero"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 9.5
+  },
+  "S-graph": {
+    "title": "graph and eager runs agree bit for bit (cap12, R = 10, 4 tasks x 100 updates)",
+    "target": "src/cap_cifar5p1_1007.py",
+    "threshold_derivation": "byte / bit equality",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "per_task.csv_identical": true,
+      "cap_task.csv_identical": true,
+      "fresh_control.csv_identical": true,
+      "task_end_states_identical": true,
+      "graph_was_used": true,
+      "projection_active_in_graph_run": true
+    },
+    "mutations": [
+      {
+        "mutation": "M-g1: the radius is re-bound instead of copied in place",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "per_task.csv_identical",
+            "cap_task.csv_identical",
+            "fresh_control.csv_identical",
+            "task_end_states_identical",
+            "projection_active_in_graph_run"
+          ]
+        }
+      },
+      {
+        "mutation": "M-g2: graph replay reads the next batch",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "per_task.csv_identical",
+            "cap_task.csv_identical",
+            "fresh_control.csv_identical",
+            "task_end_states_identical"
+          ]
+        }
+      },
+      {
+        "mutation": "M-g3: the warm-up rewind forgets the first Adam moment",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "per_task.csv_identical",
+            "cap_task.csv_identical",
+            "fresh_control.csv_identical",
+            "task_end_states_identical"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 15.6
+  },
+  "S-CLI": {
+    "title": "CLI = function call, registered defaults, admission guard",
+    "target": "src/cap_cifar5p1_1007.py",
+    "threshold_derivation": "byte equality",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "defaults_registered": true,
+      "inprocess_cli_per_task.csv_identical_to_function": true,
+      "inprocess_cli_cap_task.csv_identical_to_function": true,
+      "inprocess_cli_fresh_control.csv_identical_to_function": true,
+      "subprocess_exit_0": true,
+      "subprocess_per_task.csv_identical_to_function": true,
+      "subprocess_cap_task.csv_identical_to_function": true,
+      "subprocess_fresh_control.csv_identical_to_function": true,
+      "registered_location_refuses_unregistered_config": true,
+      "admit_refuses_wrong_config": true,
+      "admit_refuses_missing_checks": true,
+      "admit_refuses_failing_checks": true,
+      "admit_refuses_stale_sources": true,
+      "admit_accepts_complete_checks_on_clean_tree": true
+    },
+    "tree_clean": true,
+    "mutations": [
+      {
+        "mutation": "M-l1: the CLI passes --steps-easy as --steps-hard",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tree_clean": true,
+          "failed_items": [
+            "inprocess_cli_per_task.csv_identical_to_function",
+            "inprocess_cli_cap_task.csv_identical_to_function",
+            "inprocess_cli_fresh_control.csv_identical_to_function"
+          ]
+        }
+      },
+      {
+        "mutation": "M-l2: the default task count is 20",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tree_clean": true,
+          "failed_items": [
+            "defaults_registered"
+          ]
+        }
+      },
+      {
+        "mutation": "M-l3: admit() ignores all_pass",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tree_clean": true,
+          "failed_items": [
+            "admit_refuses_failing_checks"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 22.4
+  },
+  "S-nochange": {
+    "title": "ref = host: (a) byte-identical to the host's run() now; (b) committed record: all but eff_rank byte-identical, eff_rank inside the spec 7.1 band",
+    "target": "src/cap_cifar5p1_1007.py",
+    "threshold_derivation": "spec 7.1: |lam_hat - lam| <= gamma_N || |A|^T|A| ||_F + n u ||G||_2 per environment, Weyl, interval arithmetic on H = log S - T/S, plus 2 x 5e-10 for the 10-digit printing",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "a_per_task_identical_to_host_now": true,
+      "a_fresh_identical_to_host_now": true,
+      "b_same_rows": true,
+      "b_same_columns": true,
+      "b_non_eff_rank_identical": true,
+      "b_fresh_identical_to_committed": true,
+      "b_eff_rank_inside_band": true,
+      "b_observer_reproduces_printed_eff_rank": true,
+      "b_band_rejects_a_shifted_column": true,
+      "short_per_task_identical_to_host_now": true,
+      "short_fresh_identical_to_host_now": true
+    },
+    "b_non_eff_rank_diff_cells": [],
+    "eff_rank_cells": 600,
+    "eff_rank_cells_byte_equal": 489,
+    "eff_rank_max_rel_deviation": 7.834945620424501e-08,
+    "eff_rank_max_rel_band_halfwidth": 0.00014817172168288427,
+    "eff_rank_outside_band": [],
+    "shifted_column_rejected": "580/580",
+    "ref_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+    "ref_fresh_sha256": "6632bacc36735e442787d361bcf4254f4395e3f869ea558aeb1c49e72a729038",
+    "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+    "host_now_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+    "torch": "2.13.0+cu130",
+    "threads": 2,
+    "mutations": [
+      {
+        "mutation": "M-n1: the ref arm gets the W2 cap",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "eff_rank_cells": 600,
+          "eff_rank_cells_byte_equal": 15,
+          "eff_rank_max_rel_deviation": 0.5668927311500029,
+          "eff_rank_max_rel_band_halfwidth": 0.00013926497925634363,
+          "shifted_column_rejected": "580/580",
+          "ref_per_task_sha256": "8ae0e45ff2f24f51018fe221fb3a487984f0e66b2967f35e8b81c4be76d52bf2",
+          "ref_fresh_sha256": "b0ca3c2cd02646b34b1f1bde4dd30a9920000cfddad5602f5514d2802e9c8c78",
+          "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+          "host_now_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+          "torch": "2.13.0+cu130",
+          "threads": 2,
+          "failed_items": [
+            "a_per_task_identical_to_host_now",
+            "a_fresh_identical_to_host_now",
+            "b_non_eff_rank_identical",
+            "b_fresh_identical_to_committed",
+            "b_eff_rank_inside_band",
+            "short_per_task_identical_to_host_now",
+            "short_fresh_identical_to_host_now"
+          ]
+        }
+      },
+      {
+        "mutation": "M-n2: lr 1.0001e-4",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "eff_rank_cells": 600,
+          "eff_rank_cells_byte_equal": 0,
+          "eff_rank_max_rel_deviation": 0.593285968569824,
+          "eff_rank_max_rel_band_halfwidth": 0.00015016921263764273,
+          "shifted_column_rejected": "580/580",
+          "ref_per_task_sha256": "b76510a1a3744133b50ed6ee38d055874f005eb3c6cc69db2bce88485ca937de",
+          "ref_fresh_sha256": "c3d922dad6ded65a6c0f1207cbe8d9eeba5d2b00880925815a05f673cc440a28",
+          "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+          "host_now_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+          "torch": "2.13.0+cu130",
+          "threads": 2,
+          "failed_items": [
+            "a_per_task_identical_to_host_now",
+            "a_fresh_identical_to_host_now",
+            "b_non_eff_rank_identical",
+            "b_fresh_identical_to_committed",
+            "b_eff_rank_inside_band",
+            "short_per_task_identical_to_host_now",
+            "short_fresh_identical_to_host_now"
+          ]
+        }
+      },
+      {
+        "mutation": "M-n3: the Adam step counter restarts every task",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "eff_rank_cells": 600,
+          "eff_rank_cells_byte_equal": 15,
+          "eff_rank_max_rel_deviation": 1.1268319377074894,
+          "eff_rank_max_rel_band_halfwidth": 0.00012985834320683215,
+          "shifted_column_rejected": "580/580",
+          "ref_per_task_sha256": "b005966b048afbd924b5f9b727350a0fc32dc564149d62318dbf73c14a0277fc",
+          "ref_fresh_sha256": "b5209b7da2cbc22ea59c38c84ba044cb1a81ee381b73a1bbcaa9dcaf69371fc0",
+          "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+          "host_now_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+          "torch": "2.13.0+cu130",
+          "threads": 2,
+          "failed_items": [
+            "a_per_task_identical_to_host_now",
+            "a_fresh_identical_to_host_now",
+            "b_non_eff_rank_identical",
+            "b_fresh_identical_to_committed",
+            "b_eff_rank_inside_band",
+            "short_per_task_identical_to_host_now",
+            "short_fresh_identical_to_host_now"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 146.9
+  },
+  "finished": "2026-10-07T22:18:46+0900"
+}
