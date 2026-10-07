@@ -315,12 +315,16 @@ def load_c2(src, records=True):
                 'mob_l1', 'mob_l2', 'eff_rank_l1', 'eff_rank_l2', 'w_norm_l1', 'w_norm_l2', 'w_norm_l3', 'test_acc')}
         f1 = {k: [float(full[s][1][k]) for s in SEEDS] for k in ('zsd_l1', 'zsd_l2', 'alpha_med_l1', 'alpha_med_l2')}
         gaps = [float(fr[s]['fresh_gap']) for s in SEEDS] if sorted(fr) == SEEDS else [float('nan')] * 10
+        # 2 alpha * zsd from the per-seed unit medians: the host's `two_alpha_W_med` uses the EMA width V,
+        # which is frozen in the fix arms, so it is not the arm's actual alpha-times-width (display only)
+        az = {f'two_alpha_zsd_l{l}_t{t}': float(np.median([2 * float(full[s][t][f'alpha_med_l{l}']) * float(full[s][t][f'zsd_l{l}'])
+                                                             for s in SEEDS])) for l in (1, 2) for t in (1, 29)}
         table.append(dict(arm=arm, late_mean=float(E[arm].mean()), late_sd=float(E[arm].std(ddof=1)),
                           late_median=float(np.median(E[arm])), early_mean=float(early.mean()),
                           drop_mean=float((early - E[arm]).mean()), fresh_gap_mean=float(np.mean(gaps)),
                           fresh_gap_positive=int(sum(g > 0 for g in gaps)),
                           **{f'{k}_t29': float(np.median(v)) for k, v in f29.items()},
-                          **{f'{k}_t1': float(np.median(v)) for k, v in f1.items()}))
+                          **{f'{k}_t1': float(np.median(v)) for k, v in f1.items()}, **az))
         for i, s in enumerate(SEEDS):
             per_seed.append(dict(arm=arm, seed=s, late=float(E[arm][i]), early=float(early[i]),
                                  fresh_gap=gaps[i], t29_online=by[s][29]))
@@ -388,13 +392,14 @@ def summary_md(v1, v2, t1, t2, preds, src):
             c95 = v2['primary_95'][k]
             L.append(f'| {k} = E({c["a"]}) − E({c["b"]}) | {f4(c["mean"])} | {f4(c["low"])} | {f4(c["high"])} | {f4(c95["low"])} | {f4(c95["high"])} | {c["sign"]} | {c["n_positive"]}/10 |')
         L.append('')
-    L += ['| 腕 | 後期窓 平均 | SD | 中央値 | 早期窓 | 低下 | fresh gap | α 中央値 l1/l2（t29） | zsd l1/l2（t29） | 2αW l1/l2（t29） | mob l2（t29） |',
+    L += ['| 腕 | 後期窓 平均 | SD | 中央値 | 早期窓 | 低下 | fresh gap | α 中央値 l1/l2（t29） | zsd l1/l2（t29） | 2α·zsd l1/l2（t29） | mob l2（t29） |',
           '|---|---:|---:|---:|---:|---:|---:|---|---|---|---:|']
     for r in t2:
         if 'record' in r:
             L.append(f'| {r["arm"]}（記録） | {r["late_mean"]:.4f} | {r["late_sd"]:.4f} | {r["late_median"]:.4f} | {r["early_mean"]:.4f} | | | | | | |')
         else:
-            L.append(f'| {r["arm"]} | {r["late_mean"]:.4f} | {r["late_sd"]:.4f} | {r["late_median"]:.4f} | {r["early_mean"]:.4f} | {r["drop_mean"]:+.4f} | {r["fresh_gap_mean"]:+.4f} ({r["fresh_gap_positive"]}/10) | {r["alpha_med_l1_t29"]:.3f}/{r["alpha_med_l2_t29"]:.3f} | {r["zsd_l1_t29"]:.2f}/{r["zsd_l2_t29"]:.2f} | {r["two_alpha_W_med_l1_t29"]:.2f}/{r["two_alpha_W_med_l2_t29"]:.2f} | {r["mob_l2_t29"]:.3f} |')
+            L.append(f'| {r["arm"]} | {r["late_mean"]:.4f} | {r["late_sd"]:.4f} | {r["late_median"]:.4f} | {r["early_mean"]:.4f} | {r["drop_mean"]:+.4f} | {r["fresh_gap_mean"]:+.4f} ({r["fresh_gap_positive"]}/10) | {r["alpha_med_l1_t29"]:.3f}/{r["alpha_med_l2_t29"]:.3f} | {r["zsd_l1_t29"]:.2f}/{r["zsd_l2_t29"]:.2f} | {r["two_alpha_zsd_l1_t29"]:.2f}/{r["two_alpha_zsd_l2_t29"]:.2f} | {r["mob_l2_t29"]:.3f} |')
+    L += ['', '2α·zsd は seed ごとの unit 中央値（α と zsd）の積の seed 中央値（表示用）。宿主の列 `two_alpha_W_med` は EMA の幅 V から計算するので、V を凍結した fix 腕では実際の 2α × 幅にならない（per_task.csv にはそのまま残す）。']
     if 'secondary' in v2:
         L += ['', '| 副比較（95%・REPORT_ONLY） | 平均差 | 下端 | 上端 | 符号 | 正の seed |', '|---|---:|---:|---:|---|---:|']
         for c in v2['secondary']:

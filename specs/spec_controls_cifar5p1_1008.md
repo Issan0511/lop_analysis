@@ -220,3 +220,28 @@ bit 一致以外の算術比較は u32 = 2^−24・u64 = 2^−53・γ_n = nu/(1�
 ## 10. 出力・片付け
 
 `results/controls_cifar5p1_1008/` に summary.md、verdict.json/csv、paired.csv、c1_arm_table.csv、c2_arm_table.csv、c1_per_seed.csv、c2_per_seed.csv、c2 の各腕の per_task.csv/fresh_control.csv、c1 の prefix の照合表、field_stats.csv、predictions.csv、admission_checks.json、provenance_start/end.json、input_manifest.json、pre_registration/。状態（.pt）・場・unit 配列（.npz）・ログは git 外とし、退避の manifest に source・backup・bytes・sha256 を残す。
+
+## 11. 実施記録（2026-10-08・本走の後に追記。§0–§10 は登録のまま）
+
+- 登録 `2adc8331`（spec と §1.2 の登録前の環境確認・設計統計）→ 実装 `fda77873`（エンジン・検査・判定。検査 seed 100–109 で必須 15 本 PASS・列挙した変異 44 本すべて棄却、1,720 秒、検査プロセスの peak RSS 4.45 GB）→ **本走**（起動 2026-10-08 05:02:37 JST・git `fda77873`・ロック待ち 0 秒・本体 579 秒・peak RSS 2.31 GB・peak CUDA 2.41 GB。GPU は別セッションの走と同時に使われていた）。
+- 登録の後・本走の前に、検査 seed 100–109 で全腕を走らせて値を見た（煙試験・検査の CLI・S-resume。検査 seed での判定の試し計算は C1 PARTIAL・C2 ADAPTIVITY_MATTERS）。§6 の予測・定義・腕・seed は登録から変えていない。
+- 実装上の決定（登録文の範囲内）: C1 の保存点に t03 を足した（§7 S1-wiring の変異「donor を t03 に」のため。腕は使わない）。C1 の接頭部は不可分（STOP は腕の境界だけ、§8 どおり）。
+- 本走後に `verdict.py` の summary の表示列だけを直した（宿主の `two_alpha_W_med` は EMA の幅 V から計算されるので、V を凍結した fix 腕では実際の 2α × 幅にならない。表示を 2α·zsd に替えた）。判定の計算は不変。
+- 関門: C1 接頭部 task 1–29 は 0920 記録と eff_rank 以外の全列 byte 一致（eff_rank の不一致 111 件・相対差最大 7.8e−8）、fresh も byte 一致、分岐状態 t02/t03/t28/t29 は resp の退避ファイルと bit 一致。N_c・R_h の行は resp の rows.json と全列一致。SNA・KKT1 の per_task.csv は 0920 記録と eff_rank を含む全列 byte 一致、fresh_control.csv も byte 一致。
+
+## 12. 結果（本走・seed 0–9・発散 0）
+
+**C1 登録主判定: PARTIAL（fresh_differs）、CONTROL_EXCEEDS:R_match**（適用条件成立、P1 = +0.2132 [97.5%: +0.1835, +0.2429]）。
+
+- D_fresh = E(R_h) − E(R_fresh) = **+0.0324**（97.5% [+0.0219, +0.0429]、10/10 seed で正）→ +。
+- D_match = E(R_h) − E(R_match) = **−0.0292**（97.5% [−0.0399, −0.0186]、0/10）→ −（**開いた数を揃えた受け手自身の場の方がよく戻す**）。
+- task 29 の online（10 seed 平均）: N_c 0.4042、R_h 0.6174、R_fresh 0.5850、**R_match 0.6466**、R_perm 0.6154、R_rand 0.5617、fresh(t29) 0.6259。復元の割合 ρ: R_fresh 0.85、R_match 1.14、R_perm 0.99、R_rand 0.74。
+- 副（95%）: R_h − R_perm +0.0020 [−0.0029, +0.0069]（0）、R_h − R_rand +0.0557 [+0.0507, +0.0607]（+）、R_match − fresh(t29) +0.0207 [+0.0056, +0.0359]。
+
+**C2 登録主判定: ADAPTIVITY_MATTERS**（適用条件成立）。
+
+- A_SNA = E(SNA) − E(SNA_fix0) = **+0.0613**（97.5% [+0.0545, +0.0681]、10/10）、A_KKT1 = **+0.0458**（[+0.0378, +0.0537]、10/10）。
+- 後期窓（10 seed 平均）: SNA 0.6648、KKT1 0.6639、SNA_fix0 0.6034、KKT1_fix0 0.6181、**SNA_fixT1 0.6717**、**KKT1_fixT1 0.6747**、SNA_pus 0.4598、R（記録）0.4366、R+l2init(1e−3)（記録）0.6630。
+- 副（95%）: SNA − SNA_fixT1 −0.0069 [−0.0128, −0.0010]、KKT1 − KKT1_fixT1 −0.0108 [−0.0170, −0.0046]（fixT1 の方が高い。`FIXT1_EQUIVALENT_0.005` は不成立）、SNA − SNA_pus +0.2050、fix0 − R +0.167/+0.182、fix0 − l2init −0.060/−0.045、fixT1 − l2init +0.009/+0.012。
+
+予測の採点（`predictions.csv`）: C1 ラベルは親の最大確率 OPEN_COUNT_SUFFICES が外れ（多クラス Brier 0.665）、Claude の最大確率 PARTIAL が的中（0.465、ただし理由づけは逆）。C2 ラベルは親・Claude とも ADAPTIVITY_MATTERS が的中（0.315 / 0.098）。二値の 11 件はすべて、置いた確率が 0.5 を超えた側（0.5 未満なら反対側）が当たった（R_fresh − N_c > 0: 親 0.85・Claude 0.92、fixT1 ≡ SNA ±0.005: 親 0.35・Claude 0.20 → 不成立）。読み・開示は `results/controls_cifar5p1_1008/summary.md`。
