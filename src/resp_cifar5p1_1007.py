@@ -154,13 +154,10 @@ def gpu_lock(wait_s=6 * 3600, poll=15, log=print):
     6 GB free beyond this run's ~3 GB peak.  One GPU process at a time (spec §8)."""
     with GPU_LOCK.open('a') as lock:
         t0 = time.time()
-        while True:
-            try:
-                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                break
-            except BlockingIOError:
-                assert time.time() - t0 < wait_s, 'GPU lock wait exceeded'
-                time.sleep(poll)
+        # Blocking, like the sibling jobs' `flock` wrappers: a non-blocking poll loses every
+        # release to blocked waiters and starves (observed 2026-10-07, 20 min).
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        log(f'GPU lock acquired after {time.time() - t0:.0f}s')
         waited = 0
         while True:
             busy = other_gpu_python()
