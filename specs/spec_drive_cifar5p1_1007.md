@@ -166,3 +166,17 @@ GPU プロセスは同時 1 本まで（`/tmp/lop_analysis_gpu.lock` を flock �
 ## 12. 出力・片付け
 
 `results/drive_cifar5p1_1007/`: checks.json、window_calibration.json、verdict.json、per_seed.csv、per_task.csv（観測の課題別）、per_bin.npz（seed × 課題 × bin の unit 和）、per_unit_task.npz、host_identity.json、predictions.json、summary.md、production の provenance/input_manifest/complete/cost、backup_manifest.json。raw（shard・fixture・ログ・検査走の出力）は git 外で、CLAUDE.md §4 どおり退避し sha256 付きで manifest にする。既存の src・analysis・他 run の結果・他の worktree は変更しない。vault には書かない。
+
+## 実装追補（2026-10-07・実装 commit と同時・本走前。科学 seed 0–9 の観測は未実施）
+
+登録（`0afd3360`）の後、実装と検査の過程で確定・修正したもの。どれも本走の値を見る前で、登録した読み出し・ラベル・予測は変えていない。
+
+1. **成分閉包の float64 余裕を γ_{K+9} → γ_{2K+10}(u64) に直した。** 3 つの射影和・残差 M_label・S 自身・pd がそれぞれ最大 γ_{K+2} の丸めを持つので、最悪で γ_{2K+6} 程度が要る（導出の見落とし）。検査 seed の短走で、比 |S − ΣS_comp|/上界 は「unit の更新が float32 の丸めに全部吸われた（p_new = p_old なのに理想更新は非零）」場合に 1 のすぐ下まで来る。これはこの検査が測った丸め pd だけで差を説明している状態で、pd 自体は独立の上界 γ_7(u32) で検査している（比 ≤ .42）。
+2. **S-host の P 照合**は、無改変宿主の `evaluate()` を読むだけの wrapper で包み、各課題末の P（6 テンソル × 10 slot）の sha256 を取って行う（宿主の演算は変えない）。batch 行列は計画と c51_batch から独立に作り直して照合。R5 は REPORT_ONLY のままで、4 課題の試走では R5 の行が R10 の slot 0–4 と一致した（この箱では束ねの数が数値を変えない）。だから R5 は必須変異に入れられない。
+3. **S-self-total の「別課題の µ」変異**は、µ も native 平均も同じ誤った画像で計算されるので 2 つの閉包では原理的に落ちない。計画から画像集合を作り直す独立再計算（fixture 監査）だけが落とす。登録どおり、この監査を本走でも行う。
+4. **S-conf の独立定義**は、保存した float32 logit を float64 の葉にして L_conf・L_label・CE をそれぞれ autograd で微分し（conf + label = CE も検査）、第 2 層への逆伝播は numpy の einsum で別に行う。変異「history なし」は引き継いだ moment が b1^s で減衰するので課題の先頭（j = 1）の fixture で、「conf moment を毎更新リセット」は j > 1 の fixture で落ちる（どちらも登録の変異のまま、落ちる場所を明記）。
+5. **S-bin** の和の照合は unit 和で行う（bin の和・unit 別 bin の和・unit 別課題の和の 3 通りの積算が、符号別総量から作る γ_{78,000+32}(u64) の上界内で一致）。
+6. **S-cost の変異**（batch だけ観測・1 更新おき）は件数検査 `validate_counts` を狙って落とす（fixture の欠落など別の理由で落ちたのを数えない）。本物の検査走では同じ関数が通ることを先に確かめる。
+7. **GPU の取り方**: `/tmp/lop_analysis_gpu.lock` の flock に加え、他の python の GPU 計算プロセスが無く、空きが「必要量 + 6 GB」以上になるまで 30 秒ごとに待つ（失敗させない）。必要量は検査走の実測（最大 reserved + CUDA 文脈 1 GB を 0.5 GB 単位で切り上げ）を checks.json に書き、本走はそれを使う。
+8. **本走の門**: checks.json の source hash（src・checks.py・report.py・launch.sh）が現在と一致し全 PASS・全変異が落ちていること、src/analysis/specs に未 commit の変更が無いこと、S-host (a) の環境再走 per_task.csv の sha256 が checks.json と一致することを確かめてから走る。report.py を本走後に変えた場合は `--deviation` の記録なしに主 report を出さない。
+9. 本走後の順序: 完全性（validate）→ fixture 監査（`report audit`、PASS/FAIL と比だけを出す）→ 較正（`report calibrate`、calibration/ だけを開く）→ window_calibration.json を commit → 主 report。
