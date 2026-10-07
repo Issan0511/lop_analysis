@@ -1,0 +1,906 @@
+{
+  "source_sha256": {
+    "src/baselines_cifar5p1_1008.py": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+    "analysis/baselines_cifar5p1_1008/checks.py": "a14ca3a80ed6d01d75342c926ea11d3c8a93e6d690aec25c6fde756ab6b63489",
+    "analysis/baselines_cifar5p1_1008/verdict.py": "ddb066bac5f59b29f25889e2c8af465e2438ff9657bba1960bcb89c7fe418c75"
+  },
+  "torch": "2.13.0+cu130",
+  "threads": 2,
+  "git_head": "3b6026604d961fb04122fef7f1223fcd5fccf4c1",
+  "started": "2026-10-08T05:12:27",
+  "S-nochange": {
+    "title": "none arm = host R, byte for byte",
+    "target": "src/baselines_cifar5p1_1008.py",
+    "threshold_derivation": "byte identity; eff_rank band from spec 7.1 of cap_cifar5p1_1007",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "a_per_task_identical_to_host_now": true,
+      "a_fresh_identical_to_host_now": true,
+      "b_same_rows": true,
+      "b_same_columns": true,
+      "b_non_eff_rank_identical": true,
+      "b_fresh_identical_to_committed": true,
+      "b_eff_rank_inside_band": true,
+      "b_observer_reproduces_printed_eff_rank": true,
+      "b_band_rejects_a_shifted_column": true,
+      "c_short_per_task_identical_to_host_now": true,
+      "c_short_fresh_identical_to_host_now": true
+    },
+    "b_non_eff_rank_diff_cells": [],
+    "eff_rank_cells": 600,
+    "eff_rank_cells_byte_equal": 489,
+    "eff_rank_max_rel_deviation": 7.834945620424501e-08,
+    "eff_rank_max_rel_band_halfwidth": 0.00014817172168288427,
+    "eff_rank_outside_band": [],
+    "shifted_column_rejected": "580/580",
+    "none_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+    "none_fresh_sha256": "6632bacc36735e442787d361bcf4254f4395e3f869ea558aeb1c49e72a729038",
+    "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+    "host_now_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+    "torch": "2.13.0+cu130",
+    "threads": 2,
+    "mutations": [
+      {
+        "mutation": "M-n1: a tiny shrink after every (non-CBP) Adam update",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "eff_rank_cells": 600,
+          "eff_rank_cells_byte_equal": 0,
+          "eff_rank_max_rel_deviation": 1.1628035760193085,
+          "eff_rank_max_rel_band_halfwidth": 0.00014903663416226403,
+          "shifted_column_rejected": "580/580",
+          "none_per_task_sha256": "ed4d98ddeac00f34be82b28436c5a214a499a71b2fbfc3240f55636f11169d77",
+          "none_fresh_sha256": "9d77486744aa847538349f254ed419c9f8990506877bea75c831d29478ef7c9e",
+          "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+          "host_now_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+          "torch": "2.13.0+cu130",
+          "threads": 2,
+          "failed_items": [
+            "a_per_task_identical_to_host_now",
+            "a_fresh_identical_to_host_now",
+            "b_non_eff_rank_identical",
+            "b_fresh_identical_to_committed",
+            "b_eff_rank_inside_band",
+            "c_short_per_task_identical_to_host_now",
+            "c_short_fresh_identical_to_host_now"
+          ]
+        }
+      },
+      {
+        "mutation": "M-n2: lr 1.0001e-4",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "eff_rank_cells": 600,
+          "eff_rank_cells_byte_equal": 0,
+          "eff_rank_max_rel_deviation": 0.593285968569824,
+          "eff_rank_max_rel_band_halfwidth": 0.00015016921263764273,
+          "shifted_column_rejected": "580/580",
+          "none_per_task_sha256": "b76510a1a3744133b50ed6ee38d055874f005eb3c6cc69db2bce88485ca937de",
+          "none_fresh_sha256": "c3d922dad6ded65a6c0f1207cbe8d9eeba5d2b00880925815a05f673cc440a28",
+          "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+          "host_now_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+          "torch": "2.13.0+cu130",
+          "threads": 2,
+          "failed_items": [
+            "a_per_task_identical_to_host_now",
+            "a_fresh_identical_to_host_now",
+            "b_non_eff_rank_identical",
+            "b_fresh_identical_to_committed",
+            "b_eff_rank_inside_band",
+            "c_short_per_task_identical_to_host_now",
+            "c_short_fresh_identical_to_host_now"
+          ]
+        }
+      },
+      {
+        "mutation": "M-n3: the Adam step counter restarts every task",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "eff_rank_cells": 600,
+          "eff_rank_cells_byte_equal": 15,
+          "eff_rank_max_rel_deviation": 1.1268319377074894,
+          "eff_rank_max_rel_band_halfwidth": 0.00012985834320683215,
+          "shifted_column_rejected": "580/580",
+          "none_per_task_sha256": "b005966b048afbd924b5f9b727350a0fc32dc564149d62318dbf73c14a0277fc",
+          "none_fresh_sha256": "b5209b7da2cbc22ea59c38c84ba044cb1a81ee381b73a1bbcaa9dcaf69371fc0",
+          "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+          "host_now_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+          "torch": "2.13.0+cu130",
+          "threads": 2,
+          "failed_items": [
+            "a_per_task_identical_to_host_now",
+            "a_fresh_identical_to_host_now",
+            "b_non_eff_rank_identical",
+            "b_fresh_identical_to_committed",
+            "b_eff_rank_inside_band",
+            "c_short_per_task_identical_to_host_now",
+            "c_short_fresh_identical_to_host_now"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 331.1
+  },
+  "all_pass": true,
+  "n_checks": 10,
+  "n_mutations": 40,
+  "n_mutations_detected": 40,
+  "S-host-repro": {
+    "title": "comparators reproduce from the host in this environment",
+    "target": "src/cifar5p1_mlp_0920.py",
+    "threshold_derivation": "byte identity of every column but eff_rank (cap_cifar5p1_1007 \u00a71.4)",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "SNA|none|s0_vs_SNA_std_lr0.0001_per_task": true,
+      "SNA|none|s0_vs_SNA_std_lr0.0001_fresh": true,
+      "SNA|none|s10_vs_SNA_s10-19_per_task": true,
+      "SNA|none|s10_vs_SNA_s10-19_fresh": true,
+      "KKT1|none|s0_vs_KKT1_std_lr0.0001_per_task": true,
+      "KKT1|none|s0_vs_KKT1_std_lr0.0001_fresh": true,
+      "KKT1|none|s10_vs_KKT1_s10-19_per_task": true,
+      "KKT1|none|s10_vs_KKT1_s10-19_fresh": true,
+      "R|l2init:1e-3|s0_vs_R_std_lr0.0001_l2init1e-3_per_task": true,
+      "R|l2init:1e-3|s0_vs_R_std_lr0.0001_l2init1e-3_fresh": true,
+      "R|l2init:1e-3|s10_vs_R_s10-19l2init:1e3_per_task": true,
+      "R|l2init:1e-3|s10_vs_R_s10-19l2init:1e3_fresh": true
+    },
+    "mutations": [
+      {
+        "mutation": "M-h1: l2init(1e-3) seeds 0-9 compared with the l2init(1e-2) record",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "R|l2init:1e-3|s0_vs_R_std_lr0.0001_l2init1e-2_per_task",
+            "R|l2init:1e-3|s0_vs_R_std_lr0.0001_l2init1e-2_fresh"
+          ]
+        }
+      },
+      {
+        "mutation": "M-h2: SNA seeds 10-19 compared with the seeds 0-9 record",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "SNA|none|s10_vs_SNA_std_lr0.0001_per_task",
+            "SNA|none|s10_vs_SNA_std_lr0.0001_fresh"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 364.0
+  },
+  "S-snp": {
+    "title": "S&P = shrink then init-distribution noise, after Adam",
+    "target": "src/baselines_cifar5p1_1008.py",
+    "threshold_derivation": "bitwise replay of the same generator state; zeta moments within 4 sampling sd",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "every_train_step_gets_snp": true,
+      "every_fresh_self_step_gets_snp": true,
+      "no_snp_in_method_free_fresh": true,
+      "no_step_without_snp": true,
+      "after_adam_nothing_else_in_step": true,
+      "bitwise_shrink_plus_init_noise": true,
+      "zeta_in_init_range": true,
+      "zeta_mean_in_band": true,
+      "zeta_meansq_in_band": true,
+      "adam_moments_untouched": true
+    },
+    "zeta_n": 147375000,
+    "zeta_mean": 3.1611061662701454e-05,
+    "zeta_meansq": 0.33335757129921745,
+    "band_mean": 0.00019023370000171243,
+    "band_meansq": 9.823626026587336e-05,
+    "steps": {
+      "train": 100,
+      "fresh": 50,
+      "fresh_self": 50
+    },
+    "writes": {
+      "train": 100,
+      "fresh": 0,
+      "fresh_self": 50
+    },
+    "mutations": [
+      {
+        "mutation": "M-s1: biases are not shrunk or perturbed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "zeta_n": 147375000,
+          "zeta_mean": -6.288484437645259e-05,
+          "zeta_meansq": 0.33335162964178816,
+          "band_mean": 0.00019023370000171243,
+          "band_meansq": 9.823626026587336e-05,
+          "failed_items": [
+            "bitwise_shrink_plus_init_noise"
+          ]
+        }
+      },
+      {
+        "mutation": "M-s2: zeta Gaussian instead of the init's uniform",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "zeta_n": 147375000,
+          "zeta_mean": 3.1611061662701454e-05,
+          "zeta_meansq": 0.33335757129921745,
+          "band_mean": 0.00019023370000171243,
+          "band_meansq": 9.823626026587336e-05,
+          "failed_items": [
+            "bitwise_shrink_plus_init_noise"
+          ]
+        }
+      },
+      {
+        "mutation": "M-s3: the bound from fan_out",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "zeta_n": 147375000,
+          "zeta_mean": 3.1611061662701454e-05,
+          "zeta_meansq": 0.33335757129921745,
+          "band_mean": 0.00019023370000171243,
+          "band_meansq": 9.823626026587336e-05,
+          "failed_items": [
+            "bitwise_shrink_plus_init_noise"
+          ]
+        }
+      },
+      {
+        "mutation": "M-s4: S&P before the Adam update",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "zeta_n": 1,
+          "zeta_mean": 0.0,
+          "zeta_meansq": 0.0,
+          "band_mean": 2.309401076758503,
+          "band_meansq": 1.1925695879998879,
+          "failed_items": [
+            "every_train_step_gets_snp",
+            "every_fresh_self_step_gets_snp",
+            "no_step_without_snp"
+          ]
+        }
+      },
+      {
+        "mutation": "M-s5: sigma forgotten",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "zeta_n": 147375000,
+          "zeta_mean": 3.1611061662701454e-05,
+          "zeta_meansq": 0.33335757129921745,
+          "band_mean": 0.00019023370000171243,
+          "band_meansq": 9.823626026587336e-05,
+          "failed_items": [
+            "bitwise_shrink_plus_init_noise"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 29.4
+  },
+  "S-cbp": {
+    "title": "CBP = GnT accumulate + contribution utility + AdamGnT",
+    "target": "src/baselines_cifar5p1_1008.py",
+    "threshold_derivation": "utility band: gamma_99 + gamma_31 + 8u32 relative (float32 means and products); ranking tolerance 2(age_max + 6)u32 (float32 pow / division); bitwise elsewhere",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "age_plus_one": true,
+      "util_in_band": true,
+      "P_mv_untouched_by_ingraph": true,
+      "n_elig_equal_slots": true,
+      "n_elig_matches_engine_ledger": true,
+      "write_iff_k_positive": true,
+      "replaced_count_is_k": true,
+      "replaced_were_eligible": true,
+      "replaced_have_smallest_uhat": true,
+      "composed_P_bitwise": true,
+      "composed_mv_bitwise": true,
+      "u_age_reset": true,
+      "L_set_to_t": true,
+      "fresh_rows_from_own_stream": true,
+      "fresh_rows_in_range": true,
+      "adam_mirror_bitwise": true,
+      "reset_factors_one_rounding": true,
+      "first_replacement_happens": true,
+      "identical_to_none_before_first_replacement": true,
+      "non_vacuous_replacements": true,
+      "non_vacuous_small_s": true
+    },
+    "stats": {
+      "replacements": [
+        231,
+        231
+      ],
+      "max_util_err_over_band": 0.03537057688700297,
+      "reset_elems_checked": 6865524,
+      "min_s_seen": 1,
+      "steps": 1350
+    },
+    "fails": [],
+    "first_replacement_step_index": 110,
+    "mutations": [
+      {
+        "mutation": "M-c1: utility from the incoming weights",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "first_replacement_step_index": 110,
+          "failed_items": [
+            "util_in_band"
+          ]
+        }
+      },
+      {
+        "mutation": "M-c2: maturity ignored in the selection",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "first_replacement_step_index": 110,
+          "failed_items": [
+            "n_elig_equal_slots",
+            "n_elig_matches_engine_ledger",
+            "write_iff_k_positive",
+            "replaced_count_is_k",
+            "replaced_were_eligible",
+            "composed_P_bitwise",
+            "fresh_rows_from_own_stream",
+            "adam_mirror_bitwise"
+          ]
+        }
+      },
+      {
+        "mutation": "M-c3: output weights not zeroed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "first_replacement_step_index": 110,
+          "failed_items": [
+            "composed_P_bitwise"
+          ]
+        }
+      },
+      {
+        "mutation": "M-c4: output-side moments not zeroed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "first_replacement_step_index": 110,
+          "failed_items": [
+            "composed_mv_bitwise"
+          ]
+        }
+      },
+      {
+        "mutation": "M-c5: per-element step count not reset (global bias correction)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "first_replacement_step_index": 110,
+          "failed_items": [
+            "L_set_to_t",
+            "adam_mirror_bitwise"
+          ]
+        }
+      },
+      {
+        "mutation": "M-c6: the fractional count is not carried",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "first_replacement_step_index": null,
+          "failed_items": [
+            "write_iff_k_positive",
+            "first_replacement_happens",
+            "identical_to_none_before_first_replacement",
+            "non_vacuous_replacements",
+            "non_vacuous_small_s"
+          ]
+        }
+      },
+      {
+        "mutation": "M-c7: the largest utility is replaced",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "first_replacement_step_index": 110,
+          "failed_items": [
+            "replaced_have_smallest_uhat"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 256.8
+  },
+  "S-redo": {
+    "title": "ReDo = Sokar Alg. 1 / Dopamine NeuronRecycler",
+    "target": "src/baselines_cifar5p1_1008.py",
+    "threshold_derivation": "bitwise composition; float64 score band gamma_64 + gamma_100 + 4u32 near tau",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "checks_on_schedule": true,
+      "boundary_waits_for_evaluation": true,
+      "evaluated_net_is_pre_recycle": true,
+      "mask_matches_mirror": true,
+      "score_formula_float64": true,
+      "composed_P_bitwise": true,
+      "composed_mv_bitwise": true,
+      "bias_moments_untouched": true,
+      "fresh_rows_in_range": true,
+      "adam_mirror_bitwise": true,
+      "dead_post_written": true,
+      "tau0_logits_invariant": true,
+      "non_vacuous_recycling_both_layers": true,
+      "non_vacuous_mid_and_boundary": true,
+      "non_vacuous_tau0": true
+    },
+    "stats": {
+      "recycled": [
+        149,
+        458
+      ],
+      "mid_checks": 22,
+      "boundary_checks": 6,
+      "tau0_recycled": 86,
+      "near_threshold_skipped": 88
+    },
+    "fails": [],
+    "mutations": [
+      {
+        "mutation": "M-r1: scores not normalised by the layer mean",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "composed_P_bitwise",
+            "composed_mv_bitwise"
+          ]
+        }
+      },
+      {
+        "mutation": "M-r2: the probe is the current batch only",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "composed_P_bitwise",
+            "composed_mv_bitwise",
+            "tau0_logits_invariant"
+          ]
+        }
+      },
+      {
+        "mutation": "M-r3: output weights not zeroed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "composed_P_bitwise",
+            "tau0_logits_invariant"
+          ]
+        }
+      },
+      {
+        "mutation": "M-r4: incoming moments not zeroed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "composed_mv_bitwise"
+          ]
+        }
+      },
+      {
+        "mutation": "M-r5: the bias moments are zeroed too",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "composed_mv_bitwise",
+            "bias_moments_untouched"
+          ]
+        }
+      },
+      {
+        "mutation": "M-r6: the period shifted to F + 1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "checks_on_schedule",
+            "boundary_waits_for_evaluation",
+            "dead_post_written",
+            "non_vacuous_mid_and_boundary"
+          ]
+        }
+      },
+      {
+        "mutation": "M-r7: a task-end recycle runs before the evaluation",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "evaluated_net_is_pre_recycle",
+            "dead_post_written",
+            "non_vacuous_mid_and_boundary"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 102.1
+  },
+  "S-graph": {
+    "title": "CUDA graph = eager for every method",
+    "target": "src/baselines_cifar5p1_1008.py",
+    "threshold_derivation": "byte identity of every output and bit identity of the end state",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "snp_e1e-3_s1e-2_per_task.csv_identical": true,
+      "snp_e1e-3_s1e-2_extra_task.csv_identical": true,
+      "snp_e1e-3_s1e-2_fresh_control.csv_identical": true,
+      "snp_e1e-3_s1e-2_fresh_self.csv_identical": true,
+      "snp_e1e-3_s1e-2_final_state_bitwise": true,
+      "snp_e1e-3_s1e-2_graph_was_used": true,
+      "cbp_r1e-3_per_task.csv_identical": true,
+      "cbp_r1e-3_extra_task.csv_identical": true,
+      "cbp_r1e-3_fresh_control.csv_identical": true,
+      "cbp_r1e-3_fresh_self.csv_identical": true,
+      "cbp_r1e-3_final_state_bitwise": true,
+      "cbp_r1e-3_graph_was_used": true,
+      "redo_t0.1_f100_per_task.csv_identical": true,
+      "redo_t0.1_f100_extra_task.csv_identical": true,
+      "redo_t0.1_f100_fresh_control.csv_identical": true,
+      "redo_t0.1_f100_fresh_self.csv_identical": true,
+      "redo_t0.1_f100_redo_checks.csv_identical": true,
+      "redo_t0.1_f100_final_state_bitwise": true,
+      "redo_t0.1_f100_graph_was_used": true
+    },
+    "snp_e1e-3_s1e-2_engine": "host run() of cifar5p1_mlp_0920 copied for R/std + method; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+    "snp_e1e-3_s1e-2_resets": {
+      "reset_l1": 0,
+      "reset_l2": 0,
+      "redo_checks": 0
+    },
+    "cbp_r1e-3_engine": "host run() of cifar5p1_mlp_0920 copied for R/std + method; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+    "cbp_r1e-3_resets": {
+      "reset_l1": 360,
+      "reset_l2": 360,
+      "redo_checks": 0
+    },
+    "redo_t0.1_f100_engine": "host run() of cifar5p1_mlp_0920 copied for R/std + method; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+    "redo_t0.1_f100_resets": {
+      "reset_l1": 271,
+      "reset_l2": 878,
+      "redo_checks": 0
+    },
+    "mutations": [
+      {
+        "mutation": "M-g1: CBP's L rebound instead of written in place",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "snp_e1e-3_s1e-2_engine": "host run() of cifar5p1_mlp_0920 copied for R/std + method; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+          "cbp_r1e-3_engine": "host run() of cifar5p1_mlp_0920 copied for R/std + method; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+          "redo_t0.1_f100_engine": "host run() of cifar5p1_mlp_0920 copied for R/std + method; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+          "failed_items": [
+            "cbp_r1e-3_per_task.csv_identical",
+            "cbp_r1e-3_extra_task.csv_identical",
+            "cbp_r1e-3_fresh_control.csv_identical",
+            "cbp_r1e-3_fresh_self.csv_identical",
+            "cbp_r1e-3_final_state_bitwise"
+          ]
+        }
+      },
+      {
+        "mutation": "M-g2: the device step count is not written while replaying",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "snp_e1e-3_s1e-2_engine": "host run() of cifar5p1_mlp_0920 copied for R/std + method; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+          "cbp_r1e-3_engine": "host run() of cifar5p1_mlp_0920 copied for R/std + method; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+          "redo_t0.1_f100_engine": "host run() of cifar5p1_mlp_0920 copied for R/std + method; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+          "failed_items": [
+            "cbp_r1e-3_per_task.csv_identical",
+            "cbp_r1e-3_extra_task.csv_identical",
+            "cbp_r1e-3_fresh_control.csv_identical",
+            "cbp_r1e-3_fresh_self.csv_identical",
+            "cbp_r1e-3_final_state_bitwise"
+          ]
+        }
+      },
+      {
+        "mutation": "M-g3: static_idx one batch behind while replaying",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "snp_e1e-3_s1e-2_engine": "host run() of cifar5p1_mlp_0920 copied for R/std + method; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+          "cbp_r1e-3_engine": "host run() of cifar5p1_mlp_0920 copied for R/std + method; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+          "redo_t0.1_f100_engine": "host run() of cifar5p1_mlp_0920 copied for R/std + method; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+          "failed_items": [
+            "snp_e1e-3_s1e-2_per_task.csv_identical",
+            "snp_e1e-3_s1e-2_extra_task.csv_identical",
+            "snp_e1e-3_s1e-2_fresh_control.csv_identical",
+            "snp_e1e-3_s1e-2_fresh_self.csv_identical",
+            "snp_e1e-3_s1e-2_final_state_bitwise",
+            "cbp_r1e-3_per_task.csv_identical",
+            "cbp_r1e-3_extra_task.csv_identical",
+            "cbp_r1e-3_fresh_control.csv_identical",
+            "cbp_r1e-3_fresh_self.csv_identical",
+            "cbp_r1e-3_final_state_bitwise",
+            "redo_t0.1_f100_per_task.csv_identical",
+            "redo_t0.1_f100_extra_task.csv_identical",
+            "redo_t0.1_f100_fresh_control.csv_identical",
+            "redo_t0.1_f100_fresh_self.csv_identical",
+            "redo_t0.1_f100_redo_checks.csv_identical",
+            "redo_t0.1_f100_final_state_bitwise"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 110.5
+  },
+  "S-fresh": {
+    "title": "fresh controls",
+    "target": "src/baselines_cifar5p1_1008.py",
+    "threshold_derivation": "byte identity with the host and between arms; initial state bitwise",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "none_fresh_identical_to_host": true,
+      "none_per_task_identical_to_host": true,
+      "snp_fresh_network_identical_to_none": true,
+      "snp_continual_column_is_own_t_last": true,
+      "snp_fresh_self_written": true,
+      "cbp_fresh_network_identical_to_none": true,
+      "cbp_continual_column_is_own_t_last": true,
+      "cbp_fresh_self_written": true,
+      "redo_fresh_network_identical_to_none": true,
+      "redo_continual_column_is_own_t_last": true,
+      "redo_fresh_self_written": true,
+      "cbp_fresh_start_state_initial": true,
+      "cbp_fresh_self_start_state_initial": true,
+      "snp_fresh_start_state_initial": true,
+      "snp_fresh_self_start_state_initial": true
+    },
+    "mutations": [
+      {
+        "mutation": "M-f1: the method stays on in the method-free fresh",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "snp_fresh_network_identical_to_none",
+            "cbp_fresh_network_identical_to_none",
+            "redo_fresh_network_identical_to_none"
+          ]
+        }
+      },
+      {
+        "mutation": "M-f2: CBP's age not reset before a fresh run",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "cbp_fresh_start_state_initial",
+            "cbp_fresh_self_start_state_initial"
+          ]
+        }
+      },
+      {
+        "mutation": "M-f3: Adam moments not zeroed before a fresh run",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "none_fresh_identical_to_host",
+            "snp_fresh_network_identical_to_none",
+            "cbp_fresh_network_identical_to_none",
+            "redo_fresh_network_identical_to_none",
+            "cbp_fresh_start_state_initial",
+            "cbp_fresh_self_start_state_initial",
+            "snp_fresh_start_state_initial",
+            "snp_fresh_self_start_state_initial"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 90.3
+  },
+  "S-select": {
+    "title": "calibration selection (spec 3.2)",
+    "target": "analysis/baselines_cifar5p1_1008/verdict.py",
+    "threshold_derivation": "synthetic tables with known answers",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "argmax_of_mean": true,
+      "diverged_dropped": true,
+      "tie_grid_order": true,
+      "refuse_unregistered": true,
+      "refuse_wrong_seeds": true,
+      "refuse_missing_cell": true
+    },
+    "mutations": [
+      {
+        "mutation": "M-sel1: select by the median",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "argmax_of_mean"
+          ]
+        }
+      },
+      {
+        "mutation": "M-sel2: select by the early window",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "argmax_of_mean",
+            "diverged_dropped",
+            "tie_grid_order"
+          ]
+        }
+      },
+      {
+        "mutation": "M-sel3: diverged cells kept",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "diverged_dropped"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.0
+  },
+  "S-verdict": {
+    "title": "labels, intervals, sign test, windows, prediction rules",
+    "target": "analysis/baselines_cifar5p1_1008/verdict.py",
+    "threshold_derivation": "exact binomial values and closed-form fixtures",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "A_WINS": true,
+      "B_WINS": true,
+      "EQUIVALENT": true,
+      "UNRESOLVED": true,
+      "band_closed": true,
+      "band_edge_excludes_outside": true,
+      "interval_n20": true,
+      "interval_n10": true,
+      "sign_15_of_20": true,
+      "sign_14_of_20": true,
+      "sign_zeros_dropped": true,
+      "holm": true,
+      "gap_labels": true,
+      "paired_differences": true,
+      "late_window_21_29": true,
+      "early_window_1_9": true,
+      "all_zero_is_equivalent": true,
+      "p2a_closed_at_002": true,
+      "p4_open_at_03": true
+    },
+    "mutations": [
+      {
+        "mutation": "M-v1: interval [v(5), v(16)]",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "interval_n20"
+          ]
+        }
+      },
+      {
+        "mutation": "M-v2: band +-0.01",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "band_edge_excludes_outside"
+          ]
+        }
+      },
+      {
+        "mutation": "M-v3: unpaired difference of medians",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "paired_differences"
+          ]
+        }
+      },
+      {
+        "mutation": "M-v4: window hard 19-27",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "late_window_21_29"
+          ]
+        }
+      },
+      {
+        "mutation": "M-v5: one-sided p",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "sign_15_of_20",
+            "sign_14_of_20"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 0.0
+  },
+  "S-CLI": {
+    "title": "CLI = function; defaults; admission",
+    "target": "src/baselines_cifar5p1_1008.py",
+    "threshold_derivation": "byte identity",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "cli_equals_function": true,
+      "module_entry_point": true,
+      "defaults": true,
+      "cbp_defaults": true,
+      "refuse_unregistered_cell": true,
+      "refuse_missing_checks": true,
+      "refuse_calib_wrong_seeds": true,
+      "refuse_main_without_selection": true,
+      "refuse_unregistered_steps": true
+    },
+    "mutations": [
+      {
+        "mutation": "M-L1: the CLI ignores --steps-hard",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "cli_equals_function"
+          ]
+        }
+      },
+      {
+        "mutation": "M-L2: the default task count is not 30",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "defaults"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "seconds": 39.8
+  },
+  "finished": "2026-10-08T05:34:31"
+}

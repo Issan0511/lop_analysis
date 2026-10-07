@@ -274,3 +274,12 @@ seed ごとに: **後期窓** = t ∈ {21, 23, 25, 27, 29} の `online_acc` の�
 
 - git に入れる: spec、`src/baselines_cifar5p1_1008.py`、`analysis/baselines_cifar5p1_1008/`、`results/baselines_cifar5p1_1008/`（checks.json、calib/ と main/ の全走の CSV・provenance、calib_table.csv・selected.json、verdict の出力、summary.md、起動ログ）。
 - CLAUDE.md §4: git の外のファイル（`__pycache__` 以外。`data` の symlink は共有データなので辿らず移さない）と検査の作業場所の出力を `~/Projects/obsidian-research-data/baselines_cifar5p1_1008/` に移し、`results/baselines_cifar5p1_1008/backup_manifest.json`（source・backup・bytes・sha256）を commit。`git fetch origin && git merge origin/main && git push origin HEAD:main`（断られたら fetch からやり直す）。worktree とブランチは親が確かめるまで消さない。vault には書かない。
+
+## 12. 訂正（実装と検査の途中で見つけた登録文の誤り・較正の前で 3 手法の値はどの seed でもまだ無い）
+
+判定の中身は変えない。登録文が実装上ありえないことを要求していた所と、実装の細部の確定。
+
+1. **§5.5 (A)・§8 S-fresh の「手法腕の fresh_control.csv が none とバイト一致」は誤り。** このファイルの `continual_online_acc` と `fresh_gap` はその腕自身の t29 の値（構成上、腕ごとに違う）。腕どうしで共通なのは fresh の網そのもの（`fresh_online_acc`）なので、照合は **seed ごとの `fresh_online_acc` の印字のバイト一致** に直す。あわせて `continual_online_acc` がその腕の per_task の t29 の `online_acc` と一致することを確かめる。`none` と宿主の照合はファイル全体のバイト一致のまま。（模擬データで verdict を空打ちして見つけた。空打ちは committed の R・SNA・KKT1・l2init の記録を腕の代役にしたもので、3 手法の値は含まない。）
+2. **§5.2 の符号検定で 20 個の差がすべて 0 のとき**（0 を落とすと n = 0）、p = 1 とする（宿主の関数は nan を返し、Holm の計算を壊す）。2 腕が全 seed で同一のときだけ起きる。このとき区間は [0, 0] でラベルは `EQUIVALENT_WITHIN_0.005`。
+3. §2.4 の置換された要素の偏り補正は、デバイス上の float64 で 1/(1 − β^s) を計算してから float32 に 1 回丸める（宿主が scalar を Python の倍精度で作って float32 に入れるのと同じ精度）。「float32、デバイス上」の記述をこれに直す。
+4. §8 S-CLI: 関数呼び出しとの照合は同じプロセスの中で `main()` を呼んで行い、`python -m` の入口は `run --help` で確かめる（GPU のプロセスを同時に 2 本にしないため）。S-redo の変異「周期を 1 ずらす」は n mod F = 1 だと課題の第 1 更新に当たって 64 枚の標本が作れず落ちる（検出が例外になる）ので、周期 F + 1 にずらす変異にした。
