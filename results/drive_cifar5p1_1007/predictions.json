@@ -1,0 +1,75 @@
+{
+  "predictions": {
+    "parent": {
+      "window_hard": 0.65,
+      "window_easy": 0.55,
+      "D1": {
+        "BOUNDARY_ENRICHED": 0.6,
+        "UNRESOLVED": 0.3,
+        "LATER_ENRICHED": 0.1
+      },
+      "D2": {
+        "UPSTREAM_DOWN": 0.6
+      },
+      "D3": {
+        "EASY_SINKS": 0.7
+      },
+      "D4": {
+        "SELF_NET_DOWN": 0.55
+      },
+      "D5a": 0.4
+    },
+    "claude": {
+      "window_hard": 0.75,
+      "window_easy": 0.7,
+      "D1": {
+        "BOUNDARY_ENRICHED": 0.75,
+        "UNRESOLVED": 0.2,
+        "LATER_ENRICHED": 0.05
+      },
+      "D2": {
+        "UPSTREAM_DOWN": 0.6,
+        "UNRESOLVED": 0.3,
+        "UPSTREAM_UP": 0.1
+      },
+      "D3": {
+        "EASY_SINKS": 0.45,
+        "UNRESOLVED": 0.3,
+        "HARD_SINKS": 0.25
+      },
+      "D4": {
+        "SELF_NET_DOWN": 0.7,
+        "UNRESOLVED": 0.25,
+        "SELF_NET_UP": 0.05
+      },
+      "D5a": 0.5,
+      "D5b": 0.8
+    }
+  },
+  "brier": {
+    "parent": {
+      "window_hard": 0.42250000000000004,
+      "window_easy": 0.30250000000000005,
+      "D1_multiclass": null,
+      "D1_binary_BOUNDARY_ENRICHED": null,
+      "D2_binary_UPSTREAM_DOWN": 0.16000000000000003,
+      "D3_binary_EASY_SINKS": 0.48999999999999994,
+      "D4_binary_SELF_NET_DOWN": 0.30250000000000005,
+      "D5a_binary_5of5": null
+    },
+    "claude": {
+      "window_hard": 0.5625,
+      "window_easy": 0.48999999999999994,
+      "D1_multiclass": null,
+      "D1_binary_BOUNDARY_ENRICHED": null,
+      "D2_binary_UPSTREAM_DOWN": 0.16000000000000003,
+      "D2_multiclass": 0.26,
+      "D3_binary_EASY_SINKS": 0.2025,
+      "D3_multiclass": 0.855,
+      "D4_binary_SELF_NET_DOWN": 0.48999999999999994,
+      "D4_multiclass": 1.055,
+      "D5a_binary_5of5": null,
+      "D5b_binary_5of5_negative": 0.03999999999999998
+    }
+  }
+}

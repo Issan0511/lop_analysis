@@ -1,0 +1,51 @@
+{
+ "run_id": "drive_rlmnist_1007",
+ "applicability": {
+  "A": true,
+  "B": true,
+  "C": true,
+  "label": "VALID"
+ },
+ "M1x": {
+  "label": "CROSS_TASK_SINK_CONDITION_HOLDS",
+  "differences": [
+   0.011615,
+   0.013729583333333337,
+   0.010898749999999999,
+   0.015764583333333332,
+   0.018130000000000007
+  ],
+  "positive": 5,
+  "nonzero": 5,
+  "one_sided_p": 0.03125
+ },
+ "M2x": "CERTIFICATE_CONSISTENT",
+ "M2x_violations_all_seeds_all_tasks": 0.0,
+ "M3x": {
+  "label": "BOUNDARY_ENRICHED",
+  "differences": [
+   0.6290818565400844,
+   0.6642835443037974,
+   0.676446835443038,
+   0.6560995780590718,
+   0.6846286919831225
+  ],
+  "positive": 5,
+  "nonzero": 5,
+  "one_sided_p": 0.03125
+ },
+ "window": {
+  "label": "WINDOW_IDENTIFIED",
+  "break_epoch": 1,
+  "boundary_updates": 75
+ },
+ "M4x": {
+  "U_main_sum_all_negative": true,
+  "S_main_sum_all_negative": true,
+  "first_epoch_S_share_gt_half_all": true
+ },
+ "window_sha256": "cb1f0cd73f73528c9d41b2c557c7b371b8b710f90b6b23e328dd44a84444ddf0",
+ "report_source": "d0ed9170e5d33a245f73ef852b6f1836fd60d3b4a14b6bac8883ed8898019e1c",
+ "report_source_at_calibration": "d0ed9170e5d33a245f73ef852b6f1836fd60d3b4a14b6bac8883ed8898019e1c",
+ "limitations": "observational sufficient condition on the second layer's self movement; five independent seeds; Random-Label MNIST ELU->ELU ref arm, 10 tasks; no causal or net-total-sink inference"
+}

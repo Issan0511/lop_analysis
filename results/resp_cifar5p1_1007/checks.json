@@ -1,0 +1,932 @@
+{
+  "pre_run": {
+    "all_pass": true,
+    "source_sha256": {
+      "src/resp_cifar5p1_1007.py": "c8d6bedb04d0895f1fea97d2c4a14a11dcfb1eaa5fd64565f8b9668b9b5c729c",
+      "specs/spec_resp_cifar5p1_1007.md": "4e11627ce023827acd86f063792a92d4d3e08d70fd05a26c108b64762343487b",
+      "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+      "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+      "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+      "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+      "src/cifar_interventions_0920.py": "d079b5185249114d035afcce69d9636ef1db2807e642c3fd879cb2168907f37f",
+      "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
+      "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0",
+      "analysis/resp_cifar5p1_1007/checks.py": "6ac9c93c4bf19ee5650800659982b09e95224a4d3d9b0742e69964e7f3805520",
+      "analysis/resp_cifar5p1_1007/report.py": "b6aee7dfd3cd48f7e09c7e22eeaaeb87229c67b72335a0a6e2f94536c97d0d50",
+      "analysis/resp_cifar5p1_1007/launch.sh": "73df5adeb744c52356cc4609f996c41b8692dd007fe15c6ca8faec9b8b851403"
+    },
+    "required": [
+      "S-host",
+      "S-prefix",
+      "S-branch",
+      "S-field",
+      "S-grad",
+      "S-reset",
+      "S-isolation",
+      "S-graph",
+      "S-verdict",
+      "S-resume",
+      "S-cost/CLI"
+    ],
+    "required_mutants": [
+      "lr",
+      "time",
+      "order",
+      "mv_lost",
+      "tc_reset",
+      "rng_not_restored",
+      "drop_anchor",
+      "alias_P0",
+      "wrong_layer",
+      "zero_field",
+      "sign_field",
+      "seed_field",
+      "unit_field",
+      "image_field",
+      "batch_position",
+      "nan_outside_lost",
+      "drop_backward_shift",
+      "frozen_grad",
+      "backward_only",
+      "dphi_as_train",
+      "reset_m_only",
+      "reset_keep_tc",
+      "epsilon_omitted",
+      "shallow_copy",
+      "diagnostic_rng",
+      "shared_rng",
+      "warmup_state",
+      "unpaired",
+      "one_sided",
+      "no_bonferroni",
+      "missing_seed",
+      "nonfinite",
+      "missing_arm",
+      "denominator",
+      "different_identity",
+      "fake_done",
+      "bad_hash",
+      "field_lost",
+      "mv_lost_resume",
+      "wrong_arm",
+      "wrong_budget",
+      "missing_provenance"
+    ],
+    "evidence": {
+      "S-grad": {
+        "all_pass": true,
+        "derivative": {
+          "z": [
+            -3.0000000054977558e+38,
+            -1.0,
+            -1.401298464324817e-45,
+            -0.0,
+            0.0,
+            1.401298464324817e-45,
+            1.0,
+            3.0000000054977558e+38
+          ],
+          "native_training_derivative": [
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "host_diagnostic_dphi": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "subnormal_preserved_cuda": true
+        },
+        "chain_rule": {
+          "max_error_ratio": 1.6296600208985135e-05,
+          "independent": "hand float64 CE chain rule, gate 1[z+d>=0]",
+          "bound": "gamma_128 * sum|tensors|",
+          "layers": [
+            1,
+            2
+          ]
+        }
+      },
+      "S-verdict": {
+        "all_pass": true,
+        "labels": 7,
+        "quantiles": "independent Simpson integration",
+        "all_ten_required": true
+      },
+      "S-host": {
+        "all_pass": true,
+        "per_task_byte_identical": true,
+        "fresh_byte_identical": true,
+        "tasks": 30,
+        "seeds": [
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107,
+          108,
+          109
+        ],
+        "columns": "all (eff_rank included)",
+        "reference": "unmodified cifar5p1_mlp_0920.run in this environment"
+      },
+      "S-prefix": {
+        "all_pass": true,
+        "arms": {
+          "N_h": {
+            "all_pass": true,
+            "core_bit_exact": true,
+            "batches_bit_exact": true,
+            "rows_exact": true,
+            "task": 3
+          },
+          "N_c": {
+            "all_pass": true,
+            "core_bit_exact": true,
+            "batches_bit_exact": true,
+            "rows_exact": true,
+            "task": 29
+          }
+        }
+      },
+      "S-branch": {
+        "all_pass": true,
+        "arms": {
+          "N_h": {
+            "batches": 860,
+            "branch_bit_exact": true
+          },
+          "N_c": {
+            "batches": 860,
+            "branch_bit_exact": true
+          },
+          "N_hr": {
+            "batches": 860,
+            "branch_bit_exact": true
+          },
+          "N_cr": {
+            "batches": 860,
+            "branch_bit_exact": true
+          },
+          "R_ch": {
+            "batches": 860,
+            "branch_bit_exact": true
+          },
+          "R_chr": {
+            "batches": 860,
+            "branch_bit_exact": true
+          },
+          "S_hcr": {
+            "batches": 860,
+            "branch_bit_exact": true
+          },
+          "S_hc": {
+            "batches": 860,
+            "branch_bit_exact": true
+          },
+          "S_hcL1r": {
+            "batches": 860,
+            "branch_bit_exact": true
+          }
+        },
+        "tested": "all task images at once, all 780 training batches, row-order chunks of 32"
+      },
+      "S-field": {
+        "all_pass": true,
+        "arms": {
+          "R_ch": {
+            "arm": "R_ch",
+            "batches": 860,
+            "field_sd_per_seed": [
+              10.656359654610611,
+              9.97141307404138,
+              10.752616316261067,
+              8.805249004111708,
+              9.901617008440581,
+              11.856431121805084,
+              8.773937938717456,
+              9.833284312893216,
+              8.318572318471077,
+              10.26066687165589
+            ],
+            "max_abs_q": 3.814697265625e-06,
+            "argument_error_ratio_per_seed": [
+              0.9993447889604955,
+              0.980237155405909,
+              0.9752643860794743,
+              0.994924040555985,
+              0.9976476095739649,
+              0.9978650076634981,
+              0.9942185974747423,
+              0.9972237554529696,
+              0.9804195191534644,
+              0.9982557550639406
+            ],
+            "argument_error_ratio": 0.9993447889604955,
+            "ambiguous_pairs_per_seed": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              12,
+              0,
+              0,
+              0,
+              0
+            ],
+            "gate_checked_pairs_per_seed": [
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2995988,
+              2996000,
+              2996000,
+              2996000,
+              2996000
+            ],
+            "training_gate_count_max_difference": 0,
+            "all_pass": true
+          },
+          "R_chr": {
+            "arm": "R_chr",
+            "batches": 860,
+            "field_sd_per_seed": [
+              10.656359654610611,
+              9.97141307404138,
+              10.752616316261067,
+              8.805249004111708,
+              9.901617008440581,
+              11.856431121805084,
+              8.773937938717456,
+              9.833284312893216,
+              8.318572318471077,
+              10.26066687165589
+            ],
+            "max_abs_q": 3.814697265625e-06,
+            "argument_error_ratio_per_seed": [
+              0.9993447889604955,
+              0.980237155405909,
+              0.9752643860794743,
+              0.994924040555985,
+              0.9976476095739649,
+              0.9978650076634981,
+              0.9942185974747423,
+              0.9972237554529696,
+              0.9804195191534644,
+              0.9982557550639406
+            ],
+            "argument_error_ratio": 0.9993447889604955,
+            "ambiguous_pairs_per_seed": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              12,
+              0,
+              0,
+              0,
+              0
+            ],
+            "gate_checked_pairs_per_seed": [
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2995988,
+              2996000,
+              2996000,
+              2996000,
+              2996000
+            ],
+            "training_gate_count_max_difference": 0,
+            "all_pass": true
+          },
+          "S_hcr": {
+            "arm": "S_hcr",
+            "batches": 860,
+            "field_sd_per_seed": [
+              11.487627790897674,
+              11.164238580689572,
+              12.123988230901102,
+              10.084967000321958,
+              10.618169323686608,
+              13.356219319394652,
+              9.34992757293779,
+              11.371373244687325,
+              8.721708647141185,
+              11.365044900151261
+            ],
+            "max_abs_q": 3.814697265625e-06,
+            "argument_error_ratio_per_seed": [
+              0.996718076373859,
+              0.9952142070204976,
+              0.9962978082672452,
+              0.9975234978615959,
+              0.985231031130476,
+              0.9968599290166448,
+              0.9942060231125904,
+              0.9917721157188057,
+              0.9985978978738755,
+              0.9941698871617687
+            ],
+            "argument_error_ratio": 0.9985978978738755,
+            "ambiguous_pairs_per_seed": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "gate_checked_pairs_per_seed": [
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000
+            ],
+            "training_gate_count_max_difference": 0,
+            "all_pass": true
+          },
+          "S_hc": {
+            "arm": "S_hc",
+            "batches": 860,
+            "field_sd_per_seed": [
+              11.487627790897674,
+              11.164238580689572,
+              12.123988230901102,
+              10.084967000321958,
+              10.618169323686608,
+              13.356219319394652,
+              9.34992757293779,
+              11.371373244687325,
+              8.721708647141185,
+              11.365044900151261
+            ],
+            "max_abs_q": 3.814697265625e-06,
+            "argument_error_ratio_per_seed": [
+              0.996718076373859,
+              0.9952142070204976,
+              0.9962978082672452,
+              0.9975234978615959,
+              0.985231031130476,
+              0.9968599290166448,
+              0.9942060231125904,
+              0.9917721157188057,
+              0.9985978978738755,
+              0.9941698871617687
+            ],
+            "argument_error_ratio": 0.9985978978738755,
+            "ambiguous_pairs_per_seed": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "gate_checked_pairs_per_seed": [
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000
+            ],
+            "training_gate_count_max_difference": 0,
+            "all_pass": true
+          },
+          "S_hcL1r": {
+            "arm": "S_hcL1r",
+            "batches": 860,
+            "field_sd_per_seed": [
+              14.794627618343275,
+              13.548400616050621,
+              15.477389880425884,
+              13.049704452886434,
+              12.355496634572201,
+              15.03532359169716,
+              11.660454304937797,
+              14.977631018730118,
+              11.731567445705204,
+              13.864808054536933
+            ],
+            "max_abs_q": 3.814697265625e-06,
+            "argument_error_ratio_per_seed": [
+              0.998570141277326,
+              0.9981090548460262,
+              0.9907559875784621,
+              0.9978834639719282,
+              0.9997945898320458,
+              0.9994935258901417,
+              0.9944374339170744,
+              0.9986062509414295,
+              0.9995136402714682,
+              0.9951091660394706
+            ],
+            "argument_error_ratio": 0.9997945898320458,
+            "ambiguous_pairs_per_seed": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "gate_checked_pairs_per_seed": [
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000,
+              2996000
+            ],
+            "training_gate_count_max_difference": 0,
+            "all_pass": true
+          }
+        },
+        "finite_wrong_image_lookup_refused": true
+      },
+      "S-isolation": {
+        "all_pass": true,
+        "reversed_order_bit_identical": true,
+        "states_unchanged": true,
+        "arms": 9
+      },
+      "S-graph": {
+        "all_pass": true,
+        "arms": [
+          "N_h",
+          "R_ch",
+          "S_hcL1r"
+        ],
+        "eager_graph_bit_identical": true,
+        "warmup_rolled_back": true
+      },
+      "S-reset": {
+        "all_pass": true,
+        "first_update_bit_exact": true,
+        "analytic_error_ratio": 0.06755558263251507,
+        "zero_gradient_entries_in_first_update": 76473,
+        "zero_gradient_identity": true
+      },
+      "S-resume": {
+        "all_pass": true,
+        "prefix_stop_task": 10,
+        "arm_stop": "R_ch",
+        "resumed_equals_uninterrupted": true
+      },
+      "S-cost/CLI": {
+        "all_pass": true,
+        "cli_seconds_prefix_plus_9_arms": 61.54835367202759,
+        "cli_peak_cuda_bytes": 4024582656,
+        "suite_peak_rss_bytes": 4409540608,
+        "all_arms": true,
+        "seeds": [
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107,
+          108,
+          109
+        ],
+        "steps_per_task": 780
+      }
+    },
+    "mutants": {
+      "dphi_as_train": true,
+      "drop_backward_shift": true,
+      "frozen_grad": true,
+      "backward_only": true,
+      "denominator": true,
+      "missing_seed": true,
+      "nonfinite": true,
+      "missing_arm": true,
+      "one_sided": true,
+      "no_bonferroni": true,
+      "unpaired": true,
+      "lr": true,
+      "time": true,
+      "order": true,
+      "mv_lost": true,
+      "tc_reset": true,
+      "rng_not_restored": true,
+      "zero_field": true,
+      "sign_field": true,
+      "seed_field": true,
+      "unit_field": true,
+      "image_field": true,
+      "nan_outside_lost": true,
+      "wrong_layer": true,
+      "alias_P0": true,
+      "drop_anchor": true,
+      "batch_position": true,
+      "shallow_copy": true,
+      "diagnostic_rng": true,
+      "shared_rng": true,
+      "warmup_state": true,
+      "epsilon_omitted": true,
+      "reset_m_only": true,
+      "reset_keep_tc": true,
+      "mv_lost_resume": true,
+      "different_identity": true,
+      "fake_done": true,
+      "bad_hash": true,
+      "field_lost": true,
+      "wrong_arm": true,
+      "wrong_budget": true,
+      "missing_provenance": true
+    },
+    "attempt": "results/_checks_resp_cifar5p1_1007/attempt_1791379870302092060",
+    "seconds": 290.7075502872467,
+    "independent_audit": false,
+    "deferred_to_main_run": {
+      "S-host(b)": "prefix vs committed 0920 record, gate before any arm",
+      "S-prefix": "actual main N_h/N_c equality, gate before other arms",
+      "S-branch/S-field": "preflight of every main arm on the main states"
+    }
+  },
+  "host_record": {
+    "all_pass": true,
+    "gated_mismatches": 0,
+    "eff_rank_mismatches": 111,
+    "eff_rank_max_relative_difference": 7.834945006560821e-08
+  },
+  "prefix": {
+    "N_h": {
+      "all_pass": true,
+      "core_bit_exact": true,
+      "batches_bit_exact": true,
+      "rows_exact": true,
+      "task": 3
+    },
+    "N_c": {
+      "all_pass": true,
+      "core_bit_exact": true,
+      "batches_bit_exact": true,
+      "rows_exact": true,
+      "task": 29
+    }
+  },
+  "preflight": {
+    "N_h": {
+      "arm": "N_h",
+      "batches": 860,
+      "branch_bit_exact": true,
+      "all_pass": true
+    },
+    "N_c": {
+      "arm": "N_c",
+      "batches": 860,
+      "branch_bit_exact": true,
+      "all_pass": true
+    },
+    "N_hr": {
+      "arm": "N_hr",
+      "batches": 860,
+      "branch_bit_exact": true,
+      "all_pass": true
+    },
+    "N_cr": {
+      "arm": "N_cr",
+      "batches": 860,
+      "branch_bit_exact": true,
+      "all_pass": true
+    },
+    "R_ch": {
+      "arm": "R_ch",
+      "batches": 860,
+      "branch_bit_exact": true,
+      "field_sd_per_seed": [
+        10.259457319058821,
+        10.959094678168997,
+        9.631616488896263,
+        10.692985203551734,
+        11.808062397657917,
+        10.83347506385737,
+        9.761223650867102,
+        9.787585036788789,
+        13.940171180760272,
+        10.380099667180675
+      ],
+      "max_abs_q": 3.814697265625e-06,
+      "argument_error_ratio_per_seed": [
+        0.9964237181700647,
+        0.9942164133712436,
+        0.9989131251582455,
+        0.9994922169808917,
+        0.995230547261634,
+        0.9938556673694094,
+        0.9923802955410362,
+        0.9866063014399802,
+        0.9987013406749813,
+        0.9867845283365445
+      ],
+      "argument_error_ratio": 0.9994922169808917,
+      "ambiguous_pairs_per_seed": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        12,
+        0,
+        0,
+        0
+      ],
+      "gate_checked_pairs_per_seed": [
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2995988,
+        2996000,
+        2996000,
+        2996000
+      ],
+      "training_gate_count_max_difference": 0,
+      "all_pass": true
+    },
+    "R_chr": {
+      "arm": "R_chr",
+      "batches": 860,
+      "branch_bit_exact": true,
+      "field_sd_per_seed": [
+        10.259457319058821,
+        10.959094678168997,
+        9.631616488896263,
+        10.692985203551734,
+        11.808062397657917,
+        10.83347506385737,
+        9.761223650867102,
+        9.787585036788789,
+        13.940171180760272,
+        10.380099667180675
+      ],
+      "max_abs_q": 3.814697265625e-06,
+      "argument_error_ratio_per_seed": [
+        0.9964237181700647,
+        0.9942164133712436,
+        0.9989131251582455,
+        0.9994922169808917,
+        0.995230547261634,
+        0.9938556673694094,
+        0.9923802955410362,
+        0.9866063014399802,
+        0.9987013406749813,
+        0.9867845283365445
+      ],
+      "argument_error_ratio": 0.9994922169808917,
+      "ambiguous_pairs_per_seed": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        12,
+        0,
+        0,
+        0
+      ],
+      "gate_checked_pairs_per_seed": [
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2995988,
+        2996000,
+        2996000,
+        2996000
+      ],
+      "training_gate_count_max_difference": 0,
+      "all_pass": true
+    },
+    "S_hcr": {
+      "arm": "S_hcr",
+      "batches": 860,
+      "branch_bit_exact": true,
+      "field_sd_per_seed": [
+        10.098360441332797,
+        10.038251600312485,
+        11.546402655755214,
+        12.163084552502548,
+        15.109040168784695,
+        11.5547068174864,
+        10.927949286829408,
+        11.045446941216202,
+        16.189084976685926,
+        9.93276191113971
+      ],
+      "max_abs_q": 6.4373016357421875e-06,
+      "argument_error_ratio_per_seed": [
+        0.9941900276893785,
+        0.9973091536241003,
+        0.9981515173593383,
+        0.9862334037012143,
+        0.9978398004517063,
+        0.9931355547118363,
+        0.9991775283190724,
+        0.9991569837710292,
+        0.9951695352681491,
+        0.9972675487404341
+      ],
+      "argument_error_ratio": 0.9991775283190724,
+      "ambiguous_pairs_per_seed": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "gate_checked_pairs_per_seed": [
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000
+      ],
+      "training_gate_count_max_difference": 0,
+      "all_pass": true
+    },
+    "S_hc": {
+      "arm": "S_hc",
+      "batches": 860,
+      "branch_bit_exact": true,
+      "field_sd_per_seed": [
+        10.098360441332797,
+        10.038251600312485,
+        11.546402655755214,
+        12.163084552502548,
+        15.109040168784695,
+        11.5547068174864,
+        10.927949286829408,
+        11.045446941216202,
+        16.189084976685926,
+        9.93276191113971
+      ],
+      "max_abs_q": 6.4373016357421875e-06,
+      "argument_error_ratio_per_seed": [
+        0.9941900276893785,
+        0.9973091536241003,
+        0.9981515173593383,
+        0.9862334037012143,
+        0.9978398004517063,
+        0.9931355547118363,
+        0.9991775283190724,
+        0.9991569837710292,
+        0.9951695352681491,
+        0.9972675487404341
+      ],
+      "argument_error_ratio": 0.9991775283190724,
+      "ambiguous_pairs_per_seed": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "gate_checked_pairs_per_seed": [
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000
+      ],
+      "training_gate_count_max_difference": 0,
+      "all_pass": true
+    },
+    "S_hcL1r": {
+      "arm": "S_hcL1r",
+      "batches": 860,
+      "branch_bit_exact": true,
+      "field_sd_per_seed": [
+        12.32834751288848,
+        12.066298531996349,
+        16.009381977707125,
+        13.63343163685207,
+        17.187586485287067,
+        13.819183795194558,
+        12.424134513151866,
+        13.578109828095078,
+        19.39082420272566,
+        12.968375042025757
+      ],
+      "max_abs_q": 7.62939453125e-06,
+      "argument_error_ratio_per_seed": [
+        0.994667667094592,
+        0.9866282802129245,
+        0.9979632120797726,
+        0.9926418363986831,
+        0.9980145206641262,
+        0.989344753264126,
+        0.9951944776498344,
+        0.9948731617650659,
+        0.988612213052594,
+        0.9987513037106752
+      ],
+      "argument_error_ratio": 0.9987513037106752,
+      "ambiguous_pairs_per_seed": [
+        12,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "gate_checked_pairs_per_seed": [
+        2995988,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000,
+        2996000
+      ],
+      "training_gate_count_max_difference": 0,
+      "all_pass": true
+    }
+  },
+  "all_pass": true,
+  "independent_audit": false
+}
