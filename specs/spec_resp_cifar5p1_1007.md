@@ -1,0 +1,199 @@
+# resp_cifar5p1_1007 — 5+1 CIFAR × MLP（ReLU/std）で第 2 層の応答の場を交換する（S4 の移植）
+
+状態: **登録（この commit）。実装・検査・本走はこの commit より後。**
+
+作成: 2026-10-07 / 起草・実装: Claude（Opus 5.5、実験担当サブエージェント）/ 起点 `origin/main=91ec9f2ea2f8130fdbfc89b0eb9deb2f7553009b`。
+run: `resp_cifar5p1_1007` / branch: `claude/resp_cifar5p1_1007` / worktree: `wt/resp_cifar5p1_1007`。
+親: Fable（論文 V12 表 5「証拠表（柱 × 箱）」で、柱「応答 → LoP（再学習能力）」× 箱「5+1 CIFAR × MLP（実ラベルの箱）」が「未」）。
+型: [S4 resp_cifar_ee_0920](spec_resp_cifar_ee_0920.md) の §2.3（固定場と出力一致）・§3（腕）・§4（読み出し）・§5（判定）・§7（検査）。箱: [cifar5p1_mlp_0920](spec_cifar5p1_mlp_0920.md)。
+
+## 0. 一行
+
+**5+1 CIFAR × MLP（ReLU/std・Adam 1e−4）の自然な網で、初期出力を bit で揃えたまま第 2 層の応答の場を健康時（task 2 末）／劣化後（task 28 末）の網のものに入れ替えると、次の hard 課題の学習能力（online）が両方向に変わるかを問う。** 主は復元 P1 と沈降 P2。背骨（RL-CIFAR・ELU/std）で登録済みの S4 を、実ラベル・課題ごとに画像集合が変わる箱へ移す。
+
+## 1. 既知情報と S4 からの違い
+
+### 1.1 既知（設計に使った。独立な予測成功として数えない）
+
+- 0920 本走 R/std（`results/cifar5p1_mlp_0920/R_std_lr0.0001/`、seed 0–9）: 後期窓 .424・fresh gap +.228・死 l2 .38・mob l2 .002（seed 中央値）。結果ノートの事後の読み「死ぬのは第 2 層だけ（第 1 層は死者ゼロ）、殺すのは easy タスク」。**第 2 層を主対象に選んだのはこの既知の読みによる。**
+- 同じ記録の自然な online: task 3 と task 29 の差 D の seed 平均 +.233（SD .088）、task 2 末の mob l2 は .12–.66、task 28 末は 0–.002（各課題自身の画像で）。**適用条件 (2) の前半は既知の自然軌道を新しい走で bit 再現するだけ**で、予測の当たりとしては扱わない。
+- 分岐点（t_h = task 2 末、t_c = task 28 末）と 9 腕は親が指定した。本 spec の起案者はこの値を選び直していない。
+
+### 1.2 登録前に走らせたもの（介入なし・本走 seed なし）
+
+- 環境の確認: 0920 の記録は torch 2.13.0+**cu126**、現在の環境は 2.13.0+**cu130**（RTX 5060 Ti）。無改変の宿主 `cifar5p1_mlp_0920.run('R', seeds 10–19, std, lr 1e−4, 30 課題, fresh)` を現環境で走らせ、委任済みの記録 `results/cifar5p1_mlp_0920/R_s10-19/` と比べた（2026-10-07、scratchpad、所要 24 秒）。**per_task.csv の float32 由来の全列と fresh_control.csv は byte 一致。違ったのは `eff_rank_l2` だけ**（300 行中 105 行、相対差最大 1.09e−7。float64 の GEMM と CPU の `eigvalsh` を通る診断列）。
+- これに基づき §7 の S-host(b)（本走の接頭部と 0920 記録の照合）は **eff_rank_l1/l2 を除く全列の byte 一致**を要求し、eff_rank の差は報告だけにする。S-host(a)（現環境の無改変宿主と本実装の照合、検査 seed）は eff_rank を含む全列の byte 一致を要求する。
+- seed 0–9 の介入・自然継続は登録前に一切走らせていない。
+
+### 1.3 S4 からの違い（すべて事前に固定）
+
+1. **箱**: 実ラベル（CIFAR-100）、課題ごとに画像集合が変わる 5+1、ReLU、lr 1e−4、batch 32、780 更新/課題、頭は 100 出力で毎課題新しいクラス。
+2. **場の画像集合**: S4 は seed ごとに固定の 1200 枚だった。ここでは donor と受け手が学んだ課題が違うので、**場は継続課題（次課題）の全画像**（hard なので 2500 枚）で定義する（§2.3）。
+3. **ReLU**: φ = `torch.clamp(z, min=0.0)`（宿主 `B.ReLU.phi`）。訓練の微分はこの前向きの autograd。PyTorch 2.13/CUDA の clamp の微分は z ≥ 0（±0 を含む）で 1、z < 0（負の subnormal を含む）で 0。宿主の診断 `dphi = 1[z>0]` とは z が厳密に 0 のときだけ違う（差は数えて記録する）。g ∈ {0,1} なので **G = 1 − Q = 1 − 厳密 0 率**、unit 別 n_eff は「開いている画像の数」に一致する（S4 の ELU と違い、これらは独立な量ではない）。
+4. **場の微分の誤差**: ReLU の微分は不連続なので S4 の Lipschitz の上界は使えない。代わりに「引数の誤差上界より |目標値| が大きい全 pair で、ずらした引数のゲートが donor のゲートと一致する」ことを要求し、上界の帯の中にある pair の数を報告する（§2.3）。
+5. **腕**: 一様階段（S1u5r/S1u10r/S1u20r）を省く。**親の依頼文は「8 腕」と書くが、表に列挙された腕は 9 本**（S4 の 12 腕から階段 3 本を除いた数）。表のとおり 9 腕を走らせる（§3）。
+6. **分岐点**: t_h = task 2 末（hard 1 と easy 1 を学んだ後）、t_c = task 28 末（easy 14 の後）。継続課題はそれぞれ task 3・task 29（どちらも hard。task 29 は 0920 の fresh gap を測った課題そのもの）。
+7. **Adam の時刻**: 宿主の tc は課題をまたいで累積する（課題ごとに 0 に戻さない）。reset 腕は m・v・tc をすべて 0 にする。
+8. 喪失は「適応の速さ」の喪失で、online は床（0.20 や 0）に落ちない（N_c の既知値は .28–.55）。主 E は床からの距離ではなく、同じ課題内の対応差で読む。
+
+## 2. 箱・分岐・介入
+
+### 2.1 固定する箱（`src/cifar5p1_mlp_0920.py` の `run()` そのもの）
+
+- CIFAR-100 train（`cifar-100-python.tar.gz` sha256 `85cd44d0…77a7`、パス `/home/issan/Projects/claude/proj_004_drift/data/cifar100/`）。30 課題、奇数が hard（5 クラス × 500 = 2500 枚）、偶数が easy（1 クラス 500 枚）。クラスは `c51_classes` stream、バッチは `c51_batch` stream から `batch_indices(g_batch[s], rows_t, 780)`。780 更新/課題、batch 32。
+- 3072–100–100–100、ReLU（腕 `R`）、bias あり、入力 `std`（CIFAR-100 のチャネル mean/sd）、初期化 `init` stream の U(±1/√fan_in)。
+- Adam lr 1e−4、β = (0.9, 0.999)、ε = 1e−8、WD なし。宿主と同じ要素ごとの更新式・同じ順序。
+- seed 0–9 を R=10 で seed 昇順に束ねる。CUDA float32・`baddbmm`・CUDA graph（1 回 capture、warmup 3 step を巻き戻す）、`torch.use_deterministic_algorithms(True)`、TF32 off、`CUBLAS_WORKSPACE_CONFIG=:4096:8`、CPU 2 thread。診断の和・統計は float64。
+- online = 課題の 780 バッチの更新前当たり率の平均（宿主 `acc_sum/780`）。memo = 課題末に課題の全画像で測った正解率（宿主の `train_acc` と同じ式。介入腕はその腕の前向き＝場を含む関数で測る）。online CE = 780 バッチの訓練 CE の平均、memo CE = 課題末の全画像 CE。
+- 検査・計時は seed 100–109（R=10）と合成入力だけ。
+
+### 2.2 自然な接頭部と分岐点
+
+- **健康 t_h = task 2 末、劣化 t_c = task 28 末を全 seed 共通に固定**。成績で選び直さない。
+- 接頭部は新しい走で **task 1–29** を学び、そのあと宿主と同じ fresh 対照（P を初期値へ、m/v を 0、tc を 0、task 29 と同じバッチ列で 780 更新）を走らせる。task 1–29 の per_task 行と fresh の値を 0920 記録と照合する（S-host(b)）。
+- 保存点 task 2・3・28・29 末に、P・Adam m/v・tc・seed ごとの `c51_batch` generator state・完了課題・クラス計画の hash・次課題の画像行と正解ラベルの hash・状態 hash を保存する。
+- 全腕は分岐状態の独立な clone から始める。同じ分岐の腕は次課題の画像・ラベル・780 バッチの行番号を共有する（clone の generator から宿主と同じ手続きで生成）。
+- 自然腕 N_h / N_c の終端の P・m・v・tc・generator state と行（online・memo・宿主の評価列）は、接頭部の task 3 末・task 29 末と bit 一致を要求する（S-prefix）。介入腕の結果を読む前に判定する。診断は学習の乱数を進めない。
+- 介入は各分岐から 1 課題だけ（task 3 または task 29）。**P1 と P2 は別の課題の中の対応差で、絶対量の差を非対称と読まない。**
+
+### 2.3 画像 id 上の固定場と出力一致
+
+seed ごと（slot r）に、donor と受け手の同じ unit index を対応させ、**継続課題 T の全画像 I_T（2500 枚）**について、donor の第 l 層前活性 z_src と受け手の分岐時の z_br を、それぞれ 1 回の束ねた評価 forward（B = 2500）で計算し、学習前に
+
+`d_l[r, id, i] = float32(float64(z_src[r,id,i]) − float64(z_br[r,id,i]))`
+
+を作って固定する。表は CIFAR-100 train の大域行番号で引く（R × 50000 × 100）。**I_T の外の行は NaN** にし、引き違いが損失を非有限にして DIVERGED で止まるようにする（fail closed）。
+
+受け手の凍結 P0 から **現在の minibatch と同じ R・B・演算で** z0 を毎回再計算し、対象層だけ
+
+`a = φ(z0) + [φ(z + d) − φ(z0 + d)]`、φ(z) = clamp(z, min=0)
+
+とする（括弧が厳密に 0 の要素では凍結値をそのまま保つ `AnchorAdd`。括弧に対する微分は 1）。訓練の微分はこの前向きの autograd で、手書きの微分を交換しない。凍結項と d には勾配を通さず、更新する P からの z にだけ通す。非対象層はその腕の現在の前活性で φ を取る。P0 は更新も alias もしない。分岐時は z = z0 なので括弧は厳密 0 → 特徴・logit・損失が自然腕と bit 一致する（S-branch、符号つき 0 も含む）。
+
+**場の誤差上界（S-field）**: 独立の checker が保存した donor/受け手の状態から d_ref を作り直し、腕の d と全要素 bit 一致を先に確認する。各 pair で `q = float64(z_br,eval) + float64(d_ref) − float64(z_src,eval)` とし、minibatch（B=32 または全画像）でのずらした引数 `arg = fl32(z_br,mb + d)` について
+
+`|arg − z_src,eval| ≤ |q| + |z_br,mb − z_br,eval| + u32·(|z_br,mb| + |d|) + η32 + 3·u64·(|z_br,eval| + |d| + |z_src,eval|)`
+
+（u32 = 2^−24、u64 = 2^−53、η32 = float32 の最小正規数）を全 pair で要求する。ゲートは `|z_src,eval| > 上界` の全 pair で `g(arg) = g(z_src,eval)`（g は clamp の native autograd）を要求し、`|z_src,eval| ≤ 上界` の pair 数を「曖昧帯」として報告する（大きさに合否の閾値を置かない）。壊した場・引数の実測残差から許容を作らない。
+
+これは固定した人工的な関数変更である。初期出力は揃うが、その後の特徴は変わる。自然な喪失の全媒介、時々刻々の donor 追随、恒久的救済とは主張しない。**無介入腕は宿主の forward（`B.forward(P, xb, B.ReLU(), train=True)`）へ直接 dispatch** し、軌道の bit 一致はそちらで検査する。
+
+## 3. 腕（9 腕 × seed 0–9 × 1 課題）
+
+`r` は Adam の m・v・tc をすべて 0 に戻す。P・画像・ラベル・バッチ列・凍結 P0 は変えない。全腕で W1/b1/W2/b2/W3/b3 を更新する。
+
+| 腕（ファイル名） | 表記 | 受け手 | 継続課題 | 場・対象層 | Adam | 用途 |
+|---|---|---|---:|---|---|---|
+| `N_h` / `N_c` | N_h / N_c | t_h / t_c | 3 / 29 | 無介入 | 継続 | 自然対照・再開照合 |
+| `N_hr` / `N_cr` | N_h r / N_c r | t_h / t_c | 3 / 29 | 無介入 | reset | reset 単独の対照 |
+| **`R_ch`** | **R_c←h** | t_c | 29 | donor t_h・第 2 層 | 継続 | **P1 復元** |
+| `R_chr` | R_c←h r | t_c | 29 | donor t_h・第 2 層 | reset | 復元の履歴依存・副 |
+| **`S_hcr`** | **S_h←c r** | t_h | 3 | donor t_c・第 2 層 | reset | **P2 沈降** |
+| `S_hc` | S_h←c | t_h | 3 | donor t_c・第 2 層 | 継続 | 沈降の履歴依存・副 |
+| `S_hcL1r` | S_h←c_L1 r | t_h | 3 | donor t_c・第 1 層 | reset | 層対照・副 |
+
+P1 は劣化時の optimizer 状態も保って場だけを戻す。P2 は過去の moment による移動を分けるため reset 同士で比べる。**P1/P2 で履歴の条件が違う**ことを結果に併記する。走る順は N_h・N_c（S-prefix の照合）→ 残りを上の表の順。腕は直列、GPU プロセスは 1 本。
+
+## 4. 登録する読み出し
+
+- **主 E**: 継続課題（hard）の online。
+- memo、online CE、memo CE。無介入腕は宿主の評価列（dead_frac・zeroout・zbar・zsd・mob・eff_rank・w_norm・test_acc）も記録する。介入腕の場は訓練画像の上でしか定義しないので、介入腕の test 正解率は定義しない（記録しない）。
+- 両層の訓練の微分 g（対象層はずらした引数で）を継続課題の全画像で評価: 画像平均 → unit 算術平均 G、`|g| < 1e−6` の率 Q と厳密 0 率（整数の pair 数から）、全画像で 0 の unit の率、診断 `1[z>0]` との不一致 pair 数。
+- unit 別 `n_eff = (Σ_x g)² / Σ_x g²` と `/2500`。Σg² = 0 の unit は 0 を割り当て、その数を別列に出す。float64 で集約。
+- 両層の z の unit 別平均/SD と比、ずらした引数の平均、mu2（第 1 層出力の画像平均）と W2 行との cos、W 行ノルム、bias。SD = 0 の比は undefined。
+- **診断点は分岐直後（更新 0）・更新 78/390/780**。測定の予定で判定窓ではない。全画像（B=2500）の評価 forward で測る。
+- 分岐時の場の検査値（引数誤差/上界の最大比、曖昧帯の pair 数、出力の bit 一致）を seed 別に保存する。
+- ρ1 = mean(P1) / mean(E(N_h) − E(N_c))、ρ2 = mean(P2) / mean(E(N_h r) − E(N_c r)) は報告のみ。分母の 95% 対応差区間の下端が正でなければ undefined。負値・1 超を丸めない。
+
+## 5. 登録する判定
+
+### 5.1 完全性と適用条件（先に判定する）
+
+1. **10 seed × 9 腕がすべて揃い有限**、入力/commit/hash が整合し、必須検査が PASS でなければ `INCOMPLETE` / `CHECK_FAILED` / `DIVERGED` を理由付きで保存し、主ラベルを出さない。seed を落として n を縮めない。
+2. 自然差 `D_s = E_s(N_h) − E_s(N_c)` の **95% 対応差 t 区間の下端 > 0**、かつ **全 10 seed で自然な分岐の第 2 層の G が G(t_h) > G(t_c)**（G は N_h・N_c の分岐直後の診断。各自の継続課題の全画像で、訓練の微分の画像平均 → unit 平均）。満たさなければ **NOT_REPRODUCED**。t_h/t_c や層を取り替えない。
+3. 表示用に、各腕の memo と fresh(t29) を併記する。条件を追加しない。
+
+### 5.2 主比較
+
+`P1_s = E_s(R_c←h) − E_s(N_c)`、`P2_s = E_s(N_h r) − E_s(S_h←c r)`。
+
+n = 10、差の標本 SD s、df = 9 として主区間は `mean(P) ± t_(9, 1−0.05/(2×2)) · s/√10`（2 比較の Bonferroni による各 97.5% 両側区間）。95% 区間も報告する。s = 0 なら区間を同一点 `[mean, mean]` とし `DEGENERATE_SD` を併記する。符号は下端 > 0 で +、上端 < 0 で −、他は 0（端点 = 0 は 0）。
+
+| P1 符号 | P2 符号 | 主ラベル |
+|---|---|---|
+| いずれか − | 任意 | RESPONSE_REVERSED |
+| + | + | RESPONSE_BOTH_WAYS |
+| + | 0 | RESTORE_ONLY |
+| 0 | + | SINK_ONLY |
+| 0 | 0 | RESPONSE_NOT_SHOWN |
+
+0 は「差を示せない」で、同等性や効果ゼロではない。RESTORE_ONLY/SINK_ONLY は検出方向の名前で、非検出側の不可能性を意味しない。
+
+### 5.3 副比較と読みの上限（すべて 95%・REPORT_ONLY）
+
+- `R_c←h r − N_c r`、`N_h − S_h←c`、`N_h r − S_h←c_L1 r`、`S_h←c_L1 r − S_h←c r`。主 2 比較の代わりにしない。
+- ρ1、ρ2（§4）。
+- **fresh との比較**: `E(R_c←h) − fresh(t29)`（復元した網が新品網に届くか）。参考として `E(N_c) − fresh(t29)`（= −fresh gap、既知）と `E(R_c←h r) − fresh(t29)` も同じ形式で出す。fresh(t29) は本走の接頭部で再計算した値（0920 記録との一致を S-host(b) で確認）。
+- 両方向が出れば、**この 5+1 CIFAR・ReLU/std・1 課題 780 更新・固定場で、第 2 層の応答への介入が次課題の適応の速さを両方向に変えた**と読む。自然な喪失の全因果説明、全媒介、恒久的救済とは書かない。
+- 応答の場の交換は人工的な関数変更である。5+1 の喪失は床への崩壊ではなく適応の速さの喪失である。donor と受け手で学んだ課題（画像集合）が違うので、場は次課題の画像で定義した（S4 の固定 1200 枚とはここが違う）。
+
+## 6. 予測（実装・本走の前に記入）
+
+主ラベルは成立時の分布（合計 1）。適用外・undefined は採点せず別に報告する。採点は主ラベルが最大確率ラベルの一致と多クラス Brier、他は真偽と binary Brier。
+
+| 項目 | 親（Fable）の事前確率 | 実装担当（Claude）の確率 |
+|---|---:|---:|
+| 適用条件成立 | 0.85 | 0.95 |
+| RESPONSE_BOTH_WAYS | 0.50 | 0.70 |
+| SINK_ONLY | 0.20 | 0.10 |
+| RESTORE_ONLY | 0.15 | 0.12 |
+| RESPONSE_NOT_SHOWN | 0.13 | 0.05 |
+| RESPONSE_REVERSED | 0.02 | 0.03 |
+| 第 2 層を奪う平均低下 > 第 1 層を奪う平均低下（`mean[E(S_h←c_L1 r) − E(S_h←c r)] > 0`） | 0.70 | 0.85 |
+| ρ1 ≥ 0.5（定義可能なら） | 0.50 | 0.50 |
+| 復元した網は新品に届かない（`E(R_c←h) − fresh(t29)` の 95% 区間の上端 < 0） | — | 0.80 |
+
+Claude の理由（短く）: 劣化網 t_c の第 2 層は継続課題の画像でほぼ閉じている（既知の mob l2 ≈ 0）ので、健康網のゲートを与えれば第 1・2 層へ勾配が通り、P1 は正になりやすい。逆に健康網に劣化網のゲートを与えると第 2 層と、その下の第 1 層への勾配がほぼ止まり、学べるのは頭（W3/b3）と少数の開いた unit だけになるので P2 も正になりやすい。ただし 5+1 は実ラベルで、健康な特徴の上の線形の頭だけでもかなり学べるため、沈降の大きさは S4（ランダムラベルの暗記）より小さいと見る。復元は第 2 層のゲートだけを戻し、頭の古いクラスの大きな重みや第 2 層の重みの伸びは戻さないので、新品（fresh ≈ .63）には届かないと見る。
+
+## 7. 検査（本走の前に全部実行し、本物で PASS・列挙した変異で FAIL）
+
+自己参照でなく、宿主／独立な float64 連鎖律／合成 fixture の期待値で照合する。全必須検査・列挙変異を機械可読な一覧から集め、未実行・空・古い PASS を失敗扱いにする。検査は seed 100–109（R=10）と合成入力。
+
+| 検査 | 独立の参照・要求 | 落とすべき変異 |
+|---|---|---|
+| S-host | (a) 検査 seed: 現環境の無改変宿主 `run('R', std, 1e−4, 30 課題, fresh)` の per_task.csv・fresh_control.csv と、本実装の自然な 30 課題＋fresh の出力が **全列 byte 一致**。(b) 本走: 接頭部 task 1–29 の行が 0920 記録と **eff_rank_l1/l2 を除く全列 byte 一致**、fresh の 3 列（fresh・continual・gap）が byte 一致。eff_rank の差は報告。(b) が落ちたら腕を走らせず CHECK_FAILED | lr 2e−4、Adam 時刻 tc+100、バッチ列の順序反転 |
+| S-prefix | 保存した t_h/t_c から新しいエンジン（新しい graph）で再開した N_h/N_c の終端 P/m/v/tc/generator state と行が、中断なしの接頭部の task 3/29 末と bit 一致（検査 seed と本走の両方） | m/v の欠落、tc の 0 戻し、generator state の未復元 |
+| S-branch | 場のある全腕で、分岐時の z1/a1/z2/a2/logit/CE が自然腕と bit 一致。継続課題の全画像（B=2500）、実際の 780 訓練バッチ全部、行番号順の 32 枚刻み全部 | 凍結補正（AnchorAdd）を落とす、P0 を現在の P に alias、対象層の取り違え |
+| S-field | §2.3 の引数の上界内、上界外の全 pair でゲート一致、seed ごとに非定数の場、d_ref と bit 一致、I_T 外は NaN | d = 0、符号反転、他 seed・他 unit・他画像 id、minibatch 内の位置で lookup |
+| S-grad | float64 の合成網で 6 パラメータ全部の勾配が独立な手書き連鎖律（ゲート 1[z+d ≥ 0]）と γ_128 × 絶対値の和の上界内。clamp の native 微分を 0/−0/subnormal/負で記録 | d を backward から落とす、凍結項へ勾配、backward だけの置換 |
+| S-reset | reset 後 m = v = 0・tc = 0、最初の更新が独立に組んだ native Adam と bit 一致、かつ −lr·g/(|g|+ε) と γ_32·(|目標| + lr) + 32·2^−149 の内。g = 0 も | m だけ reset、tc 持ち越し、ε 省略 |
+| S-isolation | 腕の順を反転して全腕の終端状態が bit 一致。分岐状態・場・P0 の hash 不変、診断が乱数を消費しない | 状態の浅い copy、診断で乱数消費 |
+| S-graph | eager と graph が bit 一致（N_h・R_c←h・S_h←c_L1 r の 780 更新と診断）。capture の warmup を巻き戻す | warmup の状態を戻さない |
+| S-verdict | 全ラベル・端点 0・SD 0・欠測・非有限・分母が正でない場合を独立 fixture で確認。t 分位点を独立の Simpson 積分で確認 | 対応なし、片側、Bonferroni 忘れ、欠測 seed、非有限、欠測腕 |
+| S-resume | 接頭部の課題境界と腕の境界での STOP → 再開が、中断なしの走と bit 一致（腕は境界から作り直す） | 異なる identity、偽の完了 marker、壊れた hash、再開時の場の欠落、接頭部再開時の m/v 欠落 |
+| S-cost/CLI | 検査 seed で接頭部＋9 腕の時間・RAM・VRAM を実測。CLI（`--check-mode`）で全 9 腕を走らせる | 腕名の取り違え、課題の更新数の変更、provenance の欠落 |
+
+bit 一致以外の算術比較は u32・u64・γ_n = nu/(1−nu) と和の絶対量で許容を定め、相対 1e−6 等の固定値・固定倍率を置かない。期待差が非零の fixture で誤った実装を検出できることを確かめる。失敗時は実測と上界を保存して止める。
+
+## 8. 実行計画
+
+登録 commit → 実装 → 検査 seed での全検査 → 実装 commit → 本走（接頭部 29 課題＋fresh → S-host(b) → N_h・N_c → S-prefix → 残り 7 腕）→ 集計 → 結果 commit → 退避 → main へ merge。
+
+- 本走は登録 commit より後。`analysis/resp_cifar5p1_1007/launch.sh` が `src/resp_cifar5p1_1007.py` を起動し、実装の commit 済み・検査の all_pass と source hash の一致・入力の hash を確かめてから走る。
+- GPU は 1 プロセス・腕は直列。共有ロック `/tmp/lop_analysis_gpu.lock` を取ってから走る（他の研究ジョブと重ねない）。空き RAM は常に 6 GB 以上残す。
+- STOP は `results/resp_cifar5p1_1007/STOP`。接頭部は課題の境界、腕は腕の境界で止まり、再開は同じ入力・spec・実装・環境でだけ許す。
+- `provenance_start.json` に git hash・source hash・環境・argv・UTC/JST・PID を起動時に保存する。
+- 途中の効果量を見て腕・窓・seed・予測を変えない。
+
+## 9. 開示・範囲
+
+- 独立監査なし。実装・検査は実装担当（Claude）による。
+- 既知の自然軌道（0920 R/std）を参照して設計した確認的介入で、完全盲検ではない。
+- 1.2 の環境確認は登録前に行った（介入なし・seed 10–19）。
+- 対象外: raw、両層同時交換、動く場、一様階段、他の活性化、他の分岐点。
+
+## 10. 出力・片付け
+
+`results/resp_cifar5p1_1007/` に summary.md、verdict.json/csv、paired.csv、per_seed.csv、per_task.csv、branches.csv、arm_table.csv、secondary.csv、fresh_comparison.csv、host_record_comparison.csv、diagnostics.csv、predictions.csv、checks.json、provenance_start/end.json、input_manifest.json。状態（.pt）・場・unit 配列（.npz）・ログは git 外とし、schema と hash を残す。
+
+完了時は `CLAUDE.md` §4 どおり、git 外出力（pycache 以外）を `/home/issan/Projects/obsidian-research-data/resp_cifar5p1_1007/` に退避し、source/backup/bytes/sha256 の manifest（`results/resp_cifar5p1_1007/backup_manifest.json`）を commit、main へ merge/push する。worktree とブランチは親が確認するまで消さない。
