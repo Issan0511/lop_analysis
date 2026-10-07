@@ -1,0 +1,797 @@
+{
+  "all_pass": true,
+  "source_sha256": {
+    "src/controls_cifar5p1_1008.py": "c8f05f3dab2a8a577f277947c08e7a4914990c0161044727345178ed50d715d4",
+    "specs/spec_controls_cifar5p1_1008.md": "7c5d20493f04ea9c936ea607c35267dd4fe2b4e1e0681b7f137f91f048ca553a",
+    "src/resp_cifar5p1_1007.py": "c8d6bedb04d0895f1fea97d2c4a14a11dcfb1eaa5fd64565f8b9668b9b5c729c",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/cifar_interventions_0920.py": "d079b5185249114d035afcce69d9636ef1db2807e642c3fd879cb2168907f37f",
+    "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
+    "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0",
+    "analysis/controls_cifar5p1_1008/checks.py": "266c4efcda97f9244ce4e3ad551b7d6ef2976496e409328337c017e5f21ee042",
+    "analysis/controls_cifar5p1_1008/pre_registration_design.py": "66285d499defd588219e36eecaa8f4aa51f76a3dd76464f3164e4b43e8a7ba5b",
+    "analysis/controls_cifar5p1_1008/pre_registration_envcheck.py": "34fdba158670517309140fcf4d949983ea442bcee390f59de3e3751a2a03fc50",
+    "analysis/controls_cifar5p1_1008/verdict.py": "4328416be904785cefcbd67f4bac36bd5bd139a65f823e4d159f122cc890215d",
+    "analysis/controls_cifar5p1_1008/launch.sh": "8c30a7a9a84db8494c8c8e372ac69bc188554f9a7cebed81704012b0709862f8"
+  },
+  "required": [
+    "S-src",
+    "S1-host",
+    "S1-prefix",
+    "S1-wiring",
+    "S1-branch",
+    "S1-field",
+    "S1-isolation",
+    "S1-graph",
+    "S2-host",
+    "S2-freeze",
+    "S2-pus",
+    "S2-graph",
+    "S-verdict",
+    "S-resume",
+    "S-cost/CLI"
+  ],
+  "required_mutants": [
+    "prefix_wrong_save",
+    "mv_lost",
+    "tc_reset",
+    "rng_not_restored",
+    "donor_t03",
+    "adam_reset",
+    "layer1",
+    "drop_anchor",
+    "alias_P0",
+    "fresh_own_init",
+    "perm_identity",
+    "perm_same_all_seeds",
+    "perm_receiver_side",
+    "rand_unshuffled",
+    "rand_within_unit",
+    "match_zero",
+    "match_per_unit",
+    "match_K_from_fresh",
+    "sign_flip",
+    "other_seed",
+    "stored_table_edit",
+    "shallow_copy",
+    "lr",
+    "time",
+    "beta",
+    "fix0_adapting",
+    "warmup_V",
+    "freeze_t2",
+    "freeze_t0",
+    "freeze_reset_V",
+    "resume_ema_t3",
+    "pus_no_division",
+    "pus_divide_V",
+    "pus_no_clip",
+    "unpaired",
+    "no_bonferroni",
+    "missing_seed",
+    "missing_arm",
+    "nonfinite",
+    "fake_done",
+    "bad_hash",
+    "different_identity",
+    "wrong_arm",
+    "wrong_budget"
+  ],
+  "evidence": {
+    "S-src": {
+      "all_pass": true,
+      "files": {
+        "src/resp_cifar5p1_1007.py": "c8d6bedb04d0895f1fea97d2c4a14a11dcfb1eaa5fd64565f8b9668b9b5c729c",
+        "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+        "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+        "src/cifar_interventions_0920.py": "d079b5185249114d035afcce69d9636ef1db2807e642c3fd879cb2168907f37f",
+        "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
+        "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0",
+        "analysis/resp_cifar5p1_1007/checks.py": "6ac9c93c4bf19ee5650800659982b09e95224a4d3d9b0742e69964e7f3805520",
+        "analysis/resp_cifar5p1_1007/report.py": "b6aee7dfd3cd48f7e09c7e22eeaaeb87229c67b72335a0a6e2f94536c97d0d50",
+        "analysis/resp_cifar5p1_1007/launch.sh": "73df5adeb744c52356cc4609f996c41b8692dd007fe15c6ca8faec9b8b851403"
+      },
+      "reference": "results/resp_cifar5p1_1007/admission_checks.json"
+    },
+    "S-verdict": {
+      "all_pass": true,
+      "labels_c1": 9,
+      "labels_c2": 7,
+      "quantiles": "independent Simpson integration",
+      "bonferroni_fixture_mean": 0.0241
+    },
+    "S2-pus": {
+      "all_pass": true,
+      "max_phi_ratio": 0.048349151698192455,
+      "max_grad_ratio": 0.1387889646963805,
+      "clip_in_fixture": true,
+      "relation": "phi_pus * W = phi_SNA within gamma_24"
+    },
+    "S1-host": {
+      "all_pass": true,
+      "prefix_rows_equal_host": true,
+      "fresh_byte_identical": true,
+      "tasks": 29,
+      "seeds": [
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109
+      ],
+      "columns": "all (eff_rank included)",
+      "reference": "unmodified cifar5p1_mlp_0920.run(R)"
+    },
+    "S1-prefix": {
+      "all_pass": true,
+      "cli": {
+        "all_pass": true,
+        "core_bit_exact": true,
+        "batches_bit_exact": true,
+        "rows_exact": true,
+        "task": 29
+      }
+    },
+    "S1-wiring": {
+      "all_pass": true,
+      "field_path_equals_resp_run_arm": true,
+      "preflight": {
+        "arm": "R_h",
+        "batches": 860,
+        "branch_bit_exact": true,
+        "field_sd_per_seed": [
+          10.656359654610611,
+          9.97141307404138,
+          10.752616316261067,
+          8.805249004111708,
+          9.901617008440581,
+          11.856431121805084,
+          8.773937938717456,
+          9.833284312893216,
+          8.318572318471077,
+          10.26066687165589
+        ],
+        "max_abs_q": 3.814697265625e-06,
+        "argument_error_ratio_per_seed": [
+          0.9993447889604955,
+          0.980237155405909,
+          0.9752643860794743,
+          0.994924040555985,
+          0.9976476095739649,
+          0.9978650076634981,
+          0.9942185974747423,
+          0.9972237554529696,
+          0.9804195191534644,
+          0.9982557550639406
+        ],
+        "argument_error_ratio": 0.9993447889604955,
+        "ambiguous_pairs_per_seed": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          12,
+          0,
+          0,
+          0,
+          0
+        ],
+        "gate_checked_pairs_per_seed": [
+          2996000,
+          2996000,
+          2996000,
+          2996000,
+          2996000,
+          2995988,
+          2996000,
+          2996000,
+          2996000,
+          2996000
+        ],
+        "training_gate_count_max_difference": 0,
+        "open_pairs_at_branch_per_seed": [
+          153367,
+          140448,
+          144750,
+          151851,
+          134246,
+          136957,
+          151679,
+          128518,
+          145760,
+          148564
+        ],
+        "all_pass": true
+      }
+    },
+    "S1-field": {
+      "all_pass": true,
+      "arms": {
+        "R_fresh": {
+          "arm": "R_fresh",
+          "batches": 860,
+          "field_sd_per_seed": [
+            9.311797133059567,
+            8.612194268463055,
+            9.471722734716987,
+            8.17030883451563,
+            8.956774149496518,
+            10.456113956484309,
+            7.713054942157245,
+            8.4456267079787,
+            7.457931296475679,
+            8.762127247505065
+          ],
+          "max_abs_q": 3.814697265625e-06,
+          "argument_error_ratio_per_seed": [
+            0.9915963286549355,
+            0.9944114219979665,
+            0.9884130751000944,
+            0.9973895548084585,
+            0.9988599192604247,
+            0.9972531731322198,
+            0.9979935940135427,
+            0.9988561883098878,
+            0.9997472540227633,
+            0.9987755868760247
+          ],
+          "argument_error_ratio": 0.9997472540227633,
+          "ambiguous_pairs_per_seed": [
+            24,
+            0,
+            60,
+            12,
+            24,
+            0,
+            12,
+            12,
+            0,
+            0
+          ],
+          "gate_checked_pairs_per_seed": [
+            2995976,
+            2996000,
+            2995940,
+            2995988,
+            2995976,
+            2996000,
+            2995988,
+            2995988,
+            2996000,
+            2996000
+          ],
+          "training_gate_count_max_difference": 1,
+          "open_pairs_at_branch_per_seed": [
+            108876,
+            133941,
+            120979,
+            128596,
+            127732,
+            128278,
+            122113,
+            128424,
+            129672,
+            129215
+          ],
+          "all_pass": true
+        },
+        "R_match": {
+          "arm": "R_match",
+          "batches": 860,
+          "field_sd_per_seed": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "max_abs_q": 0.0,
+          "argument_error_ratio_per_seed": [
+            0.9998926523824371,
+            0.999937825044899,
+            0.9999846706652428,
+            0.9999501022258067,
+            0.9999423544551875,
+            0.9999163705010526,
+            0.9998789464449747,
+            0.9998120906935957,
+            0.9999315077780226,
+            0.9999713198122485
+          ],
+          "argument_error_ratio": 0.9999846706652428,
+          "ambiguous_pairs_per_seed": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gate_checked_pairs_per_seed": [
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2996000
+          ],
+          "training_gate_count_max_difference": 0,
+          "open_pairs_at_branch_per_seed": [
+            153367,
+            140448,
+            144750,
+            151851,
+            134246,
+            136957,
+            151679,
+            128518,
+            145760,
+            148564
+          ],
+          "K": [
+            153367,
+            140448,
+            144750,
+            151851,
+            134246,
+            136957,
+            151679,
+            128518,
+            145760,
+            148564
+          ],
+          "shift": [
+            8.389656066894531,
+            5.890637397766113,
+            8.482662200927734,
+            6.510617256164551,
+            5.662376403808594,
+            7.15386962890625,
+            6.862640380859375,
+            5.388614654541016,
+            7.097865104675293,
+            7.646064758300781
+          ],
+          "K_achieved": [
+            153367,
+            140448,
+            144750,
+            151851,
+            134246,
+            136957,
+            151679,
+            128518,
+            145760,
+            148564
+          ],
+          "all_pass": true
+        },
+        "R_perm": {
+          "arm": "R_perm",
+          "batches": 860,
+          "field_sd_per_seed": [
+            10.638081593893311,
+            9.816327007575389,
+            11.231913592825887,
+            9.429708332097636,
+            10.1507472634733,
+            11.250958534682482,
+            8.409317837321836,
+            9.782166100675553,
+            8.373932155667253,
+            10.398242108234966
+          ],
+          "max_abs_q": 3.814697265625e-06,
+          "argument_error_ratio_per_seed": [
+            0.99852110892537,
+            0.9998971318232965,
+            0.9856195613912525,
+            0.9905419428167979,
+            0.9934428097772091,
+            0.9950520287392701,
+            0.9979158427941136,
+            0.9941244708109753,
+            0.9825415839594559,
+            0.9918559549370934
+          ],
+          "argument_error_ratio": 0.9998971318232965,
+          "ambiguous_pairs_per_seed": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            12,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gate_checked_pairs_per_seed": [
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2995988,
+            2996000,
+            2996000,
+            2996000,
+            2996000
+          ],
+          "training_gate_count_max_difference": 0,
+          "open_pairs_at_branch_per_seed": [
+            153367,
+            140448,
+            144750,
+            151851,
+            134246,
+            136957,
+            151679,
+            128518,
+            145760,
+            148564
+          ],
+          "all_pass": true
+        },
+        "R_rand": {
+          "arm": "R_rand",
+          "batches": 860,
+          "field_sd_per_seed": [
+            10.259550303707902,
+            10.061674168562778,
+            10.761057052102842,
+            9.02184019316814,
+            9.923428193265925,
+            11.117090839476878,
+            8.480912531960078,
+            9.60339475881676,
+            8.290529339076533,
+            9.929779185165948
+          ],
+          "max_abs_q": 3.814697265625e-06,
+          "argument_error_ratio_per_seed": [
+            0.9932368752812715,
+            0.9942390544976923,
+            0.9988480314919074,
+            0.9925106750416666,
+            0.995134997934087,
+            0.9904520319186083,
+            0.996189474872735,
+            0.9997963005303513,
+            0.9990130512659633,
+            0.995607455821589
+          ],
+          "argument_error_ratio": 0.9997963005303513,
+          "ambiguous_pairs_per_seed": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "gate_checked_pairs_per_seed": [
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2996000,
+            2996000
+          ],
+          "training_gate_count_max_difference": 0,
+          "open_pairs_at_branch_per_seed": [
+            153367,
+            140448,
+            144750,
+            151851,
+            134246,
+            136957,
+            151679,
+            128518,
+            145760,
+            148564
+          ],
+          "all_pass": true
+        }
+      },
+      "construction": {
+        "R_h": {},
+        "R_fresh": {},
+        "R_match": {
+          "K": [
+            153367,
+            140448,
+            144750,
+            151851,
+            134246,
+            136957,
+            151679,
+            128518,
+            145760,
+            148564
+          ],
+          "shift": [
+            8.389656066894531,
+            5.890637397766113,
+            8.482662200927734,
+            6.510617256164551,
+            5.662376403808594,
+            7.15386962890625,
+            6.862640380859375,
+            5.388614654541016,
+            7.097865104675293,
+            7.646064758300781
+          ],
+          "K_achieved": [
+            153367,
+            140448,
+            144750,
+            151851,
+            134246,
+            136957,
+            151679,
+            128518,
+            145760,
+            148564
+          ]
+        },
+        "R_perm": {
+          "perm": "tensor"
+        },
+        "R_rand": {},
+        "R_match_K_minus_achieved": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "reference": "numpy CPU float64 (sort, permute, shuffle, midpoint)"
+    },
+    "S1-branch": {
+      "all_pass": true,
+      "arms": {
+        "R_fresh": {
+          "batches": 860,
+          "branch_bit_exact": true
+        },
+        "R_match": {
+          "batches": 860,
+          "branch_bit_exact": true
+        },
+        "R_perm": {
+          "batches": 860,
+          "branch_bit_exact": true
+        },
+        "R_rand": {
+          "batches": 860,
+          "branch_bit_exact": true
+        }
+      },
+      "tested": "all task images at once, all 780 training batches, row-order chunks of 32"
+    },
+    "S1-isolation": {
+      "all_pass": true,
+      "reversed_order_bit_identical": true,
+      "states_unchanged": true,
+      "arms": [
+        "N_c",
+        "R_h",
+        "R_fresh",
+        "R_match",
+        "R_perm",
+        "R_rand"
+      ]
+    },
+    "S1-graph": {
+      "all_pass": true,
+      "arms": [
+        "R_fresh",
+        "R_match"
+      ],
+      "eager_graph_bit_identical": true
+    },
+    "S2-host": {
+      "all_pass": true,
+      "arms": {
+        "SNA": {
+          "per_task_identical": true,
+          "fresh_identical": true
+        },
+        "KKT1": {
+          "per_task_identical": true,
+          "fresh_identical": true
+        },
+        "SNA_fix0": {
+          "per_task_identical": true,
+          "fresh_identical": true
+        },
+        "KKT1_fix0": {
+          "per_task_identical": true,
+          "fresh_identical": true
+        }
+      },
+      "reference": "unmodified cifar5p1_mlp_0920.run (beta=0.01; beta=0 for fix0)",
+      "seeds": [
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109
+      ],
+      "tasks": 30,
+      "columns": "all (arm name blanked for fix0)"
+    },
+    "S2-freeze": {
+      "all_pass": true,
+      "cli": {
+        "SNA_fixT1": {
+          "task1_identical_to_adaptive": true,
+          "V_constant_tasks_2_30": true
+        },
+        "KKT1_fixT1": {
+          "task1_identical_to_adaptive": true,
+          "V_constant_tasks_2_30": true
+        }
+      },
+      "fixed_alpha_tasks_2_4_bit_identical": true,
+      "validator": "task-1 rows, V, alpha stats"
+    },
+    "S2-graph": {
+      "all_pass": true,
+      "arms": {
+        "SNA_fixT1": "tasks 1-3 (incl. the recapture at the freeze)",
+        "SNA_pus": "tasks 1-2"
+      },
+      "eager_graph_bit_identical": true
+    },
+    "S-resume": {
+      "all_pass": true,
+      "stops": [
+        "after C1 R_h",
+        "after C2 SNA_fix0"
+      ],
+      "resumed_equals_uninterrupted": true
+    },
+    "S-cost/CLI": {
+      "all_pass": true,
+      "cli_seconds_all_arms": 590.9484250545502,
+      "cli_peak_cuda_bytes": 2583053824,
+      "verdict_on_cli_output": {
+        "c1": "PARTIAL",
+        "c2": "ADAPTIVITY_MATTERS",
+        "written": "results/_checks_controls_cifar5p1_1008/attempt_1791401615614399073/verdict_smoke"
+      },
+      "suite_peak_rss_bytes": 4450381824,
+      "c1_arms": [
+        "N_c",
+        "R_h",
+        "R_fresh",
+        "R_match",
+        "R_perm",
+        "R_rand"
+      ],
+      "c2_arms": [
+        "SNA",
+        "KKT1",
+        "SNA_fix0",
+        "KKT1_fix0",
+        "SNA_fixT1",
+        "KKT1_fixT1",
+        "SNA_pus"
+      ],
+      "seeds": [
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109
+      ],
+      "steps_per_task": 780
+    }
+  },
+  "mutants": {
+    "no_bonferroni": true,
+    "unpaired": true,
+    "missing_seed": true,
+    "nonfinite": true,
+    "missing_arm": true,
+    "pus_no_division": true,
+    "pus_divide_V": true,
+    "pus_no_clip": true,
+    "prefix_wrong_save": true,
+    "mv_lost": true,
+    "tc_reset": true,
+    "rng_not_restored": true,
+    "donor_t03": true,
+    "adam_reset": true,
+    "layer1": true,
+    "fresh_own_init": true,
+    "perm_identity": true,
+    "perm_same_all_seeds": true,
+    "perm_receiver_side": true,
+    "rand_unshuffled": true,
+    "rand_within_unit": true,
+    "match_zero": true,
+    "match_per_unit": true,
+    "match_K_from_fresh": true,
+    "sign_flip": true,
+    "other_seed": true,
+    "stored_table_edit": true,
+    "drop_anchor": true,
+    "alias_P0": true,
+    "shallow_copy": true,
+    "lr": true,
+    "time": true,
+    "beta": true,
+    "fix0_adapting": true,
+    "warmup_V": true,
+    "freeze_t2": true,
+    "freeze_t0": true,
+    "freeze_reset_V": true,
+    "resume_ema_t3": true,
+    "different_identity": true,
+    "fake_done": true,
+    "bad_hash": true,
+    "wrong_arm": true,
+    "wrong_budget": true
+  },
+  "attempt": "results/_checks_controls_cifar5p1_1008/attempt_1791401615614399073",
+  "seconds": 1720.2819273471832,
+  "independent_audit": false,
+  "deferred_to_main_run": {
+    "C1 prefix": "0920 R record (eff_rank reported) and resp backup states",
+    "C1 N_c/R_h": "rows equal resp_cifar5p1_1007 rows.json",
+    "C1 preflight": "S1-branch/S1-field on every main field arm",
+    "C2 SNA/KKT1": "0920 records (eff_rank reported), fresh byte-identical"
+  }
+}
