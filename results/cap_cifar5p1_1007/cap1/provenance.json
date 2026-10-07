@@ -1,0 +1,135 @@
+{
+  "run_id": "cap_cifar5p1_1007",
+  "git_hash": "d69ef7412f067d44af01aa651bb7c424b9299826",
+  "dirty_src_analysis": [],
+  "cap_arm": "cap1",
+  "cap_layers": [
+    "W1"
+  ],
+  "radius_task": 1,
+  "cap_from_task": 2,
+  "cap_rule": "after every Adam update from the cap task on: n = ||w_i|| (float32); rows with n > r_i become w_i * r_i / n; others untouched; W1 then W2; biases, W3/b3, Adam moments, step counter, RNG untouched",
+  "radii_sha256": {
+    "r_l1": "7f7714b5af3f1f234f71de5308ca5e716a717092c8afd03149a2acd46dff8b93",
+    "r_l2": "14e46647f8856fa5a200739327b5e86ba6670e8f2d6ec07835a1a35e5b95cef4"
+  },
+  "rows_written_total": {
+    "rows_w1": 3453125,
+    "rows_w2": 0
+  },
+  "violations_total": {
+    "viol_w1": 0,
+    "viol_w2": 0
+  },
+  "fresh_cap": "off: radius reset to +inf before the fresh control (spec 2.5)",
+  "fresh_rows_written": [
+    0,
+    0
+  ],
+  "arm": "R",
+  "cond": "std",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "R": 10,
+  "lr": 0.0001,
+  "n_tasks": 30,
+  "steps_per_task": 780,
+  "steps_hard": 780,
+  "steps_easy": 780,
+  "batch": 32,
+  "hidden": 100,
+  "layer_shapes": [
+    [
+      100,
+      3072
+    ],
+    [
+      100,
+      100
+    ],
+    [
+      100,
+      100
+    ]
+  ],
+  "n_params": 327500,
+  "dims": [
+    3072,
+    100,
+    100,
+    100
+  ],
+  "n_classes": 100,
+  "hard_classes": 5,
+  "per_class_train": 500,
+  "classes_used": 90,
+  "task_parity": "task 1 hard, alternating (the paper's task 0 hard)",
+  "optimizer": "adam",
+  "weight_decay": 0.0,
+  "data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "std": {
+    "mean": [
+      0.5071,
+      0.4865,
+      0.4409
+    ],
+    "std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "class_sha256": {
+    "0": "7487cc5ba7a5670094d2c8c701beae782530a141ef1cf31f07ab70673f992cd8",
+    "1": "a12ed45d3a05fd7fcf0927bb65417a3549f318a28ba23d85f488c9d37635e650",
+    "2": "5e27dd1c103b2617d199083c9909fea1c81078144102b53c93c491d435bd46ee",
+    "3": "c34bc8e8fdec85d19338aa1dfcada4ce48eb6e137020247e2604ec012eb0c12d",
+    "4": "04eb2beb4f183339e971eff4b55c8f4825e6795a81d5fe037fb0da1d22bc4daf",
+    "5": "1e363ce037e64574e24fb7e322b208669808dc2657deae88b47172e99a4f9f6c",
+    "6": "8c86984870465812064f4a9de9c365524adb6b167047241936f460f0b08ae79a",
+    "7": "1d1733cbd77116c196133d7c8ccde0f1d9359b22787506979b09596972a7c614",
+    "8": "3821dd6cf078d23a864be2eecdbe130453ab37fc988d2938a00da94f70503ed6",
+    "9": "c5bdda2b5323c5ec1e2cd939fd7e740f7061b367eb4a5c3d3cc9b4d91feb0845"
+  },
+  "rng_roles": [
+    "c51_classes",
+    "c51_batch",
+    "init"
+  ],
+  "fresh_control": {
+    "task": 29,
+    "n": 10
+  },
+  "engine": "host run() of cifar5p1_mlp_0920 copied for R/std + row-norm projection; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+  "host_module_sha256": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+  "engine_sha256": "94d3afabfde60a4d7d5bf48b1abd50645f3bef92b9614210237f6e2a836580aa",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "threads": 2,
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 1.4169576840522962,
+  "wall_clock_s": 38.67515158653259,
+  "divergences": [],
+  "spec": "specs/spec_cap_cifar5p1_1007.md",
+  "admission": {
+    "checks_sha256": "0b56ef5ba0311154e26b6ee41b2f4f0703a2a75d295e6b320d953ff4dfe44de1",
+    "source_sha256": {
+      "src/cap_cifar5p1_1007.py": "94d3afabfde60a4d7d5bf48b1abd50645f3bef92b9614210237f6e2a836580aa",
+      "analysis/cap_cifar5p1_1007/checks.py": "14660301b7b692082746cc990ed201ed92e8db827c517eb8f5b4cb0382dfbcff",
+      "analysis/cap_cifar5p1_1007/verdict.py": "3377852b0e30ed343256b544f1ab48802d56af947fdb72e08e8d5ca8c71f885e"
+    }
+  }
+}
