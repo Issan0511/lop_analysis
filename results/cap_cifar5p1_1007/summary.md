@@ -55,7 +55,7 @@ E0 = 早期窓 hard 1–9 の online、E1 = 後期窓 hard 21–29 の online、
 
 ## 検査
 
-必須 7 本（S-nochange・S-cap・S-radius・S-graph・S-fresh・S-verdict・S-CLI）すべて PASS、変異 24 本すべて意図した項目で FAIL。S-cap の射影後の相対誤差は最大 1.03〜1.26 eps32（4·eps32 以内）。独立監査なし。
+必須 7 本（S-nochange・S-cap・S-radius・S-graph・S-fresh・S-verdict・S-CLI）すべて PASS、変異 24 本すべて意図した項目で FAIL。S-cap の射影後の相対誤差は最大 1.03・1.12 eps32、本走の監視では最大 1.17〜1.26 eps32（どちらも 4·eps32 以内）。独立監査なし。
 
 ## 範囲と限定
 
