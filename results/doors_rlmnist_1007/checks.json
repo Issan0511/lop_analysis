@@ -1,0 +1,1159 @@
+{
+  "run_id": "doors_rlmnist_1007",
+  "started_at": "2026-10-07T22:03:07.726012+09:00",
+  "spec": "specs/spec_doors_rlmnist_1007.md",
+  "prereg_commit": "0597501615b227f150d7cbd435c00a814c2819d0",
+  "git_head": "26b886e4b96373f469bb31569d4dca04c4c84e68",
+  "code_sha256": {
+    "src/doors_rlmnist_1007.py": "87dc2eafdd05e3a1130b823f6c6ae1375c31cd8218b7322dd82653dfb2d9a658",
+    "src/doors_rlmnist_run_1007.py": "8ef80a392f0d031c5f9459f420bb9a27daa70d6ae8001c2c60e6eb369dfde733",
+    "analysis/doors_rlmnist_1007/verdict.py": "f8c802929719b079998ea045a5ec1ea2552f9984d877c5058cbf952cff05df30",
+    "analysis/doors_rlmnist_1007/checks.py": "ebbe3623753baac62a3754c6d90930d3ac57b2ddba905f46b2670babce97c8cb",
+    "src/mucap_el_run_0916.py": "a397eed57a84f20ce3fae0de3c20d6455b6d0e3077189cdb2c3a4a3069234606",
+    "analysis/mucap_el_0916/verdict.py": "e2376d9e9d4a02d3b1d5bb08297257367210bba33486e4c81de8ad822b065f54"
+  },
+  "torch": "2.13.0+cu130",
+  "python": "3.12.3",
+  "threads": 1,
+  "S0_S-ref-is-l2cap": {
+    "title": "S0 the doors-off path reproduces the recorded l2cap ref shards",
+    "target": "src/doors_rlmnist_1007.py",
+    "threshold_derivation": "run_doors with both doors shut, flush on, 80 epochs, tasks 1-2, reproduces the recorded l2cap ref\n    shards of seeds 0 and 5: every per_task.csv column of the record equal as written and no extra column,\n    every units.npz array bit-equal on the task 1-2 rows (test arrays: the task-1 row) and no extra array\n    (the archived copy only if its sha256 matches the manifest), and the task-1-end state hash.  String\n    and bit comparisons only.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "ref_s0": {
+        "i_per_task_columns": true,
+        "i_no_extra_columns": true,
+        "ii_arrays": true,
+        "ii_no_extra_arrays": true,
+        "iii_task1_state": true,
+        "iv_init_subset": true,
+        "bad_columns": [],
+        "n_columns": 96,
+        "extra_columns": [],
+        "bad_arrays": [],
+        "n_arrays": 87,
+        "extra_arrays": [],
+        "archive": "/home/issan/Projects/obsidian-research-data/l2cap_ee_0917/results/l2cap_ee_0917/runs/ref_s0/units.npz"
+      },
+      "ref_s5": {
+        "i_per_task_columns": true,
+        "i_no_extra_columns": true,
+        "ii_arrays": true,
+        "ii_no_extra_arrays": true,
+        "iii_task1_state": true,
+        "iv_init_subset": true,
+        "bad_columns": [],
+        "n_columns": 96,
+        "extra_columns": [],
+        "bad_arrays": [],
+        "n_arrays": 87,
+        "extra_arrays": [],
+        "archive": "/home/issan/Projects/obsidian-research-data/l2cap_ee_0917/results/l2cap_ee_0917/runs/ref_s5/units.npz"
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M0a: door H runs whatever door_h says (its m and its EMA ignore the flag)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|i_per_task_columns",
+            "ref_s0|ii_arrays",
+            "ref_s0|iii_task1_state",
+            "ref_s5|i_per_task_columns",
+            "ref_s5|ii_arrays",
+            "ref_s5|iii_task1_state"
+          ]
+        }
+      },
+      {
+        "mutation": "M0b: door C runs whatever door_c says",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|i_per_task_columns",
+            "ref_s0|ii_arrays",
+            "ref_s0|iii_task1_state",
+            "ref_s5|i_per_task_columns",
+            "ref_s5|ii_arrays",
+            "ref_s5|iii_task1_state"
+          ]
+        }
+      },
+      {
+        "mutation": "M0c: Adam eps 1e-7",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|i_per_task_columns",
+            "ref_s0|ii_arrays",
+            "ref_s0|iii_task1_state",
+            "ref_s5|i_per_task_columns",
+            "ref_s5|ii_arrays",
+            "ref_s5|iii_task1_state"
+          ]
+        }
+      },
+      {
+        "mutation": "M0d: memo through leaky",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|i_per_task_columns"
+          ]
+        }
+      },
+      {
+        "mutation": "M0e: dense diagnostic points in task 1 too",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|ii_arrays",
+            "ref_s5|ii_arrays"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 80.1
+  },
+  "all_pass": true,
+  "S-C_door-c": {
+    "title": "S-C door C: x - x.mean(0), zero mean within the bound, not divided, same input everywhere",
+    "target": "src/doors_rlmnist_1007.py",
+    "threshold_derivation": "Door C on seed 0, 2 tasks x 2 epochs.  (i) the input the runner trains and evaluates on is\n    x - x.mean(0) bit for bit (recomputed here from the host subset); (ii) its float64 mean is within\n    the spec-3 bound B_j (n_sum = 1200) at every pixel, and the raw mean is not (non-vacuity);\n    (iii) the per-task record of the FED batches says c_ok = 1 with c_in_ratio <= 1 in both tasks;\n    (iv) not divided: per pixel |sd(xc) - sd(x)| <= u/(1-u) max|xc| + 4 gamma64_n max|x| (a constant\n    shift leaves the sd; the per-element rounding perturbation has sd at most its max; plus the float64 sd\n    arithmetic); (v) the captured batch at (2, 5) is rows of xc; (vi) memo at the end of task 1 is the\n    accuracy of the captured task-end params on xc and not on the raw x; (vii) the task-1-end zbar_l1\n    of units.npz is mean(xc W1^T + b1) and not the raw one; (viii) the task-1 test arrays use\n    xt - (the SAME train mean), not xt - xt.mean(0).  Bit comparisons except (ii)/(iv).",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_input_is_x_minus_mean": true,
+      "run_completed": true,
+      "ii_mean_within_bound": true,
+      "ii_max_abs_mean": 7.100403308868408e-08,
+      "ii_max_bound": 3.985883391483702e-05,
+      "ii_raw_mean_outside": true,
+      "iii_fed_record": true,
+      "iv_not_divided": true,
+      "iv_max_sd_change": 6.160776444552596e-09,
+      "v_batch_rows_from_xc": true,
+      "vi_memo_on_xc": true,
+      "vii_units_on_xc": true,
+      "viii_test_same_mean": true
+    },
+    "mutations": [
+      {
+        "mutation": "M-Ca: divided by the mean (x / xbar)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "run_completed"
+          ]
+        }
+      },
+      {
+        "mutation": "M-Cb: divided (standardised by the sd)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_input_is_x_minus_mean",
+            "iv_not_divided",
+            "v_batch_rows_from_xc",
+            "vi_memo_on_xc",
+            "vii_units_on_xc"
+          ]
+        }
+      },
+      {
+        "mutation": "M-Cc: another seed's mean subtracted",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_input_is_x_minus_mean",
+            "ii_mean_within_bound",
+            "iii_fed_record",
+            "v_batch_rows_from_xc",
+            "vi_memo_on_xc",
+            "vii_units_on_xc",
+            "viii_test_same_mean"
+          ]
+        }
+      },
+      {
+        "mutation": "M-Cd: memo on the raw input",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "vi_memo_on_xc"
+          ]
+        }
+      },
+      {
+        "mutation": "M-Ce: the diagnostics on the raw input",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "vii_units_on_xc"
+          ]
+        }
+      },
+      {
+        "mutation": "M-Cf: the test images centred by their own mean",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "viii_test_same_mean"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 3.0
+  },
+  "S-H_door-h": {
+    "title": "S-H door H: the beta=0.01 EMA of the uncentred phi, a constant, carried, used by every evaluation",
+    "target": "src/doors_rlmnist_1007.py",
+    "threshold_derivation": "Door H on seed 0, 2 tasks x 2 epochs, five captured updates.  (i) each update's m is\n    m.mul_(1 - 0.01).add_(phi(z_l).mean(0), alpha=0.01) of the UNCENTRED phi, with z from an independent\n    forward of the captured before-state (z2 from a1 - m1), bit for bit; (ii) m is nonzero after the update\n    and is not what tracking the centred output would give (non-vacuity); (iii) the gradients the runner\n    used are the gradients of the independent forward with m a plain constant, bit for bit, and are not\n    those of a forward whose m carries the batch mean's gradient (same values, non-vacuity); (iv) the\n    runner's m never requires grad; (v) m before the first update of task 2 is m after the last update of\n    task 1; (vi) at the end of tasks 1 and 2, memo and the units.npz zbar_l2 / a1mean_l1 are the\n    independent forward's with the captured m, and the forward without m gives different values;\n    (vii) the per-task record h_upd_l1, h_upd_l2 > 0.  Bit comparisons only.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "updates": {
+        "(1, 0)": {
+          "i_ema_uncentred": true,
+          "ii_nonzero": true,
+          "ii_not_centred_tracking": true,
+          "iii_grad_is_constant_m": true,
+          "iii_grad_through_m_differs": true,
+          "iv_no_grad": true
+        },
+        "(1, 1)": {
+          "i_ema_uncentred": true,
+          "ii_nonzero": true,
+          "ii_not_centred_tracking": true,
+          "iii_grad_is_constant_m": true,
+          "iii_grad_through_m_differs": true,
+          "iv_no_grad": true
+        },
+        "(1, 149)": {
+          "i_ema_uncentred": true,
+          "ii_nonzero": true,
+          "ii_not_centred_tracking": true,
+          "iii_grad_is_constant_m": true,
+          "iii_grad_through_m_differs": true,
+          "iv_no_grad": true
+        },
+        "(2, 0)": {
+          "i_ema_uncentred": true,
+          "ii_nonzero": true,
+          "ii_not_centred_tracking": true,
+          "iii_grad_is_constant_m": true,
+          "iii_grad_through_m_differs": true,
+          "iv_no_grad": true
+        },
+        "(2, 77)": {
+          "i_ema_uncentred": true,
+          "ii_nonzero": true,
+          "ii_not_centred_tracking": true,
+          "iii_grad_is_constant_m": true,
+          "iii_grad_through_m_differs": true,
+          "iv_no_grad": true
+        }
+      },
+      "i_ema_uncentred": true,
+      "ii_nonzero": true,
+      "ii_not_centred_tracking": true,
+      "iii_grad_is_constant_m": true,
+      "iii_grad_through_m_differs": true,
+      "iv_no_grad": true,
+      "v_carried_across_boundary": true,
+      "vi_eval_uses_m": true,
+      "vi_nonvacuous": true,
+      "vii_record": true,
+      "h_upd": [
+        [
+          150,
+          150
+        ],
+        [
+          150,
+          150
+        ]
+      ]
+    },
+    "mutations": [
+      {
+        "mutation": "M-Ha: the EMA tracks the centred output",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_ema_uncentred",
+            "ii_not_centred_tracking"
+          ]
+        }
+      },
+      {
+        "mutation": "M-Hb: the gradient passes through m (same values, the batch mean's gradient)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iii_grad_is_constant_m"
+          ]
+        }
+      },
+      {
+        "mutation": "M-Hc: memo without m",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "vi_eval_uses_m"
+          ]
+        }
+      },
+      {
+        "mutation": "M-Hd: the diagnostics without m",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "vi_eval_uses_m"
+          ]
+        }
+      },
+      {
+        "mutation": "M-He: beta = 0.1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_ema_uncentred"
+          ]
+        }
+      },
+      {
+        "mutation": "M-Hf: m reset at every task boundary",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_not_centred_tracking",
+            "v_carried_across_boundary"
+          ]
+        }
+      },
+      {
+        "mutation": "M-Hg: m from the post-update forward",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_ema_uncentred"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 3.2
+  },
+  "S-gate": {
+    "title": "S-gate the gate under the doors is the host ELU's; captured updates equal an independent recomputation",
+    "target": "src/doors_rlmnist_1007.py",
+    "threshold_derivation": "(i) for the z of captured H / CH forwards, autograd of (phi(z) - m) and of phi(z) give the same\n    derivative bit for bit (m is a constant offset); (ii) four captured updates each of H and CH are bit-\n    identical to the independent recomputation (door forward + host Adam + EMA), and the recomputation\n    without m, or with a leaky second layer, or with the centring inside phi (phi(z - m)), differs\n    (non-vacuity); (iii) the ELU's training derivative on a float32 grid over [-45, 5] is\n    expm1(min(z, 0)) + 1, exactly 0 just below ln 2^-24 and positive just above, and differs from the\n    analytic exp; (iv) the runner's dtrain diagnostics at the end of task 1 (CH) are autograd through the\n    host ELU on the z of the door forward, bit for bit; (v) on a synthetic deep layer (b1 = -20) the\n    runner's dtrain_zero_l1 is 1 while the analytic gate is positive, with and without m.\n    Bit comparisons only.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "iv_dtrain_is_autograd": true,
+      "v_runner_sees_zero_derivative": true,
+      "updates": {
+        "H(1, 0)": {
+          "equals_reference": true,
+          "differs_without_m": true,
+          "differs_with_leaky": true,
+          "differs_inside_phi": true
+        },
+        "H(1, 40)": {
+          "equals_reference": true,
+          "differs_without_m": true,
+          "differs_with_leaky": true,
+          "differs_inside_phi": true
+        },
+        "H(2, 3)": {
+          "equals_reference": true,
+          "differs_without_m": true,
+          "differs_with_leaky": true,
+          "differs_inside_phi": true
+        },
+        "H(2, 120)": {
+          "equals_reference": true,
+          "differs_without_m": true,
+          "differs_with_leaky": true,
+          "differs_inside_phi": true
+        },
+        "CH(1, 0)": {
+          "equals_reference": true,
+          "differs_without_m": true,
+          "differs_with_leaky": true,
+          "differs_inside_phi": true
+        },
+        "CH(1, 40)": {
+          "equals_reference": true,
+          "differs_without_m": true,
+          "differs_with_leaky": true,
+          "differs_inside_phi": true
+        },
+        "CH(2, 3)": {
+          "equals_reference": true,
+          "differs_without_m": true,
+          "differs_with_leaky": true,
+          "differs_inside_phi": true
+        },
+        "CH(2, 120)": {
+          "equals_reference": true,
+          "differs_without_m": true,
+          "differs_with_leaky": true,
+          "differs_inside_phi": true
+        }
+      },
+      "i_gate_unchanged_by_m": true,
+      "ii_update_is_reference": true,
+      "ii_nonvacuous": true,
+      "iii_grid_equals_expm1_plus_1": true,
+      "iii_zero_below_threshold": true,
+      "iii_differs_from_exp_gate": true
+    },
+    "mutations": [
+      {
+        "mutation": "M-Ga: the centring inside phi (phi(z - m): the gate moves)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_update_is_reference",
+            "ii_nonvacuous",
+            "iv_dtrain_is_autograd"
+          ]
+        }
+      },
+      {
+        "mutation": "M-Gb: the training-derivative diagnostic read from the analytic exp",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iv_dtrain_is_autograd",
+            "v_runner_sees_zero_derivative"
+          ]
+        }
+      },
+      {
+        "mutation": "M-Gc: the second hidden layer is leaky",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_update_is_reference",
+            "ii_nonvacuous",
+            "iv_dtrain_is_autograd"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 3.3
+  },
+  "S5_S-branch": {
+    "title": "S5 the arms share their streams; H's first update is ref's and CH's is C's; all differ by task 3",
+    "target": "src/doors_rlmnist_1007.py",
+    "threshold_derivation": "The four arms, 3 tasks x 2 epochs each: (i) init, subset, labels and batch-order hashes identical;\n    (ii) H's first update (params and Adam state) is ref's, bit for bit, and H's m is nonzero right after\n    it; (iii) CH's first update is C's; (iv) C and CH train on the same input tensor, ref and H on the raw\n    images; (v) the four final states (params, Adam, m) are pairwise different; (vi) C's first update is\n    not ref's (non-vacuity of (ii)).",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_streams_identical": true,
+      "ii_H_first_update_is_ref": true,
+      "iii_CH_first_update_is_C": true,
+      "iv_inputs": true,
+      "v_all_differ": true,
+      "vi_nonvacuous": true
+    },
+    "mutations": [
+      {
+        "mutation": "M5a: the label stream depends on the arm",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_streams_identical",
+            "ii_H_first_update_is_ref",
+            "iii_CH_first_update_is_C"
+          ]
+        }
+      },
+      {
+        "mutation": "M5b: m starts nonzero",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_H_first_update_is_ref",
+            "iii_CH_first_update_is_C"
+          ]
+        }
+      },
+      {
+        "mutation": "M5c: door C also runs in the H arm",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_H_first_update_is_ref",
+            "iv_inputs",
+            "v_all_differ"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 8.3
+  },
+  "S7_S-repro": {
+    "title": "S7 the same call twice gives the same bits",
+    "target": "src/doors_rlmnist_1007.py",
+    "threshold_derivation": "The same call twice gives the same bits (arrays, hashes, rows), for ref and CH.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "ref": {
+        "i_arrays": true,
+        "ii_hashes": true,
+        "iii_rows": true,
+        "nonvacuous": true
+      },
+      "CH": {
+        "i_arrays": true,
+        "ii_hashes": true,
+        "iii_rows": true,
+        "nonvacuous": true
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M7a: the batch order does not come from the run's own generator",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref|i_arrays",
+            "ref|ii_hashes",
+            "ref|iii_rows",
+            "CH|i_arrays",
+            "CH|ii_hashes",
+            "CH|iii_rows"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 2.9
+  },
+  "S8_S-verdict": {
+    "title": "S8 the verdict returns the designed labels and estimates on synthetic shards",
+    "target": "analysis/doors_rlmnist_1007/verdict.py",
+    "threshold_derivation": "verdict.analyze on the S8 scenarios: every designed label and estimate comes out as written\n    (estimates within _tol_est, flags, states and censored times exactly), and the imported t quantile\n    reproduces the published table within TOL_T.  Prediction scoring is exercised on the designed\n    scenario (finite Brier scores, the designed realized labels).",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "designed": {
+        "labels": {
+          "main": "RESCUED",
+          "H_95": "RESCUED",
+          "C": "COLLAPSED",
+          "CH": "RESCUED_FUNCTION_ONLY",
+          "N": "NEED_H",
+          "timing_C": "EARLIER",
+          "timing_H": "LATER",
+          "timing_CH": "LATER"
+        },
+        "bad": [],
+        "tol_est": 1.9243344395976396e-13
+      },
+      "borderline": {
+        "labels": {
+          "main": "RESCUED_FUNCTION_ONLY",
+          "H_95": "RESCUED",
+          "C": "COLLAPSED",
+          "CH": "RESCUED_FUNCTION_ONLY",
+          "N": "NONE_RESCUED",
+          "timing_C": "EARLIER",
+          "timing_H": "LATER",
+          "timing_CH": "LATER"
+        },
+        "bad": [],
+        "tol_est": 2.986055847031821e-14
+      },
+      "not_reproduced": {
+        "labels": {
+          "main": "NOT_REPRODUCED",
+          "H_95": "NOT_REPRODUCED",
+          "C": "NOT_REPRODUCED",
+          "CH": "NOT_REPRODUCED",
+          "N": "NOT_REPRODUCED",
+          "timing_C": "EARLIER",
+          "timing_H": "NO_TIMING_DIFF",
+          "timing_CH": "NO_TIMING_DIFF"
+        },
+        "bad": [],
+        "tol_est": 1.9243344395976396e-13
+      },
+      "ref_8_of_10": {
+        "labels": {
+          "main": "RESCUED",
+          "H_95": "RESCUED",
+          "C": "COLLAPSED",
+          "CH": "RESCUED_FUNCTION_ONLY",
+          "N": "NEED_H",
+          "timing_C": "EARLIER",
+          "timing_H": "LATER",
+          "timing_CH": "LATER"
+        },
+        "bad": [],
+        "tol_est": 1.9243344395976396e-13
+      },
+      "ref_7_of_10": {
+        "labels": {
+          "main": "NOT_REPRODUCED",
+          "H_95": "NOT_REPRODUCED",
+          "C": "NOT_REPRODUCED",
+          "CH": "NOT_REPRODUCED",
+          "N": "NOT_REPRODUCED",
+          "timing_C": "EARLIER",
+          "timing_H": "LATER",
+          "timing_CH": "LATER"
+        },
+        "bad": [],
+        "tol_est": 1.9243344395976396e-13
+      },
+      "split": {
+        "labels": {
+          "main": "SPLIT",
+          "H_95": "SPLIT",
+          "C": "COLLAPSED",
+          "CH": "RESCUED_FUNCTION_ONLY",
+          "N": "NONE_RESCUED",
+          "timing_C": "EARLIER",
+          "timing_H": "LATER",
+          "timing_CH": "LATER"
+        },
+        "bad": [],
+        "tol_est": 1.9243344395976396e-13
+      },
+      "floor_margin": {
+        "labels": {
+          "main": "RESCUED",
+          "H_95": "RESCUED",
+          "C": "RESCUED",
+          "CH": "COLLAPSED",
+          "N": "NEED_C",
+          "timing_C": "LATER",
+          "timing_H": "LATER",
+          "timing_CH": "LATER"
+        },
+        "bad": [],
+        "tol_est": 1.9243344395976396e-13
+      },
+      "need_c": {
+        "labels": {
+          "main": "RESCUED",
+          "H_95": "RESCUED",
+          "C": "RESCUED",
+          "CH": "RESCUED_FUNCTION_ONLY",
+          "N": "NEED_C",
+          "timing_C": "LATER",
+          "timing_H": "LATER",
+          "timing_CH": "LATER"
+        },
+        "bad": [],
+        "tol_est": 1.9243344395976396e-13
+      },
+      "need_ch": {
+        "labels": {
+          "main": "COLLAPSED",
+          "H_95": "COLLAPSED",
+          "C": "COLLAPSED",
+          "CH": "RESCUED",
+          "N": "NEED_CH",
+          "timing_C": "EARLIER",
+          "timing_H": "LATER",
+          "timing_CH": "LATER"
+        },
+        "bad": [],
+        "tol_est": 1.9243344395976396e-13
+      },
+      "alive_unresolved": {
+        "labels": {
+          "main": "ALIVE_UNRESOLVED",
+          "H_95": "ALIVE_UNRESOLVED",
+          "C": "COLLAPSED",
+          "CH": "RESCUED_FUNCTION_ONLY",
+          "N": "NONE_RESCUED",
+          "timing_C": "EARLIER",
+          "timing_H": "EARLIER",
+          "timing_CH": "LATER"
+        },
+        "bad": [],
+        "tol_est": 3.4594549447319874e-14
+      },
+      "door_idle": {
+        "labels": {
+          "main": "INAPPLICABLE",
+          "H_95": "INAPPLICABLE",
+          "C": "INAPPLICABLE",
+          "CH": "RESCUED_FUNCTION_ONLY",
+          "N": "NONE_RESCUED",
+          "timing_C": "LATER",
+          "timing_H": "LATER",
+          "timing_CH": "LATER"
+        },
+        "bad": [],
+        "tol_est": 1.9243344395976396e-13
+      },
+      "broken_streams": {
+        "labels": {
+          "main": "INAPPLICABLE",
+          "H_95": "INAPPLICABLE",
+          "C": "INAPPLICABLE",
+          "CH": "INAPPLICABLE",
+          "N": "INAPPLICABLE",
+          "timing_C": "EARLIER",
+          "timing_H": "LATER",
+          "timing_CH": "LATER"
+        },
+        "bad": [],
+        "tol_est": 1.9243344395976396e-13
+      },
+      "timing_counts": {
+        "labels": {
+          "main": "COLLAPSED",
+          "H_95": "COLLAPSED",
+          "C": "COLLAPSED",
+          "CH": "COLLAPSED",
+          "N": "NONE_RESCUED",
+          "timing_C": "NO_TIMING_DIFF",
+          "timing_H": "NO_TIMING_DIFF",
+          "timing_CH": "EARLIER"
+        },
+        "bad": [],
+        "tol_est": 1.9243344395976396e-13
+      },
+      "paired_matters": {
+        "labels": {
+          "main": "RESCUED",
+          "H_95": "RESCUED",
+          "C": "COLLAPSED",
+          "CH": "RESCUED_FUNCTION_ONLY",
+          "N": "NEED_H",
+          "timing_C": "EARLIER",
+          "timing_H": "LATER",
+          "timing_CH": "LATER"
+        },
+        "bad": [],
+        "tol_est": 1.4531398391363342e-13
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M8a: the primary arm is CH",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|main: got RESCUED_FUNCTION_ONLY want RESCUED",
+            "designed|main_E1: got 0.38000224385713216 want 0.5000022438571322",
+            "designed|main_E2: got 2.2204460492503132e-17 want 0.25",
+            "designed|scoring",
+            "borderline|main_E2: got 2.2204460492503132e-17 want 0.03873790133706265",
+            "ref_8_of_10|main: got RESCUED_FUNCTION_ONLY want RESCUED",
+            "split|main: got RESCUED_FUNCTION_ONLY want SPLIT",
+            "need_c|main: got RESCUED_FUNCTION_ONLY want RESCUED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8b: E2 reads the analytic exp gate",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|main: got NOT_REPRODUCED want RESCUED",
+            "designed|H_95: got NOT_REPRODUCED want RESCUED",
+            "designed|C: got NOT_REPRODUCED want COLLAPSED",
+            "designed|CH: got NOT_REPRODUCED want RESCUED_FUNCTION_ONLY",
+            "designed|N: got NOT_REPRODUCED want NEED_H",
+            "designed|main_E2: got 0.0 want 0.25",
+            "designed|B_ok: got False want True",
+            "designed|scoring"
+          ]
+        }
+      },
+      {
+        "mutation": "M8c: main label at 95%",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "borderline|main: got RESCUED want RESCUED_FUNCTION_ONLY"
+          ]
+        }
+      },
+      {
+        "mutation": "M8d: H's registered level 95% (the ladder reads it)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "borderline|N: got NEED_H want NONE_RESCUED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8e: ref's collapse never required",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "not_reproduced|main: got RESCUED want NOT_REPRODUCED",
+            "not_reproduced|C: got COLLAPSED want NOT_REPRODUCED",
+            "not_reproduced|CH: got ALIVE_UNRESOLVED want NOT_REPRODUCED",
+            "not_reproduced|N: got NEED_H want NOT_REPRODUCED",
+            "ref_7_of_10|main: got RESCUED want NOT_REPRODUCED",
+            "ref_7_of_10|N: got NEED_H want NOT_REPRODUCED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8f: ref must be floored in every seed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_8_of_10|main: got NOT_REPRODUCED want RESCUED",
+            "ref_8_of_10|N: got NOT_REPRODUCED want NEED_H"
+          ]
+        }
+      },
+      {
+        "mutation": "M8g: ref floored in half the seeds is enough",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_7_of_10|main: got RESCUED want NOT_REPRODUCED",
+            "ref_7_of_10|N: got NEED_H want NOT_REPRODUCED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8h: the floor margin dropped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "floor_margin|CH: got RESCUED_FUNCTION_ONLY want COLLAPSED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8i: the floor at chance",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "floor_margin|CH: got RESCUED_FUNCTION_ONLY want COLLAPSED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8j: the pairing broken",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "borderline|H_95: got RESCUED_FUNCTION_ONLY want RESCUED",
+            "paired_matters|main: got RESCUED_FUNCTION_ONLY want RESCUED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8k: unit median instead of the mean",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|main_E2: got 0.2001 want 0.25"
+          ]
+        }
+      },
+      {
+        "mutation": "M8l: E1 is the window level (not the change from the arm's own task 1)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "alive_unresolved|main: got RESCUED want ALIVE_UNRESOLVED",
+            "alive_unresolved|N: got NEED_H want NONE_RESCUED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8m: (C) for H reads layer 1 only",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "door_idle|main: got RESCUED want INAPPLICABLE",
+            "door_idle|N: got NEED_H want NONE_RESCUED",
+            "door_idle|C_ok|H: got True want False"
+          ]
+        }
+      },
+      {
+        "mutation": "M8n: (C) read in the main window only",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "door_idle|C: got RESCUED want INAPPLICABLE",
+            "door_idle|N: got NEED_C want NONE_RESCUED",
+            "door_idle|C_ok|C: got True want False"
+          ]
+        }
+      },
+      {
+        "mutation": "M8o: the cross-arm stream check off",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "broken_streams|main: got RESCUED want INAPPLICABLE",
+            "broken_streams|N: got NEED_H want INAPPLICABLE",
+            "broken_streams|n_valid: got 10 want 7"
+          ]
+        }
+      },
+      {
+        "mutation": "M8p: IMPAIRED against ref's early fit itself",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|impaired|H: got True want False",
+            "designed|impaired|CH: got True want False"
+          ]
+        }
+      },
+      {
+        "mutation": "M8q: the ladder tries H before C",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "floor_margin|N: got NEED_H want NEED_C",
+            "need_c|N: got NEED_H want NEED_C"
+          ]
+        }
+      },
+      {
+        "mutation": "M8r: a censored arm counted as a tie",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|timing_H: got NO_TIMING_DIFF want LATER",
+            "designed|timing_CH: got NO_TIMING_DIFF want LATER"
+          ]
+        }
+      },
+      {
+        "mutation": "M8s: ties counted in the sign test's n",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "timing_counts|timing_CH: got NO_TIMING_DIFF want EARLIER"
+          ]
+        }
+      },
+      {
+        "mutation": "M8t: T_half on raw accuracy instead of the fit fraction",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|timing_CH: got EARLIER want LATER"
+          ]
+        }
+      },
+      {
+        "mutation": "M8u: a task's first row taken as its end point (E2)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "designed|main: got NOT_REPRODUCED want RESCUED",
+            "designed|H_95: got NOT_REPRODUCED want RESCUED",
+            "designed|C: got NOT_REPRODUCED want COLLAPSED",
+            "designed|CH: got NOT_REPRODUCED want RESCUED_FUNCTION_ONLY",
+            "designed|N: got NOT_REPRODUCED want NEED_H",
+            "designed|main_E2: got 0.0 want 0.25",
+            "designed|B_ok: got False want True",
+            "designed|scoring"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 101.7
+  },
+  "S9_S-cli": {
+    "title": "S9 the CLI maps, relabels and records this experiment",
+    "target": "src/doors_rlmnist_run_1007.py",
+    "threshold_derivation": "For each arm, main() on a 2-task, 2-epoch shard writes (i) per_task rows labelled with the arm and\n    otherwise equal to the in-process run_doors of the registered doors, and (ii) the same units.npz\n    arrays, bit for bit; (iii) the CLI's ARM_MAP is the registered one; (iv) provenance names this\n    experiment and spec, the doors and beta, act2 ELU1, flush on, 1 torch thread, and hashes both new\n    files; (v) the defaults are 100 tasks x 80 epochs; (vi) main() leaves flush on.",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "ref": {
+        "i_rows": true,
+        "ii_units": true,
+        "iv_provenance": true,
+        "vi_flush_left_on": true
+      },
+      "C": {
+        "i_rows": true,
+        "ii_units": true,
+        "iv_provenance": true,
+        "vi_flush_left_on": true
+      },
+      "H": {
+        "i_rows": true,
+        "ii_units": true,
+        "iv_provenance": true,
+        "vi_flush_left_on": true
+      },
+      "CH": {
+        "i_rows": true,
+        "ii_units": true,
+        "iv_provenance": true,
+        "vi_flush_left_on": true
+      },
+      "iii_arm_map": true,
+      "v_defaults": true
+    },
+    "mutations": [
+      {
+        "mutation": "M9a: H mapped to both doors",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "H|i_rows",
+            "H|ii_units",
+            "H|iv_provenance",
+            "iii_arm_map"
+          ]
+        }
+      },
+      {
+        "mutation": "M9b: the rows keep the runner's own label",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref|i_rows",
+            "C|i_rows",
+            "H|i_rows",
+            "CH|i_rows"
+          ]
+        }
+      },
+      {
+        "mutation": "M9c: the default horizon is 150 tasks",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "v_defaults"
+          ]
+        }
+      },
+      {
+        "mutation": "M9d: denormals not flushed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref|vi_flush_left_on",
+            "C|vi_flush_left_on",
+            "H|vi_flush_left_on",
+            "CH|vi_flush_left_on"
+          ]
+        }
+      },
+      {
+        "mutation": "M9e: provenance names another spec",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref|iv_provenance",
+            "C|iv_provenance",
+            "H|iv_provenance",
+            "CH|iv_provenance"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 25.8
+  },
+  "S-cost": {
+    "pass": true,
+    "gate": "all 6 processes exit 0",
+    "returncodes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "mem_available_gib_before": 19.738815307617188,
+    "peak_rss_gib_max": 1.4157943725585938,
+    "slots_now": 8,
+    "seconds_per_update_under_load": 0.0007770825823148091,
+    "one_trajectory_min_projected": 7.770825823148091,
+    "grid_40_wall_hours_at_6": 0.8634250914608991,
+    "measured_at": "2026-10-07T22:07:08.123762+09:00",
+    "seconds": 12.2
+  },
+  "finished_at": "2026-10-07T22:07:08.124972+09:00"
+}
