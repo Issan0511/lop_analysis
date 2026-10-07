@@ -1,0 +1,17 @@
+{
+  "run_id": "cap_cifar5p1_1007",
+  "created": "2026-10-07T22:40:18+0900",
+  "rule": "CLAUDE.md section 4: git-external files of the worktree except __pycache__",
+  "command": "git -C <worktree> status --porcelain --ignored --untracked-files=all",
+  "backup_root": "/home/issan/Projects/obsidian-research-data/cap_cifar5p1_1007",
+  "files": [],
+  "not_moved": [
+    {
+      "source": "/home/issan/Projects/claude/wt/cap_cifar5p1_1007/data",
+      "kind": "symlink",
+      "target": "/home/issan/Projects/claude/proj_004_drift/data",
+      "action": "not moved, not followed (shared data of proj_004_drift; spec section 11)"
+    }
+  ],
+  "note": "Every output of the main run (4 arms: per_task / cap_task / fresh_control CSV, provenance, radii.npz, logs) and the verdict files are committed in git, so nothing raw was left outside git; the backup folder was not created. The check runs wrote only to the session scratchpad outside the worktree (regenerable with analysis/cap_cifar5p1_1007/checks.py; their record is checks.json)."
+}
