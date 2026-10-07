@@ -1,0 +1,87 @@
+{
+  "run_id": "drive_cifar5p1_1007",
+  "mode": "production",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "R": 10,
+  "groups": {
+    "primary": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "calibration": [
+      5,
+      6,
+      7,
+      8,
+      9
+    ]
+  },
+  "n_tasks": 30,
+  "fresh": true,
+  "arm": "R",
+  "cond": "std",
+  "lr": 0.0001,
+  "bins": {
+    "size": 26,
+    "count": 30
+  },
+  "steps": 780,
+  "fixtures": [
+    [
+      2,
+      1
+    ],
+    [
+      2,
+      780
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      30,
+      780
+    ]
+  ],
+  "spec_commit": "0afd3360",
+  "source_sha256": {
+    "src/drive_cifar5p1_1007.py": "a0e803e7625e87925b651ec953688df986ec8ea8bd347d1adc292b4152190089",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "analysis/drive_cifar5p1_1007/checks.py": "67b2cf654359aceb81ca74a2ffb7d3fce965edacca888cc5816b8302d2e89c78",
+    "analysis/drive_cifar5p1_1007/report.py": "061cb6720e9f9b63fcfb89cc7c94623c116536984e6413b253e4ae31fbf77d0b",
+    "analysis/drive_cifar5p1_1007/launch.sh": "e1a734bbb51b659010510cdf23b0a5d393420b5e4b02710d8276af4f5faf5415"
+  },
+  "data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "class_sha256": {
+    "0": "7487cc5ba7a5670094d2c8c701beae782530a141ef1cf31f07ab70673f992cd8",
+    "1": "a12ed45d3a05fd7fcf0927bb65417a3549f318a28ba23d85f488c9d37635e650",
+    "2": "5e27dd1c103b2617d199083c9909fea1c81078144102b53c93c491d435bd46ee",
+    "3": "c34bc8e8fdec85d19338aa1dfcada4ce48eb6e137020247e2604ec012eb0c12d",
+    "4": "04eb2beb4f183339e971eff4b55c8f4825e6795a81d5fe037fb0da1d22bc4daf",
+    "5": "1e363ce037e64574e24fb7e322b208669808dc2657deae88b47172e99a4f9f6c",
+    "6": "8c86984870465812064f4a9de9c365524adb6b167047241936f460f0b08ae79a",
+    "7": "1d1733cbd77116c196133d7c8ccde0f1d9359b22787506979b09596972a7c614",
+    "8": "3821dd6cf078d23a864be2eecdbe130453ab37fc988d2938a00da94f70503ed6",
+    "9": "c5bdda2b5323c5ec1e2cd939fd7e740f7061b367eb4a5c3d3cc9b4d91feb0845"
+  }
+}
