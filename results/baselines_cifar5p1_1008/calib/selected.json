@@ -1,0 +1,39 @@
+{
+  "rule": "spec 3.2: max mean late window over seeds 100-109; diverged cells dropped; exact ties -> registered grid order",
+  "selected": {
+    "snp": {
+      "method": "snp",
+      "eps": "1e-5",
+      "sigma": "1e-2"
+    },
+    "cbp": {
+      "method": "cbp",
+      "rho": "1e-5",
+      "maturity": 100,
+      "decay": 0.99
+    },
+    "redo": {
+      "method": "redo",
+      "tau": "0.1",
+      "period": 1560
+    }
+  },
+  "scores": {
+    "snp": 0.557296474352,
+    "cbp": 0.514109775646,
+    "redo": 0.5586594551299999
+  },
+  "edges": {
+    "snp": [
+      "eps=1e-5 (low end)",
+      "sigma=1e-2 (high end)"
+    ],
+    "cbp": [
+      "rho=1e-5 (low end)"
+    ],
+    "redo": [
+      "tau=0.1 (high end)",
+      "period=1560 (high end)"
+    ]
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "run_id": "baselines_cifar5p1_1008",
+  "git_hash": "e2e384363830f3929bc7214c045618f792763492",
+  "dirty_src_analysis": [],
+  "method": "snp",
+  "config": "snp_e1e-4_s1e-2",
+  "method_cfg": {
+    "method": "snp",
+    "eps": "1e-4",
+    "sigma": "1e-2"
+  },
+  "method_rule": "after every Adam update, every tensor: p.mul_(1-eps).add_(zeta, alpha=sigma), zeta = (rand*2-1)/sqrt(fan_in), one CUDA generator per process",
+  "rng": {
+    "snp_noise_cuda_seed": 2797993204079214707,
+    "reinit_stream": null
+  },
+  "resets_total": {
+    "reset_l1": 0,
+    "reset_l2": 0,
+    "redo_checks": 0
+  },
+  "redo_checks_rows": null,
+  "arm": "R",
+  "cond": "std",
+  "seeds": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109
+  ],
+  "R": 10,
+  "lr": 0.0001,
+  "n_tasks": 30,
+  "steps_per_task": 780,
+  "steps_hard": 780,
+  "steps_easy": 780,
+  "batch": 32,
+  "hidden": 100,
+  "layer_shapes": [
+    [
+      100,
+      3072
+    ],
+    [
+      100,
+      100
+    ],
+    [
+      100,
+      100
+    ]
+  ],
+  "n_params": 327500,
+  "dims": [
+    3072,
+    100,
+    100,
+    100
+  ],
+  "n_classes": 100,
+  "hard_classes": 5,
+  "per_class_train": 500,
+  "classes_used": 90,
+  "task_parity": "task 1 hard, alternating (the paper's task 0 hard)",
+  "optimizer": "adam",
+  "weight_decay": 0.0,
+  "data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "std": {
+    "mean": [
+      0.5071,
+      0.4865,
+      0.4409
+    ],
+    "std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "class_sha256": {
+    "100": "f0f27b396f33d65f355d70a0d32bad2d6c6a0a3dc296793359fa996ee5d539a0",
+    "101": "cfc55bad951170384689785e290646e3b5adf22b5238daf85f0c3c0339c29853",
+    "102": "574c2350f1231ed0a1e7a979aeb874d5dd1a47929dd4c262b596d7b6a670b49d",
+    "103": "4b5e0fc7163cf48dca47432fb39a470b22f0a4dd596663ff5fbbb647c7157bd3",
+    "104": "c463dc72c44015d3416b88bb46e2386f30f25776e60bbe775341a3d0786bb314",
+    "105": "136143b57b95b95facd7009a8efcae6b2b7b9cf6e5857ab966a68cebff07b8db",
+    "106": "453d285887fb80825faa0993e75ed46d24fdad427d7557dfec6dae4d68184651",
+    "107": "56e86af0f3555c8ec98a6b7d66972cf69a5a69ed38a7282e9c6b34a7ce36ffef",
+    "108": "fd7fc89505c8af1fc8c1cd45217de158ac8aae9d5fc47c0a78dc86dd395c07a2",
+    "109": "cfcc9983e6025cdb938a7d0cbda4370938b849a8328549552e94d96b0699885a"
+  },
+  "rng_roles": [
+    "c51_classes",
+    "c51_batch",
+    "init",
+    "snp_noise(cuda)"
+  ],
+  "fresh_control": {
+    "task": 29,
+    "n": 10,
+    "rule": "host procedure, method off (spec 2.6)"
+  },
+  "fresh_self": {
+    "n": 10,
+    "rule": "method on, method state reset"
+  },
+  "engine": "host run() of cifar5p1_mlp_0920 copied for R/std + method; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+  "host_module_sha256": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+  "engine_sha256": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "threads": 2,
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 1.9101812289311335,
+  "wall_clock_s": 65.91115403175354,
+  "divergences": [],
+  "spec": "specs/spec_baselines_cifar5p1_1008.md",
+  "admission": {
+    "checks_sha256": "36efeebcc5c3471fb58730a897fec423149e1355d5659cb3866dc9ef6ed39ed6",
+    "source_sha256": {
+      "src/baselines_cifar5p1_1008.py": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "analysis/baselines_cifar5p1_1008/checks.py": "a14ca3a80ed6d01d75342c926ea11d3c8a93e6d690aec25c6fde756ab6b63489",
+      "analysis/baselines_cifar5p1_1008/verdict.py": "ddb066bac5f59b29f25889e2c8af465e2438ff9657bba1960bcb89c7fe418c75"
+    },
+    "selected_sha256": null
+  }
+}
