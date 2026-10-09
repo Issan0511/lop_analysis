@@ -1078,7 +1078,7 @@ def bundle_zbar(Bd) -> torch.Tensor:
     return s
 
 
-def replay(task: int, arms, seeds, out: Path, device, rec_steps=(1, 10, 75, 750, 7500, 30000)):
+def replay(task: int, arms, seeds, out: Path, device, rec_steps=(1, 10, 75, 750, 7500, 30000), tag=""):
     """Load every (arm, seed) checkpoint of `task` into one engine bundle and train task+1 exactly
     as the run did (labels, batch orders, Adam, alpha updates), recording channel means."""
     out.mkdir(parents=True, exist_ok=True)
@@ -1139,7 +1139,7 @@ def replay(task: int, arms, seeds, out: Path, device, rec_steps=(1, 10, 75, 750,
             den = sum(float((st["P"][i] ** 2).sum()) for i in range(10))
             fid[f"{a}_{s}"] = math.sqrt(num / den)
     res["param_rel_diff_vs_saved"] = fid
-    np.save(out / f"replay_t{task:02d}.npy", res, allow_pickle=True)
+    np.save(out / f"replay_t{task:02d}{tag}.npy", res, allow_pickle=True)
     print(f"replay t{task} -> t{task + 1}: {wall:.0f}s, max mem {res['cuda_max_mem_mb']:.0f} MB", flush=True)
     return res
 
@@ -1228,6 +1228,7 @@ def main():
     ap.add_argument("mode", choices=["checks", "checks2", "checks3", "measure", "frozen", "replay",
                                      "timing", "zbar", "capacity", "c2exact", "extra"])
     ap.add_argument("--nsub", type=int, default=32)
+    ap.add_argument("--tag", default="")
     ap.add_argument("--arms", default="SNA,SNAc3,CV06FC3,CV3FC06")
     ap.add_argument("--seeds", default="10-19")
     ap.add_argument("--tasks", default="1,5,10,20")
@@ -1261,7 +1262,7 @@ def main():
         run_checks_selfshape(out, device)
         return
     if args.mode == "replay":
-        replay(args.task, arms, seeds, out, device)
+        replay(args.task, arms, seeds, out, device, tag=args.tag)
         return
     torch.backends.cudnn.allow_tf32 = False             # float64 anyway; keep conv exact
     tasks = parse_list(args.tasks)
