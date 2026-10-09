@@ -735,11 +735,12 @@ def run_checks(out: Path, device):
     print("all_pass", rep["all_pass"], "max mem MB", rep["cuda_max_mem_mb"])
 
 
-def c2_exact_one(arm, seed, task, device, K=4096, kb=16, chunk=200):
+def c2_exact_one(arm, seed, task, device, K=512, kb=8, chunk=200):
     """Exact (non-linear) expected change of every c1 / c2 channel mean under the first Adam step,
     MC over (16-image batch, iid labels).  Each sampled step's conv parameters are applied and the
-    channel means recomputed; kb samples share one grouped forward.  float32 with cuDNN disabled
-    (plain sums; the differences are taken against the same evaluation of the unperturbed state).
+    channel means recomputed; kb samples share one grouped forward.  float64 (TF32 off).  The
+    linear prediction -lr u.A is computed on the same samples, so the paired difference
+    exact - linear (the non-linear part) has a small SE even for modest K.
     alpha is held at the checkpoint (the parameter step only)."""
     S = State(arm, seed, task, device)
     cs = channel_stats(S)
@@ -751,11 +752,10 @@ def c2_exact_one(arm, seed, task, device, K=4096, kb=16, chunk=200):
     m0 = S.conv_vec(S.m); v0 = S.conv_vec(S.v)
     t = S.tc + 1
     gen = torch.Generator().manual_seed(3009_000 + 1000 * seed + task)
-    W1, b1, W2, b2 = [q.float() for q in S.P[:4]]
-    a0 = S.alpha[0].float(); a1 = S.alpha[1].float()
-    X = S.X.float()
+    W1, b1, W2, b2 = S.P[:4]
+    a0 = S.alpha[0]
+    X = S.X
     cud = torch.backends.cudnn.enabled
-    torch.backends.cudnn.enabled = False
 
     def means(W1s, b1s, W2s, b2s, k):
         """channel means (k, 32) for k parameter sets stacked on the channel axis."""
@@ -772,9 +772,7 @@ def c2_exact_one(arm, seed, task, device, K=4096, kb=16, chunk=200):
 
     with torch.no_grad():
         base = means(W1, b1, W2, b2, 1)[0]
-        acc1 = torch.zeros(2 * CH, dtype=DT, device=device)
-        acc2 = torch.zeros(2 * CH, dtype=DT, device=device)
-        lin1 = torch.zeros(2 * CH, dtype=DT, device=device)
+        acc = {k: torch.zeros(2 * CH, dtype=DT, device=device) for k in ("e1", "e2", "l1", "l2", "d1", "d2")}
         for k0 in range(0, K, kb):
             k = min(kb, K - k0)
             idx = torch.rand(k, N, generator=gen).argsort(1)[:, :B16].to(device)
@@ -785,19 +783,25 @@ def c2_exact_one(arm, seed, task, device, K=4096, kb=16, chunk=200):
             g /= B16
             A, _, _ = adam_dir(m0, v0, g, t)
             d = (-LR * A)                                                          # (k, NCONV)
-            lin1 += (d @ U.T).sum(0)
-            dW1 = d[:, CONV_OFF[0]:CONV_OFF[1]].float().view(k * CH, 3, CN.KERNEL, CN.KERNEL)
-            db1 = d[:, CONV_OFF[1]:CONV_OFF[2]].float().reshape(-1)
-            dW2 = d[:, CONV_OFF[2]:CONV_OFF[3]].float().view(k * CH, CH, CN.KERNEL, CN.KERNEL)
-            db2 = d[:, CONV_OFF[3]:CONV_OFF[4]].float().reshape(-1)
+            lin = d @ U.T                                                          # (k, 32)
+            dW1 = d[:, CONV_OFF[0]:CONV_OFF[1]].reshape(k * CH, 3, CN.KERNEL, CN.KERNEL)
+            db1 = d[:, CONV_OFF[1]:CONV_OFF[2]].reshape(-1)
+            dW2 = d[:, CONV_OFF[2]:CONV_OFF[3]].reshape(k * CH, CH, CN.KERNEL, CN.KERNEL)
+            db2 = d[:, CONV_OFF[3]:CONV_OFF[4]].reshape(-1)
             mm = means(W1.repeat(k, 1, 1, 1) + dW1, b1.repeat(k) + db1,
                        W2.repeat(k, 1, 1, 1) + dW2, b2.repeat(k) + db2, k) - base
-            acc1 += mm.sum(0); acc2 += (mm * mm).sum(0)
+            dd = mm - lin
+            for key, v in (("e", mm), ("l", lin), ("d", dd)):
+                acc[key + "1"] += v.sum(0); acc[key + "2"] += (v * v).sum(0)
     torch.backends.cudnn.enabled = cud
-    mu = acc1 / K
-    se = ((acc2 / K - mu * mu).clamp_min(0) * K / (K - 1) / K).sqrt()
-    return {"arm": arm, "seed": seed, "task": task, "K": K, "exact_mean": mu.cpu().numpy(),
-            "exact_se": se.cpu().numpy(), "linear_mean": (lin1 / K).cpu().numpy()}
+
+    def ms(key):
+        mu = acc[key + "1"] / K
+        se = ((acc[key + "2"] / K - mu * mu).clamp_min(0) * K / (K - 1) / K).sqrt()
+        return mu.cpu().numpy(), se.cpu().numpy()
+    em, es = ms("e"); lm, ls = ms("l"); dm, ds = ms("d")
+    return {"arm": arm, "seed": seed, "task": task, "K": K, "exact_mean": em, "exact_se": es,
+            "linear_mean": lm, "linear_se": ls, "nonlin_mean": dm, "nonlin_se": ds}
 
 
 def self_shape(S: State, U: torch.Tensor, chunk=100) -> dict:
