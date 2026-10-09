@@ -4,12 +4,15 @@
     python3 src/sna_cnn_cause_1009_fork.py --src results/sna_cnn_cause_1009/A --at 30 \
         --forks SNA:SNAc3,SNAc3:SNA,SNA:SNA,SNAc3:SNAc3 --tasks 10 --out results/sna_cnn_cause_1009/F30
 
-`--forks old:new,...`: every seed's run of arm `old`, as it stood at the end of task `--at`
+`--forks old:new[@mod],...`: every seed's run of arm `old`, as it stood at the end of task `--at`
 (parameters, Adam moments and step count, V), continues for `--tasks` more tasks with the
 activation settings of arm `new` (its c / fixed alpha per site; V is carried over, so an
 adaptive site's alpha is c_new / sqrt(V) from the first step).  Labels and batch orders
 continue the seed's own streams, so old:old reproduces the source run's next tasks up to the
 engine's float differences (S-fork in the summary).
+
+Modifiers applied at the fork point (after loading, before the first continued step):
+  @f3x<k>   readout weight and bias times k: every logit times k, the argmax unchanged
 """
 
 from __future__ import annotations
@@ -33,9 +36,10 @@ def fork_bundle(src: Path, at: int, pairs: list[tuple[str, str]], seeds: list[in
                 cifar, epochs: int = 400) -> tuple[E.Bundle, list[tuple[str, str, int]]]:
     slots, meta = [], []
     for old, new in pairs:
+        new, _, mod = new.partition("@")
         for s in seeds:
             slots.append((new, s))
-            meta.append((old, new, s))
+            meta.append((old, new + (f"@{mod}" if mod else ""), s))
     B = E.Bundle(slots, cifar, device, epochs=epochs, graph=True)
     with torch.no_grad():
         tcs = set()
@@ -48,6 +52,13 @@ def fork_bundle(src: Path, at: int, pairs: list[tuple[str, str]], seeds: list[in
             for l in range(4):
                 B.act.V[l][r].copy_(st["act"]["V"][l])
             tcs.add(st["tc"])
+            mod = new.partition("@")[2]
+            if mod.startswith("f3x"):
+                k = float(mod[3:])
+                B.P[8][r].mul_(k)
+                B.P[9][r].mul_(k)
+            elif mod:
+                raise SystemExit(f"unknown fork modifier {mod!r}")
         if len(tcs) != 1:
             raise SystemExit(f"step counts differ across the forked runs: {tcs}")
         B.tc.fill_(tcs.pop())
@@ -75,7 +86,7 @@ def main() -> None:
     cifar = RC.Cifar10()
     pairs = [tuple(p.split(":")) for p in args.forks.split(",")]
     for o, n in pairs:
-        E.parse_arm(o); E.parse_arm(n)
+        E.parse_arm(o); E.parse_arm(n.partition("@")[0])
     seeds = E.parse_seeds(args.seeds)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
