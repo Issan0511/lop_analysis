@@ -466,7 +466,10 @@ def git_state() -> dict:
 
 
 def run(slots, out: Path, n_tasks: int, epochs: int, device, lr=1e-3, ckpt_tasks=CKPT_TASKS,
-        graph=True, resume=True, log=print) -> None:
+        graph=True, resume=True, log=None) -> None:
+    if log is None:
+        def log(msg):
+            print(msg, flush=True)
     out.mkdir(parents=True, exist_ok=True)
     (out / "ckpt").mkdir(exist_ok=True)
     cifar = RC.Cifar10()
@@ -491,6 +494,13 @@ def run(slots, out: Path, n_tasks: int, epochs: int, device, lr=1e-3, ckpt_tasks
     for r, sp in enumerate(B.specs):
         if sp["frz"] is not None:
             frz.setdefault(sp["frz"], []).append(r)
+    # Reserve the evaluation's peak memory now: the caching allocator keeps it, so a later
+    # neighbour on the GPU (ollama loads a 15 GB model on demand) cannot starve the
+    # end-of-task evaluation.  Read only: no parameter, moment, V or generator is touched.
+    evaluate(B.P, B.X, B.Y, B.act)
+    switch_eval(B.P, B.X, B.Y, B.act)
+    if device.type == "cuda":
+        torch.cuda.synchronize()
     t_start = time.time()
     for t in range(t0, n_tasks + 1):
         tt = time.time()
