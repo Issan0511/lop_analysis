@@ -67,6 +67,14 @@ firstConv1200rawのgradient-feature rankと新scale: adam_1200_reference.md / ad
 実120434rawのminor・routing・3画像subset raw identity検算: verify_adam_1200_reference.py / ../../results/cnn_drive_1009/adam_1200_reference.json。
 native検算・constant-rate境界の統合者による独立確認: adam_1200_verification_review.md。
 一定学習率で全raw収束/固定compact永久保持をそのまま移せない定理: adam_constant_rate_boundary.md。
+同境界と10分類有理数verifierの別agentによる追加監査: adam_constant_rate_boundary_review.md。
 10分類ではuniform predictionsでもhidden Adam場が0でない反例とpaired-head条件: adam_tenclass_equilibrium.md。
 10分類N1200/B16/H30000のpredictive bias block正下界: adam_tenclass_bias.md / verify_adam_tenclass.py / ../../results/cnn_drive_1009/adam_tenclass.json。
 10分類hidden/headの全体理論・実rate=.001/実画像の挙動は依然未解決。
+
+10分類N1200/B16/E400のsparse-support native参照と有限一定rateの正例: adam_tenclass_finite_drift.md。
+六対四のheadからの定常Adam符号、全/literal-self容量への有限ridge接続の監査: adam_tenclass_finite_drift_reference_review.md。
+全履歴の移動量による非循環な局所保持とfinite observable平均化の独立監査: adam_tenclass_finite_drift_averaging_review.md。
+実121242raw、全1200画像gate、3画像rawNTK、全10target label CE式、exact phase margin検算: verify_adam_tenclass_finite_drift.py / ../../results/cnn_drive_1009/adam_tenclass_finite_drift.json。
+target filterのeffective support一枚・特殊head・選択したridge・十分小さいrate/clock区間に限り、標準runの解決完了とは扱わない。
+上記定理§2.1には正meanから正meanのまま下がる別の解析的構成を含む。native float64 witnessの値との混同を避け、scalar geometryだけをFractionで照合する。

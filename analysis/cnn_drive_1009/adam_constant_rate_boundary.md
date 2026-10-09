@@ -127,7 +127,7 @@ Let the target first-Conv mean be the actual affine observable m(theta)=u^T thet
 This separates several logically different targets:
 
 1. **A negative net offset after adaptation:** m_T<m_0 over a long finite horizon, or a limiting mean level below its initial level. Full-parameter convergence is unnecessary.
-2. **A negative asymptotic velocity:** limsup [m_T-m_0]/T<0, equivalently a strictly positive long-run average u^Tq. This implies continuing unbounded decrease at linear speed and is much stronger than adaptation followed by stabilization.
+2. **A negative asymptotic velocity:** limsup [m_T-m_0]/T<0, equivalently liminf_T (1/T)sum_(t<T)u^Tq_t>0. Existence of an average limit is not required. This implies continuing unbounded decrease at linear speed and is much stronger than adaptation followed by stabilization.
 3. **A lower stationary or time-averaged level:** a limiting distribution or occupation measure has a lower mean/median m, more mass below an activation threshold, or a lower temporal average of m. Its average velocity can be zero.
 4. **A local conditional restoring direction:** while the state is in a specified region, the averaged response to fresh tasks points toward a lower mean. This can explain a transient shift without implying that the direction persists outside the region or forever.
 

@@ -2,6 +2,8 @@
 
 2026-10-09. The integration author independently read the complete finite verifier written by the geometry agent, read the separate constant-rate boundary proof, checked its finite-error terms against `adam_task_averaging.md` and `adam_observable_averaging.md`, and executed the repository verifiers. This record does not claim an additional agent review that was interrupted by the usage limit.
 
+Subsequent update: that separate constant-rate/ten-class-formula audit was later completed and is saved in [adam_constant_rate_boundary_review.md](adam_constant_rate_boundary_review.md). Its liminf wording suggestion has been applied. The paragraph above records the earlier integration stage.
+
 ## Native verifier: scope and identities
 
 `verify_adam_1200_reference.py` uses the exact native hidden widths and all 120434 raw weights/biases, with a binary head. It avoids an enormous N-by-P Jacobian. The first-Conv mixed minor follows from `G_(i,c,a,b)=sum_r q_(i,r) x_(c,r+offset)` on the fixed branch. The gather map and color mask implement its input derivative, with row ordering matching the packed first-Conv weights and the chosen disjoint pixels. Both strict row and column diagonal dominance imply an invertible minor, with inverse 2-norm at most the inverse geometric mean of those two margins.

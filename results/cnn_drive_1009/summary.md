@@ -161,3 +161,19 @@ ReLUは正側で動き続ける。今回外せたのはbatchサイズ1の条件�
 一方、`adam_tenclass_bias.md` と `adam_tenclass.json` は、N1200/B16/H30000でoutputbiasのpredictive応答が正と示す。B/C=1.6が非整数なのでuniform時の各bias勾配の絶対値は1/40以上。true epoch covarianceと組み合わせ、common-probability応答の有理数下界は約2.38933156>2.38、中心化logit座標のcommon-image bias係数は約5.97332889>5.95。行列はrank9の半正定値であり、残るimage/hidden方向を保証しない。raw baselineのclass共通性はgaugeとして扱い、全CNNが均等予測で平衡とは主張しない。
 
 `adam_constant_rate_boundary.md` は、一定eta>0・自由outputbias・無限iid task labelsなら各outputbiasの有限収束がほぼ確実に起こらず、全rawを固定compactに永久保持する確率も0であると示す。前者はfresh-task first batchのgradient再発、後者は稀な全同一class task burstによる。極端に稀な無限時間事象の証明であり、実用的な早期exitやhidden meanの非沈降を結論しない。長期のmeanの低い水準、有限期間のnet沈降、非零の漸近速度は別の命題である。標準RL-CIFARの10分類全体・実画像・rate=.001での自己方向はまだ証明完了としていない。
+
+## 10分類・一定rateでの有限期間の自己方向
+
+`adam_tenclass_finite_drift.md` では、N1200/B16/E400/H30000・native Conv16/16・FC100/100・10分類の全121242rawを自由に学習する有限期間の正例を示した。対象firstConv filterは1枚の1patchだけでReLU-active、他1199画像ではstrictにinactiveとする。非負画像とshared Convの具体的なkernel/biasから実現でき、このgate条件は開いている。他画像にも独立uniform labelsを与え、通常のbatch内平均・毎epochの再shuffle・課題内label再利用・Adamのmoments保持を行う。effective image supportが1枚という制限は残る。
+
+参照headの六つのrowを−.4w、四つを+.6wとし、targetのlogitsをbias初期値で揃える。対象filterの全75weightsとbiasのbatch勾配は、−(kappa/16) I_target xi_task、xi=.6−Bern(.6)となる。raw期待勾配は0だが、同一taskのEMA重みをまとめた二点補題により定常Adamの全76座標の平均quotientは正。targetは75batchesごとに1回現れるので、最新visitのlag≤149から全phaseの正marginを得る。真のmean方向はinactive/nonwinnerの位置も含む非負入力平均＋biasなので、そのprojectionも正になる。head符号を逆にすると逆方向になるため、ReLUや容量正方向だけで決まる現象とはしない。
+
+元の全raw NTKは K=(HHᵀ+11ᵀ)⊗I10+(DDᵀ)⊗aaᵀ。正のpathの混合微分から tr K′>0を導き、R≥||K||op、T≥||K′||*に対してlambda>RT/tr K′という有限十分条件でcapacity微分を正とする。literal selfでも別に同じ式を確認し、共通のfinite ridgeを選ぶ。K′自体の半正定値性は仮定しない。等しいhead rowsやuniform logitsは参照の構成だけで、符号の連続性により全raw独立な初期開集合へ広がる。自己方向の正符号と、全raw同時更新によるcapacity値の単調下降は別である。
+
+実際のmoving Adamへの接続は、局所ballの半径rと移動量上界M=H×73からS<r/(4M)を先に選び、一定etaでK=ceil(S/eta) tasksとする。全履歴で移動量<r/2なので、非退出を仮定せず保証できる。linear meanの有限observable平均化誤差はeta→0で消え、任意の所定alphaに対して P(m_K−m_0≤−dS/2)≥1−alphaとなる。normal equilibrium・C3・inverse RMS・全parameter収束は使わない。全履歴での変位上界と組み合わせ、alphaをさらに十分小さくすれば有限終点の無条件期待変位も負になる。この有限命題を無限時間の期待値や永久速度へ外挿しない。
+
+`adam_tenclass_finite_drift.json` は学習を伴わない有限恒等式検算。全1200画像でtargetのactive siteは1個、その他の最大preactivationは約−13.9457、fullの非同一pool関数間の最小winner gapは約1.21e−9。mean方向の成分和は約4.11374。native感度kappaは約.003776。kappa≥.001を条件とした有理数証明書のphase quotient下界は約1.45518e−12、U≥1のみを使うtask-summed mean場下界は約4.36555e−8。full/selfの全dataset tr K′は約4.80415/4.75922、保守的な正値sum-pooling envelopeから選んだ共通ridgeは約1.39698e17で、元のMaxPool capacity微分の正下界を得る。ridgeは存在証明用の大きな値で、任意の指定ridgeへの保証ではない。三つの明示画像の全raw NTK/方向微分恒等式誤差は1.78e−15未満、10種類のtarget labelについてbatch CE式の誤差は4.07e−20未満。native数値はfloat64であり、外向き区間証明ではない。有理数部分もkappa floorの条件と分けて扱う。
+
+既にmeanが負の数値例に加え、同定理§2.1は初期meanが正の別の解析的構成を与える。target kernelのred centerを1、他74係数を0、biasを−.1とし、全背景pixelを(.1−2tau,.1−tau)、target一箇所のredを1とする。tau=.9/(4×1200×1024)ならtarget preactivation=.9、他はstrict負で、真のmean下界は有理数3/8192000≈3.66211e−7>0。target patch全成分も正なので、座標ごとの異なる正の勾配scaleで同じ二点補題が使える。ゼロ係数は初期値だけで、raw摂動や学習を禁止しない。clock区間をさらに短くすれば、実軌道全体が正meanのままでstrictに低下する。こちらは解析的非空性とscalar Fraction検算であり、先のnative float64 Jacobian値をこの別datasetの結果とは扱わない。
+
+この新しい構成ではReLUの負側による勾配の遮断も使う。以前の全ReLUが正側にあるbinary長期定理とは異なる正例である。gate crossing・ReLUの死・負meanへの到達は証明しない。特殊な画像支持・初期head・選んだridge・小さいclock区間・十分小さい一定rateに限定し、実画像・通常初期化・rate=.001・実際の50tasks・固定rate無限時間の問題は未解決として保持する。
