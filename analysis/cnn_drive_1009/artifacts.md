@@ -51,3 +51,12 @@ native層スケーリングと元のfull/self容量の二極限: adam_singleton_
 非対称な正常方向のC2終点、LLᵀuの正rayと有限cone: adam_singleton_geometry.md。
 有限64label履歴、331raw・正規化安定条件、exact rational output-bias係数: verify_adam_singleton.py / ../../results/cnn_drive_1009/adam_singleton.json。
 独立監査: adam_singleton_linearization_review.md / adam_singleton_reference_review.md / adam_singleton_longtime_review.md。
+
+batch16・各epochの独立再shuffle/再編成・課題内reuseを含む全raw Adam長期net沈降: adam_b16_longtime.md。
+native N32/48・特徴rankN・非bias相対応答誤差と非空な正常安定条件: adam_b16_reference.md。
+標準beta/epsilon・H4/H6で定常outputbias応答Gamma>2.9: adam_b16_bias.md / adam_b16_bias_review.md。
+balanced batchを除外しないinverse RMS momentとC3期待場: adam_b16_regularity.md / adam_b16_regularity_review.md。
+有理数証明書: verify_adam_b16_certificates.py / ../../results/cnn_drive_1009/adam_b16_certificates.json。
+N32・3712raw・真のB16 CEと元のcapacityの有限照合: verify_adam_b16_native.py / ../../results/cnn_drive_1009/adam_b16_native.json。
+binary・2epochs/task・特殊な近接画像・十分小さい減衰学習率に限定する。10分類/400epochs/一定学習率は未解決。
+独立なnative検算コード監査: adam_b16_native_review.md。終点/平均化を含む統合監査: adam_b16_longtime_review.md。

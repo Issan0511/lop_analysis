@@ -41,6 +41,10 @@ ReLUのまま、異なる正画像3枚・rank3のhidden特徴とlogit Jacobian�
 
 次に同じ3画像・binaryラベルを、各epoch独立なrandom permutationで1枚ずつ更新する場合を扱う。1課題は有限E>=2 epochs、H=3E updatesで同じ画像のlabelを再利用し、Adam履歴を継続する。均等出力での定常linearizationをtask/imageの同一labelごとに厳密にまとめる。last hidden FCとhead contrastを小さい正数でscaleする非空構成、output biasを除いたJacobianのrankと有限な相対誤差不等式、元の容量微分を検算する。有限履歴のlabel全列挙は式の照合であり、無限履歴係数の推定や長期訓練実験ではない。ReLU以外、batch16、10分類、一定学習率にはこの結果を外挿しない。
 
+## 1009 batch16・各epochの再編成への数学的検算範囲
+
+binaryのN32またはN48画像を、各epochで独立にshuffleして16枚batchへ組み直す。課題内labelは固定し、E2など有限課題（H4/H6）の通常Adamを扱う。label打消しでraw batchgradientが0となる事象を除外しない。定常RMSのinverse momentsによるC3期待場、課題単位独立性を保ったoutputbias応答の正下界、非biasの相対Jacobian条件を解析・有理数照合する。nativeN32/特徴rank32は小型Conv5/FC32で有限検算し、ラベル全列挙を伴わないbatchCE恒等式チェックはその範囲と明示する。新たな長期学習・成功率推定実験ではない。10分類・標準400epoch課題・一定学習率には外挿しない。
+
 ## 1009 追加の数学的検算範囲
 
 重なる channel と full-rank な空間特徴を持つ、bias 無し 1×1 CNN の全 raw CE-SGD 共同更新について、fresh labels・対称 channel 初期化・指定の適応学習率下での条件維持、head 極限、長期 mean 低下、full/isolated 全 NTK の符号を検算する。有限の300更新は導出式の照合であり、無限時間の実験的判定ではない。

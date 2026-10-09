@@ -35,6 +35,8 @@
 
 21. full-batch条件を、各epoch独立にshuffleして1枚ずつ更新するsingleton minibatchへ緩めた。taskの同じ画像labelを有限E>=2 epochs再利用し、全raw通常Adamのmomentsを継続する。task/imageごとのEMA集約でexact定常線形化Lを求め、出力biasを厳密に分離した有限スペクトル不等式でSym(JL)>0を保証。last hiddenFC/headの小さい初期scaleで非空性を構成し、非対称正常方向のC2終点とray LLᵀuから、strict最終mean低下の全raw初期開集合を得る。native構造・元の容量自己項との接続を保つ。binary・特殊な3画像・小さい非bias感度・減衰学習率は残り、batch16/10分類/一定学習率は未解決。
 
+22. singleton条件を外し、N32またはN48のbinary画像を各epoch独立に再shuffle・再編成してbatch16で更新する全raw通常Adamへ拡張した。E2 epochs/task、標準beta/epsilon、moments保持のまま、課題単位の相関を保ったoutputbias応答の正下界と非bias相対スペクトル条件から正常安定性を導く。balanced batchで勾配0が可能な点は、全raw同時のgood-task eventとinverse RMS momentsにより期待場のC3を証明して扱う。既存の非対称終点写像とobservable平均化により高確率strict最終mean低下へ接続する。binary・特殊画像・短いtask・小さい初期scale・減衰率は残り、標準RL-CIFARの10分類/400epochs/一定学習率は未解決。
+
 ## 反例と残る制限
 
 非負入力・重み共有・一意な MaxPool・学習した出力 bias があっても、他チャネルによって自己モデルと実切替勾配の向きは逆転し得る。したがって無条件な一般化はできない。
@@ -123,3 +125,17 @@ Lの要素は対応するraw感度と同符号だが、それだけではJLの�
 元のfull/self容量はK=Kbias+t²K1+t⁴K2を使い、容量微分/t²の画像幅とtの共同連続性から同じ有限参照で正と示す。t=0そのもののReLU微分を使わず、正側の多項式係数の連続延長である。容量の局所方向一致であり、全パラメータ更新中の容量値そのものの単調下降は結論しない。
 
 普通のepoch shuffleと課題内reuseは扱えるようになったが、batchサイズは1。binary・特別な近接3画像・小さい非output-bias感度・局所routing・十分小さい減衰学習率という条件を保持する。標準RL-CIFARのbatch16/10分類/一定学習率、無条件期待沈降、負meanと死は依然として未証明。
+
+## batch16・毎epochの再編成への長期Adam拡張
+
+上のsingleton段階に続き、`analysis/cnn_drive_1009/adam_b16_longtime.md` でbatch16を扱った。N32またはN48の異なる画像に課題ごとに独立binary labelsを割り当て、E2 epochsの各々で新しく全画像をshuffleしてbatchを組み直す。同一課題内のlabelを再利用し、Adamのmoments・global bias correctionは継続する。標準beta=.9/.999、epsilon=1e−8を変更しない。全raw独立な初期開集合、十分小さいpower-decaying学習率、元のfull/self容量方向との接続を維持する。
+
+16枚の平均ではlabelの打消しがあるため、singleton時の決定論的な勾配floorは使えない。代わりに「あるbatchのラベル数が8対8でない」という全raw共通の事象から、compact全体に一様な定常RMSの逆モーメントを得る。Hilbert normの微分を使うとC3期待場に必要なのはinverse-second momentであり、証明書ではinverse-eighth momentまで余裕を確認した。有限履歴の個々のAdam写像がRMS0でC3だとは主張しない。
+
+outputbiasは感度±1/2で小さくならないので別証明にした。task間独立性とtask内相関を保持したEMAのsecond/fourth moments、RMSの下側確率評価から、共通contrast方向の定常応答Gammaの全phase下界をH4で3.3279993247、H6で2.9847166156と得た。`adam_b16_certificates.json` の有理数証明書でいずれも厳密に2.9を超える。これをNで割りH phase分を足した正の共通画像行列がoutputbiasの正常方向寄与となる。このbiasの正下界はE2に限り、逆モーメントの任意有限Eへの拡張と混同しない。
+
+残るraw感度Rには C_B=1+sqrt(N/16) を使った相対応答誤差があり、C_B(max|R|/epsilon)||R||op||R||F<sigma_min(R)^2 が正常安定性の有限十分条件になる。native正画像の同head-level simplexとlast hiddenFC/headのscaleでrankNとこの条件を両立する。特異値の小さい画像差モードも含む条件であり、画像が一致する極限に一様な余裕は主張しない。正ray LLᵀu、C2終点、pi/z²のobservable平均化から、実軌道の全phase保持・全parameter収束・strict mean差を導く。
+
+`adam_b16_native.json` の有限照合はRGB24、Conv5(2)/Conv5(2)、FC32/32、全3712raw、N32、E2、B16。画像幅.002、参照scale約5.4814e−19、相対感度変化.0007214未満、スペクトル誤差比約.1、正常方向下界約5.1314e−38。容量微分/t²はfull約63.43024、literal self約42.21268で正。4種類の固定labelと各々2回の独立shuffleで得た16batchesのCE恒等式は、感度で割った最大誤差1.05e−15未満だった。8対8のbalanced batchも含む。これらはfloat64の式照合で、全2^32label列挙、定常応答実測、長期学習、成功率推定、具体的な確率認証済み学習率の算出ではない。
+
+ReLUは正側で動き続ける。今回外せたのはbatchサイズ1の条件であり、binary・特殊な近接画像・短いtask・極めて小さい有限初期scale・局所routing・十分小さい減衰学習率は残る。標準RL-CIFARの一般画像・10分類・400epochs/task・一定学習率、負mean、gate停止、無条件期待沈降は未証明。
