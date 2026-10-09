@@ -159,13 +159,23 @@ def main() -> None:
             fw = lambda fk: window(F, fk, 31, 40, col="fork")
             base, toFC3 = fw("SNA>SNA"), fw("SNA>CV06FC3")
             rec = float((toFC3.mean() - base.mean()) / gF)
-            V["F"] = {"label": "REGIME" if rec >= 0.75 else "DAMAGE" if rec <= 0.25 else "MIXED", "rec": rec, "g_F": gF,
+            # spec §10.2: if the fc->3 fork runs away (scale), rec is not a measure of damage; the
+            # conv->3 fork is reported alongside and F is capped at MIXED
+            z40 = F[(F.fork == "SNA>CV06FC3") & (F.task == 40)][["zsd_f2", "logit_sd"]].mean()
+            zA = A[(A.arm == "SNA") & (A.task == 40)][["zsd_f2", "logit_sd"]].mean()
+            runaway = bool(z40["zsd_f2"] >= 2 * zA["zsd_f2"] or z40["logit_sd"] >= 2 * zA["logit_sd"])
+            lab = "REGIME" if rec >= 0.75 else "DAMAGE" if rec <= 0.25 else "MIXED"
+            if runaway and lab == "DAMAGE":
+                lab = "MIXED"
+            rec_conv = float((fw("SNA>CV3FC06").mean() - base.mean()) / gF)
+            V["F"] = {"label": lab, "rec": rec, "rec_conv(SNA>CV3FC06)": rec_conv, "fc3_fork_runaway": runaway,
+                      "fc3_fork_t40": {"zsd_f2": float(z40["zsd_f2"]), "logit_sd": float(z40["logit_sd"])}, "g_F": gF,
                       "SNA>SNA": float(base.mean()), "SNA>CV06FC3": float(toFC3.mean()),
                       "SNA>CV3FC06": float(fw("SNA>CV3FC06").mean()),
                       "CV3FC06>CV3FC06": float(fw("CV3FC06>CV3FC06").mean()),
                       "CV3FC06>SNAc3": float(fw("CV3FC06>SNAc3").mean()),
                       "calib_SNA>SNA_minus_A": float(base.mean() - wSA.mean())}
-            w3S, w3C = window(A, "SNA", 31, 33), window(A, "CV06FC3", 31, 33)
+            w3S, w3C = window(A, "SNA", 31, 33), window(A, "SNAc3", 31, 33)      # spec §10.2
             lg, b3 = window(F, "SNA>SNA@f3x0.5", 31, 33, col="fork"), window(F, "SNA>SNA", 31, 33, col="fork")
             ratio = float((lg.mean() - b3.mean()) / (w3C.mean() - w3S.mean()))
             V["F-logit"] = {"label": "LOGIT_SCALE_MATTERS" if ratio >= 0.5 else "LOGIT_SCALE_NOT", "ratio": ratio}
