@@ -52,6 +52,10 @@ CONV_SIZES = (16 * 3 * 25, 16, 16 * 16 * 25, 16)
 CONV_OFF = np.cumsum((0,) + CONV_SIZES)
 NCONV = int(CONV_OFF[-1])                            # 7632
 DT = torch.float64
+# activation of the runs being measured, set in main() from the arms: "snake" | "leaky" | "relu"
+ACT = {"kind": "snake", "slope": 0.0}
+PIECEWISE = {"LR": 0.1, "R": 0.0}              # phase 2 arms (src/cnn_drive_verify_1009_lr.py)
+OWN_RESULTS = Path(__file__).resolve().parents[1] / "results" / "cnn_drive_verify_1009"
 
 
 def parse_list(s: str) -> list[int]:
@@ -66,7 +70,20 @@ def parse_list(s: str) -> list[int]:
 
 
 def ckpt_path(arm: str, seed: int, task: int) -> Path:
+    if arm in PIECEWISE:
+        return OWN_RESULTS / arm / "ckpt" / f"{arm}_seed{seed}_t{task:02d}.pt"
     return CKPT_DIR / f"{arm}_seed{seed}_t{task:02d}.pt"
+
+
+def set_activation(arms) -> None:
+    kinds = {a in PIECEWISE for a in arms}
+    assert len(kinds) == 1, "one process measures either Snake arms or one piecewise arm"
+    if arms[0] in PIECEWISE:
+        assert len(set(arms)) == 1, arms
+        ACT["kind"] = "relu" if PIECEWISE[arms[0]] == 0.0 else "leaky"
+        ACT["slope"] = PIECEWISE[arms[0]]
+    else:
+        ACT["kind"], ACT["slope"] = "snake", 0.0
 
 
 # --------------------------------------------------------------------------
@@ -78,9 +95,11 @@ class State:
 
     def __init__(self, arm: str, seed: int, task: int, device, dtype=DT):
         self.arm, self.seed, self.task, self.device = arm, seed, task, device
+        if arm in PIECEWISE:
+            assert ACT["kind"] != "snake", "set_activation() first"
         if task == 0:                                   # the host's init, V = 1
             P = CN.init_params(seed, torch.device("cpu"))
-            sp = E.parse_arm(arm)
+            sp = E.parse_arm(arm) if arm not in PIECEWISE else {"site": (("a", float("nan")),) * 4}
             self.P = [p.detach().to(device, dtype) for p in P]
             self.m = [torch.zeros_like(p) for p in self.P]
             self.v = [torch.zeros_like(p) for p in self.P]
@@ -88,7 +107,7 @@ class State:
             self.alpha = []
             for l, (kind, val) in enumerate(sp["site"]):
                 w = CN.WIDTHS[l]
-                a = min(max(val, LO), HI) if kind == "c" else val
+                a = min(max(val, LO), HI) if kind == "c" else val       # NaN for LR / R
                 self.alpha.append(torch.full((w,), float(a), dtype=dtype, device=device))
         else:
             st = torch.load(ckpt_path(arm, seed, task), map_location="cpu", weights_only=False)
@@ -99,6 +118,9 @@ class State:
             self.tc = float(st["tc"])
             self.alpha = []
             for l in range(4):
+                if arm in PIECEWISE:                       # no alpha
+                    self.alpha.append(torch.full((CN.WIDTHS[l],), float("nan"), dtype=dtype, device=device))
+                    continue
                 V = st["act"]["V"][l].to(dtype)
                 ada = st["act"]["ada"][l]
                 cval = st["act"]["cval"][l].to(dtype)
@@ -122,8 +144,31 @@ def images(seed: int, device, dtype) -> torch.Tensor:
 
 
 def snake(z: torch.Tensor, a: torch.Tensor, conv: bool) -> torch.Tensor:
+    """phi of the measured runs (name kept from phase 1): Snake with per-channel alpha, or the
+    host's leaky (where(z > 0, z, 0.1 z)) / ReLU (clamp) -- alpha is ignored for those."""
+    if ACT["kind"] == "relu":
+        return torch.clamp(z, min=0.0)
+    if ACT["kind"] == "leaky":
+        return torch.where(z > 0, z, ACT["slope"] * z)
     a = a.view(1, -1, 1, 1) if conv else a.view(1, -1)
     return z + torch.sin(a * z) ** 2 * a.reciprocal()
+
+
+def dphi_b(z: torch.Tensor, a_b: torch.Tensor) -> torch.Tensor:
+    """phi'(z) with alpha already shaped to broadcast against z (alpha ignored for leaky / ReLU)."""
+    if ACT["kind"] == "relu":
+        return (z > 0).to(z.dtype)
+    if ACT["kind"] == "leaky":
+        return torch.where(z > 0, torch.ones_like(z), torch.full_like(z, ACT["slope"]))
+    return 1.0 + torch.sin(2.0 * a_b * z)
+
+
+def phi_gated(z: torch.Tensor, a: torch.Tensor, conv: bool, gate) -> torch.Tensor:
+    """phi with the gate (z > 0 pattern) of a reference state held fixed: smooth in the
+    parameters for leaky / ReLU (piecewise linear), identical to `snake` for Snake."""
+    if gate is None or ACT["kind"] == "snake":
+        return snake(z, a, conv)
+    return torch.where(gate, z, ACT["slope"] * z)
 
 
 def forward(P, x, al):
@@ -140,29 +185,37 @@ def forward(P, x, al):
 
 
 def forward_routed(P, x, al, idx=None):
-    """The same net with the two max-pools replaced by gathers at fixed winner indices
-    (`idx` = (idx1, idx2) from a reference state; None -> use and return the current winners).
-    Smooth in P in a neighbourhood: finite differences of this net check autograd without the
-    kinks of winner switches."""
+    """The same net with the two max-pools replaced by gathers at fixed winner indices and, for
+    leaky / ReLU, the four gate patterns (z > 0) held fixed: `idx` = (i1, i2, g1, g2, g3, g4) from a
+    reference state; None -> use and return the current ones.  Smooth in P in a neighbourhood:
+    finite differences of this net check autograd without the kinks of winner switches or gate
+    flips (for Snake the gates are not used)."""
     W1, b1, W2, b2, W3, b3, W4, b4, W5, b5 = P
+    pw = ACT["kind"] != "snake"
+    ref = idx is not None
     z1 = F.conv2d(x, W1, b1, padding=CN.PAD)
-    a1 = snake(z1, al[0], True)
-    if idx is None:
+    g1 = idx[2] if ref else ((z1 > 0) if pw else None)
+    a1 = phi_gated(z1, al[0], True, g1)
+    if not ref:
         h1, i1 = F.max_pool2d(a1, CN.POOL, CN.POOL, return_indices=True)
     else:
         i1 = idx[0]
         h1 = a1.flatten(2).gather(2, i1.flatten(2)).view_as(i1)
     z2 = F.conv2d(h1, W2, b2, padding=CN.PAD)
-    a2 = snake(z2, al[1], True)
-    if idx is None:
+    g2 = idx[3] if ref else ((z2 > 0) if pw else None)
+    a2 = phi_gated(z2, al[1], True, g2)
+    if not ref:
         h2, i2 = F.max_pool2d(a2, CN.POOL, CN.POOL, return_indices=True)
     else:
         i2 = idx[1]
         h2 = a2.flatten(2).gather(2, i2.flatten(2)).view_as(i2)
     h2 = h2.flatten(1)
-    z4 = snake(h2 @ W3.T + b3, al[2], False) @ W4.T + b4
-    f = snake(z4, al[3], False) @ W5.T + b5
-    return f, (i1, i2)
+    z3 = h2 @ W3.T + b3
+    g3 = idx[4] if ref else ((z3 > 0) if pw else None)
+    z4 = phi_gated(z3, al[2], False, g3) @ W4.T + b4
+    g4 = idx[5] if ref else ((z4 > 0) if pw else None)
+    f = phi_gated(z4, al[3], False, g4) @ W5.T + b5
+    return f, (i1, i2, g1, g2, g3, g4)
 
 
 def uniform_value_routed(P, al, X, Pref, chunk=300) -> float:
@@ -394,7 +447,7 @@ def g_self_bundled(S: State, U: torch.Tensor, chunk=100) -> np.ndarray:
             h1, idx1 = F.max_pool2d(a1, CN.POOL, CN.POOL, return_indices=True)
             # tangent of h1 along u_r (only its W1 / b1 part moves conv1): (B, 16 nets, 16, 16, 16)
             dz1 = F.conv2d(x, UW1, Ub1, padding=CN.PAD).view(B, CH, CH, 32, 32)
-            dphi = 1.0 + torch.sin(2.0 * al[0].view(1, 1, -1, 1, 1) * z1[:, None])
+            dphi = dphi_b(z1[:, None], al[0].view(1, 1, -1, 1, 1))
             T = (dphi * dz1).flatten(3).gather(3, idx1[:, None].flatten(3).expand(-1, CH, -1, -1))
             T = T.view(B, CH, CH, 16, 16)
         h1rep = h1.repeat(1, CH, 1, 1).requires_grad_(True)                    # (B, 256, 16, 16)
@@ -588,6 +641,41 @@ def measure_one(arm, seed, task, device, K=65536, self_net=True, verbose=False):
 # checks (K1-K6)
 # --------------------------------------------------------------------------
 
+def engine_bundle(slots, device, graph=True):
+    """The sna engine's Bundle for Snake arms, the phase-2 BundleLR (same engine) for LR / R."""
+    if slots[0][0] in PIECEWISE:
+        import cnn_drive_verify_1009_lr as LRM
+        return LRM.BundleLR(slots, PL.cifar(), device, graph=graph)
+    return E.Bundle(slots, PL.cifar(), device, graph=graph)
+
+
+def load_engine_run(arm, seed, task, device):
+    """One run in the engine at the end of `task` (posthoc_lib.load_run, for any arm)."""
+    if arm not in PIECEWISE:
+        return PL.load_run(ckpt_path(arm, seed, task), device=str(device), graph=False)[0]
+    st = torch.load(ckpt_path(arm, seed, task), map_location="cpu", weights_only=False)
+    B = engine_bundle([(arm, seed)], device, graph=False)
+    with torch.no_grad():
+        for dst, src in ((B.P, st["P"]), (B.m, st["m"]), (B.v, st["v"])):
+            for q, x in zip(dst, src):
+                q[0].copy_(x)
+        B.tc.fill_(st["tc"])
+        for k in ("V", "ada", "fixA", "cval"):
+            for dst, src in zip(getattr(B.act, k), st["act"][k]):
+                dst[0].copy_(src)
+    B.Y.copy_(PL.labels_at(seed, task)[None])
+    for _ in range(task * B.epochs):
+        torch.randperm(CN.N_IMAGES, generator=B.g_batch[seed])
+    for _ in range(task):
+        CN.task_labels(B.g_lab[seed])
+    return B
+
+
+CHECK_STATES = {"checks": (("SNA", 10, 1), ("SNAc3", 11, 20)),
+                "checks2": (("SNA", 10, 1), ("CV06FC3", 12, 10), ("SNAc3", 11, 20)),
+                "checks3": (("SNA", 10, 1), ("SNAc3", 11, 20))}
+
+
 def run_checks(out: Path, device):
     out.mkdir(parents=True, exist_ok=True)
     rep = {"checks": []}
@@ -597,10 +685,10 @@ def run_checks(out: Path, device):
         print(f"[{'PASS' if ok else 'FAIL'}] {name} {json.dumps(kw, default=float)[:300]}", flush=True)
 
     torch.backends.cudnn.allow_tf32 = False
-    for arm, seed, task in (("SNA", 10, 1), ("SNAc3", 11, 20)):
+    for arm, seed, task in CHECK_STATES["checks"]:
         S = State(arm, seed, task, device)
         # K0: our float64 forward vs the engine's forward (float32, eager, TF32 off) on 40 images
-        Bnd, _ = PL.load_run(ckpt_path(arm, seed, task), device=str(device), graph=False)
+        Bnd = load_engine_run(arm, seed, task, device)
         with torch.no_grad():
             eng = E.forward(Bnd.P, Bnd.X[:, :40], Bnd.act)
             torch.backends.cudnn.enabled = False                 # native conv, plain fp32 sums
@@ -829,7 +917,7 @@ def self_shape(S: State, U: torch.Tensor, chunk=100) -> dict:
             z1 = F.conv2d(x, W1, b1, padding=CN.PAD)
             a1 = snake(z1, al[0], True)
             h1, idx1 = F.max_pool2d(a1, CN.POOL, CN.POOL, return_indices=True)
-            dphi1 = 1.0 + torch.sin(2.0 * al[0].view(1, -1, 1, 1) * z1)
+            dphi1 = dphi_b(z1, al[0].view(1, -1, 1, 1))
             # c1 channel j: u_j moves only W1[j], b1[j]
             Wd = torch.stack([U1W[j, j] for j in range(CH)])                      # (16, 3, 5, 5)
             bd = torch.stack([U1b[j, j] for j in range(CH)])
@@ -841,7 +929,7 @@ def self_shape(S: State, U: torch.Tensor, chunk=100) -> dict:
             # c2 channel j: tangent of h1 along u_j's W1 / b1 part, then conv2 row j + its own part
             z2 = F.conv2d(h1, W2, b2, padding=CN.PAD)
             h2, idx2 = F.max_pool2d(snake(z2, al[1], True), CN.POOL, CN.POOL, return_indices=True)
-            dphi2 = 1.0 + torch.sin(2.0 * al[1].view(1, -1, 1, 1) * z2)
+            dphi2 = dphi_b(z2, al[1].view(1, -1, 1, 1))
             dz1r = F.conv2d(x, UW1, Ub1, padding=CN.PAD).view(B, CH, CH, 32, 32)  # (B, j, c1ch, ...)
             Th1 = (dphi1[:, None] * dz1r).flatten(3).gather(
                 3, idx1[:, None].flatten(3).expand(-1, CH, -1, -1)).view(B * CH, CH, 16, 16)
@@ -910,25 +998,31 @@ def extra_one(arm, seed, task, device, K=16384):
 
 
 def pooled_features(P, al, X, idx=None, chunk=200):
-    """(N, 16, 256) c1 and (N, 16, 64) c2 pooled features; fixed winners if idx given."""
-    H1s, H2s, I1, I2 = [], [], [], []
+    """(N, 16, 256) c1 and (N, 16, 64) c2 pooled features; fixed winners (and, for leaky / ReLU,
+    fixed c1 / c2 gates) if idx is given."""
+    H1s, H2s, I1, I2, G1, G2 = [], [], [], [], [], []
+    pw = ACT["kind"] != "snake"
     with torch.no_grad():
         for i0, i1 in chunks(N, chunk):
             x = X[i0:i1]
             z1 = F.conv2d(x, P[0], P[1], padding=CN.PAD)
-            a1 = snake(z1, al[0], True)
+            g1 = idx[2][i0:i1] if (idx is not None and pw) else ((z1 > 0) if pw else None)
+            a1 = phi_gated(z1, al[0], True, g1)
             if idx is None:
                 h1, j1 = F.max_pool2d(a1, CN.POOL, CN.POOL, return_indices=True)
             else:
                 j1 = idx[0][i0:i1]; h1 = a1.flatten(2).gather(2, j1.flatten(2)).view_as(j1)
             z2 = F.conv2d(h1, P[2], P[3], padding=CN.PAD)
-            a2 = snake(z2, al[1], True)
+            g2 = idx[3][i0:i1] if (idx is not None and pw) else ((z2 > 0) if pw else None)
+            a2 = phi_gated(z2, al[1], True, g2)
             if idx is None:
                 h2, j2 = F.max_pool2d(a2, CN.POOL, CN.POOL, return_indices=True)
             else:
                 j2 = idx[1][i0:i1]; h2 = a2.flatten(2).gather(2, j2.flatten(2)).view_as(j2)
             H1s.append(h1.flatten(2)); H2s.append(h2.flatten(2)); I1.append(j1); I2.append(j2)
-    return torch.cat(H1s), torch.cat(H2s), (torch.cat(I1), torch.cat(I2))
+            G1.append(g1); G2.append(g2)
+    gates = (torch.cat(G1), torch.cat(G2)) if pw else (None, None)
+    return torch.cat(H1s), torch.cat(H2s), (torch.cat(I1), torch.cat(I2), *gates)
 
 
 def run_checks_selfshape(out: Path, device):
@@ -936,7 +1030,7 @@ def run_checks_selfshape(out: Path, device):
     with the winners held fixed."""
     torch.backends.cudnn.allow_tf32 = False
     rep = {"checks": []}
-    for arm, seed, task in (("SNA", 10, 1), ("SNAc3", 11, 20)):
+    for arm, seed, task in CHECK_STATES["checks3"]:
         S = State(arm, seed, task, device)
         U = mean_grads(S)
         ss = self_shape(S, U)
@@ -976,7 +1070,7 @@ def run_checks_bundle(out: Path, device):
     computations (which K1 / K4 verified against finite differences)."""
     torch.backends.cudnn.allow_tf32 = False
     rep = {"checks": []}
-    for arm, seed, task in (("SNA", 10, 1), ("CV06FC3", 12, 10), ("SNAc3", 11, 20)):
+    for arm, seed, task in CHECK_STATES["checks2"]:
         S = State(arm, seed, task, device)
         t0 = time.time(); Ub = mean_grads(S, batched=True); tb = time.time() - t0
         t0 = time.time(); Ul = mean_grads(S, batched=False); tl = time.time() - t0
@@ -1087,7 +1181,7 @@ def replay(task: int, arms, seeds, out: Path, device, rec_steps=(1, 10, 75, 750,
     as the run did (labels, batch orders, Adam, alpha updates), recording channel means."""
     out.mkdir(parents=True, exist_ok=True)
     slots = [(a, s) for a in arms for s in seeds]
-    Bd = E.Bundle(slots, PL.cifar(), device, graph=True)
+    Bd = engine_bundle(slots, device, graph=True)
     tcs = set()
     with torch.no_grad():
         for r, (a, s) in enumerate(slots):
@@ -1158,7 +1252,8 @@ def logit_jacobian(P, al, X, idx) -> torch.Tensor:
     Pr = [p.detach().clone().requires_grad_(True) for p in P]
     rows = []
     for n in range(X.shape[0]):
-        f, _ = forward_routed(Pr, X[n:n + 1], al, (idx[0][n:n + 1], idx[1][n:n + 1]))
+        f, _ = forward_routed(Pr, X[n:n + 1], al,
+                              tuple(None if t is None else t[n:n + 1] for t in idx))
         for c in range(C):
             g = torch.autograd.grad(f[0, c], Pr, retain_graph=c < C - 1)
             rows.append(torch.cat([q.reshape(-1) for q in g]))
@@ -1233,6 +1328,8 @@ def main():
                                      "timing", "zbar", "capacity", "c2exact", "extra"])
     ap.add_argument("--nsub", type=int, default=32)
     ap.add_argument("--tag", default="")
+    ap.add_argument("--states", default="",
+                    help="checks: arm:seed:task,... (default: the phase-1 Snake states)")
     ap.add_argument("--arms", default="SNA,SNAc3,CV06FC3,CV3FC06")
     ap.add_argument("--seeds", default="10-19")
     ap.add_argument("--tasks", default="1,5,10,20")
@@ -1256,6 +1353,12 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     arms = args.arms.split(",")
     seeds = parse_list(args.seeds)
+    if args.states:
+        st = tuple((a, int(s), int(t)) for a, s, t in (x.split(":") for x in args.states.split(",")))
+        CHECK_STATES[args.mode] = st
+        set_activation([a for a, s, t in st])
+    else:
+        set_activation(arms)
     if args.mode == "checks":
         run_checks(out, device)
         return

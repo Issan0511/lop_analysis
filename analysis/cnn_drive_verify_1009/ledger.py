@@ -41,6 +41,7 @@ def seed_rate(d, col, by):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", required=True)
+    ap.add_argument("--per-task", default=str(PER_TASK), help="the run's per_task.csv")
     args = ap.parse_args()
     root = Path(args.root)
     out = root / "tables_c"; out.mkdir(parents=True, exist_ok=True)
@@ -68,7 +69,7 @@ def main():
         tabs["one_task_down_ckpt"] = seed_rate(one, "down", ["layer", "task"])
         tabs["one_task_down_ckpt_arm"] = seed_rate(one, "down", ["layer", "arm", "task"])
     # ---- per_task.csv medians, every task
-    pt = pd.read_csv(PER_TASK)
+    pt = pd.read_csv(args.per_task)
     pr = []
     for (arm, seed), g in pt.groupby(["arm", "seed"]):
         g = g.sort_values("task")
