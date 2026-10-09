@@ -13,6 +13,8 @@ engine's float differences (S-fork in the summary).
 
 Modifiers applied at the fork point (after loading, before the first continued step):
   @f3x<k>   readout weight and bias times k: every logit times k, the argmax unchanged
+  @frz      alpha of every site frozen at its fork-point value (c_new / sqrt(V), clipped) for
+            the whole continuation: the state is kept, only the tracking of V is switched off
 """
 
 from __future__ import annotations
@@ -57,6 +59,8 @@ def fork_bundle(src: Path, at: int, pairs: list[tuple[str, str]], seeds: list[in
                 k = float(mod[3:])
                 B.P[8][r].mul_(k)
                 B.P[9][r].mul_(k)
+            elif mod == "frz":
+                B.act.freeze([r])
             elif mod:
                 raise SystemExit(f"unknown fork modifier {mod!r}")
         if len(tcs) != 1:
