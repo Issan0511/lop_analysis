@@ -33,6 +33,10 @@
 
 不足が残れば依頼全体を達成済みとは記録しない。
 
+## 1009 複数画像の通常Adamへの数学的検算範囲
+
+ReLUのまま、異なる正画像3枚・rank3のhidden特徴とlogit Jacobianを持つnative Conv5/FC/全bias構成へ拡張する。binary iid labelsを画像ごとに独立に引き、全画像のfull-batchを有限H回reuseする。課題間moments保持・power-decaying学習率は維持する。画像平均を保つ同level摂動、全8ラベル割当のraw勾配、固定ridgeにおける元のfull/self容量微分を有限照合する。vector contrastの終点写像、正のAdam対角係数で重み付けした初期mean方向、population riskのobservable平均化は解析対象であり、長期成功率を数値推定する実験ではない。有限verifierの任意正対角metricを定常Adam係数の測定値とは扱わない。
+
 ## 1009 追加の数学的検算範囲
 
 重なる channel と full-rank な空間特徴を持つ、bias 無し 1×1 CNN の全 raw CE-SGD 共同更新について、fresh labels・対称 channel 初期化・指定の適応学習率下での条件維持、head 極限、長期 mean 低下、full/isolated 全 NTK の符号を検算する。有限の300更新は導出式の照合であり、無限時間の実験的判定ではない。

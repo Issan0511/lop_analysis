@@ -37,3 +37,10 @@ native5×5 Conv・hiddenFC・全bias・全raw初期開集合での実Adam長期�
 π/z²のobservable平均化: adam_observable_averaging.md / adam_observable_averaging_review.md。
 上記のactual長期Adamへの統合監査: adam_open_longtime_review.md。
 331raw paramsのnative Conv/FC/bias局所式検算: verify_adam_open_native.py / ../../results/cnn_drive_1009/adam_open_native.json。
+
+3枚の異なる画像・rank3のfeature/logit Jacobianでの通常Adam長期net沈降: adam_three_images_longtime.md。
+正画像・native全bias・8labels勾配floor・指定ridgeのfull/self容量: adam_three_images_reference.md。
+多出力のC2終点写像の定量的変分証明: adam_three_images_equilibrium.md。
+基準Adam metricで重み付けしたmean方向から有限open coneを構成: adam_three_images_geometry.md。
+331raw params・全8labels・rank3・capacity有限連続性検算: verify_adam_three_images.py / ../../results/cnn_drive_1009/adam_three_images.json。
+上記のnative参照/検算/finite cone監査: adam_three_images_reference_review.md。定量C2endpointとactual Adam統合の監査: adam_three_images_longtime_review.md。

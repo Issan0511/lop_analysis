@@ -31,6 +31,8 @@
 
 19. 等重みの不変線を外し、native5×5 Conv二段・hiddenFC二段・全biasを含む全raw空間の開集合で、実Adamの高確率長期net沈降を証明した。単一画像・binary iid task labels・H回reuse・power-decaying scalar learning rateが条件。正のhead contrastを残して出力biasで均等予測の近傍を作り、平均ODEの終点写像πとz²のobservable平均化により、全raw軌道の永久保持・全パラメータ収束・strict mean低下を同時に導く。amplitude-dependent dampingは不要。hiddenは正で残り、実RL-CIFARのmany-image/10-class/一定学習率までは未証明。
 
+20. 単一画像の制限を、異なる正画像3枚・rank3の特徴とlogit Jacobianへ緩めた。native Conv5/FC/全bias、独立raw初期開集合、binary iid task labels、H回full-batch reuse、moments保持、十分小さいpower-decaying学習率での高確率長期net沈降を示す。多出力の平均ODE終点πを定量的変分評価でC2と証明し、初期ray D*uのmean lossを正の二次形式 (JDu)^T(JDJ^T)^−1(JDu) から導く。πとΣlogcosh(z_n)のobservable平均化で、実Adamの永久保持と最終mean低下へ接続する。容量の近傍保証は指定ridgeについて。任意画像・10分類・shuffled minibatch・一定学習率は未解決。
+
 ## 反例と残る制限
 
 非負入力・重み共有・一意な MaxPool・学習した出力 bias があっても、他チャネルによって自己モデルと実切替勾配の向きは逆転し得る。したがって無条件な一般化はできない。
@@ -95,3 +97,13 @@
 `adam_open_native.json` は331自由raw params・Conv5×5二段・FC二段・全biasの局所式の検算。全/自己K′の参照下界は約6.58536/4.20821、有限摂動誤差は約1.08e−4/8.96e−5、最大式差3.56e−15未満。二つのConvのchannel mapは非比例。stationary phase平均での終点mean損失係数は約2.01556で、block-sumとのH倍は比で相殺される。これは長期成功率や終点の測定ではなく、今回の開集合族への具体的な確率認証済み学習率も算出していない。非空性と長期主張は解析証明による。
 
 出力biasによる相殺はfull networkだけに行う。literal selfのCE符号は一般に一致しないが、元の全rawNTK容量のself方向は正のままなので、実full mean低下との接続は保たれる。1画像・2分類・十分小さい減衰学習率・局所routingという制限を残す。
+
+## 異なる3画像・rank3への長期Adam拡張
+
+`analysis/cnn_drive_1009/adam_three_images_longtime.md` が統合定理。3画像の平均入力は元の1画像と同じに保ち、共通head contrastのlevel面に沿って異なる画像を作る。特徴行列とlogit Jacobianはrank3を持つため、同じ画像の複製や同じ出力方向への還元ではない。画像ごとのiid binary labelsを同一task内H回full-batchで再利用し、全raw parametersと過去momentsが動く。
+
+3という奇数を使うことで全8ラベル配置で各raw勾配に正の絶対値下限があり、定常Adamの正対角係数Dが滑らかになる。正常方向の安定性はΣlogcosh(z_n)で示し、終点πのC2性は一次・二次変分の明示上界から証明した。単に安定多様体という名称だけには依存しない。初期方向D*uと有限の全raw摂動coneから、最終mean低下の正marginを導く。
+
+`adam_three_images.json` は331raw params・native Conv5/FC/全biasの有限検算。特徴とlogit Jacobianの最小特異値は約6.27e−4と5.24e−4、全8割当の最小raw勾配は約1.82e−4。ridge=1でfull/self容量方向の有限連続性誤差後の下界は約4.77744と4.75482。CE式誤差は5.56e−17未満。任意の正対角metricでprojection恒等式も照合するが、そのmetricを実Adamの定常Dや初期coneの数値認証に流用しない。数値はfloat64の検算で、解析的非空性・長期確率証明と区別する。
+
+元の容量自己項は指定したridgeで正のまま保たれる。3画像を同一に近づけるとrankの最小特異値が0へ近づくため、全tauや全ridgeに一様な保証とはしない。実RL-CIFARの一般画像・10分類・shuffled minibatch・一定学習率、負meanやReLU停止は依然として結論しない。
