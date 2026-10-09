@@ -1,0 +1,51 @@
+{
+  "architecture": "RGB12x12 -> Conv5x5(2,pad2)+bias -> ReLU+MaxPool2 -> Conv5x5(2,pad2)+bias -> ReLU+MaxPool2 -> flatten18 -> linear10+bias",
+  "N": 2,
+  "C": 10,
+  "all_trainable_parameter_count": 444,
+  "mu_norm": 3.564008811914253,
+  "k": 2.1384052871485517,
+  "X2_gram_eigenvalues": [
+    0.8334957735720607,
+    192.59017068417475
+  ],
+  "reference_min_preactivation": [
+    0.7328268912267444,
+    0.6132640349915897
+  ],
+  "reference_min_pool_winner_gap": [
+    0.015787697999182893,
+    0.014316855058469802
+  ],
+  "formula_full_max_error": 1.7053025658242404e-13,
+  "formula_self_max_error": 1.7053025658242404e-13,
+  "mean_ray_max_error": 8.881784197001252e-16,
+  "full": {
+    "d": 0.002909537725713363,
+    "e": 0.007505636247002291,
+    "derivative_perturbation_bound": 1.340007865816195,
+    "reference_eigen_lower": 3.1761508523980364,
+    "certified_eigen_lower": 1.8361429865818415,
+    "actual_min_eigen": 3.1759636045156667,
+    "capacity_slope_lambda1": 29.284464718822036
+  },
+  "literal_self": {
+    "d": 0.0014197824290890903,
+    "e": 0.007505636247001437,
+    "derivative_perturbation_bound": 0.6054184764733435,
+    "reference_eigen_lower": 1.1434143068632932,
+    "certified_eigen_lower": 0.5379958303899497,
+    "actual_min_eigen": 1.1433326722192383,
+    "capacity_slope_lambda1": 58.26153457748016
+  },
+  "raw_perturbation_l2": 0.00011147986029702708,
+  "reference_CE_mean_gradient": 0.9722649361379363,
+  "CE_perturbation_error_bound": 0.0007684693506659541,
+  "CE_certified_lower": 0.9714964667872703,
+  "actual_CE_mean_gradient": 0.9722107391760804,
+  "channel_nonproportional_singular_min": [
+    5.74351266110699e-05,
+    0.00020962972319370508
+  ],
+  "winner_routing_unchanged": true
+}

@@ -432,3 +432,68 @@ $$m_0-m_T=S_T+M_T+R_{\mathrm{den},T}+B_{\mathrm{mom},T}$$
 非空な moving CNN の幾何として、入力も含めて一様な channel vectors を用いた §15 の family は通常の座標 Adam 自体にも保存される。層ごとの振幅は不揃いになり、head のクラス中心化も保たれるとは限らない。現在振幅から決める非零の学習率上限により、全将来ラベル実現で振幅の正を保てる。各時点の raw CE 平均の沈降符号と、L=2 の元の容量自己項への接続は残るが、iid ラベルで Adam の残差がその正の信号より小さいことまでは未証明。
 
 別に、各画像を全クラスについて一回ずつ batch に入れる場合は、実勾配が新ラベル平均と厳密に一致する。この **balanced label enumeration** と上の対称 CNN・学習率上限では、Conv gradient は各実現で非負。通常の座標 Adam が全 Conv と head を共同更新しても平均前活性は単調に下がり、初期 class contrast があれば長期の net decrease は strict。この構成は iid ラベルの batch と異なり、ラベルノイズと分母の相関を除く特殊な正例である。
+
+
+## 19. 課題内で同じラベルを再利用する長期 CE-SGD
+
+詳細は [task_reuse_longtime.md](task_reuse_longtime.md)。§15 と同じ全 Conv/head が動く CNN で、新ラベルは課題の最初にだけ割り当て、課題内では任意の固定有限 H 回使い回す。画像順は毎 epoch シャッフルしてよく、各画像の総 batch 重みを揃える。
+
+現在の振幅 a、head B、D=a²−||B||² と p=L+1 に対し、学習率を
+
+$$\eta_{k,j}=\frac{\delta_k\sqrt{D_{k,j}}}{K a_{k,j}^L(1+a_{k,j}^{L+1})},\qquad
+\delta_k=\frac{\kappa}{H(k+1)^\rho},\quad 0<\kappa\le\tfrac12,\quad\tfrac12<\rho\le1$$
+
+とする。全ラベル実現で D は正の下限を保つ。d をその下限とすると、更新 vector field F は凸領域 a≥√(d+||B||²) 全体で有界かつ明示的な大域 Lipschitz 定数を持つ。したがって、実際の H 更新と、課題開始点で凍結した参照更新との差は一様に O(H²δ_k²)。
+
+新ラベルの平均は課題開始時点でだけ取り、この誤差を残す。主駆動 Hδ_k の総和は発散し、相関誤差 H²δ_k² の総和は有限となる。課題境界の非負超マルチンゲールから軌道有界性を導き、head の画像上の成分が消えることを示した。結果は §15 と同じ
+
+$$B_t\to B_0(I-P_U),\qquad 0<a_\infty^2\le a_0^2-\|B_0P_U\|_F^2.$$
+
+従って、全 hidden mean の長期の strict net decrease と、二段モデルで元の full/self 容量の方向との一致を、毎更新ラベルを再抽選せずに証明できる。task 内の個々の勾配の符号は保証しない。H=30000 は実 RL-CIFAR のラベル・coverage スケジュールに対応できるが、指定の減衰・damping 付き SGD、対称1×1 Conv、bias無しという制限は残る。極限でも正側の ReLU であり、死の定理ではない。
+
+## 20. 負の平均前活性・混在 gate・課題内ラベル再利用の有限期間保証
+
+詳細は [task_reuse_finite.md](task_reuse_finite.md)。一般 CNN の全パラメータを同時に SGD 更新する有限課題を扱い、第一 Conv mean m=uᵀθ を対象にする。課題開始点のクラス順位等による平均駆動を、課題中の状態変化と比較する。半径 r の球で全ラベルの gradient norm≤G、gradient Lipschitz≤L、τ=Ση_t、τG≤r なら、
+
+$$\left|m_0-m_H-D_{\rm frozen}(Y)\right|
+\le\frac{\|u\|LG}{2}\left(\tau^2-\sum_t\eta_t^2\right).$$
+
+同じ Y を全更新に再利用したまま比較する。期待参照の正の余裕が右辺を上回れば、実課題の期待下降を保証する。
+
+非空例は二画像・重なる二チャネル・rank 2・全 bias trainable の Conv/ReLU/MaxPool/3-class head。mean は −0.1845、正負の ReLU sites が混在。全9ラベル割当を各8更新使い回す。学習率10⁻⁴、全パラメータ半径0.005で、期待下降には厳密な有理数下界9.59373196875e−6が付く。実 raw SGD の全列挙は約1.41899461157e−5で、mean が上がる個別実現も含む。
+
+さらに full と literal self の全 raw NTK 容量微分を有理数で正と示し、その符号が半径0.005の球全体で保たれることも証明した。ここでは K' は不定符号であり、PSD を仮定していない。従って「全ReLUが正側」という制限を、有限課題の正例では外せた。無限反復や gate crossing は別である。
+
+同じ画像のラベルを E epochs 使い回すと、凍結参照のラベル雑音分散は、各出現でラベルを引き直す場合の E 倍になる。独立な更新が E 倍増えたようには扱わない。この分散式も全列挙で確認した。
+
+## 21. 過去 moments を引き継ぐ通常 Adam と、課題内ラベル再利用
+
+詳細は [adam_task_reuse.md](adam_task_reuse.md)。課題境界で実 CNN・全 moments・global step を固定する。新しい全画像のラベル割当 Y は一度だけ引き、各 Y について「parameters は開始点に固定し、moments だけは課題の全 H 更新進める」参照を作る。この参照でも勾配と分母の相関、ラベル再利用、global bias correction、旧 moments を省かない。
+
+全 parameter の移動量と gradient の Lipschitz 上界から、実 CNN との勾配差・一次 moment 差・二次 moment の平方根の差を抑える。平方根の差には norm の逆三角不等式を使うため、過去 second moment が0でも適用できる。参照の厳密なラベル期待 Ψ と有限誤差 E により
+
+$$\mathbb E[m_0-m_H\mid\text{課題開始時点}]\ge\Psi-E$$
+
+を得る。これは Adam(Eg) への置換ではない。
+
+非空例は共有 Conv/ReLU/MaxPool、rank 2 の二画像、二チャネル、自由な二クラス空間 head、全10 raw parameters の通常 Adam。旧課題の iid ラベル (0,1) を2更新した実到達状態から、次の4通りの iid ラベル割当を各3更新再利用する。旧 moments は保持。外向き有理区間演算で期待下降下界>1.976e−5を証明した。一つのラベル割当では mean が上がり、momentum の符号も変わるため、各実現の符号を仮定した正例ではない。元の full/self 容量微分も同じ下降側にある。
+
+この条件が無限の課題反復で保たれることは未証明。実 RL-CIFAR の1200画像では厳密全ラベル和や保守的な移動量上界が重く、その走に適用済みとは言わない。
+
+
+## 22. 5×5 Conv・hidden FC・全 bias を含む、元の full/self 容量の開いた符号保証
+
+詳細は [full_ntk_positive.md](full_ntk_positive.md)。二段の本来の空間畳み込み、ReLU、MaxPool、任意有限個の hidden FC/ReLU、自由な多クラス出力、全 raw bias を含める。1×1 カーネルを5×5の中央へ埋めただけの構成ではない。
+
+参照状態では第一 Conv の各 augmented filter を mean augmented patch の方向に揃え、第二 Conv の input-channel 方向を対応させる。第一 Conv 以後の bias は値を0に置くが、その全 Jacobian 列を含める。正の scalar t に対する下流の正斉次性から、元の全 raw NTK について
+
+$$K'_{\rm full}=2a_1 k(G_2+G_{\rm suffix}),\qquad
+K'_{\rm self}=2a_1 k(G_2+u_{1c}^2G_{\rm suffix})$$
+
+を得る。G_2 は第二 Conv の全空間offsetの weight block、G_suffix は以後の全 Conv/FC/head weight block。bias blocks の方向微分は0だが、容量の逆行列には全て含む。
+
+最終 hidden feature の画像行列 F が full row rank なら、自由な head block が (FFᵀ)⊗I を含み、両 K' に正の固有値下限が付く。さらに J と J'=D_uJ の参照からの norm 距離を使う有限誤差評価で、**全 raw parameter 空間の開集合**へ拡張する。実状態のチャネルは非比例、各 bias は非零でもよく、参照の対称性を実状態にそのまま要求しない。新ラベル CE の方向も別の logit/JVP 誤差評価で同じ沈降側と示す。
+
+二段5×5 Conv・全 bias・10クラス、444 raw parameters の検算では、全座標に独立な有限摂動を加えた非比例チャネルの状態で、full/self K' の正の下限と CE 方向の余裕を確認した。hidden FC 追加は、full row rank を保つ正の重みの明示構成と全 Jacobian block の導出で解析的に扱う。32×32 RGB・16→16 Conv・FC100→100 についても、二画像の局所 bump と receptive field の違いから非零の特徴minorを作り、mean patchを保つ微小な画像摂動でpool tiesを外す解析構成を独立に確認した。
+
+これで実 RL-CIFAR 型の Conv/FC 構造に対する元の自己項の条件付き符号保証へ進めた。ただし固定状態・開近傍の定理であり、通常 Adam の長期軌道がその条件を維持するとはまだ証明していない。

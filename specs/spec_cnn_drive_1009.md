@@ -38,3 +38,9 @@
 重なる channel と full-rank な空間特徴を持つ、bias 無し 1×1 CNN の全 raw CE-SGD 共同更新について、fresh labels・対称 channel 初期化・指定の適応学習率下での条件維持、head 極限、長期 mean 低下、full/isolated 全 NTK の符号を検算する。有限の300更新は導出式の照合であり、無限時間の実験的判定ではない。
 
 また、小振幅の固定 iid 勾配 family に対する定常 Adam の展開・有限残差・対称性による符号保証を検算する。実 RL-CIFAR の変化する学習軌道と取り違えない。
+
+## 1009 課題内ラベル再利用の数学的検算範囲
+
+同じラベル割当を課題内で固定する全raw共同更新について、指定の減衰・damping付きSGDの長期定理、一般CNNのfinite-task勾配誤差、negative mean/mixed gatesの非空例、過去Adam momentsを継続したfinite-task参照と外向き有理区間を検算する。これらは既存の式の検算であり、実RL-CIFARの統計的再実験ではない。
+
+本来の5×5 sharedConvと全biasを持つ構造で、全rawNTKのfull/self方向微分と有限Jacobian摂動の式を検算する。任意有限本数のhiddenFCは解析的な同次性・rank-preserving構成で扱う。他の活性化関数には拡張しない。

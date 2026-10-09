@@ -21,6 +21,12 @@
 
 13. 実際に状態が変わる Adam 軌道に対して、第一 Conv の累積下降量を期待勾配・martingale・分母の差・momentum の端点と重み変化へ厳密分解した。対称 CNN の構造と正振幅は指定の学習率上限で Adam 自体にも保存される。iid ラベルで残差が信号より小さいことは未証明。各画像に全 class を一回ずつ与える balanced-label batch という別条件なら、全 Conv/head の actual Adam 共同学習で mean が単調低下する非空な長期正例がある。
 
+
+14. 同じラベルを課題内で固定してH回再利用する長期CE-SGDへ拡張した。課題境界で新ラベルを平均し、課題中のstate/label相関を総和有限なO(H²δ_k²)誤差として抑える。指定の減衰・damping付き学習率なら、元のstrict最終mean低下を維持する。H=30000とequal-coverageという実験スケジュールは含むが、一定学習率・Adamへの結論ではない。
+15. 全raw SGDの有限課題では、負のmean（−0.1845）、正負のReLU sites、rank2の重なる非比例チャネル、全biasを持つ例まで保証した。全9ラベル割当を各8更新再利用し、期待下降下界9.59373196875e−6を解析的に証明。full/self容量微分も全パラメータ半径.005の球全体で正。
+16. 通常Adamでも、課題境界でparameters・過去moments・global stepを保った参照と有限誤差から、課題内のラベル再利用を扱える。前課題のiidラベルを2更新した到達状態から、新しい全4割当を各3更新する例で、外向き有理区間による期待下降下界>1.976e−5。個別にmeanが上がる割当も含む。無限反復で条件が保たれることは未証明。
+17. 本来の二段5×5 Conv、任意有限個のhidden FC/ReLU、全trainable biasを含め、元の全raw NTKとliteral自己モデルの容量微分が正となる開集合を構成した。参照からのJacobian距離の有限評価で、実状態の非比例チャネル・非零biasを許す。新ラベルCEの方向も別に一致を証明。学習軌道の条件維持は別問題。
+
 ## 反例と残る制限
 
 非負入力・重み共有・一意な MaxPool・学習した出力 bias があっても、他チャネルによって自己モデルと実切替勾配の向きは逆転し得る。したがって無条件な一般化はできない。
@@ -58,3 +64,11 @@
 - `adam_smallscale_cnn.json`: 負の平均前活性を持つ shared CNN で signal/noise の次数を直接自動微分と照合。三つの振幅で勾配分解の誤差3.47e-18以下、平均信号/s³ は解析係数0.4789125に近づく。
 
 - `adam_cumulative_positive.json`: balanced label enumeration（iid ラベルではない）、二段 shared CNN、全 Conv/head actual Adam 200 更新。mean 下降0.07159685561、norm/variation による下降下界0.06551812723、厳密な累積恒等式との誤差7.50e-16未満。全時間の単調性は companion note の構造的証明による。
+
+
+## 課題内ラベル再利用・負mean・本来の空間Convの追加検算
+
+- `task_reuse_longtime.json`: 10 classes、4 images、batch2、8更新/task、80tasks。同じtask内のlabelを固定し、640回の全raw共同SGDと再帰が1.56e-15未満で一致。課題開始参照とのずれは全taskで明示上界内。無限時間は解析証明と独立監査に依る。
+- `task_reuse_finite.json`: negative mean、混在gate、rank2、trainable biases、全9iid label assignments。実期待下降約1.41899461157e−5、解析下界9.59373196875e−6。full/self NTK容量微分は厳密な有理数で正。初期の両微分が半径.005での変化上界.275625を上回るため、球全体でも正。
+- `adam_task_reuse.json`: 旧taskから全momentsを保持した通常Adam。独立な次task割当を各3回reuseし、参照期待と誤差を外向き有理区間で評価。期待下降下界1.976479684e−5以上。実Conv/autogradとの比較は補助確認。
+- `full_ntk_positive.json`: 本来の5×5 spatial Conv二段、全bias、全444raw params。全座標の有限摂動後も非比例channelでfull/self容量とCE方向に正の余裕。数値値はfloat64の照合であり、非空な開集合の主張は構造式・strict margin・有限摂動定理による。追加hidden FCは解析的に拡張し、新たな大規模学習実験は行っていない。

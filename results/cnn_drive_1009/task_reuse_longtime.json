@@ -1,0 +1,49 @@
+{
+  "scope": "Actual all-raw two-Conv/ReLU/MaxPool SGD, fresh iid labels only per task, repeated labels and equal-coverage minibatches; proof needs specified decaying/damped learning rate",
+  "seed": 100925,
+  "classes": 10,
+  "images": 4,
+  "minibatch": 2,
+  "layers": 2,
+  "widths": [
+    3,
+    3,
+    3
+  ],
+  "input_feature_rank": 4,
+  "updates_per_task": 8,
+  "tasks": 80,
+  "total_updates": 640,
+  "epochs_per_task": 4,
+  "kappa": 0.15,
+  "decay_power": 0.75,
+  "initial_a": 1.2,
+  "initial_head_squared_norm": 0.3823561529614415,
+  "proved_limiting_a_squared_upper_bound": 1.0576438470385585,
+  "deterministic_D_lower_bound": 1.0458120325045344,
+  "minimum_D": 1.0574653197098136,
+  "global_lipschitz_bound": 6.490111610082355,
+  "global_vector_field_bound": 1.4142135623730951,
+  "max_raw_parameter_recurrence_error": 1.5543122344752192e-15,
+  "max_balance_identity_error": 6.661338147750939e-16,
+  "max_task_reference_error": 0.00010271217947046609,
+  "max_task_error_to_bound_ratio": 0.0018875219372134855,
+  "final_a": 1.1948707880533298,
+  "final_head_squared_norm": 0.37025088043337173,
+  "first_and_last_task_records": [
+    {
+      "task": 1,
+      "a": 1.2012563621333026,
+      "head_squared_norm": 0.3854456623159613,
+      "task_freeze_error": 0.00010271217947046609,
+      "task_freeze_error_bound": 0.09034991299976464
+    },
+    {
+      "task": 80,
+      "a": 1.1948707880533298,
+      "head_squared_norm": 0.37025088043337173,
+      "task_freeze_error": 1.2553636961622212e-07,
+      "task_freeze_error_bound": 0.00012626784201791606
+    }
+  ]
+}

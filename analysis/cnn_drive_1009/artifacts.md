@@ -18,3 +18,9 @@ Adam の arbitrary-state 条件と一歩反例: adam_state.md。
 実際の moving Adam に対する累積恒等式・残差の十分条件・balanced-label 正例: adam_cumulative_positive.md。
 全 Conv/head の CE-SGD 長期証明の独立監査: moving_ce_longtime_review.md。
 実 moving Adam の累積恒等式と限定正例の独立監査: adam_cumulative_positive_review.md。
+
+課題内 label reuse を含む長期共同SGD: task_reuse_longtime.md / task_reuse_longtime_review.md。
+一般CNN有限taskとnegative-mean/mixed-gate正例: task_reuse_finite.md / task_reuse_finite_review.md。
+過去momentsを保った通常Adamのfinite reused-label task: adam_task_reuse.md / adam_task_reuse_review.md。
+本来の空間Conv・hiddenFC・全biasでの元の容量自己項のopen符号保証: full_ntk_positive.md。
+本来の空間Conv/FCの全NTK符号と32×32全構造の非空性の独立監査: full_ntk_positive_review.md。
