@@ -60,3 +60,13 @@ balanced batchを除外しないinverse RMS momentとC3期待場: adam_b16_regul
 N32・3712raw・真のB16 CEと元のcapacityの有限照合: verify_adam_b16_native.py / ../../results/cnn_drive_1009/adam_b16_native.json。
 binary・2epochs/task・特殊な近接画像・十分小さい減衰学習率に限定する。10分類/400epochs/一定学習率は未解決。
 独立なnative検算コード監査: adam_b16_native_review.md。終点/平均化を含む統合監査: adam_b16_longtime_review.md。
+
+実native幅のN1200/B16/E400/H30000 binary長期定理と一定学習率の有限期間定理: adam_1200_longtime.md / adam_1200_longtime_review.md。
+firstConv1200rawのgradient-feature rankと新scale: adam_1200_reference.md / adam_1200_reference_review.md。
+13完了epoch・1201 label-count整数証明書による長期reuse bias正方向: adam_longreuse_bias.md / adam_longreuse_bias_review.md / verify_adam_longreuse_bias.py。
+実120434rawのminor・routing・3画像subset raw identity検算: verify_adam_1200_reference.py / ../../results/cnn_drive_1009/adam_1200_reference.json。
+native検算・constant-rate境界の統合者による独立確認: adam_1200_verification_review.md。
+一定学習率で全raw収束/固定compact永久保持をそのまま移せない定理: adam_constant_rate_boundary.md。
+10分類ではuniform predictionsでもhidden Adam場が0でない反例とpaired-head条件: adam_tenclass_equilibrium.md。
+10分類N1200/B16/H30000のpredictive bias block正下界: adam_tenclass_bias.md / verify_adam_tenclass.py / ../../results/cnn_drive_1009/adam_tenclass.json。
+10分類hidden/headの全体理論・実rate=.001/実画像の挙動は依然未解決。

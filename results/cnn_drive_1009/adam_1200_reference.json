@@ -1,0 +1,350 @@
+{
+  "scope": "Native 120434 raw-parameter reference. All N1200 rank/routing/sensitivity/spectral statements use analytic bounds; autodiff and capacity values use only the recorded three-image subset. No full N1200-by-P Jacobian, full N1200 capacity evaluation, training, Monte Carlo, or learning-rate probability certificate.",
+  "architecture": "RGB32x32 Conv5/pad2 3->16 Pool2 Conv5/pad2 16->16 Pool2 FC100 ReLU FC100 ReLU binary FC2; every bias free",
+  "N": 1200,
+  "batch_size": 16,
+  "epochs_per_task": 400,
+  "H": 30000,
+  "raw_parameter_count": 120434,
+  "selected_centers": [
+    [
+      3,
+      3
+    ],
+    [
+      3,
+      11
+    ],
+    [
+      3,
+      19
+    ],
+    [
+      3,
+      27
+    ],
+    [
+      11,
+      3
+    ],
+    [
+      11,
+      11
+    ],
+    [
+      11,
+      19
+    ],
+    [
+      11,
+      27
+    ],
+    [
+      19,
+      3
+    ],
+    [
+      19,
+      11
+    ],
+    [
+      19,
+      19
+    ],
+    [
+      19,
+      27
+    ],
+    [
+      27,
+      3
+    ],
+    [
+      27,
+      11
+    ],
+    [
+      27,
+      19
+    ],
+    [
+      27,
+      27
+    ]
+  ],
+  "selected_pixel_count": 1200,
+  "selected_pixels_sha256": "5412c35dd067f8e842b7fcdc6392b5fd8fe3355e09990eb5becb3c5fb4934e8d",
+  "mixed_minor_shape": [
+    1200,
+    1200
+  ],
+  "mixed_minor_sha256_float64": "2cd1715aa30e1417ad55cb8dae99249e9e0af2498d7509eb2e7bed16e6db1214",
+  "mixed_minor_row_diagonal_dominance_margin": 0.05034165786560596,
+  "mixed_minor_column_diagonal_dominance_margin": 0.05034166650345392,
+  "mixed_minor_singular_value_lower": 0.050341662184529755,
+  "first_weight_gradient_shift_formula_relative_error": 0.0,
+  "selected_input_beta_identity_relative_error": 6.9464177451521935e-15,
+  "beta_range": [
+    5.042309936436145e-08,
+    0.010235822755173579
+  ],
+  "simplex_normalization": 19815653.525115672,
+  "simplex_column_sum_error": 1.6653345369377348e-15,
+  "simplex_level_error": 9.032812289079062e-22,
+  "image_separation": 0.001,
+  "image_range_bound": [
+    0.199,
+    0.7519990234375
+  ],
+  "actual_mean_direction_error": 0.0,
+  "all_raw_relative_sensitivity_bound": 0.005,
+  "required_relative_sensitivity_bound": 0.03125,
+  "first_weight_feature_Q0": 0.3663828757384613,
+  "first_weight_feature_inverse_norm_upper": 17380174342.123173,
+  "first_weight_feature_singular_value_lower": 5.7536822146620617e-11,
+  "leading_raw_lambda_min_lower": 3.3104859027318527e-21,
+  "full_routing": {
+    "first_conv_lipschitz_per_channel": [
+      0.600072,
+      0.600072,
+      0.600072,
+      0.600072,
+      0.600072,
+      0.600072,
+      0.600072,
+      0.600072,
+      0.600072,
+      0.600072,
+      0.600072,
+      0.600072,
+      0.600072,
+      0.600072,
+      0.600072,
+      0.600072
+    ],
+    "second_conv_lipschitz_per_channel": [
+      0.4200594013104276,
+      0.4200594013104276,
+      0.4200594013104276,
+      0.4200594013104276,
+      0.4200594013104276,
+      0.4200594013104276,
+      0.4200594013104276,
+      0.4200594013104276,
+      0.4200594013104276,
+      0.4200594013104276,
+      0.4200594013104276,
+      0.4200594013104276,
+      0.42005940131042757,
+      0.42005940131042757,
+      0.42005940131042757,
+      0.42005940131042757
+    ],
+    "base_pool_gaps_per_channel": [
+      [
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406,
+        0.05999412193066406
+      ],
+      [
+        0.041991411789845556,
+        0.041991411789845556,
+        0.041991411789845556,
+        0.041991411789845556,
+        0.041991411789845556,
+        0.041991411789845556,
+        0.041991411789845556,
+        0.0419914117898455,
+        0.041991411789845556,
+        0.041991411789845556,
+        0.041991411789845556,
+        0.041991411789845556,
+        0.041991411789845556,
+        0.041991411789845556,
+        0.041991411789845556,
+        0.0419914117898455
+      ]
+    ],
+    "all_image_pool_gap_lower_per_channel": [
+      [
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406,
+        0.05879397793066406
+      ],
+      [
+        0.041151292987224704,
+        0.041151292987224704,
+        0.041151292987224704,
+        0.041151292987224704,
+        0.041151292987224704,
+        0.041151292987224704,
+        0.041151292987224704,
+        0.04115129298722465,
+        0.041151292987224704,
+        0.041151292987224704,
+        0.041151292987224704,
+        0.041151292987224704,
+        0.041151292987224704,
+        0.041151292987224704,
+        0.041151292987224704,
+        0.04115129298722465
+      ]
+    ],
+    "minimum_all_image_pool_gap_lower": 0.04115129298722465,
+    "positive_hidden_bias_lower": 0.04,
+    "base_minimum_preactivation": 0.04000894463519257
+  },
+  "literal_self_routing": {
+    "first_conv_lipschitz_per_channel": [
+      0.600072
+    ],
+    "second_conv_lipschitz_per_channel": [
+      0.4200504000144017,
+      6.000864017279999e-07,
+      6.000864017279999e-07,
+      6.000864017279999e-07,
+      6.000864017279999e-07,
+      6.000864017279999e-07,
+      6.000864017279999e-07,
+      6.000864017279999e-07,
+      6.000864017279999e-07,
+      6.000864017279999e-07,
+      6.000864017279999e-07,
+      6.000864017279999e-07,
+      6.000864017279999e-07,
+      6.000864017279999e-07,
+      6.000864017279999e-07,
+      6.000864017279999e-07
+    ],
+    "base_pool_gaps_per_channel": [
+      [
+        0.059994121930663946
+      ],
+      [
+        0.04199051202365073,
+        5.998441299226442e-08,
+        5.998441299226442e-08,
+        5.998441299226442e-08,
+        5.998441299226442e-08,
+        5.998441299226442e-08,
+        5.998441299226442e-08,
+        5.998441299226442e-08,
+        5.998441299226442e-08,
+        5.998441299226442e-08,
+        5.998441299226442e-08,
+        5.998441299226442e-08,
+        5.998441299226442e-08,
+        5.998441299226442e-08,
+        5.998441299226442e-08,
+        5.998441299226442e-08
+      ]
+    ],
+    "all_image_pool_gap_lower_per_channel": [
+      [
+        0.058793977930663946
+      ],
+      [
+        0.041150411223621924,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08,
+        5.8784240188808424e-08
+      ]
+    ],
+    "minimum_all_image_pool_gap_lower": 5.8784240188808424e-08,
+    "positive_hidden_bias_lower": 0.04,
+    "base_minimum_preactivation": 0.04000034004380892
+  },
+  "minimum_absolute_base_raw_sensitivity": 4.020336303637112e-06,
+  "base_nonbias_gradient_squared_norm": 30.90567579895419,
+  "all_image_nonbias_entry_upper": 0.1770844808522108,
+  "all_image_unscaled_nonbias_frobenius_squared_upper": 37458.60623860644,
+  "initialization_scale": 1.291549594817893e-34,
+  "batch_response_relative_constant": 9.660254037844387,
+  "normal_spectral_relative_error_upper": 0.25,
+  "normal_symmetric_part_lower_conditional_on_nonnegative_bias": 1.0354167585869507e-79,
+  "per_image_L_transpose_u_lower": 2.7391874851256627e-25,
+  "positive_endpoint_ray_coefficient_lower": 9.003777694402864e-47,
+  "stationary_bias_premise": "Supplied separately by the exact N1200/H30000 binary bias certificate; not measured here.",
+  "finite_subset_indices": [
+    0,
+    600,
+    1199
+  ],
+  "finite_subset_first_weight_affine_row_relative_error": 8.125326985183311e-16,
+  "finite_subset_actual_raw_relative_sensitivity_change": 0.0019972773326306036,
+  "finite_subset_maximum_reference_contrast": 5.551115123125783e-16,
+  "finite_subset_full": {
+    "image_count": 3,
+    "raw_parameter_count": 120434,
+    "maximum_raw_jacobian_scale_relative_error": 1.4596115013044592e-14,
+    "maximum_mean_direction_jacobian_derivative_scale_relative_error": 1.3979087683963607e-14,
+    "first_conv_and_hidden_bias_jacobian_mean_derivative_exactly_zero": true,
+    "capacity_slope_divided_by_scale": 4.503554876275582,
+    "capacity_slope": 5.8165644756938745e-34,
+    "ridge": 1.0,
+    "scope": "Only the named finite image subset; not the full N1200 capacity."
+  },
+  "finite_subset_literal_self": {
+    "image_count": 3,
+    "raw_parameter_count": 113294,
+    "maximum_raw_jacobian_scale_relative_error": 1.4378262550163322e-14,
+    "maximum_mean_direction_jacobian_derivative_scale_relative_error": 1.3728117096402392e-14,
+    "first_conv_and_hidden_bias_jacobian_mean_derivative_exactly_zero": true,
+    "capacity_slope_divided_by_scale": 4.4960305168141375,
+    "capacity_slope": 5.806846392280182e-34,
+    "ridge": 1.0,
+    "scope": "Only the named finite image subset; not the full N1200 capacity."
+  },
+  "coincident_full_capacity_leading": {
+    "hidden_inner_product_with_actual_mean_derivative": 3.00235028276346,
+    "coefficient_2N_inner_over_ridge_plus_N": 5.9997008148478805,
+    "scope": "Identical-image delta=0 leading coefficient of capacity slope/t; continuity input only."
+  },
+  "coincident_literal_self_capacity_leading": {
+    "hidden_inner_product_with_actual_mean_derivative": 2.9973340608416423,
+    "coefficient_2N_inner_over_ridge_plus_N": 5.9896767244129405,
+    "scope": "Identical-image delta=0 leading coefficient of capacity slope/t; continuity input only."
+  },
+  "numeric_status": "All margins are float64 finite checks, not outward-rounded interval certificates. The full N1200 distinct-image capacity signs still use the separate continuity proof.",
+  "all_assertions_passed": true,
+  "elapsed_seconds": 0.7390833930112422,
+  "verifier_source_sha256": "2d0580df7b601e6a44d60d3053ac0ab16c1869e7be2c039e1e9ab8c823fe9ce8"
+}

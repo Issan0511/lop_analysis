@@ -1,0 +1,91 @@
+{
+  "scope": "Exact rational checks of analytic stationary-field and constant-rate-boundary formulas, not a moving-CNN experiment.",
+  "N": 1200,
+  "batch_size": 16,
+  "classes": 10,
+  "epochs_per_task": 400,
+  "H": 30000,
+  "tenclass_output_bias_response": {
+    "RMS_floor_at_uniform_predictions": {
+      "exact": "1/40",
+      "decimal_display": 0.025
+    },
+    "marginal_variance": {
+      "exact": "9/1600",
+      "decimal_display": 0.005625
+    },
+    "variance_A_upper": {
+      "exact": "279/760000",
+      "decimal_display": 0.00036710526315789473
+    },
+    "variance_B0_upper": {
+      "exact": "6219/79960000",
+      "decimal_display": 7.777638819409705e-05
+    },
+    "cross_absolute_expectation_strict_upper": {
+      "exact": "171/1000000",
+      "decimal_display": 0.000171
+    },
+    "Gamma_phase_strict_lower": {
+      "exact": "2239998632/937500125",
+      "decimal_display": 2.389331555555793
+    },
+    "common_image_centered_class_block_coefficient_strict_lower": {
+      "exact": "1119999316/187500025",
+      "decimal_display": 5.9733288888894815
+    },
+    "positive_subspace_dimension": 9,
+    "limitation": "Positive on common-image centered-class directions only; the full bias block is positive semidefinite, and this does not establish an equilibrium of the hidden field."
+  },
+  "uniform_prediction_obstructions": {
+    "native_one_image_H1_hidden_negative_response_magnitude_lower_sensitivity_one": {
+      "exact": "400000000000000/3632400121080001009",
+      "decimal_display": 0.00011012002716294103
+    },
+    "one_image_H1_output_bias_gauge_positive_response_lower": {
+      "exact": "400000000000000/8172900181620001009",
+      "decimal_display": 4.894223483844306e-05
+    },
+    "B16_intermittent_coordinate": [
+      {
+        "H": 4,
+        "negative_response_magnitude_lower": {
+          "exact": "4749588492112388506127000031/900000480000064000000000000000000",
+          "decimal_display": 5.277317732221711e-06
+        },
+        "positive_RGB_perturbation_upper": {
+          "exact": "459/8000000000",
+          "decimal_display": 5.7375e-08
+        }
+      },
+      {
+        "H": 6,
+        "negative_response_magnitude_lower": {
+          "exact": "31037588744045925624129607836252366779639391/9000004800000640000000000000000000000000000000000",
+          "decimal_display": 3.448619132296876e-06
+        },
+        "positive_RGB_perturbation_upper": {
+          "exact": "459/8000000000",
+          "decimal_display": 5.7375e-08
+        }
+      }
+    ],
+    "positive_RGB_perturbation_delta": {
+      "exact": "1/10000000000000000",
+      "decimal_display": 1e-16
+    },
+    "limitation": "Stationary frozen-state fields only; the B16 example certifies a target hidden coordinate, not the entire first-filter mean or an indefinitely reversed moving trajectory."
+  },
+  "constant_rate_boundary": {
+    "fresh_task_bias_gradient_threshold": "1/32",
+    "uniform_conditional_recurrence_probability_lower": {
+      "exact": "68630377364883/250000000000000",
+      "decimal_display": 0.274521509459532
+    },
+    "nonvanishing_bias_jump_lower_divided_by_eta": {
+      "exact": "3125000/1900000019",
+      "decimal_display": 0.0016447368256578949
+    }
+  },
+  "all_assertions_passed": true
+}

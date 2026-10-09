@@ -37,6 +37,10 @@
 
 22. singleton条件を外し、N32またはN48のbinary画像を各epoch独立に再shuffle・再編成してbatch16で更新する全raw通常Adamへ拡張した。E2 epochs/task、標準beta/epsilon、moments保持のまま、課題単位の相関を保ったoutputbias応答の正下界と非bias相対スペクトル条件から正常安定性を導く。balanced batchで勾配0が可能な点は、全raw同時のgood-task eventとinverse RMS momentsにより期待場のC3を証明して扱う。既存の非対称終点写像とobservable平均化により高確率strict最終mean低下へ接続する。binary・特殊画像・短いtask・小さい初期scale・減衰率は残り、標準RL-CIFARの10分類/400epochs/一定学習率は未解決。
 
+23. N1200・B16・400epochs/task・H30000までbinaryのnative長期定理を拡張した。最後の100特徴ではrank1200を供給できないため、16個の分離5×5 RGB patchesとfirstConv1200raw gradient featuresを使う構成へ変更。長期reuse時のoutputbiasはtrue epoch covarianceと13完了epochsのlower tailで扱い、1201 label-count全数の整数証明書を得た。native幅・全bias・全raw初期開集合・減衰率でstrict最終mean低下を示す。さらに同じ非空geometryで、全更新が同じ正のconstant rateとなる有限K期間の高確率net低下も示した。実eta=.001や実50tasksへの数値保証ではない。
+
+24. 10分類への障害と、一定学習率で結論を変える必要を厳密化した。均等予測でもhidden stationary Adam場が0とは限らず、全体のpredictive driftまで非零となるnative反例がある。一方、N1200/B16/H30000の10分類outputbiasだけは正のpredictive blockを有理数で保証できる。無限fresh-label tasksと一定rateでは全raw有限収束・固定compact永久保持が不可能という境界を証明したが、hidden meanの沈降や有限期間保証を否定するものではない。
+
 ## 反例と残る制限
 
 非負入力・重み共有・一意な MaxPool・学習した出力 bias があっても、他チャネルによって自己モデルと実切替勾配の向きは逆転し得る。したがって無条件な一般化はできない。
@@ -139,3 +143,21 @@ outputbiasは感度±1/2で小さくならないので別証明にした。task�
 `adam_b16_native.json` の有限照合はRGB24、Conv5(2)/Conv5(2)、FC32/32、全3712raw、N32、E2、B16。画像幅.002、参照scale約5.4814e−19、相対感度変化.0007214未満、スペクトル誤差比約.1、正常方向下界約5.1314e−38。容量微分/t²はfull約63.43024、literal self約42.21268で正。4種類の固定labelと各々2回の独立shuffleで得た16batchesのCE恒等式は、感度で割った最大誤差1.05e−15未満だった。8対8のbalanced batchも含む。これらはfloat64の式照合で、全2^32label列挙、定常応答実測、長期学習、成功率推定、具体的な確率認証済み学習率の算出ではない。
 
 ReLUは正側で動き続ける。今回外せたのはbatchサイズ1の条件であり、binary・特殊な近接画像・短いtask・極めて小さい有限初期scale・局所routing・十分小さい減衰学習率は残る。標準RL-CIFARの一般画像・10分類・400epochs/task・一定学習率、負mean、gate停止、無条件期待沈降は未証明。
+
+## N1200・400epochsと一定rateの有限期間への拡張
+
+`adam_1200_longtime.md` が統合定理。対象は実装と同じRGB32×32、Conv16/16、FC100/100、全bias、N1200、B16、E400、H30000で、出力のみbinary。旧scaleのleading Jacobianは最後の100特徴＋constantに制約されrank≤101だった。今回はfirstConv weights・全hidden biases・head rowsをt、outputbiasをt²とし、firstConv1200rawの入力patch感度をleading blockに入れた。16個の分離5×5 RGB patchesからinvertibleな1200minorを作り、同一logit levelのmean-preserving simplexで異なる1200画像とrank1200を両立した。各layerの幅を増やしていない。元のcapacityの方向微分は新scaleでtK1′+t³K2′となるため、旧t²の式を流用しない。
+
+`adam_longreuse_bias.json` は、true reshuffle下のbinary outputbiasについて全phase Gamma>209/100=2.09、phase-sum normal coefficient>209/4=52.25を厳密認証する。同epochの別batchのcovarianceは0、同task別epochでは1/Nを保持する。13個の完了epochを条件付きでまとめ、1201通りのtask内positive-label総数について整数多項式の係数不等式をすべて照合し、P(V<.01)<2^−80を得た。task境界を跨いでもconditional epoch independenceを保つ。別途 r=C(16,8)^75/C(1200,600)<(.999)^300 を有理数で確認し、E400で期待場C3に必要なinverse RMS momentsを供給した。訓練やMonte Carloは行っていない。
+
+`adam_1200_reference.json` は実120434rawの有限検算。1200minorのrow/column dominance marginは約.05034、gradient-feature最小特異値の解析式によるfloat64下界は約5.7537e−11。選んだ初期scaleは約1.29155e−34、normal誤差比上界.25、正下界約1.0354e−79であり、存在証明用の極端に小さい値。全rawのimage間相対感度変化の上界は.005。routingは全1200画像についてchannelごとの入力変化上界から確認した。raw autodiff・capacity数値は明示した3画像subsetだけで、full/self capacity/tは約4.50355/4.49603、scale恒等式誤差は1.5e−14未満。全N1200 distinct-image capacityを数値計算したとは扱わず、そちらの符号は画像幅を選ぶ解析的連続性証明による。数値は外向き区間certificateではない。
+
+減衰rateでの無限時間結論は、既存のC2終点・positive ray LLᵀu・observable平均化をN1200へ接続して得る。一定rateの有限期間については、Sを先に固定し、全期間同じ正のetaを十分小さくしてK=ceil(S/eta) tasksとする。累積energy誤差のAbel和から E_K≤(1−2a eta)^K E0+2e_E を得て、endpoint errorと合わせstrict mean lossを残す。固定etaでKを無限大にする保証、eta=.001の保証、実験の50tasksそのものの保証ではない。統合とreferenceはそれぞれ独立監査PASS。
+
+## 10分類と一定rateの厳密な境界
+
+`adam_tenclass_equilibrium.md` では、uniform CE predictionsでも10分類のraw勾配は必ずしも符号対称でないため、stationary Adamのhidden fieldが非零となるnative全raw構成を示した。class共通のhead/bias移動というsoftmax gaugeだけではなく、hiddenの動きが予測差を生む例である。元のfull/self容量方向は正のまま。反例は固定状態の定常応答であり、変化するCNNが永久に逆向きへ動く証明ではない。paired centered head rowsならhidden cancellationは回復するが、その幾何は任意raw摂動に開いておらず、新しい全体解析が必要。
+
+一方、`adam_tenclass_bias.md` と `adam_tenclass.json` は、N1200/B16/H30000でoutputbiasのpredictive応答が正と示す。B/C=1.6が非整数なのでuniform時の各bias勾配の絶対値は1/40以上。true epoch covarianceと組み合わせ、common-probability応答の有理数下界は約2.38933156>2.38、中心化logit座標のcommon-image bias係数は約5.97332889>5.95。行列はrank9の半正定値であり、残るimage/hidden方向を保証しない。raw baselineのclass共通性はgaugeとして扱い、全CNNが均等予測で平衡とは主張しない。
+
+`adam_constant_rate_boundary.md` は、一定eta>0・自由outputbias・無限iid task labelsなら各outputbiasの有限収束がほぼ確実に起こらず、全rawを固定compactに永久保持する確率も0であると示す。前者はfresh-task first batchのgradient再発、後者は稀な全同一class task burstによる。極端に稀な無限時間事象の証明であり、実用的な早期exitやhidden meanの非沈降を結論しない。長期のmeanの低い水準、有限期間のnet沈降、非零の漸近速度は別の命題である。標準RL-CIFARの10分類全体・実画像・rate=.001での自己方向はまだ証明完了としていない。
