@@ -1,0 +1,72 @@
+{
+  "scope": "Constructed repeated exact-head-fit CNN; not RL-CIFAR training evidence",
+  "configuration": {
+    "images": 9,
+    "input_colors": 3,
+    "conv_channels": 3,
+    "images_per_group": 3,
+    "output_classes": 10,
+    "trainable_output_bias": false,
+    "A": 2.1,
+    "B": 2.0,
+    "off_diagonal_weight": 0.1,
+    "ridge": 0.1,
+    "hidden_sgd_step_size": 0.005,
+    "rho": [
+      1.0,
+      0.8,
+      0.6,
+      0.4
+    ]
+  },
+  "analytic_constants": {
+    "initial_pooled_feature": 0.10000000000000009,
+    "geometric_exit_threshold": 3.8999999999999995,
+    "positive_step_ratio_must_be_less_than_one": 0.09999999999999999,
+    "old_label_sum_squared_norm_lower_bound": 2.1,
+    "proved_nonexit_probability_lower_bound": 0.923076923076923,
+    "mean_patch_direction_factor": 1.2333333333333334,
+    "cumulative_drive_limit_on_nonexit_event": 0.061666666666666724
+  },
+  "autograd": {
+    "seed": 100916,
+    "steps": 200,
+    "dtype": "float64",
+    "architecture": "Conv2d(3,3,kernel_size=1) -> ReLU -> MaxPool2d(2) -> Linear(3,10)",
+    "all_shared_conv_weights_and_biases_updated": true,
+    "fitted_head_detached_during_hidden_gradient": true,
+    "maximum_recurrence_update_error": 4.440892098500626e-16,
+    "maximum_mean_direction_gradient_error": 1.1102230246251565e-16,
+    "maximum_mean_displacement_identity_error": 2.7755575615628914e-16,
+    "maximum_off_group_pooled_feature": 0.0
+  },
+  "recurrence": {
+    "seed": 100914,
+    "steps": 50000,
+    "label_reuse": true,
+    "final_positive_pooled_features": [
+      3.8276396449624456e-05,
+      0.0005360813263261653,
+      0.00038466084354100484
+    ],
+    "cumulative_weighted_directional_gradient": [
+      0.061643062888855855,
+      0.06133608318209855,
+      0.06142945914648271
+    ],
+    "mean_preactivation_displacement": [
+      -0.061643062888855855,
+      -0.06133608318209855,
+      -0.06142945914648271
+    ],
+    "maximum_pooled_feature_seen": 0.10013149243918483,
+    "minimum_old_label_sum_squared_norm": 2.1,
+    "minimum_positive_update_factor": 0.9777298551544109,
+    "maximum_displacement_identity_error": 5.551115123125783e-16,
+    "exited_certified_region": false
+  },
+  "versions": {
+    "numpy": "2.5.1",
+    "torch": "2.13.0+cu130"
+  }
+}

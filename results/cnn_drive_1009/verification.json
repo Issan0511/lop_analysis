@@ -1,0 +1,178 @@
+{
+  "scope": "Constructed finite CNN certificates and counterexamples, not an RL-CIFAR trajectory result",
+  "fitted_head": [
+    {
+      "kind": "certificate",
+      "H": [
+        [
+          0.9999999999999998,
+          0.10000000000000003,
+          1.0
+        ],
+        [
+          0.10000000000000003,
+          0.9999999999999998,
+          1.0
+        ]
+      ],
+      "mean_direction": [
+        11.125,
+        11.125
+      ],
+      "minimum_winner_gap": 0.020000000000000018,
+      "rational": "1571295/438244",
+      "isolated_with_output_bias_rational": "9403295/5026564",
+      "isolated_with_output_bias_gradient": 1.8707202375220926,
+      "formula_gradient_sum_loss": 3.5854341417110103,
+      "enumerated_gradient_sum_loss": 3.5854341417110107,
+      "gradient_mean_loss": 1.7927170708555054,
+      "Q_eigenvalues": [
+        0.29298746816841764,
+        0.9781427363844942
+      ],
+      "K_eigenvalues": [
+        0.8099999999999998,
+        3.21
+      ],
+      "epsilon": 0.5390126564233938,
+      "self_angle": 0.7739572992033211,
+      "range_angle_lower_bound": 0.5749595745760692,
+      "certificate_pass": true
+    },
+    {
+      "kind": "counterexample",
+      "H": [
+        [
+          1.0000000000000004,
+          4.2,
+          1.0
+        ],
+        [
+          10.0,
+          29.999999999999996,
+          1.0
+        ]
+      ],
+      "mean_direction": [
+        2.11375,
+        12.137500000000001
+      ],
+      "minimum_winner_gap": 0.20000000000000018,
+      "rational": "-960510059/32310855272",
+      "isolated_with_output_bias_rational": "377364911/333500644",
+      "isolated_with_output_bias_gradient": 1.131526783498505,
+      "formula_gradient_sum_loss": -0.029727162927529027,
+      "enumerated_gradient_sum_loss": -0.029727162927546222,
+      "gradient_mean_loss": -0.014863581463773111,
+      "Q_eigenvalues": [
+        0.0009804242287421092,
+        0.9218067150753724
+      ],
+      "K_eigenvalues": [
+        0.8733762993418317,
+        1019.7666237006579
+      ],
+      "epsilon": 0.9717653565160319,
+      "self_angle": 0.9628752587975489,
+      "range_angle_lower_bound": 0.9627274685314794,
+      "certificate_pass": false
+    }
+  ],
+  "capacity_self_vs_full": {
+    "N": 6,
+    "channels": 7,
+    "windows": 1,
+    "mean_direction_includes_bias": true,
+    "target_preactivation": [
+      1.0,
+      1.05,
+      -0.9,
+      -1.1,
+      -1.2,
+      -0.8
+    ],
+    "other_kernel_is_2I_error": 4.440892098500626e-16,
+    "full_capacity_autograd": 0.8787449407166308,
+    "full_capacity_formula": 0.8787449407166307,
+    "isolated_capacity_derivative": 0.9879881673888614,
+    "whitened_background_eigenvalues": [
+      0.08449358078575323,
+      0.5550535206452687,
+      1.8844694971303961,
+      199.9999999999997,
+      199.99999999999974,
+      199.99999999999986
+    ],
+    "epsilon_B": 0.9892669292772607,
+    "self_angle": 0.9957010625810426,
+    "certificate_pass": true
+  },
+  "multiple_windows": {
+    "N": 3,
+    "channels": 2,
+    "windows_per_channel": 6,
+    "mixed_sign_head": true,
+    "capacity_formula": 0.42173566870586,
+    "capacity_autograd": 0.4217356687058619,
+    "capacity_finite_difference": 0.42173567038616966,
+    "fitted_head_formula": 0.43255755233365534,
+    "fitted_head_label_enumeration": 0.43255755233365256
+  },
+  "rank_deficient": {
+    "N": 4,
+    "rank": 2,
+    "epsilon_full": 2.1353072423039183,
+    "epsilon_range": 0.5676536211519593,
+    "projected_self_angle": 0.7739572992033211,
+    "gradient_sum_loss": 3.6962602092664394,
+    "F2_pass": false,
+    "F3_pass": true
+  },
+  "ce_head_training": {
+    "H": [
+      [
+        1.0,
+        2.0
+      ],
+      [
+        2.0,
+        1.0
+      ]
+    ],
+    "R": [
+      [
+        9.0,
+        0.0
+      ],
+      [
+        1.5,
+        0.0
+      ]
+    ],
+    "learning_rate": 1.0,
+    "one_step_positive": true,
+    "fully_learned_sign_not_guaranteed": true,
+    "trajectory": [
+      {
+        "steps": 1,
+        "expected_gradient": 1.8106832903903005
+      },
+      {
+        "steps": 2,
+        "expected_gradient": 1.6324564994176607
+      },
+      {
+        "steps": 10,
+        "expected_gradient": 0.5076172571744759
+      },
+      {
+        "steps": 100,
+        "expected_gradient": -1.2044355791702541
+      },
+      {
+        "steps": 1000,
+        "expected_gradient": -2.4732229010570546
+      }
+    ]
+  }
+}
