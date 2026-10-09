@@ -33,6 +33,8 @@
 
 20. 単一画像の制限を、異なる正画像3枚・rank3の特徴とlogit Jacobianへ緩めた。native Conv5/FC/全bias、独立raw初期開集合、binary iid task labels、H回full-batch reuse、moments保持、十分小さいpower-decaying学習率での高確率長期net沈降を示す。多出力の平均ODE終点πを定量的変分評価でC2と証明し、初期ray D*uのmean lossを正の二次形式 (JDu)^T(JDJ^T)^−1(JDu) から導く。πとΣlogcosh(z_n)のobservable平均化で、実Adamの永久保持と最終mean低下へ接続する。容量の近傍保証は指定ridgeについて。任意画像・10分類・shuffled minibatch・一定学習率は未解決。
 
+21. full-batch条件を、各epoch独立にshuffleして1枚ずつ更新するsingleton minibatchへ緩めた。taskの同じ画像labelを有限E>=2 epochs再利用し、全raw通常Adamのmomentsを継続する。task/imageごとのEMA集約でexact定常線形化Lを求め、出力biasを厳密に分離した有限スペクトル不等式でSym(JL)>0を保証。last hiddenFC/headの小さい初期scaleで非空性を構成し、非対称正常方向のC2終点とray LLᵀuから、strict最終mean低下の全raw初期開集合を得る。native構造・元の容量自己項との接続を保つ。binary・特殊な3画像・小さい非bias感度・減衰学習率は残り、batch16/10分類/一定学習率は未解決。
+
 ## 反例と残る制限
 
 非負入力・重み共有・一意な MaxPool・学習した出力 bias があっても、他チャネルによって自己モデルと実切替勾配の向きは逆転し得る。したがって無条件な一般化はできない。
@@ -107,3 +109,17 @@
 `adam_three_images.json` は331raw params・native Conv5/FC/全biasの有限検算。特徴とlogit Jacobianの最小特異値は約6.27e−4と5.24e−4、全8割当の最小raw勾配は約1.82e−4。ridge=1でfull/self容量方向の有限連続性誤差後の下界は約4.77744と4.75482。CE式誤差は5.56e−17未満。任意の正対角metricでprojection恒等式も照合するが、そのmetricを実Adamの定常Dや初期coneの数値認証に流用しない。数値はfloat64の検算で、解析的非空性・長期確率証明と区別する。
 
 元の容量自己項は指定したridgeで正のまま保たれる。3画像を同一に近づけるとrankの最小特異値が0へ近づくため、全tauや全ridgeに一様な保証とはしない。実RL-CIFARの一般画像・10分類・shuffled minibatch・一定学習率、負meanやReLU停止は依然として結論しない。
+
+## ランダム順序のsingleton minibatchへの長期Adam拡張
+
+`analysis/cnn_drive_1009/adam_singleton_longtime.md` が統合定理。binary labelを各画像に独立に割り当て、task内の複数epochでそのlabelを再利用し、各epochのrandom permutation順に1枚ずつ学ぶ。full-batchの定常符号補題は流用せず、同一task/imageに属するEMA重みを集約したexact線形化を使う。均等出力でsingleton gradientの二乗がlabelに依存しないことが鍵となる。
+
+Lの要素は対応するraw感度と同符号だが、それだけではJLの安定性を結論しない。output-biasの±1/2はshuffle対称性により正の共通画像行列として厳密に扱い、残りのJacobian Rに対して 2(max|R|/epsilon)||R||op||R||F<sigma_min(R)^2 という有限条件を用いる。last hiddenFCのweights/biasとhead contrastを正のtでscaleするとR=[tJ1,t²J2]、J1はhead-feature blockからrow rank3を保つ。誤差O(t³)と正常方向の余裕O(t²)を比較して、厳密に正の有限tが存在する。
+
+平均ODEは局所的にFbar=V(theta)zとなり、Sym(JV)>0からz²が減る。非対称行列でも一次・二次変分の定量証明を適用してC2終点πを構成できる。初期ray v=LLᵀuは正常空間に属し、初期meanから終点meanへの差の一次係数が||Lᵀu||²>0となる。有限coneとπ/z²のobservable平均化により、実Adamの全phase非退出、parameter収束、strict最終mean低下を導く。個々の更新の同符号は仮定しない。
+
+`adam_singleton.json` は331raw params、3画像、2epochs/task、H6、epsilon=1e−8の式検算。参照の層scaleは1e−18で、実用的初期化や学習率の提案ではない。安定条件の誤差比は約5.38e−5、正常方向の正下界は約4.33e−35。容量微分/t²はfull約2.74765、self約2.01236。2tasks×3labelsの全64履歴を列挙した12-step有限EMAの線形化は、座標相対誤差5.50e−16未満で一致する。これを定常係数や長期成功率の実測とは扱わない。出力biasだけは無限定常履歴のphase共分散を有理数で厳密に計算し、正の共通画像係数約1.99630を独立な計算法でも照合した。
+
+元のfull/self容量はK=Kbias+t²K1+t⁴K2を使い、容量微分/t²の画像幅とtの共同連続性から同じ有限参照で正と示す。t=0そのもののReLU微分を使わず、正側の多項式係数の連続延長である。容量の局所方向一致であり、全パラメータ更新中の容量値そのものの単調下降は結論しない。
+
+普通のepoch shuffleと課題内reuseは扱えるようになったが、batchサイズは1。binary・特別な近接3画像・小さい非output-bias感度・局所routing・十分小さい減衰学習率という条件を保持する。標準RL-CIFARのbatch16/10分類/一定学習率、無条件期待沈降、負meanと死は依然として未証明。

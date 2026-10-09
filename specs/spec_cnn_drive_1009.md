@@ -37,6 +37,10 @@
 
 ReLUのまま、異なる正画像3枚・rank3のhidden特徴とlogit Jacobianを持つnative Conv5/FC/全bias構成へ拡張する。binary iid labelsを画像ごとに独立に引き、全画像のfull-batchを有限H回reuseする。課題間moments保持・power-decaying学習率は維持する。画像平均を保つ同level摂動、全8ラベル割当のraw勾配、固定ridgeにおける元のfull/self容量微分を有限照合する。vector contrastの終点写像、正のAdam対角係数で重み付けした初期mean方向、population riskのobservable平均化は解析対象であり、長期成功率を数値推定する実験ではない。有限verifierの任意正対角metricを定常Adam係数の測定値とは扱わない。
 
+## 1009 shuffled singleton minibatchへの数学的検算範囲
+
+次に同じ3画像・binaryラベルを、各epoch独立なrandom permutationで1枚ずつ更新する場合を扱う。1課題は有限E>=2 epochs、H=3E updatesで同じ画像のlabelを再利用し、Adam履歴を継続する。均等出力での定常linearizationをtask/imageの同一labelごとに厳密にまとめる。last hidden FCとhead contrastを小さい正数でscaleする非空構成、output biasを除いたJacobianのrankと有限な相対誤差不等式、元の容量微分を検算する。有限履歴のlabel全列挙は式の照合であり、無限履歴係数の推定や長期訓練実験ではない。ReLU以外、batch16、10分類、一定学習率にはこの結果を外挿しない。
+
 ## 1009 追加の数学的検算範囲
 
 重なる channel と full-rank な空間特徴を持つ、bias 無し 1×1 CNN の全 raw CE-SGD 共同更新について、fresh labels・対称 channel 初期化・指定の適応学習率下での条件維持、head 極限、長期 mean 低下、full/isolated 全 NTK の符号を検算する。有限の300更新は導出式の照合であり、無限時間の実験的判定ではない。

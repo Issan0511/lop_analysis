@@ -1,0 +1,59 @@
+{
+  "scope": "Finite native rank/stability inequalities and exact finite-history identities; no actual long-time simulation or certified practical learning rate.",
+  "architecture": "RGB12x12 Conv5(2) Pool2 Conv5(2) Pool2 FC3 ReLU FC3 ReLU binary head, all biases",
+  "N": 3,
+  "batch_size": 1,
+  "epochs_per_task": 2,
+  "H": 6,
+  "raw_parameters": 331,
+  "reference_layer_scale": 1e-18,
+  "epsilon": 1e-08,
+  "hidden_scaled_singular_values": [
+    0.7497028993779611,
+    0.0021052114126095486,
+    0.0006268945554696883
+  ],
+  "non_output_bias_scaled_jacobian_singular_values": [
+    0.630433432283667,
+    0.0015711177098170037,
+    0.00046530810999135635
+  ],
+  "maximum_non_output_bias_sensitivity": 1.466091256256145e-19,
+  "minimum_absolute_raw_sensitivity": 5.44840506436259e-40,
+  "stability_relative_error_upper": 5.382570094491618e-05,
+  "symmetric_normal_matrix_lower_bound": 4.3299996666618373e-35,
+  "positive_normal_ray_coefficient_lower": 7.152484392152948e-56,
+  "maximum_absolute_reference_contrast": 2.088097429759528e-53,
+  "minimum_full_hidden_preactivation": 2.0479448698800327e-19,
+  "full_minimum_pool_gap": 9.196811347478295e-05,
+  "self_minimum_pool_gap": 9.196811347489398e-05,
+  "capacity_full": {
+    "capacity_slope_divided_by_scale_squared": 2.7476456120888395,
+    "capacity_slope": 2.7476456120888397e-36
+  },
+  "capacity_literal_self": {
+    "capacity_slope_divided_by_scale_squared": 2.01236400343183,
+    "capacity_slope": 2.0123640034318306e-36
+  },
+  "finite_history_linearization": {
+    "label_histories": 64,
+    "optimizer_steps": 12,
+    "maximum_relative_coordinate_error": 5.496683527880434e-16,
+    "maximum_absolute_coordinate_error": 1.2116903504194741e-27,
+    "interpretation": "Finite normalized EMA history identity with exact label enumeration; not the infinite stationary coefficient."
+  },
+  "stationary_output_bias": {
+    "phase_omega_rational": [
+      "1268089494676528324189/673913835722645104449370",
+      "12075306482359311267232669/6739138357226451044493700000",
+      "115308218940119018648182626979/67391383572264510444937000000000",
+      "122617346554495993735512032926921/67391383572264510444937000000000000",
+      "128634365575076038138287300049786669/67391383572264510444937000000000000000",
+      "133544445679486576993/67391383572264510444937"
+    ],
+    "positive_common_mode_coefficient_rational": "1119038125942036605/560555577977778002",
+    "positive_common_mode_coefficient": 1.9963018296580013,
+    "convention": "J L output-bias block equals this coefficient times ones(3,3); phase sum, H=6."
+  },
+  "interpretation": "The finite reference is extremely small and rates are not numerically certified. Floating-point inequalities accompany the analytic nonempty scaling construction. The exact bias coefficient is rational; other margins are float64 checks."
+}

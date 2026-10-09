@@ -44,3 +44,10 @@ native5×5 Conv・hiddenFC・全bias・全raw初期開集合での実Adam長期�
 基準Adam metricで重み付けしたmean方向から有限open coneを構成: adam_three_images_geometry.md。
 331raw params・全8labels・rank3・capacity有限連続性検算: verify_adam_three_images.py / ../../results/cnn_drive_1009/adam_three_images.json。
 上記のnative参照/検算/finite cone監査: adam_three_images_reference_review.md。定量C2endpointとactual Adam統合の監査: adam_three_images_longtime_review.md。
+
+shuffled singleton minibatch・課題内label再利用・全raw通常Adam長期net沈降: adam_singleton_longtime.md。
+task/imageで集約する定常線形化、出力biasの厳密分離、有限スペクトル条件: adam_singleton_linearization.md。
+native層スケーリングと元のfull/self容量の二極限: adam_singleton_reference.md。
+非対称な正常方向のC2終点、LLᵀuの正rayと有限cone: adam_singleton_geometry.md。
+有限64label履歴、331raw・正規化安定条件、exact rational output-bias係数: verify_adam_singleton.py / ../../results/cnn_drive_1009/adam_singleton.json。
+独立監査: adam_singleton_linearization_review.md / adam_singleton_reference_review.md / adam_singleton_longtime_review.md。
