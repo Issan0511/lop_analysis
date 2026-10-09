@@ -41,6 +41,8 @@
 
 ## 1009 通常Adamの課題反復・無限時間への数学的検算範囲
 
+追加で、native5×5 Conv・hiddenFC・全biasを含むbinary CNNの、均等予測状態の近傍にある全raw空間の開集合を調べる。単一画像、課題ごとのiid binary label、有限H回reuse、moments保持、通常のpower-decaying scalar learning rateを明示する。等重み不変線を仮定せず、平均ODEの終点写像とobservable平均化から高確率の永久保持・strict net mean下降を証明できるか検討する。Jacobian/NTKとCE勾配の有限照合は導出検算で、実RL-CIFARの成立率の実験ではない。
+
 二段の共有Conv/ReLU/MaxPoolとbinary headを全raw共同更新し、Adamのmomentsを課題間で保持する。課題ごとのiid labelsを有限H回のfull-batch更新に再利用する。明示的な減衰・damping付きscalar learning rateの下で、全raw振幅が一致する不変線、固定状態の課題ブロック平均、実際の移動状態との確率的平均化誤差を扱う。任意に高い事前成功確率を持つ長期沈降の非空例が得られるかを解析し、通常一定学習率のRL-CIFARとの条件差を保持する。
 
 有限のraw Adamと再帰・全NTK微分の照合は導出検算であり、無限時間の確率や実RL-CIFARでの成立率を数値推定する実験ではない。bias無し・binary・rank1の画像特徴という新しい構成の制限を明示する。ReLU以外へ拡張しない。

@@ -29,6 +29,8 @@
 
 18. 通常のiid binary labelsを課題内H回再利用し、過去momentsを保持した全raw共同Adamの無限時間正例を得た。二段1×1 Conv・複数Pool・36個の自由なraw weightsについて、対称な初期状態をAdamが厳密に維持する。指定の減衰・damping付き学習率なら、任意に高く指定した事前成功確率で振幅aが0へ収束し、実学習率の総和は発散する。全状態で元のfull/self NTK容量方向が一致する。bias無し・binary・rank1特徴・full-batchの限定構成であり、通常一定学習率のRL-CIFARではない。
 
+19. 等重みの不変線を外し、native5×5 Conv二段・hiddenFC二段・全biasを含む全raw空間の開集合で、実Adamの高確率長期net沈降を証明した。単一画像・binary iid task labels・H回reuse・power-decaying scalar learning rateが条件。正のhead contrastを残して出力biasで均等予測の近傍を作り、平均ODEの終点写像πとz²のobservable平均化により、全raw軌道の永久保持・全パラメータ収束・strict mean低下を同時に導く。amplitude-dependent dampingは不要。hiddenは正で残り、実RL-CIFARのmany-image/10-class/一定学習率までは未証明。
+
 ## 反例と残る制限
 
 非負入力・重み共有・一意な MaxPool・学習した出力 bias があっても、他チャネルによって自己モデルと実切替勾配の向きは逆転し得る。したがって無条件な一般化はできない。
@@ -83,3 +85,13 @@
 - 同JSONのexact rational certificateは、a0=.2、H4、標準β・epsilon=1e−8で、事前成功確率90%以上の条件が具体的な正のdelta0≈1.0072e−16で満たされることを確認する。これは非常に保守的な存在証明用の上限で、実用的な学習率への保証ではない。有限raw検算のdelta0=.01とは明確に分ける。
 
 この結果は、固定状態のAdam定常応答だけでなく、実際に動くCNNの無限時間へ接続した限定正例である。失敗事象を含めた無条件の期待沈降や、標準RL-CIFARの長期Adamは依然として結論していない。
+
+## native全bias・非対称な初期状態の開集合での長期Adam
+
+`analysis/cnn_drive_1009/adam_open_longtime.md` が統合定理。native参照、終点写像/flow tube、非線形observableの平均化をそれぞれ保存し、別々の独立監査と統合監査を通した。厳密なweight equalityを要求せず、全raw coordinateを独立に動かせる初期開集合を扱う。共有Conv・Poolの非winner・全biasを省略しない。
+
+平均化参照の終点πは解析上の写像であり、実Adamへのprojectionではない。πとz²の累積誤差は収束し、その全時間上界から中間stepを含む非退出を導く。所定の成功確率1−alphaは、共通の定数・学習率上限を使った各初期点の保証であり、非可算な全初期点が同じnoise realizationで同時成功するとは言わない。
+
+`adam_open_native.json` は331自由raw params・Conv5×5二段・FC二段・全biasの局所式の検算。全/自己K′の参照下界は約6.58536/4.20821、有限摂動誤差は約1.08e−4/8.96e−5、最大式差3.56e−15未満。二つのConvのchannel mapは非比例。stationary phase平均での終点mean損失係数は約2.01556で、block-sumとのH倍は比で相殺される。これは長期成功率や終点の測定ではなく、今回の開集合族への具体的な確率認証済み学習率も算出していない。非空性と長期主張は解析証明による。
+
+出力biasによる相殺はfull networkだけに行う。literal selfのCE符号は一般に一致しないが、元の全rawNTK容量のself方向は正のままなので、実full mean低下との接続は保たれる。1画像・2分類・十分小さい減衰学習率・局所routingという制限を残す。

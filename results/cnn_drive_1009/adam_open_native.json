@@ -1,0 +1,62 @@
+{
+  "scope": "Finite raw Jacobian/gradient identities and local geometry; no success-rate or infinite-time experiment.",
+  "architecture": "RGB12x12 Conv5(2) Pool2 Conv5(2) Pool2 FC3 ReLU FC3 ReLU binary head, all biases",
+  "raw_parameter_count": 331,
+  "N": 1,
+  "all_raw_trainable": true,
+  "formula_full": {
+    "kernel_error": 4.440892098500626e-16,
+    "derivative_error": 3.552713678800501e-15,
+    "head_block_lower": 6.585364805136157,
+    "hidden_derivative_coefficient": 12.552148129836617
+  },
+  "formula_self": {
+    "kernel_error": 2.220446049250313e-16,
+    "derivative_error": 1.7763568394002505e-15,
+    "head_block_lower": 4.208214023969314,
+    "hidden_derivative_coefficient": 12.113809871338507
+  },
+  "reference_contrast": 0.0,
+  "initial_contrast": 9.999999999999593e-05,
+  "initial_target_mean": 0.6058453755783773,
+  "raw_perturbation_norm": 0.00014140518304330173,
+  "coordinate_gradient_factorization_errors": [
+    5.551115123125783e-17,
+    2.7755575615628914e-17
+  ],
+  "minimum_absolute_logit_contrast_derivative": 0.017093421201002913,
+  "minimum_target_coordinate_alignment": 0.0075678545521436465,
+  "spatial_channel_nonproportional_singular_minima": [
+    0.06769147106533399,
+    0.023942534678265688
+  ],
+  "capacity_certificates": {
+    "full": {
+      "reference_kp_lower": 6.5853648051361535,
+      "perturbation_error": 0.00010752119663776682,
+      "positive_margin": 6.585257283939516,
+      "actual_capacity_half_logdet_slope": 5.408899645775978,
+      "minimum_hidden_preactivation": 0.17393079815610474
+    },
+    "literal_self": {
+      "reference_kp_lower": 4.208214023969319,
+      "perturbation_error": 8.959519448269609e-05,
+      "positive_margin": 4.208124428774836,
+      "actual_capacity_half_logdet_slope": 5.714809748086546,
+      "minimum_hidden_preactivation": 0.10624262352480074
+    }
+  },
+  "stationary_phase_omega_rational": [
+    "12696000401551339/3465204660237439000",
+    "12419536792037642461/3465204660237439000000",
+    "12797477709815272897729/3465204660237439000000000",
+    "13735379752561/3465204660237439"
+  ],
+  "stationary_linearization_c_range": [
+    1.9925475296742126,
+    58.28400312106289
+  ],
+  "normal_coefficient": 15.657612398798197,
+  "local_endpoint_mean_loss_per_unit_contrast": 2.0155553219914015,
+  "interpretation": "The positive endpoint coefficient is local ODE geometry, not a measured moving-Adam long-time displacement."
+}

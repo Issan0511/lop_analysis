@@ -30,3 +30,10 @@ actual moving historyから定常task-block平均への定量的橋: adam_task_a
 36rawweights不変線とfull/literal-self全NTKの独立導出: adam_invariant_line_derivation.md。
 平均化・永久保持・実学習率総和・有理数確率証明書の独立監査: adam_iid_longtime_review.md。
 有限raw AdamとNTKの検算、および非常に保守的な存在証明用の学習率証明書: verify_adam_iid_longtime.py / ../../results/cnn_drive_1009/adam_iid_longtime.json。
+
+native5×5 Conv・hiddenFC・全bias・全raw初期開集合での実Adam長期沈降: adam_open_longtime.md。
+全bias参照と元のfull/literal-self NTK: adam_native_bias_reference.md / adam_native_bias_reference_review.md。
+終点写像πと非循環な永久保持・strict mean margin: adam_open_geometry.md。
+π/z²のobservable平均化: adam_observable_averaging.md / adam_observable_averaging_review.md。
+上記のactual長期Adamへの統合監査: adam_open_longtime_review.md。
+331raw paramsのnative Conv/FC/bias局所式検算: verify_adam_open_native.py / ../../results/cnn_drive_1009/adam_open_native.json。
