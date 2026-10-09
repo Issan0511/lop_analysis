@@ -39,6 +39,12 @@
 
 また、小振幅の固定 iid 勾配 family に対する定常 Adam の展開・有限残差・対称性による符号保証を検算する。実 RL-CIFAR の変化する学習軌道と取り違えない。
 
+## 1009 通常Adamの課題反復・無限時間への数学的検算範囲
+
+二段の共有Conv/ReLU/MaxPoolとbinary headを全raw共同更新し、Adamのmomentsを課題間で保持する。課題ごとのiid labelsを有限H回のfull-batch更新に再利用する。明示的な減衰・damping付きscalar learning rateの下で、全raw振幅が一致する不変線、固定状態の課題ブロック平均、実際の移動状態との確率的平均化誤差を扱う。任意に高い事前成功確率を持つ長期沈降の非空例が得られるかを解析し、通常一定学習率のRL-CIFARとの条件差を保持する。
+
+有限のraw Adamと再帰・全NTK微分の照合は導出検算であり、無限時間の確率や実RL-CIFARでの成立率を数値推定する実験ではない。bias無し・binary・rank1の画像特徴という新しい構成の制限を明示する。ReLU以外へ拡張しない。
+
 ## 1009 課題内ラベル再利用の数学的検算範囲
 
 同じラベル割当を課題内で固定する全raw共同更新について、指定の減衰・damping付きSGDの長期定理、一般CNNのfinite-task勾配誤差、negative mean/mixed gatesの非空例、過去Adam momentsを継続したfinite-task参照と外向き有理区間を検算する。これらは既存の式の検算であり、実RL-CIFARの統計的再実験ではない。

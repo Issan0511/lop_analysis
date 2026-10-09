@@ -24,3 +24,9 @@ Adam の arbitrary-state 条件と一歩反例: adam_state.md。
 過去momentsを保った通常Adamのfinite reused-label task: adam_task_reuse.md / adam_task_reuse_review.md。
 本来の空間Conv・hiddenFC・全biasでの元の容量自己項のopen符号保証: full_ntk_positive.md。
 本来の空間Conv/FCの全NTK符号と32×32全構造の非空性の独立監査: full_ntk_positive_review.md。
+
+通常iid binary labelsを課題内再利用し、momentsを保持した全raw Adamの高確率長期沈降: adam_iid_longtime.md。
+actual moving historyから定常task-block平均への定量的橋: adam_task_averaging.md。
+36rawweights不変線とfull/literal-self全NTKの独立導出: adam_invariant_line_derivation.md。
+平均化・永久保持・実学習率総和・有理数確率証明書の独立監査: adam_iid_longtime_review.md。
+有限raw AdamとNTKの検算、および非常に保守的な存在証明用の学習率証明書: verify_adam_iid_longtime.py / ../../results/cnn_drive_1009/adam_iid_longtime.json。

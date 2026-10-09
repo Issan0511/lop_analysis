@@ -27,6 +27,8 @@
 16. 通常Adamでも、課題境界でparameters・過去moments・global stepを保った参照と有限誤差から、課題内のラベル再利用を扱える。前課題のiidラベルを2更新した到達状態から、新しい全4割当を各3更新する例で、外向き有理区間による期待下降下界>1.976e−5。個別にmeanが上がる割当も含む。無限反復で条件が保たれることは未証明。
 17. 本来の二段5×5 Conv、任意有限個のhidden FC/ReLU、全trainable biasを含め、元の全raw NTKとliteral自己モデルの容量微分が正となる開集合を構成した。参照からのJacobian距離の有限評価で、実状態の非比例チャネル・非零biasを許す。新ラベルCEの方向も別に一致を証明。学習軌道の条件維持は別問題。
 
+18. 通常のiid binary labelsを課題内H回再利用し、過去momentsを保持した全raw共同Adamの無限時間正例を得た。二段1×1 Conv・複数Pool・36個の自由なraw weightsについて、対称な初期状態をAdamが厳密に維持する。指定の減衰・damping付き学習率なら、任意に高く指定した事前成功確率で振幅aが0へ収束し、実学習率の総和は発散する。全状態で元のfull/self NTK容量方向が一致する。bias無し・binary・rank1特徴・full-batchの限定構成であり、通常一定学習率のRL-CIFARではない。
+
 ## 反例と残る制限
 
 非負入力・重み共有・一意な MaxPool・学習した出力 bias があっても、他チャネルによって自己モデルと実切替勾配の向きは逆転し得る。したがって無条件な一般化はできない。
@@ -72,3 +74,12 @@
 - `task_reuse_finite.json`: negative mean、混在gate、rank2、trainable biases、全9iid label assignments。実期待下降約1.41899461157e−5、解析下界9.59373196875e−6。full/self NTK容量微分は厳密な有理数で正。初期の両微分が半径.005での変化上界.275625を上回るため、球全体でも正。
 - `adam_task_reuse.json`: 旧taskから全momentsを保持した通常Adam。独立な次task割当を各3回reuseし、参照期待と誤差を外向き有理区間で評価。期待下降下界1.976479684e−5以上。実Conv/autogradとの比較は補助確認。
 - `full_ntk_positive.json`: 本来の5×5 spatial Conv二段、全bias、全444raw params。全座標の有限摂動後も非比例channelでfull/self容量とCE方向に正の余裕。数値値はfloat64の照合であり、非空な開集合の主張は構造式・strict margin・有限摂動定理による。追加hidden FCは解析的に拡張し、新たな大規模学習実験は行っていない。
+
+## iid課題反復で全raw Adamが動く長期正例
+
+- `analysis/cnn_drive_1009/adam_iid_longtime.md`: 二段shared Conv、36rawweights、通常binary iid labels、課題内full-batch再利用、moments保持。正値はpathwiseに証明し、上側領域の永久保持を平均化誤差の高確率上界から導く。有限時刻ではReLUは正側、極限ではmeanが0になる。先のSGD構成のa∞>0とは初期条件・更新法が異なる。
+- `analysis/cnn_drive_1009/adam_task_averaging.md`: moving Adam履歴と固定状態の定常task-block応答を接続。EMA履歴の追跡誤差は絶対総和有限、残る依存雑音はPoisson/martingale分解で扱う。task内の相関を捨てず、v=0境界でも成立する。各binary raw coordinateの定常符号は、独立taskごとの対称性から導く。
+- `adam_iid_longtime.json`: 全36raw coordinatesを60課題×4更新し、再帰・勾配・moments・全NTK/full-self方向を照合。最大差6.67e−16未満。有限軌道を無限時間の証明や成功率推定に使わない。
+- 同JSONのexact rational certificateは、a0=.2、H4、標準β・epsilon=1e−8で、事前成功確率90%以上の条件が具体的な正のdelta0≈1.0072e−16で満たされることを確認する。これは非常に保守的な存在証明用の上限で、実用的な学習率への保証ではない。有限raw検算のdelta0=.01とは明確に分ける。
+
+この結果は、固定状態のAdam定常応答だけでなく、実際に動くCNNの無限時間へ接続した限定正例である。失敗事象を含めた無条件の期待沈降や、標準RL-CIFARの長期Adamは依然として結論していない。
