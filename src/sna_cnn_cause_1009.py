@@ -219,7 +219,7 @@ def _median_rows(x: torch.Tensor) -> torch.Tensor:
 
 
 @torch.no_grad()
-def evaluate(P, X, Y, act: BundleSnake, chunk: int = 60) -> list[dict]:
+def evaluate(P, X, Y, act: BundleSnake, chunk: int = 20) -> list[dict]:
     """The host's `evaluate_cnn` quantities for every run, on its own 1200 images, plus the
     seat 2*alpha*zbar and the readout scale.  Channel statistics are accumulated over
     chunks in float64 (conv: over N, H, W)."""
@@ -306,7 +306,7 @@ def evaluate(P, X, Y, act: BundleSnake, chunk: int = 60) -> list[dict]:
 
 
 @torch.no_grad()
-def switch_eval(P, X, Y, act: BundleSnake, chunk: int = 300) -> tuple[torch.Tensor, torch.Tensor]:
+def switch_eval(P, X, Y, act: BundleSnake, chunk: int = 20) -> tuple[torch.Tensor, torch.Tensor]:
     """(R,) CE and accuracy of the network on labels it has not trained on yet."""
     R = X.shape[0]
     ce = torch.zeros(R, dtype=torch.float64, device=X.device)
