@@ -128,6 +128,7 @@ def main() -> None:
             hs = []
             gsum = {2: torch.zeros(R, CN.HIDDEN, device=device), 3: torch.zeros(R, CN.HIDDEN, device=device)}
             zsum = {2: torch.zeros(R, CN.HIDDEN, device=device), 3: torch.zeros(R, CN.HIDDEN, device=device)}
+            z2sum = {2: torch.zeros(R, CN.HIDDEN, device=device), 3: torch.zeros(R, CN.HIDDEN, device=device)}
             Vc = [B.act.V[l].clone() for l in (0, 1)]
             for i0 in range(0, n_pr, 50):
                 pi = probe[i0:i0 + 50]
@@ -142,6 +143,7 @@ def main() -> None:
                     z = o[2 * l]
                     gsum[l] += B.act.dphi(z, l).sum(1)
                     zsum[l] += z.sum(1)
+                    z2sum[l] += (z * z).sum(1)
                 # current fc on the task-start conv (conv weights and conv alpha state of epoch 0)
                 for l in (0, 1):
                     B.act.V[l].copy_(V0[l])
@@ -160,6 +162,8 @@ def main() -> None:
                 gates[f"gate_{tag}"] = (gsum[l] / n_pr).mean(1)
                 # cpu: median(dim) is not deterministic on CUDA
                 gates[f"seat_{tag}"] = (2 * B.act.alpha(l) * zsum[l] / n_pr).cpu().median(1).values
+                sd = (z2sum[l] / n_pr - (zsum[l] / n_pr) ** 2).clamp_min(0).sqrt()
+                gates[f"spread_{tag}"] = (2 * B.act.alpha(l) * sd).cpu().median(1).values
             for r, (old, new, s_) in enumerate(meta):
                 trows.append({"fork": f"{old}>{new}", "seed": s_, "task": t, "epoch": e,
                               "acc": float(hit[r]) / n_pr, "acc_oldconv": float(hit_old[r]) / n_pr,
