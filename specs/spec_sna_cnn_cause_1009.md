@@ -87,3 +87,89 @@ Issa の予測は取っていない（/goal の依頼で、問いの登録の前
 
 - CONV_LOCUS なら、c1 と c2 を分ける（S:c3-c0.6-c3-c3 と S:c0.6-c3-c3-c3）。機構はチェックポイントからの介入（α を差し替えて数課題回す）で詰める。
 - FC_LOCUS なら、f1 と f2 を分ける。CNN の fc と MLP の fc の違い（入力が max-pool 後の正に偏った特徴であること）を測る。
+
+## 7. 追補 1（2026-10-09 19:55、本走 A の t1–t10 を見たあと・束 B と fork の走の前）
+
+### 7.1 見たもの（開示）
+
+本走 A の t1–t10 の課題ごとの値を見た。online の seed 平均は次のとおり。
+
+| 腕 | t1 | t5 | t10 |
+|---|---|---|---|
+| SNA | 0.977 | 0.970 | 0.968 |
+| SNAc3 | 0.972 | 0.959 | 0.966 |
+| CV06FC3 | 0.973 | 0.977 | 0.976 |
+| CV3FC06 | 0.975 | 0.976 | 0.969 |
+
+- 劣化は fc の c=0.6 についてきているように見える。§4 の Q1 の判定（窓 t31–50）は変えない。
+- SNAc3 は、宿主と同じく t3–t9 に一時的に落ち込む。同時に mob_pool_c2 が 0.80→0.56 に下がる（conv を c=3 で上限に張り付けた c2 のゲート）。
+- 課題 5 のチェックポイントでも、c2 の位置間分散の割合は 13%（α にして 7%）だった（`varsplit.py`、5 seed）。
+
+### 7.2 計画の変更
+
+- **SNApp は回さない**。理由は二つ。
+  - 測定（t1・t5）で、c2 の √(pooled/位置内) は 1.07 だった。§4 の Q3 の操作確認（pooled 2αW が 10% 以上動く）に届かない見込みが高い。
+  - conv は劣化の層ではない形勢である。
+  - Q3 は測定で答える: 「チャネル単位の pooled 分散に混ざる位置平均の差は c2 の分散の 13%、α にして 7%」。
+- **Q2 の判定を差し替える**（SNAfrz1 はまだ走っていない）。
+  - 元の基準は窓 t31–50 で、SNAc3 を基準にした q だった。
+  - SNAc3 の序盤の落ち込みが基準を濁すこと、束 B を 30 課題で回すことから、§7.4 の基準に替える。
+- 束 B の腕は、すべて conv を c=0.6 に揃える（SNAc3 の序盤の落ち込みを避けるため）。
+
+### 7.3 束 B（`results/sna_cnn_cause_1009/B`、seed 10–19、**30 課題**）
+
+| 腕 | c1 | c2 | f1 | f2 | 備考 |
+|---|---|---|---|---|---|
+| F1ONLY | c 0.6 | c 0.6 | c 0.6 | c 3 | fc のうち f1 だけ 0.6 |
+| F2ONLY | c 0.6 | c 0.6 | c 3 | c 0.6 | fc のうち f2 だけ 0.6 |
+| SNAfrz1 | c 0.6 | c 0.6 | c 0.6 | c 0.6 | 課題 1 の終わりで α を凍結 |
+| SNA+fixconv | c 0.6 | c 0.6 | c 0.6 | c 0.6 | conv は初期値のまま（Adam の歩幅を 0 に）、fc だけ学ぶ |
+| CV06FC3+fixconv | c 0.6 | c 0.6 | c 3 | c 3 | 同上で fc は c=3 |
+
+**fork**（`results/sna_cnn_cause_1009/F30`、束 A の t30 のチェックポイントから 10 課題、seed 10–19）:
+
+| fork | 中身 |
+|---|---|
+| SNA>SNA | 対照 |
+| SNA>CV06FC3 | fc の c を 3 に |
+| SNA>CV3FC06 | conv の c を 3 に |
+| SNA>SNA@f3x0.5 | 読み出しを 0.5 倍（logit を半分にする。argmax は不変） |
+| CV3FC06>CV3FC06 | 対照 |
+| CV3FC06>SNAc3 | fc の c を 3 に |
+
+### 7.4 判定
+
+基準は、束 A の SNA（劣化する）と CV06FC3（平ら）の同じ課題範囲の値とする。束をまたぐが、エンジン・seed は同じ。
+
+- 窓 W21 = t21–30 の online の seed 平均。gap_B = W21(CV06FC3) − W21(SNA)。
+- 損の担い度 s_X = (W21(CV06FC3) − W21(X)) / gap_B。1 で SNA 並みに悪く、0 で CV06FC3 並みに良い。
+- 雑音の目安: 束 A の t10 時点の対の差の SE は約 0.002。gap_B は 0.01 以上と見込むので、s の SE は 0.2 以下、帯は 0.25 と 0.75 とする。
+- **Q1b（fc のどちらか）**:
+  - F2_CARRIES: s(F2ONLY) ≥ 0.75 かつ s(F1ONLY) ≤ 0.25。
+  - F1_CARRIES: その逆。
+  - EITHER_SUFFICES: 両方 ≥ 0.75。
+  - NEEDS_BOTH: 両方 ≤ 0.25。
+  - SPLIT: それ以外。
+- **Q2′（α の凍結、§4 の Q2 を差し替え）**: s(SNAfrz1) ≤ 0.25 で FROZEN_RESCUES、≥ 0.75 で FROZEN_NO、それ以外は FROZEN_PARTIAL。
+- **Q4（CNN 固有か）**:
+  - 低下を drop5 = t1–5 の平均 − t26–30 の平均とする。
+  - Δfix = drop5(SNA+fixconv) − drop5(CV06FC3+fixconv)、Δref = drop5(SNA) − drop5(CV06FC3)（束 A）、r = Δfix / Δref。
+  - r ≥ 0.75 で FC_ALONE（固定した conv 特徴の上でも fc の c=0.6 が劣化を作る）、r ≤ 0.25 で NEEDS_MOVING_CONV、それ以外は FIX_PARTIAL。
+- **F（状態か損傷か）**:
+  - W31–40 を fork 後 10 課題の online の seed 平均とする。基準の差 g_F = W31–40(CV06FC3, 束 A) − W31–40(SNA, 束 A)。
+  - 回復率 rec = (W31–40(SNA>CV06FC3) − W31–40(SNA>SNA)) / g_F。
+  - rec ≥ 0.75 で REGIME（今の c で決まり、fc を 3 にすればすぐ戻る）、≤ 0.25 で DAMAGE（溜まった状態が残る）、それ以外は MIXED。
+- **F-logit**:
+  - 対象は t31–33 の平均で、(SNA>SNA@f3x0.5 − SNA>SNA) を g_F と同じ課題範囲の束 A の差で割った比。
+  - 比 ≥ 0.5 で LOGIT_SCALE_MATTERS、それ以外は LOGIT_SCALE_NOT。
+- **F の較正**: SNA>SNA の W31–40 が、束 A の SNA の W31–40 から ±0.004 以内（2 SE）であること。
+
+### 7.5 予測（Claude、束 B・fork の前、束 A の t10 までを見た状態で）
+
+- Q1b: F2_CARRIES 0.45 / SPLIT 0.25 / EITHER_SUFFICES 0.10 / F1_CARRIES 0.10 / NEEDS_BOTH 0.10。
+  t1–t10 では f2 の座席が +0.9→−1.07 に沈み、mob_f2 は 1.37→0.72 に下がった。f1 の変化は小さい。
+- Q2′: FROZEN_RESCUES 0.50 / FROZEN_PARTIAL 0.30 / FROZEN_NO 0.20。
+  凍結すると、fc の W の成長（t1→t10 で 3〜5 倍）で 2αW が育ち、ゲートが洗われる。
+- Q4: FC_ALONE 0.40 / FIX_PARTIAL 0.35 / NEEDS_MOVING_CONV 0.25。
+- F: REGIME 0.55 / MIXED 0.30 / DAMAGE 0.15。F-logit: LOGIT_SCALE_MATTERS 0.25。
+- Q1（§4、窓 t31–50）の予測は登録時のまま変えない（CONV_LOCUS 0.50。t10 までの形勢では外れそう）。

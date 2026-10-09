@@ -13,6 +13,9 @@ S-eval     `evaluate` = the host's `evaluate_cnn` on the same state (SNA, SN3)
 S-pp       the within-position variance is what it says; the pooled one is the host's
 S-freeze   after `freeze`, alpha stays put while V keeps moving; unfrozen runs keep tracking
 S-cost     seconds per epoch at R = 10, 30, 60 (graph)
+S-fixconv  `+fixconv` runs keep both conv layers bit-identical to their init while their fc
+           layers move; the unmasked run in the same bundle moves its conv layers; a bundle
+           without any fixconv run takes the unmasked step (no mask is built)
 """
 
 from __future__ import annotations
@@ -262,6 +265,22 @@ def check_freeze(cifar, device) -> dict:
             "pass": frozen_const and V_moved and tracker_moved}
 
 
+def check_fixconv(cifar, device) -> dict:
+    slots = [("SNA+fixconv", 10), ("SNA", 10), ("CV06FC3+fixconv", 11)]
+    B = E.Bundle(slots, cifar, device, graph=True)
+    init = [p.detach().clone() for p in B.P]
+    B.new_labels()
+    for e in range(2):
+        B.run_epoch()
+    conv_fixed = all(bool((B.P[i][r] == init[i][r]).all()) for i in range(4) for r in (0, 2))
+    fc_moved = all(bool((B.P[i][r] != init[i][r]).any()) for i in range(4, 10) for r in (0, 2))
+    other_moved = all(bool((B.P[i][1] != init[i][1]).any()) for i in range(4))
+    no_mask = E.Bundle([("SNA", 10)], cifar, device, graph=False).upd_mask is None
+    return {"conv_fixed": conv_fixed, "fc_moved": fc_moved, "unmasked_run_conv_moved": other_moved,
+            "no_mask_without_fixconv": no_mask,
+            "pass": conv_fixed and fc_moved and other_moved and no_mask}
+
+
 def check_cost(cifar, device) -> dict:
     out = {}
     for R in (10, 30, 60):
@@ -297,6 +316,7 @@ def main() -> None:
               "S-eval": lambda: check_eval(cifar, device),
               "S-pp": lambda: check_pp(device),
               "S-freeze": lambda: check_freeze(cifar, device),
+              "S-fixconv": lambda: check_fixconv(cifar, device),
               "S-cost": lambda: check_cost(cifar, device)}
     sel = args.only.split(",") if args.only else list(checks)
     res = {}

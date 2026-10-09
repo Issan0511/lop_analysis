@@ -18,6 +18,8 @@ host's rule) or a fixed alpha, plus two options:
   pp    : conv W_j from the WITHIN-position variance (variance over the batch at each
           position, averaged over the positions) instead of the host's pooled variance
           over (batch, H, W), which also contains the spread of the position means
+  fixconv: the two conv layers never move from their init (their Adam step is masked to 0),
+          so the fc layers learn on fixed random conv features
 """
 
 from __future__ import annotations
@@ -65,12 +67,15 @@ ARMS = {
     "CV3FC06": dict(c=(3.0, 3.0, 0.6, 0.6)),            # c = 0.6 only at the fc sites
     "SNAfrz1": dict(c=(0.6, 0.6, 0.6, 0.6), frz=1),     # SNA, alpha frozen after task 1
     "SNApp":   dict(c=(0.6, 0.6, 0.6, 0.6), pp=True),   # SNA, within-position conv W
+    # batch B (spec addendum 1): conv at c = 0.6 throughout, fc split by site
+    "F1ONLY":  dict(c=(0.6, 0.6, 0.6, 3.0)),            # c = 0.6 at f1, 3 at f2
+    "F2ONLY":  dict(c=(0.6, 0.6, 3.0, 0.6)),            # c = 3 at f1, 0.6 at f2
 }
 
 
 def parse_arm(name: str) -> dict:
     """Registry name, or a site-wise spec `S:<x>-<x>-<x>-<x>` with x = c<val> | a<val>,
-    e.g. `S:c0.6-c3-c3-c3`.  Options are appended with `+frz<k>` / `+pp`."""
+    e.g. `S:c0.6-c3-c3-c3`.  Options are appended with `+frz<k>` / `+pp` / `+fixconv`."""
     base, *opts = name.split("+")
     if base in ARMS:
         d = dict(ARMS[base])
@@ -86,6 +91,8 @@ def parse_arm(name: str) -> dict:
             d["frz"] = int(o[3:])
         elif o == "pp":
             d["pp"] = True
+        elif o == "fixconv":
+            d["fixconv"] = True
         else:
             raise SystemExit(f"unknown option {o!r} in {name!r}")
     if "site" not in d:
@@ -93,6 +100,7 @@ def parse_arm(name: str) -> dict:
                      else tuple(("a", v) for v in d["a"]))
     d.setdefault("frz", None)
     d.setdefault("pp", False)
+    d.setdefault("fixconv", False)
     return d
 
 
@@ -350,6 +358,13 @@ class Bundle:
         self.b2 = torch.tensor(0.999, dtype=torch.float64, device=device)
         self.graph = graph and device.type == "cuda"
         self.cg = None
+        # per-parameter update masks, only when some run keeps its conv layers fixed (otherwise
+        # the step is exactly the unmasked one)
+        self.upd_mask = None
+        if any(sp["fixconv"] for sp in self.specs):
+            keep = torch.tensor([0.0 if sp["fixconv"] else 1.0 for sp in self.specs], device=device)
+            self.upd_mask = [keep.view(-1, *([1] * (p.dim() - 1))) if i < 4 else None
+                             for i, p in enumerate(self.P)]
 
     # one step on the static tensors; j = position of the batch in the epoch
     def step(self, j: int) -> None:
@@ -367,10 +382,13 @@ class Bundle:
             self.tc.add_(1)
             c1 = (1 - torch.pow(self.b1, self.tc)).float()
             c2 = (1 - torch.pow(self.b2, self.tc)).float()
-            for p, gr, mi, vi in zip(self.P, grads, self.m, self.v):
+            for i, (p, gr, mi, vi) in enumerate(zip(self.P, grads, self.m, self.v)):
                 mi.mul_(0.9).add_(gr, alpha=1 - 0.9)
                 vi.mul_(0.999).addcmul_(gr, gr, value=1 - 0.999)
-                p.sub_(self.lr * (mi / c1) / ((vi / c2).sqrt() + 1e-8))
+                if self.upd_mask is not None and self.upd_mask[i] is not None:
+                    p.sub_(self.upd_mask[i] * (self.lr * (mi / c1) / ((vi / c2).sqrt() + 1e-8)))
+                else:
+                    p.sub_(self.lr * (mi / c1) / ((vi / c2).sqrt() + 1e-8))
             self.act.update([out[0].detach(), out[2].detach(), out[4].detach(), out[6].detach()])
 
     def epoch_body(self) -> None:
