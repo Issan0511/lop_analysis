@@ -17,7 +17,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from scipy import stats
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import statlite as SL  # noqa: E402
 
 CH = 16
 
@@ -59,22 +61,22 @@ def load(measure_dir: Path) -> pd.DataFrame:
 def seed_rate(d: pd.DataFrame, col: str, by: list[str]) -> pd.DataFrame:
     """rate per seed, then mean, SD, t(9) 95% interval over seeds."""
     per = d.groupby(by + ["seed"])[col].mean().reset_index()
+    ncase = d.groupby(by).size()
     out = []
     for key, g in per.groupby(by):
         x = g[col].to_numpy(float)
         n = len(x)
         m, sd = x.mean(), (x.std(ddof=1) if n > 1 else float("nan"))
-        hw = stats.t.ppf(0.975, n - 1) * sd / math.sqrt(n) if n > 1 else float("nan")
-        key = key if isinstance(key, tuple) else (key,)
-        out.append(dict(zip(by, key)) | {"rate": m, "sd_seed": sd, "lo": m - hw, "hi": m + hw,
-                                        "n_seed": n, "n_cases": int(d.set_index(by).loc[key].shape[0])
-                                        if len(by) else len(d)})
+        hw = SL.t975(n - 1) * sd / math.sqrt(n) if n > 1 else float("nan")
+        kt = key if isinstance(key, tuple) else (key,)
+        out.append(dict(zip(by, kt)) | {"rate": m, "sd_seed": sd, "lo": m - hw, "hi": m + hw,
+                                       "n_seed": n, "n_cases": int(ncase.loc[key])})
     return pd.DataFrame(out)
 
 
 def adam_classes(d: pd.DataFrame) -> pd.DataFrame:
     M = len(d)
-    z = stats.norm.ppf(1 - 0.025 / M)
+    z = SL.norm_ppf(1 - 0.025 / M)
     sgd_sign = -np.sign(d["G_full"])                    # sign of the SGD expected change of the mean
     a = d["fs_adam"]; se = d["fs_adam_se"]
     sig = a.abs() > z * se
@@ -92,10 +94,7 @@ def adam_classes(d: pd.DataFrame) -> pd.DataFrame:
 
 
 def auc(score: np.ndarray, label: np.ndarray) -> float:
-    pos, neg = score[label], score[~label]
-    if len(pos) == 0 or len(neg) == 0:
-        return float("nan")
-    return float(stats.mannwhitneyu(pos, neg).statistic / (len(pos) * len(neg)))
+    return SL.auc(score, label)
 
 
 def main():
@@ -128,14 +127,14 @@ def main():
         ex = []
         for layer, g in per.groupby("layer"):
             x = g.excess.to_numpy()
-            hw = stats.t.ppf(0.975, len(x) - 1) * x.std(ddof=1) / math.sqrt(len(x))
+            hw = SL.t975(len(x) - 1) * x.std(ddof=1) / math.sqrt(len(x))
             ex.append({"layer": layer, "agree": g.ag.mean(), "chance": g.chance.mean(),
                        "excess": x.mean(), "lo": x.mean() - hw, "hi": x.mean() + hw})
         tabs["agree_excess_over_chance"] = pd.DataFrame(ex)
         # rank / sign relation of the two
         rr = []
         for layer, g in d.groupby("layer"):
-            rho = stats.spearmanr(g.G_full, g.G_self).statistic
+            rho = SL.spearman(g.G_full, g.G_self)
             rr.append({"layer": layer, "spearman_full_self": rho})
         tabs["full_self_spearman"] = pd.DataFrame(rr)
     # seat relation

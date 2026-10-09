@@ -13,7 +13,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from scipy import stats
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import statlite as SL  # noqa: E402
 
 CH = 16
 
@@ -49,7 +51,7 @@ def main():
                          "adam_real": float(r["tail750_adam"][0, k]), "sgd_real": float("nan")})
     d = pd.DataFrame(rows)
     M = int((d.S == 1).sum())
-    z = stats.norm.ppf(1 - 0.025 / max(M, 1))
+    z = SL.norm_ppf(1 - 0.025 / max(M, 1))
     sgd_sign = -np.sign(d.G_full)
     d["rev_point"] = np.sign(d.adam_mean) != sgd_sign
     d["rev_sig"] = (d.adam_mean.abs() > z * d.adam_se) & (np.sign(d.adam_mean) != sgd_sign)

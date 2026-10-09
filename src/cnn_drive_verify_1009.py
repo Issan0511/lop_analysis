@@ -26,6 +26,7 @@ import time
 from pathlib import Path
 
 os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")   # shared GPU: keep the cache tight
 
 SNA_ROOT = Path("/home/issan/Projects/claude/wt/sna_cnn_cause_1009")
 sys.path.insert(0, str(SNA_ROOT))
@@ -246,7 +247,7 @@ def channel_stats(S: State, chunk=300):
     return out
 
 
-def mean_grads(S: State, chunk=300, batched=True) -> torch.Tensor:
+def mean_grads(S: State, chunk=100, batched=True) -> torch.Tensor:
     """U (32, NCONV): gradient of every c1 / c2 channel mean w.r.t. the conv parameters.
     Rows 0..15 c1, 16..31 c2.  (fc components are exactly zero.)"""
     U = torch.zeros(2 * CH, NCONV, dtype=DT, device=S.device)
@@ -344,7 +345,7 @@ def g_self(S: State, U: torch.Tensor, layer: int, j: int) -> float:
                  + gs[3][0] * u[CONV_OFF[3]:CONV_OFF[4]][j])
 
 
-def g_self_bundled(S: State, U: torch.Tensor, chunk=150) -> np.ndarray:
+def g_self_bundled(S: State, U: torch.Tensor, chunk=100) -> np.ndarray:
     """All 32 literal-self G values at once (checked against `g_self`, which K1/K4 verified).
 
     c1: the 16 self networks share conv1 values; network r keeps channel r and feeds it to conv2
@@ -734,6 +735,238 @@ def run_checks(out: Path, device):
     print("all_pass", rep["all_pass"], "max mem MB", rep["cuda_max_mem_mb"])
 
 
+def c2_exact_one(arm, seed, task, device, K=4096, kb=16, chunk=200):
+    """Exact (non-linear) expected change of every c1 / c2 channel mean under the first Adam step,
+    MC over (16-image batch, iid labels).  Each sampled step's conv parameters are applied and the
+    channel means recomputed; kb samples share one grouped forward.  float32 with cuDNN disabled
+    (plain sums; the differences are taken against the same evaluation of the unperturbed state).
+    alpha is held at the checkpoint (the parameter step only)."""
+    S = State(arm, seed, task, device)
+    cs = channel_stats(S)
+    U = mean_grads(S)
+    J = conv_jacobian(S)
+    p = cs["p"]
+    Jp = torch.einsum("nc,ncp->np", p, J)
+    Jf = J.reshape(N * C, NCONV)
+    m0 = S.conv_vec(S.m); v0 = S.conv_vec(S.v)
+    t = S.tc + 1
+    gen = torch.Generator().manual_seed(3009_000 + 1000 * seed + task)
+    W1, b1, W2, b2 = [q.float() for q in S.P[:4]]
+    a0 = S.alpha[0].float(); a1 = S.alpha[1].float()
+    X = S.X.float()
+    cud = torch.backends.cudnn.enabled
+    torch.backends.cudnn.enabled = False
+
+    def means(W1s, b1s, W2s, b2s, k):
+        """channel means (k, 32) for k parameter sets stacked on the channel axis."""
+        s = torch.zeros(k, 2 * CH, dtype=DT, device=device)
+        for i0, i1 in chunks(N, chunk):
+            z1 = F.conv2d(X[i0:i1], W1s, b1s, padding=CN.PAD)                     # (b, k*16, 32, 32)
+            h1 = F.max_pool2d(snake(z1, a0.repeat(k), True), CN.POOL, CN.POOL)
+            z2 = F.conv2d(h1, W2s, b2s, padding=CN.PAD, groups=k)                 # (b, k*16, 16, 16)
+            s[:, :CH] += z1.double().sum((0, 2, 3)).view(k, CH)
+            s[:, CH:] += z2.double().sum((0, 2, 3)).view(k, CH)
+        s[:, :CH] /= N * 32 * 32
+        s[:, CH:] /= N * 16 * 16
+        return s
+
+    with torch.no_grad():
+        base = means(W1, b1, W2, b2, 1)[0]
+        acc1 = torch.zeros(2 * CH, dtype=DT, device=device)
+        acc2 = torch.zeros(2 * CH, dtype=DT, device=device)
+        lin1 = torch.zeros(2 * CH, dtype=DT, device=device)
+        for k0 in range(0, K, kb):
+            k = min(kb, K - k0)
+            idx = torch.rand(k, N, generator=gen).argsort(1)[:, :B16].to(device)
+            lab = torch.randint(C, (k, B16), generator=gen).to(device)
+            g = torch.zeros(k, NCONV, dtype=DT, device=device)
+            for i in range(B16):
+                g += Jp[idx[:, i]] - Jf[idx[:, i] * C + lab[:, i]]
+            g /= B16
+            A, _, _ = adam_dir(m0, v0, g, t)
+            d = (-LR * A)                                                          # (k, NCONV)
+            lin1 += (d @ U.T).sum(0)
+            dW1 = d[:, CONV_OFF[0]:CONV_OFF[1]].float().view(k * CH, 3, CN.KERNEL, CN.KERNEL)
+            db1 = d[:, CONV_OFF[1]:CONV_OFF[2]].float().reshape(-1)
+            dW2 = d[:, CONV_OFF[2]:CONV_OFF[3]].float().view(k * CH, CH, CN.KERNEL, CN.KERNEL)
+            db2 = d[:, CONV_OFF[3]:CONV_OFF[4]].float().reshape(-1)
+            mm = means(W1.repeat(k, 1, 1, 1) + dW1, b1.repeat(k) + db1,
+                       W2.repeat(k, 1, 1, 1) + dW2, b2.repeat(k) + db2, k) - base
+            acc1 += mm.sum(0); acc2 += (mm * mm).sum(0)
+    torch.backends.cudnn.enabled = cud
+    mu = acc1 / K
+    se = ((acc2 / K - mu * mu).clamp_min(0) * K / (K - 1) / K).sqrt()
+    return {"arm": arm, "seed": seed, "task": task, "K": K, "exact_mean": mu.cpu().numpy(),
+            "exact_se": se.cpu().numpy(), "linear_mean": (lin1 / K).cpu().numpy()}
+
+
+def self_shape(S: State, U: torch.Tensor, chunk=100) -> dict:
+    """Codex's self shape S_c = <R_c, H_c>_F (proof.md sec. 0-1) for every c1 / c2 channel:
+    H = the channel's pooled features (after phi and max-pool), R = their exact derivative along the
+    channel-mean direction u (forward-mode tangent through the current pool winners).  Also the
+    image-centred version (the constant per feature coordinate removed, as an intercept would).
+    For ReLU, H >= 0 and R >= 0, so S > 0 whenever the channel is alive; Snake allows H < 0."""
+    P, al = S.P, S.alpha
+    W1, b1, W2, b2 = P[:4]
+    acc = {k: torch.zeros(2 * CH, dtype=DT, device=S.device) for k in ("RH", "R", "H", "RR", "HH")}
+    sumR = torch.zeros(CH, 16 * 16, dtype=DT, device=S.device)
+    sumH = torch.zeros(CH, 16 * 16, dtype=DT, device=S.device)
+    sumR2 = torch.zeros(CH, 64, dtype=DT, device=S.device)
+    sumH2 = torch.zeros(CH, 64, dtype=DT, device=S.device)
+    U1W = U[:CH, CONV_OFF[0]:CONV_OFF[1]].view(CH, CH, 3, CN.KERNEL, CN.KERNEL)
+    U1b = U[:CH, CONV_OFF[1]:CONV_OFF[2]]
+    UW1 = U[CH:, CONV_OFF[0]:CONV_OFF[1]].reshape(CH * CH, 3, CN.KERNEL, CN.KERNEL)
+    Ub1 = U[CH:, CONV_OFF[1]:CONV_OFF[2]].reshape(-1)
+    UW2 = U[CH:, CONV_OFF[2]:CONV_OFF[3]].view(CH, CH, CH, CN.KERNEL, CN.KERNEL)
+    Ub2 = U[CH:, CONV_OFF[3]:CONV_OFF[4]]
+    with torch.no_grad():
+        for i0, i1 in chunks(N, chunk):
+            x = S.X[i0:i1]; B = i1 - i0
+            z1 = F.conv2d(x, W1, b1, padding=CN.PAD)
+            a1 = snake(z1, al[0], True)
+            h1, idx1 = F.max_pool2d(a1, CN.POOL, CN.POOL, return_indices=True)
+            dphi1 = 1.0 + torch.sin(2.0 * al[0].view(1, -1, 1, 1) * z1)
+            # c1 channel j: u_j moves only W1[j], b1[j]
+            Wd = torch.stack([U1W[j, j] for j in range(CH)])                      # (16, 3, 5, 5)
+            bd = torch.stack([U1b[j, j] for j in range(CH)])
+            dz1 = F.conv2d(x, Wd, bd, padding=CN.PAD)                             # (B, 16, 32, 32)
+            R1 = (dphi1 * dz1).flatten(2).gather(2, idx1.flatten(2))              # (B, 16, 256)
+            H1 = h1.flatten(2)
+            acc["RH"][:CH] += (R1 * H1).sum((0, 2))
+            sumR += R1.sum(0); sumH += H1.sum(0)
+            # c2 channel j: tangent of h1 along u_j's W1 / b1 part, then conv2 row j + its own part
+            z2 = F.conv2d(h1, W2, b2, padding=CN.PAD)
+            h2, idx2 = F.max_pool2d(snake(z2, al[1], True), CN.POOL, CN.POOL, return_indices=True)
+            dphi2 = 1.0 + torch.sin(2.0 * al[1].view(1, -1, 1, 1) * z2)
+            dz1r = F.conv2d(x, UW1, Ub1, padding=CN.PAD).view(B, CH, CH, 32, 32)  # (B, j, c1ch, ...)
+            Th1 = (dphi1[:, None] * dz1r).flatten(3).gather(
+                3, idx1[:, None].flatten(3).expand(-1, CH, -1, -1)).view(B * CH, CH, 16, 16)
+            for j in range(CH):
+                dz2 = (F.conv2d(Th1.view(B, CH, CH, 16, 16)[:, j], W2[j:j + 1], None, padding=CN.PAD)
+                       + F.conv2d(h1, UW2[j][j:j + 1], None, padding=CN.PAD)
+                       + Ub2[j, j])                                                  # (B, 1, 16, 16)
+                R2 = (dphi2[:, j:j + 1] * dz2).flatten(2).gather(2, idx2[:, j:j + 1].flatten(2))[:, 0]
+                H2 = h2[:, j].flatten(1)
+                acc["RH"][CH + j] += (R2 * H2).sum()
+                sumR2[j] += R2.sum(0); sumH2[j] += H2.sum(0)
+    S0 = acc["RH"].clone()
+    # centred: sum_n (R - Rbar)(H - Hbar) = sum RH - N Rbar.Hbar per coordinate
+    S1 = S0.clone()
+    S1[:CH] -= (sumR * sumH).sum(1) / N
+    S1[CH:] -= (sumR2 * sumH2).sum(1) / N
+    return {"S0": S0.cpu().numpy(), "S1": S1.cpu().numpy()}
+
+
+def adam_decomposition(S: State, J, Jp, U, m0, v0, K: int, gen, kchunk=512) -> dict:
+    """Codex adam_state.md sec. 2, per channel u:
+        E[u.A] = kappa sum_j u_j [ a_j E h_j + b mu_j E h_j + b Cov(g_j, h_j) ]
+    with a_j = beta1 m_j-, b = 1 - beta1, h_j(g) = 1/(sqrt(beta2 v_j- + (1-beta2) g^2)/sqrt(c2) ... )
+    written here in the host's bias-corrected form A_j = (m_j/c1)/(sqrt(v_j/c2) + eps), so
+    E[A_j] = (1/c1)[ a_j E h_j + b E(g_j h_j) ], h_j = 1/(sqrt(v_j/c2) + eps), and
+    E(g h) = mu E h + Cov(g, h).  Returns the three projected parts (momentum, mean-scaling, cov)
+    and their sum (= the Adam expectation, first order), MC over (batch, labels)."""
+    t = S.tc + 1
+    c1 = 1 - BETA1 ** t; c2 = 1 - BETA2 ** t
+    Jf = J.reshape(N * C, NCONV)
+    sh = torch.zeros(NCONV, dtype=DT, device=S.device)
+    sgh = torch.zeros(NCONV, dtype=DT, device=S.device)
+    for k0 in range(0, K, kchunk):
+        k = min(kchunk, K - k0)
+        idx = torch.rand(k, N, generator=gen).argsort(1)[:, :B16].to(S.device)
+        lab = torch.randint(C, (k, B16), generator=gen).to(S.device)
+        g = torch.zeros(k, NCONV, dtype=DT, device=S.device)
+        for i in range(B16):
+            g += Jp[idx[:, i]] - Jf[idx[:, i] * C + lab[:, i]]
+        g /= B16
+        v = BETA2 * v0 + (1 - BETA2) * g * g
+        h = 1.0 / ((v / c2).sqrt() + EPS)
+        sh += h.sum(0); sgh += (g * h).sum(0)
+    Eh = sh / K; Egh = sgh / K
+    mu = (Jp - J.mean(1)).mean(0)
+    a = BETA1 * m0; b = 1 - BETA1
+    mom = (U @ (a * Eh)) / c1
+    meanscale = (U @ (b * mu * Eh)) / c1
+    cov = (U @ (b * (Egh - mu * Eh))) / c1
+    # meanscale = diagonal-preconditioned SGD (coordinate scaling E h_j only, no noise correlation)
+    return {"dec_mom": (-LR * mom).cpu().numpy(), "dec_meanscale": (-LR * meanscale).cpu().numpy(),
+            "dec_cov": (-LR * cov).cpu().numpy(),
+            "dec_total": (-LR * (mom + meanscale + cov)).cpu().numpy()}
+
+
+def extra_one(arm, seed, task, device, K=16384):
+    S = State(arm, seed, task, device)
+    U = mean_grads(S)
+    ss = self_shape(S, U)
+    cs = channel_stats(S)
+    J = conv_jacobian(S)
+    Jp = torch.einsum("nc,ncp->np", cs["p"], J)
+    gen = torch.Generator().manual_seed(5009_000 + 1000 * seed + task)
+    dec = adam_decomposition(S, J, Jp, U, S.conv_vec(S.m), S.conv_vec(S.v), K, gen)
+    return {"arm": arm, "seed": seed, "task": task, **ss, **dec}
+
+
+def pooled_features(P, al, X, idx=None, chunk=200):
+    """(N, 16, 256) c1 and (N, 16, 64) c2 pooled features; fixed winners if idx given."""
+    H1s, H2s, I1, I2 = [], [], [], []
+    with torch.no_grad():
+        for i0, i1 in chunks(N, chunk):
+            x = X[i0:i1]
+            z1 = F.conv2d(x, P[0], P[1], padding=CN.PAD)
+            a1 = snake(z1, al[0], True)
+            if idx is None:
+                h1, j1 = F.max_pool2d(a1, CN.POOL, CN.POOL, return_indices=True)
+            else:
+                j1 = idx[0][i0:i1]; h1 = a1.flatten(2).gather(2, j1.flatten(2)).view_as(j1)
+            z2 = F.conv2d(h1, P[2], P[3], padding=CN.PAD)
+            a2 = snake(z2, al[1], True)
+            if idx is None:
+                h2, j2 = F.max_pool2d(a2, CN.POOL, CN.POOL, return_indices=True)
+            else:
+                j2 = idx[1][i0:i1]; h2 = a2.flatten(2).gather(2, j2.flatten(2)).view_as(j2)
+            H1s.append(h1.flatten(2)); H2s.append(h2.flatten(2)); I1.append(j1); I2.append(j2)
+    return torch.cat(H1s), torch.cat(H2s), (torch.cat(I1), torch.cat(I2))
+
+
+def run_checks_selfshape(out: Path, device):
+    """K8: self_shape's forward-mode tangent equals central differences of the pooled features
+    with the winners held fixed."""
+    torch.backends.cudnn.allow_tf32 = False
+    rep = {"checks": []}
+    for arm, seed, task in (("SNA", 10, 1), ("SNAc3", 11, 20)):
+        S = State(arm, seed, task, device)
+        U = mean_grads(S)
+        ss = self_shape(S, U)
+        H1, H2, idx = pooled_features(S.P, S.alpha, S.X)
+        worst = 0.0
+        S0fd = np.zeros(2 * CH); S1fd = np.zeros(2 * CH)
+        for row in range(2 * CH):
+            u = U[row]
+            h = 1e-5 / float(u.norm())
+            Pp = [p.clone() for p in S.P]; Pm = [p.clone() for p in S.P]
+            for i in range(4):
+                d = u[CONV_OFF[i]:CONV_OFF[i + 1]].view_as(Pp[i]) * h
+                Pp[i] += d; Pm[i] -= d
+            A1, A2, _ = pooled_features(Pp, S.alpha, S.X, idx)
+            B1, B2, _ = pooled_features(Pm, S.alpha, S.X, idx)
+            layer, j = divmod(row, CH)
+            if layer == 0:
+                R = (A1[:, j] - B1[:, j]) / (2 * h); Hh = H1[:, j]
+            else:
+                R = (A2[:, j] - B2[:, j]) / (2 * h); Hh = H2[:, j]
+            S0fd[row] = float((R * Hh).sum())
+            S1fd[row] = float(((R - R.mean(0)) * (Hh - Hh.mean(0))).sum())
+        r0 = float(np.abs(S0fd - ss["S0"]).max() / np.abs(S0fd).max())
+        r1 = float(np.abs(S1fd - ss["S1"]).max() / np.abs(S1fd).max())
+        sg = float((np.sign(S0fd) == np.sign(ss["S0"])).mean())
+        rec = dict(name="K8_selfshape_tangent_equals_fd", arm=arm, seed=seed, task=task,
+                   pass_=r0 < 1e-6 and r1 < 1e-6, rel_S0=r0, rel_S1=r1, sign_agree=sg)
+        rep["checks"].append(rec)
+        print(json.dumps(rec, default=float), flush=True)
+    rep["all_pass"] = all(c["pass_"] for c in rep["checks"])
+    (out / "checks_selfshape.json").write_text(json.dumps(rep, indent=1, default=float))
+    print("all_pass", rep["all_pass"], flush=True)
+
+
 def run_checks_bundle(out: Path, device):
     """K7: the vectorised mean gradients and the bundled literal-self G equal the per-channel
     computations (which K1 / K4 verified against finite differences)."""
@@ -832,11 +1065,14 @@ def bundle_zbar(Bd) -> torch.Tensor:
     """(R, 32) channel means of z1 / z2 over the run's 1200 images (float64 accumulation)."""
     R = Bd.R
     s = torch.zeros(R, 2 * CH, dtype=DT, device=Bd.device)
+    tf32 = torch.backends.cudnn.allow_tf32
+    torch.backends.cudnn.allow_tf32 = False          # the record only; training steps keep TF32
     for i0, i1 in chunks(N, 50):
         o = E.forward(Bd.P, Bd.X[:, i0:i1], Bd.act)
         b = i1 - i0
         s[:, :CH] += o[0].reshape(b, R, CH, -1).double().sum((0, 3))
         s[:, CH:] += o[2].reshape(b, R, CH, -1).double().sum((0, 3))
+    torch.backends.cudnn.allow_tf32 = tf32
     s[:, :CH] /= N * 32 * 32
     s[:, CH:] /= N * 16 * 16
     return s
@@ -866,7 +1102,12 @@ def replay(task: int, arms, seeds, out: Path, device, rec_steps=(1, 10, 75, 750,
             torch.randperm(N, generator=Bd.g_batch[s])
         for _ in range(task):
             CN.task_labels(Bd.g_lab[s])
+    def alphas():
+        with torch.no_grad():
+            return torch.cat([Bd.act.alpha(0), Bd.act.alpha(1)], 1).double().cpu().numpy()
+
     rec = {0: bundle_zbar(Bd).cpu().numpy()}
+    rec_a = {0: alphas()}
     t0 = time.time()
     Bd.new_labels()
     step = 0
@@ -877,14 +1118,15 @@ def replay(task: int, arms, seeds, out: Path, device, rec_steps=(1, 10, 75, 750,
         Bd.step(j)
         step += 1
         if step in rec_steps:
-            rec[step] = bundle_zbar(Bd).cpu().numpy()
+            rec[step] = bundle_zbar(Bd).cpu().numpy(); rec_a[step] = alphas()
     for e in range(1, EPOCHS):
         Bd.run_epoch()
         step += SPE
         if step in rec_steps:
-            rec[step] = bundle_zbar(Bd).cpu().numpy()
+            rec[step] = bundle_zbar(Bd).cpu().numpy(); rec_a[step] = alphas()
     wall = time.time() - t0
     res = {"task": task, "slots": slots, "rec": {str(k): v for k, v in rec.items()},
+           "rec_alpha": {str(k): v for k, v in rec_a.items()},
            "wall_s": wall, "cuda_max_mem_mb": torch.cuda.max_memory_allocated() / 2 ** 20,
            "bad": Bd.bad.cpu().numpy()}
     # fidelity: compare with the saved checkpoint of task+1 if it exists
@@ -983,8 +1225,8 @@ def capacity_one(arm, seed, task, device, n_sub=32, chans=(0, 4, 8, 12), lams=(1
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", choices=["checks", "checks2", "measure", "frozen", "replay", "timing",
-                                     "zbar", "capacity"])
+    ap.add_argument("mode", choices=["checks", "checks2", "checks3", "measure", "frozen", "replay",
+                                     "timing", "zbar", "capacity", "c2exact", "extra"])
     ap.add_argument("--nsub", type=int, default=32)
     ap.add_argument("--arms", default="SNA,SNAc3,CV06FC3,CV3FC06")
     ap.add_argument("--seeds", default="10-19")
@@ -996,8 +1238,15 @@ def main():
     ap.add_argument("--no-self", action="store_true")
     ap.add_argument("--out", required=True)
     ap.add_argument("--device", default="cuda")
+    ap.add_argument("--mem-gb", type=float, default=2.3,
+                    help="cap of this process's CUDA caching allocator (the GPU is shared; the "
+                         "CUDA context adds ~0.5 GB on top)")
     args = ap.parse_args()
     device = H.setup(args.device)
+    if device.type == "cuda":
+        di = torch.cuda.current_device()
+        total = torch.cuda.get_device_properties(di).total_memory / 2 ** 30
+        torch.cuda.set_per_process_memory_fraction(min(1.0, args.mem_gb / total), di)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     arms = args.arms.split(",")
@@ -1007,6 +1256,9 @@ def main():
         return
     if args.mode == "checks2":
         run_checks_bundle(out, device)
+        return
+    if args.mode == "checks3":
+        run_checks_selfshape(out, device)
         return
     if args.mode == "replay":
         replay(args.task, arms, seeds, out, device)
@@ -1053,6 +1305,14 @@ def main():
                     t0 = time.time()
                     r = capacity_one(arm, seed, task, device, n_sub=args.nsub)
                     print(f"capacity {arm} s{seed} t{task} {time.time() - t0:.0f}s", flush=True)
+                elif args.mode == "c2exact":
+                    t0 = time.time()
+                    r = c2_exact_one(arm, seed, task, device, K=args.K)
+                    print(f"c2exact {arm} s{seed} t{task} {time.time() - t0:.0f}s", flush=True)
+                elif args.mode == "extra":
+                    t0 = time.time()
+                    r = extra_one(arm, seed, task, device, K=args.K)
+                    print(f"extra {arm} s{seed} t{task} {time.time() - t0:.0f}s", flush=True)
                 else:
                     r = frozen_one(arm, seed, task, device, L=args.L, S_steps=args.steps)
                     print(f"frozen {arm} s{seed} t{task}", flush=True)

@@ -17,7 +17,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from scipy import stats
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import statlite as SL  # noqa: E402
 
 CH = 16
 PER_TASK = Path("/home/issan/Projects/claude/wt/sna_cnn_cause_1009/results/sna_cnn_cause_1009/A/per_task.csv")
@@ -30,7 +32,7 @@ def seed_rate(d, col, by):
         x = g[col].to_numpy(float)
         n = len(x)
         m = x.mean(); sd = x.std(ddof=1) if n > 1 else float("nan")
-        hw = stats.t.ppf(0.975, n - 1) * sd / math.sqrt(n) if n > 1 else float("nan")
+        hw = SL.t975(n - 1) * sd / math.sqrt(n) if n > 1 else float("nan")
         key = key if isinstance(key, tuple) else (key,)
         out.append(dict(zip(by, key)) | {"rate": m, "sd_seed": sd, "lo": m - hw, "hi": m + hw, "n_seed": n})
     return pd.DataFrame(out)
@@ -133,10 +135,10 @@ def main():
         for (layer, t), g in L.groupby(["layer", "task"]):
             if "G_full" in g:
                 sp.append({"layer": layer, "task": t,
-                           "spearman_negG_total": stats.spearmanr(-g.G_full, g.total).statistic,
-                           "spearman_negG_push": stats.spearmanr(-g.G_full, g.push).statistic,
-                           "spearman_adam_push": stats.spearmanr(g.fs_adam, g.push).statistic,
-                           "spearman_push_total": stats.spearmanr(g.push, g.total).statistic,
+                           "spearman_negG_total": SL.spearman(-g.G_full, g.total),
+                           "spearman_negG_push": SL.spearman(-g.G_full, g.push),
+                           "spearman_adam_push": SL.spearman(g.fs_adam, g.push),
+                           "spearman_push_total": SL.spearman(g.push, g.total),
                            "median_push": g.push.median(), "median_ret": g.ret.median(),
                            "median_total": g.total.median()})
         tabs["ledger_spearman"] = pd.DataFrame(sp)
@@ -173,6 +175,29 @@ def main():
             tabs["replay_fidelity_zbar"] = FZ.groupby(["task", "layer"]).agg(
                 max_abs_err=("abs_err", "max"), med_abs_err=("abs_err", "median"),
                 med_abs_d=("d_saved", lambda x: np.median(np.abs(x)))).reset_index()
+    # ---- frozen reference (real labels and batch order, parameters frozen) vs the moving replay
+    if led and (root / "frozen").exists():
+        fr = []
+        for fn in sorted((root / "frozen").glob("frozen_*.npy")):
+            r = np.load(fn, allow_pickle=True).item()
+            for s, v in r["rec"].items():
+                for k in range(2 * CH):
+                    layer, j = divmod(k, CH)
+                    fr.append({"arm": r["arm"], "seed": r["seed"], "task": r["task"], "layer": f"c{layer + 1}",
+                               "ch": j, "S": int(s), "frozen_real": float(v["adam"][0, k])})
+        FR = pd.DataFrame(fr)
+        if len(FR):
+            LL = L.melt(id_vars=["arm", "seed", "task", "layer", "ch"],
+                        value_vars=[c for c in L.columns if c.startswith("d") and c[1:].isdigit()],
+                        var_name="S", value_name="moving")
+            LL["S"] = LL.S.str[1:].astype(int)
+            M = FR.merge(LL, on=["arm", "seed", "task", "layer", "ch", "S"])
+            M["same_sign"] = np.sign(M.frozen_real) == np.sign(M.moving)
+            M["ratio"] = M.moving / M.frozen_real
+            tabs["frozen_vs_moving"] = M.groupby(["layer", "task", "S"]).agg(
+                same_sign=("same_sign", "mean"), median_ratio=("ratio", "median"),
+                spearman=("moving", lambda x: SL.spearman(x, M.loc[x.index, "frozen_real"])),
+                n=("same_sign", "size")).reset_index()
     for k, t in tabs.items():
         t.to_csv(out / f"{k}.csv", index=False)
     (out / "report.json").write_text(json.dumps(rep, indent=1, default=float))
