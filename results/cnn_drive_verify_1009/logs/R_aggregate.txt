@@ -1,0 +1,146 @@
+/home/issan/Projects/claude/proj_004_drift/.venv/lib/python3.12/site-packages/numpy/_core/_methods.py:219: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+/home/issan/Projects/claude/proj_004_drift/.venv/lib/python3.12/site-packages/numpy/_core/_methods.py:211: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+{
+ "n_checkpoints": 3,
+ "n_channel_cases": 96,
+ "z_bonf": 3.4698065551615747,
+ "floor_max": 1.1368683772161603e-13,
+ "undetermined_G_full": 32,
+ "max_rel_identity": 3.485580436432903e-15,
+ "c2_real_step_exact_vs_linear_rel_median": 0.0803348586093627,
+ "c2_real_step_sign_exact_vs_linear_agree": 0.6666666666666666,
+ "c1_real_step_exact_vs_linear_rel_max": 1.0
+}
+
+## sink_full_by_layer_task
+layer  task   rate  sd_seed  lo  hi  n_seed  n_cases
+   c1     1 0.8750      NaN NaN NaN       1       16
+   c1     2 0.8750      NaN NaN NaN       1       16
+   c1     3 0.0000      NaN NaN NaN       1       16
+   c2     1 0.6250      NaN NaN NaN       1       16
+   c2     2 0.9375      NaN NaN NaN       1       16
+   c2     3 0.0000      NaN NaN NaN       1       16
+
+## sink_full_by_layer_arm_task
+layer arm  task   rate  sd_seed  lo  hi  n_seed  n_cases
+   c1   R     1 0.8750      NaN NaN NaN       1       16
+   c1   R     2 0.8750      NaN NaN NaN       1       16
+   c1   R     3 0.0000      NaN NaN NaN       1       16
+   c2   R     1 0.6250      NaN NaN NaN       1       16
+   c2   R     2 0.9375      NaN NaN NaN       1       16
+   c2   R     3 0.0000      NaN NaN NaN       1       16
+
+## sink_self_by_layer_task
+layer  task   rate  sd_seed  lo  hi  n_seed  n_cases
+   c1     1 0.8750      NaN NaN NaN       1       16
+   c1     2 1.0000      NaN NaN NaN       1       16
+   c1     3 0.8750      NaN NaN NaN       1       16
+   c2     1 1.0000      NaN NaN NaN       1       16
+   c2     2 1.0000      NaN NaN NaN       1       16
+   c2     3 0.9375      NaN NaN NaN       1       16
+
+## agree_by_layer_task
+layer  task   rate  sd_seed  lo  hi  n_seed  n_cases
+   c1     1 0.8750      NaN NaN NaN       1       16
+   c1     2 0.8750      NaN NaN NaN       1       16
+   c1     3 0.1250      NaN NaN NaN       1       16
+   c2     1 0.6250      NaN NaN NaN       1       16
+   c2     2 0.9375      NaN NaN NaN       1       16
+   c2     3 0.0625      NaN NaN NaN       1       16
+
+## agree_by_layer_arm
+layer arm   rate  sd_seed  lo  hi  n_seed  n_cases
+   c1   R 0.6250      NaN NaN NaN       1       48
+   c2   R 0.5417      NaN NaN NaN       1       48
+
+## agree_by_layer
+layer   rate  sd_seed  lo  hi  n_seed  n_cases
+   c1 0.6250      NaN NaN NaN       1       48
+   c2 0.5417      NaN NaN NaN       1       48
+
+## agree_excess_over_chance
+layer  agree  chance  excess  lo  hi
+   c1 0.6250  0.5694  0.0556 NaN NaN
+   c2 0.5417  0.5200  0.0217 NaN NaN
+
+## full_self_spearman
+layer  spearman_full_self
+   c1              0.6037
+   c2              0.6175
+
+## seat_vs_sink
+layer  n_above  n_below  sink_above  sink_below  auc_seat_for_sink
+   c1        0       48         NaN      0.5833                NaN
+   c2        0       48         NaN      0.5208                NaN
+
+## codex_conditions
+layer  cases_sink  frac_cond58_all_images  frac_cond5_all_images  median_img_frac_cond5  median_img_frac_cond8  median_img_frac_cond3_all  mean_img_frac_cond3  median_img_frac_gpos
+   c1          28                     0.0                    0.0                 0.1417                 0.1429                     0.3812               0.4905                0.3300
+   c2          25                     0.0                    0.0                 0.2092                 0.2150                     0.0742               0.3582                0.5108
+
+## adam_rev_sig_by_layer_task
+layer  task   rate  sd_seed  lo  hi  n_seed  n_cases
+   c1     1 0.0000      NaN NaN NaN       1       16
+   c1     2 0.0000      NaN NaN NaN       1       16
+   c1     3 0.0000      NaN NaN NaN       1       16
+   c2     1 0.0625      NaN NaN NaN       1       16
+   c2     2 0.0000      NaN NaN NaN       1       16
+   c2     3 0.0000      NaN NaN NaN       1       16
+
+## adam_rev_point_by_layer_task
+layer  task   rate  sd_seed  lo  hi  n_seed  n_cases
+   c1     1 0.0000      NaN NaN NaN       1       16
+   c1     2 0.0000      NaN NaN NaN       1       16
+   c1     3 1.0000      NaN NaN NaN       1       16
+   c2     1 0.1875      NaN NaN NaN       1       16
+   c2     2 0.0000      NaN NaN NaN       1       16
+   c2     3 1.0000      NaN NaN NaN       1       16
+
+## adam_undet_by_layer_task
+layer  task  rate  sd_seed  lo  hi  n_seed  n_cases
+   c1     1 0.000      NaN NaN NaN       1       16
+   c1     2 0.000      NaN NaN NaN       1       16
+   c1     3 1.000      NaN NaN NaN       1       16
+   c2     1 0.125      NaN NaN NaN       1       16
+   c2     2 0.000      NaN NaN NaN       1       16
+   c2     3 1.000      NaN NaN NaN       1       16
+
+## adam_rev_sig_by_layer_arm
+layer arm   rate  sd_seed  lo  hi  n_seed  n_cases
+   c1   R 0.0000      NaN NaN NaN       1       48
+   c2   R 0.0208      NaN NaN NaN       1       48
+
+## adam_m0_rev_sig_by_layer_task
+layer  task   rate  sd_seed  lo  hi  n_seed  n_cases
+   c1     1 0.0000      NaN NaN NaN       1       16
+   c1     2 0.0000      NaN NaN NaN       1       16
+   c1     3 0.0000      NaN NaN NaN       1       16
+   c2     1 0.0625      NaN NaN NaN       1       16
+   c2     2 0.0000      NaN NaN NaN       1       16
+   c2     3 0.0000      NaN NaN NaN       1       16
+
+## real_adam_vs_sgd_exp_by_layer_task
+layer  task   rate  sd_seed  lo  hi  n_seed  n_cases
+   c1     1 0.5625      NaN NaN NaN       1       16
+   c1     2 0.4375      NaN NaN NaN       1       16
+   c1     3 1.0000      NaN NaN NaN       1       16
+   c2     1 0.3750      NaN NaN NaN       1       16
+   c2     2 0.3750      NaN NaN NaN       1       16
+   c2     3 1.0000      NaN NaN NaN       1       16
+
+## real_vs_adam_exp_by_layer_task
+layer  task   rate  sd_seed  lo  hi  n_seed  n_cases
+   c1     1 0.5625      NaN NaN NaN       1       16
+   c1     2 0.4375      NaN NaN NaN       1       16
+   c1     3 0.0000      NaN NaN NaN       1       16
+   c2     1 0.3125      NaN NaN NaN       1       16
+   c2     2 0.3750      NaN NaN NaN       1       16
+   c2     3 0.0000      NaN NaN NaN       1       16
+
+## signlike_first_step
+ task  absA_within20  absA_med  vold_ratio_med
+    1         0.5748    0.8897    1.281000e-01
+    2         0.0938    0.2334    1.418700e+00
+    3         0.0000    0.0000   2.616252e+143
