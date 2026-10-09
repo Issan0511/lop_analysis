@@ -1,0 +1,103 @@
+{
+  "run_id": "sna_cnn_cause_1009",
+  "slots": [
+    [
+      "LR",
+      10
+    ],
+    [
+      "LR",
+      11
+    ],
+    [
+      "LR",
+      12
+    ],
+    [
+      "LR",
+      13
+    ],
+    [
+      "LR",
+      14
+    ],
+    [
+      "LR",
+      15
+    ],
+    [
+      "LR",
+      16
+    ],
+    [
+      "LR",
+      17
+    ],
+    [
+      "LR",
+      18
+    ],
+    [
+      "LR",
+      19
+    ]
+  ],
+  "epochs": 400,
+  "lr": 0.001,
+  "n_tasks": 30,
+  "arms": {
+    "LR": {
+      "site": [
+        [
+          "leaky",
+          0.1
+        ],
+        [
+          "leaky",
+          0.1
+        ],
+        [
+          "leaky",
+          0.1
+        ],
+        [
+          "leaky",
+          0.1
+        ]
+      ],
+      "frz": null,
+      "pp": false,
+      "fixconv": false,
+      "fixfc": false,
+      "fcamp": 1.0,
+      "activation": "leaky",
+      "slope": 0.1
+    }
+  },
+  "host": "src/rlcifar_cnn_0908.py (init, subset, streams, net)",
+  "engine": "grouped conv / bmm bundle, one epoch per CUDA graph",
+  "gits": [
+    {
+      "git_hash": "0da43383c3bc9e8baac8274fd8c6db264e20a572",
+      "git_dirty_src": false
+    }
+  ],
+  "resumed": [],
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 5060 Ti",
+  "torch": "2.13.0+cu130",
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "wall_clock_s_this_process": 3263.9827330112457,
+  "ckpt_tasks": [
+    1,
+    2,
+    3,
+    5,
+    10,
+    20,
+    30
+  ],
+  "cuda_max_mem_mb": 435.5791015625
+}
