@@ -133,3 +133,54 @@ Codex の定理はすべて「構成した状態」で検算されており、**
 - GPU は共有（束 A・束 D が走行中）。`nvidia-smi` を見てから回し、1 プロセス ≤ 3 GB・一度に 1 本。他のプロセスは殺さない（kill は自分の PID だけ）。
 - コード: `src/cnn_drive_verify_1009.py`（計算）、`analysis/cnn_drive_verify_1009/`（集計）。結果: `results/cnn_drive_verify_1009/`。sna_cnn_cause_1009 のモジュールは `sys.path` に `wt/sna_cnn_cause_1009` を足して import（コピーしない）。
 - 中間結果が出た時点で `results/cnn_drive_verify_1009/summary.md` に表を書いて commit する。push は `claude/cnn_drive_verify_1009` へ。main には入れない。
+
+---
+
+## 追補 1（phase 2: leaky ReLU の CNN で同じ (a)(b)(c)）— 登録
+
+状態: **登録（この追補の commit）。leaky の走・検査・測定はこの commit より後。** 作成 2026-10-10 04:00 JST。親の依頼（phase 2）「c1 で full が self／自己形に従わないのは Snake のせいか」を切り分ける。
+
+### 追補 1.1 見たもの（独立な予測成功として数えない）
+
+**phase 1 の Snake の結果を全部見た後に書く。** 予測の参照にした Snake の値（4 腕 × seed 10–19、t ∈ {1,2,5,10,20,30}）: c1 の沈める側（G_full > 0）0.43–0.54、c2 0.52–0.87（谷の則、AUC 0.94）、c1 の full と literal self の一致 0.61（課題別 0.56–0.66、偶然 +0.11）、c2 0.79、中心化した自己形 S1 > 0 は c1 0.92・c2 0.90 だが c1 で full との一致 0.55、最初の Adam 1 歩の有意な反転 c1 ≤ 1.7%・c2 3–4%、凍結参照（S ≥ 75）で −G と同じ向き 92–93%、実際の軌道は最初の 10 更新で c1 の 77% が沈み（t1）課題の正味は 53% が下、初期化からの正味の沈降 c1 0.85（t30）。leaky の走は一切していない。宿主 `rlcifar_cnn_0908` の LR の既知（親から）: 窓 0.83（t31–50）・memo 0.998 で生きる。R は課題 3 で死ぬ。
+
+### 追補 1.2 箱
+
+- 腕 **LR**: leaky ReLU、傾き 0.1、宿主 `pmnist_0905.ARMS["LR"]` と同じ式 `torch.where(z > 0, z, 0.1·z)`（φ′ = 1 か 0.1、z = 0 は 0.1）。全 4 サイト（c1 c2 f1 f2）。
+- 束ねエンジンは sna_cnn_cause_1009 の `Bundle`（forward・Adam・CUDA グラフ・checkpoint・`run`）をそのまま使い、活性化だけ `BundleLeaky`（`BundleSnake` と同じ接口、本 worktree の `src/cnn_drive_verify_1009_lr.py`）に替える。α は無いので `alpha()` は NaN、`evaluate` の seat・two_alpha_* は NaN になる（V は記録として残す）。
+- seed 10–19 を R=10 で束ねる。30 課題 × 400 epoch、Adam lr 1e−3、宿主のプロトコル（同じ init・画像・ラベル・batch の stream）。チェックポイント t ∈ {1,2,3,5,10,20,30}。出力 `results/cnn_drive_verify_1009/LR/`。
+- 任意: **R**（ReLU、`clamp(z, min=0)`）を seed 10 だけ t1–3 で 1 本（死の前後と、ReLU で自己形 S ≥ 0 の検算のため）。出力 `results/cnn_drive_verify_1009/R/`。
+
+### 追補 1.3 走の前の検査（全部 PASS してから回す）
+
+- **L-host**: R=1 の束と宿主 `rlcifar_cnn_0908` の forward・Adam ループ（`run_one` の Adam 分岐を写したもの、sna の S-host と同じ形）で、同じ batch の 1 step の損失と全勾配（相対 1e−4 以内）、1 epoch 75 step 後の全パラメータ（絶対 2 lr 以内、sna の S-host と同じ許容）。LR と R。
+- **L-graph**: 2 epoch を CUDA グラフで再生したものと eager が bit 一致。
+- **L-indep**: 束の run 1 のパラメータ・画像を乱しても run 0・2 の損失・勾配は bit で不変、run 1 は変わる。
+
+### 追補 1.4 測定（phase 1 と同じコード、活性化だけ切り替え）
+
+(a) full と literal self の向き・一致、沈める側の割合（c1・c2）、十分条件 (3)(5)(8)、自己形 S0・S1（LR では負の枝 0.1z があるので S0 < 0 はありうる。R では S0 ≥ 0 が構成上なりたつので検算）。(b) 最初の 1 歩（MC 65,536）と凍結参照（t1・10・20、ラベル 32 本 ＋ 実際）の反転率、Adam の分解。(c) 再走の帳簿（t1・10・20 から 1 課題、40 走ではなく 10 走の束）と初期化からの沈降割合。**K1 は pool の勝者に加えて gate（z > 0 の印）も固定した差分**で照合する（leaky・ReLU は z = 0 で折れる）。
+
+### 追補 1.5 主判定（親の指定）
+
+c1 の full と literal self の符号一致率（t ∈ {1,2,5,10,20,30} をまとめる。seed ごとに出して 10 seed の平均と 95% 区間）:
+
+- **≥ 0.75 → SNAKE_SPECIFIC**（Snake の c1 の不一致は Snake のせい）
+- **< 0.65 → CNN_GENERIC**（leaky でも同じく従わない）
+- **その間 → PARTIAL**
+
+点推定で判定し、95% 区間が境界をまたぐときはそのことを併記する（Snake の seed SD は 0.03 なので、区間の半幅は 0.02 程度と見込む）。
+
+### 追補 1.6 Claude の予測（leaky の計算の前に登録）
+
+- **L1（主判定）**: CNN_GENERIC 0.45・PARTIAL 0.35・SNAKE_SPECIFIC 0.20。
+- **L2**（p 0.55）: leaky の c1 の沈める側（全課題まとめ）≥ 0.65。
+- **L3**（p 0.60）: leaky の c2 の沈める側（全課題まとめ）≥ 0.75。
+- **L4**（p 0.90）: (5) か (8) が全 1200 枚で成り立つのは、沈める側のチャネル × 状態の 1% 以下。
+- **L5**（p 0.70）: 中心化した自己形 S1 > 0 は c1・c2 とも 0.9 以上。R（seed 10、t1–3）の S0 ≥ 0 は生きたチャネルの 100%（p 0.97）。
+- **L6**（p 0.45）: c1 で sign(S1) と sign(G_full) の一致 ≥ 0.65。
+- **L7**（p 0.65）: 最初の Adam 1 歩の有意な反転は c1 ≤ 2%・c2 ≤ 8%。
+- **L8**（p 0.70）: 凍結参照の S ≥ 75 で −G と有意に同じ向きが c1・c2 とも 0.85 以上。
+- **L9**（p 0.60）: 初期化から t20 までの正味で沈んだチャネルは c1 ≥ 0.75、c2 ≥ 0.85。
+- **L10**（p 0.50）: 再走 t1 の最初の 1 epoch で c1 の 60% 以上が下がる。課題の正味が下がる割合は 0.45–0.65（p 0.60）。
+- **L11**（p 0.60）: 同じ実ラベルで、凍結の −G との一致は実際の軌道より c1 で 0.15 以上高い（S = 75）。
