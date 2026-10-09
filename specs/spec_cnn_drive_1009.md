@@ -49,6 +49,10 @@ binaryのN32またはN48画像を、各epochで独立にshuffleして16枚batch�
 
 実装のN1200・batch16・400epochs/task・H30000を確認し、同じbinary補題の長期reuse時のoutputbias応答を、真のepoch組替えの共分散と条件付き整数係数で厳密照合する。native Conv16のfirstConv1200個のraw weightsを正常rankに使う別の初期scaleと、入力level simplexによるrank1200構成も解析する。10分類の均等予測でAdam平均場が0とは限らない障害、一定学習率で全raw収束・固定compact永久保持が不可能となる境界を別命題として示す。新しい学習実験ではなく有限式・整数証明書・固定状態Jacobianの検算であり、他の活性化には進めない。
 
+## 1009 10分類の局所driftと有限一定rateの数学的検算範囲
+
+同じN1200/B16/E400/native Conv16/16・FC100/100・10分類で、対象firstConv filterが一つの画像の一つのpatchで反応し、他の画像ではstrictにinactiveとなる非空な局所構成を解析する。headの6対4の係数配置から、課題単位に集約した二点Adam補題で真のfilter meanの定常応答符号を導く。元のfull/literal-self全rawNTK容量との方向一致は、正のpath微分と有限ridge上界で別に確認する。固定局所領域での実移動量と有限observable平均化から、十分小さい一定rate・固定clock区間における高確率のnet mean低下を検討する。有限検算はgates/routing、raw gradient/Jacobian恒等式、trace/ridge上界と有理数のphase marginに限り、新しい訓練、成功率推定、他の活性化の実験ではない。effective image support一枚、特殊な初期head、選択したridge、実用rate未認証という制限を明示する。
+
 ## 1009 追加の数学的検算範囲
 
 重なる channel と full-rank な空間特徴を持つ、bias 無し 1×1 CNN の全 raw CE-SGD 共同更新について、fresh labels・対称 channel 初期化・指定の適応学習率下での条件維持、head 極限、長期 mean 低下、full/isolated 全 NTK の符号を検算する。有限の300更新は導出式の照合であり、無限時間の実験的判定ではない。
