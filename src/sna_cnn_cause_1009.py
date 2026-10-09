@@ -22,6 +22,8 @@ host's rule) or a fixed alpha, plus two options:
           so the fc layers learn on fixed random conv features
   fixfc : the three fc layers never move (their Adam step is masked to 0); used by the forks
           to measure what the conv layers alone can fit
+  fcamp<a>: at the two fc sites phi = z + a sin^2(alpha z)/alpha, phi' = 1 + a sin(2 alpha z)
+          >= 1 - a: the same gate pattern with its flat point (phi' = 0) lifted to 1 - a
 """
 
 from __future__ import annotations
@@ -77,7 +79,8 @@ ARMS = {
 
 def parse_arm(name: str) -> dict:
     """Registry name, or a site-wise spec `S:<x>-<x>-<x>-<x>` with x = c<val> | a<val>,
-    e.g. `S:c0.6-c3-c3-c3`.  Options are appended with `+frz<k>` / `+pp` / `+fixconv` / `+fixfc`."""
+    e.g. `S:c0.6-c3-c3-c3`.  Options are appended with `+frz<k>` / `+pp` / `+fixconv` / `+fixfc` /
+    `+fcamp<a>`."""
     base, *opts = name.split("+")
     if base in ARMS:
         d = dict(ARMS[base])
@@ -97,6 +100,8 @@ def parse_arm(name: str) -> dict:
             d["fixconv"] = True
         elif o == "fixfc":
             d["fixfc"] = True
+        elif o.startswith("fcamp"):
+            d["fcamp"] = float(o[5:])
         else:
             raise SystemExit(f"unknown option {o!r} in {name!r}")
     if "site" not in d:
@@ -106,6 +111,7 @@ def parse_arm(name: str) -> dict:
     d.setdefault("pp", False)
     d.setdefault("fixconv", False)
     d.setdefault("fixfc", False)
+    d.setdefault("fcamp", 1.0)
     return d
 
 
@@ -138,6 +144,11 @@ class BundleSnake:
                     self.fixA[l][r] = val
             self.pp[r] = bool(s["pp"])
         self.any_pp = bool(self.pp.any())
+        # Snake amplitude per run at the fc sites; only built when some run uses one, so that
+        # every other bundle computes exactly the plain Snake
+        self.amp = None
+        if any(s["fcamp"] != 1.0 for s in specs):
+            self.amp = torch.tensor([[s["fcamp"]] for s in specs], device=device)   # (R, 1)
 
     def alpha(self, l: int) -> torch.Tensor:                          # (R, n)
         ada = (self.cval[l] / self.V[l].sqrt()).clamp(self.lo, self.hi)
@@ -148,9 +159,13 @@ class BundleSnake:
 
     def phi(self, z: torch.Tensor, l: int) -> torch.Tensor:
         a = self._shape(l, self.alpha(l))
+        if self.amp is not None and not IS_CONV[l]:
+            return z + self.amp[:, None, :] * (torch.sin(a * z) ** 2 * a.reciprocal())
         return z + torch.sin(a * z) ** 2 * a.reciprocal()
 
     def dphi(self, z: torch.Tensor, l: int) -> torch.Tensor:
+        if self.amp is not None and not IS_CONV[l]:
+            return 1.0 + self.amp[:, None, :] * torch.sin(2.0 * self._shape(l, self.alpha(l)) * z)
         return 1.0 + torch.sin(2.0 * self._shape(l, self.alpha(l)) * z)
 
     @torch.no_grad()

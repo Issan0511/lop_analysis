@@ -281,6 +281,28 @@ def check_fixconv(cifar, device) -> dict:
             "pass": conv_fixed and fc_moved and other_moved and no_mask}
 
 
+def check_fcamp(cifar, device) -> dict:
+    """`+fcamp<a>`: phi' = 1 + a sin(2 alpha z) at f1/f2 (checked against autograd), the conv
+    sites untouched, and a = 1 in a mixed bundle gives the plain Snake bit for bit."""
+    specs = [E.parse_arm("SNA+fcamp0.7"), E.parse_arm("SNA")]
+    act = E.BundleSnake(specs, device)
+    plain = E.BundleSnake([E.parse_arm("SNA")], device)
+    g = torch.Generator(device="cpu").manual_seed(1)
+    z = (3 * torch.randn(2, 16, 100, generator=g)).to(device).requires_grad_(True)
+    y = act.phi(z, 3)
+    (gz,) = torch.autograd.grad(y.sum(), z)
+    d = act.dphi(z.detach(), 3)
+    deriv_ok = rel(gz, d) < 1e-5
+    floor_ok = bool((d[0] >= 0.3 - 1e-6).all()) and float(d[1].min()) < 0.05
+    same_plain = bool((act.phi(z.detach(), 3)[1] == plain.phi(z.detach()[1:2], 3)[0]).all())
+    zc = torch.randn(4, 2 * 16, 8, 8, generator=g).to(device)
+    conv_plain = bool((act.phi(zc, 1)[:, :16] == E.BundleSnake([E.parse_arm("SNA")], device).phi(zc[:, :16], 1)).all())
+    no_amp = plain.amp is None
+    return {"deriv_matches_autograd": deriv_ok, "floor_0.3_and_plain_reaches_0": floor_ok,
+            "a1_run_bit_identical": same_plain, "conv_untouched": conv_plain, "no_amp_tensor_when_unused": no_amp,
+            "pass": deriv_ok and floor_ok and same_plain and conv_plain and no_amp}
+
+
 def check_cost(cifar, device) -> dict:
     out = {}
     for R in (10, 30, 60):
@@ -317,6 +339,7 @@ def main() -> None:
               "S-pp": lambda: check_pp(device),
               "S-freeze": lambda: check_freeze(cifar, device),
               "S-fixconv": lambda: check_fixconv(cifar, device),
+              "S-fcamp": lambda: check_fcamp(cifar, device),
               "S-cost": lambda: check_cost(cifar, device)}
     sel = args.only.split(",") if args.only else list(checks)
     res = {}
