@@ -10,6 +10,9 @@
 4. 二乗損失・全 head ridge・共通学習率 SGD では、全 hidden 層を正の学習率で共同学習する有限期間へ拡張した。旧ラベルと学習後表現の依存を保ち、参照状態との差を一様評価する。二段 Conv の全旧ラベル検算も通過。
 5. CE では、固定 hidden・ゼロ head からの一歩学習と、明示した正の総学習率範囲での多歩学習を証明した。長く head を学ぶと逆転する反例もある。
 6. 反応する画像群を分けた三チャネルの共有 Conv→ReLU→MaxPool では、通常のラベル再利用を含めて長期沈降を証明した。出力 bias なし、exact ridge head、二乗損失、full-batch SGD という構成。指定の初期条件から、将来ラベルの乱数に関して少なくとも 12/13 の確率で条件領域を永久に保ち、その事象上で正の pooled 出力が 0 に収束する。平均前活性の累積変化は負、時間平均勾配の極限は 0。一般の CNN の成功確率ではない。
+7. その後、任意の学習済み full CNN 状態で使える CE 条件へ広げた。全パラメータを通った logits の平均前活性方向感度と、クラス順位または top confidence/contrast を比較する。実 RL-CIFAR と同じ二段 Conv・二段 hidden FC・全 bias・重なる全 Conv チャネル・異なる二画像の異なる予測クラスを含む非空な開集合を解析的に構成した。旧 head の短い学習に限定しない。
+8. 真の Adam 更新について、過去 momentum・座標ごとの倍率差・現在の勾配と分母の共分散を分けた有限状態の十分条件を示した。対称なクラス係数による厳密正例もあり、実 RL-CIFAR と同じ構造、10 クラス、batch 16、全 bias の非空例を検算した。対称性を少し崩した近傍も正になる。条件の実学習軌道での維持は未証明。
+9. ユーザーの「一歩の Adam 反転は長期平均なら関係なくなるのでは」という指摘を受け、初期反転と定常偏りを分けた。一定の iid 勾配分布を Adam に供給する模型では、標準の beta と有限 epsilon でも、正の SGD 平均に対して負の定常 Adam 平均・ほぼ確実な時間平均が得られる。これは実 CNN のパラメータが変化する長期軌道の反転を証明したものではない。
 
 ## 反例と残る制限
 
@@ -27,3 +30,15 @@
 - `longtime_verification.json`: 10 クラス・9 画像、共有 Conv 自動微分 200 更新と再帰 50,000 更新。有限計算は再帰式を検算するもので、無限時間の主張は超マルチンゲールの証明に依る。
 
 導出は `analysis/cnn_drive_1009/proof.md` と三つの付録。二つの独立最終監査を同じディレクトリに保存した。
+
+## 追加検算と注意
+
+- `ce_full_architecture.json`、`ce_different_classes.json`: 実 RL-CIFAR と同じ full architecture での、全パラメータ CE 恒等式・クラス順位条件・異なる予測 class・定義した CE self と full の符号。自動微分と解析式が一致。
+- `adam_full_architecture.json`: full architecture、10 クラス、batch 16 のラベル全組合せを和の分布に集約。対称例で期待第一 Conv mean 変化は負、非対称例では期待 SGD 勾配が正でも最初の Adam mean 変化が正。真の torch.optim.Adam との誤差は 2.6e-15 以下。
+- `adam_interval.json`、`adam_shared_conv.json`、`adam_symmetric.json`: 区間による分母誤差、有限履歴の非空例、全 class-count の共有 Conv 自動微分、対称ノイズの正例。
+- `overlap_obstruction.json`: 非比例な重なりを持つ depthwise CNN の反例。任意小の overlap でも標的振幅が小さいと、旧ラベルを固定した方向が反転する。これは長期の非沈降を示すものではない。
+- `adam_stationary_twopoint.json`: 16枚中1枚のみが標的勾配に寄与する、独立な10クラスラベルの二点分布。SGD平均 +6.25e-7、定常Adam期待の解析上界 -2.819430718e-5。Fraction による厳密検算。
+
+追加のCE selfは、他の第一Convチャネルを取り去り forward を計算し直す明示した操作。元の logdet 自己項と同一の意味ではない。新しい十分条件を得ても、自己項の定義の違いを消したことにはならない。
+- `adam_stationary_b16.json`: 16 枚全てが寄与する17値の固定 iid 勾配。SGD平均 +1e-6、定常Adam平均の厳密区間は約 [-0.0003586082662003, -0.0002715579654668]。有理数の moment と平方根の有理区間を用い、Taylor残差・低分母事象・epsilonを全て含む。独立な joint-moment 再帰でも照合。通常の初期化とbias correctionを含む時間平均も同じ極限へ収束する。固定分布への応答であり、実 CNN の変化するパラメータ軌道ではない。
+- `adam_stationary_b16_optional_mc.json`: 別の補助シミュレーション出力も保存。符号判定はこの Monte Carlo の点推定によらず、上の有理数証明書による。

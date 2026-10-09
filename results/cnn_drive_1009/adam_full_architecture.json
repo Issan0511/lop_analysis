@@ -1,0 +1,41 @@
+{
+  "seed": 100921,
+  "minimum_pool_gap": 1.7917601445871512e-06,
+  "actual_optimizer_check_scope": "Four symmetric-example label vectors; asymmetric full-network case checked by analytic coordinate formula",
+  "scope": "Exact finite label-sum expectations at constructed full CNN states; not observed training trajectories",
+  "architecture": "Conv5(3,16,pad2)-ReLU-MaxPool2-Conv5(16,16,pad2)-ReLU-MaxPool2-FC(1024,100)-ReLU-FC(100,100)-ReLU-FC(100,10); all biases trainable",
+  "batch": 16,
+  "classes": 10,
+  "adam": {
+    "step": 1,
+    "beta1": 0.9,
+    "beta2": 0.999,
+    "epsilon": 1e-08,
+    "previous_first_and_second_moments": 0
+  },
+  "symmetric_example": {
+    "different_images": 2,
+    "copies_per_image": 8,
+    "compressed_label_configurations": 5329,
+    "number_label_vectors": 10000000000000000,
+    "probability_sum": 1.0,
+    "minimum_target_coordinate_expected_adam_direction": 0.997061195918122,
+    "expected_target_mean_gradient_SGD": 0.9825114765999644,
+    "expected_target_mean_update_Adam_lr_001": -0.03884461214665478,
+    "max_autograd_gradient_error": 4.163336342344337e-17,
+    "max_actual_adam_update_error": 2.55351295663786e-15
+  },
+  "asymmetric_counterexample": {
+    "favored_classes": 3,
+    "favored_probability": 0.30099999999999993,
+    "expected_target_mean_gradient_SGD": 0.0004620231140544925,
+    "expected_target_mean_update_Adam_lr_001": 0.0038862258069807276,
+    "minimum_coordinate_expected_adam_direction": -0.10018437798034552,
+    "maximum_coordinate_expected_adam_direction": -0.10017722274166402,
+    "output_bias_group_coefficient": -0.273931342512395
+  },
+  "versions": {
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.1"
+  }
+}

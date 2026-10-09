@@ -2,6 +2,8 @@
 
 状態: 検証中。ユーザーの依頼全体は未完了。以下は新しい条件付き定理と、無条件化を阻む反例である。実際の RL-CIFAR の二つの Conv と二つの FC を Adam・CE で同時訓練する全期間の定理とはしない。
 
+1009 追記: §11 以降に、任意の学習済み full CNN 状態で使える CE 条件、真の Adam 更新の条件、微小 overlap の障害、Adam の定常偏りを追加した。CE の符号保証は現在、head の初期学習だけに限定されない。ただし、その新しい条件の実学習軌道での維持は未証明である。
+
 ## 0. 何の向きを示すか
 
 既存の「自己項」は少なくとも三種類を区別する必要がある。
@@ -285,3 +287,67 @@ $$0<S\le\min\left\{\frac N{r_*},\frac{2N}{h^2},\frac{8Q_*}{5\mathrm e\,Cdh^5}\ri
 具体値 $A=2.1,B=2,\delta=0.1,\lambda=0.1,\eta=0.005$ では、各チャネルの初期応答 $h_0=0.1$、支えが崩れる上界 $H_{\rm exit}=3.9$。停止した応答の和に対する非負 supermartingale の評価から、**模型内の将来のランダムラベルに関して、少なくとも $1-3h_0/H_{\rm exit}=12/13$ の確率で全期間その支えが保たれる**。その事象では全チャネルで $h_t\to0$、平均前活性の累積変化は約 $-0.0616667$ に収束する。他チャネルを除いた自己モデルとも方向が一致する。共有 Conv の実際の自動微分による200更新と導出した再帰式の最大差は $4.44\times10^{-16}$ だった。
 
 これは条件付きの正の駆動と長期間の累積沈降を示す例であり、勾配の時間平均が正の定数に収束するという主張ではない。この例では駆動の振幅も消え、時間平均はゼロへ向かう。支えの分離、出力 bias なし、二乗損失、exact head fit の制限を外した、実 RL-CIFAR の二段 Conv・非線形 FC・CE・Adam における長期の自己方向は未解決である。
+
+## 11. 任意の学習済み CNN 状態での CE 符号保証
+
+詳細は [ce_trained_state.md](ce_trained_state.md)。現在の全パラメータを固定し、新しい一様ラベルだけを平均する。対象の平均前活性を $m$、全パラメータ方向を $u=\nabla m$、logits と感度を $f_n,R_n=Df_n[u]$ とすると、
+
+$$G=\mathbb E\langle\nabla m,\nabla L_{\rm new}\rangle
+=\frac1N\sum_n R_n\cdot(p_n-\mathbf1/C)
+=\frac1{NC}\sum_n\sum_{c<d}(p_{nc}-p_{nd})(R_{nc}-R_{nd}).$$
+
+従って各画像で logits と感度のクラス順位が同じなら $G\ge0$、strict な対があれば $G>0$。旧ラベルと学習後特徴の独立性、head の最適当てはめ、旧学習の短さは必要ない。多クラスでは目的の総和の正をそのまま仮定する条件ではなく、各クラス対の構造を指定する十分条件である。
+
+より弱く、各画像の top class $t$ に対して、全 loser との logit 差が $\log(C-1)$ より大きく、感度差 $R_t-R_c\ge\gamma>0$ なら、loser 同士の順位によらず $G_n\ge\gamma(p_t-1/C)>0$。固定した実状態から検査できる。
+
+非空性は実 RL-CIFAR と同じ二段 Conv・二段 hidden FC・全 bias の構造で証明した。異なる二画像が異なる top class を持ち、全 Conv チャネルが両画像に反応し、MaxPool winner が strict な開集合を構成した。別に全 hidden 重みが正で head のクラス順位が各座標で共通な開集合では、全四層の mean に対して成立する。
+
+第一 Conv の mean については、全層を同時 SGD 更新しても $\mathbb E\Delta m=-\eta G$ が厳密。深層 mean では全 upstream 変化を含めた $O(\eta^2)$ の余りを抑える。CE channel-ablation self と full がともに下がる非空例も示したが、その self は既存 logdet の自己項と同一視しない。
+
+## 12. CE の期待勾配から真の Adam 更新へ
+
+詳細は [adam_state.md](adam_state.md)。現在の CNN と過去の Adam 状態を固定し、新ラベルによる座標勾配を $g_j=\mu_j+\xi_j$ とする。過去の first moment は任意の実数、second moment は非負。正の共通係数 $\kappa$ と
+
+$$a_j=\beta_1m_j^-,\quad b=1-\beta_1,\quad
+h_j(g)=\frac1{\sqrt{\beta_2v_j^-+(1-\beta_2)g^2}+\widetilde\epsilon}$$
+
+を使うと、実際の Adam の降下方向 $A$ は
+
+$$\mathbb E[u^\top A]=\kappa\sum_j u_j\{(a_j+b\mu_j)\mathbb E h_j(g_j)+b\operatorname{Cov}(g_j,h_j(g_j))\}.$$
+
+現在の新ラベルが分母にも入るため、分母を期待値で置き換えない。勾配の全ラベル範囲と分散から、分母変化の上界を求め、CE の余裕・座標間倍率差・過去 momentum・分母との共分散を分けた十分条件を示した。
+
+さらに、クラス係数が正負対称で logits が $f_{nc}=a_ct_n+k_n$、$t_n>0$、hidden 座標感度が非負の場合は、勾配雑音が厳密に対称になる。過去 first moment が関連座標で非負なら、任意の過去 second moment、有限 epsilon、任意の有限 batch で期待 Adam 方向が正になる。odd かつ strictly increasing な関数 $g/(\sqrt{c+dg^2}+\epsilon)$ の性質から証明する。strict な余裕は小摂動後にも残る。
+
+この正例と反例を、実 RL-CIFAR と同じ全構造に埋め込んだ。10 クラス・batch 16 の $10^{16}$ 通りの独立ラベルを有限の和へ集約し、真の共有重みと全層同時 Adam の第一 Conv mean 変化を評価した。正例では沈降、3 対 7 クラスの弱い予測偏りでは期待 SGD 勾配が正でも最初の Adam 更新平均が逆向きになる。この一歩の反例だけから長期の反転は結論しない。
+
+## 13. 非比例な微小 overlap に対する長期証明の障害
+
+詳細は [overlap_obstruction.md](overlap_obstruction.md)。二画像に対して、共有 depthwise Conv→ReLU→MaxPool の特徴を
+
+$$H=\begin{pmatrix}a&\varepsilon b\\\varepsilon a&b\end{pmatrix},\qquad a,b,\varepsilon>0$$
+
+とする。両チャネルが両画像に活性で、特徴は非比例。10 クラスの異なる旧ラベルを固定して新ラベルだけを平均すると、任意に小さい $\varepsilon$ でも $a$ を十分小さくすれば full の駆動が孤立自己モデルと逆向きになる。平均前活性方向と真の共有 Conv 勾配で検算した。
+
+同じ状態で旧ラベルも独立に平均し直すと正になり、F1 と矛盾しない。通常のラベル再利用では旧ラベルと表現が依存するため、その再平均を黙って適用できない。この反例は「全正振幅領域で各旧ラベルに対する条件付き方向を保つ」という、前の支え分離証明の性質の一様な拡張を阻む。長期沈降そのものを否定する反例ではない。
+
+## 14. Adam の初期反転と、長期に残る定常偏りを分ける
+
+ユーザーの指摘どおり、§12 の最初の一歩の反例だけでは、長期の期待方向を反証できない。別に Adam の履歴を無限に伸ばした定常状態を解析した。
+
+二点分布の一般定理は [adam_stationary_twopoint.md](adam_stationary_twopoint.md)。$g_t=q+\mu-\operatorname{Bernoulli}(q)$、$q>1/2$ では、$\mu=0$ の定常 Adam 平均が厳密に負になる。各過去勾配を一つだけ残して条件付けると、正の勾配の方が大きい分母を作ることから従う。定量的な負の余裕と正の $\mu$ の許容範囲も証明した。batch 16 のうち一画像だけが対象に反応する CNN に埋め込め、他画像のラベルも独立な10クラスのままである。
+
+16 枚全てが寄与する場合も、[adam_stationary_b16.md](adam_stationary_b16.md) で別に証明した。
+
+$$g_t=0.900001-K_t/16,\quad K_t\overset{\rm iid}{\sim}\mathrm{Binomial}(16,0.9),\quad
+\beta_1=0.9,\ \beta_2=0.999,\ \epsilon=10^{-8}.$$
+
+この固定分布で $\mathbb E g=10^{-6}>0$ なのに、定常 Adam 方向には
+
+$$-0.000358609<\mathbb E\frac m{\sqrt v+\epsilon}<-0.000271557<0$$
+
+という厳密な区間が付く。定常の joint moments を有理数で求め、二次展開の残差を六次・十二次 moment で抑え、平方根は整数演算で有理区間に囲った。数値シミュレーションの符号を証明の代わりにしたものではない。独立な joint-moment 再帰でも照合した。
+
+定常列のエルゴード性と、通常の初期値・bias correction からの差の幾何減衰により、実現した長期時間平均もこの負の定常期待へ収束する。従って Adam の勾配と分母の相関は、長期平均だけでは必ずしも消えない。
+
+**重要な限定**: これらは固定した CNN 状態が作る iid 勾配分布への Adam の定常応答である。実際に CNN の重みを更新すれば logits と勾配分布が変わる。実 RL-CIFAR の長期軌道が逆転したとは証明していない。また、正の平均勾配が小さい構成である。実際の自己方向の余裕が定常補正を上回ることを示せれば、Adam を含む方向保証は依然可能である。

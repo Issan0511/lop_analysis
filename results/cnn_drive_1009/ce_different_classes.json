@@ -1,0 +1,152 @@
+{
+  "architecture": "Actual RLCIFAR: Conv5 3->16 pad2; pool; Conv5 16->16 pad2; pool; FC1024->100->100->10, ReLU and all trainable biases",
+  "input_range": [
+    0.08333333333333333,
+    0.99951171875
+  ],
+  "c0": 1.5478515625,
+  "r_h_analytic_lower_bound": 0.04037854889589906,
+  "scope": "Constructed arbitrary-state open-family witness, not a measured training trajectory",
+  "records": [
+    {
+      "name": "full_exact",
+      "h": [
+        1.0,
+        6.0
+      ],
+      "mean_gradient_projection": 2.697648091266815,
+      "minimum_abs_gate_margin": 0.3999999999999999,
+      "minimum_pool_gap": 0.0009765625,
+      "all_conv_channels_active_on_both_images": true,
+      "samples": [
+        {
+          "top_class_1based": 2,
+          "minimum_top_logit_gap": 3.0000000000000018,
+          "minimum_top_R_gap": 0.5426020279034057,
+          "maximum_top_R_gap": 0.5426020279034057,
+          "spread_certificate": 0.45302603554336784,
+          "g": 0.4530260355433677,
+          "g_per_rh": 2.5047420332753476,
+          "r_h": 0.18086734263446855,
+          "top_probability": 0.9349140110917826
+        },
+        {
+          "top_class_1based": 1,
+          "minimum_top_logit_gap": 5.400000000000009,
+          "minimum_top_R_gap": 2.914927327380147,
+          "maximum_top_R_gap": 5.829854654760289,
+          "spread_certificate": 2.6103282851101013,
+          "g": 4.9422701469902695,
+          "g_per_rh": 5.5951622985148015,
+          "r_h": 0.8833113113273161,
+          "top_probability": 0.9955037268308811
+        }
+      ]
+    },
+    {
+      "name": "self_exact",
+      "h": [
+        0.0625,
+        0.375
+      ],
+      "mean_gradient_projection": 0.8773017130919569,
+      "minimum_abs_gate_margin": 0.0625,
+      "minimum_pool_gap": 0.0001220703125,
+      "all_conv_channels_active_on_both_images": true,
+      "samples": [
+        {
+          "top_class_1based": 2,
+          "minimum_top_logit_gap": 0.1875000000000001,
+          "minimum_top_R_gap": 0.5426020279034057,
+          "maximum_top_R_gap": 0.5426020279034057,
+          "spread_certificate": 0.1970341898678531,
+          "g": 0.1970341898678531,
+          "g_per_rh": 1.0893851095388603,
+          "r_h": 0.18086734263446855,
+          "top_probability": 0.46312836984628675
+        },
+        {
+          "top_class_1based": 2,
+          "minimum_top_logit_gap": 1.125,
+          "minimum_top_R_gap": 2.649933933981947,
+          "maximum_top_R_gap": 2.649933933981947,
+          "spread_certificate": 1.5575692363160594,
+          "g": 1.5575692363160594,
+          "g_per_rh": 1.763329888729222,
+          "r_h": 0.8833113113273161,
+          "top_probability": 0.6877766295764075
+        }
+      ]
+    },
+    {
+      "name": "full_perturbed",
+      "h": [
+        1.0000017364149454,
+        6.000010388781474
+      ],
+      "mean_gradient_projection": 2.697677295440435,
+      "minimum_abs_gate_margin": 0.3999987382031923,
+      "minimum_pool_gap": 0.0009765473262846047,
+      "all_conv_channels_active_on_both_images": true,
+      "samples": [
+        {
+          "top_class_1based": 2,
+          "minimum_top_logit_gap": 3.000029633090602,
+          "minimum_top_R_gap": 0.542607401710356,
+          "maximum_top_R_gap": 0.5426074153176443,
+          "spread_certificate": 0.45303150071545717,
+          "g": 0.4530315062159861,
+          "g_per_rh": 2.504767823204327,
+          "r_h": 0.18086766446737043,
+          "top_probability": 0.9349158144313068
+        },
+        {
+          "top_class_1based": 1,
+          "minimum_top_logit_gap": 5.400199952667062,
+          "minimum_top_R_gap": 2.9149571253789697,
+          "maximum_top_R_gap": 5.829914032434987,
+          "spread_certificate": 2.6103575779557344,
+          "g": 4.942323084664874,
+          "g_per_rh": 5.595212185437353,
+          "r_h": 0.883312896967205,
+          "top_probability": 0.9955046217416886
+        }
+      ]
+    },
+    {
+      "name": "self_perturbed",
+      "h": [
+        0.06250011067609801,
+        0.37500064969583324
+      ],
+      "mean_gradient_projection": 0.8773137200023766,
+      "minimum_abs_gate_margin": 0.06250058743919422,
+      "minimum_pool_gap": 0.00012200167825607289,
+      "all_conv_channels_active_on_both_images": true,
+      "samples": [
+        {
+          "top_class_1based": 2,
+          "minimum_top_logit_gap": 0.18750188956910124,
+          "minimum_top_R_gap": 0.542607401710356,
+          "maximum_top_R_gap": 0.5426074153176443,
+          "spread_certificate": 0.197036392214269,
+          "g": 0.19703639929342118,
+          "g_per_rh": 1.0893953868076163,
+          "r_h": 0.18086766446737043,
+          "top_probability": 0.46312883948308153
+        },
+        {
+          "top_class_1based": 2,
+          "minimum_top_logit_gap": 1.1250111287298865,
+          "minimum_top_R_gap": 2.6499602198836394,
+          "maximum_top_R_gap": 2.649960286338267,
+          "spread_certificate": 1.5575910115010765,
+          "g": 1.5575910407113323,
+          "g_per_rh": 1.7633514081581005,
+          "r_h": 0.883312896967205,
+          "top_probability": 0.6877790194761643
+        }
+      ]
+    }
+  ]
+}
