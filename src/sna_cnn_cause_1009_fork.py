@@ -119,35 +119,51 @@ def main() -> None:
 
         @torch.no_grad()
         def trace(e: int) -> None:
+            """Read only; the probe goes through in chunks of 50 images (memory)."""
             nonlocal h0
-            Xp, Yp = B.X[:, probe], B.Y[:, probe]
-            o = E.forward(B.P, Xp, B.act)
-            h = torch.nn.functional.max_pool2d(o[3], 2, 2).reshape(probe.numel(), R, -1).transpose(0, 1)
+            n_pr = probe.numel()
+            hit = torch.zeros(R, device=device)
+            hit_old = torch.zeros(R, device=device)
+            ce_s = torch.zeros(R, device=device)
+            hs = []
+            gsum = {2: torch.zeros(R, CN.HIDDEN, device=device), 3: torch.zeros(R, CN.HIDDEN, device=device)}
+            zsum = {2: torch.zeros(R, CN.HIDDEN, device=device), 3: torch.zeros(R, CN.HIDDEN, device=device)}
+            Vc = [B.act.V[l].clone() for l in (0, 1)]
+            for i0 in range(0, n_pr, 50):
+                pi = probe[i0:i0 + 50]
+                Xp, Yp = B.X[:, pi], B.Y[:, pi]
+                o = E.forward(B.P, Xp, B.act)
+                b = pi.numel()
+                hs.append(torch.nn.functional.max_pool2d(o[3], 2, 2).reshape(b, R, -1).transpose(0, 1))
+                hit += (o[8].argmax(-1) == Yp).float().sum(1)
+                ce_s += torch.nn.functional.cross_entropy(o[8].reshape(-1, 10), Yp.reshape(-1),
+                                                          reduction="none").view(R, -1).sum(1)
+                for l in (2, 3):
+                    z = o[2 * l]
+                    gsum[l] += B.act.dphi(z, l).sum(1)
+                    zsum[l] += z.sum(1)
+                # current fc on the task-start conv (conv weights and conv alpha state of epoch 0)
+                for l in (0, 1):
+                    B.act.V[l].copy_(V0[l])
+                om = E.forward(P0[:4] + list(B.P[4:]), Xp, B.act)
+                for l in (0, 1):
+                    B.act.V[l].copy_(Vc[l])
+                hit_old += (om[8].argmax(-1) == Yp).float().sum(1)
+            h = torch.cat(hs, 1)
             if h0 is None:
                 h0 = h.clone()
-            # current fc on the task-start conv (conv weights and conv alpha state of epoch 0)
-            Vc = [B.act.V[l].clone() for l in (0, 1)]
-            for l in (0, 1):
-                B.act.V[l].copy_(V0[l])
-            om = E.forward(P0[:4] + list(B.P[4:]), Xp, B.act)
-            for l in (0, 1):
-                B.act.V[l].copy_(Vc[l])
-            acc = (o[8].argmax(-1) == Yp).float().mean(1)
-            acc_old = (om[8].argmax(-1) == Yp).float().mean(1)
-            ce = torch.nn.functional.cross_entropy(o[8].reshape(-1, 10), Yp.reshape(-1),
-                                                   reduction="none").view(R, -1).mean(1)
             dh = (h - h0).flatten(1).norm(dim=1) / h0.flatten(1).norm(dim=1)
             mv = {tag: ((B.P[2 * i] - P0[2 * i]).flatten(1).norm(dim=1)
                         / P0[2 * i].flatten(1).norm(dim=1)) for i, tag in enumerate(CN.WEIGHT_TAGS)}
             gates = {}
             for l, tag in ((2, "f1"), (3, "f2")):
-                z = o[2 * l]
-                gates[f"gate_{tag}"] = B.act.dphi(z, l).mean((1, 2))
-                gates[f"seat_{tag}"] = (2 * B.act.alpha(l) * z.mean(1)).cpu().median(1).values  # cpu: median(dim) is not deterministic on CUDA
+                gates[f"gate_{tag}"] = (gsum[l] / n_pr).mean(1)
+                # cpu: median(dim) is not deterministic on CUDA
+                gates[f"seat_{tag}"] = (2 * B.act.alpha(l) * zsum[l] / n_pr).cpu().median(1).values
             for r, (old, new, s_) in enumerate(meta):
                 trows.append({"fork": f"{old}>{new}", "seed": s_, "task": t, "epoch": e,
-                              "acc": float(acc[r]), "acc_oldconv": float(acc_old[r]),
-                              "ce": float(ce[r]), "feat_drift": float(dh[r]),
+                              "acc": float(hit[r]) / n_pr, "acc_oldconv": float(hit_old[r]) / n_pr,
+                              "ce": float(ce_s[r]) / n_pr, "feat_drift": float(dh[r]),
                               **{f"move_{k}": float(v[r]) for k, v in mv.items()},
                               **{k: float(v[r]) for k, v in gates.items()}})
 
