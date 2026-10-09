@@ -20,6 +20,8 @@ host's rule) or a fixed alpha, plus two options:
           over (batch, H, W), which also contains the spread of the position means
   fixconv: the two conv layers never move from their init (their Adam step is masked to 0),
           so the fc layers learn on fixed random conv features
+  fixfc : the three fc layers never move (their Adam step is masked to 0); used by the forks
+          to measure what the conv layers alone can fit
 """
 
 from __future__ import annotations
@@ -75,7 +77,7 @@ ARMS = {
 
 def parse_arm(name: str) -> dict:
     """Registry name, or a site-wise spec `S:<x>-<x>-<x>-<x>` with x = c<val> | a<val>,
-    e.g. `S:c0.6-c3-c3-c3`.  Options are appended with `+frz<k>` / `+pp` / `+fixconv`."""
+    e.g. `S:c0.6-c3-c3-c3`.  Options are appended with `+frz<k>` / `+pp` / `+fixconv` / `+fixfc`."""
     base, *opts = name.split("+")
     if base in ARMS:
         d = dict(ARMS[base])
@@ -93,6 +95,8 @@ def parse_arm(name: str) -> dict:
             d["pp"] = True
         elif o == "fixconv":
             d["fixconv"] = True
+        elif o == "fixfc":
+            d["fixfc"] = True
         else:
             raise SystemExit(f"unknown option {o!r} in {name!r}")
     if "site" not in d:
@@ -101,6 +105,7 @@ def parse_arm(name: str) -> dict:
     d.setdefault("frz", None)
     d.setdefault("pp", False)
     d.setdefault("fixconv", False)
+    d.setdefault("fixfc", False)
     return d
 
 
@@ -361,9 +366,13 @@ class Bundle:
         # per-parameter update masks, only when some run keeps its conv layers fixed (otherwise
         # the step is exactly the unmasked one)
         self.upd_mask = None
-        if any(sp["fixconv"] for sp in self.specs):
-            keep = torch.tensor([0.0 if sp["fixconv"] else 1.0 for sp in self.specs], device=device)
-            self.upd_mask = [keep.view(-1, *([1] * (p.dim() - 1))) if i < 4 else None
+        if any(sp["fixconv"] or sp["fixfc"] for sp in self.specs):
+            kc = torch.tensor([0.0 if sp["fixconv"] else 1.0 for sp in self.specs], device=device)
+            kf = torch.tensor([0.0 if sp["fixfc"] else 1.0 for sp in self.specs], device=device)
+            use_c = any(sp["fixconv"] for sp in self.specs)
+            use_f = any(sp["fixfc"] for sp in self.specs)
+            self.upd_mask = [(kc if i < 4 else kf).view(-1, *([1] * (p.dim() - 1)))
+                             if ((i < 4 and use_c) or (i >= 4 and use_f)) else None
                              for i, p in enumerate(self.P)]
 
     # one step on the static tensors; j = position of the batch in the epoch

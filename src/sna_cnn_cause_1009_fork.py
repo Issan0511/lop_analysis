@@ -102,6 +102,7 @@ def main() -> None:
         tt = time.time()
         B.new_labels()
         sce, sacc = E.switch_eval(B.P, B.X, B.Y, B.act)
+        P0 = [B.P[i].detach().clone() for i in range(10)]
         ep_acc = torch.zeros(R, epochs, device=device)
         for e in range(epochs):
             B.run_epoch()
@@ -110,13 +111,17 @@ def main() -> None:
         curves[:, k] = ep_acc.cpu().numpy()
         online = ep_acc.double().mean(1)
         ev = E.evaluate(B.P, B.X, B.Y, B.act)
+        with torch.no_grad():                          # relative move of each weight tensor over the task
+            rel = {tag: ((B.P[2 * i] - P0[2 * i]).flatten(1).norm(dim=1)
+                         / P0[2 * i].flatten(1).norm(dim=1)).cpu() for i, tag in enumerate(CN.WEIGHT_TAGS)}
         for r, (old, new, s) in enumerate(meta):
             cur = curves[r, k]
             hit99 = np.nonzero(cur >= 0.99)[0]
             rows.append({"old": old, "new": new, "fork": f"{old}>{new}", "seed": s, "task": t,
                          "online_acc": float(online[r]), "switch_ce": float(sce[r]),
                          "switch_acc": float(sacc[r]),
-                         "ep_first99": int(hit99[0]) + 1 if hit99.size else -1, **ev[r]})
+                         "ep_first99": int(hit99[0]) + 1 if hit99.size else -1,
+                         **{f"move_{k}": float(v[r]) for k, v in rel.items()}, **ev[r]})
         H.write_csv(out / "per_task.csv", rows)
         np.save(out / "curves.npy", curves)
         m = {}
