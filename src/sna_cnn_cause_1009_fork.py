@@ -85,6 +85,9 @@ def main() -> None:
     ap.add_argument("--tasks", type=int, default=10)
     ap.add_argument("--out", required=True)
     ap.add_argument("--epochs", type=int, default=400, help="per continued task (400 = the protocol)")
+    ap.add_argument("--trace", default=None,
+                    help="comma list of epochs (0 = task start) at which to write trace.csv rows: "
+                         "per-layer move, feature drift, and the fit with the task-start conv")
     args = ap.parse_args()
     device = H.setup("cuda")
     cifar = RC.Cifar10()
@@ -98,6 +101,10 @@ def main() -> None:
     E.evaluate(B.P, B.X, B.Y, B.act)          # reserve the evaluation's memory (see E.run)
     E.switch_eval(B.P, B.X, B.Y, B.act)
     R, epochs = B.R, B.epochs
+    trace_at = sorted({int(x) for x in args.trace.split(",")}) if args.trace else []
+    trows = []
+    g_pr = torch.Generator().manual_seed(4242)
+    probe = torch.randperm(CN.N_IMAGES, generator=g_pr)[:300].to(device)
     rows = []
     curves = np.zeros((R, args.tasks, epochs), dtype=np.float32)
     gits = [E.git_state()]
@@ -107,10 +114,51 @@ def main() -> None:
         B.new_labels()
         sce, sacc = E.switch_eval(B.P, B.X, B.Y, B.act)
         P0 = [B.P[i].detach().clone() for i in range(10)]
+        V0 = [v.clone() for v in B.act.V]
+        h0 = None
+
+        @torch.no_grad()
+        def trace(e: int) -> None:
+            nonlocal h0
+            Xp, Yp = B.X[:, probe], B.Y[:, probe]
+            o = E.forward(B.P, Xp, B.act)
+            h = torch.nn.functional.max_pool2d(o[3], 2, 2).reshape(probe.numel(), R, -1).transpose(0, 1)
+            if h0 is None:
+                h0 = h.clone()
+            # current fc on the task-start conv (conv weights and conv alpha state of epoch 0)
+            Vc = [B.act.V[l].clone() for l in (0, 1)]
+            for l in (0, 1):
+                B.act.V[l].copy_(V0[l])
+            om = E.forward(P0[:4] + list(B.P[4:]), Xp, B.act)
+            for l in (0, 1):
+                B.act.V[l].copy_(Vc[l])
+            acc = (o[8].argmax(-1) == Yp).float().mean(1)
+            acc_old = (om[8].argmax(-1) == Yp).float().mean(1)
+            ce = torch.nn.functional.cross_entropy(o[8].reshape(-1, 10), Yp.reshape(-1),
+                                                   reduction="none").view(R, -1).mean(1)
+            dh = (h - h0).flatten(1).norm(dim=1) / h0.flatten(1).norm(dim=1)
+            mv = {tag: ((B.P[2 * i] - P0[2 * i]).flatten(1).norm(dim=1)
+                        / P0[2 * i].flatten(1).norm(dim=1)) for i, tag in enumerate(CN.WEIGHT_TAGS)}
+            gates = {}
+            for l, tag in ((2, "f1"), (3, "f2")):
+                z = o[2 * l]
+                gates[f"gate_{tag}"] = B.act.dphi(z, l).mean((1, 2))
+                gates[f"seat_{tag}"] = (2 * B.act.alpha(l) * z.mean(1)).cpu().median(1).values  # cpu: median(dim) is not deterministic on CUDA
+            for r, (old, new, s_) in enumerate(meta):
+                trows.append({"fork": f"{old}>{new}", "seed": s_, "task": t, "epoch": e,
+                              "acc": float(acc[r]), "acc_oldconv": float(acc_old[r]),
+                              "ce": float(ce[r]), "feat_drift": float(dh[r]),
+                              **{f"move_{k}": float(v[r]) for k, v in mv.items()},
+                              **{k: float(v[r]) for k, v in gates.items()}})
+
         ep_acc = torch.zeros(R, epochs, device=device)
+        if 0 in trace_at:
+            trace(0)
         for e in range(epochs):
             B.run_epoch()
             ep_acc[:, e].copy_(B.acc_ep)
+            if e + 1 in trace_at:
+                trace(e + 1)
         ep_acc /= CN.STEPS_PER_EPOCH
         curves[:, k] = ep_acc.cpu().numpy()
         online = ep_acc.double().mean(1)
@@ -127,6 +175,8 @@ def main() -> None:
                          "ep_first99": int(hit99[0]) + 1 if hit99.size else -1,
                          **{f"move_{k}": float(v[r]) for k, v in rel.items()}, **ev[r]})
         H.write_csv(out / "per_task.csv", rows)
+        if trows:
+            H.write_csv(out / "trace.csv", trows)
         np.save(out / "curves.npy", curves)
         m = {}
         for r, (old, new, s) in enumerate(meta):
