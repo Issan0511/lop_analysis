@@ -14,6 +14,13 @@
 8. 真の Adam 更新について、過去 momentum・座標ごとの倍率差・現在の勾配と分母の共分散を分けた有限状態の十分条件を示した。対称なクラス係数による厳密正例もあり、実 RL-CIFAR と同じ構造、10 クラス、batch 16、全 bias の非空例を検算した。対称性を少し崩した近傍も正になる。条件の実学習軌道での維持は未証明。
 9. ユーザーの「一歩の Adam 反転は長期平均なら関係なくなるのでは」という指摘を受け、初期反転と定常偏りを分けた。一定の iid 勾配分布を Adam に供給する模型では、標準の beta と有限 epsilon でも、正の SGD 平均に対して負の定常 Adam 平均・ほぼ確実な時間平均が得られる。これは実 CNN のパラメータが変化する長期軌道の反転を証明したものではない。
 
+
+10. 重なる複数チャネル、full-rank な空間特徴、自由な多クラス head を持ち、全 Conv/head が実際に変わる CE-SGD の無限時間過程で、最終平均前活性の strict な低下を証明した。初期 D=a²−||B||²>0 と指定の適応学習率から D>0、active ReLU、一意な MaxPool が永久に保たれ、head の画像上の成分が消える。a∞²≤a0²−||B0 P_U||²。1×1 Conv、bias 無し、channel 対称 family、毎更新 fresh iid labels が条件。a∞>0 なので ReLU の死は結論しない。
+11. 上の二段 CNN の第一 Conv mean 方向では、全 raw parameter の NTK と、他の第一 Conv channel を除いた自己モデルの両方の容量微分を直接計算し、strict に同符号と示した。実 CE の期待方向はこれを反転しない。logits の class contrast が非零なら strict に一致、uniform 出力では CE 駆動が 0 となる。
+12. 小振幅の定常 Adam で、正の平均信号 O(s³) と勾配雑音 O(s) の相対比較を有限残差つきで導出した。epsilon 支配だけでは方向は保証できない。一方 iid 雑音が厳密に正負対称なら任意の有限振幅で期待 Adam は正となり、epsilon 支配で相対的にも SGD の向き・大きさに近づく。負の平均前活性、重なる二チャネル、rank 2、10 classes、batch 16 の CNN 状態 family で実現した。固定状態の定常応答であり、更新中にその対称性が保たれるとは限らない。
+
+13. 実際に状態が変わる Adam 軌道に対して、第一 Conv の累積下降量を期待勾配・martingale・分母の差・momentum の端点と重み変化へ厳密分解した。対称 CNN の構造と正振幅は指定の学習率上限で Adam 自体にも保存される。iid ラベルで残差が信号より小さいことは未証明。各画像に全 class を一回ずつ与える balanced-label batch という別条件なら、全 Conv/head の actual Adam 共同学習で mean が単調低下する非空な長期正例がある。
+
 ## 反例と残る制限
 
 非負入力・重み共有・一意な MaxPool・学習した出力 bias があっても、他チャネルによって自己モデルと実切替勾配の向きは逆転し得る。したがって無条件な一般化はできない。
@@ -42,3 +49,12 @@
 追加のCE selfは、他の第一Convチャネルを取り去り forward を計算し直す明示した操作。元の logdet 自己項と同一の意味ではない。新しい十分条件を得ても、自己項の定義の違いを消したことにはならない。
 - `adam_stationary_b16.json`: 16 枚全てが寄与する17値の固定 iid 勾配。SGD平均 +1e-6、定常Adam平均の厳密区間は約 [-0.0003586082662003, -0.0002715579654668]。有理数の moment と平方根の有理区間を用い、Taylor残差・低分母事象・epsilonを全て含む。独立な joint-moment 再帰でも照合。通常の初期化とbias correctionを含む時間平均も同じ極限へ収束する。固定分布への応答であり、実 CNN の変化するパラメータ軌道ではない。
 - `adam_stationary_b16_optional_mc.json`: 別の補助シミュレーション出力も保存。符号判定はこの Monte Carlo の点推定によらず、上の有理数証明書による。
+
+
+## 動き続ける CE-CNN と小振幅 Adam の追加検算
+
+- `moving_ce_kernel.json`: rank 4、3 channels、10 classes、二段共有 Conv/ReLU/MaxPool の全 raw SGD を300更新。再帰との最大差1.34e-15未満。初期・更新後の full/self 全 NTK と方向微分の解析式との差3.56e-15未満。無限時間の結論は `moving_ce_longtime.md` の証明による。
+- `adam_smallscale.json`: epsilon より小さい second moment でも cubic signal の向きが逆転する有限有理数上界、対称分布の相対誤差上界、第三 moment が0だけでは足りない反例。
+- `adam_smallscale_cnn.json`: 負の平均前活性を持つ shared CNN で signal/noise の次数を直接自動微分と照合。三つの振幅で勾配分解の誤差3.47e-18以下、平均信号/s³ は解析係数0.4789125に近づく。
+
+- `adam_cumulative_positive.json`: balanced label enumeration（iid ラベルではない）、二段 shared CNN、全 Conv/head actual Adam 200 更新。mean 下降0.07159685561、norm/variation による下降下界0.06551812723、厳密な累積恒等式との誤差7.50e-16未満。全時間の単調性は companion note の構造的証明による。

@@ -351,3 +351,84 @@ $$-0.000358609<\mathbb E\frac m{\sqrt v+\epsilon}<-0.000271557<0$$
 定常列のエルゴード性と、通常の初期値・bias correction からの差の幾何減衰により、実現した長期時間平均もこの負の定常期待へ収束する。従って Adam の勾配と分母の相関は、長期平均だけでは必ずしも消えない。
 
 **重要な限定**: これらは固定した CNN 状態が作る iid 勾配分布への Adam の定常応答である。実際に CNN の重みを更新すれば logits と勾配分布が変わる。実 RL-CIFAR の長期軌道が逆転したとは証明していない。また、正の平均勾配が小さい構成である。実際の自己方向の余裕が定常補正を上回ることを示せれば、Adam を含む方向保証は依然可能である。
+
+
+## 15. 重なる複数チャネルの CE 共同学習で、条件維持と長期沈降まで証明
+
+詳細は [moving_ce_longtime.md](moving_ce_longtime.md)。L 段の共有 1×1 Conv→ReLU→MaxPool と、自由な多クラス・全空間位置の線形 head を用いる。bias は無し。正の単位 channel vectors u_l に対して W_l=a_l u_l u_{l-1}^T、head の channel 方向は u_L と揃え、初期 a_l=a_0>0 とする。これは channel 対称性の仮定だが、全 raw parameters を同時に学習し、pool 後の画像行列 X は full rank にできる。他チャネルは同じ画像に全て反応する。
+
+毎 optimizer step でラベルを独立一様に引き直す。全 raw SGD が上の family を厳密に保ち、A_t を通常の CE head gradient matrix とすると、
+
+$$a_{t+1}=a_t-\eta_t a_t^{L-1}\langle B_t,A_t\rangle,\qquad B_{t+1}=B_t-\eta_t a_t^L A_t.$$
+
+D_t=a_t²−||B_t||²、D_0>0 とし、K=√2 max_n||x_n||、η_t=γ_t√D_t/(K a_t^L)、0<γ_t≤1/2、Σγ_t=∞、Σγ_t²<∞ と選ぶ。現在の新ラベルを見る前に決まる学習率である。このとき全ラベル実現に対して
+
+$$(1-\gamma_t^2)D_t\le D_{t+1}\le D_t,\qquad a_t>0$$
+
+が保たれる。さらに現在状態を固定した新ラベル平均は
+
+$$\mathbb E[\langle B_t,A_t\rangle\mid\mathcal F_t]
+=\sum_n\pi_n(B_tx_n)\cdot[\operatorname{softmax}(a_t^LB_tx_n)-\mathbf1/C]\ge0.$$
+
+この条件付き符号、非負超マルチンゲール、head の累積駆動と連続性から、U=span{x_n} として
+
+$$B_t\longrightarrow B_0(I-P_U),\qquad
+0<a_\infty^2\le a_0^2-\|B_0P_U\|_F^2$$
+
+がほぼ確実に成立する。従って初期 head が画像上で非自明なら、**全 hidden 層・全チャネルの最終平均前活性が初期より厳密に下がる**。一歩ごとの実現が全て下がるとは主張しない。また極限の a は正であり、ReLU の死まで示したものではない。
+
+L=2 の第一 Conv mean 方向では、全 raw parameter の NTK K と、他の第一 Conv チャネルを除いた自己モデル K_self の双方について、方向微分 K'、K'_self が非零の半正定値となる。従って元の logdet 容量の微分は両方 strict に正。実 CE の期待勾配はその沈降方向を逆転せず、logits の class contrast が非零なら strict に同符号となる。出力が uniform になった点では CE の駆動はゼロだが容量微分は正なので、全時点の strict 一致とはしない。
+
+検算では rank 4 の画像特徴、3 hidden channels、10 classes、二段 Conv の全 raw SGD 300 更新を導出式と照合した。parameter 誤差は 1.34e-15 未満、初期・更新後の full/self 全 NTK と微分の誤差は 3.56e-15 未満。
+
+**範囲**: 毎更新 fresh labels、bias 無し、1×1 Conv、channel 対称 family、指定の適応 SGD。実 RL-CIFAR の task 内ラベル再利用・bias・5×5 Conv・非線形 FC・Adam を同時に扱った定理ではない。特に Adam は D の更新に一次の非相殺項を作り、この証明をそのまま移せない。
+
+## 16. 沈降信号が小さくなる極限でも、Adam の補正は相対的に小さいとは限らない
+
+詳細は [adam_smallscale.md](adam_smallscale.md)。固定した状態から出る iid 勾配の family g_s=sξ+s^kμ を考える。ξ は中心化有界、μ>0、epsilon>0 を固定する。定常 Adam は有限残差つきで
+
+$$\mathbb E[A_s]=\frac{\mu s^k}{\epsilon}
+-\frac{s^2}{\epsilon^2}\mathbb E[M\sqrt V]
++\frac{s^3}{\epsilon^3}\omega\mathbb E[\xi^3]+R_k(s).$$
+
+M,V はノイズの定常一次・二次移動平均。自己方向の正の CE 平均が O(s³) なら、非対称性による O(s²) 補正が優勢になる場合がある。従って sqrt(v)≪epsilon という絶対誤差の小ささだけでは期待値の符号を保証できない。
+
+一方、ξ の分布が厳密に対称なら、各過去勾配一つについて条件付けた奇関数の単調性により、任意の有限 s>0 で定常 Adam の期待方向が正となる。さらに
+
+$$\left|\frac{\mathbb E[A_s]}{\mu s^k/\epsilon}-1\right|
+\le\frac{s(D+\mu s^{k-1})}{\epsilon}\to0.$$
+
+非空性として、負の平均前活性、MaxPool、両画像群で重なる二チャネル、rank 2 の特徴、10 classes、batch 16 を持つ CNN の family を構成した。正負対称なクラス係数によって、実 CE 勾配が信号 O(s³)・対称ノイズ O(s) となる。これも実際の学習軌道で対称性が維持されるという主張ではなく、固定状態での定常応答とその小振幅極限の定理である。
+
+
+## 17. 長期平均で消える momentum 境界と、消えるとは限らない分母の偏り
+
+ユーザーの長期平均に関する直観がそのまま正しい部分もある。一次移動平均 M_t=β₁M_{t−1}+(1−β₁)g_t では、各実現について厳密に
+
+$$\frac1T\sum_{t=1}^T(M_t-g_t)
+=\frac{\beta_1}{(1-\beta_1)T}(M_0-M_T).$$
+
+従って M_T=o(T) なら、非加重の時間平均で momentum のずれは消える。一歩の momentum の向きだけでは長期反転を主張できない。
+
+Adam で残る違いは、実更新が M_t そのものではなく、r_t M_t、r_t=(√v_t+epsilon)^{-1} だという点にある。固定 iid 勾配の定常状態では
+
+$$\mathbb E[r_tM_t]=\mathbb E[g_t]\,\mathbb E[r_t]+\operatorname{Cov}(M_t,r_t).$$
+
+beta を固定した二次指数移動平均は、t を増やしても有効な履歴幅が無限に伸びない。有限四次 moment を持つ iid 勾配について
+
+$$\operatorname{Var}(v_\infty)=\frac{1-\beta_2}{1+\beta_2}\operatorname{Var}(g^2),$$
+
+なので一般には定常状態でも分母の揺れが残る。その相関は長期平均を取るだけでは除けない。§14 が厳密な負の定常平均の例、§16 が相関を消す十分条件の一つを与える。どちらも固定分布の結論と実 CNN の変化する軌道を分ける必要がある。
+
+
+## 18. 実際に変わる Adam 軌道での累積符号を判定する恒等式
+
+詳細は [adam_cumulative_positive.md](adam_cumulative_positive.md)。固定入力の第一 Conv mean m=uᵀθ を対象とし、現在の実 CNN の勾配 g_t と条件付き平均 μ_t=E[g_t|F_{t−1}] を使う。Adam の全履歴、bias correction、現在の勾配に依存する分母を残したまま、累積下降量を
+
+$$m_0-m_T=S_T+M_T+R_{\mathrm{den},T}+B_{\mathrm{mom},T}$$
+
+と厳密に分ける。S_T は予測可能な正の scalar 倍で重み付けした CE 平均駆動、M_T は martingale、R_den は実分母と scalar 参照の差、B_mom は momentum の端点と参照重みの時間変化である。後二者を norm で抑え、自己方向の累積余裕と比較すれば、momentum の符号を仮定せず実 Adam の累積沈降を保証できる。正の信号が発散する場合と、有限な最終下降量の場合の確率評価は区別する。
+
+非空な moving CNN の幾何として、入力も含めて一様な channel vectors を用いた §15 の family は通常の座標 Adam 自体にも保存される。層ごとの振幅は不揃いになり、head のクラス中心化も保たれるとは限らない。現在振幅から決める非零の学習率上限により、全将来ラベル実現で振幅の正を保てる。各時点の raw CE 平均の沈降符号と、L=2 の元の容量自己項への接続は残るが、iid ラベルで Adam の残差がその正の信号より小さいことまでは未証明。
+
+別に、各画像を全クラスについて一回ずつ batch に入れる場合は、実勾配が新ラベル平均と厳密に一致する。この **balanced label enumeration** と上の対称 CNN・学習率上限では、Conv gradient は各実現で非負。通常の座標 Adam が全 Conv と head を共同更新しても平均前活性は単調に下がり、初期 class contrast があれば長期の net decrease は strict。この構成は iid ラベルの batch と異なり、ラベルノイズと分母の相関を除く特殊な正例である。

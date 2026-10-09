@@ -1,0 +1,62 @@
+{
+  "beta1": 0.9,
+  "beta2": 0.999,
+  "omega": 0.0009910802775024777,
+  "epsilon": 1e-08,
+  "scale": 1e-12,
+  "noise_bound": 0.6,
+  "epsilon_dominance_ratio": 6e-05,
+  "skew_C1_lower": 3.9643211100099105e-05,
+  "skew_C1_upper": 5.946481665014866e-05,
+  "skew_C2": 4.757185332011893e-05,
+  "skew_cases": [
+    {
+      "k": 3,
+      "mu": 1.0,
+      "SGD_mean": 1e-36,
+      "stationary_Adam_lower": -5.946135546481664e-13,
+      "stationary_Adam_upper": -3.9637157914767085e-13,
+      "finite_remainder": 1.2960000000000013e-17
+    },
+    {
+      "k": 2,
+      "mu": 1.0,
+      "SGD_mean": 1e-24,
+      "stationary_Adam_lower": -5.945135666484071e-13,
+      "stationary_Adam_upper": -3.962715671474304e-13,
+      "finite_remainder": 1.2972000240562128e-17
+    },
+    {
+      "k": 2,
+      "mu": 10000.0,
+      "SGD_mean": 1e-20,
+      "stationary_Adam_lower": 4.052664429452123e-13,
+      "stationary_Adam_upper": 6.037484232589502e-13,
+      "finite_remainder": 1.3296240662118537e-16
+    }
+  ],
+  "symmetric_case": {
+    "k": 3,
+    "mu": 8.25,
+    "noise_bound": 4.5,
+    "relative_error_bound": 0.0009,
+    "stationary_Adam_lower": 8.242575e-28
+  },
+  "zero_third_moment_example": {
+    "noise": [
+      [
+        -2.0,
+        0.14285714285714285
+      ],
+      [
+        -1.0,
+        0.4
+      ],
+      [
+        1.5,
+        0.45714285714285713
+      ]
+    ],
+    "E_x_abs_x": 0.05714285714285714
+  }
+}

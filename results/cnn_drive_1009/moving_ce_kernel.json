@@ -1,0 +1,84 @@
+{
+  "seed": 100925,
+  "scope": "Actual full raw-parameter 1x1 Conv/ReLU/MaxPool twice plus free multiclass spatial head; no biases, fresh iid labels each update, adaptive scalar SGD; not standard RL-CIFAR Adam",
+  "batch": 4,
+  "classes": 10,
+  "input_feature_rank": 4,
+  "all_channels_overlap": true,
+  "layers": 2,
+  "widths": [
+    3,
+    3,
+    3
+  ],
+  "initial_a": 1.2,
+  "initial_B_squared_norm": 0.3823561529614415,
+  "limiting_a_squared_upper_bound_proved_in_companion_note": 1.0576438470385585,
+  "actual_autograd_steps": 300,
+  "final_a": 1.1866510098852627,
+  "final_B_squared_norm": 0.35238876741695924,
+  "minimum_balanced_gap_D": 1.0557518518447546,
+  "max_full_parameter_invariance_error": 1.3322676295501878e-15,
+  "max_forward_error": 1.4988010832439613e-15,
+  "max_exact_balance_identity_error": 6.661338147750939e-16,
+  "initial_NTK_and_CE": [
+    {
+      "self_only": false,
+      "exact_kernel_formula_error": 2.6645352591003757e-15,
+      "exact_kernel_derivative_formula_error": 1.7763568394002505e-15,
+      "NTK_shape": [
+        40,
+        40
+      ],
+      "capacity_mean_direction": 8.55631944458258,
+      "CE_mean_direction": 0.013608494734431813,
+      "minimum_eigenvalue_NTK_derivative": 1.2293564613140782,
+      "maximum_eigenvalue_NTK_derivative": 6.425316084313969,
+      "conv1_channels": 3
+    },
+    {
+      "self_only": true,
+      "exact_kernel_formula_error": 8.326672684688674e-17,
+      "exact_kernel_derivative_formula_error": 1.6653345369377348e-16,
+      "NTK_shape": [
+        40,
+        40
+      ],
+      "capacity_mean_direction": 29.10372723163311,
+      "CE_mean_direction": 0.002439840742672697,
+      "minimum_eigenvalue_NTK_derivative": 0.22100790315758717,
+      "maximum_eigenvalue_NTK_derivative": 1.6643863366092224,
+      "conv1_channels": 1
+    }
+  ],
+  "after_300_updates_NTK_and_CE": [
+    {
+      "self_only": false,
+      "exact_kernel_formula_error": 3.552713678800501e-15,
+      "exact_kernel_derivative_formula_error": 1.7763568394002505e-15,
+      "NTK_shape": [
+        40,
+        40
+      ],
+      "capacity_mean_direction": 8.644784343268416,
+      "CE_mean_direction": 0.01193397007683894,
+      "minimum_eigenvalue_NTK_derivative": 1.1887844880384997,
+      "maximum_eigenvalue_NTK_derivative": 6.170431999465618,
+      "conv1_channels": 3
+    },
+    {
+      "self_only": true,
+      "exact_kernel_formula_error": 5.551115123125783e-17,
+      "exact_kernel_derivative_formula_error": 2.220446049250313e-16,
+      "NTK_shape": [
+        40,
+        40
+      ],
+      "capacity_mean_direction": 28.94788539636381,
+      "CE_mean_direction": 0.0021410235704435576,
+      "minimum_eigenvalue_NTK_derivative": 0.2137140652653484,
+      "maximum_eigenvalue_NTK_derivative": 1.5590757626178715,
+      "conv1_channels": 1
+    }
+  ]
+}

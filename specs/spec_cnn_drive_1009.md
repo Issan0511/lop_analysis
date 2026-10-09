@@ -32,3 +32,9 @@
 結果: `results/cnn_drive_1009/verification.json`、`summary.md`。
 
 不足が残れば依頼全体を達成済みとは記録しない。
+
+## 1009 追加の数学的検算範囲
+
+重なる channel と full-rank な空間特徴を持つ、bias 無し 1×1 CNN の全 raw CE-SGD 共同更新について、fresh labels・対称 channel 初期化・指定の適応学習率下での条件維持、head 極限、長期 mean 低下、full/isolated 全 NTK の符号を検算する。有限の300更新は導出式の照合であり、無限時間の実験的判定ではない。
+
+また、小振幅の固定 iid 勾配 family に対する定常 Adam の展開・有限残差・対称性による符号保証を検算する。実 RL-CIFAR の変化する学習軌道と取り違えない。

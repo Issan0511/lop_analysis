@@ -12,3 +12,9 @@ Adam の arbitrary-state 条件と一歩反例: adam_state.md。
 チェック用 Python はいずれも単独実行可能。torch を使うものはプロジェクトの .venv、stationary certificate は Python 標準ライブラリだけで動く。stationary B16 の --mc は補助計算であり通常の証明検算には不要。
 
 2026-10-09 の再確認: src/rlcifar_cnn_0908.py は task 間で Adam moments を保持する。write_hist が保存するのはヒストグラム・平均・前活性サンプルで、全パラメータと Adam moments の checkpoint ではない。obsidian-research-data で見つかった rlcifar の .pt は MLP 比較走であり、この CNN の新しい state certificate の実測には使わなかった。
+
+全 Conv/head が実際に動く CE-SGD の長期定理と元の容量自己項への接続: moving_ce_longtime.md。
+小振幅における定常 Adam の有限残差・対称雑音の正例: adam_smallscale.md。
+実際の moving Adam に対する累積恒等式・残差の十分条件・balanced-label 正例: adam_cumulative_positive.md。
+全 Conv/head の CE-SGD 長期証明の独立監査: moving_ce_longtime_review.md。
+実 moving Adam の累積恒等式と限定正例の独立監査: adam_cumulative_positive_review.md。
