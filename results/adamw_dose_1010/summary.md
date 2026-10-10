@@ -4,7 +4,7 @@
 
 ## 0. 実行したもの
 
-- 集計時の HEAD: `83dd883d8784c1eb29da78f0963a84bb73c00034`・箱 1 の run の commit: ['83dd883d8784c1eb29da78f0963a84bb73c00034']
+- 集計時の HEAD: `4bbe2c5aae22df3bf53b04749d2f222d5dac8211`・箱 1 の run の commit: ['83dd883d8784c1eb29da78f0963a84bb73c00034']
 - 箱 1: shard 50/50・欠損 0・有効 seed 10（無効: なし）
 - 箱 2: 腕 ['adamw10', 'adamw5']・R と L2 Init は committed の記録を再利用（照合 {'a': True, 'b': True, 'c': True}・最後の難しい課題のバッチ列の sha256 が全腕で一致: True）
 
