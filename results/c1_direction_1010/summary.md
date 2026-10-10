@@ -1,6 +1,6 @@
 # c1_direction_1010 — 隠れ層に読まれる層の押しの向き: CNN の入力層が自己形から外れる理由
 
-状態: 書きかけ（2026-10-10 15:05。LR と MLP は確定、Snake・LRc・Q2 は計算中）。spec と予測は `specs/spec_c1_direction_1010.md`（登録 e4268ad2、計算前）。導出は `analysis/c1_direction_1010/derivation.md`（§5′・§5″ は計算前の追記と Codex の批評を受けた訂正）、Codex の独立導出は `codex_derivation.md`・`codex_derivation2.md`。計算・表は Opus（`src/c1_direction_1010.py`・`analysis/c1_direction_1010/mlp_drift.py`・`cnn_tables.py`）、採点は `verdict.py` → `verdict.json`・`verdict_tables.md`。この要約は親（Fable）。符号の約束: G > 0 = 沈める側（期待の SGD の 1 歩が平均を下げる）。
+状態: 書きかけ（2026-10-10 14:00。LR と MLP は確定、Snake・LRc・Q2 は計算中）。spec と予測は `specs/spec_c1_direction_1010.md`（登録 e4268ad2、計算前）。導出は `analysis/c1_direction_1010/derivation.md`（§5′・§5″ は計算前の追記と Codex の批評を受けた訂正）、Codex の独立導出は `codex_derivation.md`・`codex_derivation2.md`。計算・表は Opus（`src/c1_direction_1010.py`・`analysis/c1_direction_1010/mlp_drift.py`・`cnn_tables.py`）、採点は `verdict.py` → `verdict.json`・`verdict_tables.md`。この要約は親（Fable）。符号の約束: G > 0 = 沈める側（期待の SGD の 1 歩が平均を下げる）。
 
 ## 0. 一行
 
