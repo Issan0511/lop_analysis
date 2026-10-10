@@ -1,0 +1,22 @@
+quantity,definition
+G>0 (sinking),rate of G > 0 over the layer's 16 channels
+Gdrift<0 | Pbar>0,rate of Gdrift < 0 (drift term on the floating side) among channels with Pbar > 0
+Gdrift>0 | Pbar<=0,rate of Gdrift > 0 (drift term on the sinking side) among channels with Pbar <= 0
+n Pbar<=0,number of channels with Pbar <= 0 (per seed; pooled = total)
+Grest>0,rate of Grest > 0 (rest term on the sinking side)
+sign(G0)=sign(G),rate of sign agreement of the init term with the full G
+|Gdrift|>|Grest|,rate
+|Gdrift|>|G0|,rate
+drift share (median),median over channels of |Gdrift| / (|G0| + |Gdrift| + |Grest|)
+"Spearman(That,G)",per-seed Spearman over the 16 channels of the DC transmission proxy That vs G
+Gdrift<0 (all ch),rate of Gdrift < 0 over all 16 channels
+|Grest|>|Gdrift|,rate (complement of |Gdrift|>|Grest| up to ties)
+G0>0,rate of G0 > 0
+Grest>0 | Pbar>0,rate among Pbar > 0
+S1>0,rate of the centred self-form S1 > 0
+sign(S1)=sign(G),rate
+carrier c>0,c1 rows: c_k > 0 over the 16 c2 channels k (W2 anti-parallel drift); c2 rows: c_u > 0 over the 100 fc1 units u (W3)
+carrier Dbar>0,c1 rows: D2bar_k > 0 over the 16 c2 channels (c2's own bias push sinking); c2 rows: D3bar_u > 0 over the 100 fc1 units
+carrier mu-path share signed (median),"c1 rows: median_k <dW2[k],mu2> / (<dW2[k],mu2> + db2_k) (decomposition of dzbar2_k at the current mu2); c2 rows: same for fc1"
+carrier mu-path share abs (median),"median of |<dW,mu>| / (|<dW,mu>| + |db|)"
+carrier dzbar<0,"rate of <dW,mu> + db < 0 (the layer below the carrier moved down by its own parameters)"
