@@ -28,6 +28,11 @@ Checks per state: M1 = autograd of L_u w.r.t. (W1, b1): <xbar, dL_u/dW1[i]> + dL
   split sum G0+Gd+Gr = G (1e-12); zbar2 identity; zbar2 change split; projection <dW2^drift[k], mu2> = <dW2[k], mu2>;
   recomputed z1/z2 against the float16 z1/z2 stored in the snapshot.  M2 (sign rate of G over alive units against
   p169's S_push, seeds 0-2) is computed in the tables step.
+POST HOC (coordinator follow-up after Codex's review; NOT registered, separate from the P8 numbers): the 3x2 split
+  W2 {W2^0, dW2^drift, dW2^rest} x W3 {W3^0, dW3} (dW3 enters through delta2 with the forward state fixed), the shares
+  of all three W2 buckets, the coupling margin sum_k c_k Dbar_k, and the regression of H = delta2 W2 on h1 per unit
+  (see posthoc()).  Stored under new npz keys (G_00 ... G_rD, kappa, *_ni, *_wi, posthoc_scalars); the registered keys
+  are unchanged.  Tables: results/c1_direction_1010/mlp_tables/posthoc_3x2.md (+ posthoc_3x2_*.csv).
 """
 from __future__ import annotations
 
@@ -175,6 +180,65 @@ def measure(X, K, P, P0, F0, Z):
                 dW2_drift_frac=float(np.linalg.norm(dW2d) / nrm) if nrm > 0 else float("nan"),
                 K_neg_frac=float((K < 0).mean()), K_mean=float(K.mean()), K_sd=float(K.std()),
                 pmax_mean=float(F["p"].max(1).mean()), **chk)
+    ph_arrays, ph_scal = posthoc(F, df, d2, Kg1, P, P0, dW2d, dW2r, G, G0, Gd, Gr, c, Dbar, S0)
+    return arrays, scal, ph_arrays, ph_scal
+
+
+# ---------------------------------------------------------------------------------------------- post hoc
+# Coordinator follow-up after Codex's review (2026-10-10), NOT part of the registered P8 numbers: the registered
+# arrays/tables above are untouched; everything below is stored under new npz keys and written to posthoc_3x2.*.
+
+PH_CELLS = ("G_00", "G_0D", "G_d0", "G_dD", "G_r0", "G_rD")    # G_{a b}: a = W2 bucket (0, d, r), b = W3 part (0, D)
+
+
+def posthoc(F, df, d2, Kg1, P, P0, dW2d, dW2r, G, G0, Gd, Gr, c, Dbar, S0):
+    """(1) 3x2 split: W2 in {W2^0, dW2^drift, dW2^rest} x W3 in {W3^0, dW3 = W3 - W3^0}; the W3 part enters only
+    through delta2 = phi'(z2) * ((p - 1/10) W3part) with the forward state (z1, z2, p) fixed, so
+    G_{a b, i} = sum_k W2a_ki A^b_ki,  A^b_ki = sum_n delta2^b_nk K_n phi'(z1_ni).
+    (3) coupling margin cD = sum_k c_k Dbar_k and kappa_i = sum_n K_n phi'(z1_ni) (if K_n phi'(z1_ni) were constant
+    over n, Cpl_i = kappa_i cD / N).  (4) H_in = [delta2 W2]_in (backprop to h1; G_i = sum_n K_n phi'(z1_ni) H_in)
+    regressed on h1_in over n per unit: no intercept (ni) G = beta S0 + sum K phi' Hperp; with intercept (wi)
+    G = beta S0 + alpha kappa + sum K phi' Hperp."""
+    W2_0 = P0["W2"]
+    dW3 = P["W3"] - P0["W3"]
+    A_b = {"0": (F["g2"] * (df @ P0["W3"])).T @ Kg1,
+           "D": (F["g2"] * (df @ dW3)).T @ Kg1}
+    cells = {f"G_{an}{bn}": (Wa * Ab).sum(0)
+             for an, Wa in (("0", W2_0), ("d", dW2d), ("r", dW2r)) for bn, Ab in A_b.items()}
+    kappa = Kg1.sum(0)
+    cD = float(c @ Dbar)
+    h1 = F["h1"]
+    H = d2 @ P["W2"]                                   # (N, H1)
+    beta_n = (H * h1).sum(0) / (h1 * h1).sum(0)
+    Hp_n = H - beta_n * h1
+    R2_n = 1.0 - (Hp_n * Hp_n).sum(0) / (H * H).sum(0)                  # uncentred R^2 (no intercept)
+    Gself_n = beta_n * S0
+    Gperp_n = (Kg1 * Hp_n).sum(0)
+    hc = h1 - h1.mean(0)
+    Hc = H - H.mean(0)
+    beta_w = (Hc * hc).sum(0) / (hc * hc).sum(0)
+    alpha_w = H.mean(0) - beta_w * h1.mean(0)
+    Hp_w = H - alpha_w - beta_w * h1
+    R2_w = 1.0 - (Hp_w * Hp_w).sum(0) / (Hc * Hc).sum(0)                # centred R^2 (with intercept)
+    Gself_w = beta_w * S0
+    Gint_w = alpha_w * kappa
+    Gperp_w = (Kg1 * Hp_w).sum(0)
+    six = sum(cells.values())
+    S6 = sum(np.abs(v) for v in cells.values())
+    chk = dict(
+        six_rel=relmax(six - G, S6),
+        six_rel_G=relmax(six - G, G),
+        rows_rel=max(relmax(cells["G_00"] + cells["G_0D"] - G0, np.abs(cells["G_00"]) + np.abs(cells["G_0D"])),
+                     relmax(cells["G_d0"] + cells["G_dD"] - Gd, np.abs(cells["G_d0"]) + np.abs(cells["G_dD"])),
+                     relmax(cells["G_r0"] + cells["G_rD"] - Gr, np.abs(cells["G_r0"]) + np.abs(cells["G_rD"]))),
+        H_rel=relmax((Kg1 * H).sum(0) - G, G),
+        self_ni_rel=relmax(Gself_n + Gperp_n - G, np.abs(Gself_n) + np.abs(Gperp_n)),
+        self_wi_rel=relmax(Gself_w + Gint_w + Gperp_w - G, np.abs(Gself_w) + np.abs(Gint_w) + np.abs(Gperp_w)),
+    )
+    arrays = dict(**cells, kappa=kappa, beta_ni=beta_n, R2_ni=R2_n, Gself_ni=Gself_n, Gperp_ni=Gperp_n,
+                  beta_wi=beta_w, alpha_wi=alpha_w, R2_wi=R2_w, Gself_wi=Gself_w, Gint_wi=Gint_w, Gperp_wi=Gperp_w)
+    scal = dict(cD=cD, cD_cos=cD / float(np.linalg.norm(c) * np.linalg.norm(Dbar)),
+                dW3_fro=float(np.linalg.norm(dW3)), W3_0_fro=float(np.linalg.norm(P0["W3"])), **chk)
     return arrays, scal
 
 
@@ -194,14 +258,14 @@ def compute(conds, seeds, tasks):
             for t in tasks:
                 t0 = time.time()
                 P, Z = load_state(cond, seed, t)
-                arrays, scal = measure(X, K, P, P0, F0, Z)
+                arrays, scal, ph_arrays, ph_scal = measure(X, K, P, P0, F0, Z)
                 np.savez(os.path.join(OUT, f"LR_{cond}_s{seed}_t{t:02d}.npz"), cond=cond, seed=seed, t=t,
-                         scalars=json.dumps(scal), **arrays)
+                         scalars=json.dumps(scal), **arrays, posthoc_scalars=json.dumps(ph_scal), **ph_arrays)
                 al = arrays["alive"]
                 print(f"{cond} s{seed} t{t:02d} alive {int(al.sum()):3d} G>0 {np.mean(arrays['G'][al] > 0):.3f} "
                       f"| M1 {scal['m1_rel']:.1e} split {scal['split_rel_parts']:.1e} dz {scal['dz_split_rel']:.1e} "
                       f"z1chk {scal['z1_chk']:.1e} z2chk {scal['z2_chk']:.1e} | K<0 {scal['K_neg_frac']:.3f} "
-                      f"({time.time() - t0:.2f}s)", flush=True)
+                      f"| six {ph_scal['six_rel']:.1e} cD {ph_scal['cD']:+.3e} ({time.time() - t0:.2f}s)", flush=True)
     return cifar.sha256
 
 
@@ -477,6 +541,237 @@ def tables(cifar_sha=None, argv=None):
     print(f"tables: {len(per)} states -> {TAB}")
 
 
+# ---------------------------------------------------------------------------------------------- post hoc tables
+
+PH_LABEL = {"G_00": "G^{0,0} (W2^0, W3^0)", "G_0D": "G^{0,Δ} (W2^0, dW3)", "G_d0": "G^{d,0} (dW2^drift, W3^0)",
+            "G_dD": "G^{d,Δ} (dW2^drift, dW3)", "G_r0": "G^{r,0} (dW2^rest, W3^0)", "G_rD": "G^{r,Δ} (dW2^rest, dW3)"}
+PH_CHECKS = ("six_rel", "six_rel_G", "rows_rel", "H_rel", "self_ni_rel", "self_wi_rel")
+
+
+def posthoc_state_metrics(d, ph):
+    m = d["alive"].astype(bool)
+    h = d["hbar1"][m]
+    G, G0, Gd, Gr, Cpl, kappa = (d[k][m] for k in ("G", "G0", "Gd", "Gr", "Cpl", "kappa"))
+    cell = {k: d[k][m] for k in PH_CELLS}
+    S6 = sum(np.abs(v) for v in cell.values())
+
+    def med(v):
+        return float(np.median(v)) if np.size(v) else np.nan
+
+    def agree(v):
+        return frac(np.sign(v) == np.sign(G))
+
+    out = dict(n_all=int(m.sum()))
+    for k, v in cell.items():
+        out[f"{k}_pos"] = frac(v > 0)
+        out[f"{k}_agree"] = agree(v)
+        out[f"{k}_share6"] = med(np.abs(v) / S6)
+    out["Gd_pos"] = frac(Gd > 0)
+    out["Gd_agree"] = agree(Gd)
+    for r in ("0", "d", "r"):
+        out[f"row{r}_share6"] = med((np.abs(cell[f"G_{r}0"]) + np.abs(cell[f"G_{r}D"])) / S6)
+    for b in ("0", "D"):
+        col = cell[f"G_0{b}"] + cell[f"G_d{b}"] + cell[f"G_r{b}"]
+        out[f"col{b}_pos"] = frac(col > 0)
+        out[f"col{b}_agree"] = agree(col)
+        out[f"col{b}_share6"] = med((np.abs(cell[f"G_0{b}"]) + np.abs(cell[f"G_d{b}"]) + np.abs(cell[f"G_r{b}"])) / S6)
+    out["G0D_gt_Gd"] = frac(np.abs(cell["G_0D"]) > np.abs(Gd))
+    for nm, mm in (("hneg", h < 0), ("hpos", h > 0)):
+        out[f"n_{nm}"] = int(mm.sum())
+        out[f"G_0D_pos_{nm}"] = frac(cell["G_0D"][mm] > 0)
+        out[f"G_0D_agree_{nm}"] = frac(np.sign(cell["G_0D"][mm]) == np.sign(G[mm]))
+    S3 = np.abs(G0) + np.abs(Gd) + np.abs(Gr)
+    out["share3_0"] = med(np.abs(G0) / S3)
+    out["share3_d"] = med(np.abs(Gd) / S3)
+    out["share3_r"] = med(np.abs(Gr) / S3)
+    out["G0_dom"] = frac(np.abs(G0) > np.abs(Gd) + np.abs(Gr))
+    cD = ph["cD"]
+    out["cD"] = cD
+    out["cD_cos"] = ph["cD_cos"]
+    out["cD_pos"] = float(cD > 0)
+    out["Cpl_eq_cD"] = frac(np.sign(Cpl) == np.sign(cD))
+    out["kappa_pos"] = frac(kappa > 0)
+    out["Cpl_eq_kcD"] = frac(np.sign(Cpl) == np.sign(kappa * cD))
+    for sfx in ("ni", "wi"):
+        beta, R2, Gs, Gp = (d[f"{k}_{sfx}"][m] for k in ("beta", "R2", "Gself", "Gperp"))
+        Gi = d["Gint_wi"][m] if sfx == "wi" else np.zeros_like(Gs)
+        tot = np.abs(Gs) + np.abs(Gi) + np.abs(Gp)
+        out[f"beta_pos_{sfx}"] = frac(beta > 0)
+        out[f"R2_med_{sfx}"] = med(R2)
+        out[f"Gself_pos_{sfx}"] = frac(Gs > 0)
+        out[f"Gself_agree_{sfx}"] = agree(Gs)
+        out[f"self_share_{sfx}"] = med(np.abs(Gs) / tot)
+        out[f"Gperp_pos_{sfx}"] = frac(Gp > 0)
+        out[f"Gperp_agree_{sfx}"] = agree(Gp)
+        out[f"perp_share_{sfx}"] = med(np.abs(Gp) / tot)
+        if sfx == "wi":
+            out["Gint_pos_wi"] = frac(Gi > 0)
+            out["Gint_agree_wi"] = agree(Gi)
+            out["int_share_wi"] = med(np.abs(Gi) / tot)
+    return out
+
+
+PH_SEC1 = [r for k in PH_CELLS for r in ((f"{k}_pos", f"{PH_LABEL[k]} > 0"),
+                                         (f"{k}_agree", f"sign {PH_LABEL[k].split(' ')[0]} = sign G"),
+                                         (f"{k}_share6", f"median share abs {PH_LABEL[k].split(' ')[0]} / S6"))] + [
+    ("Gd_pos", "G^drift = G^{d,0} + G^{d,Δ} > 0"),
+    ("Gd_agree", "sign G^drift = sign G"),
+    ("row0_share6", "W2^0 row share (abs G^{0,0} + abs G^{0,Δ}) / S6"),
+    ("rowd_share6", "drift row share (abs G^{d,0} + abs G^{d,Δ}) / S6"),
+    ("rowr_share6", "rest row share (abs G^{r,0} + abs G^{r,Δ}) / S6"),
+    ("col0_pos", "W3^0 column G^{.,0} > 0"),
+    ("col0_agree", "sign G^{.,0} = sign G"),
+    ("col0_share6", "W3^0 column share / S6"),
+    ("colD_pos", "dW3 column G^{.,Δ} > 0"),
+    ("colD_agree", "sign G^{.,Δ} = sign G"),
+    ("colD_share6", "dW3 column share / S6"),
+    ("G0D_gt_Gd", "abs G^{0,Δ} > abs G^drift"),
+    ("G_0D_pos_hneg", "G^{0,Δ} > 0, alive with hbar1 below 0"),
+    ("G_0D_pos_hpos", "G^{0,Δ} > 0, alive with hbar1 above 0"),
+]
+PH_SEC2 = [("share3_0", "median abs G0 / S3"), ("share3_d", "median abs G^drift / S3"),
+           ("share3_r", "median abs G^rest / S3"), ("G0_dom", "abs G0 > abs G^drift + abs G^rest")]
+PH_SEC3 = [("cD_cos", "cos(c, Dbar) = sum_k c_k Dbar_k / (norm c norm Dbar)"),
+           ("Cpl_eq_cD", "sign Cpl_i = sign sum_k c_k Dbar_k, alive"),
+           ("kappa_pos", "kappa_i = sum_n K_n phi'(z1_ni) > 0, alive"),
+           ("Cpl_eq_kcD", "sign Cpl_i = sign(kappa_i sum_k c_k Dbar_k), alive")]
+PH_SEC4 = [("beta_pos_ni", "no intercept: beta_i > 0"), ("R2_med_ni", "no intercept: median R^2 (uncentred)"),
+           ("Gself_pos_ni", "no intercept: self part beta S0 > 0"), ("Gself_agree_ni", "no intercept: sign self part = sign G"),
+           ("self_share_ni", "no intercept: median self share abs(beta S0) / (abs self + abs perp)"),
+           ("Gperp_pos_ni", "no intercept: perp part > 0"), ("Gperp_agree_ni", "no intercept: sign perp part = sign G"),
+           ("perp_share_ni", "no intercept: median perp share"),
+           ("beta_pos_wi", "with intercept: beta_i > 0"), ("R2_med_wi", "with intercept: median R^2 (centred)"),
+           ("Gself_pos_wi", "with intercept: self part beta S0 > 0"), ("Gself_agree_wi", "with intercept: sign self part = sign G"),
+           ("self_share_wi", "with intercept: median self share abs(beta S0) / (abs self + abs int + abs perp)"),
+           ("Gint_pos_wi", "with intercept: intercept part alpha kappa > 0"), ("Gint_agree_wi", "with intercept: sign intercept part = sign G"),
+           ("int_share_wi", "with intercept: median intercept share"),
+           ("Gperp_pos_wi", "with intercept: perp part > 0"), ("Gperp_agree_wi", "with intercept: sign perp part = sign G"),
+           ("perp_share_wi", "with intercept: median perp share")]
+
+
+def seed_agg(per):
+    metrics = [c for c in per.columns if c not in ("cond", "seed", "t")]
+    agg = []
+    for (cond, t), g in per.groupby(["cond", "t"]):
+        for mkey in metrics:
+            agg.append(dict(cond=cond, t=t, metric=mkey, **mean_ci(g[mkey].to_numpy(float)), seeds_total=len(g)))
+    return pd.DataFrame(agg)
+
+
+def metric_table(L, agg, per, cond, rowsdef):
+    tlist = sorted(per["t"].unique())
+    seeds_total = per.groupby(["cond", "t"]).size()
+    L.append("| quantity | " + " | ".join(f"t{t}" for t in tlist) + " |")
+    L.append("|---|" + "---|" * len(tlist))
+    for key, label in rowsdef:
+        cells = []
+        for t in tlist:
+            sel = agg[(agg.cond == cond) & (agg.t == t) & (agg.metric == key)]
+            cells.append("--" if sel.empty else fmt(sel.iloc[0].to_dict(), int(seeds_total[(cond, t)]), key))
+        L.append(f"| {label} | " + " | ".join(cells) + " |")
+
+
+def posthoc_tables():
+    rows, chk_rows = [], []
+    for fpath in sorted(glob.glob(os.path.join(OUT, "LR_*_s*_t*.npz"))):
+        d = np.load(fpath)
+        if "posthoc_scalars" not in d.files:
+            continue
+        ph = json.loads(str(d["posthoc_scalars"]))
+        key = dict(cond=str(d["cond"]), seed=int(d["seed"]), t=int(d["t"]))
+        rows.append({**key, **posthoc_state_metrics(d, ph)})
+        chk_rows.append({**key, **{k: ph[k] for k in PH_CHECKS}})
+    if not rows:
+        print("posthoc: no npz carries the post hoc keys; run without --tables-only first")
+        return
+    per = pd.DataFrame(rows).sort_values(["cond", "t", "seed"]).reset_index(drop=True)
+    chk = pd.DataFrame(chk_rows).sort_values(["cond", "t", "seed"]).reset_index(drop=True)
+    agg = seed_agg(per)
+    per.to_csv(os.path.join(TAB, "posthoc_3x2_per_state.csv"), index=False, float_format="%.6g")
+    agg.to_csv(os.path.join(TAB, "posthoc_3x2_seed_mean.csv"), index=False, float_format="%.6g")
+    chk.to_csv(os.path.join(TAB, "posthoc_3x2_checks.csv"), index=False, float_format="%.3e")
+
+    def cell(cond, t, key, digits=2):
+        st = agg[(agg.cond == cond) & (agg.t == t) & (agg.metric == key)].iloc[0].to_dict()
+        if not np.isfinite(st["mean"]):
+            return "--"
+        s = f"{st['mean']:.{digits}f}"
+        if np.isfinite(st["lo"]):
+            s += f" [{st['lo']:.{digits}f}, {st['hi']:.{digits}f}]"
+        return s
+
+    L = ["# c1_direction_1010 — MLP post hoc diagnostics: 3x2 split, W2 bucket shares, coupling margin, self-aligned split\n",
+         f"Generated by `analysis/c1_direction_1010/mlp_drift.py` at {time.strftime('%Y-%m-%d %H:%M')} (git HEAD {git_hash()[:8]}).\n",
+         "**POST HOC, NOT REGISTERED.** Asked for by the coordinator after Codex's review (the vault's 'W3 growth x initial "
+         "W2 column' term would be G^{0,Δ}, not the drift term). These numbers are separate from the registered P8 numbers "
+         "in `summary_mlp.md` / `mlp_*.csv`, which are unchanged (same npz keys, same values).\n",
+         "**Sign convention: G > 0 = the expected SGD step on the uniform-label loss lowers the unit's mean (sinking side).** "
+         "Same for every part.\n",
+         "Definitions (all at the stored state, forward pass fixed):\n",
+         "1. 3x2 split. delta2^{W3^0} = phi'(z2) * ((p - 1/10) W3^0), delta2^{dW3} = phi'(z2) * ((p - 1/10) (W3 - W3^0)) "
+         "(p, z2 from the full forward pass; they sum to delta2). G^{a,b}_i = sum_n K_n phi'(z1_ni) [delta2^{b} W2^{a}]_ni "
+         "with a in {0: W2^0, d: dW2^drift, r: dW2^rest} (the registered W2 split) and b in {0: W3^0, Δ: dW3}. The six "
+         "cells sum to G; each W2 row sums to the registered G0 / G^drift / G^rest. S6_i = sum of the six abs cells; "
+         "'share' = median over alive units of abs(part)_i / S6_i. 'sign X = sign G' = fraction of alive units.",
+         "2. W2 buckets: S3_i = abs G0_i + abs G^drift_i + abs G^rest_i.",
+         "3. Coupling margin: cD = sum_k c_k Dbar_k (one number per state), cos = cD / (norm c norm Dbar). The registered "
+         "G^drift_i = -mu2hat_i Cpl_i with Cpl_i = sum_k c_k A_ki, A_ki = sum_n delta2_nk K_n phi'(z1_ni). "
+         "kappa_i = sum_n K_n phi'(z1_ni): if K_n phi'(z1_ni) were constant over n, Cpl_i = kappa_i cD / N exactly.",
+         "4. Self-aligned split. H_in = [delta2 W2]_in (backprop to h1), so G_i = sum_n K_n phi'(z1_ni) H_in. Per unit, "
+         "regress H_in on h1_in over the 1200 images. No intercept: beta_i = sum H h1 / sum h1^2, R^2 uncentred, "
+         "G_i = beta_i S0_i + sum_n K_n phi' Hperp_in (S0_i = sum_n K_n phi' h1_in, the registered self-form). "
+         "With intercept: beta_i = cov/var, alpha_i = mean H - beta_i hbar1_i, R^2 centred, "
+         "G_i = beta_i S0_i + alpha_i kappa_i + sum_n K_n phi' Hperp_in. Shares over the abs parts of each split.\n",
+         "Cells: seed mean [t-based 95% interval over seeds]; '(ks)' = only k seeds had units in the subset.\n"]
+
+    L.append("\n## G^{0,Δ} vs the drift term (alive units)\n")
+    L.append("Shares are over S6. Drift = G^drift = G^{d,0} + G^{d,Δ}; its share is the drift row (abs G^{d,0} + abs G^{d,Δ}) / S6.\n")
+    L.append("| cond | t | G^{0,Δ} > 0 | sign G^{0,Δ} = sign G | share G^{0,Δ} | G^drift > 0 | sign G^drift = sign G | share drift row | abs G^{0,Δ} > abs G^drift |")
+    L.append("|---|---|---|---|---|---|---|---|---|")
+    for (cond, t), _ in per.groupby(["cond", "t"]):
+        L.append(f"| {cond} | {t} | {cell(cond, t, 'G_0D_pos')} | {cell(cond, t, 'G_0D_agree')} | {cell(cond, t, 'G_0D_share6')} | "
+                 f"{cell(cond, t, 'Gd_pos')} | {cell(cond, t, 'Gd_agree')} | {cell(cond, t, 'rowd_share6')} | {cell(cond, t, 'G0D_gt_Gd')} |")
+
+    L.append("\n## Self-aligned split, raw vs std (alive units)\n")
+    L.append("| cond | t | R^2 ni | self share ni | self > 0 ni | R^2 wi | beta > 0 wi | self share wi | int share wi | perp share wi | self > 0 wi | int > 0 wi | perp > 0 wi |")
+    L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    for (cond, t), _ in per.groupby(["cond", "t"]):
+        L.append(f"| {cond} | {t} | {cell(cond, t, 'R2_med_ni')} | {cell(cond, t, 'self_share_ni')} | {cell(cond, t, 'Gself_pos_ni')} | "
+                 f"{cell(cond, t, 'R2_med_wi')} | {cell(cond, t, 'beta_pos_wi')} | {cell(cond, t, 'self_share_wi')} | "
+                 f"{cell(cond, t, 'int_share_wi')} | {cell(cond, t, 'perp_share_wi')} | {cell(cond, t, 'Gself_pos_wi')} | "
+                 f"{cell(cond, t, 'Gint_pos_wi')} | {cell(cond, t, 'Gperp_pos_wi')} |")
+
+    for cond in sorted(per["cond"].unique()):
+        for title, rowsdef in (("1. 3x2 split", PH_SEC1), ("2. W2 bucket shares", PH_SEC2),
+                               ("3. coupling margin", PH_SEC3), ("4. self-aligned split", PH_SEC4)):
+            L.append(f"\n## {cond} — {title}\n")
+            metric_table(L, agg, per, cond, rowsdef)
+            if title.startswith("3"):
+                L.append("\nsum_k c_k Dbar_k per seed (s0..s9):\n")
+                L.append("| t | " + " | ".join(f"s{s}" for s in sorted(per['seed'].unique())) + " | seeds with cD > 0 |")
+                L.append("|---|" + "---|" * (per["seed"].nunique() + 1))
+                for t, g in per[per.cond == cond].groupby("t"):
+                    g = g.set_index("seed")
+                    L.append(f"| {t} | " + " | ".join(f"{g.loc[s, 'cD']:+.3g}" if s in g.index else "--"
+                                                       for s in sorted(per['seed'].unique()))
+                             + f" | {int((g['cD'] > 0).sum())}/{len(g)} |")
+
+    L.append("\n## Checks (max over all states)\n")
+    L.append("| check | max | meaning |")
+    L.append("|---|---|---|")
+    meaning = dict(six_rel="six cells sum to G (rel. to max S6); threshold 1e-12",
+                   six_rel_G="same error rel. to max abs G",
+                   rows_rel="each W2 row (two W3 cells) sums to the registered G0 / G^drift / G^rest",
+                   H_rel="sum_n K_n phi' H_in = G_i",
+                   self_ni_rel="beta S0 + perp = G (no intercept)",
+                   self_wi_rel="beta S0 + alpha kappa + perp = G (with intercept)")
+    for k in PH_CHECKS:
+        L.append(f"| {k} | {chk[k].max():.2e} | {meaning[k]} |")
+    with open(os.path.join(TAB, "posthoc_3x2.md"), "w") as fh:
+        fh.write("\n".join(L) + "\n")
+    print(f"posthoc tables: {len(per)} states -> {TAB}/posthoc_3x2.*")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--conds", nargs="+", default=list(CONDS))
@@ -488,6 +783,7 @@ def main():
     if not args.tables_only:
         sha = compute(args.conds, args.seeds, args.tasks)
     tables(sha, sys.argv[1:])
+    posthoc_tables()
 
 
 if __name__ == "__main__":
