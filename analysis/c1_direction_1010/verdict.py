@@ -14,9 +14,14 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
-CNN = ROOT / "results" / "c1_direction_1010" / "cnn"
-MLP = ROOT / "results" / "c1_direction_1010" / "mlp"
 OUT = ROOT / "results" / "c1_direction_1010"
+# raw per-state files live in the repo until the section-4 cleanup moves them to obsidian-research-data
+_BK = Path(os.environ.get("C1_DATA_ROOT", str(Path.home() / "Projects" / "obsidian-research-data" / "c1_direction_1010")))
+def _data(sub: str) -> Path:
+    here = OUT / sub
+    return here if any(here.glob("*.npz")) else _BK / "results" / "c1_direction_1010" / sub
+CNN = _data("cnn")
+MLP = _data("mlp")
 STRONG, MAJ, CH_LO, CH_HI = 0.85, 0.70, 0.35, 0.65        # bands (spec section 3)
 T_MAIN = (5, 10, 20)
 SNAKE = ("SNA", "SNAc3", "CV06FC3", "CV3FC06")

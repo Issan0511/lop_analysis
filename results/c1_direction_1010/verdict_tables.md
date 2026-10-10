@@ -1,4 +1,4 @@
-# c1_direction_1010 verdict tables (2026-10-10T14:42; 360 CNN states, max check error 2.3085048773867276e-12)
+# c1_direction_1010 verdict tables (2026-10-10T15:07; 360 CNN states, max check error 2.3085048773867276e-12)
 
 Q1 = **DRIFT_SIGN_ONLY**, Q3 = **SIGN_RULE_HOLDS**. Sign convention: G > 0 = sinking side. Cells: seed mean [95% t-interval].
 
