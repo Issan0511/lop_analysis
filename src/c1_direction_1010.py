@@ -692,12 +692,192 @@ def collect(out: Path):
 
 
 # --------------------------------------------------------------------------
+# Q2 replay (spec sec. 2.2, P9): LR, task t -> t+1 in the engine, with records and in-task snapshots
+# --------------------------------------------------------------------------
+
+REC_STEPS = (0, 1, 10, 75, 150, 750, 3750, 7500, 15000, 30000)
+SNAP_STEPS = (75, 750, 30000)
+REF_LR = REF / "LR"                    # the original LR run's per_task.csv / curves.npy / verify replays
+
+
+def replay_q2(task: int, seeds, out_rec: Path, out_snap: Path, device, chunk=200,
+              rec_steps=REC_STEPS, snap_steps=SNAP_STEPS, smoke_epochs=None) -> dict:
+    """Train task `task`+1 of the LR runs exactly as they were trained (the engine bundle, all 10
+    seeds in one R = 10 bundle as in the original run, labels / batch orders from the run's streams,
+    cuDNN TF32 as trained, epoch 1 eager then one CUDA graph per epoch -- cnn_drive_verify_1009's
+    `replay` procedure, which reproduced the saved t02 of every LR run bit for bit).  Records per run
+    at `rec_steps` (0 = task start, after new_labels): zbar c1 / c2 (bundle_zbar, float64
+    accumulation, TF32 off for the record only), a_j = <W1[j], M^> (M = the run's raw mean patch),
+    b1, the 256 DC sums s_kj of W2, <W2[k], mu2^> with mu2^ fixed at the task-start state (float64),
+    b2, |W2^AC[k]| (Frobenius norm of W2[k] minus its per-(k, j) tap mean).  At `snap_steps` the full
+    state of every run is analysed in float64 by measure_state with the task's actual labels (CE)
+    and with L_u.  R1 (fidelity; no t+1 checkpoint was saved for LR): the per-epoch online accuracy
+    of the replayed task against the original run's curves.npy, its end-of-task `evaluate` row and
+    switch CE / accuracy against per_task.csv, and the zbar records against the earlier verify
+    replay of the same task."""
+    import pandas as pd
+    E = V.E
+    arm = "LR"
+    slots = [(arm, s) for s in seeds]
+    R = len(slots)
+    Bd = V.engine_bundle(slots, device, graph=True)
+    tcs = set()
+    with torch.no_grad():
+        for r, (a, s) in enumerate(slots):
+            st = torch.load(ckpt_path(a, s, task), map_location="cpu", weights_only=False)
+            for dst, src in ((Bd.P, st["P"]), (Bd.m, st["m"]), (Bd.v, st["v"])):
+                for q, x in zip(dst, src):
+                    q[r].copy_(x)
+            tcs.add(float(st["tc"]))
+            for k in ("V", "ada", "fixA", "cval"):
+                for dst, src in zip(getattr(Bd.act, k), st["act"][k]):
+                    dst[r].copy_(src)
+    assert len(tcs) == 1
+    Bd.tc.fill_(tcs.pop())
+    for s in Bd.useeds:
+        for _ in range(task * V.EPOCHS):
+            torch.randperm(N, generator=Bd.g_batch[s])
+        for _ in range(task):
+            CN.task_labels(Bd.g_lab[s])
+    # fixed float64 directions from the task-start state; the init of every run for the splits
+    mu2h = torch.zeros(R, CH * KER * KER, dtype=DT, device=device)
+    Mh = torch.zeros(R, 3 * KER * KER, dtype=DT, device=device)
+    Mn = torch.zeros(R, dtype=DT, device=device)
+    inits = {}
+    for r, (a, s) in enumerate(slots):
+        S = load_state(a, s, task, device)
+        A = means_pass(S.P, S.alpha, S.X, chunk)
+        mu2h[r] = A["mu2"] / A["mu2"].norm()
+        Mh[r] = A["M"] / A["M"].norm(); Mn[r] = A["M"].norm()
+        inits[s] = load_state(a, s, 0, device)
+        del S
+    rec = {k: [] for k in ("step", "zbar", "a", "b1", "s_kj", "w2mu", "b2", "w2ac_norm", "tc")}
+
+    def record(step):
+        zb = V.bundle_zbar(Bd)
+        with torch.no_grad():
+            W1 = Bd.P[0].detach().double().reshape(R, CH, -1)
+            W2 = Bd.P[2].detach().double()
+            blk = W2.reshape(R, CH, CH, KER * KER)
+            vals = {"zbar": zb, "a": torch.einsum("rjd,rd->rj", W1, Mh), "b1": Bd.P[1].detach().double(),
+                    "s_kj": W2.sum((3, 4)), "w2mu": torch.einsum("rkd,rd->rk", W2.reshape(R, CH, -1), mu2h),
+                    "b2": Bd.P[3].detach().double(),
+                    "w2ac_norm": (blk - blk.mean(3, keepdim=True)).reshape(R, CH, -1).norm(dim=2)}
+        rec["step"].append(step); rec["tc"].append(float(Bd.tc))
+        for k, v in vals.items():
+            rec[k].append(v.cpu().numpy())
+
+    def snapshot(step):
+        ts = time.time()
+        for r, (a, s) in enumerate(slots):
+            S = state_from_dict(Bd.run_state(r), device, task=task)
+            y = Bd.Y[r].detach().clone()
+            for tag, lab in (("task", y), ("Lu", None)):
+                res = measure_state(S, inits[s], labels=lab, chunk=chunk)
+                res["loss"] = "task" if lab is not None else "L_u"
+                res["step"] = step
+                res["task_start"] = task
+                res["task_in"] = task + 1
+                fn = out_snap / f"LR_s{s}_t{task:02d}_step{step}_{tag}.npz"
+                tmp = fn.with_name(fn.stem + ".tmp.npz")
+                np.savez(tmp, **{k: np.asarray(v) for k, v in res.items()})
+                tmp.replace(fn)
+            del S
+            torch.cuda.empty_cache()
+        print(f"  snapshot step {step}: {time.time() - ts:.0f}s", flush=True)
+
+    t0 = time.time()
+    Bd.new_labels()
+    sce, sacc = E.switch_eval(Bd.P, Bd.X, Bd.Y, Bd.act)          # as the original run, right after new_labels
+    record(0)
+    ep_acc = torch.zeros(R, V.EPOCHS, device=device)
+    step = 0
+    Bd.new_order()                                                 # epoch 1 eagerly, step by step
+    Bd.acc_ep.zero_()
+    for j in range(V.SPE):
+        Bd.step(j)
+        step += 1
+        if step in rec_steps:
+            record(step)
+        if step in snap_steps:
+            snapshot(step)
+    ep_acc[:, 0].copy_(Bd.acc_ep)
+    for e in range(1, V.EPOCHS if smoke_epochs is None else smoke_epochs):
+        Bd.run_epoch()
+        step += V.SPE
+        ep_acc[:, e].copy_(Bd.acc_ep)
+        if step in rec_steps:
+            record(step)
+        if step in snap_steps:
+            snapshot(step)
+    ep_acc /= V.SPE
+    ev = E.evaluate(Bd.P, Bd.X, Bd.Y, Bd.act)
+    wall = time.time() - t0
+    if smoke_epochs is not None:                    # code-path test only: no fidelity check
+        np.savez(out_rec / f"smoke_replay_LR_t{task:02d}.npz", seeds=np.asarray(seeds),
+                 **{k: np.asarray(v) for k, v in rec.items()})
+        print(f"smoke replay t{task}: {wall:.0f}s, steps {rec['step']}, ev[0] memo {ev[0]['memo_acc']}", flush=True)
+        return {}
+    # ---- R1: fidelity against the original run's records of task t+1
+    pt = pd.read_csv(REF_LR / "per_task.csv")
+    cur = np.load(REF_LR / "curves.npy")                                    # (10 runs, 30 tasks, 400)
+    vr = np.load(REF_LR / "replay" / f"replay_t{task:02d}.npy", allow_pickle=True).item()
+    ep = ep_acc.cpu().numpy()
+    fid = {"per_run": {}}
+    worst_ev = worst_sw = 0.0
+    curves_equal = True
+    for r, (a, s) in enumerate(slots):
+        row = pt[(pt.seed == s) & (pt.task == task + 1)].iloc[0]
+        rr = {}
+        for c, v in ev[r].items():
+            if c in row and np.isfinite(v) and np.isfinite(row[c]):
+                rr[c] = abs(v - float(row[c])) / max(abs(float(row[c])), 1e-12)
+        ce_eq = bool(np.array_equal(ep[r], cur[r, task]))
+        curves_equal &= ce_eq
+        on = abs(float(ep_acc[r].double().mean()) - float(row["online_acc"])) / float(row["online_acc"])
+        sw = max(abs(float(sce[r]) - float(row["switch_ce"])) / abs(float(row["switch_ce"])),
+                 abs(float(sacc[r]) - float(row["switch_acc"])) / max(abs(float(row["switch_acc"])), 1e-12))
+        worst_ev = max(worst_ev, max(rr.values()), on)
+        worst_sw = max(worst_sw, sw)
+        fid["per_run"][f"LR_{s}"] = {"evaluate_max_rel_vs_per_task_csv": max(rr.values()),
+                                     "evaluate_worst_column": max(rr, key=rr.get),
+                                     "online_acc_rel": on, "curve_bit_equal": ce_eq, "switch_rel": sw}
+    zr = {}
+    for k_step, arr in vr["rec"].items():
+        i = rec["step"].index(int(k_step)) if int(k_step) in rec["step"] else None
+        if i is not None:
+            zr[k_step] = float(np.abs(rec["zbar"][i] - arr).max())
+    fid.update({"R1_evaluate_and_online_max_rel": worst_ev, "R1_switch_max_rel": worst_sw,
+                "R1_curves_bit_equal_all_runs": curves_equal,
+                "R1_zbar_records_vs_verify_replay_max_abs": zr,
+                "R1_pass": bool(worst_ev < 1e-6 and worst_sw < 1e-6 and curves_equal
+                                and all(v == 0.0 for v in zr.values())),
+                "threshold_rel": 1e-6, "wall_s": wall,
+                "note": "no LR checkpoint of task t+1 exists (saved tasks 1,2,3,5,10,20,30); R1 compares "
+                        "the replayed task with the original run's per-epoch online accuracy (curves.npy, "
+                        "bit equality), its end-of-task evaluate() row and switch CE / acc (per_task.csv, "
+                        "printed to 10 significant digits) and the earlier verify replay's zbar records"})
+    np.savez(out_rec / f"replay_LR_t{task:02d}.npz", seeds=np.asarray(seeds), task_start=task,
+             M_norm=Mn.cpu().numpy(), mu2_hat_start=mu2h.cpu().numpy(), M_hat=Mh.cpu().numpy(),
+             ep_acc=ep, **{k: np.asarray(v) for k, v in rec.items()})
+    (out_rec / f"replay_LR_t{task:02d}_R1.json").write_text(json.dumps(fid, indent=1, default=float))
+    print(f"replay t{task} -> t{task + 1}: train+records+snapshots {wall:.0f}s; R1 pass {fid['R1_pass']} "
+          f"(evaluate/online max rel {worst_ev:.1e}, switch {worst_sw:.1e}, curves bit-equal {curves_equal}, "
+          f"zbar vs verify replay {zr})", flush=True)
+    return fid
+
+
+# --------------------------------------------------------------------------
 # main
 # --------------------------------------------------------------------------
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", choices=["checks", "measure", "collect"])
+    ap.add_argument("mode", choices=["checks", "measure", "collect", "replay"])
+    ap.add_argument("--replay-tasks", default="10,20", help="replay: start tasks (t -> t+1), run in order")
+    ap.add_argument("--snap-out", default="results/c1_direction_1010/cnn_task",
+                    help="replay: where the in-task decompositions go")
+    ap.add_argument("--smoke", action="store_true", help="replay: 2 epochs, one snapshot, no R1 (code test)")
     ap.add_argument("--states", default="LR:10:10", help="checks: arm:seed:task,...")
     ap.add_argument("--arms", default="LR")
     ap.add_argument("--seeds", default="10-19")
@@ -714,12 +894,28 @@ def main():
         collect(out)
         return
     device = V.H.setup(args.device)                       # deterministic algorithms, as verify
-    torch.backends.cudnn.allow_tf32 = False
-    torch.backends.cuda.matmul.allow_tf32 = False
+    if args.mode != "replay":
+        # float64 measurement; the replay keeps the training's defaults (cuDNN TF32 on, as the
+        # original LR run: provenance tf32_cudnn = true) so that it reproduces the run
+        torch.backends.cudnn.allow_tf32 = False
+        torch.backends.cuda.matmul.allow_tf32 = False
     if device.type == "cuda":
         di = torch.cuda.current_device()
         total = torch.cuda.get_device_properties(di).total_memory / 2 ** 30
         torch.cuda.set_per_process_memory_fraction(min(1.0, args.mem_gb / total), di)
+    if args.mode == "replay":
+        V.set_activation(["LR"])
+        snap = Path(args.snap_out)
+        snap.mkdir(parents=True, exist_ok=True)
+        assert torch.backends.cudnn.allow_tf32, "the replay must keep the training's cuDNN TF32 setting"
+        for task in V.parse_list(args.replay_tasks):
+            if args.smoke:
+                replay_q2(task, V.parse_list(args.seeds), out, snap, device, chunk=args.chunk,
+                          rec_steps=(0, 1, 10, 75, 150), snap_steps=(75,), smoke_epochs=2)
+            else:
+                replay_q2(task, V.parse_list(args.seeds), out, snap, device, chunk=args.chunk)
+            torch.cuda.empty_cache()
+        return
     if args.mode == "checks":
         st = [(a, int(s), int(t)) for a, s, t in (x.split(":") for x in args.states.split(","))]
         V.set_activation([a for a, _, _ in st])

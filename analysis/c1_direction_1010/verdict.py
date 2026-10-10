@@ -210,7 +210,9 @@ def judge_cnn(aggd, rows):
     P["P7"] = p7
     # Q1 label
     s = P["P1"]["score"]; s2 = P["P2"]["score"]
-    if any(v == "pending" for v in list(s.values()) + list(s2.values())):
+    # the c2 drift-sign item is informational for the label (no channel has Pbar2 > 0 at t10/t20)
+    label_items = list(s.values()) + [s2["rest_pos>=0.85"], s2["dom_rest_drift>=0.70"]]
+    if any(v == "pending" for v in label_items):
         q1 = "pending"
     elif s["drift_float_pos>=0.85"] == "ok" and s["dom_drift_rest>=0.70"] == "ok" and s["init_agree in chance band"] == "ok" \
             and s2["rest_pos>=0.85"] == "ok" and s2["dom_rest_drift>=0.70"] == "ok":
