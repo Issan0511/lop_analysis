@@ -71,6 +71,30 @@ def per_state_rates(d, layer):
     That = d["That_c1"] if layer == "c1" else d["That_c2"]
     r["spearman_That_G"] = spearman(That, G)
     r["agree_That_G"], _ = rate(np.sign(That) == np.sign(G))
+    # ---- post hoc (DC / AC buckets, Codex's Z, self-aligned regression, c2 own / upstream) ----
+    if f"G_{layer}_DC" in d.files:
+        GD, GA = d[f"G_{layer}_DC"], d[f"G_{layer}_AC"]
+        r["ph_DC_float"], _ = rate(GD < 0)
+        r["ph_AC_float"], _ = rate(GA < 0)
+        r["ph_agree_DC_G"], _ = rate(np.sign(GD) == np.sign(G))
+        r["ph_dom_DC_AC"], _ = rate(np.abs(GD) > np.abs(GA))
+        r["ph_dom_DC_drift"], _ = rate(np.abs(GD) > np.abs(Gd))
+        r["ph_share_DC_med"] = float(np.median(np.abs(GD) / (np.abs(GD) + np.abs(GA))))
+    if layer == "c1" and "Z_c1" in d.files:
+        r["ph_Z_pos"], _ = rate(d["Z_c1"] > 0)
+    if f"R2_{layer}_noint" in d.files:
+        r["ph_R2_med"] = float(np.median(d[f"R2_{layer}_noint"]))
+    if f"G_{layer}_selfal" in d.files:
+        r["ph_selfal_agree"], _ = rate(np.sign(d[f"G_{layer}_selfal"]) == np.sign(G))
+    if layer == "c2" and "G_c2_up_full" in d.files:
+        up, own = d["G_c2_up_full"], d["G_c2_own_full"]
+        r["ph_up_agree"], _ = rate(np.sign(up) == np.sign(G))
+        r["ph_own_sink"], _ = rate(own > 0)
+        r["ph_up_share_med"] = float(np.median(np.abs(up) / (np.abs(up) + np.abs(own))))
+    if layer == "c1" and "c_k" in d.files:
+        cd = d["c_k"] * d["D2bar"]
+        r["ph_sum_cD_pos"] = float(cd.sum() > 0)
+        r["ph_margin_cD"] = float(cd.sum() / np.abs(cd).sum())
     if layer == "c1":
         r["c_pos"], _ = rate(d["c_k"] > 0)
         r["D_pos"], _ = rate(d["D2bar"] > 0)
@@ -241,7 +265,14 @@ def fmt(x):
 def main():
     rows, checks = load_cnn()
     keys = ["sink", "drift_float_pos", "drift_sink_nonpos", "rest_pos", "init_agree", "dom_drift_rest", "dom_drift_init",
-            "share_drift_med", "drift_sign_rule", "sink_posP", "sink_nonposP", "spearman_That_G", "agree_That_G", "c_pos", "D_pos", "mu_path_share_med"]
+            "share_drift_med", "drift_sign_rule", "sink_posP", "sink_nonposP", "spearman_That_G", "agree_That_G", "c_pos", "D_pos", "mu_path_share_med",
+            "ph_DC_float", "ph_AC_float", "ph_agree_DC_G", "ph_dom_DC_AC", "ph_dom_DC_drift", "ph_share_DC_med", "ph_Z_pos", "ph_R2_med",
+            "ph_selfal_agree", "ph_up_agree", "ph_own_sink", "ph_up_share_med", "ph_sum_cD_pos", "ph_margin_cD"]
+    # keys missing in a state (older files / other layer) are skipped per state
+    for per_seed in rows.values():
+        for v in per_seed.values():
+            for k in keys:
+                v.setdefault(k, float("nan"))
     aggd = agg(rows, keys)
     P, q1 = judge_cnn(aggd, rows)
     mlp_agg, p8, q3 = judge_mlp()
