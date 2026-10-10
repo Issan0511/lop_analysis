@@ -1,0 +1,1664 @@
+{
+  "run_id": "adamw_dose_1010",
+  "started_at": "2026-10-10T17:41:11.356898+09:00",
+  "spec": "specs/spec_adamw_dose_1010.md",
+  "prereg_commit": "364d9cd1df7a40367a30aa16c52e9fcb0d8617dc",
+  "git_head": "e8b1581c0c70dfa51cfab2364817f6773ecea927",
+  "source_sha256": {
+    "src/adamw_dose_1010.py": "f5c6d66accb6813cdb85785af0992dfd35812a5cf9bd95b25f02cbb15165708a",
+    "src/adamw_dose_1010_c51.py": "6095f24262edd2f7684ed2738a0db7e5e02fbd01afcd24bea366ca63a96cdc48",
+    "src/adamw_dose_1010_run.py": "b08a9c1b8a3d557184ccc8830e26e732070667057a7b0931a5c7dcd6f8628add",
+    "analysis/adamw_dose_1010/checks.py": "384ed6c40992466c70748667156d2ef3343b7c52933b59a877a2d41b5c56efaa"
+  },
+  "verdict_sha256": "df68b70df7ccb418c7089a38c14911e0627cd5e25aa54c244ddf626ff781b435",
+  "torch": "2.13.0+cu130",
+  "python": "3.12.3",
+  "S0": {
+    "title": "S0 the lambda = 0 path reproduces the recorded l2cap ref shards",
+    "target": "src/adamw_dose_1010.py",
+    "threshold_derivation": "run_adamw with the arm 'ref' (lambda 0 on every tensor), flush on, 80 epochs, tasks 1-2, reproduces the\n    recorded l2cap ref shards of seeds 0 and 5: every per_task.csv column of the record equal as written and no\n    extra column, every units.npz array bit-equal on the task 1-2 rows (test arrays: the task-1 row) and no extra\n    array (the archived copy only if its sha256 matches the manifest), the task-1-end state hash, and the init and\n    subset hashes.  String and bit comparisons only.",
+    "threads": 1,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "ref_s0": {
+        "i_per_task_columns": true,
+        "i_no_extra_columns": true,
+        "ii_arrays": true,
+        "ii_no_extra_arrays": true,
+        "iii_task1_state": true,
+        "iv_init_subset": true,
+        "v_no_decay_recorded": true,
+        "bad_columns": [],
+        "n_columns": 96,
+        "extra_columns": [],
+        "bad_arrays": [],
+        "n_arrays": 87,
+        "extra_arrays": [],
+        "archive": "/home/issan/Projects/obsidian-research-data/l2cap_ee_0917/results/l2cap_ee_0917/runs/ref_s0/units.npz"
+      },
+      "ref_s5": {
+        "i_per_task_columns": true,
+        "i_no_extra_columns": true,
+        "ii_arrays": true,
+        "ii_no_extra_arrays": true,
+        "iii_task1_state": true,
+        "iv_init_subset": true,
+        "v_no_decay_recorded": true,
+        "bad_columns": [],
+        "n_columns": 96,
+        "extra_columns": [],
+        "bad_arrays": [],
+        "n_arrays": 87,
+        "extra_arrays": [],
+        "archive": "/home/issan/Projects/obsidian-research-data/l2cap_ee_0917/results/l2cap_ee_0917/runs/ref_s5/units.npz"
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M0a: ref carries wd1e-3's decay (c != 1)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|i_per_task_columns",
+            "ref_s0|ii_arrays",
+            "ref_s0|iii_task1_state",
+            "ref_s0|v_no_decay_recorded",
+            "ref_s5|i_per_task_columns",
+            "ref_s5|ii_arrays",
+            "ref_s5|iii_task1_state",
+            "ref_s5|v_no_decay_recorded"
+          ]
+        }
+      },
+      {
+        "mutation": "M0b: Adam eps 1e-7",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|i_per_task_columns",
+            "ref_s0|ii_arrays",
+            "ref_s0|iii_task1_state",
+            "ref_s5|i_per_task_columns",
+            "ref_s5|ii_arrays",
+            "ref_s5|iii_task1_state"
+          ]
+        }
+      },
+      {
+        "mutation": "M0c: the task 2-10 diagnostic points shifted to tasks 3-10",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_s0|ii_arrays",
+            "ref_s5|ii_arrays"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 52.3
+  },
+  "all_pass": true,
+  "n_checks": 16,
+  "n_mutations": 48,
+  "n_mutations_detected": 48,
+  "S-wd": {
+    "title": "S-wd decoupled on synthetic tensors (box 1)",
+    "target": "src/adamw_dose_1010.py",
+    "threshold_derivation": "Box 1, synthetic tensors of the box's six shapes (U(+-1/sqrt(fan_in))), lambdas from the arm 'wd1e-1'\n    (registered 1e-1 on all six), lr 1e-3, K = 40 steps of random gradients in which a fixed mask of entries\n    (one third of each tensor) gets an exactly-0 gradient every step.  (i) the 0-gradient, 0-moment entries equal\n    np.float32 iteration p <- p * c, c = np.float32(1 - 1e-3 * 1e-1), after step 1 and after step K, in every\n    tensor; (ii) the whole update equals the independent 'p.mul_(c), then the host's Adam' after K steps, bit for\n    bit, and the update count is K; (iii) coupled L2 (lambda theta added to the gradient, then Adam), computed here,\n    moves the (i) entries on step 1 by Adam's exact first step eta g / (|g| + eps), g = lambda theta (within 1e-3 eta:\n    float32 rounding is ~1e-7 relative), which is eta sign(theta) to 1% wherever |g| >= 100 eps (within 0.011 eta),\n    and so differs from (i): the check tells coupled from decoupled.  Bit comparisons except (iii).",
+    "threads": 1,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_zero_grad_one_step_is_c": true,
+      "i_zero_grad_K_steps_is_c_iterated": true,
+      "ii_update_is_decay_then_host_adam": true,
+      "ii_update_count": true,
+      "iii_coupled_is_adam_first_step": true,
+      "iii_coupled_moves_eta_sign": true,
+      "iii_coupled_differs": true,
+      "n_decays": [
+        40,
+        40,
+        40,
+        40,
+        40,
+        40
+      ]
+    },
+    "coupled_max_dev_from_first_step": 3.600758623776082e-09,
+    "coupled_max_dev_from_eta_sign": 9.683844633400461e-06,
+    "c_hex": "0x1.fff2e40000000p-1",
+    "mutations": [
+      {
+        "mutation": "Mw1: coupled L2 (lambda theta added to the gradient)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 3.600758623776082e-09,
+          "coupled_max_dev_from_eta_sign": 9.683844633400461e-06,
+          "c_hex": "0x1.fff2e40000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw2: the decay after the Adam step",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 3.600758623776082e-09,
+          "coupled_max_dev_from_eta_sign": 9.683844633400461e-06,
+          "c_hex": "0x1.fff2e40000000p-1",
+          "failed_items": [
+            "ii_update_is_decay_then_host_adam"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw3: biases not decayed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 3.600758623776082e-09,
+          "coupled_max_dev_from_eta_sign": 9.683844633400461e-06,
+          "c_hex": "0x1.fff2e40000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam",
+            "ii_update_count"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw4: W3 only",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 3.600758623776082e-09,
+          "coupled_max_dev_from_eta_sign": 9.683844633400461e-06,
+          "c_hex": "0x1.fff2e40000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam",
+            "ii_update_count"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw5: c = 1 - lambda (the lr forgotten)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 3.600758623776082e-09,
+          "coupled_max_dev_from_eta_sign": 9.683844633400461e-06,
+          "c_hex": "0x1.fff2e40000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw6: lambda doubled",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 3.600758623776082e-09,
+          "coupled_max_dev_from_eta_sign": 9.683844633400461e-06,
+          "c_hex": "0x1.fff2e40000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 0.4
+  },
+  "S-torch": {
+    "title": "S-torch torch.optim.AdamW's formula within the rounding band (box 1)",
+    "target": "src/adamw_dose_1010.py",
+    "threshold_derivation": "Box 1: seed 100, the arm wd1e-1, 2 tasks x 2 epochs (300 updates) with every gradient captured.  (a) replaying\n    M.adamw_step_ on the captured gradients from the initial values reproduces the run's final parameters bit for\n    bit (the function tested is the one the run used); (b) torch.optim.AdamW(lr 1e-3, betas (0.9, 0.999), eps 1e-8,\n    weight_decay = the registered 0.1, foreach=False) fed the same gradients stays within Band elementwise at the\n    end, its second moments equal ours at every update; (c) torch.optim.Adam(weight_decay = 0.1) (coupled) leaves\n    the band.  The arithmetic of the mutation 'decay after Adam' (eta * eta * lambda * |s| per update) against the\n    band per update is reported (median over elements of one update's band, and 1e-7 * median |s|).The registered band (spec 6): |dp_K| <= sum_t [n_op u eta |s_t| + 2 u |p_t|], n_op = N_OP_REG, u = 2^-24, with\n    the measured |s_t| = |m_hat / (sqrt(v_hat) + eps)| of our code and |p_t| = the larger of the two codes', element\n    by element.A wider bound, reported next to the registered one: |p_mine - p_torch| after K updates fed the same gradients\n\n        B_K = sum_t [ eta (2 E_t / c1_t) / (sqrt(v_t / c2_t) + eps)        the first moments' rounding difference\n                      + N_OP u eta S_t                                       the step's last stage, both codes\n                      + 4 u max|p| ]                                         the decay product and the subtraction,\n                                                                             each rounded once per code\n    with S_t = (M_t / c1_t) / (sqrt(v_t / c2_t) + eps), M_t = beta1 M_{t-1} + (1 - beta1)|g_t| (>= |m_t|: the bound\n    holds under cancellation), E_t = beta1 E_{t-1} + M_ROUND u (M_t + |g_t|) per code.  v is the same in both codes\n    (the same ops), which the check asserts bit for bit at every update.  First order in u; float64.",
+    "threads": 1,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "a_replay_reproduces_run": true,
+      "b_adamw_within_band": true,
+      "b_second_moments_identical": true,
+      "c_coupled_adam_outside_band": true,
+      "n_updates": 300
+    },
+    "worst_ratio_adamw": 0.06634242343167142,
+    "n_outside_adamw": 0,
+    "worst_ratio_coupled": 110269.27497472004,
+    "n_outside_coupled": 89610,
+    "band_per_update_median": 6.176970038453691e-09,
+    "worst_ratio_adamw_wide_band": 0.01966487008541137,
+    "mutation_offset_per_update_at_median_s": 8.50415825843811e-09,
+    "median_abs_s": 0.0850415825843811,
+    "mutation_reach_over_band_max": 46.38036826000565,
+    "mutation_reach_over_band_frac_above_10": 0.24795223747349626,
+    "mutations": [
+      {
+        "mutation": "Mt1: the decay after the Adam step",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "worst_ratio_adamw": 15.1471555021195,
+          "n_outside_adamw": 43028,
+          "worst_ratio_coupled": 110282.17699189183,
+          "n_outside_coupled": 89609,
+          "band_per_update_median": 6.177007888378632e-09,
+          "worst_ratio_adamw_wide_band": 5.217283357446513,
+          "mutation_offset_per_update_at_median_s": 8.504600077867508e-09,
+          "median_abs_s": 0.08504600077867508,
+          "mutation_reach_over_band_max": 46.38094457831896,
+          "mutation_reach_over_band_frac_above_10": 0.24794107800468698,
+          "failed_items": [
+            "b_adamw_within_band"
+          ]
+        }
+      },
+      {
+        "mutation": "Mt2: lambda theta added to the gradient",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "worst_ratio_adamw": 44791.420559445745,
+          "n_outside_adamw": 89610,
+          "worst_ratio_coupled": 0.009670253162648487,
+          "n_outside_coupled": 0,
+          "band_per_update_median": 6.2926859393206355e-09,
+          "worst_ratio_adamw_wide_band": 23795.82890271296,
+          "mutation_offset_per_update_at_median_s": 9.767019073478877e-10,
+          "median_abs_s": 0.009767019073478878,
+          "mutation_reach_over_band_max": 67.81049459336735,
+          "mutation_reach_over_band_frac_above_10": 0.0998549269054793,
+          "failed_items": [
+            "b_adamw_within_band",
+            "b_second_moments_identical",
+            "c_coupled_adam_outside_band"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 5.0
+  },
+  "S-deadpix": {
+    "title": "S-deadpix the in-run record of the decay",
+    "target": "src/adamw_dose_1010.py",
+    "threshold_derivation": "Seed 100, 2 tasks x 2 epochs, the arms wd1e-1 and ref.  (i) the run's own wd_task record: deadpix_ok = 1 at\n    both task ends in both arms, deadpix_n > 0, and wd_steps = 150 per tensor per task in wd1e-1, 0 in ref;\n    (ii) recomputed here: the W1 columns of the seed's always-0 pixels at each task end equal the initial values\n    times np.float32(1 - 1e-3 * 1e-1) iterated once per update (150 t times) in wd1e-1, and equal the initial values\n    in ref; (iii) non-vacuity: those columns moved in wd1e-1, and the columns of the other pixels are not that\n    iteration.  Bit comparisons.",
+    "threads": 1,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "wd1e-1_dead_set_matches": true,
+      "wd1e-1_i_record": true,
+      "wd1e-1_ii_recomputed": true,
+      "wd1e-1_iii_moved": true,
+      "wd1e-1_iii_live_columns_are_not_the_iteration": true,
+      "ref_dead_set_matches": true,
+      "ref_i_record": true,
+      "ref_ii_recomputed": true
+    },
+    "mutations": [
+      {
+        "mutation": "Md1: coupled L2",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "wd1e-1_i_record",
+            "wd1e-1_ii_recomputed"
+          ]
+        }
+      },
+      {
+        "mutation": "Md2: the decay skipped every other update",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "wd1e-1_i_record",
+            "wd1e-1_ii_recomputed"
+          ]
+        }
+      },
+      {
+        "mutation": "Md3: c multiplied in float64 (another rounding)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "wd1e-1_i_record",
+            "wd1e-1_ii_recomputed"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 2.8
+  },
+  "S5": {
+    "title": "S5 the arms share their streams; the first update; all differ",
+    "target": "src/adamw_dose_1010.py",
+    "threshold_derivation": "The five registered arms, seed 100, 3 tasks x 2 epochs: (i) init, subset, labels and batch-order hashes\n    identical; (ii) every lambda arm's first update uses ref's gradients and ends with ref's moments bit for bit, and\n    its parameters are fl(fl(p0 c) - a) with a = lr (m/c1) / (sqrt(v/c2) + eps) from those moments (computed here)\n    and c = the registered lambda's np.float32(1 - 1e-3 lambda), while ref's are fl(p0 - a); (iii) the five final\n    states are pairwise different.",
+    "threads": 1,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_streams_identical": true,
+      "ii_ref_first_update": true,
+      "ii_lambda_first_updates": true,
+      "iii_all_differ": true
+    },
+    "arm_first_update": {
+      "wd1e-3": true,
+      "wd1e-2": true,
+      "wd3e-2": true,
+      "wd1e-1": true
+    },
+    "mutations": [
+      {
+        "mutation": "M5a: the label stream depends on the arm",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_streams_identical",
+            "ii_lambda_first_updates"
+          ]
+        }
+      },
+      {
+        "mutation": "M5b: the decay starts at task 2",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_lambda_first_updates"
+          ]
+        }
+      },
+      {
+        "mutation": "M5c: ref is decayed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_ref_first_update",
+            "iii_all_differ"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 9.9
+  },
+  "S-ctrl": {
+    "title": "S-ctrl readout-only decay leaves the hidden widths like ref's",
+    "target": "src/adamw_dose_1010.py",
+    "threshold_derivation": "Seed 100, 10 tasks x 80 epochs: ref, ro1e-1 (W3 and b3 only, lambda 0.1; M.arm_lams('ro1e-1')) and wd1e-1\n    (all six).  s = the unit median of sigma at the end of task 10.  PASS iff in both layers\n    s_ro > sqrt(s_ref s_wd) (the geometric midpoint) and s_wd < s_ref.  Only sigma and PASS/FAIL are read.",
+    "threads": 1,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "l1_ro_above_midpoint": true,
+      "l1_wd_below_ref": true,
+      "l2_ro_above_midpoint": true,
+      "l2_wd_below_ref": true
+    },
+    "sigma_t10": {
+      "ref": {
+        "1": 5.136166808766189,
+        "2": 20.530275031041725
+      },
+      "ro1e-1": {
+        "1": 6.524879908002147,
+        "2": 38.83767078660142
+      },
+      "wd1e-1": {
+        "1": 1.4469796957940766,
+        "2": 0.6213497454956114
+      }
+    },
+    "lams_ro": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.1,
+      0.1
+    ],
+    "mutations": [
+      {
+        "mutation": "Mc1: ro1e-1 decays every tensor",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "l1_ro_above_midpoint",
+            "l2_ro_above_midpoint"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 193.1
+  },
+  "S7": {
+    "title": "S7 the same call twice gives the same bits",
+    "target": "src/adamw_dose_1010.py",
+    "threshold_derivation": "ref and wd1e-1, seed 100, 2 tasks x 2 epochs, twice each: the same arrays, hashes, rows and wd rows.",
+    "threads": 1,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "ref_arrays": true,
+      "ref_hashes": true,
+      "ref_rows": true,
+      "wd1e-1_arrays": true,
+      "wd1e-1_hashes": true,
+      "wd1e-1_rows": true
+    },
+    "mutations": [
+      {
+        "mutation": "M7a: the batch order from the global generator",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ref_arrays",
+            "ref_hashes",
+            "ref_rows",
+            "wd1e-1_arrays",
+            "wd1e-1_hashes",
+            "wd1e-1_rows"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 2.7
+  },
+  "S-wd-c51": {
+    "title": "S-wd decoupled on synthetic tensors (box 2)",
+    "target": "src/adamw_dose_1010_c51.py",
+    "threshold_derivation": "Box 2, the same on CUDA with the stacked shapes (R = 2), lambda = the arm 'adamw10' (registered 10), lr 1e-4,\n    wd_c filled with M.decay_factor(lr, lambda) into a float32 0-dim tensor as run() does, the host's inv_c1/inv_c2\n    filled per step from the python double: (i) the 0-gradient entries equal np.float32 iteration with\n    c = np.float32(1 - 1e-4 * 10) after 1 and K steps; (ii) the update equals the independent 'p * c, then the host's\n    stacked Adam' bit for bit, and the device counters read K; (iii) coupled L2 here moves the (i) entries by Adam's\n    exact first step eta g / (|g| + eps), g = lambda theta (eta sign(theta) to 1% where |g| >= 100 eps) and differs\n    from (i).",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_zero_grad_one_step_is_c": true,
+      "i_zero_grad_K_steps_is_c_iterated": true,
+      "ii_update_is_decay_then_host_adam": true,
+      "ii_counters": true,
+      "iii_coupled_is_adam_first_step": true,
+      "iii_coupled_moves_eta_sign": true,
+      "iii_coupled_differs": true
+    },
+    "coupled_max_dev_from_first_step": 1.6959608135176316e-09,
+    "coupled_max_dev_from_eta_sign": 9.034218033775735e-07,
+    "c_hex": "0x1.ff7cee0000000p-1",
+    "mutations": [
+      {
+        "mutation": "Mw1: coupled L2",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 1.6959608135176316e-09,
+          "coupled_max_dev_from_eta_sign": 9.034218033775735e-07,
+          "c_hex": "0x1.ff7cee0000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw2: the decay after the Adam step",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 1.6959608135176316e-09,
+          "coupled_max_dev_from_eta_sign": 9.034218033775735e-07,
+          "c_hex": "0x1.ff7cee0000000p-1",
+          "failed_items": [
+            "ii_update_is_decay_then_host_adam"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw3: biases not decayed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 1.6959608135176316e-09,
+          "coupled_max_dev_from_eta_sign": 9.034218033775735e-07,
+          "c_hex": "0x1.ff7cee0000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam",
+            "ii_counters"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw4: W3 only",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 1.6959608135176316e-09,
+          "coupled_max_dev_from_eta_sign": 9.034218033775735e-07,
+          "c_hex": "0x1.ff7cee0000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam",
+            "ii_counters"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw5: c = 1 - lambda",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 1.6959608135176316e-09,
+          "coupled_max_dev_from_eta_sign": 9.034218033775735e-07,
+          "c_hex": "0x1.ff7cee0000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw6: lambda doubled",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 1.6959608135176316e-09,
+          "coupled_max_dev_from_eta_sign": 9.034218033775735e-07,
+          "c_hex": "0x1.ff7cee0000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 1.1
+  },
+  "S-torch-c51": {
+    "title": "S-torch torch.optim.AdamW's formula within the rounding band (box 2)",
+    "target": "src/adamw_dose_1010_c51.py",
+    "threshold_derivation": "Box 2: adamw10 on seeds 100-109 stacked, 2 tasks x 100 updates, eager, every training update's gradients\n    taken from the 'grads' hook and fed in lockstep to (a) M.adam_update_ on a shadow copy -- which must equal the\n    run's own parameters bit for bit at the end of task 2 --, (b) torch.optim.AdamW(lr 1e-4, weight_decay = the\n    registered 10, foreach=False) on the stacked tensors, within Band, second moments identical at every update,\n    and (c) torch.optim.Adam(weight_decay 10) (coupled), outside the band.The registered band (spec 6): |dp_K| <= sum_t [n_op u eta |s_t| + 2 u |p_t|], n_op = N_OP_REG, u = 2^-24, with\n    the measured |s_t| = |m_hat / (sqrt(v_hat) + eps)| of our code and |p_t| = the larger of the two codes', element\n    by element.A wider bound, reported next to the registered one: |p_mine - p_torch| after K updates fed the same gradients\n\n        B_K = sum_t [ eta (2 E_t / c1_t) / (sqrt(v_t / c2_t) + eps)        the first moments' rounding difference\n                      + N_OP u eta S_t                                       the step's last stage, both codes\n                      + 4 u max|p| ]                                         the decay product and the subtraction,\n                                                                             each rounded once per code\n    with S_t = (M_t / c1_t) / (sqrt(v_t / c2_t) + eps), M_t = beta1 M_{t-1} + (1 - beta1)|g_t| (>= |m_t|: the bound\n    holds under cancellation), E_t = beta1 E_{t-1} + M_ROUND u (M_t + |g_t|) per code.  v is the same in both codes\n    (the same ops), which the check asserts bit for bit at every update.  First order in u; float64.",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "a_shadow_equals_run": true,
+      "b_adamw_within_band": true,
+      "b_second_moments_identical": true,
+      "c_coupled_adam_outside_band": true,
+      "n_updates": 200
+    },
+    "worst_ratio_adamw": 0.10075402162715648,
+    "n_outside_adamw": 0,
+    "worst_ratio_coupled": 165919.95885384706,
+    "n_outside_coupled": 3274970,
+    "band_per_update_median": 5.581118125940682e-09,
+    "worst_ratio_adamw_wide_band": 0.028015802039619987,
+    "mutations": [
+      {
+        "mutation": "Mt1: the decay after the Adam step",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "worst_ratio_adamw": 322.05858045539253,
+          "n_outside_adamw": 3130074,
+          "worst_ratio_coupled": 165097.052183834,
+          "n_outside_coupled": 3274964,
+          "band_per_update_median": 5.5831553282419075e-09,
+          "worst_ratio_adamw_wide_band": 89.65805910114715,
+          "failed_items": [
+            "b_adamw_within_band"
+          ]
+        }
+      },
+      {
+        "mutation": "Mt2: lambda theta added to the gradient",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "worst_ratio_adamw": 241734.72501693087,
+          "n_outside_adamw": 3274970,
+          "worst_ratio_coupled": 20.000283899609677,
+          "n_outside_coupled": 2,
+          "band_per_update_median": 5.7464220064355424e-09,
+          "worst_ratio_adamw_wide_band": 101609.93181210344,
+          "failed_items": [
+            "b_adamw_within_band",
+            "b_second_moments_identical"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 14.9
+  },
+  "S-nochange": {
+    "title": "S-nochange the lambda = 0 path is the host's R",
+    "target": "src/adamw_dose_1010_c51.py",
+    "threshold_derivation": "spec 2.3 (a)(b): the lambda = 0 path, seeds 0-9, 30 tasks, graph, 2 threads, fresh: (a) per_task.csv and\n    fresh_control.csv byte-identical to the unmodified host run() in this environment; (b) identical to the\n    committed R record in every column but eff_rank (same rows, same header), the committed eff_rank inside the\n    cap_cifar5p1_1007 spec 7.1 band around the value recomputed here (and the band rejects the next task's value:\n    non-vacuity), fresh_control.csv byte-identical to the committed one; (c) a 4-task run is byte-identical to the\n    host's 4-task run.  The real module's outputs are kept in results/adamw_dose_1010/c51/_nochange/.",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "a_per_task_identical_to_host_now": true,
+      "a_fresh_identical_to_host_now": true,
+      "b_same_rows": true,
+      "b_same_columns": true,
+      "b_non_eff_rank_identical": true,
+      "b_fresh_identical_to_committed": true,
+      "b_eff_rank_inside_band": true,
+      "b_observer_reproduces_printed_eff_rank": true,
+      "b_band_rejects_a_shifted_column": true,
+      "c_short_per_task_identical_to_host_now": true,
+      "c_short_fresh_identical_to_host_now": true
+    },
+    "b_non_eff_rank_diff_cells": [],
+    "eff_rank_cells": 600,
+    "eff_rank_cells_byte_equal": 489,
+    "eff_rank_max_rel_deviation": 7.834945620424501e-08,
+    "eff_rank_outside_band": [],
+    "shifted_column_rejected": "580/580",
+    "nochange_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+    "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+    "host_now_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+    "mutations": [
+      {
+        "mutation": "Mn1: the lambda = 0 path decayed with lambda 1e-2",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "eff_rank_cells": 600,
+          "eff_rank_cells_byte_equal": 0,
+          "eff_rank_max_rel_deviation": 0.6290288867959136,
+          "shifted_column_rejected": "580/580",
+          "nochange_per_task_sha256": "9f9a235fbe017b5751734acc6d8f9e46f51081e49735d0acb7fc45e77680fd93",
+          "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+          "host_now_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+          "failed_items": [
+            "a_per_task_identical_to_host_now",
+            "a_fresh_identical_to_host_now",
+            "b_non_eff_rank_identical",
+            "b_fresh_identical_to_committed",
+            "b_eff_rank_inside_band",
+            "c_short_per_task_identical_to_host_now",
+            "c_short_fresh_identical_to_host_now"
+          ]
+        }
+      },
+      {
+        "mutation": "Mn2: lr 1.0001e-4",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "eff_rank_cells": 600,
+          "eff_rank_cells_byte_equal": 0,
+          "eff_rank_max_rel_deviation": 0.593285968569824,
+          "shifted_column_rejected": "580/580",
+          "nochange_per_task_sha256": "b76510a1a3744133b50ed6ee38d055874f005eb3c6cc69db2bce88485ca937de",
+          "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+          "host_now_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+          "failed_items": [
+            "a_per_task_identical_to_host_now",
+            "a_fresh_identical_to_host_now",
+            "b_non_eff_rank_identical",
+            "b_fresh_identical_to_committed",
+            "b_eff_rank_inside_band",
+            "c_short_per_task_identical_to_host_now",
+            "c_short_fresh_identical_to_host_now"
+          ]
+        }
+      },
+      {
+        "mutation": "Mn3: the Adam update count restarts every task",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "eff_rank_cells": 600,
+          "eff_rank_cells_byte_equal": 15,
+          "eff_rank_max_rel_deviation": 1.1268319377074894,
+          "shifted_column_rejected": "580/580",
+          "nochange_per_task_sha256": "b005966b048afbd924b5f9b727350a0fc32dc564149d62318dbf73c14a0277fc",
+          "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+          "host_now_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+          "failed_items": [
+            "a_per_task_identical_to_host_now",
+            "a_fresh_identical_to_host_now",
+            "b_non_eff_rank_identical",
+            "b_fresh_identical_to_committed",
+            "b_eff_rank_inside_band",
+            "c_short_per_task_identical_to_host_now",
+            "c_short_fresh_identical_to_host_now"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 142.7
+  },
+  "S-host-repro": {
+    "title": "the L2 Init record reproduces from the unmodified host in this environment",
+    "target": "src/cifar5p1_mlp_0920.py",
+    "threads": 2,
+    "threshold_derivation": "byte identity of every column but eff_rank (cap_cifar5p1_1007 1.4)",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "per_task_non_eff_rank_identical": true,
+      "fresh_identical": true
+    },
+    "diff": [],
+    "mutations": [
+      {
+        "mutation": "Mh1: compared with the l2init 1e-3 record",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "per_task_non_eff_rank_identical",
+            "fresh_identical"
+          ]
+        }
+      },
+      {
+        "mutation": "Mh2: compared with the seeds 10-19 record",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "per_task_non_eff_rank_identical",
+            "fresh_identical"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 27.5
+  },
+  "S-graph": {
+    "title": "S-graph CUDA graph = eager for adamw10",
+    "target": "src/adamw_dose_1010_c51.py",
+    "threshold_derivation": "adamw10, seeds 100-109, 4 tasks x 100 updates: graph and eager give byte-identical per_task.csv, wd_task.csv\n    and fresh_self.csv and bit-identical final P, m, v; the graph was used; the decays were counted (100).",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "per_task.csv_identical": true,
+      "wd_task.csv_identical": true,
+      "fresh_self.csv_identical": true,
+      "final_state_bitwise": true,
+      "graph_was_used": true,
+      "decays_counted": true
+    },
+    "engine": "host run() of cifar5p1_mlp_0920 copied for R/std + decoupled decay; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+    "mutations": [
+      {
+        "mutation": "Mg1: the decay factor rebound outside the graph (the graph keeps reading 1)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "engine": "host run() of cifar5p1_mlp_0920 copied for R/std + decoupled decay; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+          "failed_items": [
+            "per_task.csv_identical",
+            "wd_task.csv_identical",
+            "fresh_self.csv_identical",
+            "final_state_bitwise"
+          ]
+        }
+      },
+      {
+        "mutation": "Mg2: static_idx one batch behind while replaying",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "engine": "host run() of cifar5p1_mlp_0920 copied for R/std + decoupled decay; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+          "failed_items": [
+            "per_task.csv_identical",
+            "wd_task.csv_identical",
+            "fresh_self.csv_identical",
+            "final_state_bitwise"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 5.5
+  },
+  "S-fresh": {
+    "title": "S-fresh the fresh controls",
+    "target": "src/adamw_dose_1010_c51.py",
+    "threshold_derivation": "Short runs (seeds 100-102, 3 tasks, 200/100 updates): (i) the last hard task's batches have the same sha256\n    in adamw10, adamw5 and the lambda = 0 path (the common fresh is R's own); (ii) adamw10 writes fresh_self.csv and\n    no fresh_control.csv, its continual column is its own task-3 online accuracy, and the lambda = 0 path's\n    fresh_control.csv is the host's byte for byte; (iii) at the start of fresh_self, P equals the initial values,\n    m = v = 0, wd_c = np.float32(1 - 1e-4 * 10), and the first fresh_self update has update count 1; (iv) every\n    fresh_self update decays (wd_steps = 200 in fresh_self.csv).",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_same_last_hard_batches": true,
+      "ii_nochange_fresh_is_host": true,
+      "ii_adamw10_writes_fresh_self_only": true,
+      "ii_continual_is_own_t3": true,
+      "iv_fresh_self_decays_every_update": true,
+      "iii_start_state_initial_and_c": true,
+      "iii_first_update_count_1": true
+    },
+    "fresh_batches_sha256": {
+      "nochange": "0ec13ae6b8edaaab6d268b78868b39fc99ee2b8a8babf3f2be237021557806df",
+      "adamw10": "0ec13ae6b8edaaab6d268b78868b39fc99ee2b8a8babf3f2be237021557806df",
+      "adamw5": "0ec13ae6b8edaaab6d268b78868b39fc99ee2b8a8babf3f2be237021557806df"
+    },
+    "mutations": [
+      {
+        "mutation": "Mf1: the Adam moments not zeroed before fresh_self",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_nochange_fresh_is_host",
+            "iii_start_state_initial_and_c"
+          ]
+        }
+      },
+      {
+        "mutation": "Mf2: the decay switched off for fresh_self",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iii_start_state_initial_and_c"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 8.7
+  },
+  "S8": {
+    "title": "S8 the verdict returns the designed labels on synthetic data",
+    "target": "analysis/adamw_dose_1010/verdict.py",
+    "threshold_derivation": "verdict.analyze1/analyze2 on synthetic data: every designed label comes out as written (box 1: the five\n    labels and their three values, the box summary, DOSE's four, EQUILIBRIUM's layer and level labels, WIDTH's layer\n    and level labels, DEPTH's three; box 2: RESCUED / PARTIAL / NO_RESCUE, WORSE, IMPAIRED, the box summary; and\n    INAPPLICABLE / NOT_REPRODUCED / INCOMPLETE / CHECK_FAILED), the designed estimates within (100 + 50 + 10 + 4)\n    eps64 max|term|, the t quantiles within the published table's rounding (5e-7), and the n = 10 sign-test p\n    values equal to the exact binomial ones.  The prediction scoring runs on the designed scenario.",
+    "threads": 1,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "designed": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "RESCUED",
+          "wd1e-2_three": "RESCUED",
+          "wd3e-2": "RESCUED",
+          "wd3e-2_three": "RESCUED",
+          "wd3e-2_95": "RESCUED",
+          "wd1e-1": "RESCUED",
+          "wd1e-1_three": "RESCUED",
+          "wd1e-1_95": "RESCUED",
+          "box": "WD_RESCUES_BOTH",
+          "dose": "DOSE_PEAKED",
+          "eq_wd3e-2": "EQUILIBRIUM_MATCH",
+          "eq_wd1e-1": "EQUILIBRIUM_MATCH",
+          "width_wd3e-2": "WIDTH_STOPPED",
+          "width_wd1e-1": "WIDTH_STOPPED",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd3e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd1e-1": "DEPTH_ABOVE_FLOOR"
+        },
+        "bad": []
+      },
+      "monotone_and_rfo": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "RESCUED",
+          "wd1e-2_three": "RESCUED",
+          "wd3e-2": "RESCUED",
+          "wd3e-2_three": "RESCUED",
+          "wd3e-2_95": "RESCUED",
+          "wd1e-1": "RESCUED_FUNCTION_ONLY",
+          "wd1e-1_three": "PARTIAL",
+          "wd1e-1_95": "RESCUED_FUNCTION_ONLY",
+          "box": "WD_RESCUES_ONE",
+          "dose": "DOSE_MONOTONE",
+          "eq_wd3e-2": "EQUILIBRIUM_MATCH",
+          "eq_wd1e-1": "EQUILIBRIUM_MATCH",
+          "width_wd3e-2": "WIDTH_STOPPED",
+          "width_wd1e-1": "WIDTH_STOPPED",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd3e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd1e-1": "NOT_EVALUATED"
+        },
+        "bad": []
+      },
+      "flat": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "COLLAPSED",
+          "wd1e-2_three": "FAIL",
+          "wd3e-2": "COLLAPSED",
+          "wd3e-2_three": "FAIL",
+          "wd3e-2_95": "COLLAPSED",
+          "wd1e-1": "COLLAPSED",
+          "wd1e-1_three": "FAIL",
+          "wd1e-1_95": "COLLAPSED",
+          "box": "WD_RESCUES_NONE",
+          "dose": "DOSE_FLAT",
+          "eq_wd3e-2": "EQUILIBRIUM_MATCH",
+          "eq_wd1e-1": "EQUILIBRIUM_MATCH",
+          "width_wd3e-2": "WIDTH_FROZEN",
+          "width_wd1e-1": "WIDTH_FROZEN",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "NOT_EVALUATED",
+          "depth_wd3e-2": "NOT_EVALUATED",
+          "depth_wd1e-1": "NOT_EVALUATED"
+        },
+        "bad": []
+      },
+      "other": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "RESCUED",
+          "wd1e-2_three": "RESCUED",
+          "wd3e-2": "RESCUED",
+          "wd3e-2_three": "RESCUED",
+          "wd3e-2_95": "RESCUED",
+          "wd1e-1": "RESCUED",
+          "wd1e-1_three": "RESCUED",
+          "wd1e-1_95": "RESCUED",
+          "box": "WD_RESCUES_BOTH",
+          "dose": "DOSE_OTHER",
+          "eq_wd3e-2": "EQUILIBRIUM_MATCH",
+          "eq_wd1e-1": "EQUILIBRIUM_MATCH",
+          "width_wd3e-2": "WIDTH_STOPPED",
+          "width_wd1e-1": "WIDTH_STOPPED",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd3e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd1e-1": "DEPTH_ABOVE_FLOOR"
+        },
+        "bad": []
+      },
+      "split_alive_unresolved": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "RESCUED",
+          "wd1e-2_three": "RESCUED",
+          "wd3e-2": "SPLIT",
+          "wd3e-2_three": "PARTIAL",
+          "wd3e-2_95": "SPLIT",
+          "wd1e-1": "ALIVE_UNRESOLVED",
+          "wd1e-1_three": "PARTIAL",
+          "wd1e-1_95": "ALIVE_UNRESOLVED",
+          "box": "WD_RESCUES_NONE",
+          "dose": "DOSE_MONOTONE",
+          "eq_wd3e-2": "EQUILIBRIUM_MATCH",
+          "eq_wd1e-1": "EQUILIBRIUM_MATCH",
+          "width_wd3e-2": "WIDTH_SPLIT",
+          "width_wd1e-1": "WIDTH_STOPPED",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd3e-2": "NOT_EVALUATED",
+          "depth_wd1e-1": "NOT_EVALUATED"
+        },
+        "bad": []
+      },
+      "t1_lower": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "RESCUED",
+          "wd1e-2_three": "RESCUED",
+          "wd3e-2": "RESCUED",
+          "wd3e-2_three": "RESCUED",
+          "wd3e-2_95": "RESCUED",
+          "wd1e-1": "RESCUED",
+          "wd1e-1_three": "RESCUED",
+          "wd1e-1_95": "RESCUED",
+          "box": "WD_RESCUES_BOTH",
+          "dose": "DOSE_PEAKED",
+          "eq_wd3e-2": "EQUILIBRIUM_MATCH",
+          "eq_wd1e-1": "EQUILIBRIUM_MATCH",
+          "width_wd3e-2": "WIDTH_STOPPED",
+          "width_wd1e-1": "WIDTH_STOPPED",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd3e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd1e-1": "DEPTH_ABOVE_FLOOR"
+        },
+        "bad": []
+      },
+      "not_reproduced": {
+        "labels": {
+          "wd1e-3": "NOT_REPRODUCED",
+          "wd1e-3_three": "NOT_REPRODUCED",
+          "wd1e-2": "NOT_REPRODUCED",
+          "wd1e-2_three": "NOT_REPRODUCED",
+          "wd3e-2": "NOT_REPRODUCED",
+          "wd3e-2_three": "NOT_REPRODUCED",
+          "wd3e-2_95": "NOT_REPRODUCED",
+          "wd1e-1": "NOT_REPRODUCED",
+          "wd1e-1_three": "NOT_REPRODUCED",
+          "wd1e-1_95": "NOT_REPRODUCED",
+          "box": "NOT_REPRODUCED",
+          "dose": "NOT_REPRODUCED",
+          "eq_wd3e-2": "NOT_REPRODUCED",
+          "eq_wd1e-1": "NOT_REPRODUCED",
+          "width_wd3e-2": "NOT_REPRODUCED",
+          "width_wd1e-1": "NOT_REPRODUCED",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "NOT_EVALUATED",
+          "depth_wd3e-2": "NOT_EVALUATED",
+          "depth_wd1e-1": "NOT_EVALUATED"
+        },
+        "bad": []
+      },
+      "inapplicable_streams": {
+        "labels": {
+          "wd1e-3": "INAPPLICABLE",
+          "wd1e-3_three": "INAPPLICABLE",
+          "wd1e-2": "INAPPLICABLE",
+          "wd1e-2_three": "INAPPLICABLE",
+          "wd3e-2": "INAPPLICABLE",
+          "wd3e-2_three": "INAPPLICABLE",
+          "wd3e-2_95": "INAPPLICABLE",
+          "wd1e-1": "INAPPLICABLE",
+          "wd1e-1_three": "INAPPLICABLE",
+          "wd1e-1_95": "INAPPLICABLE",
+          "box": "INAPPLICABLE",
+          "dose": "INAPPLICABLE",
+          "eq_wd3e-2": "INAPPLICABLE",
+          "eq_wd1e-1": "INAPPLICABLE",
+          "width_wd3e-2": "INAPPLICABLE",
+          "width_wd1e-1": "INAPPLICABLE",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "NOT_EVALUATED",
+          "depth_wd3e-2": "NOT_EVALUATED",
+          "depth_wd1e-1": "NOT_EVALUATED"
+        },
+        "bad": []
+      },
+      "inapplicable_wd_idle": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "INAPPLICABLE",
+          "wd1e-2_three": "INAPPLICABLE",
+          "wd3e-2": "RESCUED",
+          "wd3e-2_three": "RESCUED",
+          "wd3e-2_95": "RESCUED",
+          "wd1e-1": "INAPPLICABLE",
+          "wd1e-1_three": "INAPPLICABLE",
+          "wd1e-1_95": "INAPPLICABLE",
+          "box": "WD_RESCUES_ONE",
+          "dose": "INAPPLICABLE",
+          "eq_wd3e-2": "EQUILIBRIUM_MATCH",
+          "eq_wd1e-1": "INAPPLICABLE",
+          "width_wd3e-2": "WIDTH_STOPPED",
+          "width_wd1e-1": "INAPPLICABLE",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "NOT_EVALUATED",
+          "depth_wd3e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd1e-1": "NOT_EVALUATED"
+        },
+        "bad": []
+      },
+      "eq_off_and_width": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "RESCUED",
+          "wd1e-2_three": "RESCUED",
+          "wd3e-2": "RESCUED",
+          "wd3e-2_three": "RESCUED",
+          "wd3e-2_95": "RESCUED",
+          "wd1e-1": "RESCUED",
+          "wd1e-1_three": "RESCUED",
+          "wd1e-1_95": "RESCUED",
+          "box": "WD_RESCUES_BOTH",
+          "dose": "DOSE_PEAKED",
+          "eq_wd3e-2": "EQUILIBRIUM_OFF",
+          "eq_wd1e-1": "EQUILIBRIUM_OFF",
+          "width_wd3e-2": "WIDTH_NOT_STOPPED",
+          "width_wd1e-1": "WIDTH_NOT_STOPPED",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd3e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd1e-1": "DEPTH_ABOVE_FLOOR"
+        },
+        "bad": []
+      },
+      "eq_unresolved": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "RESCUED",
+          "wd1e-2_three": "RESCUED",
+          "wd3e-2": "RESCUED",
+          "wd3e-2_three": "RESCUED",
+          "wd3e-2_95": "RESCUED",
+          "wd1e-1": "RESCUED",
+          "wd1e-1_three": "RESCUED",
+          "wd1e-1_95": "RESCUED",
+          "box": "WD_RESCUES_BOTH",
+          "dose": "DOSE_PEAKED",
+          "eq_wd3e-2": "EQUILIBRIUM_OFF",
+          "eq_wd1e-1": "EQUILIBRIUM_MATCH",
+          "width_wd3e-2": "WIDTH_STOPPED",
+          "width_wd1e-1": "WIDTH_NOT_STOPPED",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd3e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd1e-1": "DEPTH_ABOVE_FLOOR"
+        },
+        "bad": []
+      },
+      "eq_edge_784": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "RESCUED",
+          "wd1e-2_three": "RESCUED",
+          "wd3e-2": "RESCUED",
+          "wd3e-2_three": "RESCUED",
+          "wd3e-2_95": "RESCUED",
+          "wd1e-1": "RESCUED",
+          "wd1e-1_three": "RESCUED",
+          "wd1e-1_95": "RESCUED",
+          "box": "WD_RESCUES_BOTH",
+          "dose": "DOSE_PEAKED",
+          "eq_wd3e-2": "EQUILIBRIUM_MATCH",
+          "eq_wd1e-1": "EQUILIBRIUM_MATCH",
+          "width_wd3e-2": "WIDTH_STOPPED",
+          "width_wd1e-1": "WIDTH_STOPPED",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd3e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd1e-1": "DEPTH_ABOVE_FLOOR"
+        },
+        "bad": []
+      },
+      "width_ref_frozen": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "RESCUED",
+          "wd1e-2_three": "RESCUED",
+          "wd3e-2": "RESCUED",
+          "wd3e-2_three": "RESCUED",
+          "wd3e-2_95": "RESCUED",
+          "wd1e-1": "RESCUED",
+          "wd1e-1_three": "RESCUED",
+          "wd1e-1_95": "RESCUED",
+          "box": "WD_RESCUES_BOTH",
+          "dose": "DOSE_PEAKED",
+          "eq_wd3e-2": "EQUILIBRIUM_MATCH",
+          "eq_wd1e-1": "EQUILIBRIUM_MATCH",
+          "width_wd3e-2": "WIDTH_STOPPED",
+          "width_wd1e-1": "WIDTH_STOPPED",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd3e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd1e-1": "DEPTH_ABOVE_FLOOR"
+        },
+        "bad": []
+      },
+      "depth_at_and_median": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "RESCUED",
+          "wd1e-2_three": "RESCUED",
+          "wd3e-2": "RESCUED",
+          "wd3e-2_three": "RESCUED",
+          "wd3e-2_95": "RESCUED",
+          "wd1e-1": "RESCUED",
+          "wd1e-1_three": "RESCUED",
+          "wd1e-1_95": "RESCUED",
+          "box": "WD_RESCUES_BOTH",
+          "dose": "DOSE_PEAKED",
+          "eq_wd3e-2": "EQUILIBRIUM_MATCH",
+          "eq_wd1e-1": "EQUILIBRIUM_MATCH",
+          "width_wd3e-2": "WIDTH_STOPPED",
+          "width_wd1e-1": "WIDTH_STOPPED",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd3e-2": "DEPTH_AT_FLOOR",
+          "depth_wd1e-1": "DEPTH_UNRESOLVED"
+        },
+        "bad": []
+      },
+      "floor_margin": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "RESCUED",
+          "wd1e-2_three": "RESCUED",
+          "wd3e-2": "RESCUED",
+          "wd3e-2_three": "RESCUED",
+          "wd3e-2_95": "RESCUED",
+          "wd1e-1": "COLLAPSED",
+          "wd1e-1_three": "FAIL",
+          "wd1e-1_95": "COLLAPSED",
+          "box": "WD_RESCUES_ONE",
+          "dose": "DOSE_PEAKED",
+          "eq_wd3e-2": "EQUILIBRIUM_MATCH",
+          "eq_wd1e-1": "EQUILIBRIUM_MATCH",
+          "width_wd3e-2": "WIDTH_STOPPED",
+          "width_wd1e-1": "WIDTH_FROZEN",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd3e-2": "DEPTH_ABOVE_FLOOR",
+          "depth_wd1e-1": "NOT_EVALUATED"
+        },
+        "bad": []
+      },
+      "holm_matters": {
+        "labels": {
+          "wd1e-3": "COLLAPSED",
+          "wd1e-3_three": "FAIL",
+          "wd1e-2": "COLLAPSED",
+          "wd1e-2_three": "FAIL",
+          "wd3e-2": "COLLAPSED",
+          "wd3e-2_three": "FAIL",
+          "wd3e-2_95": "COLLAPSED",
+          "wd1e-1": "COLLAPSED",
+          "wd1e-1_three": "FAIL",
+          "wd1e-1_95": "COLLAPSED",
+          "box": "WD_RESCUES_NONE",
+          "dose": "DOSE_FLAT",
+          "eq_wd3e-2": "EQUILIBRIUM_MATCH",
+          "eq_wd1e-1": "EQUILIBRIUM_MATCH",
+          "width_wd3e-2": "WIDTH_FROZEN",
+          "width_wd1e-1": "WIDTH_FROZEN",
+          "depth_wd1e-3": "NOT_EVALUATED",
+          "depth_wd1e-2": "NOT_EVALUATED",
+          "depth_wd3e-2": "NOT_EVALUATED",
+          "depth_wd1e-1": "NOT_EVALUATED"
+        },
+        "bad": []
+      },
+      "c51_no_rescue_worse_impaired": {
+        "labels": {
+          "adamw5": "NO_RESCUE",
+          "adamw5_worse": true,
+          "adamw5_impaired": true,
+          "adamw10": "NO_RESCUE",
+          "adamw10_worse": true,
+          "adamw10_impaired": true,
+          "box": "WD_NO_RESCUE_RELU"
+        },
+        "bad": []
+      },
+      "c51_partial": {
+        "labels": {
+          "adamw5": "PARTIAL",
+          "adamw5_worse": false,
+          "adamw5_impaired": false,
+          "adamw10": "PARTIAL",
+          "adamw10_worse": false,
+          "adamw10_impaired": false,
+          "box": "WD_PARTIAL_RELU"
+        },
+        "bad": []
+      },
+      "c51_rescued": {
+        "labels": {
+          "adamw5": "RESCUED",
+          "adamw5_worse": false,
+          "adamw5_impaired": false,
+          "adamw10": "RESCUED",
+          "adamw10_worse": false,
+          "adamw10_impaired": false,
+          "box": "WD_RESCUES_RELU"
+        },
+        "bad": []
+      },
+      "c51_holm_two": {
+        "labels": {
+          "adamw5": "NO_RESCUE",
+          "adamw5_worse": false,
+          "adamw5_impaired": false,
+          "adamw10": "NO_RESCUE",
+          "adamw10_worse": false,
+          "adamw10_impaired": false,
+          "box": "WD_NO_RESCUE_RELU"
+        },
+        "bad": []
+      },
+      "c51_incomplete": {
+        "labels": {
+          "adamw5": "INCOMPLETE",
+          "adamw10": "INCOMPLETE",
+          "box": "INCOMPLETE"
+        },
+        "bad": []
+      },
+      "c51_check_failed": {
+        "labels": {
+          "adamw5": "CHECK_FAILED",
+          "adamw10": "CHECK_FAILED",
+          "box": "CHECK_FAILED"
+        },
+        "bad": []
+      },
+      "c51_not_reproduced": {
+        "labels": {
+          "adamw5": "NOT_REPRODUCED",
+          "adamw5_worse": false,
+          "adamw5_impaired": true,
+          "adamw10": "NOT_REPRODUCED",
+          "adamw10_worse": false,
+          "adamw10_impaired": true,
+          "box": "NOT_REPRODUCED"
+        },
+        "bad": []
+      },
+      "c51_inapplicable": {
+        "labels": {
+          "adamw5": "NO_RESCUE",
+          "adamw5_worse": true,
+          "adamw5_impaired": true,
+          "adamw10": "INAPPLICABLE",
+          "adamw10_worse": false,
+          "adamw10_impaired": true,
+          "box": "INAPPLICABLE"
+        },
+        "bad": []
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "M8a: WIDTH against ref's main-window slope (the parent's original)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "b1:designed|width_wd3e-2: got WIDTH_NOT_STOPPED want WIDTH_STOPPED",
+            "b1:designed|width_wd1e-1: got WIDTH_NOT_STOPPED want WIDTH_STOPPED",
+            "b1:eq_off_and_width|width_l1|wd3e-2: got UNRESOLVED want GROWING",
+            "b1:eq_off_and_width|width_l1|wd1e-1: got UNRESOLVED want SHRINKING",
+            "b1:width_ref_frozen|width_wd3e-2: got WIDTH_NOT_STOPPED want WIDTH_STOPPED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8b: DOSE strictly monotone (every step UP)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "b1:monotone_and_rfo|dose: got DOSE_OTHER want DOSE_MONOTONE"
+          ]
+        }
+      },
+      {
+        "mutation": "M8c: Holm removed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "b1:holm_matters|dose: got DOSE_MONOTONE want DOSE_FLAT",
+            "b2:holm_two|adamw5: got PARTIAL want NO_RESCUE",
+            "b2:holm_two|adamw10: got PARTIAL want NO_RESCUE",
+            "b2:holm_two|box: got WD_PARTIAL_RELU want WD_NO_RESCUE_RELU"
+          ]
+        }
+      },
+      {
+        "mutation": "M8d: one-sided sign test",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "sign_test(10/10)",
+            "sign_test(9/10)",
+            "sign_test(8/10)",
+            "b1:holm_matters|dose: got DOSE_MONOTONE want DOSE_FLAT",
+            "b2:holm_two|adamw5: got PARTIAL want NO_RESCUE",
+            "b2:holm_two|adamw10: got PARTIAL want NO_RESCUE",
+            "b2:holm_two|box: got WD_PARTIAL_RELU want WD_NO_RESCUE_RELU"
+          ]
+        }
+      },
+      {
+        "mutation": "M8e: the box 2 midpoint is R",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "b2:partial|adamw5: got RESCUED want PARTIAL",
+            "b2:partial|adamw10: got RESCUED want PARTIAL",
+            "b2:partial|box: got WD_RESCUES_RELU want WD_PARTIAL_RELU"
+          ]
+        }
+      },
+      {
+        "mutation": "M8f: E1 measured from ref's task 1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "b1:split_alive_unresolved|wd1e-1: got RESCUED_FUNCTION_ONLY want ALIVE_UNRESOLVED",
+            "b1:t1_lower|E1|wd1e-1: got 0.5500022438571323 want 0.6700022438571323"
+          ]
+        }
+      },
+      {
+        "mutation": "M8g: EQUILIBRIUM with d = 784 on the first layer",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "b1:designed|eq_l1|wd1e-1: got 0.9738525937082796 want 1.1",
+            "b1:eq_edge_784|eq_l1|wd3e-2: got OFF_LOW want MATCH",
+            "b1:eq_edge_784|eq_wd3e-2: got EQUILIBRIUM_OFF want EQUILIBRIUM_MATCH"
+          ]
+        }
+      },
+      {
+        "mutation": "M8h: the floor without sqrt(50)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "b1:floor_margin|wd1e-2: got COLLAPSED want RESCUED"
+          ]
+        }
+      },
+      {
+        "mutation": "M8i: DEPTH from the unit median",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "b1:depth_at_and_median|depth_wd3e-2: got DEPTH_ABOVE_FLOOR want DEPTH_AT_FLOOR"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 146.5
+  },
+  "S9": {
+    "title": "S9 the CLI maps, records and admits",
+    "target": "src/adamw_dose_1010_run.py",
+    "threshold_derivation": "Box 1: for each registered arm, main(['mnist', ...]) on seed 100, 2 tasks x 2 epochs writes per_task rows\n    labelled with the arm and otherwise equal to the in-process run_adamw with the registered lambda, the same\n    units.npz arrays bit for bit and the same wd rows; provenance names this experiment, spec, registration commit,\n    lambda, flush on, one torch thread, the checks.json hash; main() leaves flush on.  ARM_MAP, the engines' lambda\n    tables and the defaults (box 1: 100 tasks x 80 epochs; box 2: 30 tasks, lr 1e-4, 2 threads, 780 updates) are the\n    registered ones.  Box 2: main(['c51', ...]) equals the in-process run byte for byte.  Admission: a registered\n    output is refused for a missing checks.json, a not-all_pass one, changed sources, an unregistered configuration\n    (150 tasks) and an unregistered arm / seed group, and accepted for a registered one when the tree is clean.",
+    "threads": 1,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "ref_rows": true,
+      "ref_wd": true,
+      "ref_units": true,
+      "ref_provenance": true,
+      "ref_flush_left_on": true,
+      "wd1e-3_rows": true,
+      "wd1e-3_wd": true,
+      "wd1e-3_units": true,
+      "wd1e-3_provenance": true,
+      "wd1e-3_flush_left_on": true,
+      "wd1e-2_rows": true,
+      "wd1e-2_wd": true,
+      "wd1e-2_units": true,
+      "wd1e-2_provenance": true,
+      "wd1e-2_flush_left_on": true,
+      "wd3e-2_rows": true,
+      "wd3e-2_wd": true,
+      "wd3e-2_units": true,
+      "wd3e-2_provenance": true,
+      "wd3e-2_flush_left_on": true,
+      "wd1e-1_rows": true,
+      "wd1e-1_wd": true,
+      "wd1e-1_units": true,
+      "wd1e-1_provenance": true,
+      "wd1e-1_flush_left_on": true,
+      "arm_map": true,
+      "defaults_mnist": true,
+      "defaults_c51": true,
+      "c51_cli_equals_function": true,
+      "refuse_missing_checks": true,
+      "refuse_not_all_pass": true,
+      "refuse_changed_sources": true,
+      "refuse_150_tasks": true,
+      "refuse_check_seed_in_place": true,
+      "refuse_c51_unregistered_seeds": true,
+      "accept_registered_when_clean": true
+    },
+    "tree_clean_at_check": true,
+    "mutations": [
+      {
+        "mutation": "M9a: the lambdas of wd3e-2 and wd1e-1 swapped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tree_clean_at_check": true,
+          "failed_items": [
+            "wd3e-2_rows",
+            "wd3e-2_wd",
+            "wd3e-2_units",
+            "wd3e-2_provenance",
+            "wd1e-1_rows",
+            "wd1e-1_wd",
+            "wd1e-1_units",
+            "wd1e-1_provenance",
+            "arm_map"
+          ]
+        }
+      },
+      {
+        "mutation": "M9b: the default horizon is 150 tasks",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tree_clean_at_check": true,
+          "failed_items": [
+            "defaults_mnist",
+            "refuse_missing_checks",
+            "refuse_not_all_pass",
+            "refuse_changed_sources",
+            "refuse_150_tasks",
+            "refuse_check_seed_in_place",
+            "accept_registered_when_clean"
+          ]
+        }
+      },
+      {
+        "mutation": "M9c: denormals not flushed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "tree_clean_at_check": true,
+          "failed_items": [
+            "ref_flush_left_on",
+            "wd1e-3_flush_left_on",
+            "wd1e-2_flush_left_on",
+            "wd3e-2_flush_left_on",
+            "wd1e-1_flush_left_on"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 31.3
+  },
+  "S-cost": {
+    "pass": true,
+    "gate": "all 6 box 1 processes and the box 2 run exit 0",
+    "returncodes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "c51_returncode": 0,
+    "mem_available_gib_before": 16.255008697509766,
+    "peak_rss_gib_max": 1.029296875,
+    "slots_now": 8,
+    "seconds_per_update_under_load": 0.0006241170366605123,
+    "one_trajectory_min_projected": 6.241170366605123,
+    "grid_50_wall_hours_at_6": 0.8668292175840447,
+    "c51": {
+      "ms_per_update": 0.9714496441376514,
+      "peak_rss_gib": 1.7476272583007812,
+      "peak_vram_gib": 1.7168197631835938,
+      "wall_clock_s": 5.966400861740112
+    },
+    "measured_at": "2026-10-10T17:52:12.717382+09:00",
+    "seconds": 17.1
+  },
+  "finished_at": "2026-10-10T17:52:12.718546+09:00"
+}
