@@ -1,0 +1,127 @@
+{
+  "run_id": "adamw_dose_1010",
+  "git_hash": "83dd883d8784c1eb29da78f0963a84bb73c00034",
+  "dirty_src_analysis": [],
+  "wd_arm": "adamw10",
+  "lam": 10.0,
+  "c_hex": "0x1.ff7cee0000000p-1",
+  "one_minus_c": 0.0009999871253967285,
+  "prereg_commit": "364d9cd1df7a40367a30aa16c52e9fcb0d8617dc",
+  "wd_rule": "after the gradient, before the host's Adam step, every tensor p.mul_(wd_c) with wd_c = fl32(1 - lr*lam) (float32 0-dim device tensor, written in place after capture); a device counter per tensor counts the decays",
+  "arm": "R",
+  "cond": "std",
+  "seeds": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109
+  ],
+  "R": 10,
+  "lr": 0.0001,
+  "n_tasks": 30,
+  "steps_per_task": 780,
+  "steps_hard": 780,
+  "steps_easy": 780,
+  "batch": 32,
+  "hidden": 100,
+  "layer_shapes": [
+    [
+      100,
+      3072
+    ],
+    [
+      100,
+      100
+    ],
+    [
+      100,
+      100
+    ]
+  ],
+  "n_params": 327500,
+  "dims": [
+    3072,
+    100,
+    100,
+    100
+  ],
+  "n_classes": 100,
+  "hard_classes": 5,
+  "per_class_train": 500,
+  "classes_used": 90,
+  "task_parity": "task 1 hard, alternating (the paper's task 0 hard)",
+  "optimizer": "adam + decoupled weight decay (AdamW)",
+  "weight_decay": 10.0,
+  "data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "std": {
+    "mean": [
+      0.5071,
+      0.4865,
+      0.4409
+    ],
+    "std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "class_sha256": {
+    "100": "f0f27b396f33d65f355d70a0d32bad2d6c6a0a3dc296793359fa996ee5d539a0",
+    "101": "cfc55bad951170384689785e290646e3b5adf22b5238daf85f0c3c0339c29853",
+    "102": "574c2350f1231ed0a1e7a979aeb874d5dd1a47929dd4c262b596d7b6a670b49d",
+    "103": "4b5e0fc7163cf48dca47432fb39a470b22f0a4dd596663ff5fbbb647c7157bd3",
+    "104": "c463dc72c44015d3416b88bb46e2386f30f25776e60bbe775341a3d0786bb314",
+    "105": "136143b57b95b95facd7009a8efcae6b2b7b9cf6e5857ab966a68cebff07b8db",
+    "106": "453d285887fb80825faa0993e75ed46d24fdad427d7557dfec6dae4d68184651",
+    "107": "56e86af0f3555c8ec98a6b7d66972cf69a5a69ed38a7282e9c6b34a7ce36ffef",
+    "108": "fd7fc89505c8af1fc8c1cd45217de158ac8aae9d5fc47c0a78dc86dd395c07a2",
+    "109": "cfcc9983e6025cdb938a7d0cbda4370938b849a8328549552e94d96b0699885a"
+  },
+  "rng_roles": [
+    "c51_classes",
+    "c51_batch",
+    "init"
+  ],
+  "fresh_control": null,
+  "fresh_self": {
+    "task": 29,
+    "n": 10,
+    "rule": "the same AdamW from the initial values, m = v = 0, update count 0"
+  },
+  "fresh_batches_sha256": "4bdea2f7508f10f64755af7d4b51810053ae5637b1aad7ee2f77ee34bcb4c61b",
+  "engine": "host run() of cifar5p1_mlp_0920 copied for R/std + decoupled decay; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+  "host_module_sha256": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+  "engine_sha256": "6095f24262edd2f7684ed2738a0db7e5e02fbd01afcd24bea366ca63a96cdc48",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "threads": 2,
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 0.97656433398907,
+  "wall_clock_s": 27.412245988845825,
+  "divergences": [],
+  "spec": "specs/spec_adamw_dose_1010.md",
+  "admission": {
+    "checks_sha256": "bcd12ea1fc1497e039e61651c5e36edb2c4868f4db41be8a058f16368b58a5b3",
+    "source_sha256": {
+      "src/adamw_dose_1010.py": "f5c6d66accb6813cdb85785af0992dfd35812a5cf9bd95b25f02cbb15165708a",
+      "src/adamw_dose_1010_c51.py": "6095f24262edd2f7684ed2738a0db7e5e02fbd01afcd24bea366ca63a96cdc48",
+      "src/adamw_dose_1010_run.py": "b08a9c1b8a3d557184ccc8830e26e732070667057a7b0931a5c7dcd6f8628add",
+      "analysis/adamw_dose_1010/checks.py": "384ed6c40992466c70748667156d2ef3343b7c52933b59a877a2d41b5c56efaa"
+    }
+  },
+  "spec_sha256": "fcaf5f3e7c1b29ec02b6dcdd608e27fe57f56a7eb6a6a099110b0030479845f9",
+  "checks_sha256": "bcd12ea1fc1497e039e61651c5e36edb2c4868f4db41be8a058f16368b58a5b3",
+  "cli_sha256": "b08a9c1b8a3d557184ccc8830e26e732070667057a7b0931a5c7dcd6f8628add",
+  "peak_rss_kb": 1833032,
+  "ru_maxrss_kb": 1833032,
+  "peak_vram_bytes": 1843421184
+}
