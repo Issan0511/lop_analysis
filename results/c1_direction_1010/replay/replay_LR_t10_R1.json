@@ -1,0 +1,90 @@
+{
+ "per_run": {
+  "LR_10": {
+   "evaluate_max_rel_vs_per_task_csv": 3.111199298844634e-10,
+   "evaluate_worst_column": "mob_f1",
+   "online_acc_rel": 4.569239085560558e-11,
+   "curve_bit_equal": true,
+   "switch_rel": 1.1726484738680866e-10
+  },
+  "LR_11": {
+   "evaluate_max_rel_vs_per_task_csv": 3.2867204196026673e-10,
+   "evaluate_worst_column": "mob_c2",
+   "online_acc_rel": 2.0090251610749463e-11,
+   "curve_bit_equal": true,
+   "switch_rel": 1.0003579997585269e-10
+  },
+  "LR_12": {
+   "evaluate_max_rel_vs_per_task_csv": 3.668655556181332e-10,
+   "evaluate_worst_column": "zbar_f1",
+   "online_acc_rel": 2.226619394268476e-11,
+   "curve_bit_equal": true,
+   "switch_rel": 3.2786887947950885e-10
+  },
+  "LR_13": {
+   "evaluate_max_rel_vs_per_task_csv": 3.542144935126724e-10,
+   "evaluate_worst_column": "zsd_f1",
+   "online_acc_rel": 4.8026787713022173e-11,
+   "curve_bit_equal": true,
+   "switch_rel": 1.0006719141969624e-10
+  },
+  "LR_14": {
+   "evaluate_max_rel_vs_per_task_csv": 3.917238882059331e-10,
+   "evaluate_worst_column": "eff_rank_c1",
+   "online_acc_rel": 1.1517435013293518e-11,
+   "curve_bit_equal": true,
+   "switch_rel": 1.1723695586645086e-10
+  },
+  "LR_15": {
+   "evaluate_max_rel_vs_per_task_csv": 4.3867321229845314e-10,
+   "evaluate_worst_column": "zsd_f1",
+   "online_acc_rel": 2.6342521672289233e-12,
+   "curve_bit_equal": true,
+   "switch_rel": 4.746862645394715e-11
+  },
+  "LR_16": {
+   "evaluate_max_rel_vs_per_task_csv": 3.988041054845705e-10,
+   "evaluate_worst_column": "zsd_c1",
+   "online_acc_rel": 4.5606097134959636e-11,
+   "curve_bit_equal": true,
+   "switch_rel": 3.12499895654449e-10
+  },
+  "LR_17": {
+   "evaluate_max_rel_vs_per_task_csv": 3.4689343747951367e-10,
+   "evaluate_worst_column": "eff_rank_c1",
+   "online_acc_rel": 2.7114915794951786e-11,
+   "curve_bit_equal": true,
+   "switch_rel": 3.9694343753904825e-11
+  },
+  "LR_18": {
+   "evaluate_max_rel_vs_per_task_csv": 2.930796447855082e-10,
+   "evaluate_worst_column": "zsd_c1",
+   "online_acc_rel": 4.373516355469389e-11,
+   "curve_bit_equal": true,
+   "switch_rel": 5.377980246927274e-11
+  },
+  "LR_19": {
+   "evaluate_max_rel_vs_per_task_csv": 4.294386097810166e-10,
+   "evaluate_worst_column": "zsd_f1",
+   "online_acc_rel": 4.601375826792077e-12,
+   "curve_bit_equal": true,
+   "switch_rel": 6.502604505042102e-11
+  }
+ },
+ "R1_evaluate_and_online_max_rel": 4.3867321229845314e-10,
+ "R1_switch_max_rel": 3.2786887947950885e-10,
+ "R1_curves_bit_equal_all_runs": true,
+ "R1_zbar_records_vs_verify_replay_max_abs": {
+  "0": 0.0,
+  "1": 0.0,
+  "10": 0.0,
+  "75": 0.0,
+  "750": 0.0,
+  "7500": 0.0,
+  "30000": 0.0
+ },
+ "R1_pass": true,
+ "threshold_rel": 1e-06,
+ "wall_s": 580.1820330619812,
+ "note": "no LR checkpoint of task t+1 exists (saved tasks 1,2,3,5,10,20,30); R1 compares the replayed task with the original run's per-epoch online accuracy (curves.npy, bit equality), its end-of-task evaluate() row and switch CE / acc (per_task.csv, printed to 10 significant digits) and the earlier verify replay's zbar records"
+}
