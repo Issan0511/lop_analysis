@@ -33,6 +33,10 @@ POST HOC (coordinator follow-up after Codex's review; NOT registered, separate f
   of all three W2 buckets, the coupling margin sum_k c_k Dbar_k, and the regression of H = delta2 W2 on h1 per unit
   (see posthoc()).  Stored under new npz keys (G_00 ... G_rD, kappa, *_ni, *_wi, posthoc_scalars); the registered keys
   are unchanged.  Tables: results/c1_direction_1010/mlp_tables/posthoc_3x2.md (+ posthoc_3x2_*.csv).
+POST HOC round 2 (Codex: origin-invariant form; NOT registered): G = G_const + G_cen with G_const = kappa Hbar and
+  G_cen = sum_n (a - kappa/N)(H - Hbar), a = K phi'(z1); G_const split by W2 bucket (see constmode()).  New npz keys
+  Hbar, G_const, G_cen, G_const_0/_d/_r, constmode_scalars; section "Constant mode" in posthoc_3x2.md and
+  posthoc_constmode_*.csv.
 """
 from __future__ import annotations
 
@@ -181,7 +185,32 @@ def measure(X, K, P, P0, F0, Z):
                 K_neg_frac=float((K < 0).mean()), K_mean=float(K.mean()), K_sd=float(K.std()),
                 pmax_mean=float(F["p"].max(1).mean()), **chk)
     ph_arrays, ph_scal = posthoc(F, df, d2, Kg1, P, P0, dW2d, dW2r, G, G0, Gd, Gr, c, Dbar, S0)
-    return arrays, scal, ph_arrays, ph_scal
+    cm_arrays, cm_scal = constmode(d2, Kg1, P, W2_0, dW2d, dW2r, G, That)
+    return arrays, scal, ph_arrays, ph_scal, cm_arrays, cm_scal
+
+
+def constmode(d2, Kg1, P, W2_0, dW2d, dW2r, G, That):
+    """Post hoc, round 2 (Codex: origin-invariant form; NOT registered). a_in = K_n phi'(z1_in), kappa_i = sum_n a_in,
+    H_in = [delta2 W2]_in, Hbar_i = mean_n H_in. Exact: G_i = kappa_i Hbar_i + sum_n (a_in - kappa_i/N)(H_in - Hbar_i)
+    =: G_const_i + G_cen_i.  G_const split by W2 bucket: kappa_i * mean_n [delta2 W2v]_in for W2v in (W2^0, dW2^drift,
+    dW2^rest).  Identity: G_const_i = kappa_i That_i / N (That = registered transmission proxy W2^T Dbar), and the drift
+    bucket is -kappa_i mu2hat_i (sum_k c_k Dbar_k) / N."""
+    N = d2.shape[0]
+    kappa = Kg1.sum(0)
+    H = d2 @ P["W2"]
+    Hbar = H.mean(0)
+    G_const = kappa * Hbar
+    G_cen = ((Kg1 - kappa / N) * (H - Hbar)).sum(0)
+    dmean = d2.mean(0)
+    Gc0 = kappa * (W2_0.T @ dmean)
+    Gcd = kappa * (dW2d.T @ dmean)
+    Gcr = kappa * (dW2r.T @ dmean)
+    chk = dict(const_rel=relmax(G_const + G_cen - G, np.abs(G_const) + np.abs(G_cen)),
+               const_rel_G=relmax(G_const + G_cen - G, G),
+               constbucket_rel=relmax(Gc0 + Gcd + Gcr - G_const, np.abs(Gc0) + np.abs(Gcd) + np.abs(Gcr)),
+               const_That_rel=relmax(G_const - kappa * That / N, G_const))
+    arrays = dict(Hbar=Hbar, G_const=G_const, G_cen=G_cen, G_const_0=Gc0, G_const_d=Gcd, G_const_r=Gcr)
+    return arrays, chk
 
 
 # ---------------------------------------------------------------------------------------------- post hoc
@@ -258,9 +287,10 @@ def compute(conds, seeds, tasks):
             for t in tasks:
                 t0 = time.time()
                 P, Z = load_state(cond, seed, t)
-                arrays, scal, ph_arrays, ph_scal = measure(X, K, P, P0, F0, Z)
+                arrays, scal, ph_arrays, ph_scal, cm_arrays, cm_scal = measure(X, K, P, P0, F0, Z)
                 np.savez(os.path.join(OUT, f"LR_{cond}_s{seed}_t{t:02d}.npz"), cond=cond, seed=seed, t=t,
-                         scalars=json.dumps(scal), **arrays, posthoc_scalars=json.dumps(ph_scal), **ph_arrays)
+                         scalars=json.dumps(scal), **arrays, posthoc_scalars=json.dumps(ph_scal), **ph_arrays,
+                         constmode_scalars=json.dumps(cm_scal), **cm_arrays)
                 al = arrays["alive"]
                 print(f"{cond} s{seed} t{t:02d} alive {int(al.sum()):3d} G>0 {np.mean(arrays['G'][al] > 0):.3f} "
                       f"| M1 {scal['m1_rel']:.1e} split {scal['split_rel_parts']:.1e} dz {scal['dz_split_rel']:.1e} "
@@ -767,9 +797,97 @@ def posthoc_tables():
                    self_wi_rel="beta S0 + alpha kappa + perp = G (with intercept)")
     for k in PH_CHECKS:
         L.append(f"| {k} | {chk[k].max():.2e} | {meaning[k]} |")
+    constmode_section(L)
     with open(os.path.join(TAB, "posthoc_3x2.md"), "w") as fh:
         fh.write("\n".join(L) + "\n")
     print(f"posthoc tables: {len(per)} states -> {TAB}/posthoc_3x2.*")
+
+
+# ---------------------------------------------------------------------------------------------- post hoc round 2
+CM_PARTS = (("G_const", "G_const"), ("G_cen", "G_cen"), ("G_const_0", "G_const^{W2^0}"),
+            ("G_const_d", "G_const^{drift}"), ("G_const_r", "G_const^{rest}"))
+CM_CHECKS = {"const_rel": "G_const + G_cen = G (rel. to max of abs G_const + abs G_cen); threshold 1e-12",
+             "const_rel_G": "same error rel. to max abs G",
+             "constbucket_rel": "the three W2 buckets sum to G_const",
+             "const_That_rel": "G_const = kappa That / N (That = registered W2^T Dbar)"}
+
+
+def constmode_state_metrics(d):
+    alive = d["alive"].astype(bool)
+    h = d["hbar1"]
+    out = {}
+    for nm, m in (("all", alive), ("hneg", alive & (h < 0)), ("hpos", alive & (h > 0))):
+        G = d["G"][m]
+        out[f"n_{nm}"] = int(m.sum())
+        for k, _ in CM_PARTS:
+            v = d[k][m]
+            out[f"{k}_pos_{nm}"] = frac(v > 0)
+            out[f"{k}_agree_{nm}"] = frac(np.sign(v) == np.sign(G))
+        gc, ge = np.abs(d["G_const"][m]), np.abs(d["G_cen"][m])
+        out[f"const_share_{nm}"] = float(np.median(gc / (gc + ge))) if m.any() else np.nan
+        out[f"const_gt_cen_{nm}"] = frac(gc > ge)
+    return out
+
+
+def cm_rows(sfx):
+    rows = []
+    for k, lab in CM_PARTS:
+        rows += [(f"{k}_pos_{sfx}", f"{lab} > 0"), (f"{k}_agree_{sfx}", f"sign {lab} = sign G")]
+    return rows + [(f"const_share_{sfx}", "median abs G_const / (abs G_const + abs G_cen)"),
+                   (f"const_gt_cen_{sfx}", "abs G_const > abs G_cen")]
+
+
+def constmode_section(L):
+    rows, chks = [], []
+    for fpath in sorted(glob.glob(os.path.join(OUT, "LR_*_s*_t*.npz"))):
+        d = np.load(fpath)
+        if "constmode_scalars" not in d.files:
+            continue
+        key = dict(cond=str(d["cond"]), seed=int(d["seed"]), t=int(d["t"]))
+        rows.append({**key, **constmode_state_metrics(d)})
+        chks.append({**key, **json.loads(str(d["constmode_scalars"]))})
+    if not rows:
+        return
+    per = pd.DataFrame(rows).sort_values(["cond", "t", "seed"]).reset_index(drop=True)
+    chk = pd.DataFrame(chks).sort_values(["cond", "t", "seed"]).reset_index(drop=True)
+    agg = seed_agg(per)
+    per.to_csv(os.path.join(TAB, "posthoc_constmode_per_state.csv"), index=False, float_format="%.6g")
+    agg.to_csv(os.path.join(TAB, "posthoc_constmode_seed_mean.csv"), index=False, float_format="%.6g")
+    chk.to_csv(os.path.join(TAB, "posthoc_constmode_checks.csv"), index=False, float_format="%.3e")
+    L.append("\n## Constant mode (post hoc round 2, Codex: origin-invariant form; NOT registered)\n")
+    L.append("a_in = K_n phi'(z1_in), kappa_i = sum_n a_in, H_in = [delta2 W2]_in (backprop to h1), Hbar_i = mean_n H_in. "
+             "Exact: G_i = kappa_i Hbar_i + sum_n (a_in - kappa_i/N)(H_in - Hbar_i) =: G_const_i + G_cen_i. "
+             "G_const is split by W2 bucket as kappa_i * mean_n [delta2 W2v]_in for W2v = W2^0, dW2^drift, dW2^rest "
+             "(registered split; the three sum to G_const). Identities: G_const_i = kappa_i That_i / N with That the "
+             "registered transmission proxy W2^T Dbar; G_const^{drift}_i = -kappa_i mu2hat_i (sum_k c_k Dbar_k) / N. "
+             "Rates over alive units per seed; cells = seed mean [t-based 95% interval]. Sign convention as above "
+             "(> 0 = sinking side).\n")
+    for cond in sorted(per["cond"].unique()):
+        L.append(f"\n### {cond} — constant mode, all alive units\n")
+        metric_table(L, agg, per, cond, cm_rows("all"))
+    both = [(c, t) for (c, t), g in per.groupby(["cond", "t"]) if (g["n_hneg"] > 0).all() and (g["n_hpos"] > 0).all()]
+    if both:
+        L.append("\n### constant mode by hbar1 sign (states where every seed has alive units of both signs: "
+                 + ", ".join(f"{c} t{t}" for c, t in both) + ")\n")
+        heads = [(c, t, s) for c, t in both for s in ("hneg", "hpos")]
+        L.append("| quantity | " + " | ".join(f"{c} t{t} hbar1 {'below' if s == 'hneg' else 'above'} 0" for c, t, s in heads) + " |")
+        L.append("|---|" + "---|" * len(heads))
+        L.append("| alive units (total over seeds) | " + " | ".join(
+            str(int(per[(per.cond == c) & (per.t == t)][f"n_{s}"].sum())) for c, t, s in heads) + " |")
+        seeds_total = per.groupby(["cond", "t"]).size()
+        for base, lab in cm_rows("X"):
+            stem = base[:-2]                                   # strip the "_X" suffix
+            cells = []
+            for c, t, s in heads:
+                st = agg[(agg.cond == c) & (agg.t == t) & (agg.metric == f"{stem}_{s}")].iloc[0].to_dict()
+                cells.append(fmt(st, int(seeds_total[(c, t)]), f"{stem}_{s}"))
+            L.append(f"| {lab} | " + " | ".join(cells) + " |")
+    L.append("\nChecks (max over all states):\n")
+    L.append("| check | max | meaning |")
+    L.append("|---|---|---|")
+    for k, v in CM_CHECKS.items():
+        L.append(f"| {k} | {chk[k].max():.2e} | {v} |")
+    print(f"constant mode: {len(per)} states -> {TAB}/posthoc_constmode_*.csv + section in posthoc_3x2.md")
 
 
 def main():
