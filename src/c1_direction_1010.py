@@ -194,9 +194,13 @@ def means_pass(P, al, X, chunk=200) -> dict:
     return {k: v / div[k] for k, v in acc.items()}
 
 
-def grad_pass(S, W2var: dict, W3var: dict, M: torch.Tensor, labels=None, chunk=200) -> dict:
+def grad_pass(S, W2var: dict, W3var: dict, M: torch.Tensor, mu2: torch.Tensor, labels=None,
+              chunk=200) -> dict:
     """One pass over the images on the state's graph: the conv-parameter gradient of L, the
-    back-propagated gradients of every W2 / W3 variant, and the side sums (D-bars, gates, K1)."""
+    back-propagated gradients of every W2 / W3 variant, and the side sums (D-bars, gates, K1).
+    Post hoc sums: A-tilde_kj = (1/25) sum_{n,q} R1_j (ones *^T delta2_k), R1_j = gamma_j K1 at the
+    c1 winners; the regression sums of H1_j on P1_j and of H2_k on P2_k; the own tangent of P2_k
+    along u_k's (W2[k], b2[k]) part, R2own_k = gamma2_k K2 at the c2 winners, K2 = <mu2, P1patch> + 1."""
     P, al, X = S.P, S.alpha, S.X
     dev = S.device
     n_img = X.shape[0]
@@ -210,10 +214,17 @@ def grad_pass(S, W2var: dict, W3var: dict, M: torch.Tensor, labels=None, chunk=2
     H2sum = {k: z(CH) for k in W3var}
     side = {k: z(n) for k, n in (("D2", CH), ("D3", CN.HIDDEN), ("G_eq1", CH), ("gam1", CH),
                                   ("K1w", CH), ("gK1w", CH), ("gam2", CH), ("H1all", CH), ("H2all", CH))}
+    # post hoc sums
+    side["Atil"] = z(CH, CH)                                          # (k, j)
+    for k in ("RP1", "RH1", "HP1", "PP1", "HH1", "Hs1", "Ps1",
+              "R2P2own", "R2H2own", "HP2", "PP2", "HH2", "Hs2", "Ps2"):
+        side[k] = z(CH)
     errH1 = errH2 = 0.0
     Lval = 0.0
     Mk = M.view(1, 3, KER, KER)
     one = torch.ones(1, dtype=DT, device=dev)
+    ones_k = torch.ones(CH, 1, KER, KER, dtype=DT, device=dev)      # per-channel 5x5 all-ones kernel
+    mu2k = mu2.view(1, CH, KER, KER)
     if labels is not None:
         labels = labels.to(dev).long()
         assert labels.shape == (n_img,)
@@ -264,7 +275,26 @@ def grad_pass(S, W2var: dict, W3var: dict, M: torch.Tensor, labels=None, chunk=2
             side["gam1"] += gam.sum((0, 2)); side["K1w"] += K1w.sum((0, 2))
             side["gK1w"] += (gam * K1w).sum((0, 2))
             z2w = z2.detach().flatten(2).gather(2, idx2.flatten(2))
-            side["gam2"] += V.dphi_b(z2w, al[1].view(1, -1, 1)).sum((0, 2))
+            gam2 = V.dphi_b(z2w, al[1].view(1, -1, 1))
+            side["gam2"] += gam2.sum((0, 2))
+            # ---- post hoc: c1 tangent R1 = gamma K1 at the winners, A-tilde, regression sums
+            R1 = gam * K1w                                                     # (B, 16 j, 256 q)
+            P1f = P1.detach().flatten(2); H1f = H1.flatten(2)
+            side["RP1"] += (R1 * P1f).sum((0, 2)); side["RH1"] += (R1 * H1f).sum((0, 2))
+            side["HP1"] += (H1f * P1f).sum((0, 2)); side["PP1"] += (P1f * P1f).sum((0, 2))
+            side["HH1"] += (H1f * H1f).sum((0, 2))
+            side["Hs1"] += H1f.sum((0, 2)); side["Ps1"] += P1f.sum((0, 2))
+            Bk = F.conv_transpose2d(d2, ones_k, padding=PAD, groups=CH).flatten(2)   # ones *^T delta2_k
+            side["Atil"] += torch.einsum("njq,nkq->kj", R1, Bk) / (KER * KER)
+            # ---- post hoc: c2 own tangent R2own = gamma2 K2 at the c2 winners, regression sums
+            K2 = F.conv2d(P1.detach(), mu2k, one, padding=PAD)                 # <mu2, P1patch> + 1
+            K2w = K2.flatten(2).expand(-1, CH, -1).gather(2, idx2.flatten(2))
+            R2o = gam2 * K2w                                                   # (B, 16 k, 64 r)
+            P2f = P2.detach().flatten(2); H2f = H2.flatten(2)
+            side["R2P2own"] += (R2o * P2f).sum((0, 2)); side["R2H2own"] += (R2o * H2f).sum((0, 2))
+            side["HP2"] += (H2f * P2f).sum((0, 2)); side["PP2"] += (P2f * P2f).sum((0, 2))
+            side["HH2"] += (H2f * H2f).sum((0, 2))
+            side["Hs2"] += H2f.sum((0, 2)); side["Ps2"] += P2f.sum((0, 2))
         del z1, P1, z2, P2, z3, z4, f, L, g, d1, d2, d3, H1, H2
     side["gam1"] /= n_img * 256; side["K1w"] /= n_img * 256; side["gK1w"] /= n_img * 256
     side["gam2"] /= n_img * 64
@@ -308,7 +338,24 @@ def measure_state(S, S0, labels=None, U=None, chunk=200, saved=None, saved_extra
     if mix:
         W2var["mix"] = MIX[0] * W20 + MIX[1] * W2var["drift"] + MIX[2] * W2var["rest"]
         W3var["mix"] = MIX[0] * W30 + MIX[1] * drift3 + MIX[2] * rest3
-    B = grad_pass(S, W2var, W3var, M, labels, chunk)
+    # ---- post hoc variants (coordinator, after the registered LR numbers): DC / AC buckets.
+    # c1: per (k, j) block of 5x5 taps, DC = (block sum / 25) * ones, AC = the remainder; applied to
+    # dW2, to W2^0 and to dW2^drift (the drift's block DC is -(c_k / |mu2|) * mean of mu2's j-block).
+    dW2t = W2 - W20
+    W2var["DC"] = dW2t.mean((2, 3), keepdim=True).expand_as(dW2t).contiguous()
+    W2var["AC"] = dW2t - W2var["DC"]
+    W2var["init_DC"] = W20.mean((2, 3), keepdim=True).expand_as(W20).contiguous()
+    W2var["init_AC"] = W20 - W2var["init_DC"]
+    dr = W2var["drift"]
+    W2var["drift_DC"] = dr.mean((2, 3), keepdim=True).expand_as(dr).contiguous()
+    W2var["drift_AC"] = dr - W2var["drift_DC"]
+    # c2: per (u, k) the 64 positions of channel k in fc1's input, DC = (sum / 64) * ones, AC = rest
+    def bucket3(Wm):
+        dc = Wm.view(CN.HIDDEN, CH, 64).mean(2, keepdim=True).expand(-1, -1, 64).reshape(CN.HIDDEN, CN.FLAT)
+        return dc.contiguous(), (Wm - dc)
+    W3var["DC"], W3var["AC"] = bucket3(dW3)
+    W3var["init_DC"], W3var["init_AC"] = bucket3(W30)
+    B = grad_pass(S, W2var, W3var, M, A["mu2"], labels, chunk)
     # ---- G per variant
     ar = torch.arange(CH, device=dev)
     u1W = U[:CH, OFF[0]:OFF[1]].reshape(CH, CH, 3, KER, KER)[ar, ar]          # (16, 3, 5, 5)
@@ -319,7 +366,11 @@ def measure_state(S, S0, labels=None, U=None, chunk=200, saved=None, saved_extra
     for k, (gW1, gb1) in B["acc1"].items():
         G[f"G_c1_{k}"] = (gW1 * u1W).sum((1, 2, 3)) + gb1 * u1b
     for k, gs in B["acc2"].items():
-        G[f"G_c2_{k}"] = U[CH:] @ torch.cat([q.reshape(-1) for q in gs])
+        gvec = torch.cat([q.reshape(-1) for q in gs])
+        G[f"G_c2_{k}"] = U[CH:] @ gvec
+        # post hoc F: own = u_k's (W2[k], b2[k]) part, up = its (W1, b1) part (through P1)
+        G[f"G_c2_own_{k}"] = U[CH:, OFF[2]:OFF[4]] @ gvec[OFF[2]:OFF[4]]
+        G[f"G_c2_up_{k}"] = U[CH:, OFF[0]:OFF[2]] @ gvec[OFF[0]:OFF[2]]
     G_ag = U @ torch.cat([q.reshape(-1) for q in B["gconv"]])
     sd = B["side"]
     # ---- side quantities
@@ -405,6 +456,88 @@ def measure_state(S, S0, labels=None, U=None, chunk=200, saved=None, saved_extra
             lin = MIX[0] * g[key + "init"] + MIX[1] * g[key + "drift"] + MIX[2] * g[key + "rest"]
             scale = (MIX[0] * g[key + "init"]).abs() + (MIX[1] * g[key + "drift"]).abs() + (MIX[2] * g[key + "rest"]).abs()
             chk[f"C5_linearity_{tag}"] = float(((g[key + "mix"] - lin).abs() / scale.clamp_min(1e-300)).max())
+    # ==== post hoc quantities A-F (coordinator, 1010, after the registered LR numbers) ====
+    # Every registered key above is unchanged.  New keys: G_c1_{DC,AC,init_DC,init_AC,drift_DC,
+    # drift_AC}, G_c2_{DC,AC,init_DC,init_AC}, G_c2_own_* / G_c2_up_* (every c2 variant), the
+    # H1sum_* / H2sum_* of the new variants, the arrays in `ph` below, posthoc_version, chk_PH_*.
+    n_img = S.X.shape[0]
+    At = sd["Atil"]                                                     # A-tilde (k, j)
+    ds_kj = (W2 - W20).sum((2, 3)); s0_kj = W20.sum((2, 3))
+    c_k, c_u = -proj2, -proj3
+    mu2n = mu2.norm()
+    # P-bar used in C: the mean over the 25 taps of mu2's j-block (zero padding included), so that
+    # G_c1_drift_j = -(Pbar1_blk_j / |mu2|) Z_j - E_ac_j holds exactly with |mu2| the 400-vector norm
+    Pbar1_blk = mu2.view(CH, KER * KER).mean(1)
+    Z = (KER * KER) * (c_k[:, None] * At).sum(0)                       # Z_j = 25 sum_k c_k A_kj
+    lead = Pbar1_blk / mu2n * Z
+    E_ac = -G["G_c1_drift"] - lead
+    trans_DC = (ds_kj * At).sum(0)                                      # sum_k ds_kj A_kj = G_c1_DC
+    trans_init = (s0_kj * At).sum(0)                                    # sum_k s0_kj A_kj = G_c1_init_DC
+    cD2 = c_k * sd["D2"]; cD3 = c_u * sd["D3"]
+
+    def regress(HP, PP, HH, Hs, Ps, n):
+        """H on P over all (image, position): no-intercept beta, with-intercept beta, R2 (with
+        intercept = corr^2), uncentred R2 of the no-intercept fit."""
+        cov = HP - Hs * Ps / n; vp = PP - Ps * Ps / n; vh = HH - Hs * Hs / n
+        return HP / PP, cov / vp, cov * cov / (vp * vh), HP * HP / (PP * HH)
+    b1n, b1i, r1i, r1n = regress(sd["HP1"], sd["PP1"], sd["HH1"], sd["Hs1"], sd["Ps1"], n_img * 256)
+    b2n, b2i, r2i, r2n = regress(sd["HP2"], sd["PP2"], sd["HH2"], sd["Hs2"], sd["Ps2"], n_img * 64)
+    G1sa = b1n * sd["RP1"]                                # beta_j sum_{n,q} gamma K1 P1 (self-aligned part)
+    G2own_sa = b2n * sd["R2P2own"]
+    nanv = torch.full((CH,), float("nan"), dtype=DT, device=dev)
+    if self_form:
+        G2sa = b2n * torch.as_tensor(out["S0"][CH:], dtype=DT, device=dev)   # full tangent of P2_k (self_shape)
+    else:
+        G2sa = nanv
+    ph = {"Atil": At, "Pbar1_blk": Pbar1_blk, "Z_c1": Z, "lead_c1": lead, "E_ac_c1": E_ac,
+          "trans_DC_c1": trans_DC, "trans_init_DC_c1": trans_init,
+          "cD2_sum": cD2.sum(), "cD2_abs": cD2.abs().sum(), "cD3_sum": cD3.sum(), "cD3_abs": cD3.abs().sum(),
+          "beta1_noint": b1n, "beta1_int": b1i, "R2_c1_int": r1i, "R2_c1_noint": r1n,
+          "G_c1_selfal": G1sa, "G_c1_perp": G["G_c1_full"] - G1sa, "S0own_c1": sd["RP1"], "RH1_c1": sd["RH1"],
+          "beta2_noint": b2n, "beta2_int": b2i, "R2_c2_int": r2i, "R2_c2_noint": r2n,
+          "G_c2_selfal": G2sa, "G_c2_perp": G["G_c2_full"] - G2sa,
+          "G_c2_own_selfal": G2own_sa, "G_c2_own_perp": G["G_c2_own_full"] - G2own_sa,
+          "S0own_c2": sd["R2P2own"], "R2H2own_c2": sd["R2H2own"],
+          "ds3_uk": dW3.view(CN.HIDDEN, CH, 64).sum(2), "s03_uk": W30.view(CN.HIDDEN, CH, 64).sum(2)}
+    out.update({k: v.detach().cpu().numpy() for k, v in ph.items()})
+    for k in G:                                          # the post hoc variants' G (also in `vals`)
+        out[k] = G[k].detach().cpu().numpy()
+    out["posthoc_version"] = 1
+
+    def rsc(a, b, scale):
+        return float(((a - b).abs() / scale.clamp_min(1e-300)).max())
+    g = {k: v for k, v in G.items()}
+    chk["PH_A_DC_plus_AC_eq_dW2"] = float(((W2var["DC"] + W2var["AC"]) - dW2t).abs().max() / dW2t.abs().max())
+    chk["PH_A_G_DC_plus_AC"] = rsc(g["G_c1_DC"] + g["G_c1_AC"], g["G_c1_drift"] + g["G_c1_rest"],
+                                   g["G_c1_DC"].abs() + g["G_c1_AC"].abs())
+    chk["PH_A_G_initDC_plus_initAC"] = rsc(g["G_c1_init_DC"] + g["G_c1_init_AC"], g["G_c1_init"],
+                                           g["G_c1_init_DC"].abs() + g["G_c1_init_AC"].abs())
+    chk["PH_A_G_driftDC_plus_driftAC"] = rsc(g["G_c1_drift_DC"] + g["G_c1_drift_AC"], g["G_c1_drift"],
+                                             g["G_c1_drift_DC"].abs() + g["G_c1_drift_AC"].abs())
+    chk["PH_A_transmission_identity"] = rsc(g["G_c1_DC"], trans_DC, (ds_kj * At).abs().sum(0))
+    chk["PH_A_init_transmission_identity"] = rsc(g["G_c1_init_DC"], trans_init, (s0_kj * At).abs().sum(0))
+    chk["PH_C_driftDC_identity"] = rsc(g["G_c1_drift_DC"], -lead,
+                                       (KER * KER) * (Pbar1_blk / mu2n).abs() * (c_k[:, None] * At).abs().sum(0))
+    chk["PH_C_Eac_identity"] = rsc(E_ac, -g["G_c1_drift_AC"], g["G_c1_drift_DC"].abs() + g["G_c1_drift_AC"].abs())
+    chk["PH_B_DC_plus_AC_eq_dW3"] = float(((W3var["DC"] + W3var["AC"]) - dW3).abs().max() / dW3.abs().max())
+    chk["PH_B_G_DC_plus_AC"] = rsc(g["G_c2_DC"] + g["G_c2_AC"], g["G_c2_drift"] + g["G_c2_rest"],
+                                   g["G_c2_DC"].abs() + g["G_c2_AC"].abs())
+    chk["PH_B_G_initDC_plus_initAC"] = rsc(g["G_c2_init_DC"] + g["G_c2_init_AC"], g["G_c2_init"],
+                                           g["G_c2_init_DC"].abs() + g["G_c2_init_AC"].abs())
+    chk["PH_E_RH1_eq_G_c1"] = rsc(sd["RH1"], g["G_c1_full"], g["G_c1_full"].abs())
+    chk["PH_E_R2H2own_eq_G_c2_own"] = rsc(sd["R2H2own"], g["G_c2_own_full"], g["G_c2_own_full"].abs())
+    chk["PH_F_own_plus_up_eq_G_c2"] = rsc(g["G_c2_own_full"] + g["G_c2_up_full"], g["G_c2_full"],
+                                          g["G_c2_own_full"].abs() + g["G_c2_up_full"].abs())
+    if self_form:
+        chk["PH_E_S0own_c1_eq_self_shape"] = rsc(sd["RP1"], torch.as_tensor(out["S0"][:CH], dtype=DT, device=dev),
+                                                 sd["RP1"].abs())
+    # u_k's own part: W2 block of row k = mu2 (other rows 0), b2 part = e_k
+    U2W = U[CH:, OFF[2]:OFF[3]].reshape(CH, CH, -1)
+    own_blk = U2W[ar, ar]
+    off_blk = U2W.clone(); off_blk[ar, ar] = 0
+    chk["PH_U_c2_own_rows_equal_mu2"] = float((own_blk - mu2[None]).abs().max() / mu2.abs().max())
+    chk["PH_U_c2_other_rows_zero"] = float(off_blk.abs().max() / mu2.abs().max())
+    chk["PH_U_c2_b_equal_eye"] = float((U[CH:, OFF[3]:OFF[4]] - torch.eye(CH, dtype=DT, device=dev)).abs().max())
     for k, v in chk.items():
         out["chk_" + k] = v
     out["seconds"] = time.time() - t0
@@ -425,7 +558,15 @@ THRESH = {"H1_full_vs_autograd": 1e-12, "H2_full_vs_autograd": 1e-12,
           "U_c1_rows_equal_M": 1e-12, "U_c1_b_equal_1": 1e-12,
           "C5_linearity_c1": 1e-10, "C5_linearity_c2": 1e-10,
           "C5_formula_vs_split": 1e-10, "C5_formula_vs_saved": 1e-8, "C5_M_direct_vs_U": 1e-12,
-          "C5_fd_fixed_routing": 1e-4}
+          "C5_fd_fixed_routing": 1e-4,
+          # post hoc identities (A-F)
+          "PH_A_DC_plus_AC_eq_dW2": 1e-12, "PH_A_G_DC_plus_AC": 1e-10, "PH_A_G_initDC_plus_initAC": 1e-10,
+          "PH_A_G_driftDC_plus_driftAC": 1e-10, "PH_A_transmission_identity": 1e-10,
+          "PH_A_init_transmission_identity": 1e-10, "PH_C_driftDC_identity": 1e-10, "PH_C_Eac_identity": 1e-10,
+          "PH_B_DC_plus_AC_eq_dW3": 1e-12, "PH_B_G_DC_plus_AC": 1e-10, "PH_B_G_initDC_plus_initAC": 1e-10,
+          "PH_E_RH1_eq_G_c1": 1e-10, "PH_E_R2H2own_eq_G_c2_own": 1e-10, "PH_F_own_plus_up_eq_G_c2": 1e-10,
+          "PH_E_S0own_c1_eq_self_shape": 1e-10, "PH_U_c2_own_rows_equal_mu2": 1e-12,
+          "PH_U_c2_other_rows_zero": 1e-12, "PH_U_c2_b_equal_eye": 1e-12}
 REPORTED_ONLY = {"C2_vs_G", "C2_c2split_vs_G", "zbar_vs_saved", "S0_vs_saved_extra", "S1_vs_saved_extra"}
 
 
@@ -595,7 +736,13 @@ def main():
             for seed in seeds:
                 fn = out / f"{arm}_s{seed}_t{task:02d}.npz"
                 if fn.exists():
-                    continue
+                    try:
+                        with np.load(fn) as d:
+                            done = "posthoc_version" in d.files      # files before the post hoc keys are redone
+                    except Exception:
+                        done = False
+                    if done:
+                        continue
                 if not ckpt_path(arm, seed, task).exists():
                     print(f"missing {ckpt_path(arm, seed, task)}", flush=True)
                     continue
