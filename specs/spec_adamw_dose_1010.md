@@ -392,3 +392,13 @@ Claude の行は、本 spec の起草者（Opus 5.5、2026-10-10 16:50 JST）。
 - 適用外: `INCOMPLETE` ／ `CHECK_FAILED` ／ `NOT_REPRODUCED` ／ `INAPPLICABLE`
 
 **予測の項目**: §7 の B1-1〜B1-11、S1〜S14、C1〜C11（C1w・C2w を含む）。Issa と Fable の列は空欄。
+
+## 13. 追補（2026-10-10、実装と検査の後・本走の前。実装役 Claude Opus 5.5。判定の規則・腕・予測は変えていない）
+
+1. **S-wd (iii) の式**: coupled L2 の 1 歩目の動きは Adam の厳密な初回の歩 η·g/(|g| + ε)（g = λθ）で、η·sign(θ) になるのは |g| ≫ ε の座標だけである（|θ| が 1e−7 程度の座標では 0.9η 程度）。検査は (a) 全座標で厳密な初回の歩との差 ≤ 10⁻³η、(b) |g| ≥ 100ε の座標で η·sign(θ) との差 ≤ 0.011η、(c) decoupled の (i) と一致しない、の 3 つにした。値を見て変えたのではなく、§6 の文の近似の範囲を明記した。
+2. **S-torch の帯**: §6 の式 Σ_t [n_op·u₃₂·η|ŝ_t| + 2u₃₂|p_t|] をそのまま判定に使い、n_op = 21（宿主: m 2・v 2・÷c1・÷c2・√・+ε・÷・×η の 10、torch: lerp 3・v 2・√・÷√bc2・+ε・÷・×step_size の 10、float32 の step_size 1）、|ŝ_t| は本実装の m̂/(√v̂ + ε)、|p_t| は両実装の更新前後の大きい方（要素ごと）。2 実装の v は同じ演算なので、全更新で bit 一致を合わせて確かめる。m の打ち消しに強い広い帯（|ŝ| を |g| の EMA に替え、m の丸めの漸化式を足したもの）も報告する（判定には使わない）。箱 2 は seed 100–109・2 課題 × 100 更新で捕捉した。
+3. **検査の名前**: 両箱の S-wd・S-torch は、対象のファイルが違うので S-wd / S-wd-c51、S-torch / S-torch-c51 に分けた。箱 2 の λ = 0 の経路（S-nochange・`_nochange`）は腕名 `nochange`。
+4. **S-cost の RSS**: getrusage の ru_maxrss は exec をまたいで親（検査の python）の最大値を引き継ぐので、CLI は /proc/self/status の VmHWM を `peak_rss_kb` に書く（ru_maxrss も併記）。
+5. **ラベルの適用条件の読み**: §5.1 の「全ラベル」を箱 1 の全ラベル（DOSE・EQUILIBRIUM・WIDTH・DEPTH を含む）と読んだ。(A) が破れれば INAPPLICABLE、(B) が破れれば NOT_REPRODUCED。(C) は腕ごとで、DOSE は 4 つの λ 腕すべての (C) を要る。箱 2 のまとめは、どちらかの腕が INAPPLICABLE・NOT_REPRODUCED ならそれを返す。
+6. **台帳**: §9 は「走る直前に親が登録」だが、親の依頼で実装役が P 番号付きで登録する。§9 の「worktree とブランチは親が確かめるまで消さない」は、親の依頼（片付けまで）で置き換える。
+7. **出力**: verdict.py が summary.md と figs/ を書く。手書きの読みは `results/adamw_dose_1010/notes.md` に置き、summary.md の §1 に差し込む。
