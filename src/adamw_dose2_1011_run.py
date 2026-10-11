@@ -105,9 +105,9 @@ def main_rlcifar(args) -> None:
     torch.set_num_threads(args.threads)
     run_cfg = dict(tasks=args.tasks, epochs=args.epochs, graph=not args.no_graph, threads=torch.get_num_threads(),
                    seeds=seeds)
-    admission = admit("rlcifar", args.arm, seeds, run_cfg, A1_REGISTERED) if _registered_place(out) else None
     if args.prefix is not None and _registered_place(out):
         raise SystemExit("ABORT: --prefix is for check runs; the registered arms branch from cap_cifar_ee_0920's prefix")
+    admission = admit("rlcifar", args.arm, seeds, run_cfg, A1_REGISTERED) if _registered_place(out) else None
     prefix = None if args.prefix is None else torch.load(args.prefix, map_location="cpu", weights_only=False)
     t0 = time.time()
     done = A1.run_arm(args.arm, out, seeds=seeds, tasks=args.tasks, epochs=args.epochs, graph=not args.no_graph,

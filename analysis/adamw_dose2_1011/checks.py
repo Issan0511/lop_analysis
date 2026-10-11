@@ -1480,9 +1480,11 @@ def s_cli(M) -> dict:
     per["iv_refuse_30_tasks"] = refused("rlcifar", "wd1e0", SEEDS, {**reg1, "tasks": 30}, M.A1_REGISTERED, fake,
                                         "registered configuration")
     per["iv_refuse_c51_unregistered_arm"] = refused("c51", "dec2e-2", SEEDS, reg2, M.A2.REGISTERED, fake, "registers")
-    rp = subprocess.run([PY, "-m", "src.adamw_dose2_1011_run", "rlcifar", "--arm", "wd1e0", "--prefix", str(pf),
-                         "--out", str(OUT / "rlcifar" / "_refused_probe")], cwd=REPO, capture_output=True, text=True)
-    per["iv_refuse_prefix_at_registered_place"] = rp.returncode != 0 and "ABORT" in (rp.stderr + rp.stdout)
+    try:                                   # in-process, so that a mutation of the CLI is what runs
+        M.main(["rlcifar", "--arm", "wd1e0", "--prefix", str(pf), "--out", str(OUT / "rlcifar" / "_refused_probe")])
+        per["iv_refuse_prefix_at_registered_place"] = False
+    except SystemExit as e:
+        per["iv_refuse_prefix_at_registered_place"] = "--prefix is for check runs" in str(e)
     shutil.rmtree(OUT / "rlcifar" / "_refused_probe", ignore_errors=True)
     dirty = subprocess.run(["git", "-C", str(REPO), "status", "--porcelain", "--", "src", "analysis", "specs"],
                            capture_output=True, text=True).stdout.strip()
