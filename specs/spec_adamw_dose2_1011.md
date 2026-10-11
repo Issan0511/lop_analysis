@@ -232,24 +232,26 @@ Claude の列は本 spec の起草者（Opus 5.5、2026-10-11 13:30 JST）。こ
 
 略号: RFO = RESCUED_FUNCTION_ONLY、AU = ALIVE_UNRESOLVED、他 = INAPPLICABLE・NOT_REPRODUCED・CHECK_FAILED・INCOMPLETE・DIVERGED をまとめた桶。
 
+**Fable の列（追記、2026-10-11 15:58 JST）**: 親（Fable）から受け取った予測を、検査 all_pass（`838e0820`）の後・本走の前（Codex の監査の間）に記入した。親はこの時点で、検査の結果と §13 の 6 の開示（S-ctrl の λ = 1 の幅）と、確認の連絡の要約（規則の当て・Claude の予測）を見ている。書かれていない項目は空欄のまま。
+
 ### 7.1 ラベルの項目
 
 | # | 項目 | Claude | Issa | Fable |
 |---|---|---|---|---|
-| A1-1 | **RULE_PREDICTED** | **HOLDS .55** ／ PARTIAL .38 ／ FAILS .05 ／ INAPPLICABLE .02 | | |
-| A1-2 | wd3e-2 のラベル（97.5%） | RESCUED .28 ／ SPLIT .28 ／ COLLAPSED .22 ／ RFO .12 ／ AU .05 ／ 他 .05 | | |
-| A1-3 | wd1e-1 のラベル | RESCUED .55 ／ SPLIT .18 ／ RFO .12 ／ COLLAPSED .08 ／ AU .03 ／ 他 .04 | | |
-| A1-4 | wd1e0 のラベル | RESCUED .85 ／ SPLIT .04 ／ COLLAPSED .03 ／ RFO .03 ／ AU .02 ／ 他 .03 | | |
+| A1-1 | **RULE_PREDICTED** | **HOLDS .55** ／ PARTIAL .38 ／ FAILS .05 ／ INAPPLICABLE .02 | | HOLDS .50 ／ PARTIAL .40 ／ FAILS .10 |
+| A1-2 | wd3e-2 のラベル（97.5%） | RESCUED .28 ／ SPLIT .28 ／ COLLAPSED .22 ／ RFO .12 ／ AU .05 ／ 他 .05 | | RESCUED .30 ／ SPLIT .35 ／ COLLAPSED .35 |
+| A1-3 | wd1e-1 のラベル | RESCUED .55 ／ SPLIT .18 ／ RFO .12 ／ COLLAPSED .08 ／ AU .03 ／ 他 .04 | | RESCUED .45 ／ SPLIT .30 ／ COLLAPSED .25 |
+| A1-4 | wd1e0 のラベル | RESCUED .85 ／ SPLIT .04 ／ COLLAPSED .03 ／ RFO .03 ／ AU .02 ／ 他 .03 | | RESCUED .75（IMPAIRED_EARLY が立つ .15） |
 | A1-5 | DOSE | MONOTONE .75 ／ PEAKED .12 ／ OTHER .11 ／ FLAT .02 | | |
 | A1-6 | EQUILIBRIUM（wd1e0） | MATCH .40 ／ OFF .60（層別: MATCH .55・OFF_HIGH .35・OFF_LOW .03・UNRESOLVED .07） | | |
 | A1-7 | EQUILIBRIUM（wd1e-1） | MATCH .35 ／ OFF .65（層別: MATCH .50・OFF_HIGH .35・OFF_LOW .05・UNRESOLVED .10） | | |
 | A1-8 | EQUILIBRIUM（wd3e-2） | MATCH .30 ／ OFF .70（層別: MATCH .45・OFF_HIGH .20・OFF_LOW .20・UNRESOLVED .15） | | |
 | A1-9 | WIDTH（wd1e0） | STOPPED .80 ／ NOT_STOPPED .10 ／ FROZEN・SPLIT .10 | | |
 | A1-10 | WIDTH（wd1e-1） | STOPPED .55 ／ NOT_STOPPED .15 ／ FROZEN・SPLIT .30 | | |
-| A1-11 | DEPTH（wd1e0 ／ wd1e-1 ／ wd3e-2） | ABOVE_LINE .85 ／ .25 ／ .05（残りは AT_LINE と UNRESOLVED に 3:1） | | |
-| A2-1 | l2c1e-2 のラベル | NO_RESCUE .43 ／ PARTIAL .33 ／ RESCUED .22 ／ 他 .02 | | |
+| A1-11 | DEPTH（wd1e0 ／ wd1e-1 ／ wd3e-2） | ABOVE_LINE .85 ／ .25 ／ .05（残りは AT_LINE と UNRESOLVED に 3:1） | | ABOVE_LINE .85 ／ .25 ／ .10 |
+| A2-1 | l2c1e-2 のラベル | NO_RESCUE .43 ／ PARTIAL .33 ／ RESCUED .22 ／ 他 .02 | | NO_RESCUE .40 ／ PARTIAL .35 ／ RESCUED .25 |
 | A2-2 | l2c5e-3 のラベル | NO_RESCUE .42 ／ PARTIAL .36 ／ RESCUED .20 ／ 他 .02 | | |
-| A2-3 | **読みのラベル（l2c1e-2）** | **TARGET_MATTERS .41** ／ BOTH .37 ／ NORM_MATTERS .20 ／ 他 .02 | | |
+| A2-3 | **読みのラベル（l2c1e-2）** | **TARGET_MATTERS .41** ／ BOTH .37 ／ NORM_MATTERS .20 ／ 他 .02 | | NORM_MATTERS .35 ／ BOTH .35 ／ TARGET_MATTERS .30 |
 | A2-4 | A2 のまとめ | L2C_NO_RESCUE_RELU .38 ／ L2C_PARTIAL_RELU .33 ／ L2C_RESCUES_RELU .27 ／ 他 .02 | | |
 
 ### 7.2 二値の項目
