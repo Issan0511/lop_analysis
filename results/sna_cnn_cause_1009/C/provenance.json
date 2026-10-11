@@ -1,0 +1,180 @@
+{
+  "run_id": "sna_cnn_cause_1009",
+  "slots": [
+    [
+      "SNA+fcamp0.7",
+      10
+    ],
+    [
+      "SNA+fcamp0.7",
+      11
+    ],
+    [
+      "SNA+fcamp0.7",
+      12
+    ],
+    [
+      "SNA+fcamp0.7",
+      13
+    ],
+    [
+      "SNA+fcamp0.7",
+      14
+    ],
+    [
+      "SNA+fcamp0.7",
+      15
+    ],
+    [
+      "SNA+fcamp0.7",
+      16
+    ],
+    [
+      "SNA+fcamp0.7",
+      17
+    ],
+    [
+      "SNA+fcamp0.7",
+      18
+    ],
+    [
+      "SNA+fcamp0.7",
+      19
+    ],
+    [
+      "SNA+fcamp0.9",
+      10
+    ],
+    [
+      "SNA+fcamp0.9",
+      11
+    ],
+    [
+      "SNA+fcamp0.9",
+      12
+    ],
+    [
+      "SNA+fcamp0.9",
+      13
+    ],
+    [
+      "SNA+fcamp0.9",
+      14
+    ],
+    [
+      "SNA+fcamp0.9",
+      15
+    ],
+    [
+      "SNA+fcamp0.9",
+      16
+    ],
+    [
+      "SNA+fcamp0.9",
+      17
+    ],
+    [
+      "SNA+fcamp0.9",
+      18
+    ],
+    [
+      "SNA+fcamp0.9",
+      19
+    ]
+  ],
+  "epochs": 400,
+  "lr": 0.001,
+  "n_tasks": 30,
+  "arms": {
+    "SNA+fcamp0.7": {
+      "c": [
+        0.6,
+        0.6,
+        0.6,
+        0.6
+      ],
+      "fcamp": 0.7,
+      "site": [
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ]
+      ],
+      "frz": null,
+      "pp": false,
+      "fixconv": false,
+      "fixfc": false
+    },
+    "SNA+fcamp0.9": {
+      "c": [
+        0.6,
+        0.6,
+        0.6,
+        0.6
+      ],
+      "fcamp": 0.9,
+      "site": [
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ]
+      ],
+      "frz": null,
+      "pp": false,
+      "fixconv": false,
+      "fixfc": false
+    }
+  },
+  "host": "src/rlcifar_cnn_0908.py (init, subset, streams, net)",
+  "engine": "grouped conv / bmm bundle, one epoch per CUDA graph",
+  "gits": [
+    {
+      "git_hash": "18b05bbfa4e00d5cf20f769f77cc18ac11c67911",
+      "git_dirty_src": false
+    }
+  ],
+  "resumed": [],
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 5060 Ti",
+  "torch": "2.13.0+cu130",
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "wall_clock_s_this_process": 4320.265935897827,
+  "ckpt_tasks": [
+    1,
+    2,
+    3,
+    5,
+    10,
+    20,
+    30,
+    40,
+    50
+  ],
+  "cuda_max_mem_mb": 714.880859375
+}

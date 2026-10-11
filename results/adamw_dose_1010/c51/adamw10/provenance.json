@@ -1,0 +1,127 @@
+{
+  "run_id": "adamw_dose_1010",
+  "git_hash": "83dd883d8784c1eb29da78f0963a84bb73c00034",
+  "dirty_src_analysis": [],
+  "wd_arm": "adamw10",
+  "lam": 10.0,
+  "c_hex": "0x1.ff7cee0000000p-1",
+  "one_minus_c": 0.0009999871253967285,
+  "prereg_commit": "364d9cd1df7a40367a30aa16c52e9fcb0d8617dc",
+  "wd_rule": "after the gradient, before the host's Adam step, every tensor p.mul_(wd_c) with wd_c = fl32(1 - lr*lam) (float32 0-dim device tensor, written in place after capture); a device counter per tensor counts the decays",
+  "arm": "R",
+  "cond": "std",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "R": 10,
+  "lr": 0.0001,
+  "n_tasks": 30,
+  "steps_per_task": 780,
+  "steps_hard": 780,
+  "steps_easy": 780,
+  "batch": 32,
+  "hidden": 100,
+  "layer_shapes": [
+    [
+      100,
+      3072
+    ],
+    [
+      100,
+      100
+    ],
+    [
+      100,
+      100
+    ]
+  ],
+  "n_params": 327500,
+  "dims": [
+    3072,
+    100,
+    100,
+    100
+  ],
+  "n_classes": 100,
+  "hard_classes": 5,
+  "per_class_train": 500,
+  "classes_used": 90,
+  "task_parity": "task 1 hard, alternating (the paper's task 0 hard)",
+  "optimizer": "adam + decoupled weight decay (AdamW)",
+  "weight_decay": 10.0,
+  "data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "std": {
+    "mean": [
+      0.5071,
+      0.4865,
+      0.4409
+    ],
+    "std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "class_sha256": {
+    "0": "7487cc5ba7a5670094d2c8c701beae782530a141ef1cf31f07ab70673f992cd8",
+    "1": "a12ed45d3a05fd7fcf0927bb65417a3549f318a28ba23d85f488c9d37635e650",
+    "2": "5e27dd1c103b2617d199083c9909fea1c81078144102b53c93c491d435bd46ee",
+    "3": "c34bc8e8fdec85d19338aa1dfcada4ce48eb6e137020247e2604ec012eb0c12d",
+    "4": "04eb2beb4f183339e971eff4b55c8f4825e6795a81d5fe037fb0da1d22bc4daf",
+    "5": "1e363ce037e64574e24fb7e322b208669808dc2657deae88b47172e99a4f9f6c",
+    "6": "8c86984870465812064f4a9de9c365524adb6b167047241936f460f0b08ae79a",
+    "7": "1d1733cbd77116c196133d7c8ccde0f1d9359b22787506979b09596972a7c614",
+    "8": "3821dd6cf078d23a864be2eecdbe130453ab37fc988d2938a00da94f70503ed6",
+    "9": "c5bdda2b5323c5ec1e2cd939fd7e740f7061b367eb4a5c3d3cc9b4d91feb0845"
+  },
+  "rng_roles": [
+    "c51_classes",
+    "c51_batch",
+    "init"
+  ],
+  "fresh_control": null,
+  "fresh_self": {
+    "task": 29,
+    "n": 10,
+    "rule": "the same AdamW from the initial values, m = v = 0, update count 0"
+  },
+  "fresh_batches_sha256": "1ce981fba231d14ceefac0c0e65f4bd5667163c4a92062c8e6b00e18e45f42a9",
+  "engine": "host run() of cifar5p1_mlp_0920 copied for R/std + decoupled decay; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+  "host_module_sha256": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+  "engine_sha256": "6095f24262edd2f7684ed2738a0db7e5e02fbd01afcd24bea366ca63a96cdc48",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "threads": 2,
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 0.9790142377217611,
+  "wall_clock_s": 27.479928493499756,
+  "divergences": [],
+  "spec": "specs/spec_adamw_dose_1010.md",
+  "admission": {
+    "checks_sha256": "bcd12ea1fc1497e039e61651c5e36edb2c4868f4db41be8a058f16368b58a5b3",
+    "source_sha256": {
+      "src/adamw_dose_1010.py": "f5c6d66accb6813cdb85785af0992dfd35812a5cf9bd95b25f02cbb15165708a",
+      "src/adamw_dose_1010_c51.py": "6095f24262edd2f7684ed2738a0db7e5e02fbd01afcd24bea366ca63a96cdc48",
+      "src/adamw_dose_1010_run.py": "b08a9c1b8a3d557184ccc8830e26e732070667057a7b0931a5c7dcd6f8628add",
+      "analysis/adamw_dose_1010/checks.py": "384ed6c40992466c70748667156d2ef3343b7c52933b59a877a2d41b5c56efaa"
+    }
+  },
+  "spec_sha256": "fcaf5f3e7c1b29ec02b6dcdd608e27fe57f56a7eb6a6a099110b0030479845f9",
+  "checks_sha256": "bcd12ea1fc1497e039e61651c5e36edb2c4868f4db41be8a058f16368b58a5b3",
+  "cli_sha256": "b08a9c1b8a3d557184ccc8830e26e732070667057a7b0931a5c7dcd6f8628add",
+  "peak_rss_kb": 1832732,
+  "ru_maxrss_kb": 1832732,
+  "peak_vram_bytes": 1843421184
+}

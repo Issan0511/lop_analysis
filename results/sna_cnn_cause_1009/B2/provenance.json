@@ -1,0 +1,180 @@
+{
+  "run_id": "sna_cnn_cause_1009",
+  "slots": [
+    [
+      "F1ONLY",
+      10
+    ],
+    [
+      "F1ONLY",
+      11
+    ],
+    [
+      "F1ONLY",
+      12
+    ],
+    [
+      "F1ONLY",
+      13
+    ],
+    [
+      "F1ONLY",
+      14
+    ],
+    [
+      "F1ONLY",
+      15
+    ],
+    [
+      "F1ONLY",
+      16
+    ],
+    [
+      "F1ONLY",
+      17
+    ],
+    [
+      "F1ONLY",
+      18
+    ],
+    [
+      "F1ONLY",
+      19
+    ],
+    [
+      "F2ONLY",
+      10
+    ],
+    [
+      "F2ONLY",
+      11
+    ],
+    [
+      "F2ONLY",
+      12
+    ],
+    [
+      "F2ONLY",
+      13
+    ],
+    [
+      "F2ONLY",
+      14
+    ],
+    [
+      "F2ONLY",
+      15
+    ],
+    [
+      "F2ONLY",
+      16
+    ],
+    [
+      "F2ONLY",
+      17
+    ],
+    [
+      "F2ONLY",
+      18
+    ],
+    [
+      "F2ONLY",
+      19
+    ]
+  ],
+  "epochs": 400,
+  "lr": 0.001,
+  "n_tasks": 30,
+  "arms": {
+    "F1ONLY": {
+      "c": [
+        0.6,
+        0.6,
+        0.6,
+        3.0
+      ],
+      "site": [
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          3.0
+        ]
+      ],
+      "frz": null,
+      "pp": false,
+      "fixconv": false,
+      "fixfc": false,
+      "fcamp": 1.0
+    },
+    "F2ONLY": {
+      "c": [
+        0.6,
+        0.6,
+        3.0,
+        0.6
+      ],
+      "site": [
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          3.0
+        ],
+        [
+          "c",
+          0.6
+        ]
+      ],
+      "frz": null,
+      "pp": false,
+      "fixconv": false,
+      "fixfc": false,
+      "fcamp": 1.0
+    }
+  },
+  "host": "src/rlcifar_cnn_0908.py (init, subset, streams, net)",
+  "engine": "grouped conv / bmm bundle, one epoch per CUDA graph",
+  "gits": [
+    {
+      "git_hash": "0e10820ddc20f42952612ad8afe2fd9636c02883",
+      "git_dirty_src": false
+    }
+  ],
+  "resumed": [],
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 5060 Ti",
+  "torch": "2.13.0+cu130",
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "wall_clock_s_this_process": 3433.803289413452,
+  "ckpt_tasks": [
+    1,
+    2,
+    3,
+    5,
+    10,
+    20,
+    30,
+    40,
+    50
+  ],
+  "cuda_max_mem_mb": 714.88037109375
+}
