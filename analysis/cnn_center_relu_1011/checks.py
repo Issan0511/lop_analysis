@@ -636,16 +636,18 @@ def scenarios():
     cr_ref = synth_arm("Cr", _collapse(3))
     out.append(("A_transfer", base, cr_ref, True,
                 {"ref": "FAIL", "C": "FAIL", "H": "FAIL", "CH": "RESCUED", "N": "NEED_CH", "DOORS": "DOORS_TRANSFER",
+                 "DOORS_v1": "DOORS_TRANSFER",
                  "LAYER": "LAYER_CORRESPONDENCE", "ref_sub": "FAIL_FLOOR", "RESIDUAL": True,
                  "Cr": "CONST_SHIFT_NO_EFFECT", "EVALOFF_CH": "EVALOFF_DEPENDS", "T1_LOWER_CH": False}))
     # C alone rescues -> NEED_C, PARTIAL (the MLP order fails); Cr acts like C
     f = dict(base, C=synth_arm("C", _hold(0.96)))
     out.append(("B_C_rescues", f, synth_arm("Cr", _hold(0.96)), True,
-                {"C": "RESCUED", "N": "NEED_C", "DOORS": "DOORS_PARTIAL", "Cr": "CONST_SHIFT_ACTS_LIKE_C"}))
+                {"C": "RESCUED", "N": "NEED_C", "DOORS": "DOORS_PARTIAL", "DOORS_v1": "DOORS_PARTIAL",
+                 "Cr": "CONST_SHIFT_ACTS_LIKE_C"}))
     # CH fails -> DOORS_FAIL
     f = dict(base, CH=synth_arm("CH", _collapse(12)))
     out.append(("C_CH_fails", f, cr_ref, True, {"CH": "FAIL", "N": "NONE_RESCUED", "DOORS": "DOORS_FAIL",
-                                                 "RESIDUAL": True}))
+                                                 "DOORS_v1": "DOORS_FAIL", "RESIDUAL": True}))
     # ref survives -> NOT_REPRODUCED
     f = dict(base, ref=synth_arm("ref", _hold(0.9)))
     out.append(("D_ref_alive", f, cr_ref, True, {"ref": "RESCUED", "N": "NOT_REPRODUCED", "DOORS": "NOT_REPRODUCED",
@@ -670,21 +672,38 @@ def scenarios():
     # main window: CH high in t11-20 and low in t21-30 -> FAIL (a wider window would change it)
     f = dict(base, CH=synth_arm("CH", lambda s, t: 0.95 if t <= 20 else 0.100))
     out.append(("K_window", f, cr_ref, True, {"CH": "FAIL", "DOORS": "DOORS_FAIL"}))
-    # condition 4: C PARTIAL and above CH in its kept seeds -> CH - C TIE -> PARTIAL, not TRANSFER
+    # C PARTIAL and above CH in its kept seeds -> CH - C TIE: PARTIAL under both rules
     f = dict(base, C=synth_arm("C", lambda s, t: 0.99 if s < 16 else (0.95 if t < 3 else 0.100)))
-    out.append(("L_cond4", f, cr_ref, True, {"C": "PARTIAL", "CH": "RESCUED", "DOORS": "DOORS_PARTIAL"}))
+    out.append(("L_cond4", f, cr_ref, True, {"C": "PARTIAL", "CH": "RESCUED", "DOORS": "DOORS_PARTIAL",
+                                              "DOORS_v1": "DOORS_PARTIAL"}))
+    # the last condition alone: C FAIL, H FAIL, CH RESCUED but CH - C 8/2 (TIE) -> PARTIAL
+    cw = {10: 0.99, 11: 0.3}
+    chw = {11: 0.2}
+    f = dict(base, C=synth_arm("C", lambda s, t: 0.95 if t == 1 else cw.get(s, 0.100)),
+             CH=synth_arm("CH", lambda s, t: 0.95 if t == 1 else chw.get(s, 0.95)))
+    out.append(("L2_cond_helps", f, cr_ref, True, {"C": "FAIL", "H": "FAIL", "CH": "RESCUED", "DOORS": "DOORS_PARTIAL"}))
+    # contradictions of the v1 rule (Codex audit high 1-2): C or H rescue while CH fails, or H rescues
+    f = dict(base, C=synth_arm("C", _hold(0.96)), CH=synth_arm("CH", _collapse(12)))
+    out.append(("P_C_rescues_CH_fails", f, cr_ref, True, {"N": "NEED_C", "DOORS": "DOORS_PARTIAL", "DOORS_v1": "DOORS_FAIL"}))
+    f = dict(base, H=synth_arm("H", _hold(0.96)), CH=synth_arm("CH", _collapse(12)))
+    out.append(("Q_H_rescues_CH_fails", f, cr_ref, True, {"N": "NEED_H", "DOORS": "DOORS_PARTIAL", "DOORS_v1": "DOORS_FAIL"}))
     # ladder order: C and H both rescue -> NEED_C
     f = dict(base, C=synth_arm("C", _hold(0.96)), H=synth_arm("H", _hold(0.96)))
     out.append(("M_ladder", f, cr_ref, True, {"N": "NEED_C"}))
     # H alone rescues, C fails -> NEED_H, TRANSFER, H differs from the MLP; no layer correspondence
     f = dict(base, H=synth_arm("H", _hold(0.96)))
-    out.append(("N_H_rescues", f, cr_ref, True, {"H": "RESCUED", "N": "NEED_H", "DOORS": "DOORS_TRANSFER",
-                                                  "M_H": "H_DIFFERS_FROM_MLP", "LAYER": "LAYER_CORRESPONDENCE_NOT_SHOWN"}))
+    out.append(("N_H_rescues", f, cr_ref, True, {"H": "RESCUED", "N": "NEED_H", "DOORS": "DOORS_PARTIAL",
+                                                  "DOORS_v1": "DOORS_TRANSFER", "M_H": "H_DIFFERS_FROM_MLP",
+                                                  "LAYER": "LAYER_CORRESPONDENCE_NOT_SHOWN"}))
     # no separating window -> CR_UNINFORMATIVE; evaloff no dependence; T1_LOWER on CH; no residual loss
     f = dict(base, C=synth_arm("C", _collapse(3), mob_C),
              CH=synth_arm("CH", lambda s, t: 0.90 if t <= 1 else 0.96, memo_m0=1.0))
-    out.append(("O_misc", f, cr_ref, True, {"Cr": "CR_UNINFORMATIVE", "EVALOFF_CH": "EVALOFF_NO_DEPENDENCE",
+    out.append(("O_misc", f, cr_ref, True, {"Cr": "CR_UNINFORMATIVE", "EVALOFF_CH": "EVALOFF_NO_DETECTED_DEPENDENCE",
                                              "T1_LOWER_CH": True, "RESIDUAL": False}))
+    # Cr that did not finish validly (diverged flag, windows finite) -> INAPPLICABLE, not a label
+    bad_cr = synth_arm("Cr", _collapse(3))
+    bad_cr["diverged"] = True
+    out.append(("R_Cr_invalid", base, bad_cr, True, {"Cr": "INAPPLICABLE"}))
     return out
 
 
@@ -694,7 +713,8 @@ def ck_verdict(V) -> dict:
     for name, frames, crf, checks_ok, exp in scenarios():
         res = V.analyze_frames(frames, checks_ok, 30000, cr_frame=crf, c_door_ok=True)
         got = {"ref": res["arms"]["ref"]["label"], "C": res["arms"]["C"]["label"], "H": res["arms"]["H"]["label"],
-               "CH": res["arms"]["CH"]["label"], "N": res["N"], "DOORS": res["DOORS"], "LAYER": res["LAYER"]["label"],
+               "CH": res["arms"]["CH"]["label"], "N": res["N"], "DOORS": res["DOORS"], "DOORS_v1": res["DOORS_v1"],
+               "LAYER": res["LAYER"]["label"],
                "ref_sub": res["arms"]["ref"].get("fail_subtype"), "RESIDUAL": res["flags"]["RESIDUAL_LOSS_CH"]["set"],
                "Cr": res["Cr"]["label"], "EVALOFF_CH": res["EVALOFF"]["CH"]["label"],
                "T1_LOWER_CH": res["flags"]["T1_LOWER"]["CH"]["set"], "M_H": res["M_H"]["vs_MLP"]}
@@ -705,8 +725,129 @@ def ck_verdict(V) -> dict:
     k_ok = [V.kstar(n) for n in (8, 9, 10)] == [8, 8, 9]
     st = V.sign_test([1.0] * 9 + [-1.0])
     s_ok = st["label"] == "HELPS" and abs(st["p"] - 0.021484375) < 1e-15
+    # every combination of arm labels x D_H|C x C learns t1 x conditions (3^4 x 3 x 2 x 2 = 972)
+    import itertools
+    inv = []
+    n_comb = 0
+    for labs in itertools.product(("RESCUED", "PARTIAL", "FAIL"), repeat=4):
+        lab = dict(zip(("ref", "C", "H", "CH"), labs))
+        for dhc, ct1, cond in itertools.product(("HELPS", "TIE", "HURTS"), (True, False), (True, False)):
+            n_comb += 1
+            d, nn = V.doors_summary(lab, dhc, ct1, cond), V.ladder(lab, cond, lab["ref"] == "FAIL")
+            if d == "DOORS_TRANSFER" and not (nn == "NEED_CH" and lab["C"] == lab["H"] == "FAIL"):
+                inv.append(("TRANSFER needs C, H FAIL and NEED_CH", lab, dhc, ct1, cond, nn))
+            if d == "DOORS_FAIL" and not (nn == "NONE_RESCUED" and lab["C"] == lab["H"] == lab["CH"] == "FAIL"):
+                inv.append(("FAIL needs every door arm FAIL", lab, dhc, ct1, cond, nn))
+            if nn in ("NEED_C", "NEED_H") and d in ("DOORS_TRANSFER", "DOORS_FAIL"):
+                inv.append(("a single door rescues but the summary is TRANSFER/FAIL", lab, dhc, ct1, cond, d))
+            if not cond and d != "INAPPLICABLE":
+                inv.append(("conditions fail but not INAPPLICABLE", lab, d))
+            if cond and lab["ref"] != "FAIL" and d != "NOT_REPRODUCED":
+                inv.append(("ref alive but not NOT_REPRODUCED", lab, d))
+    # the tables: wrong arm, foreign seed, duplicated / missing task, non-finite value -> problems
+    good = synth_arm("CH", _hold(0.95))
+    corrupt = {}
+    x = good.copy(); x.loc[x.index[0], "arm"] = "C"; corrupt["wrong_arm"] = x
+    x = pd.concat([good, good[good.seed == 10].assign(seed=20)]); corrupt["foreign_seed"] = x
+    x = pd.concat([good, good.iloc[[5]]]); corrupt["duplicate_task"] = x
+    x = good.drop(good.index[7]); corrupt["missing_task"] = x
+    x = good.copy(); x.loc[x.index[3], "online_acc"] = float("nan"); corrupt["nan_online"] = x
+    val_ok = not V.validate_frame(good, "CH", range(10, 20)) and all(
+        V.validate_frame(v, "CH", range(10, 20)) for v in corrupt.values())
+    val_detail = {k: bool(V.validate_frame(v, "CH", range(10, 20))) for k, v in corrupt.items()}
+    tf_ok = math.isnan(V.t_f({1: 0.1, **{t: 0.1 for t in range(2, 31)}})) and \
+        V.t_f({1: 0.9, **{t: (0.9 if t < 4 else 0.2) for t in range(2, 31)}}) == 4
     return {"n_expectations": n, "failed": fails[:12], "kstar_8_9_10": k_ok, "sign_test_9_1": s_ok,
-            "pass": not fails and k_ok and s_ok}
+            "n_combinations": n_comb, "invariant_violations": [str(v) for v in inv[:6]], "table_validation": val_detail,
+            "t_f_undefined_and_value": tf_ok,
+            "pass": not fails and k_ok and s_ok and n_comb == 972 and not inv and val_ok and tf_ok}
+
+
+# --------------------------------------------------------------------------
+# K-mech (report-only tables) and K-gate (provenance gate)
+# --------------------------------------------------------------------------
+
+def ck_mech(V) -> dict:
+    """The mu-path split and the path table on a real-format run (K-resume's CH, seeds 10-11, 2 tasks,
+    checkpoints t1 t2), against an independent recomputation."""
+    src = SCR / "resume_A"
+    if not (src / "units.npz").exists():
+        return {"reason": "K-resume output missing", "pass": False}
+    base = SCR / "mech_base"
+    shutil.rmtree(base, ignore_errors=True)
+    shutil.copytree(src, base / "CH")
+    V.OUT, V.BACKUP = base, base / "none"
+    tw = V.three_way_table(arms=("CH",), tasks=(1, 2))
+    mech = V.mechanism_tables(arms=("CH",))
+    u = np.load(src / "units.npz")
+    worst, n = 0.0, 0
+    for t in (1, 2):
+        for li, l in enumerate(LAYERS):
+            own, up, cross = [], [], []
+            for si, seed in enumerate((10, 11)):
+                P0 = CN.init_params(seed, torch.device("cpu"))
+                Pt = torch.load(src / "ckpt" / f"CH_seed{seed}_t{t:02d}.pt", map_location="cpu", weights_only=False)["P"]
+                W0 = P0[2 * li].detach().double().reshape(P0[2 * li].shape[0], -1)
+                Wt = Pt[2 * li].double().reshape(Pt[2 * li].shape[0], -1)
+                m0 = torch.from_numpy(u[f"m_in_{l}"][0, si]).double()
+                mt = torch.from_numpy(u[f"m_in_{l}"][t, si]).double()
+                own.append(np.median(((Wt - W0) @ m0).numpy()))
+                up.append(np.median((W0 @ (mt - m0)).numpy()))
+                cross.append(np.median(((Wt - W0) @ (mt - m0)).numpy()))
+            r = tw[(tw.layer == l) & (tw.t == t)].iloc[0]
+            for k, v in (("own_med", own), ("up_med", up), ("cross_med", cross)):
+                worst = max(worst, abs(float(r[k]) - float(np.median(v))))
+                n += 1
+            for t_from in (0, 1):
+                if t <= t_from:
+                    continue
+                q = mech["path"][(mech["path"].layer == l) & (mech["path"]["from"] == t_from) & (mech["path"].t == t)].iloc[0]
+                dz = u[f"zbar_{l}"][t] - u[f"zbar_{l}"][t_from]
+                dw = u[f"wm_{l}"][t] - u[f"wm_{l}"][t_from]
+                worst = max(worst, abs(q.dz_med - float(np.median(np.median(dz, 1)))),
+                            abs(q.dwm_med - float(np.median(np.median(dw, 1)))))
+                n += 2
+    ident = float(tw.identity_res.max())
+    return {"n_compared": n, "max_abs_diff": worst, "identity_res_max": ident,
+            "pass": n == 48 and worst <= 1e-12 and ident <= 1e-9}
+
+
+def ck_gate(V) -> dict:
+    """provenance_gate accepts the registered configuration and rejects each kind of mismatch."""
+    head_chk = subprocess.run(["git", "-C", str(REPO), "rev-parse", "0a5c0873"], capture_output=True, text=True).stdout.strip()
+    no_engine = subprocess.run(["git", "-C", str(REPO), "rev-parse", "fdb97c2b"], capture_output=True, text=True).stdout.strip()
+
+    def make(name, edit=None):
+        base = SCR / "gate" / name
+        shutil.rmtree(base, ignore_errors=True)
+        base.mkdir(parents=True)
+        (base / "checks.json").write_text(json.dumps({"all_pass": True, "K-center": {"pass": True},
+                                                      "_meta": {"git_hash": head_chk, "git_dirty_code": False}}))
+        for a in ("ref", "C", "H", "CH", "Cr"):
+            seeds = [10] if a == "Cr" else list(range(10, 20))
+            pv = {"arm": a, "slots": [[a, s] for s in seeds], "n_tasks": 30, "epochs": 400, "lr": 0.001,
+                  "beta_h": 0.01, "data_sha256": {"cifar-10-python.tar.gz": "6d95"},
+                  "gits": [{"git_hash": head_chk, "git_dirty_code": False}]}
+            if edit:
+                pv = edit(a, pv)
+            (base / a).mkdir()
+            (base / a / "provenance.json").write_text(json.dumps(pv))
+        return base
+
+    def ch_only(f):
+        return lambda a, pv: f(pv) if a == "CH" else pv
+
+    cases = {
+        "clean": (make("clean"), True),
+        "epochs_399": (make("epochs", ch_only(lambda pv: {**pv, "epochs": 399})), False),
+        "other_engine": (make("engine", ch_only(lambda pv: {**pv, "gits": [{"git_hash": no_engine, "git_dirty_code": False}]})), False),
+        "dirty_run": (make("dirty", ch_only(lambda pv: {**pv, "gits": [{"git_hash": head_chk, "git_dirty_code": True}]})), False),
+        "wrong_slots": (make("slots", ch_only(lambda pv: {**pv, "slots": [["CH", s] for s in range(11, 21)]})), False),
+        "other_data": (make("data", ch_only(lambda pv: {**pv, "data_sha256": {"x": "y"}})), False),
+    }
+    res = {k: V.provenance_gate(b)["ok"] for k, (b, want) in cases.items()}
+    ok = all(res[k] == want for k, (b, want) in cases.items())
+    return {**{f"gate_ok_{k}": v for k, v in res.items()}, "pass": ok}
 
 
 # --------------------------------------------------------------------------
@@ -837,7 +978,20 @@ CHECKS = {
         ("0.5 の線を > に", [('"kept": W >= KEEP_LINE', '"kept": W > KEEP_LINE')]),
         ("床の √10 を √30 に", [("mf.std(ddof=1) / math.sqrt(len(mf))", "mf.std(ddof=1) / math.sqrt(30)")]),
         ("主窓の課題範囲", [("WINDOW = (21, 30)", "WINDOW = (11, 30)")]),
-        ("TRANSFER の条件 4 を落とす", [('            and d_h_given_c == "HELPS"):', "            and True):")]),
+        ("TRANSFER の最後の条件（CH−C HELPS）を落とす",
+         [('labels["H"] == "FAIL" and c_learned_t1\n            and d_h_given_c == "HELPS"):',
+           'labels["H"] == "FAIL" and c_learned_t1\n            and True):')]),
+        ("TRANSFER が H を見ない", [('labels["C"] == "FAIL" and labels["H"] == "FAIL" and c_learned_t1',
+                                    'labels["C"] == "FAIL" and c_learned_t1')]),
+        ("FAIL が C・H を見ない", [('    if all(labels[a] == "FAIL" for a in ("C", "H", "CH")):',
+                                    '    if labels["CH"] == "FAIL":')]),
+        ("Cr の valid を見ない", [('ok = CR_SEED in cst.index and bool(cst.loc[CR_SEED, "valid"]) and',
+                                  'ok = CR_SEED in cst.index and')]),
+        ("seed 集合の検査を落とす", [("    if set(int(x) for x in df.seed) != set(seeds):", "    if False:")]),
+        ("重複 task の検査を落とす", [("        if t != list(range(1, N_TASKS + 1)):", "        if len(set(t)) != N_TASKS:")]),
+        ("EVALOFF の TIE を「依存なし」と呼ぶ", [('"EVALOFF_NO_DETECTED_DEPENDENCE"', '"EVALOFF_NO_DEPENDENCE"')]),
+        ("A(1) ≤ 0.1 の T_f を 1 にする", [('    if not np.isfinite(a1) or a1 - CHANCE <= 0:\n        return float("nan")',
+                                           '    if not np.isfinite(a1) or a1 - CHANCE <= 0:\n        return 1')]),
         ("梯子の順序", [('for arm, name in (("C", "NEED_C"), ("H", "NEED_H"), ("CH", "NEED_CH")):',
                          'for arm, name in (("H", "NEED_H"), ("C", "NEED_C"), ("CH", "NEED_CH")):')]),
         ("LAYER の c1 の判定", [('h_c1 = int(sum("c1" in s.split(",") for s in vH.first_layers if s))',
@@ -845,6 +999,14 @@ CHECKS = {
         ("(C) の死んだ層の免除を落とす", [("mask = ~((df[col] == steps_per_task) | (df[dcol] == 1.0))",
                                          "mask = ~(df[col] == steps_per_task)")]),
     ], "合成データの期待値（設計から）", VERDICT),
+    "K-mech": ("報告のみの表（µ 経路の自分・上流・交差、起点 t0・t1 の分解）が独立の再計算と一致", ck_mech, [
+        ("自分と上流の取り違え", [("own, ups, cross = dW @ m0, W0 @ dm, dW @ dm", "own, ups, cross = W0 @ dm, dW @ m0, dW @ dm")]),
+        ("起点 t1 の分解が t0 から引く", [("wm[t] - wm[t_from]", "wm[t] - wm[0]")]),
+    ], "float64 の同じ量（1e-12）・恒等式の残差 1e-9", VERDICT),
+    "K-gate": ("provenance の関門: 登録どおりなら通し、epochs・エンジン・汚れ・slots・データの食い違いを落とす", ck_gate, [
+        ("エンジンの sha256 を照合しない", [("    if chk_sha is None or shas != {chk_sha}:", "    if False:")]),
+        ("汚れた木からの走を通す", [("            if g.get(\"git_dirty_code\"):", "            if False:")]),
+    ], "合成の provenance の期待値（設計から）", VERDICT),
     "K-cost": ("CH の束（R=10）の 1 epoch の秒数（単独と主 4 腕の同時）と GPU メモリの峰（seed 100–109、精度は読まない）",
                ck_cost, [], "—", ENGINE),
 }

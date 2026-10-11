@@ -88,11 +88,12 @@ def window_mean(g: pd.DataFrame, col: str, w) -> float:
     return float(s.mean()) if len(s) == w[1] - w[0] + 1 else float("nan")
 
 
-def t_f(online: dict) -> int:
-    """First task t >= 2 with fit ratio (A(t) - 0.1)/(A(1) - 0.1) < 1/2; 31 when never."""
+def t_f(online: dict) -> float:
+    """First task t >= 2 with fit ratio (A(t) - 0.1)/(A(1) - 0.1) < 1/2; 31 when never; NaN (undefined)
+    when A(1) <= 0.1 (the fit ratio has no positive denominator)."""
     a1 = online.get(1, float("nan"))
     if not np.isfinite(a1) or a1 - CHANCE <= 0:
-        return 1
+        return float("nan")
     for t in range(2, N_TASKS + 1):
         if (online[t] - CHANCE) / (a1 - CHANCE) < TF_RATIO:
             return t
@@ -202,7 +203,8 @@ def ladder(labels: dict, cond_ok: bool, ref_fail: bool) -> str:
     return "NONE_RESCUED"
 
 
-def doors_summary(labels: dict, d_h_given_c: str, c_learned_t1: bool, cond_ok: bool) -> str:
+def doors_summary_v1(labels: dict, d_h_given_c: str, c_learned_t1: bool, cond_ok: bool) -> str:
+    """The summary as registered at fdb97c2b (spec §5.6); reported and scored against L6 only."""
     if not cond_ok:
         return "INAPPLICABLE"
     if labels["ref"] != "FAIL":
@@ -210,6 +212,21 @@ def doors_summary(labels: dict, d_h_given_c: str, c_learned_t1: bool, cond_ok: b
     if labels["CH"] == "FAIL":
         return "DOORS_FAIL"
     if (labels["CH"] == "RESCUED" and labels["C"] != "RESCUED" and c_learned_t1
+            and d_h_given_c == "HELPS"):
+        return "DOORS_TRANSFER"
+    return "DOORS_PARTIAL"
+
+
+def doors_summary(labels: dict, d_h_given_c: str, c_learned_t1: bool, cond_ok: bool) -> str:
+    """Main summary (spec §13): TRANSFER = the MLP's ladder exactly (ref, C and H FAIL, C learns task 1,
+    CH RESCUED, CH - C HELPS); FAIL = every door arm FAIL; anything else PARTIAL."""
+    if not cond_ok:
+        return "INAPPLICABLE"
+    if labels["ref"] != "FAIL":
+        return "NOT_REPRODUCED"
+    if all(labels[a] == "FAIL" for a in ("C", "H", "CH")):
+        return "DOORS_FAIL"
+    if (labels["CH"] == "RESCUED" and labels["C"] == "FAIL" and labels["H"] == "FAIL" and c_learned_t1
             and d_h_given_c == "HELPS"):
         return "DOORS_TRANSFER"
     return "DOORS_PARTIAL"
@@ -258,7 +275,7 @@ def cr_label(cr: pd.Series | None, st_ref: pd.DataFrame, st_C: pd.DataFrame) -> 
 def evaloff(st: pd.DataFrame) -> dict:
     v = st[st.valid]
     t = sign_test(v.memo_t30 - v.memo_m0_t30)
-    return {**t, "label": "EVALOFF_DEPENDS" if t["label"] == "HELPS" else "EVALOFF_NO_DEPENDENCE", "sign_label": t["label"],
+    return {**t, "label": "EVALOFF_DEPENDS" if t["label"] == "HELPS" else "EVALOFF_NO_DETECTED_DEPENDENCE", "sign_label": t["label"],
             "memo_t30_median": float(v.memo_t30.median()), "memo_m0_t30_median": float(v.memo_m0_t30.median())}
 
 
@@ -292,6 +309,7 @@ def analyze_frames(frames: dict, checks_ok: bool, steps_per_task: int, cr_frame=
         "C_learned_t1": c_learned,
         "N": ladder(labels, cond_ok, ref_fail),
         "DOORS": doors_summary(labels, signs["D_H|C"]["label"], c_learned, cond_ok),
+        "DOORS_v1": doors_summary_v1(labels, signs["D_H|C"]["label"], c_learned, cond_ok),
         "M_H": {"label": labels["H"],
                 "vs_MLP": {"FAIL": "H_LIKE_MLP", "RESCUED": "H_DIFFERS_FROM_MLP",
                            "PARTIAL": "H_PARTIAL"}.get(labels["H"], labels["H"])},
@@ -310,7 +328,11 @@ def analyze_frames(frames: dict, checks_ok: bool, steps_per_task: int, cr_frame=
     }
     if cr_frame is not None:
         cst = seed_table(cr_frame)
-        res["Cr"] = cr_label(cst.loc[CR_SEED] if CR_SEED in cst.index else None, st["ref"], st["C"])
+        ok = CR_SEED in cst.index and bool(cst.loc[CR_SEED, "valid"]) and \
+            all(np.isfinite(cst.loc[CR_SEED, f"W{w[0]}_{w[1]}"]) for w in CR_WINDOWS)
+        res["Cr"] = cr_label(cst.loc[CR_SEED] if ok else None, st["ref"], st["C"])
+        if not ok:
+            res["Cr"]["reason"] = "Cr seed 10 missing, incomplete or not finite"
     else:
         res["Cr"] = cr_label(None, st["ref"], st["C"])
     res["_seed_tables"] = st
@@ -405,8 +427,8 @@ def three_way_table(arms=MAIN_ARMS, tasks=(1, 3, 10, 30)) -> pd.DataFrame:
                     own, ups, cross = dW @ m0, W0 @ dm, dW @ dm
                     total = Wt @ mt - W0 @ m0
                     rows.append({"arm": a, "seed": seed, "t": t, "layer": l,
-                                 "own_med": float(own.median()), "up_med": float(ups.median()),
-                                 "cross_med": float(cross.median()), "dwm_med": float(total.median()),
+                                 "own_med": float(np.median(own.numpy())), "up_med": float(np.median(ups.numpy())),
+                                 "cross_med": float(np.median(cross.numpy())), "dwm_med": float(np.median(total.numpy())),
                                  "identity_res": float((own + ups + cross - total).abs().max())})
     d = pd.DataFrame(rows)
     if not len(d):
@@ -443,7 +465,8 @@ PRED_LABELS = {
     "L3": ("H", {"FAIL": .40, "PARTIAL": .30, "RESCUED": .28, "OTHER": .02}),
     "L4": ("CH", {"RESCUED": .64, "PARTIAL": .20, "FAIL": .14, "OTHER": .02}),
     "L5": ("N", {"NEED_CH": .36, "NONE_RESCUED": .30, "NEED_H": .24, "NEED_C": .08, "OTHER": .02}),
-    "L6": ("DOORS", {"DOORS_TRANSFER": .50, "DOORS_PARTIAL": .30, "DOORS_FAIL": .13, "OTHER": .07}),
+    "L6": ("DOORS_v1", {"DOORS_TRANSFER": .50, "DOORS_PARTIAL": .30, "DOORS_FAIL": .13, "OTHER": .07}),
+    "L6b": ("DOORS", {"DOORS_TRANSFER": .19, "DOORS_PARTIAL": .64, "DOORS_FAIL": .10, "OTHER": .07}),
     "L7": ("LAYER", {"LAYER_CORRESPONDENCE": .30, "LAYER_CORRESPONDENCE_NOT_SHOWN": .65, "NOT_REPRODUCED": .05}),
     "L8": ("Cr", {"CR_UNINFORMATIVE": .50, "CONST_SHIFT_NO_EFFECT": .30, "CR_UNRESOLVED": .10,
                   "CONST_SHIFT_ACTS_LIKE_C": .10}),
@@ -454,8 +477,21 @@ PRED_LABELS_FABLE = {
     "L3": ("H", {"FAIL": .45, "PARTIAL": .30, "RESCUED": .25}),
     "L4": ("CH", {"RESCUED": .60, "PARTIAL": .25, "FAIL": .15}),
     "L5": ("N", {"NEED_CH": .40, "NONE_RESCUED": .30, "NEED_H": .20, "OTHER": .10}),
-    "L6": ("DOORS", {"DOORS_TRANSFER": .45, "DOORS_PARTIAL": .35, "DOORS_FAIL": .12, "NOT_REPRODUCED": .08}),
+    "L6": ("DOORS_v1", {"DOORS_TRANSFER": .45, "DOORS_PARTIAL": .35, "DOORS_FAIL": .12, "NOT_REPRODUCED": .08}),
     "L7": ("LAYER", {"LAYER_CORRESPONDENCE": .30, "OTHER": .70}),
+}
+# Codex (independent audit, specs/review_codex_cnn_center_relu_1011.md §8, fixed before reading spec §7)
+PRED_LABELS_CODEX = {
+    "L1": ("ref", {"FAIL": .97, "PARTIAL": .01, "RESCUED": .00, "OTHER": .02}),
+    "L2": ("C", {"FAIL": .72, "PARTIAL": .20, "RESCUED": .06, "OTHER": .02}),
+    "L3": ("H", {"FAIL": .28, "PARTIAL": .25, "RESCUED": .45, "OTHER": .02}),
+    "L4": ("CH", {"FAIL": .11, "PARTIAL": .17, "RESCUED": .70, "OTHER": .02}),
+    "L5": ("N", {"NEED_C": .06, "NEED_H": .40, "NEED_CH": .32, "NONE_RESCUED": .18, "OTHER": .04}),
+    "L6": ("DOORS_v1", {"DOORS_TRANSFER": .55, "DOORS_PARTIAL": .30, "DOORS_FAIL": .11, "NOT_REPRODUCED": .02,
+                        "INAPPLICABLE": .02}),
+    "L7": ("LAYER", {"LAYER_CORRESPONDENCE": .40, "LAYER_CORRESPONDENCE_NOT_SHOWN": .56, "NOT_REPRODUCED": .04}),
+    "L8": ("Cr", {"CR_UNINFORMATIVE": .55, "CONST_SHIFT_NO_EFFECT": .15, "CONST_SHIFT_ACTS_LIKE_C": .05,
+                  "CR_UNRESOLVED": .23, "OTHER": .02}),
 }
 PRED_BINARY = {"B1": .60, "B2": .55, "B3": .25, "B4": .50, "B5": .50, "B6": .70, "B7": .35, "B8": .12,
                "B9": .90, "B10": .75, "B11": .45, "B12": .80}
@@ -477,7 +513,7 @@ PRED_TEXT = {
 
 def realised(res: dict) -> dict:
     lab = {"ref": res["arms"]["ref"]["label"], "C": res["arms"]["C"]["label"], "H": res["arms"]["H"]["label"],
-           "CH": res["arms"]["CH"]["label"], "N": res["N"], "DOORS": res["DOORS"],
+           "CH": res["arms"]["CH"]["label"], "N": res["N"], "DOORS": res["DOORS"], "DOORS_v1": res["DOORS_v1"],
            "LAYER": res["LAYER"]["label"], "Cr": res["Cr"]["label"]}
     return lab
 
@@ -499,7 +535,8 @@ def score_labels(res: dict, table: dict) -> dict:
 
 def score(res: dict, mech: dict | None, leaky: dict) -> dict:
     lab = realised(res)
-    out = {"labels": {}, "binary": {}, "labels_fable": score_labels(res, PRED_LABELS_FABLE)}
+    out = {"labels": {}, "binary": {}, "labels_fable": score_labels(res, PRED_LABELS_FABLE),
+           "labels_codex": score_labels(res, PRED_LABELS_CODEX)}
     for key, (item, probs) in PRED_LABELS.items():
         r = lab[item]
         bucket = r if r in probs else "OTHER"
@@ -513,7 +550,7 @@ def score(res: dict, mech: dict | None, leaky: dict) -> dict:
     truth: dict[str, bool | None] = {}
     truth["B1"] = (res["arms"]["ref"].get("fail_subtype") == "FAIL_FLOOR") if lab["ref"] == "FAIL" else None
     vr = st["ref"][st["ref"].valid]
-    truth["B2"] = int(sum("c2" in s.split(",") for s in vr.first_layers if s)) >= (kstar(len(vr)) or 99)
+    truth["B2"] = (int(sum("c2" in s.split(",") for s in vr.first_layers if s)) >= 9) if len(vr) == 10 else None
     truth["B3"] = res["timing_T_f"]["C"]["vs_ref"]["label"] == "LATER"
     vh = st["H"][st["H"].valid]
     truth["B4"] = float(vh.mob_t30_c1.median()) < 0.01
@@ -547,10 +584,100 @@ def score(res: dict, mech: dict | None, leaky: dict) -> dict:
 # io
 # --------------------------------------------------------------------------
 
+REQUIRED = ("online_acc", "memo_acc", "major_frac") + tuple(f"{q}_{l}" for q in ("mob", "dead_frac") for l in LAYERS)
+REQUIRED_H = tuple(f"h_upd_{l}" for l in LAYERS) + ("memo_acc_m0",)
+
+
+def validate_frame(df: pd.DataFrame, arm: str, seeds) -> list[str]:
+    """Problems that make the table not the registered box (empty list = valid)."""
+    bad = []
+    if "arm" not in df or set(df.arm.astype(str)) != {arm}:
+        bad.append(f"{arm}: arm column {sorted(set(df.arm.astype(str))) if 'arm' in df else 'missing'}")
+    if set(int(x) for x in df.seed) != set(seeds):
+        bad.append(f"{arm}: seeds {sorted(set(int(x) for x in df.seed))} != {list(seeds)}")
+    for seed, g in df.groupby("seed"):
+        t = sorted(int(x) for x in g.task)
+        if t != list(range(1, N_TASKS + 1)):
+            bad.append(f"{arm}: seed {seed} tasks not exactly 1..{N_TASKS} once (n={len(t)})")
+    need = REQUIRED + (REQUIRED_H if arm in H_ARMS else ())
+    miss = [c for c in need if c not in df]
+    if miss:
+        bad.append(f"{arm}: missing columns {miss}")
+    else:
+        nonfinite = [c for c in need if not np.isfinite(df[c].to_numpy(float)).all()]
+        if nonfinite:
+            bad.append(f"{arm}: non-finite values in {nonfinite}")
+    return bad
+
+
 def load_frames(base: Path = OUT) -> tuple[dict, pd.DataFrame | None]:
     frames = {a: pd.read_csv(base / a / "per_task.csv") for a in MAIN_ARMS}
     crp = base / "Cr" / "per_task.csv"
     return frames, (pd.read_csv(crp) if crp.exists() else None)
+
+
+def engine_sha_at(commit: str) -> str | None:
+    import hashlib
+    import subprocess
+    r = subprocess.run(["git", "-C", str(REPO), "show", f"{commit}:src/cnn_center_relu_1011.py"],
+                       capture_output=True)
+    return hashlib.sha256(r.stdout).hexdigest() if r.returncode == 0 else None
+
+
+EXPECTED = {"n_tasks": N_TASKS, "epochs": 400, "lr": 0.001, "beta_h": 0.01}
+
+
+def provenance_gate(base: Path = OUT) -> dict:
+    """Every arm's provenance.json is the registered configuration, from a clean tree, with the engine
+    that the checks ran on (the same sha256 at the checks commit and at every run commit)."""
+    bad = []
+    c = json.loads((base / "checks.json").read_text()) if (base / "checks.json").exists() else {}
+    if not c.get("all_pass"):
+        bad.append("checks.json missing or not all_pass")
+    chk_commit = c.get("_meta", {}).get("git_hash")
+    chk_sha = engine_sha_at(chk_commit) if chk_commit else None
+    if c.get("_meta", {}).get("git_dirty_code"):
+        bad.append("checks ran on a dirty tree")
+    shas, data = set(), set()
+    for a in MAIN_ARMS + ("Cr",):
+        pp = base / a / "provenance.json"
+        if not pp.exists():
+            if a != "Cr":
+                bad.append(f"{a}: provenance.json missing")
+            continue
+        pv = json.loads(pp.read_text())
+        seeds = [CR_SEED] if a == "Cr" else list(SEEDS)
+        if pv.get("arm") != a or pv.get("slots") != [[a, s] for s in seeds]:
+            bad.append(f"{a}: provenance arm/slots {pv.get('arm')} {pv.get('slots')}")
+        for k, v in EXPECTED.items():
+            if pv.get(k) != v:
+                bad.append(f"{a}: provenance {k} = {pv.get(k)} != {v}")
+        for g in pv.get("gits", []):
+            if g.get("git_dirty_code"):
+                bad.append(f"{a}: run from a dirty tree ({g.get('git_hash')})")
+            shas.add(engine_sha_at(g.get("git_hash")))
+        data.add(json.dumps(pv.get("data_sha256"), sort_keys=True))
+    if chk_sha is None or shas != {chk_sha}:
+        bad.append(f"engine sha256 of runs {sorted(str(x)[:12] for x in shas)} != checks {str(chk_sha)[:12]}")
+    if len(data) != 1:
+        bad.append("data sha256 differs between arms")
+    return {"ok": not bad, "problems": bad, "engine_sha256": chk_sha}
+
+
+def c_door_from_runs() -> dict:
+    """(C) for C and CH from the runs themselves: the t0 mean input patch of c1 is < 0.1 x ref's, per seed."""
+    out = {}
+    pr = find_units("ref")
+    if pr is None:
+        return {"ok": None, "reason": "units.npz of ref not found"}
+    raw = np.linalg.norm(np.load(pr)["m_in_c1"][0], axis=1)
+    for a in ("C", "CH"):
+        pa = find_units(a)
+        if pa is None:
+            return {"ok": None, "reason": f"units.npz of {a} not found"}
+        cen = np.linalg.norm(np.load(pa)["m_in_c1"][0], axis=1)
+        out[a] = {"ratio_max": float((cen / raw).max()), "ok": bool((cen < 0.1 * raw).all())}
+    return {"ok": all(v["ok"] for v in out.values()), **out}
 
 
 def steps_per_task(base: Path = OUT) -> int:
@@ -595,7 +722,8 @@ def write_report(res: dict, mech: dict, leaky: dict, sc: dict, base: Path = OUT)
                  f"{r.get('kept')}/{r.get('n_valid')} | {r.get('at_floor')}/{r.get('n_valid')} | {fmt(r.get('t1_median'))} | "
                  f"{fmt(r.get('drop_median'))} | {fmt(res['timing_T_f'][a]['median'], 1)} |")
     L += ["", "## 登録判定", ""]
-    L.append(f"- **DOORS** = `{res['DOORS']}`（C が課題 1 を学ぶ: {res['C_learned_t1']}）")
+    L.append(f"- **DOORS** = `{res['DOORS']}`（spec §13 の主判定。C が課題 1 を学ぶ: {res['C_learned_t1']}）。"
+             f"登録時の規則（fdb97c2b、§5.6）では `{res['DOORS_v1']}`")
     L.append(f"- **N** = `{res['N']}`")
     L.append(f"- **M_H** = `{res['M_H']['label']}`（{res['M_H']['vs_MLP']}）")
     lay = res["LAYER"]
@@ -613,7 +741,12 @@ def write_report(res: dict, mech: dict, leaky: dict, sc: dict, base: Path = OUT)
     L.append(f"- Cr（seed {CR_SEED}）: `{cr['label']}` — 分ける窓 {cr.get('separating_windows')}, 側 {cr.get('sides')}, Cr の値 "
              + ", ".join(f"{k} {fmt(v)}" for k, v in cr.get("Cr", {}).items()))
     c = res["conditions"]
-    L.append(f"- 適用条件: (A) 検査 all_pass {c['A_checks_all_pass']}・有効 seed {c['n_valid']}、(B) ref FAIL {c['B_ref_fail']}、"
+    if "provenance_gate" in c:
+        L.append(f"- 入力と provenance の検査: 表の問題 {c.get('validation_problems') or 'なし'}、"
+                 f"provenance {('OK' if c['provenance_gate']['ok'] else c['provenance_gate']['problems'])}、"
+                 f"エンジンの sha256 {str(c['provenance_gate'].get('engine_sha256'))[:12]}…、"
+                 f"走から見た C の扉 {c.get('C_door_from_runs')}")
+    L.append(f"- 適用条件: (A) 検査 all_pass ∧ 入力と provenance の検査 {c['A_checks_all_pass']}・有効 seed {c['n_valid']}、(B) ref FAIL {c['B_ref_fail']}、"
              f"(C) H の扉 {{{', '.join(f'{a}: {v['ok']}' for a, v in c['C_h_door'].items())}}}・C の扉の検査 {c['C_c_door_check']}")
     L += ["", "## T_f（網の機能の低下、適合率 < 1/2）と ref との符号検定（報告のみ）", ""]
     for a in MAIN_ARMS:
@@ -650,6 +783,10 @@ def write_report(res: dict, mech: dict, leaky: dict, sc: dict, base: Path = OUT)
           "|---|---|---|---|---|---|---|"]
     for k, v in sc["labels_fable"].items():
         L.append(f"| {k} | {v['item']} | {v['realised']} | {v['p_realised']:.2f} | {v['mode']} | {'○' if v['mode_hit'] else '✗'} | {v['brier']:.3f} |")
+    L += ["", "### Codex（監査 §8、spec §7 を読む前に固定）", "", "| # | 項目 | 実現 | p(実現) | 最頻 | 的中 | Brier |",
+          "|---|---|---|---|---|---|---|"]
+    for k, v in sc["labels_codex"].items():
+        L.append(f"| {k} | {v['item']} | {v['realised']} | {v['p_realised']:.2f} | {v['mode']} | {'○' if v['mode_hit'] else '✗'} | {v['brier']:.3f} |")
     L += ["", "### 二値（Claude）", "", "| # | 主張 | p | 真偽 | Brier |", "|---|---|---|---|---|"]
     for k, v in sc["binary"].items():
         truth = "—" if v["true"] is None else ("○" if v["true"] else "✗")
@@ -660,8 +797,21 @@ def write_report(res: dict, mech: dict, leaky: dict, sc: dict, base: Path = OUT)
 
 def main() -> None:
     frames, crf = load_frames()
+    problems = [x for a in MAIN_ARMS for x in validate_frame(frames[a], a, SEEDS)]
+    if crf is not None:
+        cr_bad = validate_frame(crf, "Cr", (CR_SEED,))
+        if cr_bad:
+            problems += cr_bad
+            crf = None
+    gate = provenance_gate()
     checks_ok, c_ok = checks_state()
-    res = analyze_frames(frames, checks_ok, steps_per_task(), cr_frame=crf, c_door_ok=c_ok)
+    cdoor = c_door_from_runs()
+    c_ok = c_ok and cdoor.get("ok") is not False
+    res = analyze_frames(frames, checks_ok and gate["ok"] and not problems, steps_per_task(), cr_frame=crf,
+                         c_door_ok=c_ok)
+    res["conditions"]["validation_problems"] = problems
+    res["conditions"]["provenance_gate"] = gate
+    res["conditions"]["C_door_from_runs"] = cdoor
     mech = mechanism_tables()
     mech["three_way"] = three_way_table()
     leaky = leaky_reference()

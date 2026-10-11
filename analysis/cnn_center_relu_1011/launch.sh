@@ -35,8 +35,8 @@ for it in "${QUEUE[@]}"; do
     run=$(n_alive)
     free=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits | head -1)
     avail=$(( $(awk '/MemAvailable/ {print $2}' /proc/meminfo) / 1024 ))
-    gpu_room=$(( free - 2048 - M_PROC * 125 / 100 ))
-    ram_room=$(( avail - 6144 - RSS_LOAD - RSS * 120 / 100 ))
+    gpu_room=$(( free - 2048 - (M_PROC * 125 + 99) / 100 ))          # safety factors rounded up
+    ram_room=$(( avail - 6144 - RSS_LOAD - (RSS * 120 + 99) / 100 ))
     if [ "$run" -lt "$MAX_CONC" ] && [ "$gpu_room" -ge 0 ] && [ "$ram_room" -ge 0 ]; then break; fi
     sleep 60
   done
