@@ -328,18 +328,28 @@ CH の束（R = 10）の 1 プロセスは、定常の VmRSS が 2,345 MiB、読
 
 監査: `specs/review_codex_cnn_center_relu_1011.md`（Codex、判定「直してから」、high 2・medium 4・low 2）。指摘ごとの扱い:
 
-### 13.1 要約 DOORS の定義（high 1・2）— 主判定を差し替え、登録時の規則も残す
+### 13.1 要約 DOORS の定義（high 1・2）— 主判定を親の定義に差し替え、登録時の規則も残す
 
-§5.6 の規則（登録 `fdb97c2b`）は、あり得るラベルの組で日本語の意味と矛盾した: H 単独が RESCUED（N = `NEED_H`）でも `DOORS_TRANSFER` になり、C か H が RESCUED で CH だけ FAIL でも `DOORS_FAIL` になる。主判定を次に替える（`verdict.py` の `doors_summary`）。
+§5.6 の規則（登録 `fdb97c2b`）は、あり得るラベルの組で日本語の意味と矛盾した: H 単独が RESCUED（N = `NEED_H`）でも `DOORS_TRANSFER` になり、C か H が RESCUED で CH だけ FAIL でも `DOORS_FAIL` になる。親（Fable）の go（14:45）の定義で主判定を替える（`verdict.py` の `doors_summary`）。
 
-- **`DOORS_TRANSFER`**（MLP と同じ並びそのもの）: ref が FAIL ∧ **C が FAIL**（課題 1 は学ぶ: 課題 1 の online ≥ 0.5 が k* 本以上）∧ **H が FAIL** ∧ CH が RESCUED ∧ D_{H|C}（CH − C）が `HELPS`。MLP の表 2 は ref・C・H がすべて 0/10（FAIL）で CH が 10/10 だった。監査の最小の修正は「H が FAIL を足す」だったが、同じ理由（PARTIAL は MLP と同じ並びではない）で C も「RESCUED でない」から「FAIL」に揃えた。
-- **`DOORS_FAIL`**: C・H・CH が**すべて** FAIL（中心化のどの形も崩壊を防がない）。
-- **`DOORS_PARTIAL`**: それ以外（どれかの扉が救うか部分的に効くが、MLP の並びではない。どの腕が救ったかは N と腕のラベルで読む）。
+- **`DOORS_TRANSFER`**（MLP と同じ並び）: ref が FAIL ∧ C が RESCUED でない（課題 1 は学ぶ: 課題 1 の online ≥ 0.5 が k* 本以上）∧ CH が RESCUED ∧ D_{H|C}（CH − C）が `HELPS` ∧ **H が RESCUED でない**（したがって N = `NEED_CH`）。
+- **`DOORS_TRANSFER_H_SUFFICES`**: 上の条件のうち H だけが RESCUED（N = `NEED_H`）。CH は救うが、MLP と違って中間層の中心化だけで足りる。
+- **`DOORS_FAIL`**: C・H・CH が**すべて** FAIL。
+- **`DOORS_PARTIAL`**: それ以外（例: CH だけ FAIL で C か H が RESCUED、CH が PARTIAL、CH − C が `HELPS` でない、C が RESCUED）。
 - `NOT_REPRODUCED`・`INAPPLICABLE` は変えない。
 
-登録時の規則は `DOORS_v1` として同じ verdict に出し、§7.1 の L6（Claude・Fable・Codex の確率）は `DOORS_v1` に対して採点する。新しい主判定には L6b を足す（Claude、14:40、本走の前）: **DOORS_TRANSFER .19 ／ DOORS_PARTIAL .64 ／ DOORS_FAIL .10 ／ 他 .07**（L1〜L4 の確率から: TRANSFER は C・H・CH の同時の条件で、H が FAIL の確率 .40 が効く）。Fable・Codex の L6b は、本走の前に受け取れば記入する。
+（13:40〜14:40 の私の下書きは C と H に「FAIL」を求める厳しい形だったが、親の定義「RESCUED でない」に合わせた。下書きは commit `3e03e431` にあり、本走の前に置き換えた。）
 
-§5.12 の読みも直す: `DOORS_TRANSFER` だけが「MLP と同じ並びが CNN でも出た」。CH が RESCUED なら、`DOORS_PARTIAL` でも「入力と中間層の中心化（CH）は崩壊を防ぐ」は言え、並びの違い（例: H だけで足りる = `NEED_H`）を併記する。`DOORS_FAIL` のときだけ「この形の中心化は ReLU の CNN の崩壊を防がない」と書く。
+登録時の規則は **`DOORS_v1`** として同じ verdict に出し、§7.1 の L6 の確率（Claude・Fable・Codex）は `DOORS_v1` に対して採点する（L6_v1）。新しい主判定の確率を、結果の前に次のとおり登録する（L6）:
+
+| 項目 | Claude（14:50、自分で再計算） | Fable（14:45、親から受け取った値） | Codex（監査 §8 の L6 をそのまま転記） |
+|---|---|---|---|
+| L6（新しい DOORS） | TRANSFER .29 ／ TRANSFER_H_SUFFICES .21 ／ PARTIAL .33 ／ FAIL .10 ／ 他 .07 | TRANSFER .40 ／ PARTIAL .40 ／ FAIL .10 ／ NOT_REPRODUCED .08 ／ その他 .02 | TRANSFER .55 ／ PARTIAL .30 ／ FAIL .11 ／ NOT_REPRODUCED .02 ／ INAPPLICABLE .02 |
+
+- Claude の再計算: P(CH RESCUED) .64 のうち H も RESCUED の分 ≈ .27（H が救えば CH もほぼ救う）、残り .37 に C が RESCUED でない .90・ref が FAIL .95・CH − C が HELPS .93・C が課題 1 を学ぶ .98 を掛けて TRANSFER ≈ .29、H も救う分に同じ係数で H_SUFFICES ≈ .21、FAIL は C・H・CH がすべて FAIL ≈ .10、他（NOT_REPRODUCED・INAPPLICABLE）.07、残り PARTIAL .33。
+- Codex の値は、旧定義に対して書かれ、かつ `verdict.py` に写した Claude・Fable の確率を見た後に書かれた（監査の開示）。親の指示で、新しい定義にもそのまま転記した。`TRANSFER_H_SUFFICES` には確率を置いていない（0 として採点）。
+
+§5.12 の読みも直す: `DOORS_TRANSFER` は「MLP と同じ並びが CNN でも出た」。`DOORS_TRANSFER_H_SUFFICES` は「CH は救い、並びは H 単独で足りる点だけ MLP と違う」。CH が RESCUED なら、`DOORS_PARTIAL` でも「CH（CNN 用の C と H）は崩壊を防ぐ」は言え、崩れた条件を併記する。`DOORS_FAIL` のときだけ「この形の中心化は ReLU の CNN の崩壊を防がない」と書く。
 
 ### 13.2 入力と provenance の関門（medium）
 
@@ -354,14 +364,14 @@ CH の束（R = 10）の 1 プロセスは、定常の VmRSS が 2,345 MiB、読
 - EVALOFF（medium）: `EVALOFF_NO_DEPENDENCE` を **`EVALOFF_NO_DETECTED_DEPENDENCE`** に改名する。`EVALOFF_DEPENDS` は「t30 の memo の関数が評価時の m に依存する」で、m が訓練の中で救命を生んだという因果の証拠ではない。
 - µ 経路の内訳（medium）: §4 の自分・上流・交差の分解を `verdict.py` の `three_way_table` で出す（報告のみ）。K-mech が実際の形式の走（K-resume の CH、2 課題）で独立の再計算と 1e−12 で一致し、恒等式の残差 4e−16、変異 2/2 を検出することを確かめた。H の腕では m が t0 で 0、課題 1 に立ち上がるので、起点 t1 の分解も並べる（報告のみ。登録の B10・B11・B12 は起点 t0 のまま採点）。
 - B2（low）: 登録どおり「9 本以上」で採点し、有効な seed が 10 本でなければ未採点にする。
-- T_f: A(1) ≤ 0.1 の seed は適合率の分母が正でないので、T_f を未定義（NaN）にする（以前の実装は 1 を返していた）。
+- T_f（§4 の定義「q(t) < 1/2 になる最初の t ≥ 2」と実装を揃える）: 実装は t = 2 から探す。A(1) ≤ 0.1 の seed は適合率の分母が正でないので、T_f を未定義（NaN）にする（以前の実装は 1 を返し、定義の「t ≥ 2」と食い違っていた）。
 - 言葉（medium・low）: C は「その seed の 1,200 枚の特徴ごとの平均」を引く MLP の C の厳密な移植ではなく、`cnn_center_1010` の「訓練集合の色のチャネル平均」を引く CNN 用の C。H は MLP の H（特徴ごと）を CNN の畳み込みの対称性に合わせて**チャネル平均にした版**で、位置ごとの厳密な移植ではない（f1 の入力に位置ごとの DC が残る）。結果の主張は「CNN 用の C・H」に限る。§3.1 の「∂a/∂z = 1[z>0]」は、正確には「m の減算は微分を変えない。訓練の実装（`torch.clamp`）の微分は z > 0 と z = 0 で 1、z < 0 で 0。診断のゲートは z > 0」。
 - `launch.sh` の安全係数の整数の丸めを切り上げにした（1.25 × 1,170 → 1,463 MiB）。
 
 ### 13.4 検査
 
-K-verdict に、監査の矛盾 3 例（H が救って CH も救う／C が救って CH は落ちる／H が救って CH は落ちる）、全 972 の組合せ（腕のラベル 3⁴ × D_{H|C} 3 × C が課題 1 を学ぶか 2 × 適用条件 2）での不変条件（TRANSFER ⇒ C・H が FAIL で N = `NEED_CH`、FAIL ⇒ 全扉の腕が FAIL で N = `NONE_RESCUED`、単独の扉が救えば TRANSFER でも FAIL でもない、ほか）、表の関門（腕名の取り違え・seed 20 の混入・課題の重複・欠落・NaN）、T_f の未定義を足した。K-mech（µ 経路の表）と K-gate（provenance の関門: 登録どおりは通し、epoch・エンジン・汚れ・slots・データの食い違いを落とす）を足した。変異は新しく 10 本（TRANSFER が H を見ない・FAIL が C と H を見ない・Cr の valid を見ない・seed 集合と重複の検査を落とす・EVALOFF の名前・T_f・µ 経路の取り違え 2・エンジンの照合と汚れの検査を落とす）。全部の検査は、修正を commit した後、本走の直前に起動 commit の上でもう一度回す。
+K-verdict に、監査の矛盾 3 例（H が救って CH も救う／C が救って CH は落ちる／H が救って CH は落ちる）、全 972 の組合せ（腕のラベル 3⁴ × D_{H|C} 3 × C が課題 1 を学ぶか 2 × 適用条件 2）での不変条件（TRANSFER ⇒ C・H が FAIL で N = `NEED_CH`、FAIL ⇒ 全扉の腕が FAIL で N = `NONE_RESCUED`、単独の扉が救えば TRANSFER でも FAIL でもない、ほか）、表の関門（腕名の取り違え・seed 20 の混入・課題の重複・欠落・NaN）、T_f の未定義を足した。K-mech（µ 経路の表）と K-gate（provenance の関門: 登録どおりは通し、epoch・エンジン・汚れ・slots・データの食い違いを落とす）を足した。変異を新しく足した（TRANSFER が H を見ない・TRANSFER の C を FAIL に厳しくする・TRANSFER の CH − C HELPS を落とす・FAIL が C と H を見ない・Cr の valid を見ない・seed 集合と重複の検査を落とす・EVALOFF の名前・T_f・µ 経路の取り違え 2・エンジンの照合と汚れの検査を落とす）。新しい定義に合わせて合成の場面も足した（C が PARTIAL で CH − C が HELPS なら TRANSFER、H が RESCUED で CH が PARTIAL なら PARTIAL、H が救えば TRANSFER_H_SUFFICES）。全部の検査は、修正を commit した後、本走の直前に起動 commit の上でもう一度回す。
 
 ### 13.5 見たもの（開示）
 
-報告の表のコードを試すため、K-loop・K-resume の検査の出力（H と CH、seed 10–11、2 課題 × 2 epoch）から µ 経路の表と層の表を出して見た（例: H の c1 の相対位置が −0.42 → −1.84、c2 の入力の平均のノルムが m の立ち上がりで 3.4 → 1.2〜1.8）。1 課題 30,000 更新の 0.5% の長さの走で、扉の腕の精度は見ていない。§7 の Claude の予測（L1〜L8・B1〜B12）は登録 commit のまま変えていない。L6b はこの追補で初めて置く。
+報告の表のコードを試すため、K-loop・K-resume の検査の出力（H と CH、seed 10–11、2 課題 × 2 epoch）から µ 経路の表と層の表を出して見た（例: H の c1 の相対位置が −0.42 → −1.84、c2 の入力の平均のノルムが m の立ち上がりで 3.4 → 1.2〜1.8）。1 課題 30,000 更新の 0.5% の長さの走で、扉の腕の精度は見ていない。§7 の Claude の予測（L1〜L8・B1〜B12）は登録 commit のまま変えていない（L6 は旧定義 `DOORS_v1` の予測として残す）。新しい定義の L6 はこの追補で初めて置く。

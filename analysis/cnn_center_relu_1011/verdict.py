@@ -218,17 +218,19 @@ def doors_summary_v1(labels: dict, d_h_given_c: str, c_learned_t1: bool, cond_ok
 
 
 def doors_summary(labels: dict, d_h_given_c: str, c_learned_t1: bool, cond_ok: bool) -> str:
-    """Main summary (spec §13): TRANSFER = the MLP's ladder exactly (ref, C and H FAIL, C learns task 1,
-    CH RESCUED, CH - C HELPS); FAIL = every door arm FAIL; anything else PARTIAL."""
+    """Main summary (spec §13, the parent's definition after the Codex audit).
+    TRANSFER = the MLP's order: ref FAIL, C not RESCUED (learns task 1), CH RESCUED, CH - C HELPS and
+    H not RESCUED (N = NEED_CH).  The same with H RESCUED is TRANSFER_H_SUFFICES.  FAIL = C, H and CH
+    all FAIL.  Anything else PARTIAL."""
     if not cond_ok:
         return "INAPPLICABLE"
     if labels["ref"] != "FAIL":
         return "NOT_REPRODUCED"
     if all(labels[a] == "FAIL" for a in ("C", "H", "CH")):
         return "DOORS_FAIL"
-    if (labels["CH"] == "RESCUED" and labels["C"] == "FAIL" and labels["H"] == "FAIL" and c_learned_t1
-            and d_h_given_c == "HELPS"):
-        return "DOORS_TRANSFER"
+    ladder_ok = labels["CH"] == "RESCUED" and labels["C"] != "RESCUED" and c_learned_t1 and d_h_given_c == "HELPS"
+    if ladder_ok:
+        return "DOORS_TRANSFER" if labels["H"] != "RESCUED" else "DOORS_TRANSFER_H_SUFFICES"
     return "DOORS_PARTIAL"
 
 
@@ -465,8 +467,9 @@ PRED_LABELS = {
     "L3": ("H", {"FAIL": .40, "PARTIAL": .30, "RESCUED": .28, "OTHER": .02}),
     "L4": ("CH", {"RESCUED": .64, "PARTIAL": .20, "FAIL": .14, "OTHER": .02}),
     "L5": ("N", {"NEED_CH": .36, "NONE_RESCUED": .30, "NEED_H": .24, "NEED_C": .08, "OTHER": .02}),
-    "L6": ("DOORS_v1", {"DOORS_TRANSFER": .50, "DOORS_PARTIAL": .30, "DOORS_FAIL": .13, "OTHER": .07}),
-    "L6b": ("DOORS", {"DOORS_TRANSFER": .19, "DOORS_PARTIAL": .64, "DOORS_FAIL": .10, "OTHER": .07}),
+    "L6_v1": ("DOORS_v1", {"DOORS_TRANSFER": .50, "DOORS_PARTIAL": .30, "DOORS_FAIL": .13, "OTHER": .07}),
+    "L6": ("DOORS", {"DOORS_TRANSFER": .29, "DOORS_TRANSFER_H_SUFFICES": .21, "DOORS_PARTIAL": .33,
+                     "DOORS_FAIL": .10, "OTHER": .07}),
     "L7": ("LAYER", {"LAYER_CORRESPONDENCE": .30, "LAYER_CORRESPONDENCE_NOT_SHOWN": .65, "NOT_REPRODUCED": .05}),
     "L8": ("Cr", {"CR_UNINFORMATIVE": .50, "CONST_SHIFT_NO_EFFECT": .30, "CR_UNRESOLVED": .10,
                   "CONST_SHIFT_ACTS_LIKE_C": .10}),
@@ -477,7 +480,9 @@ PRED_LABELS_FABLE = {
     "L3": ("H", {"FAIL": .45, "PARTIAL": .30, "RESCUED": .25}),
     "L4": ("CH", {"RESCUED": .60, "PARTIAL": .25, "FAIL": .15}),
     "L5": ("N", {"NEED_CH": .40, "NONE_RESCUED": .30, "NEED_H": .20, "OTHER": .10}),
-    "L6": ("DOORS_v1", {"DOORS_TRANSFER": .45, "DOORS_PARTIAL": .35, "DOORS_FAIL": .12, "NOT_REPRODUCED": .08}),
+    "L6_v1": ("DOORS_v1", {"DOORS_TRANSFER": .45, "DOORS_PARTIAL": .35, "DOORS_FAIL": .12, "NOT_REPRODUCED": .08}),
+    "L6": ("DOORS", {"DOORS_TRANSFER": .40, "DOORS_PARTIAL": .40, "DOORS_FAIL": .10, "NOT_REPRODUCED": .08,
+                     "OTHER": .02}),
     "L7": ("LAYER", {"LAYER_CORRESPONDENCE": .30, "OTHER": .70}),
 }
 # Codex (independent audit, specs/review_codex_cnn_center_relu_1011.md §8, fixed before reading spec §7)
@@ -487,8 +492,12 @@ PRED_LABELS_CODEX = {
     "L3": ("H", {"FAIL": .28, "PARTIAL": .25, "RESCUED": .45, "OTHER": .02}),
     "L4": ("CH", {"FAIL": .11, "PARTIAL": .17, "RESCUED": .70, "OTHER": .02}),
     "L5": ("N", {"NEED_C": .06, "NEED_H": .40, "NEED_CH": .32, "NONE_RESCUED": .18, "OTHER": .04}),
-    "L6": ("DOORS_v1", {"DOORS_TRANSFER": .55, "DOORS_PARTIAL": .30, "DOORS_FAIL": .11, "NOT_REPRODUCED": .02,
-                        "INAPPLICABLE": .02}),
+    "L6_v1": ("DOORS_v1", {"DOORS_TRANSFER": .55, "DOORS_PARTIAL": .30, "DOORS_FAIL": .11, "NOT_REPRODUCED": .02,
+                           "INAPPLICABLE": .02}),
+    # the same numbers for the new definition, transcribed as the parent asked (written by Codex after
+    # it had seen Claude's probabilities in verdict.py; no probability for TRANSFER_H_SUFFICES)
+    "L6": ("DOORS", {"DOORS_TRANSFER": .55, "DOORS_PARTIAL": .30, "DOORS_FAIL": .11, "NOT_REPRODUCED": .02,
+                     "INAPPLICABLE": .02}),
     "L7": ("LAYER", {"LAYER_CORRESPONDENCE": .40, "LAYER_CORRESPONDENCE_NOT_SHOWN": .56, "NOT_REPRODUCED": .04}),
     "L8": ("Cr", {"CR_UNINFORMATIVE": .55, "CONST_SHIFT_NO_EFFECT": .15, "CONST_SHIFT_ACTS_LIKE_C": .05,
                   "CR_UNRESOLVED": .23, "OTHER": .02}),

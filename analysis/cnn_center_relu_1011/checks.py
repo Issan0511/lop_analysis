@@ -692,7 +692,7 @@ def scenarios():
     out.append(("M_ladder", f, cr_ref, True, {"N": "NEED_C"}))
     # H alone rescues, C fails -> NEED_H, TRANSFER, H differs from the MLP; no layer correspondence
     f = dict(base, H=synth_arm("H", _hold(0.96)))
-    out.append(("N_H_rescues", f, cr_ref, True, {"H": "RESCUED", "N": "NEED_H", "DOORS": "DOORS_PARTIAL",
+    out.append(("N_H_rescues", f, cr_ref, True, {"H": "RESCUED", "N": "NEED_H", "DOORS": "DOORS_TRANSFER_H_SUFFICES",
                                                   "DOORS_v1": "DOORS_TRANSFER", "M_H": "H_DIFFERS_FROM_MLP",
                                                   "LAYER": "LAYER_CORRESPONDENCE_NOT_SHOWN"}))
     # no separating window -> CR_UNINFORMATIVE; evaloff no dependence; T1_LOWER on CH; no residual loss
@@ -700,6 +700,12 @@ def scenarios():
              CH=synth_arm("CH", lambda s, t: 0.90 if t <= 1 else 0.96, memo_m0=1.0))
     out.append(("O_misc", f, cr_ref, True, {"Cr": "CR_UNINFORMATIVE", "EVALOFF_CH": "EVALOFF_NO_DETECTED_DEPENDENCE",
                                              "T1_LOWER_CH": True, "RESIDUAL": False}))
+    # C PARTIAL (3 seeds kept, below CH in every seed): not RESCUED, CH - C HELPS -> TRANSFER
+    f = dict(base, C=synth_arm("C", lambda s, t: 0.95 if t == 1 else (0.6 if s < 13 else 0.100)))
+    out.append(("S_C_partial_transfer", f, cr_ref, True, {"C": "PARTIAL", "DOORS": "DOORS_TRANSFER", "N": "NEED_CH"}))
+    # H RESCUED but CH only PARTIAL -> PARTIAL (not H_SUFFICES)
+    f = dict(base, H=synth_arm("H", _hold(0.96)), CH=synth_arm("CH", lambda s, t: 0.95 if s < 15 else 0.100))
+    out.append(("T_H_rescues_CH_partial", f, cr_ref, True, {"CH": "PARTIAL", "N": "NEED_H", "DOORS": "DOORS_PARTIAL"}))
     # Cr that did not finish validly (diverged flag, windows finite) -> INAPPLICABLE, not a label
     bad_cr = synth_arm("Cr", _collapse(3))
     bad_cr["diverged"] = True
@@ -734,12 +740,16 @@ def ck_verdict(V) -> dict:
         for dhc, ct1, cond in itertools.product(("HELPS", "TIE", "HURTS"), (True, False), (True, False)):
             n_comb += 1
             d, nn = V.doors_summary(lab, dhc, ct1, cond), V.ladder(lab, cond, lab["ref"] == "FAIL")
-            if d == "DOORS_TRANSFER" and not (nn == "NEED_CH" and lab["C"] == lab["H"] == "FAIL"):
-                inv.append(("TRANSFER needs C, H FAIL and NEED_CH", lab, dhc, ct1, cond, nn))
+            if d == "DOORS_TRANSFER" and not (nn == "NEED_CH" and lab["CH"] == "RESCUED" and dhc == "HELPS" and ct1):
+                inv.append(("TRANSFER needs NEED_CH, CH RESCUED, HELPS, C learns t1", lab, dhc, ct1, cond, nn))
+            if d == "DOORS_TRANSFER_H_SUFFICES" and not (nn == "NEED_H" and lab["CH"] == "RESCUED" and dhc == "HELPS"):
+                inv.append(("H_SUFFICES needs NEED_H, CH RESCUED, HELPS", lab, dhc, ct1, cond, nn))
             if d == "DOORS_FAIL" and not (nn == "NONE_RESCUED" and lab["C"] == lab["H"] == lab["CH"] == "FAIL"):
                 inv.append(("FAIL needs every door arm FAIL", lab, dhc, ct1, cond, nn))
-            if nn in ("NEED_C", "NEED_H") and d in ("DOORS_TRANSFER", "DOORS_FAIL"):
-                inv.append(("a single door rescues but the summary is TRANSFER/FAIL", lab, dhc, ct1, cond, d))
+            if nn == "NEED_C" and d != "DOORS_PARTIAL":
+                inv.append(("C alone rescues but the summary is not PARTIAL", lab, dhc, ct1, cond, d))
+            if nn == "NEED_H" and d not in ("DOORS_PARTIAL", "DOORS_TRANSFER_H_SUFFICES"):
+                inv.append(("H alone rescues but the summary is TRANSFER/FAIL", lab, dhc, ct1, cond, d))
             if not cond and d != "INAPPLICABLE":
                 inv.append(("conditions fail but not INAPPLICABLE", lab, d))
             if cond and lab["ref"] != "FAIL" and d != "NOT_REPRODUCED":
@@ -978,11 +988,11 @@ CHECKS = {
         ("0.5 の線を > に", [('"kept": W >= KEEP_LINE', '"kept": W > KEEP_LINE')]),
         ("床の √10 を √30 に", [("mf.std(ddof=1) / math.sqrt(len(mf))", "mf.std(ddof=1) / math.sqrt(30)")]),
         ("主窓の課題範囲", [("WINDOW = (21, 30)", "WINDOW = (11, 30)")]),
-        ("TRANSFER の最後の条件（CH−C HELPS）を落とす",
-         [('labels["H"] == "FAIL" and c_learned_t1\n            and d_h_given_c == "HELPS"):',
-           'labels["H"] == "FAIL" and c_learned_t1\n            and True):')]),
-        ("TRANSFER が H を見ない", [('labels["C"] == "FAIL" and labels["H"] == "FAIL" and c_learned_t1',
-                                    'labels["C"] == "FAIL" and c_learned_t1')]),
+        ("TRANSFER の CH−C HELPS を落とす", [('and c_learned_t1 and d_h_given_c == "HELPS"', 'and c_learned_t1')]),
+        ("TRANSFER が H を見ない", [('return "DOORS_TRANSFER" if labels["H"] != "RESCUED" else "DOORS_TRANSFER_H_SUFFICES"',
+                                    'return "DOORS_TRANSFER"')]),
+        ("TRANSFER の C を FAIL に厳しくする", [('ladder_ok = labels["CH"] == "RESCUED" and labels["C"] != "RESCUED"',
+                                              'ladder_ok = labels["CH"] == "RESCUED" and labels["C"] == "FAIL"')]),
         ("FAIL が C・H を見ない", [('    if all(labels[a] == "FAIL" for a in ("C", "H", "CH")):',
                                     '    if labels["CH"] == "FAIL":')]),
         ("Cr の valid を見ない", [('ok = CR_SEED in cst.index and bool(cst.loc[CR_SEED, "valid"]) and',
