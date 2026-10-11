@@ -309,7 +309,7 @@ Fable の列は親の依頼文の値をそのまま写した（2026-10-11、H′
 | L3 | FEATURE_DOOR | SUFFICES .45 ／ PARTIAL .32 ／ NOT_A_DOOR .20 ／ 他 .03 |
 | L4 | T_f: CHf 対 CH | LATER .70 ／ NO_TIMING_DIFF .23 ／ EARLIER .07 |
 
-Codex は監査で `verdict.py` を読んでおり、そこには Claude と Fable の確率（`PRED_LABELS`）が書かれていたので、視界に入った可能性がある（監査の本文は「§7 を読む前に固定、読後に変えた行なし」）。L5〜L8・二値は記入なし。`verdict.py` の `PRED_LABELS_CODEX` に写し、Claude・Fable と同じ規則で採点する。
+**Codex の値は、Claude と Fable の予測が `verdict.py`（`PRED_LABELS`）経由で視界に入った後の記入である**（親が監査のログで確認した事実。監査の本文の「§7 を読む前に固定」は spec §7 を開く前という意味で、`verdict.py` の確率は先に見ている）。L5〜L8・二値は記入なし。`verdict.py` の `PRED_LABELS_CODEX` に写し、Claude・Fable と同じ規則で採点する。
 
 ### 13.6 時刻の訂正（§11・§12 の見出しの時刻は書いたときの見積もりで、git の記録と合わない。中身は変えていない）
 
@@ -322,3 +322,9 @@ Codex は監査で `verdict.py` を読んでおり、そこには Claude と Fab
 ### 13.7 検査の回し直し
 
 この追補の commit の上で、エンジンに触れない検査を全部回し直す（K-reuse と K-cost を除く 18 項目。K-reuse・K-cost の対象の `src/` は `d8696db9` から不変で、その値を使う。provenance の関門は検査の commit と走の commit のエンジン 2 ファイルの sha256 を比べる）。結果は次の commit で `checks.json` に入る。
+
+### 13.8 親の go と、検査の回し直しの結果（追補 3 の続き）
+
+- 親の go（18:2x ごろ受け取った。commit `701d696e` 18:1x の後）: 監査の 3 点を直し、verdict 系の検査を回し直してから台帳に登録して起動する。Codex の列は「Claude と Fable の予測が verdict.py 経由で視界に入った後の記入」と事実として注記する（§13.5 を直した）。順番は CHf・Hf → Hs → CHs のまま。
+- K-verdict に「Hf・CHf の units.npz が無い → C の扉が fail-closed → CHf と FEATURE_DOOR が INAPPLICABLE」の場面と、変異「fail-open に戻す」を足した（K-gate と両方で検出する）。
+- `701d696e` の上で K-reuse・K-cost を除く 18 項目が all_pass（K-gate の変異 8/8、K-verdict 11/11）。この commit の上で K-verdict・K-gate・K-mech を回し直し、結果を `checks.json` に入れる。

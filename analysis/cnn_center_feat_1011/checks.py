@@ -962,6 +962,13 @@ def ck_verdict(V) -> dict:
             n += 1
             if got[k] != v:
                 fails.append(f"{name}:{k} expected {v} got {got[k]}")
+    # units.npz of Hf / CHf missing -> the C door fails closed -> CHf and FEATURE_DOOR INAPPLICABLE (audit 1)
+    frames0, ctrl0 = scenarios()[0][1], scenarios()[0][2]
+    r_miss = V.analyze_frames(frames0, True, ctrl0,
+                              c_door_ok=V.c_door_ok_from({"ok": None, "reason": "units.npz of Hf or CHf not found"}))
+    n += 2
+    if r_miss["arms"]["CHf"]["label"] != "INAPPLICABLE" or r_miss["FEATURE_DOOR"] != "INAPPLICABLE":
+        fails.append(f"units_missing: CHf {r_miss['arms']['CHf']['label']} FEATURE_DOOR {r_miss['FEATURE_DOOR']}")
     k_ok = [V.kstar(n_) for n_ in (8, 9, 10)] == [8, 8, 9]
     st = V.sign_test([1.0] * 9 + [-1.0])
     s_ok = st["label"] == "HELPS" and abs(st["p"] - 0.021484375) < 1e-15
@@ -1302,7 +1309,8 @@ CHECKS = {
                                     '    return {**t, "label": {"HELPS": "EARLIER", "HURTS": "LATER"}.get(t["label"], "NO_TIMING_DIFF")}')]),
         ("seed 集合の検査を落とす", [("    if set(int(x) for x in df.seed) != set(seeds):", "    if False:")]),
         ("対比（CH が FAIL）を見ない", [('    contrast_ok = labels["ref"] == "FAIL" and labels["CH"] == "FAIL"', '    contrast_ok = labels["ref"] == "FAIL"')]),
-    ], "合成データの期待値（設計から）", VERDICT),
+        ("C の扉の実走確認が units 欠損で通る（fail-open）", [('    return cdoor.get("ok") is True', '    return cdoor.get("ok") is not False')]),
+    ], "合成データの期待値（設計から）。units 欠損の場面は監査 1", VERDICT),
     "K-mech": ("報告の表（µ 経路の自分・上流・交差、起点 t0・t1、位置ごとの DC）が独立の再計算と一致（K-resume の CHf）", ck_mech, [
         ("自分と上流の取り違え", [("own, ups, cross = dW @ m0, W0 @ dm, dW @ dm", "own, ups, cross = W0 @ dm, dW @ m0, dW @ dm")]),
         ("起点 t1 の分解が t0 から引く", [("wm[t] - wm[t_from]", "wm[t] - wm[0]")]),

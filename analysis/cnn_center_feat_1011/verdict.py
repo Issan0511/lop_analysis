@@ -522,7 +522,8 @@ PRED_LABELS_FABLE = {
     "L3": ("FEATURE_DOOR", {"FEATURE_CENTERING_SUFFICES": .45, "FEATURE_CENTERING_PARTIAL": .25,
                             "CENTERING_NOT_A_DOOR_IN_CNN": .30}),
 }
-# Codex: transcribed after the audit (spec §7.2)
+# Codex (audit §7, specs/review_codex_cnn_center_feat_1011.md): written AFTER Claude's and Fable's
+# probabilities had been in view through this file's PRED_LABELS (confirmed from the audit log, spec §13.5)
 PRED_LABELS_CODEX = {
     "L1": ("CHf", {"RESCUED": .45, "PARTIAL": .28, "FAIL": .24, "OTHER": .03}),
     "L2": ("Hf", {"RESCUED": .15, "PARTIAL": .25, "FAIL": .57, "OTHER": .03}),
