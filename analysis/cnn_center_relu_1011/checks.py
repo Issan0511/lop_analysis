@@ -110,6 +110,8 @@ def run_check(key: str, title: str, fn, mutations: list, derivation: str, target
     if mutations:
         entry["all_mutations_detected"] = all(m["detected"] for m in entry["mutations"])
     entry["seconds"] = time.time() - t0
+    entry["git_hash"] = RESULTS.get("_meta", {}).get("git_hash")
+    entry["git_dirty_code"] = RESULTS.get("_meta", {}).get("git_dirty_code")
     RESULTS[key] = entry
     print(key, "pass" if entry["pass"] else "FAIL",
           "" if not mutations else f"mutations {sum(m['detected'] for m in entry['mutations'])}/{len(mutations)}",

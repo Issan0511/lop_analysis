@@ -223,12 +223,12 @@ MLP（relu_doors_h_ref_0920）の「H は第 1 層で、C は第 2 層で死ぬ�
 | # | 項目 | Claude | Issa | Fable |
 |---|---|---|---|---|
 | L1 | ref のラベル | FAIL .93 ／ PARTIAL .04 ／ RESCUED .01 ／ 他 .02 | | |
-| L2 | C のラベル | FAIL .72 ／ PARTIAL .16 ／ RESCUED .10 ／ 他 .02 | | |
-| L3 | H のラベル（M_H） | FAIL .40 ／ PARTIAL .30 ／ RESCUED .28 ／ 他 .02 | | |
-| L4 | **CH のラベル（主）** | **RESCUED .64** ／ PARTIAL .20 ／ FAIL .14 ／ 他 .02 | | |
-| L5 | 梯子 N | NEED_CH .36 ／ NONE_RESCUED .30 ／ NEED_H .24 ／ NEED_C .08 ／ 他 .02 | | |
-| L6 | **要約** | **DOORS_TRANSFER .50** ／ DOORS_PARTIAL .30 ／ DOORS_FAIL .13 ／ 他 .07 | | |
-| L7 | LAYER（§5.8） | CORRESPONDENCE .30 ／ NOT_SHOWN .65 ／ NOT_REPRODUCED .05 | | |
+| L2 | C のラベル | FAIL .72 ／ PARTIAL .16 ／ RESCUED .10 ／ 他 .02 | | FAIL .70 ／ PARTIAL .22 ／ RESCUED .08 |
+| L3 | H のラベル（M_H） | FAIL .40 ／ PARTIAL .30 ／ RESCUED .28 ／ 他 .02 | | FAIL .45 ／ PARTIAL .30 ／ RESCUED .25 |
+| L4 | **CH のラベル（主）** | **RESCUED .64** ／ PARTIAL .20 ／ FAIL .14 ／ 他 .02 | | RESCUED .60 ／ PARTIAL .25 ／ FAIL .15 |
+| L5 | 梯子 N | NEED_CH .36 ／ NONE_RESCUED .30 ／ NEED_H .24 ／ NEED_C .08 ／ 他 .02 | | NEED_CH .40 ／ NONE_RESCUED .30 ／ NEED_H .20 ／ その他 .10 |
+| L6 | **要約** | **DOORS_TRANSFER .50** ／ DOORS_PARTIAL .30 ／ DOORS_FAIL .13 ／ 他 .07 | | DOORS_TRANSFER .45 ／ DOORS_PARTIAL .35 ／ DOORS_FAIL .12 ／ NOT_REPRODUCED .08 |
+| L7 | LAYER（§5.8） | CORRESPONDENCE .30 ／ NOT_SHOWN .65 ／ NOT_REPRODUCED .05 | | CORRESPONDENCE .30（他 .70） |
 | L8 | Cr（§5.10） | CR_UNINFORMATIVE .50 ／ CONST_SHIFT_NO_EFFECT .30 ／ CR_UNRESOLVED .10 ／ CONST_SHIFT_ACTS_LIKE_C .10 | | |
 
 | # | 主張（二値） | Claude | Issa | Fable |
@@ -251,6 +251,7 @@ MLP（relu_doors_h_ref_0920）の「H は第 1 層で、C は第 2 層で死ぬ�
 - ラベルの項目（L1〜L8）は、実現したラベルに付けた確率、最頻ラベルの的中、多クラスの Brier 得点 Σ_k (p_k − 1[k = 実現])² を報告する。「他」は 1 つの桶で、名前の無いラベルの確率は 0。
 - 二値の項目（B1〜B12）は、真偽と binary Brier (p − o)² を報告する。条件つきの項目（B1）は条件が成り立たなければ「未採点（理由）」。
 - Issa と Fable の列は空欄で登録する。走る前に記入されたものだけを採点する。
+- **Fable の列の記入**（2026-10-11 13:57 JST、親から受け取った値をそのまま写した。本走の前で、扉の腕の結果は 1 つも無い。親が予測を書いた時点で見ていたのは、この spec・§11 の追補・私の送った要約（腕・判定・Claude の予測・GPU・試走の時間）まで）。Fable の「その他」「他」は、名前の無いラベル全部をまとめた 1 つの桶として採点する。L1・L8 と二値の項目は記入なし。
 
 ## 8. 費用と実行
 
@@ -292,3 +293,33 @@ MLP（relu_doors_h_ref_0920）の「H は第 1 層で、C は第 2 層で死ぬ�
 - **見たもの（開示）**: 実装中の smoke test で、CH の seed 10–11 を課題 1 の 3 epoch だけ回した値（memo 0.165、f1 の入力の r_in 0.52（EMA の立ち上がり中）、m のノルム）を見た。検査は seed 10–13 の 2 epoch（K-loop・K-resume は 2 課題 × 2 epoch）を走らせるが、私が読んだのは pass/fail と上に書いた検査の量だけで、扉の腕の 1 課題を通した精度は 1 つも見ていない。K-cost は未登録の seed 100–109 で、精度を計算しない。§7 の予測は登録 commit `fdb97c2b` のまま。
 - **K-cost**（GPU を他に使う走が無い状態）: CH の束（R = 10）は単独で 0.125 秒/epoch（30 課題で 25 分）。主 4 腕を同時に走らせると各 0.49〜0.52 秒/epoch（各 99〜104 分）で、GPU は 1 本で計算に飽和し、同時に走らせても全体の処理量は変わらない。1 プロセスの峰は `nvidia-smi` で 1,160〜1,170 MiB（torch の確保の峰 513 MiB）。
 - **同時本数**（§8 の式）: M_proc = 1,170 MiB。起動直前に M_free と、別 agent の `adamw_dose2_1011` の実測の使用量を `nvidia-smi` で取り、その spec §8 の予定（A1 は 3 本、A2 は短い 2 本）を足して M_keep を決める（`launch.sh <M_keep>` が式を計算し `logs/launch_record.txt` に残す）。現時点の空き 14,505 MiB で、別 agent の 3 本を各 1,200 MiB と見積もると M_keep = 3,600 + 2,048 = 5,648 MiB、n = ⌊(14,505 − 5,648) / (1.25 × 1,170)⌋ = 6 ≥ 5 なので、主 4 腕と Cr を同時に起動する。GPU は飽和しているので、所要時間は全体の仕事量で決まる: 私の主 4 腕で約 100 分、Cr（R = 1）で約 7 分（K-repro の 3 課題 46 秒から）、別 agent の A1 が約 57 分（その spec §8）。同時なら終わりまで約 2.5〜3 時間の見込み。
+
+## 12. 追補 2 — 起動直前の資源の再計算の手順・Fable の予測・片付けの置き場所（2026-10-11 14:00 JST、本走の前。判定・窓・予測は変えていない）
+
+親から: 本走は、Codex の監査（`specs/review_codex_cnn_center_relu_1011.md`）を受けて親が go を出すまで起動しない。監査の対象は `fdb97c2b`〜`3f635551`。この追補とそれに伴う `verdict.py` の採点の追加・`launch.sh` の書き直しは、その後の commit。エンジン `src/cnn_center_relu_1011.py` は検査 commit `0a5c0873` から変えていない（sha256 `a7517aa5…`）。
+
+### 12.1 Fable の予測
+
+§7.1 の Fable の列に、親から受け取った値をそのまま入れた（§7.2 の注記）。`verdict.py` は Claude と同じ規則で Fable の L2〜L7 も採点する。
+
+### 12.2 RAM の実測（GPU のメモリより先に効く）
+
+CH の束（R = 10）の 1 プロセスは、定常の VmRSS が 2,345 MiB、読み込み時の峰（VmHWM）が 3,395 MiB（C・CH・Cr は訓練集合のチャネル平均を float64 で一度計算する）。測った時点の MemAvailable は約 19,000 MiB。§8 の GPU のメモリの式だけだと 5 本同時になるが、RAM で数えると 5 本は 6 GiB の余裕を割る。GPU は 1 本で計算に飽和する（§11 の K-cost）ので、同時本数を減らしても全体の所要時間は変わらない。そこで §8 の「主 4 腕と Cr を同時に起動する」をやめ、**同時 2 本までの順番待ち**にする（2 本目は課題末の評価のあいだも GPU を埋めるため。残りの GPU と RAM は別 agent の `adamw_dose2_1011` に残す）。順番は CH → ref → C → H → Cr（主腕を先に回し、壊れ方があれば早く見つかるように）。
+
+### 12.3 起動直前（と、順番待ちの各腕の起動直前）の再計算の手順
+
+`analysis/cnn_center_relu_1011/launch.sh [MAX_CONC=2]` を `nohup setsid` で切り離して起動する。各腕を起動する直前に、その時点のマシンから次を計算し直し、全部満たすまで 60 秒ごとに待つ。決定はすべて `results/cnn_center_relu_1011/logs/launch_record.txt` に残る。
+
+1. **本数**: この走のプロセス（`pgrep -f "[s]rc/cnn_center_relu_1011\.py run --arm <腕> --seeds"`。自己一致を避ける括弧の形）が MAX_CONC 本未満。同じ腕のプロセスが生きていれば起動しない（重複の防止）。`provenance.json` のある腕は完了として飛ばし、`state.pt` だけある腕は再開する。
+2. **GPU**: `nvidia-smi --query-gpu=memory.free` − 2,048 MiB ≥ 1.25 × 1,170 MiB（K-cost の 1 本の峰、CUDA の context 込み）。別 agent のプロセスや ollama がメモリを使っていれば、その分はこの空きにすでに入っている。
+3. **RAM**: MemAvailable − 6,144 MiB − 1,050 MiB（読み込み時の峰の上乗せ）≥ 1.2 × 2,350 MiB（定常の RSS）。
+4. 記録: 起動ごとに、時刻・HEAD と作業木の汚れ・生きている本数・GPU の空き・MemAvailable・両方の余裕・マシン全体の proj_004_drift の python の本数（`pgrep -c -f '[p]roj_004_drift/\.venv/bin/python'`。operatingsis の python は数えない）・`nvidia-smi` のプロセスごとの使用量。
+5. 起動の後は 90 秒待ってから次の予算を読む（読み込みの峰は 10 秒ほどで過ぎる）。
+6. 起動の後の確認（私が手で行う）: 1〜2 分後に `pgrep` でプロセスが生きていること、`nvidia-smi` に載っていること、最初の課題の後にログに `task  1` の行（課題番号・秒数・腕名だけ）が出ること。
+7. 見積もり: 私の仕事は GPU を単独で使って主 4 腕 約 100 分 ＋ Cr 約 7 分。別 agent の A1（その spec §8 で約 57 分）と重なれば、全体で約 2.7 時間（GPU は飽和しているので、時間は全体の仕事量で決まる）。
+
+`DRY=1 bash launch.sh` は起動せずに判断だけを記録する（`launch_record_dry.txt`）。13:47 の試しでは、5 腕とも余裕あり（GPU 10,981 MiB・RAM 8,997 MiB）で起動の判断になった。
+
+### 12.4 片付けの置き場所の訂正
+
+§9 の `~/Projects/obsidian-research-data/cnn_center_relu_1011_1011/` は誤記で、CLAUDE.md §4 の `<実験名>_<MMDD>` は `cnn_center_relu_1011`（実験名 cnn_center_relu、cnn_center_1010 の退避先 `obsidian-research-data/cnn_center_1010/` と同じ形）。`analysis/cnn_center_relu_1011/backup.py` と `verdict.py` はこちらを使う。

@@ -397,6 +397,15 @@ PRED_LABELS = {
     "L8": ("Cr", {"CR_UNINFORMATIVE": .50, "CONST_SHIFT_NO_EFFECT": .30, "CR_UNRESOLVED": .10,
                   "CONST_SHIFT_ACTS_LIKE_C": .10}),
 }
+# Fable (parent), relayed 2026-10-11 13:57 before any door run (spec §7.2); "OTHER" is one bucket
+PRED_LABELS_FABLE = {
+    "L2": ("C", {"FAIL": .70, "PARTIAL": .22, "RESCUED": .08}),
+    "L3": ("H", {"FAIL": .45, "PARTIAL": .30, "RESCUED": .25}),
+    "L4": ("CH", {"RESCUED": .60, "PARTIAL": .25, "FAIL": .15}),
+    "L5": ("N", {"NEED_CH": .40, "NONE_RESCUED": .30, "NEED_H": .20, "OTHER": .10}),
+    "L6": ("DOORS", {"DOORS_TRANSFER": .45, "DOORS_PARTIAL": .35, "DOORS_FAIL": .12, "NOT_REPRODUCED": .08}),
+    "L7": ("LAYER", {"LAYER_CORRESPONDENCE": .30, "OTHER": .70}),
+}
 PRED_BINARY = {"B1": .60, "B2": .55, "B3": .25, "B4": .50, "B5": .50, "B6": .70, "B7": .35, "B8": .12,
                "B9": .90, "B10": .75, "B11": .45, "B12": .80}
 PRED_TEXT = {
@@ -422,9 +431,24 @@ def realised(res: dict) -> dict:
     return lab
 
 
+def score_labels(res: dict, table: dict) -> dict:
+    lab = realised(res)
+    out = {}
+    for key, (item, probs) in table.items():
+        r = lab[item]
+        bucket = r if r in probs else "OTHER"
+        p = probs.get(bucket, 0.0)
+        brier = sum((pk - (1.0 if k == bucket else 0.0)) ** 2 for k, pk in probs.items()) + \
+            (0.0 if bucket in probs else 1.0)
+        top = max(probs, key=probs.get)
+        out[key] = {"item": item, "realised": r, "p_realised": p, "mode": top, "mode_hit": top == bucket,
+                    "brier": brier}
+    return out
+
+
 def score(res: dict, mech: dict | None, leaky: dict) -> dict:
     lab = realised(res)
-    out = {"labels": {}, "binary": {}}
+    out = {"labels": {}, "binary": {}, "labels_fable": score_labels(res, PRED_LABELS_FABLE)}
     for key, (item, probs) in PRED_LABELS.items():
         r = lab[item]
         bucket = r if r in probs else "OTHER"
@@ -563,7 +587,11 @@ def write_report(res: dict, mech: dict, leaky: dict, sc: dict, base: Path = OUT)
     L += ["", "## 予測の採点（Claude、spec §7.1）", "", "| # | 項目 | 実現 | p(実現) | 最頻 | 的中 | Brier |", "|---|---|---|---|---|---|---|"]
     for k, v in sc["labels"].items():
         L.append(f"| {k} | {v['item']} | {v['realised']} | {v['p_realised']:.2f} | {v['mode']} | {'○' if v['mode_hit'] else '✗'} | {v['brier']:.3f} |")
-    L += ["", "| # | 主張 | p | 真偽 | Brier |", "|---|---|---|---|---|"]
+    L += ["", "### Fable（spec §7.2、本走の前の記入）", "", "| # | 項目 | 実現 | p(実現) | 最頻 | 的中 | Brier |",
+          "|---|---|---|---|---|---|---|"]
+    for k, v in sc["labels_fable"].items():
+        L.append(f"| {k} | {v['item']} | {v['realised']} | {v['p_realised']:.2f} | {v['mode']} | {'○' if v['mode_hit'] else '✗'} | {v['brier']:.3f} |")
+    L += ["", "### 二値（Claude）", "", "| # | 主張 | p | 真偽 | Brier |", "|---|---|---|---|---|"]
     for k, v in sc["binary"].items():
         truth = "—" if v["true"] is None else ("○" if v["true"] else "✗")
         brier = "—" if v["brier"] is None else f"{v['brier']:.3f}"
