@@ -91,9 +91,9 @@ def fig_online(frames: dict) -> None:
     ax.set_title("ReLU の CNN（RL-CIFAR・Kumar らの CNN）: 腕ごとの online（線 = seed 中央値、帯 = seed の範囲）",
                  fontsize=9, color=INK, loc="left")
     style(ax)
-    ax.legend(frameon=False, fontsize=8, loc="lower left")
+    ax.legend(frameon=False, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=3)
     fig.tight_layout()
-    fig.savefig(OUT / "fig_online.png")
+    fig.savefig(OUT / "fig_online.png", bbox_inches="tight")
     plt.close(fig)
 
 
@@ -127,11 +127,12 @@ def fig_layers(frames: dict) -> None:
                 ax.set_ylabel(name, fontsize=8)
             if i == 2:
                 ax.set_xlabel("課題（0 = 初期値）")
-    axes[0, 0].legend(frameon=False, fontsize=7, loc="lower left")
+    h, lab = axes[0, 0].get_legend_handles_labels()
+    fig.legend(h, lab, frameon=False, fontsize=8, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.01))
     fig.suptitle("層ごとの位置・開いた割合・死亡率（線 = seed 中央値、帯 = seed の範囲、灰の帯 = 主窓）",
                  fontsize=10, color=INK, x=0.01, ha="left")
-    fig.tight_layout()
-    fig.savefig(OUT / "fig_layers.png")
+    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    fig.savefig(OUT / "fig_layers.png", bbox_inches="tight")
     plt.close(fig)
 
 

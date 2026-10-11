@@ -340,16 +340,19 @@ def mechanism_tables(arms=MAIN_ARMS) -> dict:
         u = np.load(p)
         for l in LAYERS:
             zb, b, wm = u[f"zbar_{l}"], u[f"b_{l}"], u[f"wm_{l}"]           # (T+1, R, n)
-            for t in CKPT:
-                if t >= zb.shape[0] or not np.isfinite(zb[t]).all():
-                    continue
-                dz, db, dw = zb[t] - zb[0], b[t] - b[0], wm[t] - wm[0]
-                share = np.abs(db) / (np.abs(db) + np.abs(dw) + 1e-30)
-                rows.append({"arm": a, "layer": l, "t": t,
-                             "dz_med": float(np.median(np.median(dz, 1))),
-                             "db_med": float(np.median(np.median(db, 1))),
-                             "dwm_med": float(np.median(np.median(dw, 1))),
-                             "b_share_med": float(np.median(np.median(share, 1)))})
+            # from = 0 is the registered reference (t0); from = 1 is report only: in the H arms the
+            # door's m is 0 at t0 and converges during task 1, so t0 -> t also carries the switch-on
+            for t_from in (0, 1):
+                for t in CKPT:
+                    if t <= t_from or t >= zb.shape[0] or not np.isfinite(zb[t]).all():
+                        continue
+                    dz, db, dw = zb[t] - zb[t_from], b[t] - b[t_from], wm[t] - wm[t_from]
+                    share = np.abs(db) / (np.abs(db) + np.abs(dw) + 1e-30)
+                    rows.append({"arm": a, "layer": l, "from": t_from, "t": t,
+                                 "dz_med": float(np.median(np.median(dz, 1))),
+                                 "db_med": float(np.median(np.median(db, 1))),
+                                 "dwm_med": float(np.median(np.median(dw, 1))),
+                                 "b_share_med": float(np.median(np.median(share, 1)))})
             for t in (0,) + CKPT:
                 if t >= zb.shape[0] or not np.isfinite(zb[t]).all():
                     continue
@@ -363,6 +366,54 @@ def mechanism_tables(arms=MAIN_ARMS) -> dict:
                             "dead_frac": float(np.median(dead.mean(1))),
                             "m_in_norm": float(np.median(np.linalg.norm(min_, axis=1)))})
     return {"path": pd.DataFrame(rows), "layers": pd.DataFrame(lay)}
+
+
+def find_ckpt(arm: str) -> Path | None:
+    for base in (OUT, BACKUP):
+        p = base / arm / "ckpt"
+        if p.exists() and any(p.glob("*.pt")):
+            return p
+    return None
+
+
+def three_way_table(arms=MAIN_ARMS, tasks=(1, 3, 10, 30)) -> pd.DataFrame:
+    """Report only (spec §4): the mu path <W, m_in> from t0 to t split into own <dW, m0>, upstream
+    <W0, dm> and cross <dW, dm> (an exact identity), unit median per seed, then seed median.
+    W0 is the host init (CN.init_params), W_t the checkpoint, m_in from units.npz."""
+    import torch
+    sys.path.insert(0, str(REPO))
+    from src import rlcifar_cnn_0908 as CN
+    rows = []
+    for a in arms:
+        up, ck = find_units(a), find_ckpt(a)
+        if up is None or ck is None:
+            continue
+        u = np.load(up)
+        for si, seed in enumerate(SEEDS):
+            P0 = [q.detach().double() for q in CN.init_params(seed, torch.device("cpu"))]
+            for t in tasks:
+                f = ck / f"{a}_seed{seed}_t{t:02d}.pt"
+                if not f.exists():
+                    continue
+                Pt = [q.double() for q in torch.load(f, map_location="cpu", weights_only=False)["P"]]
+                for li, l in enumerate(LAYERS):
+                    W0 = P0[2 * li].reshape(P0[2 * li].shape[0], -1)
+                    Wt = Pt[2 * li].reshape(Pt[2 * li].shape[0], -1)
+                    m0 = torch.from_numpy(u[f"m_in_{l}"][0, si]).double()
+                    mt = torch.from_numpy(u[f"m_in_{l}"][t, si]).double()
+                    dW, dm = Wt - W0, mt - m0
+                    own, ups, cross = dW @ m0, W0 @ dm, dW @ dm
+                    total = Wt @ mt - W0 @ m0
+                    rows.append({"arm": a, "seed": seed, "t": t, "layer": l,
+                                 "own_med": float(own.median()), "up_med": float(ups.median()),
+                                 "cross_med": float(cross.median()), "dwm_med": float(total.median()),
+                                 "identity_res": float((own + ups + cross - total).abs().max())})
+    d = pd.DataFrame(rows)
+    if not len(d):
+        return d
+    return d.groupby(["arm", "layer", "t"])[["own_med", "up_med", "cross_med", "dwm_med", "identity_res"]].agg(
+        {"own_med": "median", "up_med": "median", "cross_med": "median", "dwm_med": "median",
+         "identity_res": "max"}).reset_index()
 
 
 def leaky_reference() -> dict:
@@ -476,12 +527,12 @@ def score(res: dict, mech: dict | None, leaky: dict) -> dict:
         pth = mech["path"]
 
         def share(arm, layer):
-            q = pth[(pth.arm == arm) & (pth.layer == layer) & (pth.t == N_TASKS)]
+            q = pth[(pth.arm == arm) & (pth.layer == layer) & (pth["from"] == 0) & (pth.t == N_TASKS)]
             return float(q.b_share_med.iloc[0]) if len(q) else float("nan")
 
         truth["B10"] = share("CH", "c2") > 0.5 and share("CH", "f2") > 0.5
         truth["B11"] = share("CH", "f1") > 0.5
-        q = pth[(pth.arm == "ref") & (pth.layer == "c2") & (pth.t == N_TASKS)]
+        q = pth[(pth.arm == "ref") & (pth.layer == "c2") & (pth["from"] == 0) & (pth.t == N_TASKS)]
         truth["B12"] = float(q.dz_med.iloc[0]) < -50 if len(q) else None
     else:
         truth["B10"] = truth["B11"] = truth["B12"] = None
@@ -575,11 +626,19 @@ def write_report(res: dict, mech: dict, leaky: dict, sc: dict, base: Path = OUT)
             if r.t in (0, 1, 3, 10, 30):
                 L.append(f"| {r.arm} | {r.layer} | {r.t} | {r.zbar_med:.3f} | {r.sd_med:.3f} | {r.rel_pos_med:.2f} | "
                          f"{r.open_mean:.3f} | {r.dead_frac:.3f} | {r.m_in_norm:.3f} |")
-        L += ["", "## µ 経路と b 経路（t0 → t、単位中央値の seed 中央値。b の取り分 = |Δb|/(|Δb| + |Δ⟨W, m_in⟩|)）", "",
-              "| 腕 | 層 | t | Δz̄ | Δb | Δ⟨W, m_in⟩ | b の取り分 |", "|---|---|---|---|---|---|---|"]
+        L += ["", "## µ 経路と b 経路（起点 → t、単位中央値の seed 中央値。b の取り分 = |Δb|/(|Δb| + |Δ⟨W, m_in⟩|)。起点 0 が登録、起点 1 は報告のみ: H の腕では m が t0 に 0 で課題 1 に立ち上がる）", "",
+              "| 腕 | 層 | 起点 | t | Δz̄ | Δb | Δ⟨W, m_in⟩ | b の取り分 |", "|---|---|---|---|---|---|---|---|"]
         for _, r in mech["path"].iterrows():
             if r.t in (3, 10, 30):
-                L.append(f"| {r.arm} | {r.layer} | {r.t} | {r.dz_med:.3f} | {r.db_med:.3f} | {r.dwm_med:.3f} | {r.b_share_med:.2f} |")
+                L.append(f"| {r.arm} | {r.layer} | {r['from']} | {r.t} | {r.dz_med:.3f} | {r.db_med:.3f} | {r.dwm_med:.3f} | {r.b_share_med:.2f} |")
+    tw = mech.get("three_way")
+    if tw is not None and len(tw):
+        tw.to_csv(base / "tables" / "mu_path_split.csv", index=False)
+        L += ["", "## µ 経路の内訳（t0 → t、自分の重み ⟨ΔW, m₀⟩・上流 ⟨W₀, Δm⟩・交差 ⟨ΔW, Δm⟩。単位中央値の seed 中央値、報告のみ）", "",
+              "| 腕 | 層 | t | 自分 | 上流 | 交差 | Δ⟨W, m_in⟩ |", "|---|---|---|---|---|---|---|"]
+        for _, r in tw.iterrows():
+            if r.layer != "c1":
+                L.append(f"| {r.arm} | {r.layer} | {r.t} | {r.own_med:.3f} | {r.up_med:.3f} | {r.cross_med:.3f} | {r.dwm_med:.3f} |")
     if leaky:
         L += ["", "## 同じ seed・同じエンジンの leaky（報告のみ）", ""]
         for k, v in leaky.items():
@@ -604,6 +663,7 @@ def main() -> None:
     checks_ok, c_ok = checks_state()
     res = analyze_frames(frames, checks_ok, steps_per_task(), cr_frame=crf, c_door_ok=c_ok)
     mech = mechanism_tables()
+    mech["three_way"] = three_way_table()
     leaky = leaky_reference()
     sc = score(res, mech, leaky)
     write_report(res, mech, leaky, sc)
