@@ -16,9 +16,9 @@ REPO=$(cd "$(dirname "$0")/../.." && pwd)
 PY=/home/issan/Projects/claude/proj_004_drift/.venv/bin/python
 OUT="$REPO/results/cnn_center_feat_1011"
 MAX_CONC=${1:-2}
-M_PROC=${M_PROC:-1200}      # MiB, K-cost (nvidia-smi, per process, CUDA context included)
-RSS=${RSS:-2400}            # MiB, steady VmRSS of one CHf process (K-cost)
-RSS_LOAD=${RSS_LOAD:-1100}  # MiB, VmHWM - steady (train-set channel mean in float64 at load)
+M_PROC=${M_PROC:-1180}      # MiB, K-cost 1,174 (nvidia-smi, per process, CUDA context included), rounded up
+RSS=${RSS:-2310}            # MiB, steady VmRSS of one CHf process (K-cost 2,294-2,305), rounded up
+RSS_LOAD=${RSS_LOAD:-1040}  # MiB, VmHWM 3,333 - steady 2,305 (train-set channel mean in float64 at load), rounded up
 QUEUE=("CHf 10-19" "Hf 10-19" "Hs 10")
 if [ "${WITH_CHS:-0}" = 1 ]; then QUEUE+=("CHs 10"); fi
 mkdir -p "$OUT/logs"
