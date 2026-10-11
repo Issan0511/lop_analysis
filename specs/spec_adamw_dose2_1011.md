@@ -232,27 +232,29 @@ Claude の列は本 spec の起草者（Opus 5.5、2026-10-11 13:30 JST）。こ
 
 略号: RFO = RESCUED_FUNCTION_ONLY、AU = ALIVE_UNRESOLVED、他 = INAPPLICABLE・NOT_REPRODUCED・CHECK_FAILED・INCOMPLETE・DIVERGED をまとめた桶。
 
+**Codex の列（追記、2026-10-11 16:30 JST）**: `specs/review_codex_adamw_dose2_1011.md` の予測の表を写した。Codex は 10/11 16:07:48 JST に §7 を見る前に盲検で確定した（sha256 `0d57ddcf…`）。A1-1 と A2-3 は登録時の定義での予測（§14.1・§14.3）。
+
 **Fable の列（追記、2026-10-11 15:56 JST）**: 親（Fable）から受け取った予測を、検査 all_pass（`838e0820`）の後・本走の前（Codex の監査の間）に記入した。親はこの時点で、検査の結果と §13 の 6 の開示（S-ctrl の λ = 1 の幅）と、確認の連絡の要約（規則の当て・Claude の予測）を見ている。書かれていない項目は空欄のまま。
 
 ### 7.1 ラベルの項目
 
-| # | 項目 | Claude | Issa | Fable |
-|---|---|---|---|---|
-| A1-1 | **RULE_PREDICTED** | **HOLDS .55** ／ PARTIAL .38 ／ FAILS .05 ／ INAPPLICABLE .02 | | HOLDS .50 ／ PARTIAL .40 ／ FAILS .10 |
-| A1-2 | wd3e-2 のラベル（97.5%） | RESCUED .28 ／ SPLIT .28 ／ COLLAPSED .22 ／ RFO .12 ／ AU .05 ／ 他 .05 | | RESCUED .30 ／ SPLIT .35 ／ COLLAPSED .35 |
-| A1-3 | wd1e-1 のラベル | RESCUED .55 ／ SPLIT .18 ／ RFO .12 ／ COLLAPSED .08 ／ AU .03 ／ 他 .04 | | RESCUED .45 ／ SPLIT .30 ／ COLLAPSED .25 |
-| A1-4 | wd1e0 のラベル | RESCUED .85 ／ SPLIT .04 ／ COLLAPSED .03 ／ RFO .03 ／ AU .02 ／ 他 .03 | | RESCUED .75（IMPAIRED_EARLY が立つ .15） |
-| A1-5 | DOSE | MONOTONE .75 ／ PEAKED .12 ／ OTHER .11 ／ FLAT .02 | | |
-| A1-6 | EQUILIBRIUM（wd1e0） | MATCH .40 ／ OFF .60（層別: MATCH .55・OFF_HIGH .35・OFF_LOW .03・UNRESOLVED .07） | | |
-| A1-7 | EQUILIBRIUM（wd1e-1） | MATCH .35 ／ OFF .65（層別: MATCH .50・OFF_HIGH .35・OFF_LOW .05・UNRESOLVED .10） | | |
-| A1-8 | EQUILIBRIUM（wd3e-2） | MATCH .30 ／ OFF .70（層別: MATCH .45・OFF_HIGH .20・OFF_LOW .20・UNRESOLVED .15） | | |
-| A1-9 | WIDTH（wd1e0） | STOPPED .80 ／ NOT_STOPPED .10 ／ FROZEN・SPLIT .10 | | |
-| A1-10 | WIDTH（wd1e-1） | STOPPED .55 ／ NOT_STOPPED .15 ／ FROZEN・SPLIT .30 | | |
-| A1-11 | DEPTH（wd1e0 ／ wd1e-1 ／ wd3e-2） | ABOVE_LINE .85 ／ .25 ／ .05（残りは AT_LINE と UNRESOLVED に 3:1） | | ABOVE_LINE .85 ／ .25 ／ .10 |
-| A2-1 | l2c1e-2 のラベル | NO_RESCUE .43 ／ PARTIAL .33 ／ RESCUED .22 ／ 他 .02 | | NO_RESCUE .40 ／ PARTIAL .35 ／ RESCUED .25 |
-| A2-2 | l2c5e-3 のラベル | NO_RESCUE .42 ／ PARTIAL .36 ／ RESCUED .20 ／ 他 .02 | | |
-| A2-3 | **読みのラベル（l2c1e-2）** | **TARGET_MATTERS .41** ／ BOTH .37 ／ NORM_MATTERS .20 ／ 他 .02 | | NORM_MATTERS .35 ／ BOTH .35 ／ TARGET_MATTERS .30 |
-| A2-4 | A2 のまとめ | L2C_NO_RESCUE_RELU .38 ／ L2C_PARTIAL_RELU .33 ／ L2C_RESCUES_RELU .27 ／ 他 .02 | | |
+| # | 項目 | Claude | Issa | Fable | Codex |
+|---|---|---|---|---|---|
+| A1-1 | **RULE_PREDICTED** | **HOLDS .55** ／ PARTIAL .38 ／ FAILS .05 ／ INAPPLICABLE .02 | | HOLDS .50 ／ PARTIAL .40 ／ FAILS .10 | HOLDS .38 ／ PARTIAL .47 ／ FAILS .15 |
+| A1-2 | wd3e-2 のラベル（97.5%） | RESCUED .28 ／ SPLIT .28 ／ COLLAPSED .22 ／ RFO .12 ／ AU .05 ／ 他 .05 | | RESCUED .30 ／ SPLIT .35 ／ COLLAPSED .35 | RESCUED .15 ／ SPLIT .45 ／ COLLAPSED .40 |
+| A1-3 | wd1e-1 のラベル | RESCUED .55 ／ SPLIT .18 ／ RFO .12 ／ COLLAPSED .08 ／ AU .03 ／ 他 .04 | | RESCUED .45 ／ SPLIT .30 ／ COLLAPSED .25 | RESCUED .55 ／ SPLIT .35 ／ COLLAPSED .10 |
+| A1-4 | wd1e0 のラベル | RESCUED .85 ／ SPLIT .04 ／ COLLAPSED .03 ／ RFO .03 ／ AU .02 ／ 他 .03 | | RESCUED .75（IMPAIRED_EARLY が立つ .15） | RESCUED .65 ／ SPLIT .10 ／ COLLAPSED .25 |
+| A1-5 | DOSE | MONOTONE .75 ／ PEAKED .12 ／ OTHER .11 ／ FLAT .02 | | |  |
+| A1-6 | EQUILIBRIUM（wd1e0） | MATCH .40 ／ OFF .60（層別: MATCH .55・OFF_HIGH .35・OFF_LOW .03・UNRESOLVED .07） | | |  |
+| A1-7 | EQUILIBRIUM（wd1e-1） | MATCH .35 ／ OFF .65（層別: MATCH .50・OFF_HIGH .35・OFF_LOW .05・UNRESOLVED .10） | | |  |
+| A1-8 | EQUILIBRIUM（wd3e-2） | MATCH .30 ／ OFF .70（層別: MATCH .45・OFF_HIGH .20・OFF_LOW .20・UNRESOLVED .15） | | |  |
+| A1-9 | WIDTH（wd1e0） | STOPPED .80 ／ NOT_STOPPED .10 ／ FROZEN・SPLIT .10 | | |  |
+| A1-10 | WIDTH（wd1e-1） | STOPPED .55 ／ NOT_STOPPED .15 ／ FROZEN・SPLIT .30 | | |  |
+| A1-11 | DEPTH（wd1e0 ／ wd1e-1 ／ wd3e-2） | ABOVE_LINE .85 ／ .25 ／ .05（残りは AT_LINE と UNRESOLVED に 3:1） | | ABOVE_LINE .85 ／ .25 ／ .10 | ABOVE_LINE .97 ／ .58 ／ .20（二値） |
+| A2-1 | l2c1e-2 のラベル | NO_RESCUE .43 ／ PARTIAL .33 ／ RESCUED .22 ／ 他 .02 | | NO_RESCUE .40 ／ PARTIAL .35 ／ RESCUED .25 | RESCUED .45 ／ PARTIAL .45 ／ NO_RESCUE .10 |
+| A2-2 | l2c5e-3 のラベル | NO_RESCUE .42 ／ PARTIAL .36 ／ RESCUED .20 ／ 他 .02 | | | RESCUED .28 ／ PARTIAL .52 ／ NO_RESCUE .20 |
+| A2-3 | **読みのラベル（l2c1e-2）** | **TARGET_MATTERS .41** ／ BOTH .37 ／ NORM_MATTERS .20 ／ 他 .02 | | NORM_MATTERS .35 ／ BOTH .35 ／ TARGET_MATTERS .30 | NORM_MATTERS .28 ／ TARGET_MATTERS .07 ／ BOTH .65 |
+| A2-4 | A2 のまとめ | L2C_NO_RESCUE_RELU .38 ／ L2C_PARTIAL_RELU .33 ／ L2C_RESCUES_RELU .27 ／ 他 .02 | | |  |
 
 ### 7.2 二値の項目
 
@@ -347,3 +349,36 @@ Claude の列は本 spec の起草者（Opus 5.5、2026-10-11 13:30 JST）。こ
 5. **WIDTH の防御**: ref の生きている間の傾きが 0 の seed があれば κ は定義できないので、その層を UNRESOLVED にする（登録の t1〜t3 の傾きは記録で全 seed 正なので、本走では起きない。検査の変異「主窓の傾きを使う」がこの経路を通る）。
 6. **開示（検査で見たもの）**: (i) S-coupled-host は coupled の 2 腕を検査 seed 100–109 で 30 課題走らせ、宿主の `iv='l2:<λ>'` とバイト一致を確かめた（出力は `c51/_coupledhost/`）。**その後期窓などの成績は本走の前に読んでいない。** (ii) S-ctrl は seed 100 の task 4 終端の幅を読む検査で、wd1e0（λ = 1）の s2 は 1.25（規則の帯 [2.1, 16.3] の下）、s1 は 6.3、ref は s1 115・s2 282、読み出しだけの WD は s1 102・s2 306 だった（予測 S8「wd1e0 の主窓の s2 が帯の中」に関わる。予測は §7 で固定済みで変えない）。(iii) S-mut (iii) の seed 100 の 30 課題の走（after 10⁻²・decoupled 2×10⁻²・λ = 0）の後期窓は .503・.477・.472（判定なし）。
 7. **本走の同時本数**: §8 の式を `launch.sh` が起動の直前ごとに評価する（S-cost の 1 本の GPU 使用量の実測を使う）。GPU の共有ロックは取らない（別の agent の CNN の走と同時に使うため）。
+
+## 14. 追補（2026-10-11 16:35 JST、Codex の監査の後・本走の前。親（Fable）の指示による修正。腕・λ・規則の二値の当ては変えていない）
+
+Codex の監査（`specs/review_codex_adamw_dose2_1011.md`、判定「直してから」）を受けた親の指示（16:16）で、本走の前に次を直した。以下は §5・§7.3 の該当箇所を置き換える。
+
+1. **RULE_PREDICTED（主判定、§5.2 を置き換え）は機能ラベルの一致にする。** 規則の二値の当ては wd3e-2 FAIL・wd1e-1 FAIL（中心の二値）・wd1e0 SAVE で固定。各 λ で「救った」= ラベル RESCUED（97.5%）かつ IMPAIRED_EARLY でない（2 を参照）。当て SAVE ⇔ 救った、の一致の数で `RULE_HOLDS`（3/3）／`RULE_PARTIAL`（2/3）／`RULE_FAILS`（1/3 以下）。どれかの腕が INAPPLICABLE・NOT_REPRODUCED・INCOMPLETE・CHECK_FAILED・DIVERGED なら `RULE_INAPPLICABLE`。
+   - **機構の副判定 `RULE_DEPTH`**: DEPTH_ABOVE_LINE の真偽が当ての側（SAVE なら真、FAIL なら偽）と一致した数で `RULE_DEPTH_HOLDS`／`RULE_DEPTH_PARTIAL`／`RULE_DEPTH_FAILS`。
+   - **「規則が立った」と書けるのは、`RULE_HOLDS` かつ救った λ のすべてで DEPTH_ABOVE_LINE が真のときだけ**（verdict の `rule_stands`）。
+   - 登録時の定義（救った = RESCUED ∧ DEPTH_ABOVE_LINE）での一致の数も `rule_registered` として出す。A1-1 の予測（Claude・Fable・Codex の列）はこの定義で立てたので、それで採点する。
+   - 理由: 登録時の定義では、機能ラベルで救っている腕（RESCUED で Z/Z_ref が 0.1 をわずかに超える）を FAIL の的中に数えられた（監査 3.1）。
+2. **IMPAIRED_EARLY の腕は「救った」に入れない**（監査 3.2）。
+3. **A2 の読みのラベル（§5.7 の読みを置き換え）は同等性の帯で決める。** seed ごとに L2 Init − R の後期窓の差を D_s（記録で 10/10 seed 正）、回復の割合を ρ_s = (W_s − R_s)/D_s とする。ρ の平均の 95% t 区間（対応、n = 10）が [3/4, ∞) にあれば **`NORM_MATTERS`**（後期窓が L2 Init − 0.25D 以上 = L2 Init 並み）、(−∞, 1/4] にあれば **`TARGET_MATTERS`**（R + 0.25D 以下 = R 並み）、(1/4, 3/4) にあれば **`BOTH`**、帯の境をまたげば **`READING_UNRESOLVED`**。主判定（RESCUED／PARTIAL／NO_RESCUE）は変えない。
+   - **0.25 の根拠**: 記録の D_s（seed 0–9）は平均 0.2195・中央値 0.2206・SD 0.0302。0.25·D̄ = 0.055 は、10 seed の D の中央値の順序統計の区間 [v(2), v(9)] = [0.182, 0.252]（幅 0.070）と同じ桁で、10 seed で区別できる差の目安。帯 1/4・3/4 は R と L2 Init の間を 4 つに割り、両端の 1/4 を「並み」とする。較正として、P180 の AdamW はこの読みで ρ = −0.35 [−0.47, −0.24]（adamw5）・−0.40 [−0.56, −0.24]（adamw10）で R 並み以下（登録の判定ではない）。
+   - 登録時の読み（RESCUED かつ L2 Init より有意に下でない → NORM、NO_RESCUE → TARGET、他 → BOTH）は `reading_registered` として出し、A2-3 の各列の採点に使う。理由: 登録時の読みは「有意でない」を「並み」に置き換えていた（監査 4.1）。
+4. **Z の意味**: Z は活性化の局所微分 e^z が float32 で厳密に 0 になる（画像, unit）の対の割合（z < −103.97）で、上流の dy を掛けた dy·e^z（パラメータの勾配が実際に運ぶ量）の零率ではない。dy·e^z の零点は dy = 10⁻⁴ で −94.76、dy = 10⁻⁸ で −85.55（CUDA で実測、S-line の記録）。§1.1 (b)・§5.6 の「勾配を運ぶ」「訓練の微分が厳密に 0」は「局所微分が厳密に 0」と読み、Z から勾配の輸送は言わない（監査 1.1）。
+5. **S-ctrl の開示（§13 の 6 を強める）**: seed 100・task 4 終端の wd1e0 の s2 = 1.253 は規則の帯 [2.12, 16.3] の下にある。規則の κ（P180 の ×1.6〜2.3）と ρ1・f の、この箱の WD の状態への外挿が過大な可能性がある。そうなら s2 は小さく出て Z は下がり、際どい wd1e-1 は SAVE の側へ動く（wd3e-2 も同じ向きだが境までの余裕は大きい）。λ の水準と当ては変えない。RULE の結論は「登録した外挿の規則の当否」に限る（監査 2.1・5）。
+6. **強さの揃えの限界**: coupled と AdamW の強さの対応（2λ/√v̂）は R の全 327,500 座標の √v̂ の中央値での名目の対応で、層ごとには揃っていない（λ_W に直すと W2 で 3.1・1.6、W3 で 62・31）。coupled の走では L2 の項自身が m と v を変えるので、R で測った √v̂ は介入後の実効の率でもない。名目で揃えた AdamW との差を「通し方だけの効果」と断定しない（監査 4.2）。
+7. **EQUILIBRIUM と WIDTH の帯（§5.4・§5.5 を置き換え）**:
+   - EQUILIBRIUM の MATCH は「行ノルム ÷ 回転平衡 η√(d/(2(1−c))) が P180 で観測した帯の中」。帯は P180 の効く 2 水準 × 2 層の比 1.61〜2.25 を両側 30% 広げた **×1.238〜×2.925**（log₂ で 0.309〜1.548）。30% は P180 の中で水準と層を替えたときの比の散らばり（2.25/1.61 = ×1.40）と同じ桁で、箱を替えたことへの余裕として置いた。log₂ 比の 95% 区間が帯の中で MATCH、下端 > 上限で OFF_HIGH、上端 < 下限で OFF_LOW、他は UNRESOLVED。登録した記述的な帯への適合であり、回転平衡の機構の確認とは書かない（監査 3.3）。
+   - WIDTH の許容は層ごとに、ref の生きている間（t1–t3）の幅の傾きの seed の変動係数: 第 1 層 2.23/31.04 = **0.072**、第 2 層 8.29/73.38 = **0.113**（記録から verdict が計算する）。κ の 95% 区間が (−許容, +許容) の中で STOPPED、下端 > 許容で GROWING、上端 < −許容で SHRINKING。「止まった」= 主窓の傾きが、生きている間の成長率の seed 間の揺れより小さい。
+8. **予測の採点（§7.3 を補う）**: A1-11 は Claude の列を 3 ラベル（ABOVE_LINE ／ AT_LINE ／ UNRESOLVED、ABOVE 以外を AT:UNRESOLVED = 3:1 に分ける）で、Fable と Codex の列は二値（ABOVE_LINE か否か）で採点する。WIDTH の項目（A1-9・A1-10）は §7.1 の表の 3 つの桶（STOPPED／NOT_STOPPED／FROZEN・SPLIT）で採点し、§7.3 の「WIDTH は ALIVE のときだけ」は層ごとのラベルの評価条件を指すと読む。WIDTH_INAPPLICABLE と DOSE_INAPPLICABLE は未採点。Fable の列は参考予測（検査と Claude の予測の要約を見た後の記入）で、書かれていないラベルは「他」の桶。Codex の列は盲検（§7 の注記）。各列を別の表で採点する（監査 B.2・B.3）。
+9. **新しい予測（Claude、この追補の commit で固定。本走の前、1・3 の定義に対して）**:
+
+| # | 項目 | Claude |
+|---|---|---|
+| A1-1b | RULE_PREDICTED（14.1 の定義） | HOLDS .27 ／ PARTIAL .45 ／ FAILS .26 ／ 他 .02 |
+| A1-1c | RULE_DEPTH | HOLDS .58 ／ PARTIAL .35 ／ FAILS .05 ／ 他 .02 |
+| A2-3b | 読み（14.3 の帯、l2c1e-2） | TARGET_MATTERS .38 ／ BOTH .25 ／ READING_UNRESOLVED .25 ／ NORM_MATTERS .12 |
+
+   根拠: この箱の RESCUED は全 seed が床の上なら立つので、FAIL の当ての 2 腕（λ = 0.03・0.1）はラベルで RESCUED になりやすく、機能の一致はそこで外れやすい（一致の確率 .72・.46）。λ = 1 は RESCUED ∧ ¬IMPAIRED_EARLY .75。DEPTH の側は規則の物理に沿うので一致しやすい（.95・.75・.85）。
+10. **起動直前の実測**: `launch.sh` は起動の直前に CUDA で零点（−103.97）と出力の線（−16.98）を二分法で測り、`results/adamw_dose2_1011/launch_record.json` に残す（規則の値と違えば起動しない）。同じ測定を検査 S-line にした（`analysis/adamw_dose2_1011/lines.py`）。A2 の各起動の前にも GPU と RAM のゲートを置く（監査 1.2・7）。
+11. **環境の照合**: 検査の環境（torch・CUDA・driver・決定論・subnormal・threads）を checks.json に記録し、verdict は各腕の provenance の環境と一致しなければ全ラベルを CHECK_FAILED にする（監査 9.4）。
+12. **Codex の予測**は §7.1 の Codex の列に写した（盲検）。A1-1 と A2-3 は登録時の定義での予測なので、`rule_registered`・`reading_registered` で採点する。

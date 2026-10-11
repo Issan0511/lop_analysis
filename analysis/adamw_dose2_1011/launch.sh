@@ -28,6 +28,25 @@ nmem() { awk -v u="$(used_mib)" -v p="$PEAK" 'BEGIN{n=int((16311 - u - 2048) / (
 ram_ok() { awk -v a="$(avail_gib)" -v r="$RSS" 'BEGIN{exit !((a - 6) >= 1.2 * r)}'; }
 heavy() { ps -eo args= | grep -c "^/home/issan/Projects/claude/proj_004_drift/.venv/bin/python" || true; }
 echo "$(date -Is) launch: git $(git rev-parse HEAD)  peak ${PEAK} MiB/process  rss ${RSS} GiB  gpu used $(used_mib) MiB  N_mem $(nmem)  proj_004 python $(heavy)  all .venv python $(pgrep -c -f '[.]venv/bin/python' || true)"
+# spec 14.9: measure the float32 lines on this GPU right before the start and keep the record
+"$PY" -m analysis.adamw_dose2_1011.lines --out "$OUT/launch_record_lines.json" > /dev/null
+"$PY" - "$OUT" <<'PYEOF'
+import json, subprocess, sys, time
+out = sys.argv[1]
+lines = json.load(open(f"{out}/launch_record_lines.json"))
+smi = subprocess.run(["nvidia-smi", "--query-gpu=memory.used,memory.total,utilization.gpu,driver_version",
+                      "--format=csv,noheader"], capture_output=True, text=True).stdout.strip()
+apps = subprocess.run(["nvidia-smi", "--query-compute-apps=pid,used_memory", "--format=csv,noheader"],
+                      capture_output=True, text=True).stdout.strip().splitlines()
+head = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+rec = {"at": time.strftime("%Y-%m-%d %H:%M:%S %Z"), "git_head": head, "lines": lines, "nvidia_smi": smi,
+       "compute_apps": apps, "z0_matches_rule": lines["z0_last_zero"] < -103.97207708399179 <= lines["z0_first_nonzero"],
+       "zf_matches_rule": lines["zf"] == -16.982107162475586}
+json.dump(rec, open(f"{out}/launch_record.json", "w"), indent=1)
+print(json.dumps({k: rec[k] for k in ("at", "z0_matches_rule", "zf_matches_rule", "nvidia_smi")}))
+if not (rec["z0_matches_rule"] and rec["zf_matches_rule"]):
+    sys.exit("ABORT: the measured float32 lines differ from the rule's")
+PYEOF
 pids=()
 for arm in wd1e0 wd1e-1 wd3e-2; do
   if [ -f "$OUT/rlcifar/$arm/done.json" ]; then echo "$(date -Is) skip $arm (done)"; continue; fi
@@ -46,8 +65,15 @@ for arm in wd1e0 wd1e-1 wd3e-2; do
   pids+=("$!")
   sleep 30
 done
+PEAK2=$("$PY" -c "import json; print(json.load(open('$OUT/checks.json'))['S-cost']['c51']['gpu_mib_nvidia_smi'])")
+RSS2=$("$PY" -c "import json; print(json.load(open('$OUT/checks.json'))['S-cost']['c51']['peak_rss_gib'])")
+gpu2_ok() { awk -v u="$(used_mib)" -v p="$PEAK2" 'BEGIN{exit !((16311 - u - 2048) >= 1.2 * p)}'; }
+ram2_ok() { awk -v a="$(avail_gib)" -v r="$RSS2" 'BEGIN{exit !((a - 6) >= 1.2 * r)}'; }
 for arm in l2c1e-2 l2c5e-3; do
   if [ -f "$OUT/c51/$arm/provenance.json" ]; then echo "$(date -Is) skip $arm (done)"; continue; fi
+  until gpu2_ok && ram2_ok; do
+    echo "$(date -Is) wait for c51 $arm: gpu used $(used_mib) MiB, avail $(avail_gib) GiB"; sleep 60
+  done
   echo "$(date -Is) start c51 $arm  (gpu used $(used_mib) MiB)"
   if "$PY" -m "$MOD" c51 --arm "$arm" --seeds 0-9 --out "$OUT/c51/$arm" > "$OUT/logs/c51_$arm.log" 2>&1; then
     echo "$(date -Is) done c51 $arm"

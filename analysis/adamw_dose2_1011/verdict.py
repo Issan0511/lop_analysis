@@ -45,8 +45,11 @@ STEPS = 30000
 W0, W1 = 30, 50                     # 0-based task slice of the main window t31-50
 LEVEL = 0.975                       # every lambda arm: 2-endpoint Bonferroni (spec 5.1)
 CHANCE, HALF = 0.1, 0.5
-TOL = 0.1                           # WIDTH and DEPTH (spec 5.5, 5.6)
-EQ_BAND = 1.0                       # log2: x1/2 .. x2
+TOL = 0.1                           # DEPTH (spec 5.6)
+# EQUILIBRIUM (spec 14.7): P180's measured ratios 1.61-2.25, widened by 30% each side -> x1.238 .. x2.925
+EQ_LO, EQ_HI = 1.61 / 1.3, 2.25 * 1.3
+# A2 reading (spec 14.3): rho = (W - R) / (L - R); R-like <= 1/4, L2 Init-like >= 3/4 of the L2 Init benefit D
+RHO_LO, RHO_HI = 0.25, 0.75
 LIVE = (0, 3)                       # the ref's live tasks t1-t3 (spec 5.5)
 D1, D2 = 3072, 100
 DOSE_ALPHA = 0.05
@@ -135,6 +138,17 @@ def label_interval(lo: float, hi: float, band: float, inside: str, high: str, lo
     return "UNRESOLVED"
 
 
+def band_label(lo: float, hi: float, a: float, b: float) -> str:
+    """MATCH if [lo, hi] lies in [a, b]; OFF_HIGH if lo > b; OFF_LOW if hi < a; else UNRESOLVED."""
+    if lo >= a and hi <= b:
+        return "MATCH"
+    if lo > b:
+        return "OFF_HIGH"
+    if hi < a:
+        return "OFF_LOW"
+    return "UNRESOLVED"
+
+
 def returns(a: np.ndarray, run: int = 3) -> int:
     """'Return' events (P180): >= run consecutive tasks with F(t) < 1/2, then a task with F(t) >= 1/2."""
     f = (np.asarray(a, float) - CHANCE) / (a[0] - CHANCE)
@@ -185,8 +199,8 @@ def analyze_a1(data: dict) -> dict:
     prefix_ok = all(np.array_equal(np.asarray(arms[a][k])[:, 0], np.asarray(arms["ref"][k])[:, 0])
                     for a in ARMS1 for k in ("A", "G", "F"))
     res["applicability"].update(hashes_equal=bool(hashes_ok), prefix_equal=bool(prefix_ok),
-                                s0_ok=bool(data.get("s0_ok", False)))
-    if not (hashes_ok and prefix_ok and data.get("s0_ok", False)):
+                                s0_ok=bool(data.get("s0_ok", False)), env_ok=bool(data.get("env_ok", True)))
+    if not (hashes_ok and prefix_ok and data.get("s0_ok", False) and data.get("env_ok", True)):
         return all_labels("CHECK_FAILED")
     x = {a: {k: np.asarray(arms[a][k], np.float64) for k in ("A", "G", "F", "Z")} for a in ALL1}
     upper, fmean, fsd = CS.upper_floor(x["ref"]["F"][:, W0:W1])
@@ -249,30 +263,48 @@ def analyze_a1(data: dict) -> dict:
     res["arms"]["ref"] = {"online_late": float(win_mean(ref["A"]).mean()), "G_late": float(win_mean(ref["G"]).mean()),
                           "Z_late": float(Zref.mean()), "floor_count": int(floors["ref"].sum()),
                           "online_t1": float(ref["A"][:, 0].mean()), "online_t2": float(ref["A"][:, 1].mean())}
-    # ---- RULE_PREDICTED (spec 5.2)
+    # ---- RULE_PREDICTED (spec 14.1): functional main judgement, mechanism sub-judgement, registered conjunction
     calls = {r["arm"]: r for r in RULE.table()}
-    n_match = n_label_match = 0
+    n_main = n_depth = n_conj = n_label = 0
     rule_rows = []
     for a in ARMS1:
         lab = res["labels"][a]
-        saved = lab == "RESCUED" and res["labels"][f"{a}_depth"] == "DEPTH_ABOVE_LINE"
-        call = calls[a]["call"]
-        match = (call == "SAVES") == saved
-        lmatch = (call == "SAVES") == (lab == "RESCUED")
-        n_match += match
-        n_label_match += lmatch
+        call_save = calls[a]["call"] == "SAVES"
+        impaired = res["labels"][f"{a}_early"] == "IMPAIRED_EARLY"
+        above = res["labels"][f"{a}_depth"] == "DEPTH_ABOVE_LINE"
+        saved = lab == "RESCUED" and not impaired                    # spec 14.1-14.2: the functional outcome
+        m_main = call_save == saved
+        m_depth = call_save == above                                  # the depth side the rule predicted
+        m_conj = call_save == (lab == "RESCUED" and above)            # the registration's definition (7525f974)
+        n_main += m_main
+        n_depth += m_depth
+        n_conj += m_conj
+        n_label += call_save == (lab == "RESCUED")
         Zl = res["arms"][a]["Z_late"]
-        three_out = "SAVED" if saved else ("NOT_SAVED_Z<0.5" if Zl < 0.5 else "NOT_SAVED_Z>=0.5")
-        rule_rows.append({"arm": a, "lam": LAMBDA[a], "class": calls[a]["class"], "call": call, "label": lab,
-                          "depth": res["labels"][f"{a}_depth"], "outcome": "SAVED" if saved else "NOT_SAVED",
-                          "outcome3": three_out, "match": bool(match), "label_only_match": bool(lmatch)})
+        rule_rows.append({"arm": a, "lam": LAMBDA[a], "class": calls[a]["class"], "call": calls[a]["call"],
+                          "label": lab, "impaired_early": impaired, "depth": res["labels"][f"{a}_depth"],
+                          "outcome": "SAVED" if saved else "NOT_SAVED", "match": bool(m_main),
+                          "depth_side_match": bool(m_depth), "registered_conjunction_match": bool(m_conj),
+                          "Z_band": "Z<0.1" if Zl < 0.1 else ("0.1<=Z<0.5" if Zl < 0.5 else "Z>=0.5")})
+
+    def count_label(n, prefix):
+        return f"{prefix}_HOLDS" if n == 3 else f"{prefix}_PARTIAL" if n == 2 else f"{prefix}_FAILS"
     if any(res["labels"][a] in NONLABELS for a in ARMS1):
-        rlab = "RULE_INAPPLICABLE"
+        rlab = dlab_ = clab = "RULE_INAPPLICABLE"
+        stands = False
     else:
-        rlab = "RULE_HOLDS" if n_match == 3 else "RULE_PARTIAL" if n_match == 2 else "RULE_FAILS"
+        rlab = count_label(n_main, "RULE")
+        dlab_ = count_label(n_depth, "RULE_DEPTH")
+        clab = count_label(n_conj, "RULE")
+        stands = rlab == "RULE_HOLDS" and all(r["depth"] == "DEPTH_ABOVE_LINE" for r in rule_rows
+                                              if r["outcome"] == "SAVED")
     res["labels"]["rule"] = rlab
-    res["rule"] = {"label": rlab, "n_match": int(n_match), "n_label_only_match": int(n_label_match),
-                   "rows": rule_rows}
+    res["labels"]["rule_depth"] = dlab_
+    res["labels"]["rule_registered"] = clab
+    res["labels"]["rule_stands"] = bool(stands)
+    res["rule"] = {"label": rlab, "n_match": int(n_main), "depth_label": dlab_, "n_depth_match": int(n_depth),
+                   "registered_label": clab, "n_registered_match": int(n_conj),
+                   "n_label_only_match": int(n_label), "rule_stands": bool(stands), "rows": rule_rows}
     # ---- DOSE (spec 5.3)
     levels = {a: win_mean(x[a]["A"]) for a in ALL1}
     steps = [("ref", "wd3e-2"), ("wd3e-2", "wd1e-1"), ("wd1e-1", "wd1e0")]
@@ -299,14 +331,16 @@ def analyze_a1(data: dict) -> dict:
     g_ref = {l: np.array([slope(range(LIVE[0] + 1, LIVE[1] + 1), med["ref"][f"s{l}"][s, LIVE[0]:LIVE[1]])
                           for s in range(10)]) for l in (1, 2)}
     res["width_ref_live_slope"] = {f"s{l}": g_ref[l].tolist() for l in (1, 2)}
+    # spec 14.7: the WIDTH tolerance per layer = the seed CV of the ref's live slope (record: 0.072, 0.113)
+    wtol = {l: float(np.std(g_ref[l], ddof=1) / np.mean(g_ref[l])) for l in (1, 2)}
+    res["width_tolerance"] = {f"l{l}": wtol[l] for l in (1, 2)}
     for a in ARMS1:
         lam = LAMBDA[a]
         eq = {}
         for l, d in ((1, D1), (2, D2)):
             ratio = win_mean(med[a][f"w{l}"]) / RULE.w_star(lam, d)
             ci = CS.interval(np.log2(ratio), 0.95)
-            eq[f"l{l}"] = {"label": label_interval(ci["low"], ci["high"], EQ_BAND, "MATCH", "OFF_HIGH", "OFF_LOW",
-                                                   True),
+            eq[f"l{l}"] = {"label": band_label(ci["low"], ci["high"], math.log2(EQ_LO), math.log2(EQ_HI)),
                            "ratio_geo": float(2 ** ci["mean"]), "log2_lo": ci["low"], "log2_hi": ci["high"],
                            "w_star": RULE.w_star(lam, d), "measured": float(win_mean(med[a][f"w{l}"]).mean())}
         eq["label"] = "EQUILIBRIUM_MATCH" if all(eq[f"l{l}"]["label"] == "MATCH" for l in (1, 2)) else "EQUILIBRIUM_OFF"
@@ -331,8 +365,9 @@ def analyze_a1(data: dict) -> dict:
                                     "note": "reference live slope 0 in some seed"}
                     continue
                 ci = CS.interval(kap, 0.95)
-                wd_[f"l{l}"] = {"label": label_interval(ci["low"], ci["high"], TOL, "STOPPED", "GROWING", "SHRINKING",
-                                                        False), "kappa_mean": ci["mean"], "lo": ci["low"],
+                wd_[f"l{l}"] = {"label": label_interval(ci["low"], ci["high"], wtol[l], "STOPPED", "GROWING",
+                                                        "SHRINKING", False), "tol": wtol[l],
+                                "kappa_mean": ci["mean"], "lo": ci["low"],
                                 "hi": ci["high"], "s_late": float(win_mean(med[a][f"s{l}"]).mean())}
             wlab = "WIDTH_STOPPED" if all(wd_[f"l{l}"]["label"] == "STOPPED" for l in (1, 2)) else "WIDTH_NOT_STOPPED"
         wd_["label"] = wlab
@@ -468,14 +503,32 @@ def analyze_a2(data: dict) -> dict:
             lab = "PARTIAL"
         else:
             lab = "NO_RESCUE"
+        # spec 14.3: the reading from the share of the L2 Init benefit recovered, rho_s = (W_s - R_s) / (L_s - R_s),
+        # with its paired 95% t interval: L2 Init-like if the interval is >= 3/4, R-like if <= 1/4, between if inside
+        # (1/4, 3/4), unresolved if it crosses a boundary
+        rho = (np.array(info[a]["W_late"]) - np.array(res["R_late"])) / (np.array(res["L_late"]) - np.array(res["R_late"]))
+        rci = ci95(rho)
         if lab in ("INAPPLICABLE", "NOT_REPRODUCED"):
             reading = lab
-        elif lab == "RESCUED" and not below_L:
+        elif rci["lo"] >= RHO_HI:
             reading = "NORM_MATTERS"
-        elif lab == "NO_RESCUE":
+        elif rci["hi"] <= RHO_LO:
             reading = "TARGET_MATTERS"
-        else:
+        elif rci["lo"] > RHO_LO and rci["hi"] < RHO_HI:
             reading = "BOTH"
+        else:
+            reading = "READING_UNRESOLVED"
+        # the registration's reading (7525f974), kept to score the predictions made under it
+        if lab in ("INAPPLICABLE", "NOT_REPRODUCED"):
+            reading_reg = lab
+        elif lab == "RESCUED" and not below_L:
+            reading_reg = "NORM_MATTERS"
+        elif lab == "NO_RESCUE":
+            reading_reg = "TARGET_MATTERS"
+        else:
+            reading_reg = "BOTH"
+        info[a]["rho_interval"] = rci
+        res["labels"][f"{a}_reading_registered"] = reading_reg
         res["labels"][a] = lab
         res["labels"][f"{a}_worse"] = bool(lab == "NO_RESCUE" and ta["dir"] == "DOWN")
         res["labels"][f"{a}_impaired"] = info[a]["impaired"]["flag"]
@@ -544,6 +597,8 @@ def analyze_a2(data: dict) -> dict:
 # --------------------------------------------------------------------------
 
 OTHER = "OTHER"
+# Claude (spec 7, registered 7525f974; A1-1 and A2-3 were made under the registration's definitions and are scored
+# against them: rule_registered, <arm>_reading_registered; spec 14.1/14.3)
 CLAUDE_P = {
     "A1-1": {"RULE_HOLDS": .55, "RULE_PARTIAL": .38, "RULE_FAILS": .05, OTHER: .02},
     "A1-2": {"RESCUED": .28, "SPLIT": .28, "COLLAPSED": .22, "RESCUED_FUNCTION_ONLY": .12, "ALIVE_UNRESOLVED": .05,
@@ -558,18 +613,46 @@ CLAUDE_P = {
     "A1-8": {"EQUILIBRIUM_MATCH": .30, "EQUILIBRIUM_OFF": .70},
     "A1-9": {"WIDTH_STOPPED": .80, "WIDTH_NOT_STOPPED": .10, "WIDTH_FROZEN|WIDTH_SPLIT": .10},
     "A1-10": {"WIDTH_STOPPED": .55, "WIDTH_NOT_STOPPED": .15, "WIDTH_FROZEN|WIDTH_SPLIT": .30},
+    "A1-11.wd1e0": {"DEPTH_ABOVE_LINE": .85, "DEPTH_AT_LINE": .1125, "DEPTH_UNRESOLVED": .0375},
+    "A1-11.wd1e-1": {"DEPTH_ABOVE_LINE": .25, "DEPTH_AT_LINE": .5625, "DEPTH_UNRESOLVED": .1875},
+    "A1-11.wd3e-2": {"DEPTH_ABOVE_LINE": .05, "DEPTH_AT_LINE": .7125, "DEPTH_UNRESOLVED": .2375},
     "A2-1": {"NO_RESCUE": .43, "PARTIAL": .33, "RESCUED": .22, OTHER: .02},
     "A2-2": {"NO_RESCUE": .42, "PARTIAL": .36, "RESCUED": .20, OTHER: .02},
     "A2-3": {"TARGET_MATTERS": .41, "BOTH": .37, "NORM_MATTERS": .20, OTHER: .02},
     "A2-4": {"L2C_NO_RESCUE_RELU": .38, "L2C_PARTIAL_RELU": .33, "L2C_RESCUES_RELU": .27, OTHER: .02},
+    # spec 14.9: registered after Codex's audit and before the run, for the definitions of spec 14.1 and 14.3
+    "A1-1b": {"RULE_HOLDS": .27, "RULE_PARTIAL": .45, "RULE_FAILS": .26, OTHER: .02},
+    "A1-1c": {"RULE_DEPTH_HOLDS": .58, "RULE_DEPTH_PARTIAL": .35, "RULE_DEPTH_FAILS": .05, OTHER: .02},
+    "A2-3b": {"TARGET_MATTERS": .38, "BOTH": .25, "READING_UNRESOLVED": .25, "NORM_MATTERS": .12},
 }
 EQ_LAYER_P = {"A1-6": {"MATCH": .55, "OFF_HIGH": .35, "OFF_LOW": .03, "UNRESOLVED": .07},
               "A1-7": {"MATCH": .50, "OFF_HIGH": .35, "OFF_LOW": .05, "UNRESOLVED": .10},
               "A1-8": {"MATCH": .45, "OFF_HIGH": .20, "OFF_LOW": .20, "UNRESOLVED": .15}}
-DEPTH_P = {"wd1e0": .85, "wd1e-1": .25, "wd3e-2": .05}
 BINARY_P = {"S1": .99, "S2": .85, "S3": .97, "S4": .80, "S5": .60, "S6": .60, "S7": .55, "S8": .65, "S9": .70,
             "S10": .75, "S11": .45, "S12": .30, "C5": .30, "C6": .55, "C7": .75, "C8": .55, "C9": .60, "C10": .55,
             "C11": .85}
+# Fable (spec 7, written 10/11 15:56 after the checks; reference predictions; the unnamed remainder is one bucket)
+FABLE_P = {
+    "A1-1": {"RULE_HOLDS": .50, "RULE_PARTIAL": .40, "RULE_FAILS": .10},
+    "A1-2": {"RESCUED": .30, "SPLIT": .35, "COLLAPSED": .35},
+    "A1-3": {"RESCUED": .45, "SPLIT": .30, "COLLAPSED": .25},
+    "A1-4": {"RESCUED": .75, OTHER: .25},
+    "A2-1": {"NO_RESCUE": .40, "PARTIAL": .35, "RESCUED": .25},
+    "A2-3": {"NORM_MATTERS": .35, "BOTH": .35, "TARGET_MATTERS": .30},
+}
+FABLE_BIN = {"A1-11.wd1e0": .85, "A1-11.wd1e-1": .25, "A1-11.wd3e-2": .10, "IMPAIRED_EARLY.wd1e0": .15}
+# Codex (specs/review_codex_adamw_dose2_1011.md, fixed blind at 10/11 16:07:48 before reading spec 7)
+CODEX_P = {
+    "A1-1": {"RULE_HOLDS": .38, "RULE_PARTIAL": .47, "RULE_FAILS": .15},
+    "A1-2": {"RESCUED": .15, "SPLIT": .45, "COLLAPSED": .40},
+    "A1-3": {"RESCUED": .55, "SPLIT": .35, "COLLAPSED": .10},
+    "A1-4": {"RESCUED": .65, "SPLIT": .10, "COLLAPSED": .25},
+    "A2-1": {"RESCUED": .45, "PARTIAL": .45, "NO_RESCUE": .10},
+    "A2-2": {"RESCUED": .28, "PARTIAL": .52, "NO_RESCUE": .20},
+    "A2-3": {"NORM_MATTERS": .28, "TARGET_MATTERS": .07, "BOTH": .65},
+}
+CODEX_BIN = {"A1-11.wd3e-2": .20, "A1-11.wd1e-1": .58, "A1-11.wd1e0": .97}
+UNSCORED = ("WIDTH_INAPPLICABLE", "DOSE_INAPPLICABLE")
 
 
 def _bucket(label: str, table: dict) -> str:
@@ -587,34 +670,41 @@ def score_item(table: dict, realized: str) -> dict:
     return {"realized": realized, "bucket": b, "p": p, "mode": mode, "hit": mode == b, "brier": brier}
 
 
-def score_predictions(r1: dict, r2: dict, s0_ok: bool | None) -> dict:
+def _realized(r1: dict, r2: dict) -> dict:
     lab = {**r1.get("labels", {}), **{f"c51_{k}": v for k, v in r2.get("labels", {}).items()}}
-    items = {}
-    real = {"A1-1": lab.get("rule"), "A1-2": lab.get("wd3e-2"), "A1-3": lab.get("wd1e-1"), "A1-4": lab.get("wd1e0"),
-            "A1-5": lab.get("dose"), "A1-6": lab.get("wd1e0_equilibrium"), "A1-7": lab.get("wd1e-1_equilibrium"),
+    return {"A1-1": lab.get("rule_registered"), "A1-1b": lab.get("rule"), "A1-1c": lab.get("rule_depth"),
+            "A1-2": lab.get("wd3e-2"), "A1-3": lab.get("wd1e-1"), "A1-4": lab.get("wd1e0"), "A1-5": lab.get("dose"),
+            "A1-6": lab.get("wd1e0_equilibrium"), "A1-7": lab.get("wd1e-1_equilibrium"),
             "A1-8": lab.get("wd3e-2_equilibrium"), "A1-9": lab.get("wd1e0_width"), "A1-10": lab.get("wd1e-1_width"),
-            "A2-1": lab.get("c51_l2c1e-2"), "A2-2": lab.get("c51_l2c5e-3"), "A2-3": lab.get("c51_l2c1e-2_reading"),
+            "A1-11.wd1e0": lab.get("wd1e0_depth"), "A1-11.wd1e-1": lab.get("wd1e-1_depth"),
+            "A1-11.wd3e-2": lab.get("wd3e-2_depth"),
+            "A2-1": lab.get("c51_l2c1e-2"), "A2-2": lab.get("c51_l2c5e-3"),
+            "A2-3": lab.get("c51_l2c1e-2_reading_registered"), "A2-3b": lab.get("c51_l2c1e-2_reading"),
             "A2-4": lab.get("c51_box")}
-    for k, table in CLAUDE_P.items():
-        if real[k] is None:
-            items[k] = {"unscored": "label missing"}
-        elif k == "A1-1" and real[k] == "RULE_INAPPLICABLE":
-            items[k] = score_item(table, OTHER)
+
+
+def _score_table(tables: dict, real: dict) -> dict:
+    out = {}
+    for k, table in tables.items():
+        v = real.get(k)
+        if v is None:
+            out[k] = {"unscored": "label missing"}
+        elif v in UNSCORED:
+            out[k] = {"unscored": f"{v} (spec 14.8)"}
         else:
-            items[k] = score_item(table, real[k])
+            out[k] = score_item(table, v)
+    return out
+
+
+def score_predictions(r1: dict, r2: dict, s0_ok: bool | None) -> dict:
+    real = _realized(r1, r2)
+    lab = {**r1.get("labels", {}), **{f"c51_{k}": v for k, v in r2.get("labels", {}).items()}}
+    items = _score_table(CLAUDE_P, real)
     for k, arm in (("A1-6", "wd1e0"), ("A1-7", "wd1e-1"), ("A1-8", "wd3e-2")):
         eq = r1.get("equilibrium", {}).get(arm)
         if eq:
             for l in ("l1", "l2"):
                 items[f"{k}.{l}"] = score_item(EQ_LAYER_P[k], eq[l]["label"])
-    binary = {}
-    for arm, p in DEPTH_P.items():
-        d = lab.get(f"{arm}_depth")
-        if d is None:
-            binary[f"A1-11.{arm}"] = {"p": p, "unscored": "missing"}
-        else:
-            o = d == "DEPTH_ABOVE_LINE"
-            binary[f"A1-11.{arm}"] = {"p": p, "outcome": o, "brier": (p - o) ** 2}
     arms = r1.get("arms", {})
     fac = r1.get("factors", {})
     rule = r1.get("rule", {})
@@ -660,11 +750,27 @@ def score_predictions(r1: dict, r2: dict, s0_ok: bool | None) -> dict:
         "C10": vs("l2c5e-3", +1),
         "C11": below_L("l2c1e-2"),
     }
+    binary = {}
     for k, p in BINARY_P.items():
         o = outc.get(k)
         binary[k] = {"p": p, "unscored": "not evaluable"} if o is None else {"p": p, "outcome": bool(o),
                                                                               "brier": (p - bool(o)) ** 2}
-    return {"labels": items, "binary": binary}
+
+    def bin_items(table: dict) -> dict:
+        out = {}
+        for k, p in table.items():
+            if k.startswith("A1-11."):
+                v = real.get(k)
+                o = None if v is None else v == "DEPTH_ABOVE_LINE"
+            else:
+                v = lab.get(k.split(".")[1] + "_early")
+                o = None if v is None or v == "EARLY_FLAG_NOT_ASSESSABLE" else v == "IMPAIRED_EARLY"
+            out[k] = {"p": p, "unscored": "not evaluable"} if o is None else {"p": p, "outcome": bool(o),
+                                                                              "brier": (p - bool(o)) ** 2}
+        return out
+    return {"labels": items, "binary": binary,
+            "fable": {"labels": _score_table(FABLE_P, real), "binary": bin_items(FABLE_BIN)},
+            "codex": {"labels": _score_table(CODEX_P, real), "binary": bin_items(CODEX_BIN)}}
 
 
 # --------------------------------------------------------------------------
@@ -749,7 +855,13 @@ def load_a1(src: Path) -> dict:
                            "Z": grid(full, "zero2"), "lh": grid(full, "label_hash", str),
                            "oh": grid(full, "order_hash", str), "med": meds, "wd_ok": wd_ok, "fline2": fline}
     ck = OUT / "checks.json"
-    data["s0_ok"] = bool(ck.exists() and json.loads(ck.read_text()).get("S0", {}).get("pass"))
+    c = json.loads(ck.read_text()) if ck.exists() else {}
+    data["s0_ok"] = bool(c.get("S0", {}).get("pass"))
+    # Codex 9.4: the arms ran in the environment the checks (S0) ran in
+    envs = {a: json.loads((src / "rlcifar" / a / "provenance_start.json").read_text())["identity"]["environment"]
+            for a in ARMS1 if (src / "rlcifar" / a / "provenance_start.json").exists()}
+    data["env_ok"] = bool(c.get("environment")) and all(e == c.get("environment") for e in envs.values())
+    data["envs"] = envs
     return data
 
 
@@ -829,25 +941,31 @@ def summary_md(r1: dict, r2: dict, sc: dict, head: str) -> str:
     L.append(f"- (B) ref の床 {ap.get('ref_floor_count')}/10・ref の E2 の上端 "
              f"{fmt(ap.get('ref_E2', {}).get('high'), 4)} → **{ap.get('B_ok')}**")
     L.append(f"- (C) {ap.get('C')}\n")
-    L.append("| 腕 | λ | 規則の分類 | 二値の当て | ラベル（97.5%） | 床 | 主窓 online | δE1 [97.5%] | δE2 [97.5%] | Z（主窓） | DEPTH | 結果 | 一致 | IMPAIRED_EARLY | 戻り（seed ごと） |")
-    L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    L.append("| 腕 | λ | 規則の分類 | 二値の当て | ラベル（97.5%） | 床 | 主窓 online | δE1 [97.5%] | δE2 [97.5%] | Z（主窓） | DEPTH | 結果（RESCUED ∧ ¬IMPAIRED） | 一致（主） | DEPTH の側の一致 | IMPAIRED_EARLY | 戻り（seed ごと） |")
+    L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     rr = {r["arm"]: r for r in r1.get("rule", {}).get("rows", [])}
     for a in ARMS1:
         x = r1.get("arms", {}).get(a)
         if not x or a not in rr:
-            L.append(f"| {a} | {LAMBDA[a]} | — | — | {lab.get(a)} | | | | | | | | | | |")
+            L.append(f"| {a} | {LAMBDA[a]} | — | — | {lab.get(a)} | | | | | | | | | | | |")
             continue
         L.append(f"| {a} | {LAMBDA[a]} | {rr[a]['class']} | {rr[a]['call']} | **{x['label']}** | {x['floor_state']} "
                  f"({x['floor_count']}/10) | {x['online_late']:.3f} | {fmt(x['E1']['mean'])} [{fmt(x['E1']['low'])}, "
                  f"{fmt(x['E1']['high'])}] | {fmt(x['E2']['mean'], 4)} [{fmt(x['E2']['low'], 4)}, {fmt(x['E2']['high'], 4)}] "
                  f"| {x['Z_late']:.4f} | {lab.get(f'{a}_depth')} | {rr[a]['outcome']} | {'○' if rr[a]['match'] else '×'} "
-                 f"| {x['early']} ({x['early_count']}) | {', '.join(map(str, x['returns']))} |")
+                 f"| {'○' if rr[a]['depth_side_match'] else '×'} | {x['early']} ({x['early_count']}) | "
+                 f"{', '.join(map(str, x['returns']))} |")
     rref = r1.get("arms", {}).get("ref", {})
     L.append(f"\nref: 主窓 online {rref.get('online_late', float('nan')):.3f}・Z {rref.get('Z_late', float('nan')):.4f}・"
              f"task 1 {rref.get('online_t1', float('nan')):.3f}・task 2 {rref.get('online_t2', float('nan')):.3f}\n")
     ru = r1.get("rule", {})
-    L.append(f"**RULE_PREDICTED: {ru.get('label')}**（一致 {ru.get('n_match')}/3。ラベルだけの一致 "
-             f"{ru.get('n_label_only_match')}/3）\n")
+    L.append(f"**RULE_PREDICTED（主・機能）: {ru.get('label')}**（一致 {ru.get('n_match')}/3）・**RULE_DEPTH（機構）: "
+             f"{ru.get('depth_label')}**（{ru.get('n_depth_match')}/3）・規則が立った（機能 3/3 かつ救った λ で "
+             f"DEPTH_ABOVE_LINE）: **{ru.get('rule_stands')}**・登録時の定義（RESCUED ∧ DEPTH）での一致 "
+             f"{ru.get('n_registered_match')}/3（{ru.get('registered_label')}、A1-1 の採点に使う）・ラベルだけの一致 "
+             f"{ru.get('n_label_only_match')}/3\n")
+    L.append("Z は活性化の局所微分 e^z が float32 で厳密に 0 になる（画像, unit）の対の割合で、上流の dy を掛けた "
+             "dy·e^z の零率ではない（spec §14.4）。\n")
     L.append("### 2.1 規則の因子: 実測と帯（主窓、seed 平均）\n")
     L.append("| 腕 | κ1 | κ2 | ρ1 | f | r | s2 | m = r·s2 | 中央の z̄₂ | Z | F（z ≤ −16.98） |")
     L.append("|---|---|---|---|---|---|---|---|---|---|---|")
@@ -858,7 +976,8 @@ def summary_md(r1: dict, r2: dict, sc: dict, head: str) -> str:
         cell = lambda k: f"{f_[k]['measured']:.3g} [{f_[k]['band_lo']:.3g}, {f_[k]['band_hi']:.3g}]{'' if f_[k]['inside'] else ' 外'}"
         L.append(f"| {a} | {cell('kappa1')} | {cell('kappa2')} | {cell('rho1')} | {cell('f')} | {cell('r')} | "
                  f"{cell('s2')} | {cell('m')} | {f_['zbar2_measured']:.3g} | {cell('Z')} | {cell('F')} |")
-    L.append("\n### 2.2 DOSE・EQUILIBRIUM・WIDTH\n")
+    L.append("\n### 2.2 DOSE・EQUILIBRIUM（帯 ×1.24〜×2.93、spec §14.7）・WIDTH（許容 = ref の t1–3 の傾きの seed の変動係数 "
+             f"{r1.get('width_tolerance', {})}）\n")
     L.append(f"- DOSE: **{lab.get('dose')}** " + "・".join(
         f"{s['step']} {s['pos']}/{s['n']} p {s['p']:.4g} {s['dir']} 中央値 {s['median']:+.4f}" for s in r1.get("dose", {}).get("steps", [])))
     for a in ARMS1:
@@ -874,17 +993,20 @@ def summary_md(r1: dict, r2: dict, sc: dict, head: str) -> str:
     ap2 = r2.get("applicability", {})
     L.append(f"- (A) 欠け {ap2.get('incomplete')}・照合 {ap2.get('reuse')}・バッチ列の sha256 一致 {ap2.get('fresh_batches_same')}")
     L.append(f"- (B) R の fresh gap {ap2.get('B_R_fresh_gap')} → {ap2.get('B_ok')}・(C) {ap2.get('C')}\n")
-    L.append("| 腕 | λ | ラベル | 読み | WORSE | IMPAIRED | a = W−R 中央値 · +/n · p | c = W−M 中央値 · +/n · p | W−L 中央値 · +/n · p | 後期窓 W | 揃った AdamW との差（中央値 · +/n · p） |")
-    L.append("|---|---|---|---|---|---|---|---|---|---|---|")
+    L.append("| 腕 | λ | ラベル | 読み（帯） | ρ = (W−R)/(L−R) [95%] | 登録時の読み | WORSE | IMPAIRED | a = W−R 中央値 · +/n · p | c = W−M 中央値 · +/n · p | W−L 中央値 · +/n · p | 後期窓 W | 名目で揃えた AdamW との差（中央値 · +/n · p） |")
+    L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     T = r2.get("tests", {})
     for a in ARMS2:
         if f"a|{a}" not in T:
-            L.append(f"| {a} | {LAMBDA2[a]} | {l2.get(a)} | {l2.get(a + '_reading')} | | | | | | | |")
+            L.append(f"| {a} | {LAMBDA2[a]} | {l2.get(a)} | {l2.get(a + '_reading')} | | | | | | | | | |")
             continue
         ta, tc, tl = T[f"a|{a}"], T[f"c|{a}"], T[f"L|{a}"]
         inf = r2["info"][a]
         vm = inf.get("vs_matched_adamw", {})
-        L.append(f"| {a} | {LAMBDA2[a]} | **{l2.get(a)}** | **{l2.get(a + '_reading')}** | {l2.get(a + '_worse')} | "
+        ri = inf.get("rho_interval", {})
+        L.append(f"| {a} | {LAMBDA2[a]} | **{l2.get(a)}** | **{l2.get(a + '_reading')}** | {ri.get('mean', float('nan')):+.3f} "
+                 f"[{ri.get('lo', float('nan')):+.3f}, {ri.get('hi', float('nan')):+.3f}] | {l2.get(a + '_reading_registered')} | "
+                 f"{l2.get(a + '_worse')} | "
                  f"{l2.get(a + '_impaired')} | {ta['median']:+.4f} · {ta['pos']}/{ta['n']} · {ta['p']:.4g} | "
                  f"{tc['median']:+.4f} · {tc['pos']}/{tc['n']} · {tc['p']:.4g} | {tl['median']:+.4f} · {tl['pos']}/{tl['n']} · "
                  f"{tl['p']:.4g} | {inf['W_late_mean']:.4f} | {vm.get('adamw')} {vm.get('median', float('nan')):+.4f} · "
@@ -911,6 +1033,19 @@ def summary_md(r1: dict, r2: dict, sc: dict, head: str) -> str:
     for k, v in sc["binary"].items():
         L.append(f"| {k} | {v['p']:.2f} | {v.get('outcome', '未採点（' + str(v.get('unscored')) + '）')} | "
                  f"{'' if 'brier' not in v else format(v['brier'], '.3f')} |")
+    for who, key in (("Fable（参考予測。検査と Claude の予測の要約を見た後の記入）", "fable"),
+                     ("Codex（盲検、10/11 16:07:48 に §7 を見る前に確定）", "codex")):
+        t = sc.get(key, {})
+        L.append(f"\n**{who}**\n")
+        L.append("| 項目 | 実現 | p(実現) | 最頻 | 的中 | Brier |")
+        L.append("|---|---|---|---|---|---|")
+        for k, v in t.get("labels", {}).items():
+            if "realized" in v:
+                L.append(f"| {k} | {v['realized']}（桶 {v['bucket']}） | {v['p']:.2f} | {v['mode']} | {'○' if v['hit'] else '×'} | {v['brier']:.3f} |")
+            else:
+                L.append(f"| {k} | 未採点（{v.get('unscored')}） | | | | |")
+        for k, v in t.get("binary", {}).items():
+            L.append(f"| {k}（二値） | {v.get('outcome', '未採点')} | {v['p']:.2f} | | | {'' if 'brier' not in v else format(v['brier'], '.3f')} |")
     lb = [v["brier"] for v in sc["labels"].values() if "brier" in v]
     bb = [v["brier"] for v in sc["binary"].values() if "brier" in v]
     L.append(f"\nラベルの項目の Brier 平均 {np.mean(lb) if lb else float('nan'):.3f}（{len(lb)} 項目）・二値の項目の Brier 平均 "

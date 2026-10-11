@@ -44,7 +44,7 @@ from src import pmnist_0905 as H                       # noqa: E402
 from src import rlcifar_mlp_battle_0918 as B           # noqa: E402
 from src import cifar5p1_mlp_0920 as C                 # noqa: E402
 from src.cifar_interventions_0920 import core_state, load_pt, tree_hash, make_inputs   # noqa: E402
-from analysis.cifar_ledger_0920.replay import output_artifact, setup   # noqa: E402
+from analysis.cifar_ledger_0920.replay import environment, output_artifact, setup   # noqa: E402
 from analysis.cap_cifar_ee_0920 import stats as CS     # noqa: E402
 
 RUN = "adamw_dose2_1011"
@@ -52,6 +52,8 @@ A1F = REPO / "src" / "adamw_dose2_1011.py"
 A2F = REPO / "src" / "adamw_dose2_1011_c51.py"
 CLI = REPO / "src" / "adamw_dose2_1011_run.py"
 VERDICT = REPO / "analysis" / RUN / "verdict.py"
+LINES = REPO / "analysis" / RUN / "lines.py"
+RULEF = REPO / "analysis" / RUN / "rule.py"
 OUT = REPO / "results" / RUN
 SCR = REPO / "results" / f"_checks_{RUN}"
 DUMP_PATH = OUT / "checks.json"
@@ -59,7 +61,8 @@ CAP = REPO / "results" / "cap_cifar_ee_0920"
 HOST_DIR = REPO / "results" / "cifar5p1_mlp_0920"
 HOST_REC = HOST_DIR / "R_std_lr0.0001"
 SOURCES = ("src/adamw_dose2_1011.py", "src/adamw_dose2_1011_c51.py", "src/adamw_dose2_1011_run.py",
-           "analysis/adamw_dose2_1011/checks.py", "analysis/adamw_dose2_1011/rule.py")
+           "analysis/adamw_dose2_1011/checks.py", "analysis/adamw_dose2_1011/rule.py",
+           "analysis/adamw_dose2_1011/lines.py")
 PY = sys.executable
 U32, U64 = 2.0 ** -24, 2.0 ** -53
 PRINT_REL = 5e-10
@@ -1220,6 +1223,7 @@ def _a2_frame(late, early, seeds=SEEDS, extra_cols=True):
 
 
 def _synth_a2(arms: dict, gap=0.2, reuse=True, broken=None, drop=None, seed=3) -> dict:
+    """arms[a] = (rho, early_shift): the late window W = R + rho (L - R) seed by seed (rho a number or (10,) array)."""
     rng = np.random.default_rng(seed)
     Rl = 0.44 + rng.normal(0, 0.02, 10)
     Re = 0.61 + rng.normal(0, 0.02, 10)
@@ -1231,14 +1235,10 @@ def _synth_a2(arms: dict, gap=0.2, reuse=True, broken=None, drop=None, seed=3) -
                                                              "adamw10": _a2_frame(Rl - 0.09, Re - 0.15)},
             "nochange": {"prov": {"fresh_batches_sha256": "x"}},
             "reuse": {k: reuse for k in ("a", "b", "c", "coupled_host")}, "arms": {}}
-    for a, (kind, early_shift) in arms.items():
+    for a, (rho, early_shift) in arms.items():
         if drop == a:
             continue
-        M_ = (Rl + Ll) / 2
-        late = {"norm": Ll + 0.01, "both_hi": M_ + 0.03 + 0 * Ll, "partial": (Rl + M_) / 2, "none": Rl + rng.choice([-1, 1], 10) * 0.001,
-                "worse": Rl - 0.05}[kind]
-        if kind == "both_hi":
-            late = np.minimum(M_ + 0.03, Ll - 0.04)
+        late = Rl + np.asarray(rho, float) * (Ll - Rl)
         l2 = pd.DataFrame([{"seed": s, "task": t, "steps": 780, **{f"l2_steps_{nm}": (779 if broken == a else 780)
                                                                    for nm in ("W1", "b1", "W2", "b2", "W3", "b3")},
                             **{c: 0.1 for c in ("relpos_l2", "p2", "b1_norm", "b2_norm", "b3_norm", "w1_row_med",
@@ -1278,7 +1278,7 @@ def s_verdict(V) -> dict:
     per["2A_labels"] = (L["wd3e-2"], L["wd1e-1"], L["wd1e0"]) == ("COLLAPSED", "SPLIT", "RESCUED")
     per["2A_depth"] = (L["wd3e-2_depth"], L["wd1e-1_depth"], L["wd1e0_depth"]) == ("DEPTH_AT_LINE", "DEPTH_AT_LINE",
                                                                                    "DEPTH_ABOVE_LINE")
-    per["2A_rule_holds"] = L["rule"] == "RULE_HOLDS"
+    per["2A_rule_holds"] = (L["rule"], L["rule_depth"], L["rule_stands"]) == ("RULE_HOLDS", "RULE_DEPTH_HOLDS", True)
     per["2A_dose_monotone"] = L["dose"] == "DOSE_MONOTONE"
     per["2A_width"] = (L["wd3e-2_width"], L["wd1e-1_width"], L["wd1e0_width"]) == ("WIDTH_FROZEN", "WIDTH_SPLIT",
                                                                                    "WIDTH_STOPPED")
@@ -1293,7 +1293,10 @@ def s_verdict(V) -> dict:
     L = Bs["labels"]
     per["2B_rfo_au"] = (L["wd3e-2"], L["wd1e-1"]) == ("RESCUED_FUNCTION_ONLY", "ALIVE_UNRESOLVED")
     per["2B_depth_unresolved"] = L["wd1e0_depth"] == "DEPTH_UNRESOLVED"
-    per["2B_rule_partial"] = L["rule"] == "RULE_PARTIAL"
+    per["2B_rule_main_holds"] = L["rule"] == "RULE_HOLDS"                 # functional: RFO, AU not saved; wd1e0 saved
+    per["2B_rule_depth_fails"] = L["rule_depth"] == "RULE_DEPTH_FAILS"     # Z 0.001 at a FAIL call; UNRESOLVED at SAVE
+    per["2B_rule_registered_partial"] = L["rule_registered"] == "RULE_PARTIAL"
+    per["2B_rule_not_stands"] = L["rule_stands"] is False
     per["2B_dose_peaked"] = L["dose"] == "DOSE_PEAKED"
     per["2B_equilibrium"] = (L["wd3e-2_equilibrium"], _lab(Bs, "equilibrium", "wd3e-2", "l1"),
                              _lab(Bs, "equilibrium", "wd1e0", "l2")) == ("EQUILIBRIUM_OFF", "OFF_HIGH", "UNRESOLVED")
@@ -1324,6 +1327,17 @@ def s_verdict(V) -> dict:
         "wd1e0": dict(online=_v(0.8), G=("rel", 0.01 + 0.0129 * z), Z=_v(0.001), eq=eq_ok, kap=kap0)}))
     per["2G_task1_base_rescued"] = Gs["labels"]["wd3e-2"] == "RESCUED"
     per["2G_bonferroni_rfo"] = Gs["labels"]["wd1e0"] == "RESCUED_FUNCTION_ONLY"
+    # scenario H: an IMPAIRED_EARLY RESCUED arm is not SAVED; a ratio of 1 lies below P180's band; a width slope of
+    # 0.05 x the ref's live slope is above the seed-CV tolerance
+    Hs = V.analyze_a1(_synth_a1(V, {
+        "wd3e-2": dict(online=_v(0.10), G=_v(1e-5), Z=_v(0.95), eq=eq_ok, kap=kap0),
+        "wd1e-1": dict(online=HALF_SPLIT, G=_v(0.02), Z=_v(0.5), eq=(_v(1.0), _v(1.0)), kap=kap0),
+        "wd1e0": dict(online=_v(0.8), t2=_v(0.2), G=_v(0.15), Z=_v(0.001), eq=eq_ok, kap=(_v(0.05), _v(0.05)))}))
+    L = Hs["labels"]
+    per["2H_impaired_not_saved"] = (L["wd1e0"], L["wd1e0_early"], L["rule"], L["rule_registered"]) == \
+        ("RESCUED", "IMPAIRED_EARLY", "RULE_PARTIAL", "RULE_HOLDS")
+    per["2H_eq_ratio1_off_low"] = _lab(Hs, "equilibrium", "wd1e-1", "l1") == "OFF_LOW"
+    per["2H_width_tolerance"] = _lab(Hs, "width", "wd1e0", "l1") == "GROWING"
     # scenario D: DOSE_FLAT
     flat = 0.10 + np.array([1, -1] * 5) * 0.004
     Ds = V.analyze_a1(_synth_a1(V, {a: dict(online=flat[::k], G=_v(1e-5), Z=_v(0.99), eq=eq_ok, kap=kap0)
@@ -1347,24 +1361,31 @@ def s_verdict(V) -> dict:
     per["2E_inapplicable"] = ina["wd1e-1"] == "INAPPLICABLE" and ina["rule"] == "RULE_INAPPLICABLE" and \
         ina["dose"] == "DOSE_INAPPLICABLE" and ina["wd1e0"] == "RESCUED"
     # (3) A2
-    a = V.analyze_a2(_synth_a2({"l2c1e-2": ("norm", 0.0), "l2c5e-3": ("partial", 0.0)}))["labels"]
-    per["3a_norm_partial"] = (a["l2c1e-2"], a["l2c1e-2_reading"], a["l2c5e-3"], a["l2c5e-3_reading"], a["box"]) == \
-        ("RESCUED", "NORM_MATTERS", "PARTIAL", "BOTH", "L2C_RESCUES_RELU")
-    b = V.analyze_a2(_synth_a2({"l2c1e-2": ("both_hi", 0.0), "l2c5e-3": ("worse", -0.1)}))["labels"]
-    per["3b_both_worse_impaired"] = (b["l2c1e-2"], b["l2c1e-2_reading"], b["l2c5e-3"], b["l2c5e-3_reading"],
-                                     b["l2c5e-3_worse"], b["l2c5e-3_impaired"], b["l2c1e-2_impaired"]) == \
-        ("RESCUED", "BOTH", "NO_RESCUE", "TARGET_MATTERS", True, True, False)
-    c = V.analyze_a2(_synth_a2({"l2c1e-2": ("none", 0.0), "l2c5e-3": ("none", 0.0)}))["labels"]
-    per["3c_no_rescue_box"] = (c["l2c1e-2"], c["l2c1e-2_worse"], c["box"]) == ("NO_RESCUE", False, "L2C_NO_RESCUE_RELU")
-    p_ = V.analyze_a2(_synth_a2({"l2c1e-2": ("partial", 0.0), "l2c5e-3": ("partial", 0.0)}))["labels"]
-    per["3d_partial_box"] = p_["box"] == "L2C_PARTIAL_RELU"
-    per["3e_incomplete"] = V.analyze_a2(_synth_a2({"l2c1e-2": ("norm", 0.0), "l2c5e-3": ("norm", 0.0)},
+    a = V.analyze_a2(_synth_a2({"l2c1e-2": (1.05, 0.0), "l2c5e-3": (0.5, 0.0)}))["labels"]
+    per["3a_norm_both"] = (a["l2c1e-2"], a["l2c1e-2_reading"], a["l2c1e-2_reading_registered"], a["l2c5e-3"],
+                           a["l2c5e-3_reading"], a["l2c5e-3_reading_registered"], a["box"]) == \
+        ("RESCUED", "NORM_MATTERS", "NORM_MATTERS", "PARTIAL", "BOTH", "BOTH", "L2C_RESCUES_RELU")
+    b = V.analyze_a2(_synth_a2({"l2c1e-2": (0.6, 0.0), "l2c5e-3": (-0.25, -0.1)}))["labels"]
+    per["3b_both_target_worse_impaired"] = (b["l2c1e-2"], b["l2c1e-2_reading"], b["l2c1e-2_reading_registered"],
+                                            b["l2c5e-3"], b["l2c5e-3_reading"], b["l2c5e-3_worse"],
+                                            b["l2c5e-3_impaired"], b["l2c1e-2_impaired"]) == \
+        ("RESCUED", "BOTH", "BOTH", "NO_RESCUE", "TARGET_MATTERS", True, True, False)
+    tiny = np.array([1, -1] * 5) * 0.001
+    c = V.analyze_a2(_synth_a2({"l2c1e-2": (tiny, 0.0), "l2c5e-3": (tiny, 0.0)}))["labels"]
+    per["3c_no_rescue_target"] = (c["l2c1e-2"], c["l2c1e-2_worse"], c["l2c1e-2_reading"], c["box"]) == \
+        ("NO_RESCUE", False, "TARGET_MATTERS", "L2C_NO_RESCUE_RELU")
+    p_ = V.analyze_a2(_synth_a2({"l2c1e-2": (0.15, 0.0), "l2c5e-3": (0.15, 0.0)}))["labels"]
+    per["3d_partial_box"] = (p_["box"], p_["l2c1e-2"], p_["l2c1e-2_reading"]) == \
+        ("L2C_PARTIAL_RELU", "PARTIAL", "TARGET_MATTERS")
+    u = V.analyze_a2(_synth_a2({"l2c1e-2": (np.array([0.6, 0.9] * 5), 0.0), "l2c5e-3": (0.7, 0.0)}))["labels"]
+    per["3f_unresolved_and_both"] = (u["l2c1e-2_reading"], u["l2c5e-3_reading"]) == ("READING_UNRESOLVED", "BOTH")
+    per["3e_incomplete"] = V.analyze_a2(_synth_a2({"l2c1e-2": (1.0, 0.0), "l2c5e-3": (1.0, 0.0)},
                                                   drop="l2c5e-3"))["labels"]["box"] == "INCOMPLETE"
-    per["3e_check_failed"] = V.analyze_a2(_synth_a2({"l2c1e-2": ("norm", 0.0), "l2c5e-3": ("norm", 0.0)},
+    per["3e_check_failed"] = V.analyze_a2(_synth_a2({"l2c1e-2": (1.0, 0.0), "l2c5e-3": (1.0, 0.0)},
                                                     reuse=False))["labels"]["box"] == "CHECK_FAILED"
-    per["3e_inapplicable"] = V.analyze_a2(_synth_a2({"l2c1e-2": ("norm", 0.0), "l2c5e-3": ("norm", 0.0)},
+    per["3e_inapplicable"] = V.analyze_a2(_synth_a2({"l2c1e-2": (1.0, 0.0), "l2c5e-3": (1.0, 0.0)},
                                                     broken="l2c5e-3"))["labels"]["l2c5e-3"] == "INAPPLICABLE"
-    per["3e_not_reproduced"] = V.analyze_a2(_synth_a2({"l2c1e-2": ("norm", 0.0), "l2c5e-3": ("norm", 0.0)},
+    per["3e_not_reproduced"] = V.analyze_a2(_synth_a2({"l2c1e-2": (1.0, 0.0), "l2c5e-3": (1.0, 0.0)},
                                                       gap=-0.05))["labels"]["box"] == "NOT_REPRODUCED"
     # (4)
     tq = {(0.975, 9): 2.262157, (1 - 0.025 / 2, 9): 2.685011, (0.95, 19): 1.729133}
@@ -1389,8 +1410,11 @@ def _synth_b(V, ref_late, zspread, eq_ok, kap0):
 
 
 VERDICT_MUT = [
-    ("Mv1: the RULE outcome without DEPTH",
-     [('        saved = lab == "RESCUED" and res["labels"][f"{a}_depth"] == "DEPTH_ABOVE_LINE"\n',
+    ("Mv1: the main RULE outcome requires DEPTH too (the registration's conjunction)",
+     [('        saved = lab == "RESCUED" and not impaired                    # spec 14.1-14.2: the functional outcome\n',
+       '        saved = lab == "RESCUED" and not impaired and above\n')]),
+    ("Mv1b: IMPAIRED_EARLY not excluded from SAVED",
+     [('        saved = lab == "RESCUED" and not impaired                    # spec 14.1-14.2: the functional outcome\n',
        '        saved = lab == "RESCUED"\n')]),
     ("Mv2: the floor with 3 sd instead of the t quantile",
      [('    upper, fmean, fsd = CS.upper_floor(x["ref"]["F"][:, W0:W1])\n',
@@ -1404,10 +1428,34 @@ VERDICT_MUT = [
     ("Mv6: A2's midpoint = R",
      [("        c_d[a] = np.array([Wl[s] - (Rl[s] + Ll[s]) / 2.0 for s in SEEDS2])\n",
        "        c_d[a] = np.array([Wl[s] - (Rl[s] + Rl[s]) / 2.0 for s in SEEDS2])\n")]),
-    ("Mv7: the reading ignores the L2 Init comparison",
-     [('        elif lab == "RESCUED" and not below_L:\n', '        elif lab == "RESCUED":\n')]),
+    ("Mv7: the reading bands at 1/3 and 2/3", [("RHO_LO, RHO_HI = 0.25, 0.75", "RHO_LO, RHO_HI = 1 / 3, 2 / 3")]),
+    ("Mv8: a straddling interval read as BOTH",
+     [('        else:\n            reading = "READING_UNRESOLVED"\n', '        else:\n            reading = "BOTH"\n')]),
+    ("Mv9: EQUILIBRIUM back to x1/2 .. x2", [("EQ_LO, EQ_HI = 1.61 / 1.3, 2.25 * 1.3", "EQ_LO, EQ_HI = 0.5, 2.0")]),
+    ("Mv10: WIDTH tolerance fixed at 0.1",
+     [("    wtol = {l: float(np.std(g_ref[l], ddof=1) / np.mean(g_ref[l])) for l in (1, 2)}",
+       "    wtol = {l: 0.1 for l in (1, 2)}")]),
 ]
 
+
+# --------------------------------------------------------------------------
+# S-line: the float32 lines on this GPU (spec 1.1 (a), 14.4, 14.9)
+# --------------------------------------------------------------------------
+
+def s_line(Rm) -> dict:
+    """On this GPU (analysis/adamw_dose2_1011/lines.py, bisection over float32): (i) the largest z with F.elu(z) == -1
+    equals rule.ZF_CUDA bit for bit; (ii) the rule's zero line rule.Z0 lies in (the last z whose local derivative is
+    exactly 0, the next float32 above it], i.e. Z0 is the derivative's float32 zero to one ulp; (iii) report only:
+    the last zero of dy * e^z for dy = 1e-4 and 1e-8.  The raw values are kept in this record."""
+    m = load(LINES).measure("cuda")
+    per = {"i_forward_line_is_ZF_CUDA": m["zf"] == Rm.ZF_CUDA,
+           "ii_Z0_is_the_local_derivative_zero": m["z0_last_zero"] < Rm.Z0 <= m["z0_first_nonzero"]}
+    return result(per, {"measured": m})
+
+
+LINE_MUT = [("Ml1: the CPU forward line taken for the CUDA one",
+             [("ZF_CUDA = -16.982107162475586 ", "ZF_CUDA = -16.635532333438686 ")]),
+            ("Ml2: the MNIST host's line taken as the zero", [("Z0 = math.log(2.0 ** -150)", "Z0 = math.log(2.0 ** -24)")])]
 
 # --------------------------------------------------------------------------
 # S-cli
@@ -1606,8 +1654,9 @@ CHECKS = {
     "S-fresh-c51": ("S-fresh-c51 the fresh controls (A2)", s_fresh_c51, FRESHC51_MUT, s_fresh_c51.__doc__, A2F, 2),
     "S-verdict": ("S-verdict the verdict returns the designed labels", s_verdict, VERDICT_MUT, s_verdict.__doc__, VERDICT, 2),
     "S-cli": ("S-cli the CLI maps, defaults and admits", s_cli, CLI_MUT, s_cli.__doc__, CLI, 2),
+    "S-line": ("S-line the float32 lines of F.elu on this GPU", s_line, LINE_MUT, s_line.__doc__, RULEF, 2),
 }
-ORDER = ("S-verdict", "S-wd", "S-torch", "S0", "S-branch", "S-graph", "S-resume", "S-ctrl", "S-nochange",
+ORDER = ("S-verdict", "S-line", "S-wd", "S-torch", "S0", "S-branch", "S-graph", "S-resume", "S-ctrl", "S-nochange",
          "S-host-repro", "S-coupled-host", "S-mut", "S-graph-c51", "S-fresh-c51", "S-cli", "S-cost")
 
 
@@ -1618,7 +1667,7 @@ def main() -> None:
     ap.add_argument("--merge", default="", help="comma separated partial json files of one source state -> checks.json")
     args = ap.parse_args()
     if args.merge:
-        merge([Path(x) for x in args.merge.split(",") if x])
+        merge([Path(x).resolve() for x in args.merge.split(",") if x])
         return
     only = [k for k in args.only.split(",") if k]
     SCR.mkdir(parents=True, exist_ok=True)
@@ -1630,6 +1679,8 @@ def main() -> None:
                                                text=True).stdout.strip(),
                     "source_sha256": {s: sha(REPO / s) for s in SOURCES}, "verdict_sha256": sha(VERDICT),
                     "torch": torch.__version__, "python": sys.version.split()[0]})
+    dev()
+    RESULTS["environment"] = environment()        # Codex 9.4: the verdict compares the arms' environment with this
     for k in ORDER:
         if only and k not in only:
             continue
@@ -1654,9 +1705,15 @@ def merge(parts: list[Path]) -> None:
     merged = {"run_id": RUN, "spec": "specs/spec_adamw_dose2_1011.md",
               "prereg_commit": "7525f9747a6a2872c30eb380fe3da4809bc6fa95", "git_head": head, "source_sha256": now,
               "verdict_sha256": sha(VERDICT), "merged_from": [str(p.relative_to(REPO)) for p in parts]}
+    envs = []
     for p in parts:
         d = json.loads(p.read_text())
         assert d["source_sha256"] == now and d["git_head"] == head and d["verdict_sha256"] == sha(VERDICT), p
+        envs.append(d.get("environment"))
+    assert envs and all(e == envs[0] for e in envs) and envs[0], "the parts ran in different environments"
+    merged["environment"] = envs[0]
+    for p in parts:
+        d = json.loads(p.read_text())
         for k, v in d.items():
             if k.startswith("S") and isinstance(v, dict) and "pass" in v:
                 assert k not in merged, f"{k} twice"

@@ -45,10 +45,11 @@ REPO = Path(__file__).resolve().parents[1]
 OUT_ROOT = REPO / "results" / EXPERIMENT
 CHECKS_JSON = OUT_ROOT / "checks.json"
 SOURCES = ("src/adamw_dose2_1011.py", "src/adamw_dose2_1011_c51.py", "src/adamw_dose2_1011_run.py",
-           "analysis/adamw_dose2_1011/checks.py", "analysis/adamw_dose2_1011/rule.py")
+           "analysis/adamw_dose2_1011/checks.py", "analysis/adamw_dose2_1011/rule.py",
+           "analysis/adamw_dose2_1011/lines.py")
 REQUIRED_CHECKS = ("S0", "S-wd", "S-torch", "S-branch", "S-ctrl", "S-graph", "S-resume", "S-nochange",
                    "S-host-repro", "S-coupled-host", "S-mut", "S-graph-c51", "S-fresh-c51", "S-verdict", "S-cli",
-                   "S-cost")
+                   "S-cost", "S-line")
 A1_REGISTERED = dict(tasks=A1.TASKS, epochs=A1.EPOCHS, graph=True, threads=2, seeds=list(A1.SEEDS))
 A1_ARMS = A1.REGISTERED_ARMS
 C51_SEEDS = {"l2c1e-2": [list(range(10))], "l2c5e-3": [list(range(10))]}
