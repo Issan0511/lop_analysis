@@ -1,0 +1,129 @@
+{
+  "run_id": "adamw_dose2_1011",
+  "git_hash": "88ce3c75568c46122a3062a086f8502bce245cb4",
+  "dirty_src_analysis": [],
+  "l2_arm": "l2c1e-2",
+  "mode": "coupled",
+  "lam": 0.01,
+  "c_hex_decoupled_only": null,
+  "prereg_commit": "7525f9747a6a2872c30eb380fe3da4809bc6fa95",
+  "l2_rule": "gr = gr.add(p.detach(), alpha=2.0 * lam) before m and v on all six tensors (the host's iv='l2' op); a device counter per tensor",
+  "arm": "R",
+  "cond": "std",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "R": 10,
+  "lr": 0.0001,
+  "n_tasks": 30,
+  "steps_per_task": 780,
+  "steps_hard": 780,
+  "steps_easy": 780,
+  "batch": 32,
+  "hidden": 100,
+  "layer_shapes": [
+    [
+      100,
+      3072
+    ],
+    [
+      100,
+      100
+    ],
+    [
+      100,
+      100
+    ]
+  ],
+  "n_params": 327500,
+  "dims": [
+    3072,
+    100,
+    100,
+    100
+  ],
+  "n_classes": 100,
+  "hard_classes": 5,
+  "per_class_train": 500,
+  "classes_used": 90,
+  "task_parity": "task 1 hard, alternating (the paper's task 0 hard)",
+  "optimizer": "adam with coupled L2 toward 0 (loss + lam ||theta||^2)",
+  "l2_lambda": 0.01,
+  "data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "std": {
+    "mean": [
+      0.5071,
+      0.4865,
+      0.4409
+    ],
+    "std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "class_sha256": {
+    "0": "7487cc5ba7a5670094d2c8c701beae782530a141ef1cf31f07ab70673f992cd8",
+    "1": "a12ed45d3a05fd7fcf0927bb65417a3549f318a28ba23d85f488c9d37635e650",
+    "2": "5e27dd1c103b2617d199083c9909fea1c81078144102b53c93c491d435bd46ee",
+    "3": "c34bc8e8fdec85d19338aa1dfcada4ce48eb6e137020247e2604ec012eb0c12d",
+    "4": "04eb2beb4f183339e971eff4b55c8f4825e6795a81d5fe037fb0da1d22bc4daf",
+    "5": "1e363ce037e64574e24fb7e322b208669808dc2657deae88b47172e99a4f9f6c",
+    "6": "8c86984870465812064f4a9de9c365524adb6b167047241936f460f0b08ae79a",
+    "7": "1d1733cbd77116c196133d7c8ccde0f1d9359b22787506979b09596972a7c614",
+    "8": "3821dd6cf078d23a864be2eecdbe130453ab37fc988d2938a00da94f70503ed6",
+    "9": "c5bdda2b5323c5ec1e2cd939fd7e740f7061b367eb4a5c3d3cc9b4d91feb0845"
+  },
+  "rng_roles": [
+    "c51_classes",
+    "c51_batch",
+    "init"
+  ],
+  "fresh_control": null,
+  "fresh_self": {
+    "task": 29,
+    "n": 10,
+    "rule": "the same L2 form from the initial values, m = v = 0, update count 0"
+  },
+  "fresh_batches_sha256": "1ce981fba231d14ceefac0c0e65f4bd5667163c4a92062c8e6b00e18e45f42a9",
+  "engine": "host run() of cifar5p1_mlp_0920 copied for R/std + the arm's L2 form; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+  "host_module_sha256": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+  "engine_sha256": "7286640e3bc14f3c00479cdcfbe5d6bf320e592e58cef7ee533e158ee82794da",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "threads": 2,
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 4.292570321987837,
+  "wall_clock_s": 148.6444969177246,
+  "divergences": [],
+  "spec": "specs/spec_adamw_dose2_1011.md",
+  "admission": {
+    "checks_sha256": "01cdb67516a4cb127402b81b0c2a4e30219ed96432a8d82426a578aaa0b0e0a3",
+    "source_sha256": {
+      "src/adamw_dose2_1011.py": "d26dc4e5bfb0c8ae1a0d84ea7016e8fb519756e136fc79210f8eceb7e625a26e",
+      "src/adamw_dose2_1011_c51.py": "7286640e3bc14f3c00479cdcfbe5d6bf320e592e58cef7ee533e158ee82794da",
+      "src/adamw_dose2_1011_run.py": "6466e9e5dc166ff0a20d5a5bbeab5558648b3761bfff39a39e9c8d15277c31a3",
+      "analysis/adamw_dose2_1011/checks.py": "c62752ed7b86abda19b1ba6e589ff53ece7154ccaa65f4697f0c27bcdba02660",
+      "analysis/adamw_dose2_1011/rule.py": "18d46c092b0d92bfb9cdc6c456e65ed24e3198eb51e6ee3236da43ac3a749297",
+      "analysis/adamw_dose2_1011/lines.py": "b21f7cf1629ec340a3fe5d048498bb379049b985a28f87c6a5a904c0a57a461a"
+    }
+  },
+  "spec_sha256": "a5dbc594ec8e47c271c97326dfab0db1cc6c5e8d57caabaf567f2d5ba1a951f0",
+  "checks_sha256": "01cdb67516a4cb127402b81b0c2a4e30219ed96432a8d82426a578aaa0b0e0a3",
+  "cli_sha256": "6466e9e5dc166ff0a20d5a5bbeab5558648b3761bfff39a39e9c8d15277c31a3",
+  "peak_rss_kb": 1832628,
+  "ru_maxrss_kb": 1832628,
+  "peak_vram_bytes": 1843421184
+}

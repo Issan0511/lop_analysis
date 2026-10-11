@@ -1,0 +1,90 @@
+{
+  "run_id": "adamw_dose2_1011",
+  "git_hash": "6957428ee1e727e771ddb815d7de005152c69021",
+  "dirty_src_analysis": [],
+  "l2_arm": "dec2e-2",
+  "mode": "decoupled",
+  "lam": 0.02,
+  "c_hex_decoupled_only": "0x1.ffffbc0000000p-1",
+  "prereg_commit": "7525f9747a6a2872c30eb380fe3da4809bc6fa95",
+  "l2_rule": "p.mul_(wd_c), wd_c = fl32(1 - lr*lam), before m and v (check only)",
+  "arm": "R",
+  "cond": "std",
+  "seeds": [
+    100
+  ],
+  "R": 1,
+  "lr": 0.0001,
+  "n_tasks": 30,
+  "steps_per_task": 780,
+  "steps_hard": 780,
+  "steps_easy": 780,
+  "batch": 32,
+  "hidden": 100,
+  "layer_shapes": [
+    [
+      100,
+      3072
+    ],
+    [
+      100,
+      100
+    ],
+    [
+      100,
+      100
+    ]
+  ],
+  "n_params": 327500,
+  "dims": [
+    3072,
+    100,
+    100,
+    100
+  ],
+  "n_classes": 100,
+  "hard_classes": 5,
+  "per_class_train": 500,
+  "classes_used": 90,
+  "task_parity": "task 1 hard, alternating (the paper's task 0 hard)",
+  "optimizer": "adam + decoupled weight decay (AdamW)",
+  "l2_lambda": 0.02,
+  "data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "std": {
+    "mean": [
+      0.5071,
+      0.4865,
+      0.4409
+    ],
+    "std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "class_sha256": {
+    "100": "f0f27b396f33d65f355d70a0d32bad2d6c6a0a3dc296793359fa996ee5d539a0"
+  },
+  "rng_roles": [
+    "c51_classes",
+    "c51_batch",
+    "init"
+  ],
+  "fresh_control": null,
+  "fresh_self": null,
+  "fresh_batches_sha256": null,
+  "engine": "host run() of cifar5p1_mlp_0920 copied for R/std + the arm's L2 form; stacked baddbmm, autograd, elementwise Adam, one step captured as a CUDA graph",
+  "host_module_sha256": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+  "engine_sha256": "7286640e3bc14f3c00479cdcfbe5d6bf320e592e58cef7ee533e158ee82794da",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "threads": 2,
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 0.1872891034835424,
+  "wall_clock_s": 4.914077997207642,
+  "divergences": [],
+  "spec": "specs/spec_adamw_dose2_1011.md"
+}
