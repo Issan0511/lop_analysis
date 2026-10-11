@@ -1081,8 +1081,8 @@ def ck_gate(V) -> dict:
         base.mkdir(parents=True)
         (base / "checks.json").write_text(json.dumps({"all_pass": True,
                                                       "_meta": {"git_hash": head_chk, "git_dirty_code": False}}))
-        for a in ("Hf", "CHf", "Hs"):
-            seeds = [10] if a == "Hs" else list(range(10, 20))
+        for a in ("Hf", "CHf", "Hs", "CHs"):
+            seeds = [10] if a in ("Hs", "CHs") else list(range(10, 20))
             pv = {"arm": a, "slots": [[a, s] for s in seeds], "n_tasks": 30, "epochs": 400, "lr": 0.001,
                   "beta_h": 0.01, "h_mode": modes[a], "data_sha256": {"cifar-10-python.tar.gz": "6d95"},
                   "gits": [{"git_hash": head_chk, "git_dirty_code": False}]}
@@ -1103,7 +1103,9 @@ def ck_gate(V) -> dict:
         "wrong_slots": (make("slots", chf_only(lambda pv: {**pv, "slots": [["CHf", s] for s in range(11, 21)]})), False),
         "other_data": (make("data", chf_only(lambda pv: {**pv, "data_sha256": {"x": "y"}})), False),
         "door_mode": (make("mode", chf_only(lambda pv: {**pv, "h_mode": "chan"})), False),
+        "no_CHs": (make("no_chs", lambda a, pv: {**pv, "arm": "gone"} if a == "CHs" else pv), False),
     }
+    shutil.rmtree(cases["no_CHs"][0] / "CHs")
     res = {k: V.provenance_gate(b)["ok"] for k, (b, want) in cases.items()}
     ok = all(res[k] == want for k, (b, want) in cases.items())
     # reused blobs: the real files pass; an edited copy fails
@@ -1116,8 +1118,31 @@ def ck_gate(V) -> dict:
     with open(fake / "CH" / "per_task.csv", "a") as fh:
         fh.write("\n")
     edited = V.reused_blobs(fake)["ok"]
+    # the C door fails closed when the runs' units.npz are missing (audit 1)
+    empty = SCR / "gate" / "empty_out"
+    shutil.rmtree(empty, ignore_errors=True)
+    empty.mkdir(parents=True)
+    saved = (V.OUT, V.BACKUP)
+    V.OUT, V.BACKUP = empty, empty / "none"
+    try:
+        cd = V.c_door_from_runs()
+        door_closed = V.c_door_ok_from(cd) is False and V.c_door_ok_from({"ok": True}) is True and \
+            V.c_door_ok_from({"ok": False}) is False
+        # the mechanism inputs: missing for the new arms (empty OUT), complete and sha-exact for P181's arms
+        mb = V.required_mechanism_inputs()
+        mech_new_missing = any(x.startswith("CHf: units.npz missing") for x in mb) and \
+            any(x.startswith("Hs: ckpt missing") for x in mb)
+        mech_p181_ok = not any(x.startswith(("ref:", "C:", "H:", "CH:")) for x in mb)
+    finally:
+        V.OUT, V.BACKUP = saved
+    # both adopted controls are required
+    good = synth_arm("Hs", _hold(0.95), seeds=(10,))
+    ctl_ok = not V.control_problems({"Hs": good, "CHs": synth_arm("CHs", _hold(0.95), seeds=(10,))}) and \
+        bool(V.control_problems({"Hs": good, "CHs": None}))
     return {**{f"gate_ok_{k}": v for k, v in res.items()}, "reused_blobs_real": real, "reused_blobs_edited": edited,
-            "pass": ok and real and not edited}
+            "c_door_fails_closed": door_closed, "mechanism_missing_reported": mech_new_missing,
+            "mechanism_p181_complete": mech_p181_ok, "controls_required": ctl_ok,
+            "pass": ok and real and not edited and door_closed and mech_new_missing and mech_p181_ok and ctl_ok}
 
 
 # --------------------------------------------------------------------------
@@ -1282,12 +1307,17 @@ CHECKS = {
         ("自分と上流の取り違え", [("own, ups, cross = dW @ m0, W0 @ dm, dW @ dm", "own, ups, cross = W0 @ dm, dW @ m0, dW @ dm")]),
         ("起点 t1 の分解が t0 から引く", [("wm[t] - wm[t_from]", "wm[t] - wm[0]")]),
     ], "float64 の同じ量（1e-12）・恒等式の残差 1e-9・位置ごとの DC の表は float32 の units からの再計算と 2·2^-24·‖µ‖/σ + 1e-9（保存の丸め）", VERDICT),
-    "K-gate": ("provenance の関門と再利用の blob の照合: 登録どおりなら通し、食い違いを落とす", ck_gate, [
+    "K-gate": ("provenance の関門・再利用の blob・C の扉の fail-closed・対照の完了・機構の入力の欠損の報告", ck_gate, [
         ("エンジンの sha256 を照合しない", [("    if chk_sha is None or shas != {chk_sha}:", "    if False:")]),
         ("汚れた木からの走を通す", [("            if g.get(\"git_dirty_code\"):", "            if False:")]),
         ("扉の型を照合しない", [("        if pv.get(\"h_mode\") != H_MODE[a]:", "        if False:")]),
         ("再利用の blob を照合しない", [("        if not want or want != have:", "        if False:")]),
-    ], "合成の provenance の期待値（設計から）", VERDICT),
+        ("C の扉の実走確認が units 欠損で通る（fail-open）", [('    return cdoor.get("ok") is True', '    return cdoor.get("ok") is not False')]),
+        ("対照の provenance の欠損を通す", [("            if a in NEW_ARMS + tuple(CTRL):", "            if a in NEW_ARMS:")]),
+        ("対照の per_task の欠損を通す", [('            out.append(f"{a}: per_task.csv missing (control adopted by the parent, spec §12.1)")',
+                                           "            continue")]),
+        ("機構の入力の欠損を報告しない", [("    return bad\n\n\ndef commit_time", "    return []\n\n\ndef commit_time")]),
+    ], "合成の provenance の期待値（設計から）。C の扉・対照・機構の入力は監査（1・2・3）の fail-closed", VERDICT),
     "K-cost": ("CHf の束（R=10）の 1 epoch の秒数（単独と Hf との同時）・GPU メモリの峰・VmRSS（seed 100–109、精度は読まない）",
                ck_cost, [], "—", ENGINE),
 }

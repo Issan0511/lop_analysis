@@ -277,3 +277,48 @@ Fable の列は親の依頼文の値をそのまま写した（2026-10-11、H′
 6. 起動の後の確認（私が手で行う）: 1〜2 分後に `pgrep` でプロセスが生きていること、`nvidia-smi` に載っていること、最初の課題の後にログに `task  1` の行（課題番号・秒数・腕名だけ）が出ること。
 7. 18:03 の試し（`DRY=1`）では、GPU の空き 11,766 MiB・MemAvailable 14,671 MiB で、GPU の余裕 8,243・RAM の余裕 4,715 MiB、主 2 腕は起動の判断になった（3 本目は枠の上限 2 で待つ）。
 8. **見込み**: 別 agent の 3 本が GPU に居る状態の K-cost で、CHf・Hf の同時は各 0.642 秒/epoch ＋ 課題末の診断 6 秒 → 各約 131 分（並行）。Hs・CHs（R = 1）は P181 の Cr（R = 1）の単独 15 秒/課題から、GPU を分けて 1 本 15〜25 分。全体で約 2.5 時間（別 agent が終われば短くなる）。
+
+## 13. 追補 3 — Codex の本走前監査への対応・Codex の予測・時刻の訂正（本走の前。扉の腕の結果は 1 つも無い。判定・窓・Claude の予測は変えていない）
+
+監査: `specs/review_codex_cnn_center_feat_1011.md`（Codex、判定「直してから」、high 1・medium 2。H′ の定義と実装・(C′)・FEATURE_DOOR・P181 の再利用・資源の算術は PASS）。指摘ごとの扱い（`analysis/cnn_center_feat_1011/verdict.py`・`checks.py` だけを直した。エンジン `src/` は `d8696db9` から不変）:
+
+### 13.1 C の扉の実走確認を fail-closed に（high 1）
+
+`c_door_from_runs` は Hf か CHf の `units.npz` が無いと `ok = None` を返し、以前の `is not False` はそれを成立として扱っていた。`c_door_ok_from(cdoor)` = `cdoor["ok"] is True` に替えた。units が無ければ CHf は INAPPLICABLE、FEATURE_DOOR も INAPPLICABLE になる（K-verdict の場面 J と合わせて鎖がつながる）。K-gate に「空の OUT で fail-closed」と変異「`is not False` に戻す」を足した。
+
+### 13.2 採用した対照 Hs・CHs を完了の関門に（medium 2）
+
+§12.1 で両方を回すと決めたので、provenance の関門は Hf・CHf に加えて Hs・CHs の `provenance.json` を必須にし、集計は両方の per_task.csv を必須にする（`control_problems`）。欠けるか無効なら (A) が崩れ、FEATURE_DOOR は INAPPLICABLE。最終の結果に `NOT_RUN` は出ない（`NOT_RUN` は合成の検査の中だけに残る）。K-gate に「CHs の provenance が無い」「CHs の per_task が無い」と変異 2 つを足した。
+
+### 13.3 機構の表の入力の欠損を黙って飛ばさない（medium 3）
+
+`required_mechanism_inputs()` が、新しい 4 走の `units.npz`（tasks_done = 0〜30）と全チェックポイント（t1・2・3・5・10・20・30 × seed）、P181 の 4 腕の退避先の `units.npz` と 280 本のチェックポイント（P181 の `backup_manifest.json` の sha256 と照合）、片付けの後はこの走の退避先（自分の `backup_manifest.json` の sha256 と照合）を確かめる。1 つでも欠ければ verdict は報告を書かずに止まる（検査の中だけ `--allow-missing-mechanism` で迂回できる）。K-gate に「空の OUT で欠損が報告される」「P181 の退避物は全部そろって sha256 が一致する」と変異を足した。
+
+### 13.4 そのほか
+
+- 集計の要約に、有効でない seed とその理由（incomplete・non-finite・diverged）、登録・検査・走・集計・P181 の commit の hash と commit 時刻を自動で出す（監査 8 の「時刻の食い違い」「有効 seed 不足」）。先後は本文の時刻でなく commit で読む。
+- 関数の既定引数 `base=OUT` は import 時に束縛されるので、試験で OUT を差し替えても一部が本物の置き場に書いた（18:0x の空打ちで `results/cnn_center_feat_1011/` に合成の summary・verdict・tables を書き、すぐ消した。git には入っていない。合成のデータで、走の結果ではない）。既定値を呼び出し時に解決するよう直した。
+- P181 の腕の位置ごとの DC の表で、f1 の入力が全部 0 の課題（c2 が全滅）は 0/0 になる。警告を出さず NaN にした（報告のみの表）。
+
+### 13.5 Codex の予測（監査 §7。spec §7 を読む前に固定と記載。転記）
+
+| # | 項目 | Codex |
+|---|---|---|
+| L1 | CHf | RESCUED .45 ／ PARTIAL .28 ／ FAIL .24 ／ 他 .03 |
+| L2 | Hf | RESCUED .15 ／ PARTIAL .25 ／ FAIL .57 ／ 他 .03 |
+| L3 | FEATURE_DOOR | SUFFICES .45 ／ PARTIAL .32 ／ NOT_A_DOOR .20 ／ 他 .03 |
+| L4 | T_f: CHf 対 CH | LATER .70 ／ NO_TIMING_DIFF .23 ／ EARLIER .07 |
+
+Codex は監査で `verdict.py` を読んでおり、そこには Claude と Fable の確率（`PRED_LABELS`）が書かれていたので、視界に入った可能性がある（監査の本文は「§7 を読む前に固定、読後に変えた行なし」）。L5〜L8・二値は記入なし。`verdict.py` の `PRED_LABELS_CODEX` に写し、Claude・Fable と同じ規則で採点する。
+
+### 13.6 時刻の訂正（§11・§12 の見出しの時刻は書いたときの見積もりで、git の記録と合わない。中身は変えていない）
+
+| 書いた時刻 | 場所 | 正しい時刻（根拠） |
+|---|---|---|
+| 18:05（§11 の見出し） | §11 | commit `fcd190c1` 18:03:56 |
+| 18:20（§12 の見出し） | §12 | commit `d3a9b8c3` 18:05:48 |
+| 18:15 ごろ（親の決定を受け取った） | §12.1 | 18:04〜18:05 ごろ（私の連絡（`fcd190c1` の後）と `d3a9b8c3` の間） |
+
+### 13.7 検査の回し直し
+
+この追補の commit の上で、エンジンに触れない検査を全部回し直す（K-reuse と K-cost を除く 18 項目。K-reuse・K-cost の対象の `src/` は `d8696db9` から不変で、その値を使う。provenance の関門は検査の commit と走の commit のエンジン 2 ファイルの sha256 を比べる）。結果は次の commit で `checks.json` に入る。

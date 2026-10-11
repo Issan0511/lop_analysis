@@ -129,7 +129,9 @@ def seed_table(df: pd.DataFrame) -> pd.DataFrame:
         diverged = bool(g.diverged.astype(str).str.lower().eq("true").any()) if "diverged" in g else False
         valid = complete and finite and not diverged
         on = {int(t): float(v) for t, v in zip(g.task, g.online_acc)}
-        row = {"seed": int(seed), "valid": valid}
+        why = ",".join(w for w, bad in (("incomplete", not complete), ("non-finite", not finite),
+                                        ("diverged", diverged)) if bad)
+        row = {"seed": int(seed), "valid": valid, "invalid_reason": why}
         if complete:
             W = window_mean(g, "online_acc", WINDOW)
             mf = g[(g.task >= WINDOW[0]) & (g.task <= WINDOW[1])].major_frac.to_numpy(float)
@@ -468,12 +470,14 @@ def pdc_table(frames: dict, ctrl_frames: dict | None = None) -> pd.DataFrame:
                 if t >= m_in.shape[0] or len(g) != m_in.shape[1]:
                     continue
                 pd_, cd_, dc_ = dc_parts_np(m_in[t], SIDE["f1"])
-                sig = dc_ / g.r_in_f1.to_numpy(float)
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    sig = dc_ / g.r_in_f1.to_numpy(float)
                 for si, seed in enumerate(g.seed):
-                    rows.append({"arm": a, "seed": int(seed), "task": t, "layer": "f1",
-                                 "pdc_pre": pd_[si] / sig[si], "pdc_post": pd_[si] / sig[si],
-                                 "cdc_post": cd_[si] / sig[si], "dc_post": dc_[si] / sig[si],
-                                 "source": "P181 units.npz (pre = post)"})
+                    with np.errstate(divide="ignore", invalid="ignore"):
+                        rows.append({"arm": a, "seed": int(seed), "task": t, "layer": "f1",
+                                     "pdc_pre": pd_[si] / sig[si], "pdc_post": pd_[si] / sig[si],
+                                     "cdc_post": cd_[si] / sig[si], "dc_post": dc_[si] / sig[si],
+                                     "source": "P181 units.npz (pre = post)"})
         else:
             for l in ("c2", "f1"):
                 if f"pdc_post_{l}" not in d:
@@ -519,7 +523,13 @@ PRED_LABELS_FABLE = {
                             "CENTERING_NOT_A_DOOR_IN_CNN": .30}),
 }
 # Codex: transcribed after the audit (spec §7.2)
-PRED_LABELS_CODEX: dict = {}
+PRED_LABELS_CODEX = {
+    "L1": ("CHf", {"RESCUED": .45, "PARTIAL": .28, "FAIL": .24, "OTHER": .03}),
+    "L2": ("Hf", {"RESCUED": .15, "PARTIAL": .25, "FAIL": .57, "OTHER": .03}),
+    "L3": ("FEATURE_DOOR", {"FEATURE_CENTERING_SUFFICES": .45, "FEATURE_CENTERING_PARTIAL": .32,
+                            "CENTERING_NOT_A_DOOR_IN_CNN": .20, "OTHER": .03}),
+    "L4": ("T_CHf_CH", {"LATER": .70, "NO_TIMING_DIFF": .23, "EARLIER": .07}),
+}
 PRED_BINARY = {"B1": .45, "B2": .35, "B3": .50, "B4": .85, "B5": .15, "B6": .85, "B7": .70, "B8": .25,
                "B9": .85, "B10": .10}
 PRED_TEXT = {
@@ -624,9 +634,10 @@ def git(*args) -> subprocess.CompletedProcess:
     return subprocess.run(["git", "-C", str(REPO), *args], capture_output=True)
 
 
-def reused_blobs(base: Path = P181) -> dict:
+def reused_blobs(base: Path | None = None) -> dict:
     """§5.4 (A): the working-tree per_task.csv of each reused arm is the blob of P181's commit, and
     P181's checks.json (also that blob) is all_pass."""
+    base = P181 if base is None else base
     bad = []
     for a in REUSED:
         rel = f"results/cnn_center_relu_1011/{a}/per_task.csv"
@@ -654,9 +665,11 @@ EXPECTED = {"n_tasks": N_TASKS, "epochs": 400, "lr": 0.001, "beta_h": 0.01}
 H_MODE = {"Hf": "feat", "CHf": "feat", "Hs": "shuf", "CHs": "shuf"}
 
 
-def provenance_gate(base: Path = OUT, arms=NEW_ARMS + tuple(CTRL)) -> dict:
+def provenance_gate(base: Path | None = None, arms=NEW_ARMS + tuple(CTRL)) -> dict:
     """Every new arm's provenance.json is the registered configuration, from a clean tree, with the
-    engine (this experiment's file and P181's file it imports) that the checks ran on."""
+    engine (this experiment's file and P181's file it imports) that the checks ran on.  The two
+    controls were adopted by the parent (spec §12.1): a missing control is a problem too (audit 2)."""
+    base = OUT if base is None else base
     bad = []
     c = json.loads((base / "checks.json").read_text()) if (base / "checks.json").exists() else {}
     if not c.get("all_pass"):
@@ -669,7 +682,7 @@ def provenance_gate(base: Path = OUT, arms=NEW_ARMS + tuple(CTRL)) -> dict:
     for a in arms:
         pp = base / a / "provenance.json"
         if not pp.exists():
-            if a in NEW_ARMS:
+            if a in NEW_ARMS + tuple(CTRL):
                 bad.append(f"{a}: provenance.json missing")
             continue
         pv = json.loads(pp.read_text())
@@ -703,8 +716,90 @@ def c_door_from_runs() -> dict:
     return {"ok": bool((cen < 0.1 * raw).all()), "ratio_max": float((cen / raw).max())}
 
 
-def checks_ok_state(base: Path = OUT) -> bool:
-    p = base / "checks.json"
+def control_problems(ctrl: dict) -> list[str]:
+    """Both controls were adopted by the parent (spec §12.1): each must be there and valid (audit 2)."""
+    out = []
+    for a in CTRL:
+        if ctrl.get(a) is None:
+            out.append(f"{a}: per_task.csv missing (control adopted by the parent, spec §12.1)")
+        else:
+            out += validate_frame(ctrl[a], a, (CTRL_SEED,))
+    return out
+
+
+def c_door_ok_from(cdoor: dict) -> bool:
+    """Fail closed (audit 1): the C door counts as checked only when the runs' units.npz say so."""
+    return cdoor.get("ok") is True
+
+
+def sha256_file(p: Path) -> str:
+    h = hashlib.sha256()
+    with open(p, "rb") as f:
+        for b in iter(lambda: f.read(1 << 20), b""):
+            h.update(b)
+    return h.hexdigest()
+
+
+def required_mechanism_inputs() -> list[str]:
+    """Audit 3: every artifact the report-only tables need (empty list = complete).  New arms and the
+    controls: units.npz with tasks 0..30 and every checkpoint (CKPT tasks x seeds), in OUT or in the
+    backup (whose sha256 must match this run's backup_manifest.json when the files were moved).
+    Reused P181 arms: the backup units.npz and checkpoints, sha256 as P181's backup_manifest.json says."""
+    bad = []
+    own = OUT / "backup_manifest.json"
+    own_man = {r["backup"]: r["sha256"] for r in json.loads(own.read_text())["files"]} if own.exists() else {}
+
+    def check_own(f: Path) -> None:
+        if str(f).startswith(str(BACKUP)) and own_man.get(str(f)) not in (None, sha256_file(f)):
+            bad.append(f"{f}: sha256 differs from backup_manifest.json")
+        if str(f).startswith(str(BACKUP)) and str(f) not in own_man:
+            bad.append(f"{f}: not in backup_manifest.json")
+
+    for a in NEW_ARMS + tuple(CTRL):
+        seeds = (CTRL_SEED,) if a in CTRL else SEEDS
+        up, ck = find_units(a), find_ckpt(a)
+        if up is None:
+            bad.append(f"{a}: units.npz missing")
+        else:
+            td = [int(x) for x in np.load(up)["tasks_done"]]
+            if td != list(range(0, N_TASKS + 1)):
+                bad.append(f"{a}: units.npz tasks_done {td[:2]}..{td[-2:]}")
+            check_own(up)
+        if ck is None:
+            bad.append(f"{a}: ckpt missing")
+            continue
+        for sd in seeds:
+            for t in CKPT:
+                f = ck / f"{a}_seed{sd}_t{t:02d}.pt"
+                if not f.exists():
+                    bad.append(f"{a}: {f.name} missing")
+                else:
+                    check_own(f)
+    man_p = P181 / "backup_manifest.json"
+    man = {r["source"]: r for r in json.loads(man_p.read_text())["files"]} if man_p.exists() else {}
+    for a in REUSED:
+        need = [f"results/cnn_center_relu_1011/{a}/units.npz"] + [
+            f"results/cnn_center_relu_1011/{a}/ckpt/{a}_seed{sd}_t{t:02d}.pt" for sd in SEEDS for t in CKPT]
+        for rel in need:
+            r = man.get(rel)
+            if r is None:
+                bad.append(f"{a}: {rel} not in P181's backup_manifest.json")
+            elif not Path(r["backup"]).exists():
+                bad.append(f"{a}: {r['backup']} missing")
+            elif sha256_file(Path(r["backup"])) != r["sha256"]:
+                bad.append(f"{a}: {Path(r['backup']).name} sha256 differs from P181's manifest")
+    return bad
+
+
+def commit_time(h: str | None) -> str:
+    if not h:
+        return "—"
+    r = git("show", "-s", "--format=%h %ci", h)
+    return r.stdout.decode().strip() if r.returncode == 0 else f"{h[:8]} (not found)"
+
+
+def checks_ok_state(base: Path | None = None) -> bool:
+    p = (OUT if base is None else base) / "checks.json"
     return bool(json.loads(p.read_text()).get("all_pass")) if p.exists() else False
 
 
@@ -727,7 +822,8 @@ def fmt(x, nd=4):
 # report
 # --------------------------------------------------------------------------
 
-def write_report(res: dict, mech: dict, pdc: pd.DataFrame, short: list, sc: dict, base: Path = OUT) -> None:
+def write_report(res: dict, mech: dict, pdc: pd.DataFrame, short: list, sc: dict, base: Path | None = None) -> None:
+    base = OUT if base is None else base
     (base / "tables").mkdir(parents=True, exist_ok=True)
     for a, s in res["_seed_tables"].items():
         s.to_csv(base / "tables" / f"seeds_{a}.csv")
@@ -783,6 +879,14 @@ def write_report(res: dict, mech: dict, pdc: pd.DataFrame, short: list, sc: dict
              f"再利用の blob {('OK' if c.get('reused_blobs', {}).get('ok') else c.get('reused_blobs', {}).get('problems'))}）・"
              f"有効 seed {c['n_valid']}、(B) 対比 ref・CH が FAIL {c['B_contrast_ref_and_CH_FAIL']}、"
              f"(C′) 課題 1 の EMA {{{', '.join(f'{a}: {v['ok']}' for a, v in c['C_door_record'].items())}}}・C の扉 {c['C_c_door']} {c.get('C_door_from_runs', '')}")
+    cm = c.get("commits")
+    if cm:
+        L.append(f"- commit（hash と commit 時刻。先後はこちらで読む）: 登録 {cm['registration']}、検査 {cm['checks']}、"
+                 f"走 {'・'.join(cm['runs']) or '—'}、この集計 {cm['verdict_head']}、P181 {cm['p181']}")
+    for a in ALL_ARMS:
+        v = res["_seed_tables"][a]
+        if "invalid_reason" in v and (~v.valid).any():
+            L.append(f"- 有効でない seed（{a}）: " + "、".join(f"{s_} {r_}" for s_, r_ in v[~v.valid].invalid_reason.items()))
     if len(sh):
         L.append(f"- 報告のみ: 課題 2 以降を含む h_upd の満点（30,000）割れで層が全滅していない（seed, 課題, 層）: "
                  + "、".join(f"{a} {int((sh.arm == a).sum())}" for a in H_ARMS))
@@ -844,20 +948,29 @@ def write_report(res: dict, mech: dict, pdc: pd.DataFrame, short: list, sc: dict
 def main() -> None:
     frames, ctrl = load_frames()
     problems = [x for a in REUSED + NEW_ARMS for x in validate_frame(frames[a], a, SEEDS)]
+    cbad = control_problems(ctrl)          # a completion gate (audit 2)
+    problems += cbad
     for a in CTRL:
-        if ctrl[a] is not None:
-            bad = validate_frame(ctrl[a], a, (CTRL_SEED,))
-            if bad:
-                problems += bad
-                ctrl[a] = None
+        if any(x.startswith(f"{a}:") for x in cbad):
+            ctrl[a] = None
+    mech_bad = required_mechanism_inputs()
+    if mech_bad and "--allow-missing-mechanism" not in sys.argv:
+        raise SystemExit("mechanism inputs incomplete (audit 3), no report written: " + "; ".join(mech_bad[:12]))
     gate = provenance_gate()
     blobs = reused_blobs()
     chk = checks_ok_state()
     cdoor = c_door_from_runs()
     ok_a = chk and gate["ok"] and blobs["ok"] and not problems
-    res = analyze_frames(frames, ok_a, ctrl, c_door_ok=cdoor.get("ok") is not False)
+    res = analyze_frames(frames, ok_a, ctrl, c_door_ok=c_door_ok_from(cdoor))
+    chk_meta = json.loads((OUT / "checks.json").read_text()).get("_meta", {}) if (OUT / "checks.json").exists() else {}
+    run_commits = sorted({g.get("git_hash") for a in NEW_ARMS + tuple(CTRL) if (OUT / a / "provenance.json").exists()
+                          for g in json.loads((OUT / a / "provenance.json").read_text()).get("gits", [])})
     res["conditions"] |= {"validation_problems": problems, "provenance_gate": gate, "reused_blobs": blobs,
-                          "checks_all_pass": chk, "C_door_from_runs": cdoor}
+                          "checks_all_pass": chk, "C_door_from_runs": cdoor, "mechanism_inputs_missing": mech_bad,
+                          "commits": {"registration": commit_time("b1b28854"), "checks": commit_time(chk_meta.get("git_hash")),
+                                      "runs": [commit_time(h) for h in run_commits],
+                                      "verdict_head": commit_time(git("rev-parse", "HEAD").stdout.decode().strip()),
+                                      "p181": commit_time(P181_COMMIT)}}
     short = [x for a in H_ARMS for x in record_shortfalls(frames[a], a)]
     mech = mechanism_tables(ALL_ARMS + tuple(a for a in CTRL if ctrl[a] is not None))
     mech["three_way"] = three_way_table(NEW_ARMS + tuple(a for a in CTRL if ctrl[a] is not None))
