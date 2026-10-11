@@ -1,0 +1,85 @@
+{
+  "run_id": "cnn_center_relu_1011",
+  "spec": "specs/spec_cnn_center_relu_1011.md",
+  "arm": "H",
+  "slots": [
+    [
+      "H",
+      10
+    ],
+    [
+      "H",
+      11
+    ],
+    [
+      "H",
+      12
+    ],
+    [
+      "H",
+      13
+    ],
+    [
+      "H",
+      14
+    ],
+    [
+      "H",
+      15
+    ],
+    [
+      "H",
+      16
+    ],
+    [
+      "H",
+      17
+    ],
+    [
+      "H",
+      18
+    ],
+    [
+      "H",
+      19
+    ]
+  ],
+  "epochs": 400,
+  "lr": 0.001,
+  "n_tasks": 30,
+  "beta_h": 0.01,
+  "door": {
+    "shift": null,
+    "h": true
+  },
+  "input_shift": null,
+  "activation": "relu (clamp(z, min=0)); diagnostic gate z > 0",
+  "host": "src/rlcifar_cnn_0908.py (init, subset, streams, net)",
+  "engine": "src/sna_cnn_cause_1009.py Bundle (grouped conv / bmm / one epoch per CUDA graph)",
+  "gits": [
+    {
+      "git_hash": "2dce31a12397ab885a94dff8d5d5949655b7c623",
+      "git_dirty_code": false
+    }
+  ],
+  "resumed": [],
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 5060 Ti",
+  "torch": "2.13.0+cu130",
+  "tf32_cudnn": true,
+  "tf32_matmul": false,
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "ckpt_tasks": [
+    1,
+    2,
+    3,
+    5,
+    10,
+    20,
+    30
+  ],
+  "wall_clock_s_this_process": 3865.517933368683,
+  "cuda_max_mem_mb": 512.9111328125
+}

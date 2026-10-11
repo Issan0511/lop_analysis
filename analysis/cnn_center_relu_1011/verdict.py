@@ -282,13 +282,15 @@ def evaloff(st: pd.DataFrame) -> dict:
 
 
 def analyze_frames(frames: dict, checks_ok: bool, steps_per_task: int, cr_frame=None,
-                   c_door_ok: bool = True) -> dict:
-    """frames: arm -> per_task DataFrame (main arms); returns every registered label."""
+                   c_door_ok: bool = True, door_record_check: bool = True) -> dict:
+    """frames: arm -> per_task DataFrame (main arms); returns every registered label.
+    door_record_check=False is the post-hoc reading only (spec §15): §5.4 (C)'s h_upd record is
+    reported but does not make the H arms INAPPLICABLE."""
     st = {a: seed_table(frames[a]) for a in MAIN_ARMS}
     arms = {a: arm_label(st[a]) for a in MAIN_ARMS}
     condC = {a: door_condition_C(frames[a], steps_per_task) for a in H_ARMS}
     for a in H_ARMS:
-        if not condC[a]["ok"]:
+        if door_record_check and not condC[a]["ok"]:
             arms[a] = arms[a] | {"label": "INAPPLICABLE", "condition_C": condC[a]}
     if not c_door_ok:
         for a in ("C", "CH"):
@@ -438,6 +440,50 @@ def three_way_table(arms=MAIN_ARMS, tasks=(1, 3, 10, 30)) -> pd.DataFrame:
     return d.groupby(["arm", "layer", "t"])[["own_med", "up_med", "cross_med", "dwm_med", "identity_res"]].agg(
         {"own_med": "median", "up_med": "median", "cross_med": "median", "dwm_med": "median",
          "identity_res": "max"}).reset_index()
+
+
+def door_record_explained(frames: dict, steps_per_task: int, res: dict) -> list[dict]:
+    """Post hoc (spec §15): every (seed, task, layer) where §5.4 (C) failed, with what units.npz says
+    about it: dead fraction, number of live units, the largest |m| of the dead units (the float32
+    denormal fixed point of m <- 0.99 m is 7.0e-44), whether the live units are open on every image,
+    and the seed's T_f (was the network's function already lost?)."""
+    out = []
+    for a in H_ARMS:
+        up = find_units(a)
+        u = np.load(up) if up is not None else None
+        st = res["_seed_tables"][a]
+        df = frames[a]
+        for l in LAYERS:
+            bad = df[(df[f"h_upd_{l}"] != steps_per_task) & (df[f"dead_frac_{l}"] != 1.0)]
+            for _, r in bad.iterrows():
+                seed, t = int(r.seed), int(r.task)
+                row = {"arm": a, "layer": l, "seed": seed, "task": t, "h_upd": int(r[f"h_upd_{l}"]),
+                       "dead_frac": float(r[f"dead_frac_{l}"]), "T_f": float(st.loc[seed, "T_f"])}
+                if u is not None:
+                    si = list(SEEDS).index(seed)
+                    dead = u[f"dead_{l}"][t, si]
+                    m = u[f"mdoor_{l}"][t, si]
+                    opn = u[f"open_{l}"][t, si]
+                    row |= {"n_live": int((~dead).sum()),
+                            "max_abs_m_dead": float(np.abs(m[dead]).max()) if dead.any() else float("nan"),
+                            "live_open_min": float(opn[~dead].min()) if (~dead).any() else float("nan")}
+                out.append(row)
+    return out
+
+
+def posthoc(frames: dict, steps_per_task: int, checks_ok: bool, cr_frame, c_door_ok: bool, res: dict) -> dict:
+    """Post hoc (spec §15, not a registered judgment): the labels with §5.4 (C)'s door record reported
+    but not used, and the description of every record shortfall."""
+    ph = analyze_frames(frames, checks_ok, steps_per_task, cr_frame=cr_frame, c_door_ok=c_door_ok,
+                        door_record_check=False)
+    expl = door_record_explained(frames, steps_per_task, res)
+    return {"labels": {a: ph["arms"][a]["label"] for a in MAIN_ARMS},
+            "fail_subtypes": {a: ph["arms"][a].get("fail_subtype") for a in MAIN_ARMS},
+            "N": ph["N"], "DOORS": ph["DOORS"], "DOORS_v1": ph["DOORS_v1"], "M_H": ph["M_H"], "LAYER": ph["LAYER"],
+            "signs": ph["signs"], "flags": ph["flags"], "EVALOFF": ph["EVALOFF"], "timing_T_f": ph["timing_T_f"],
+            "record_shortfalls": expl,
+            "record_shortfalls_all_after_T_f": all(x["task"] >= x["T_f"] for x in expl),
+            "_res": ph}
 
 
 def leaky_reference() -> dict:
@@ -714,9 +760,12 @@ def write_report(res: dict, mech: dict, leaky: dict, sc: dict, base: Path = OUT)
     if len(mech["path"]):
         mech["path"].to_csv(base / "tables" / "mu_b_path.csv", index=False)
         mech["layers"].to_csv(base / "tables" / "layers.csv", index=False)
-    clean = {k: v for k, v in res.items() if k != "_seed_tables"}
+    clean = {k: v for k, v in res.items() if k not in ("_seed_tables", "posthoc")}
+    if "posthoc" in res:
+        clean["posthoc"] = {k: v for k, v in res["posthoc"].items() if k != "_res"}
+        clean["posthoc"]["prediction_scoring"] = sc.get("posthoc")
     clean["leaky_reference"] = leaky
-    clean["prediction_scoring"] = sc
+    clean["prediction_scoring"] = {k: v for k, v in sc.items() if k != "posthoc"}
     (base / "verdict.json").write_text(json.dumps(clean, indent=1, default=lambda o: o if not isinstance(
         o, (np.integer, np.floating, np.bool_)) else o.item()))
     L = ["# cnn_center_relu_1011 — ReLU の CNN に中心化の扉 C・H・CH", "",
@@ -726,7 +775,10 @@ def write_report(res: dict, mech: dict, leaky: dict, sc: dict, base: Path = OUT)
          "|---|---|---|---|---|---|---|---|---|"]
     for a in MAIN_ARMS:
         r = res["arms"][a]
-        lab = r["label"] + (f"（{r['fail_subtype']}）" if r.get("fail_subtype") else "")
+        lab = r["label"] + (f"（{r['fail_subtype']}）" if r.get("fail_subtype") and r["label"] == "FAIL" else "")
+        if r["label"] == "INAPPLICABLE" and "posthoc" in res:
+            lab += f"（§5.4 (C) の扉の記録）。事後 {res['posthoc']['labels'][a]}" + (
+                f"（{res['posthoc']['fail_subtypes'][a]}）" if res['posthoc']['fail_subtypes'][a] else "")
         L.append(f"| {a} | **{lab}** | {fmt(r.get('W_median'))} | {fmt(r.get('W_min'))}–{fmt(r.get('W_max'))} | "
                  f"{r.get('kept')}/{r.get('n_valid')} | {r.get('at_floor')}/{r.get('n_valid')} | {fmt(r.get('t1_median'))} | "
                  f"{fmt(r.get('drop_median'))} | {fmt(res['timing_T_f'][a]['median'], 1)} |")
@@ -757,6 +809,28 @@ def write_report(res: dict, mech: dict, leaky: dict, sc: dict, base: Path = OUT)
                  f"走から見た C の扉 {c.get('C_door_from_runs')}")
     L.append(f"- 適用条件: (A) 検査 all_pass ∧ 入力と provenance の検査 {c['A_checks_all_pass']}・有効 seed {c['n_valid']}、(B) ref FAIL {c['B_ref_fail']}、"
              f"(C) H の扉 {{{', '.join(f'{a}: {v['ok']}' for a, v in c['C_h_door'].items())}}}・C の扉の検査 {c['C_c_door_check']}")
+    if "posthoc" in res:
+        ph = res["posthoc"]
+        L += ["", "## 事後の読み（登録判定ではない。spec §15）: (C) の扉の記録を判定に使わない場合", "",
+              f"- 腕: " + "、".join(f"{a} `{ph['labels'][a]}`" + (f"（{ph['fail_subtypes'][a]}）" if ph['fail_subtypes'][a] else "")
+                                for a in MAIN_ARMS),
+              f"- DOORS `{ph['DOORS']}`（DOORS_v1 `{ph['DOORS_v1']}`）、N `{ph['N']}`、M_H `{ph['M_H']['label']}`（{ph['M_H']['vs_MLP']}）、"
+              f"LAYER `{ph['LAYER']['label']}` — " + ", ".join(f"{k} {v}" for k, v in ph['LAYER'].items() if k != 'label'),
+              f"- (C) の記録の不足は {len(ph['record_shortfalls'])} 件、すべて T_f（網の機能の低下）の後: {ph['record_shortfalls_all_after_T_f']}",
+              "", "| 腕 | 層 | seed | 課題 | h_upd の最小（満点 30,000） | 死亡率 | 生きた単位 | 死んだ単位の最大 \\|m\\| | 生きた単位の開いた割合の最小 | T_f |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
+        sh = pd.DataFrame(ph["record_shortfalls"])
+        if len(sh):
+            (base / "tables").mkdir(parents=True, exist_ok=True)
+            sh.to_csv(base / "tables" / "record_shortfalls.csv", index=False)
+            for (a_, l_, s_), g in sh.groupby(["arm", "layer", "seed"]):
+                L.append(f"| {a_} | {l_} | {s_} | {g.task.min()}–{g.task.max()}（{len(g)}） | {g.h_upd.min()} | "
+                         f"{g.dead_frac.min():.2f}–{g.dead_frac.max():.2f} | {g.n_live.min()}–{g.n_live.max()} | "
+                         f"{g.max_abs_m_dead.max():.1e} | {g.live_open_min.min():.3f} | {g.T_f.iloc[0]:.0f} |")
+        for k, v in ph["signs"].items():
+            L.append(f"- 事後 {k}: `{v['label']}` — 中央値 {fmt(v['median'])}, +{v['pos']}/−{v['neg']}（同値 {v['ties']}）, p {fmt(v['p'])}")
+        for a, t in ph["EVALOFF"].items():
+            L.append(f"- 事後 EVALOFF（{a}）: `{t['label']}` — t30 の memo {fmt(t['memo_t30_median'])}、m = 0 で {fmt(t['memo_m0_t30_median'])}")
     L += ["", "## T_f（網の機能の低下、適合率 < 1/2）と ref との符号検定（報告のみ）", ""]
     for a in MAIN_ARMS:
         t = res["timing_T_f"][a]
@@ -796,6 +870,12 @@ def write_report(res: dict, mech: dict, leaky: dict, sc: dict, base: Path = OUT)
           "|---|---|---|---|---|---|---|"]
     for k, v in sc["labels_codex"].items():
         L.append(f"| {k} | {v['item']} | {v['realised']} | {v['p_realised']:.2f} | {v['mode']} | {'○' if v['mode_hit'] else '✗'} | {v['brier']:.3f} |")
+    if "posthoc" in sc:
+        L += ["", "### 事後の読みのラベルに対する採点（参考。登録の採点は上の表）", "", "| # | 予測者 | 項目 | 実現（事後） | p(実現) | 最頻 | 的中 | Brier |",
+              "|---|---|---|---|---|---|---|---|"]
+        for who, key in (("Claude", "labels"), ("Fable", "labels_fable"), ("Codex", "labels_codex")):
+            for k, v in sc["posthoc"][key].items():
+                L.append(f"| {k} | {who} | {v['item']} | {v['realised']} | {v['p_realised']:.2f} | {v['mode']} | {'○' if v['mode_hit'] else '✗'} | {v['brier']:.3f} |")
     L += ["", "### 二値（Claude）", "", "| # | 主張 | p | 真偽 | Brier |", "|---|---|---|---|---|"]
     for k, v in sc["binary"].items():
         truth = "—" if v["true"] is None else ("○" if v["true"] else "✗")
@@ -805,7 +885,7 @@ def write_report(res: dict, mech: dict, leaky: dict, sc: dict, base: Path = OUT)
 
 
 def main() -> None:
-    frames, crf = load_frames()
+    frames, crf = load_frames()  # noqa: F841
     problems = [x for a in MAIN_ARMS for x in validate_frame(frames[a], a, SEEDS)]
     if crf is not None:
         cr_bad = validate_frame(crf, "Cr", (CR_SEED,))
@@ -821,10 +901,12 @@ def main() -> None:
     res["conditions"]["validation_problems"] = problems
     res["conditions"]["provenance_gate"] = gate
     res["conditions"]["C_door_from_runs"] = cdoor
+    res["posthoc"] = posthoc(frames, steps_per_task(), checks_ok and gate["ok"] and not problems, crf, c_ok, res)
     mech = mechanism_tables()
     mech["three_way"] = three_way_table()
     leaky = leaky_reference()
     sc = score(res, mech, leaky)
+    sc["posthoc"] = score(res["posthoc"]["_res"], mech, leaky)
     write_report(res, mech, leaky, sc)
     print(json.dumps({k: (v if isinstance(v, str) else v.get("label") if isinstance(v, dict) else v)
                       for k, v in res.items() if k in ("N", "DOORS", "M_H", "LAYER", "Cr")}, default=str))
