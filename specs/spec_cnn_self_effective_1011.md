@@ -25,3 +25,7 @@ Also define an activation/pool effective-input matrix Psi_j with rows phi'(z_win
 ## Verification and outputs
 
 Required: gradient closure; Qf identity convergence; native-reference replay comparison; exact c1 mean-change closure; direction-accounting closure; reconstruction fidelity with quantified approximation. No multi-channel sample is treated as an independent seed. Snapshot algebra is not labelled an intervention. Save code, numerical tables, provenance and a readable summary; back up raw binaries with SHA256 before worktree cleanup. Original data are read-only.
+
+## Sequential extension after observing the switch window
+
+The first75-step result had80/160 upward+shrinking channels and61/80 positive self contributions. This motivated a phase-sensitivity extension, not an independent preregistered test: advance the same10 saved runs through task31 and measure its final75 updates (steps29926–30000). Start a fresh component-history ledger at that window; do not treat its history bucket as absence of earlier self effects. This does not extend the original seed0 animation trajectory. Retain both windows regardless of outcome.
