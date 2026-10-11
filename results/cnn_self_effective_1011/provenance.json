@@ -1,0 +1,142 @@
+{
+  "experiment": "cnn_self_effective_1011",
+  "date": "2026-10-11",
+  "analysis_type": "exploratory posthoc",
+  "git_hash": "5e1e66dab097318d68016e7132031f893ee1ff8c",
+  "spec_initial_commit": "4aaa2106",
+  "source_runs": [
+    {
+      "source": "/home/issan/Projects/claude/proj_004_drift/results/rlcifar_cnn_0908/LR/hist/LR_seed0.npz",
+      "source_sha256": "f367d85920ae419adf5261beb0464037399d705a0870c8956431d4a9a7e23c22"
+    },
+    {
+      "source": "/home/issan/Projects/claude/proj_004_drift/results/rlcifar_cnn_0908/LR/hist/LR_seed1.npz",
+      "source_sha256": "4face59ab9c0a6d63b51d6fa7e3abb4a7f31b3aa637afc82c57c2b947e3fc0c3"
+    },
+    {
+      "source": "/home/issan/Projects/claude/proj_004_drift/results/rlcifar_cnn_0908/LR/hist/LR_seed2.npz",
+      "source_sha256": "ee134c931af772303e25812b6e237040784f68d5c55c42c98df92677c6d28aa3"
+    },
+    {
+      "source": "/home/issan/Projects/claude/proj_004_drift/results/rlcifar_cnn_0908/LR/hist/LR_seed3.npz",
+      "source_sha256": "2481c9a2429e46801ca00ba8438f1abb4627886fa28885c18c302ba85f4e466c"
+    },
+    {
+      "source": "/home/issan/Projects/claude/proj_004_drift/results/rlcifar_cnn_0908/LR/hist/LR_seed4.npz",
+      "source_sha256": "30e16fdaf22da4022cb4a0a37e68533044792f07fb4b9815c8194262ff08ee35"
+    },
+    {
+      "source": "/home/issan/Projects/claude/proj_004_drift/results/rlcifar_cnn_0908/LR/hist/LR_seed5.npz",
+      "source_sha256": "e4365079d604263f604ff953b1129d27d5c2e633033c91517b0eee69d5698838"
+    },
+    {
+      "source": "/home/issan/Projects/claude/proj_004_drift/results/rlcifar_cnn_0908/LR/hist/LR_seed6.npz",
+      "source_sha256": "ce8fed7b2003aa1555630ad9d359fac350983d3facfa01fd40d28ebae6b13b67"
+    },
+    {
+      "source": "/home/issan/Projects/claude/proj_004_drift/results/rlcifar_cnn_0908/LR/hist/LR_seed7.npz",
+      "source_sha256": "fc96ad786b7c1151167c26a9ece259369689ea59ee61eac49bff7a58b5abdb4e"
+    },
+    {
+      "source": "/home/issan/Projects/claude/proj_004_drift/results/rlcifar_cnn_0908/LR/hist/LR_seed8.npz",
+      "source_sha256": "1b8c434506291b24d2ca43c562262333ca1a08d7279ff89f57860eaf94155db8"
+    },
+    {
+      "source": "/home/issan/Projects/claude/proj_004_drift/results/rlcifar_cnn_0908/LR/hist/LR_seed9.npz",
+      "source_sha256": "c2f60fd8ee9eda5735c9e700f7e5cf13c3a0b126b3968f912e919fbb02812801"
+    },
+    {
+      "source": "/home/issan/Projects/obsidian-research-data/cnn_drive_verify_1009/results/cnn_drive_verify_1009/LR/state.pt",
+      "source_sha256": "53b961932b8c8b4de3ad7f601fc12cce7a591866bda92d52c8afe766e116b8ac"
+    }
+  ],
+  "code_sha256": {
+    "analysis/cnn_self_effective_1011/ce_self.py": "16fd7481c6eec2ead2b8065f5f1beb98687726dbaecedfaf3991a22683f1bf65",
+    "analysis/cnn_self_effective_1011/directions.py": "e1bc5ca964a9140b54139682e2d7af85dff008a5c791586e1d277a474525aaf5",
+    "analysis/cnn_self_effective_1011/replay.py": "6515b6d8173fdf05f08cfb539cbb234d4277a3dd5585fe43d528b887c64457d8",
+    "analysis/cnn_self_effective_1011/replay_directions.py": "a4f93b386abe7a9cbc8b77aa64813d4b3b181b5a2e853f664b2282559f1ae0d8",
+    "analysis/cnn_self_effective_1011/summarize.py": "42f30d58c4ab452d79512c34fca28d89fce8c4f91286afd7b23a63137119ab9d"
+  },
+  "python": "3.12.3 (main, Apr 15 2024, 18:25:56) [Clang 17.0.6 ]",
+  "python_executable": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+  "torch_version": "2.13.0+cu130",
+  "original_geometry": {
+    "run": "rlcifar_cnn_0908/LR",
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "parameter_estimation": "512 float16 preactivation probes, rank76 least squares; sensitivity384 and holdout128",
+    "reported_intervals": [
+      [
+        20,
+        30
+      ],
+      [
+        30,
+        40
+      ],
+      [
+        40,
+        50
+      ],
+      [
+        20,
+        50
+      ]
+    ],
+    "gate_effective_geometry": "seed0, fixed128 images, baseline frozen per interval"
+  },
+  "actual_update_windows": {
+    "run": "cnn_drive_verify_1009/LR",
+    "seeds": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "source_task": 30,
+    "task": 31,
+    "first": [
+      1,
+      75
+    ],
+    "late": [
+      29926,
+      30000
+    ],
+    "distinct_from_original_seed0": true
+  },
+  "code_timing_note": "Final source records the scale-aware replay closure guard added after the late run failed its original fixed absolute guard. Numerical run data and failure log are preserved; scale_audit.json is a separate post-run audit. No trajectory was rerun to conceal the failed guard.",
+  "result_limitations": [
+    "Operational local-linear CE diagonal-channel self, not a unique causal decomposition.",
+    "Only c1 direction and mean attribution are analyzed.",
+    "Late component attribution is ill-conditioned and is not quantitative mechanism evidence.",
+    "Mid-task net growth phase is localized but its gradient-component cause is unmeasured.",
+    "Original seed0 has no full model/optimizer checkpoint, so long-run self attribution remains unknown."
+  ],
+  "qa": {
+    "python_syntax": "pass",
+    "json_readability": "pass",
+    "early_count_up_shrink": 80,
+    "early_count_self_up_given_up_shrink": 61,
+    "native_replay_parameter_error_early": 0.0,
+    "native_replay_parameter_error_late": 0.0,
+    "ce_kernel_checks": "pass",
+    "late_quantitative_shares": "not usable"
+  }
+}
