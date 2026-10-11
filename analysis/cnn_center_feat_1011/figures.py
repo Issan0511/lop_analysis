@@ -179,14 +179,14 @@ def fig_posdc() -> None:
         ends.append((float(np.log10(max(med.iloc[-1], 1e-4))), arm, x[-1]))
     ax.set_yscale("log")
     ax.axhline(NOISE_FLOOR, color=MUTED, lw=0.8, linestyle=(0, (2, 2)))
-    ax.text(0.3, NOISE_FLOOR * 1.08, "EMA の標本の揺れの床 0.018", color=MUTED, fontsize=7.5, va="bottom")
+    ax.text(0.3, NOISE_FLOOR * 1.08, "EMA の揺れの見積もり 0.018（独立な標本を仮定、上界寄り）", color=MUTED, fontsize=7.5, va="bottom")
     ends.sort()
     placed = []
     for ye, arm, xe in ends:
         y = ye
         for q in placed:
-            if abs(y - q) < 0.09:
-                y = q + 0.09
+            if abs(y - q) < 0.13:
+                y = q + 0.13
         placed.append(y)
         ax.text(xe + 0.5, 10 ** y, {"Hf": "H′", "CHf": "CH′"}.get(arm, arm), color=INK, fontsize=8, va="center")
     ax.set_xlim(-0.5, 33)
