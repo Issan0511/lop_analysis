@@ -252,3 +252,28 @@ Fable の列は親の依頼文の値をそのまま写した（2026-10-11、H′
 - **見たもの（開示）**: 実装中の smoke test（seed 10–11 で 3 更新、扉の m の形と、立ち上がり中の `pdc_*` の値）と、検査の内部の量（seed 10–13、2 epoch または 2 課題 × 2 epoch）。K-reuse は P181 の腕の課題 1 を再現しただけで、私が読んだのは一致の真偽と列数。K-cost は未登録の seed 100–109 で精度を計算しない。H′ の腕の 1 課題を通した精度は 1 つも見ていない。§7 の予測は登録 commit `b1b28854` のまま。
 - **K-cost**（別 agent の `adamw_dose2_1011` の 3 本が GPU を使っている状態。GPU は 100% で飽和）: CHf の束（R = 10）は単独 0.488 秒/epoch（30 課題で 98 分）、CHf と Hf の同時で各 0.642 秒/epoch（各 128 分、並行）。課題末の診断 5〜6 秒。1 プロセスの峰は nvidia-smi で 1,174 MiB、定常の VmRSS 2,294〜2,305 MiB、読み込み時の VmHWM 3,333 MiB。
 - **同時本数と見込み**: §8 の式で、起動直前に GPU の空き 11,766 MiB・MemAvailable 14,671 MiB（GPU の余裕 8,243、RAM の余裕 4,715 MiB）。主 2 腕（CHf・Hf）を同時に起動し、どちらかが終わったら Hs（親が認めれば続けて CHs）。別 agent の 3 本が走り続ければ主 2 腕で約 2 時間 10 分、対照で 20〜30 分。別 agent が終われば短くなる。
+
+## 12. 追補 2 — 親の決定と、起動直前の資源の再計算の手順・順番（2026-10-11 18:20 JST、本走の前。判定・窓・予測は変えていない）
+
+### 12.1 親（Fable）の決定（18:15 ごろ受け取った）
+
+- **CHs（C ＋ シャッフル、seed 10）を回す**（§3.2 の提案を採用）。L8 は採点の対象になる。
+- **§5.5 の 4 に「Hf も FAIL」を足した変更を採用**する。
+- 本走は Codex の短い監査（`specs/review_codex_cnn_center_feat_1011.md`）の後、親の go を受けてから起動する。
+
+### 12.2 順番
+
+**CHf・Hf（同時）→ Hs → CHs**。主 2 腕を先に同時に回し、どちらかが終わって枠が空いたら Hs、次に CHs を入れる（`launch.sh` は登録の順に、空いた枠へ 1 本ずつ入れる）。`WITH_CHS=1 bash analysis/cnn_center_feat_1011/launch.sh 2` で CHs を待ち行列の最後に足す（監査中のファイルを変えないため、`launch.sh` の既定の待ち行列は書き換えない）。
+
+### 12.3 起動直前（と、各腕の起動直前）の再計算の手順（P181 §12.3 と同じ形）
+
+`nohup setsid env WITH_CHS=1 bash analysis/cnn_center_feat_1011/launch.sh 2 > results/cnn_center_feat_1011/logs/launcher.log 2>&1 < /dev/null &` で切り離して起動する。各腕を起動する直前に、その時点のマシンから次を計算し直し、全部満たすまで 60 秒ごとに待つ。決定はすべて `results/cnn_center_feat_1011/logs/launch_record.txt` に残る。
+
+1. **本数**: この走のプロセス（`pgrep -f "[s]rc/cnn_center_feat_1011\.py run --arm <腕> --seeds"`。自己一致を避ける括弧の形。`--arm Hf` は `--arm CHf` に含まれない）が 2 本未満。同じ腕のプロセスが生きていれば起動しない。`provenance.json` のある腕は完了として飛ばし、`state.pt` だけある腕は再開する。
+2. **GPU**: `nvidia-smi --query-gpu=memory.free` − 2,048 MiB ≥ 1.25 × 1,180 MiB（= 1,475 MiB。K-cost の 1 本の峰 1,174 MiB の切り上げ、CUDA の context 込み）。別 agent（`adamw_dose2_1011`）や ollama が使う分は、この空きにすでに入っている。
+3. **RAM**: MemAvailable − 6,144 MiB − 1,040 MiB（読み込み時の峰の上乗せ、VmHWM 3,333 − 定常 2,305 の切り上げ）≥ 1.2 × 2,310 MiB（定常の VmRSS の切り上げ）。つまり MemAvailable ≥ 9,956 MiB。swap は条件に入れない（SwapFree は他のアプリの古いページで 0.65 GiB しか無く、swap の条件を置くと起動が何時間も止まる。6 GiB の余裕で受ける）。
+4. **記録**: 起動ごとに時刻・HEAD と作業木の汚れ・生きている本数・GPU の空き・MemAvailable・両方の余裕・マシン全体の proj_004_drift の python の本数（`pgrep -c -f '[p]roj_004_drift/\.venv/bin/python'`）・`nvidia-smi` のプロセスごとの使用量。
+5. 起動の後は 90 秒待ってから次の予算を読む（読み込みの峰は 10 秒ほどで過ぎる）。
+6. 起動の後の確認（私が手で行う）: 1〜2 分後に `pgrep` でプロセスが生きていること、`nvidia-smi` に載っていること、最初の課題の後にログに `task  1` の行（課題番号・秒数・腕名だけ）が出ること。
+7. 18:03 の試し（`DRY=1`）では、GPU の空き 11,766 MiB・MemAvailable 14,671 MiB で、GPU の余裕 8,243・RAM の余裕 4,715 MiB、主 2 腕は起動の判断になった（3 本目は枠の上限 2 で待つ）。
+8. **見込み**: 別 agent の 3 本が GPU に居る状態の K-cost で、CHf・Hf の同時は各 0.642 秒/epoch ＋ 課題末の診断 6 秒 → 各約 131 分（並行）。Hs・CHs（R = 1）は P181 の Cr（R = 1）の単独 15 秒/課題から、GPU を分けて 1 本 15〜25 分。全体で約 2.5 時間（別 agent が終われば短くなる）。
