@@ -1,0 +1,72 @@
+{
+  "config": {
+    "run_id": "ch_chb_performance_1011",
+    "arms": [
+      "CH",
+      "CHB"
+    ],
+    "seeds": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "tasks": 200,
+    "epochs": 400,
+    "conds": [
+      "raw"
+    ],
+    "beta": 0.01,
+    "lr": 0.001,
+    "lam": {
+      "CH": 0.0,
+      "CHB": 0.1713
+    },
+    "threads": 2,
+    "device": "cuda",
+    "graph": true,
+    "snapshots": true,
+    "primary_window": [
+      181,
+      200
+    ],
+    "early_window": [
+      31,
+      50
+    ]
+  },
+  "git_hash": "e6d40977b69687eb49fb8d6d387b8c803c51fbf7",
+  "prereg_commit": "e6d40977b69687eb49fb8d6d387b8c803c51fbf7",
+  "source_sha256": {
+    "specs/spec_ch_chb_performance_1011.md": "e7cfeafa4e20d50852b51880814d17121ba2acbbc370acc9a4ede79c8a3f4ed8",
+    "src/relu_doors_0919.py": "2478c8339decaee3aacb90ac7aa87f8cff6b49d2da30833c6e3dbea0dfa82da4",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "analysis/ch_chb_performance_1011/checks.py": "7f7499ec4335357170513ff581c559b36203dab1fbbd3996fe13a106e722c386",
+    "analysis/ch_chb_performance_1011/common.py": "30a963051660629d7f55b39e17891b2b32e930473c8ac5228c9c16980f350ed6",
+    "analysis/ch_chb_performance_1011/launch.py": "a956bdaf2a8da471e38ec2f65324130fc4c277877282daa0728e5745fa09719a",
+    "analysis/ch_chb_performance_1011/report.py": "72f0eee78478730d07894d941a8f38d4c6b258caa213f701b4f39e41091c6f74"
+  },
+  "python": "/home/issan/.local/share/uv/python/cpython-3.12.3-linux-x86_64-gnu/bin/python3.12",
+  "data_dir": "/home/issan/Projects/claude/proj_004_drift/data/cifar10",
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "checks_sha256": "5126c914cc8b158fdd59378a5dbb5c7adf3401c3c831889b740b6098b621dfe5",
+  "created_at": "2026-10-11T12:57:57.178104+00:00",
+  "command": [
+    "/home/issan/Projects/claude/wt/ch_chb_performance_1011/analysis/ch_chb_performance_1011/launch.py",
+    "run",
+    "--data-dir",
+    "/home/issan/Projects/claude/proj_004_drift/data/cifar10",
+    "--poll-seconds",
+    "300"
+  ]
+}

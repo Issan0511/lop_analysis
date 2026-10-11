@@ -1,0 +1,63 @@
+{
+  "run_id": "ch_chb_performance_1011",
+  "verified_at_utc": "2026-10-11T15:58:04.146477+00:00",
+  "registered_git_hash": "e6d40977b69687eb49fb8d6d387b8c803c51fbf7",
+  "source_spec_unchanged_from_launch": true,
+  "full_rows_per_arm": 2000,
+  "seeds": [
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "tasks": [
+    1,
+    200
+  ],
+  "checkpoint_task": 200,
+  "optimizer_steps_per_seed": 6000000,
+  "no_training_resume_or_divergence": true,
+  "csv_checkpoint_metrics_match": true,
+  "completion_checksums_match": true,
+  "actual_initial_snapshots_equal_between_arms": true,
+  "dataset_archive_checksum_matches_launch": true,
+  "independent_numeric_review": {
+    "result": "PASS",
+    "method": "Separate implementation using stdlib csv/statistics and Student t(9) CDF; no report.py import",
+    "reviewer_agent": "check_geometry_explanation",
+    "checks": [
+      "all4000rows unique and complete",
+      "online/memo finite and within[0,1]",
+      "all per-seed and per-arm early/late/drop summaries",
+      "paired primary CI and direction",
+      "paired secondary CI and direction"
+    ]
+  },
+  "figure_visual_qa": {
+    "performance.png": "PASS",
+    "paired_performance.png": "PASS",
+    "diagnostics.png": "PASS"
+  },
+  "summary_editorial_addition": "Added early-to-late means and all-seed directions from the registered secondary outcomes; no endpoint or numerical change.",
+  "archive": {
+    "path": "/home/issan/Projects/obsidian-research-data/ch_chb_performance_1011",
+    "files": 4045,
+    "bytes": 7165512050,
+    "sha256_verified_before_and_after_move": true
+  },
+  "artifacts_sha256": {
+    "paired_ci.json": "33d1b2e497e37c708a2c9f51102be1dbd829cb96ff76dda7f51ba34065c7d105",
+    "per_seed.csv": "9b8d5c7224b4c747f102852313be56ba59e6c695c7fc5f1fc6b6d91ecde9627d",
+    "summary.md": "16c7bcf44bbf0f37f40f5ffd7d292c6323308c40fa41ebc02917f151e135cda8",
+    "performance.png": "90721c4e3c6c81b0e7b95f5514f2683f1d9ce0177fe7ef41790c32d7bf0cb269",
+    "paired_performance.png": "dd33ab4792ce12581c666af8dd2c8c5410bd96a7596ae14f58a8ce239e7ea97b",
+    "diagnostics.png": "08736693f8f784e7e8b84a0b991098bcbba8e87c8d1405feb3066c7c70ef030c",
+    "backup_manifest.json": "bf8aaa21cf28ff8b08064990843a7a96db30df99866de555d6dc692554e62243"
+  }
+}
