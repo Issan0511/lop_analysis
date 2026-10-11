@@ -1,0 +1,917 @@
+#!/usr/bin/env python3
+"""Registered verdict of cnn_center_relu_1011 (spec §5) plus the report-only tables (§5.11).
+
+    python analysis/cnn_center_relu_1011/verdict.py            # -> results/cnn_center_relu_1011/{verdict.json,summary.md,tables/}
+
+Labels come only from per_task.csv (git) and checks.json; the mechanism tables also read
+units.npz (git-external: the run directory, or the backup in obsidian-research-data after §9).
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import sys
+from math import comb
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+REPO = Path(__file__).resolve().parents[2]
+OUT = REPO / "results" / "cnn_center_relu_1011"
+BACKUP = Path.home() / "Projects" / "obsidian-research-data" / "cnn_center_relu_1011" / "results" / "cnn_center_relu_1011"
+MAIN_ARMS = ("ref", "C", "H", "CH")
+H_ARMS = ("H", "CH")
+SEEDS = tuple(range(10, 20))
+CR_SEED = 10
+N_TASKS = 30
+WINDOW = (21, 30)                      # main window (spec §4)
+SIDE_WINDOWS = ((1, 5), (6, 10), (11, 20))
+EARLY, LATE = (1, 5), (26, 30)         # drop = mean(EARLY) - mean(LATE)
+CR_WINDOWS = ((1, 5), (6, 10), (11, 20), (21, 30))
+KEEP_LINE = 0.5                        # relu_doors_0919's rescue line (spec §5.1)
+CHANCE = 0.1
+FLOOR_SIGMAS = 3.0
+TF_RATIO = 0.5                         # V12 §4.0: functional loss when the fit ratio < 1/2
+TD_OPEN = 0.01                         # V12 §4.0: layer loss when the unit-median open fraction < 1%
+ALPHA = 0.05
+LAYERS = ("c1", "c2", "f1", "f2")
+DEEP = frozenset({"c2", "f1", "f2"})
+CKPT = (1, 2, 3, 5, 10, 20, 30)
+
+
+# --------------------------------------------------------------------------
+# statistics
+# --------------------------------------------------------------------------
+
+def binom_two_sided(k: int, n: int) -> float:
+    """Exact two-sided p of k successes in n fair trials (k counted on the larger side)."""
+    if n == 0:
+        return float("nan")
+    k = max(k, n - k)
+    return min(1.0, 2.0 * sum(comb(n, j) for j in range(k, n + 1)) / 2.0 ** n)
+
+
+def kstar(n: int) -> int | None:
+    """Smallest k with two-sided binomial p(k of n) < 0.05 (spec §5.2: n = 10 -> 9)."""
+    for k in range(n // 2 + 1, n + 1):
+        if binom_two_sided(k, n) < ALPHA:
+            return k
+    return None
+
+
+def sign_test(diffs) -> dict:
+    """Exact two-sided sign test, ties excluded; HELPS / HURTS need p < 0.05 and <= 1 opposite."""
+    d = [float(x) for x in diffs if np.isfinite(x)]
+    nz = [x for x in d if x != 0.0]
+    n = len(nz)
+    pos = sum(1 for x in nz if x > 0)
+    neg = n - pos
+    p = binom_two_sided(pos, n) if n else float("nan")
+    if n and p < ALPHA and neg <= 1:
+        lab = "HELPS"
+    elif n and p < ALPHA and pos <= 1:
+        lab = "HURTS"
+    else:
+        lab = "TIE"
+    return {"label": lab, "median": float(np.median(d)) if d else float("nan"), "pos": pos, "neg": neg,
+            "n": n, "ties": len(d) - n, "p": p}
+
+
+# --------------------------------------------------------------------------
+# per seed
+# --------------------------------------------------------------------------
+
+def window_mean(g: pd.DataFrame, col: str, w) -> float:
+    s = g[(g.task >= w[0]) & (g.task <= w[1])][col]
+    return float(s.mean()) if len(s) == w[1] - w[0] + 1 else float("nan")
+
+
+def t_f(online: dict) -> float:
+    """First task t >= 2 with fit ratio (A(t) - 0.1)/(A(1) - 0.1) < 1/2; 31 when never; NaN (undefined)
+    when A(1) <= 0.1 (the fit ratio has no positive denominator)."""
+    a1 = online.get(1, float("nan"))
+    if not np.isfinite(a1) or a1 - CHANCE <= 0:
+        return float("nan")
+    for t in range(2, N_TASKS + 1):
+        if (online[t] - CHANCE) / (a1 - CHANCE) < TF_RATIO:
+            return t
+    return N_TASKS + 1
+
+
+def t_d(mob: dict) -> int:
+    for t in range(1, N_TASKS + 1):
+        if mob[t] < TD_OPEN:
+            return t
+    return N_TASKS + 1
+
+
+def seed_table(df: pd.DataFrame) -> pd.DataFrame:
+    """One row per seed with everything §5 needs."""
+    out = []
+    for seed, g in df.groupby("seed"):
+        g = g.sort_values("task")
+        tasks = set(int(t) for t in g.task)
+        complete = tasks >= set(range(1, N_TASKS + 1))
+        finite = bool(np.isfinite(g.online_acc).all() and np.isfinite(g.memo_acc).all())
+        diverged = bool(g.diverged.astype(str).str.lower().eq("true").any()) if "diverged" in g else False
+        valid = complete and finite and not diverged
+        on = {int(t): float(v) for t, v in zip(g.task, g.online_acc)}
+        row = {"seed": int(seed), "valid": valid}
+        if complete:
+            W = window_mean(g, "online_acc", WINDOW)
+            mf = g[(g.task >= WINDOW[0]) & (g.task <= WINDOW[1])].major_frac.to_numpy(float)
+            floor = float(mf.mean() + FLOOR_SIGMAS * mf.std(ddof=1) / math.sqrt(len(mf)))
+            row |= {"W": W, "kept": W >= KEEP_LINE, "floor": floor, "at_floor": W <= floor,
+                    "t1": on[1], "early": window_mean(g, "online_acc", EARLY),
+                    "late": window_mean(g, "online_acc", LATE),
+                    "T_f": t_f(on)}
+            row["drop"] = row["early"] - row["late"]
+            for w in SIDE_WINDOWS + CR_WINDOWS:
+                row[f"W{w[0]}_{w[1]}"] = window_mean(g, "online_acc", w)
+            tds = {}
+            for l in LAYERS:
+                mob = {int(t): float(v) for t, v in zip(g.task, g[f"mob_{l}"])}
+                tds[l] = t_d(mob)
+                row[f"T_d_{l}"] = tds[l]
+            mn = min(tds.values())
+            row["first_layers"] = ",".join(l for l in LAYERS if tds[l] == mn) if mn <= N_TASKS else ""
+            last = g[g.task == N_TASKS].iloc[0]
+            row["memo_t30"] = float(last.memo_acc)
+            if "memo_acc_m0" in g:
+                row["memo_m0_t30"] = float(last.memo_acc_m0)
+            for l in LAYERS:
+                row[f"mob_t30_{l}"] = float(last[f"mob_{l}"])
+                row[f"dead_t30_{l}"] = float(last[f"dead_frac_{l}"])
+        out.append(row)
+    return pd.DataFrame(out).set_index("seed")
+
+
+def door_condition_C(df: pd.DataFrame, steps_per_task: int) -> dict:
+    """§5.4 (C) for the H arms: every (seed, task, layer) has h_upd = steps or a fully dead layer."""
+    bad = []
+    for l in LAYERS:
+        col, dcol = f"h_upd_{l}", f"dead_frac_{l}"
+        if col not in df:
+            return {"ok": False, "reason": f"missing {col}"}
+        mask = ~((df[col] == steps_per_task) | (df[dcol] == 1.0))
+        for _, r in df[mask].iterrows():
+            bad.append((int(r.seed), int(r.task), l, int(r[col]), float(r[dcol])))
+    return {"ok": not bad, "violations": bad[:20], "n_violations": len(bad)}
+
+
+# --------------------------------------------------------------------------
+# labels
+# --------------------------------------------------------------------------
+
+def arm_label(st: pd.DataFrame) -> dict:
+    v = st[st.valid]
+    n = len(v)
+    if n < 8:
+        return {"label": "INAPPLICABLE", "n_valid": n}
+    k = kstar(n)
+    kept = int(v.kept.sum())
+    at_floor = int(v.at_floor.sum())
+    if kept >= k:
+        lab = "RESCUED"
+    elif kept <= n - k:
+        lab = "FAIL"
+    else:
+        lab = "PARTIAL"
+    sub = None
+    if lab == "FAIL":
+        sub = "FAIL_FLOOR" if at_floor >= k else "FAIL_ABOVE_FLOOR"
+    return {"label": lab, "fail_subtype": sub, "n_valid": n, "kstar": k, "kept": kept, "at_floor": at_floor,
+            "W_median": float(v.W.median()), "W_min": float(v.W.min()), "W_max": float(v.W.max()),
+            "t1_median": float(v.t1.median()), "drop_median": float(v["drop"].median())}
+
+
+def paired(st_a: pd.DataFrame, st_b: pd.DataFrame, col: str = "W") -> dict:
+    s = sorted(set(st_a[st_a.valid].index) & set(st_b[st_b.valid].index))
+    return sign_test([st_a.loc[x, col] - st_b.loc[x, col] for x in s]) | {"seeds": s}
+
+
+def ladder(labels: dict, cond_ok: bool, ref_fail: bool) -> str:
+    if not cond_ok:
+        return "INAPPLICABLE"
+    if not ref_fail:
+        return "NOT_REPRODUCED"
+    for arm, name in (("C", "NEED_C"), ("H", "NEED_H"), ("CH", "NEED_CH")):
+        if labels[arm] == "RESCUED":
+            return name
+    return "NONE_RESCUED"
+
+
+def doors_summary_v1(labels: dict, d_h_given_c: str, c_learned_t1: bool, cond_ok: bool) -> str:
+    """The summary as registered at fdb97c2b (spec §5.6); reported and scored against L6 only."""
+    if not cond_ok:
+        return "INAPPLICABLE"
+    if labels["ref"] != "FAIL":
+        return "NOT_REPRODUCED"
+    if labels["CH"] == "FAIL":
+        return "DOORS_FAIL"
+    if (labels["CH"] == "RESCUED" and labels["C"] != "RESCUED" and c_learned_t1
+            and d_h_given_c == "HELPS"):
+        return "DOORS_TRANSFER"
+    return "DOORS_PARTIAL"
+
+
+def doors_summary(labels: dict, d_h_given_c: str, c_learned_t1: bool, cond_ok: bool) -> str:
+    """Main summary (spec §13, the parent's definition after the Codex audit).
+    TRANSFER = the MLP's order: ref FAIL, C not RESCUED (learns task 1), CH RESCUED, CH - C HELPS and
+    H not RESCUED (N = NEED_CH).  The same with H RESCUED is TRANSFER_H_SUFFICES.  FAIL = C, H and CH
+    all FAIL.  Anything else PARTIAL."""
+    if not cond_ok:
+        return "INAPPLICABLE"
+    if labels["ref"] != "FAIL":
+        return "NOT_REPRODUCED"
+    if all(labels[a] == "FAIL" for a in ("C", "H", "CH")):
+        return "DOORS_FAIL"
+    ladder_ok = labels["CH"] == "RESCUED" and labels["C"] != "RESCUED" and c_learned_t1 and d_h_given_c == "HELPS"
+    if ladder_ok:
+        return "DOORS_TRANSFER" if labels["H"] != "RESCUED" else "DOORS_TRANSFER_H_SUFFICES"
+    return "DOORS_PARTIAL"
+
+
+def layer_correspondence(st_H: pd.DataFrame, st_C: pd.DataFrame, cond_ok: bool, ref_fail: bool) -> dict:
+    if not cond_ok:
+        return {"label": "INAPPLICABLE"}
+    if not ref_fail:
+        return {"label": "NOT_REPRODUCED"}
+    vH, vC = st_H[st_H.valid], st_C[st_C.valid]
+    kH, kC = kstar(len(vH)), kstar(len(vC))
+    h_c1 = int(sum("c1" in s.split(",") for s in vH.first_layers if s))
+    c_deep = int(sum(bool(s) and set(s.split(",")) <= DEEP for s in vC.first_layers))
+    c1 = h_c1 >= kH
+    c2 = c_deep >= kC
+    return {"label": "LAYER_CORRESPONDENCE" if c1 and c2 else "LAYER_CORRESPONDENCE_NOT_SHOWN",
+            "H_first_includes_c1": h_c1, "C_first_only_deep": c_deep, "kstar_H": kH, "kstar_C": kC,
+            "cond1_H_c1": c1, "cond2_C_deep": c2}
+
+
+def cr_label(cr: pd.Series | None, st_ref: pd.DataFrame, st_C: pd.DataFrame) -> dict:
+    if cr is None:
+        return {"label": "INAPPLICABLE", "reason": "no Cr run"}
+    vr, vc = st_ref[st_ref.valid], st_C[st_C.valid]
+    sep, sides = [], {}
+    for w in CR_WINDOWS:
+        col = f"W{w[0]}_{w[1]}"
+        r_lo, r_hi, c_lo, c_hi = vr[col].min(), vr[col].max(), vc[col].min(), vc[col].max()
+        if r_hi < c_lo or c_hi < r_lo:
+            sep.append(col)
+            v = float(cr[col])
+            sides[col] = "ref" if r_lo <= v <= r_hi else ("C" if c_lo <= v <= c_hi else "outside")
+    if not sep:
+        lab = "CR_UNINFORMATIVE"
+    elif all(s == "ref" for s in sides.values()):
+        lab = "CONST_SHIFT_NO_EFFECT"
+    elif all(s == "C" for s in sides.values()):
+        lab = "CONST_SHIFT_ACTS_LIKE_C"
+    else:
+        lab = "CR_UNRESOLVED"
+    return {"label": lab, "separating_windows": sep, "sides": sides,
+            "Cr": {f"W{w[0]}_{w[1]}": float(cr[f"W{w[0]}_{w[1]}"]) for w in CR_WINDOWS}}
+
+
+def evaloff(st: pd.DataFrame) -> dict:
+    v = st[st.valid]
+    t = sign_test(v.memo_t30 - v.memo_m0_t30)
+    return {**t, "label": "EVALOFF_DEPENDS" if t["label"] == "HELPS" else "EVALOFF_NO_DETECTED_DEPENDENCE", "sign_label": t["label"],
+            "memo_t30_median": float(v.memo_t30.median()), "memo_m0_t30_median": float(v.memo_m0_t30.median())}
+
+
+def analyze_frames(frames: dict, checks_ok: bool, steps_per_task: int, cr_frame=None,
+                   c_door_ok: bool = True, door_record_check: bool = True) -> dict:
+    """frames: arm -> per_task DataFrame (main arms); returns every registered label.
+    door_record_check=False is the post-hoc reading only (spec §15): §5.4 (C)'s h_upd record is
+    reported but does not make the H arms INAPPLICABLE."""
+    st = {a: seed_table(frames[a]) for a in MAIN_ARMS}
+    arms = {a: arm_label(st[a]) for a in MAIN_ARMS}
+    condC = {a: door_condition_C(frames[a], steps_per_task) for a in H_ARMS}
+    for a in H_ARMS:
+        if door_record_check and not condC[a]["ok"]:
+            arms[a] = arms[a] | {"label": "INAPPLICABLE", "condition_C": condC[a]}
+    if not c_door_ok:
+        for a in ("C", "CH"):
+            arms[a] = arms[a] | {"label": "INAPPLICABLE", "condition_C": "C door check failed"}
+    labels = {a: arms[a]["label"] for a in MAIN_ARMS}
+    cond_ok = checks_ok and all(l != "INAPPLICABLE" for l in labels.values())
+    ref_fail = labels["ref"] == "FAIL"
+    signs = {"D_C": paired(st["C"], st["ref"]), "D_H": paired(st["H"], st["ref"]),
+             "D_CH": paired(st["CH"], st["ref"]), "D_H|C": paired(st["CH"], st["C"]),
+             "D_C|H": paired(st["CH"], st["H"])}
+    vC = st["C"][st["C"].valid]
+    kC = kstar(len(vC)) if len(vC) else None
+    c_learned = bool(kC is not None and int((vC.t1 >= KEEP_LINE).sum()) >= kC)
+    res = {
+        "conditions": {"A_checks_all_pass": checks_ok, "n_valid": {a: arms[a].get("n_valid") for a in MAIN_ARMS},
+                       "B_ref_fail": ref_fail, "C_h_door": condC, "C_c_door_check": c_door_ok,
+                       "steps_per_task": steps_per_task},
+        "arms": arms,
+        "signs": {k: {kk: vv for kk, vv in v.items()} for k, v in signs.items()},
+        "C_learned_t1": c_learned,
+        "N": ladder(labels, cond_ok, ref_fail),
+        "DOORS": doors_summary(labels, signs["D_H|C"]["label"], c_learned, cond_ok),
+        "DOORS_v1": doors_summary_v1(labels, signs["D_H|C"]["label"], c_learned, cond_ok),
+        "M_H": {"label": labels["H"],
+                "vs_MLP": {"FAIL": "H_LIKE_MLP", "RESCUED": "H_DIFFERS_FROM_MLP",
+                           "PARTIAL": "H_PARTIAL"}.get(labels["H"], labels["H"])},
+        "LAYER": layer_correspondence(st["H"], st["C"], cond_ok, ref_fail),
+        "flags": {
+            "RESIDUAL_LOSS_CH": (lambda t: {"set": t["label"] == "HELPS", **t})(
+                sign_test(st["CH"][st["CH"].valid]["drop"])),
+            "T1_LOWER": {a: (lambda t: {"set": t["label"] == "HURTS", **t})(paired(st[a], st["ref"], "t1"))
+                         for a in ("C", "H", "CH")},
+        },
+        "EVALOFF": {a: evaloff(st[a]) for a in H_ARMS},
+        "timing_T_f": {a: {"median": float(st[a][st[a].valid].T_f.median()),
+                           "vs_ref": (lambda t: {**t, "label": {"HELPS": "LATER", "HURTS": "EARLIER"}.get(
+                               t["label"], "NO_TIMING_DIFF")})(paired(st[a], st["ref"], "T_f"))}
+                       for a in MAIN_ARMS},
+    }
+    if cr_frame is not None:
+        cst = seed_table(cr_frame)
+        ok = CR_SEED in cst.index and bool(cst.loc[CR_SEED, "valid"]) and \
+            all(np.isfinite(cst.loc[CR_SEED, f"W{w[0]}_{w[1]}"]) for w in CR_WINDOWS)
+        res["Cr"] = cr_label(cst.loc[CR_SEED] if ok else None, st["ref"], st["C"])
+        if not ok:
+            res["Cr"]["reason"] = "Cr seed 10 missing, incomplete or not finite"
+    else:
+        res["Cr"] = cr_label(None, st["ref"], st["C"])
+    res["_seed_tables"] = st
+    return res
+
+
+# --------------------------------------------------------------------------
+# report-only mechanism tables (units.npz)
+# --------------------------------------------------------------------------
+
+def find_units(arm: str) -> Path | None:
+    for base in (OUT, BACKUP):
+        p = base / arm / "units.npz"
+        if p.exists():
+            return p
+    return None
+
+
+def mechanism_tables(arms=MAIN_ARMS) -> dict:
+    """mu path / b path (t0 -> t) per layer: unit median of dz, db, dwm and the b share
+    |db| / (|db| + |dwm|), then the seed median.  Also zbar / sd / open / dead per checkpoint."""
+    rows, lay = [], []
+    for a in arms:
+        p = find_units(a)
+        if p is None:
+            continue
+        u = np.load(p)
+        for l in LAYERS:
+            zb, b, wm = u[f"zbar_{l}"], u[f"b_{l}"], u[f"wm_{l}"]           # (T+1, R, n)
+            # from = 0 is the registered reference (t0); from = 1 is report only: in the H arms the
+            # door's m is 0 at t0 and converges during task 1, so t0 -> t also carries the switch-on
+            for t_from in (0, 1):
+                for t in CKPT:
+                    if t <= t_from or t >= zb.shape[0] or not np.isfinite(zb[t]).all():
+                        continue
+                    dz, db, dw = zb[t] - zb[t_from], b[t] - b[t_from], wm[t] - wm[t_from]
+                    share = np.abs(db) / (np.abs(db) + np.abs(dw) + 1e-30)
+                    rows.append({"arm": a, "layer": l, "from": t_from, "t": t,
+                                 "dz_med": float(np.median(np.median(dz, 1))),
+                                 "db_med": float(np.median(np.median(db, 1))),
+                                 "dwm_med": float(np.median(np.median(dw, 1))),
+                                 "b_share_med": float(np.median(np.median(share, 1)))})
+            for t in (0,) + CKPT:
+                if t >= zb.shape[0] or not np.isfinite(zb[t]).all():
+                    continue
+                sd, op, dead = u[f"sd_{l}"][t], u[f"open_{l}"][t], u[f"dead_{l}"][t]
+                min_ = u[f"m_in_{l}"][t]
+                lay.append({"arm": a, "layer": l, "t": t,
+                            "zbar_med": float(np.median(np.median(zb[t], 1))),
+                            "sd_med": float(np.median(np.median(sd, 1))),
+                            "rel_pos_med": float(np.median(np.median(zb[t] / np.maximum(sd, 1e-30), 1))),
+                            "open_mean": float(np.median(op.mean(1))),
+                            "dead_frac": float(np.median(dead.mean(1))),
+                            "m_in_norm": float(np.median(np.linalg.norm(min_, axis=1)))})
+    return {"path": pd.DataFrame(rows), "layers": pd.DataFrame(lay)}
+
+
+def find_ckpt(arm: str) -> Path | None:
+    for base in (OUT, BACKUP):
+        p = base / arm / "ckpt"
+        if p.exists() and any(p.glob("*.pt")):
+            return p
+    return None
+
+
+def three_way_table(arms=MAIN_ARMS, tasks=(1, 3, 10, 30)) -> pd.DataFrame:
+    """Report only (spec §4): the mu path <W, m_in> from t0 to t split into own <dW, m0>, upstream
+    <W0, dm> and cross <dW, dm> (an exact identity), unit median per seed, then seed median.
+    W0 is the host init (CN.init_params), W_t the checkpoint, m_in from units.npz."""
+    import torch
+    sys.path.insert(0, str(REPO))
+    from src import rlcifar_cnn_0908 as CN
+    rows = []
+    for a in arms:
+        up, ck = find_units(a), find_ckpt(a)
+        if up is None or ck is None:
+            continue
+        u = np.load(up)
+        for si, seed in enumerate(SEEDS):
+            P0 = [q.detach().double() for q in CN.init_params(seed, torch.device("cpu"))]
+            for t in tasks:
+                f = ck / f"{a}_seed{seed}_t{t:02d}.pt"
+                if not f.exists():
+                    continue
+                Pt = [q.double() for q in torch.load(f, map_location="cpu", weights_only=False)["P"]]
+                for li, l in enumerate(LAYERS):
+                    W0 = P0[2 * li].reshape(P0[2 * li].shape[0], -1)
+                    Wt = Pt[2 * li].reshape(Pt[2 * li].shape[0], -1)
+                    m0 = torch.from_numpy(u[f"m_in_{l}"][0, si]).double()
+                    mt = torch.from_numpy(u[f"m_in_{l}"][t, si]).double()
+                    dW, dm = Wt - W0, mt - m0
+                    own, ups, cross = dW @ m0, W0 @ dm, dW @ dm
+                    total = Wt @ mt - W0 @ m0
+                    rows.append({"arm": a, "seed": seed, "t": t, "layer": l,
+                                 "own_med": float(np.median(own.numpy())), "up_med": float(np.median(ups.numpy())),
+                                 "cross_med": float(np.median(cross.numpy())), "dwm_med": float(np.median(total.numpy())),
+                                 "identity_res": float((own + ups + cross - total).abs().max())})
+    d = pd.DataFrame(rows)
+    if not len(d):
+        return d
+    return d.groupby(["arm", "layer", "t"])[["own_med", "up_med", "cross_med", "dwm_med", "identity_res"]].agg(
+        {"own_med": "median", "up_med": "median", "cross_med": "median", "dwm_med": "median",
+         "identity_res": "max"}).reset_index()
+
+
+def door_record_explained(frames: dict, steps_per_task: int, res: dict) -> list[dict]:
+    """Post hoc (spec §15): every (seed, task, layer) where §5.4 (C) failed, with what units.npz says
+    about it: dead fraction, number of live units, the largest |m| of the dead units (the float32
+    denormal fixed point of m <- 0.99 m is 7.0e-44), whether the live units are open on every image,
+    and the seed's T_f (was the network's function already lost?)."""
+    out = []
+    for a in H_ARMS:
+        up = find_units(a)
+        u = np.load(up) if up is not None else None
+        st = res["_seed_tables"][a]
+        df = frames[a]
+        for l in LAYERS:
+            bad = df[(df[f"h_upd_{l}"] != steps_per_task) & (df[f"dead_frac_{l}"] != 1.0)]
+            for _, r in bad.iterrows():
+                seed, t = int(r.seed), int(r.task)
+                row = {"arm": a, "layer": l, "seed": seed, "task": t, "h_upd": int(r[f"h_upd_{l}"]),
+                       "dead_frac": float(r[f"dead_frac_{l}"]), "T_f": float(st.loc[seed, "T_f"])}
+                if u is not None:
+                    si = list(SEEDS).index(seed)
+                    dead = u[f"dead_{l}"][t, si]
+                    m = u[f"mdoor_{l}"][t, si]
+                    opn = u[f"open_{l}"][t, si]
+                    row |= {"n_live": int((~dead).sum()),
+                            "max_abs_m_dead": float(np.abs(m[dead]).max()) if dead.any() else float("nan"),
+                            "live_open_min": float(opn[~dead].min()) if (~dead).any() else float("nan")}
+                out.append(row)
+    return out
+
+
+def posthoc(frames: dict, steps_per_task: int, checks_ok: bool, cr_frame, c_door_ok: bool, res: dict) -> dict:
+    """Post hoc (spec §15, not a registered judgment): the labels with §5.4 (C)'s door record reported
+    but not used, and the description of every record shortfall."""
+    ph = analyze_frames(frames, checks_ok, steps_per_task, cr_frame=cr_frame, c_door_ok=c_door_ok,
+                        door_record_check=False)
+    expl = door_record_explained(frames, steps_per_task, res)
+    return {"labels": {a: ph["arms"][a]["label"] for a in MAIN_ARMS},
+            "fail_subtypes": {a: ph["arms"][a].get("fail_subtype") for a in MAIN_ARMS},
+            "N": ph["N"], "DOORS": ph["DOORS"], "DOORS_v1": ph["DOORS_v1"], "M_H": ph["M_H"], "LAYER": ph["LAYER"],
+            "signs": ph["signs"], "flags": ph["flags"], "EVALOFF": ph["EVALOFF"], "timing_T_f": ph["timing_T_f"],
+            "record_shortfalls": expl,
+            "record_shortfalls_all_after_T_f": all(x["task"] >= x["T_f"] for x in expl),
+            "_res": ph}
+
+
+def leaky_reference() -> dict:
+    """Same engine, same seeds, leaky 0.1: LR (raw) and LRc (centred), report only."""
+    out = {}
+    for name, p in (("LR", REPO / "results" / "cnn_drive_verify_1009" / "LR" / "per_task.csv"),
+                    ("LRc", REPO / "results" / "cnn_center_1010" / "LRc" / "per_task.csv")):
+        if p.exists():
+            d = pd.read_csv(p)
+            g = []
+            for seed, s in d.groupby("seed"):
+                g.append({"seed": seed, "W": window_mean(s, "online_acc", WINDOW),
+                          "drop": window_mean(s, "online_acc", EARLY) - window_mean(s, "online_acc", LATE)})
+            g = pd.DataFrame(g)
+            out[name] = {"W_median": float(g.W.median()), "drop_median": float(g["drop"].median()),
+                         "drop_mean": float(g["drop"].mean())}
+    return out
+
+
+# --------------------------------------------------------------------------
+# prediction scoring (spec §7)
+# --------------------------------------------------------------------------
+
+PRED_LABELS = {
+    "L1": ("ref", {"FAIL": .93, "PARTIAL": .04, "RESCUED": .01, "OTHER": .02}),
+    "L2": ("C", {"FAIL": .72, "PARTIAL": .16, "RESCUED": .10, "OTHER": .02}),
+    "L3": ("H", {"FAIL": .40, "PARTIAL": .30, "RESCUED": .28, "OTHER": .02}),
+    "L4": ("CH", {"RESCUED": .64, "PARTIAL": .20, "FAIL": .14, "OTHER": .02}),
+    "L5": ("N", {"NEED_CH": .36, "NONE_RESCUED": .30, "NEED_H": .24, "NEED_C": .08, "OTHER": .02}),
+    "L6_v1": ("DOORS_v1", {"DOORS_TRANSFER": .50, "DOORS_PARTIAL": .30, "DOORS_FAIL": .13, "OTHER": .07}),
+    "L6": ("DOORS", {"DOORS_TRANSFER": .29, "DOORS_TRANSFER_H_SUFFICES": .21, "DOORS_PARTIAL": .33,
+                     "DOORS_FAIL": .10, "OTHER": .07}),
+    "L7": ("LAYER", {"LAYER_CORRESPONDENCE": .30, "LAYER_CORRESPONDENCE_NOT_SHOWN": .65, "NOT_REPRODUCED": .05}),
+    "L8": ("Cr", {"CR_UNINFORMATIVE": .50, "CONST_SHIFT_NO_EFFECT": .30, "CR_UNRESOLVED": .10,
+                  "CONST_SHIFT_ACTS_LIKE_C": .10}),
+}
+# Fable (parent), relayed 2026-10-11 13:57 before any door run (spec §7.2); "OTHER" is one bucket
+PRED_LABELS_FABLE = {
+    "L2": ("C", {"FAIL": .70, "PARTIAL": .22, "RESCUED": .08}),
+    "L3": ("H", {"FAIL": .45, "PARTIAL": .30, "RESCUED": .25}),
+    "L4": ("CH", {"RESCUED": .60, "PARTIAL": .25, "FAIL": .15}),
+    "L5": ("N", {"NEED_CH": .40, "NONE_RESCUED": .30, "NEED_H": .20, "OTHER": .10}),
+    "L6_v1": ("DOORS_v1", {"DOORS_TRANSFER": .45, "DOORS_PARTIAL": .35, "DOORS_FAIL": .12, "NOT_REPRODUCED": .08}),
+    "L6": ("DOORS", {"DOORS_TRANSFER": .40, "DOORS_PARTIAL": .40, "DOORS_FAIL": .10, "NOT_REPRODUCED": .08,
+                     "OTHER": .02}),
+    "L7": ("LAYER", {"LAYER_CORRESPONDENCE": .30, "OTHER": .70}),
+}
+# Codex (independent audit, specs/review_codex_cnn_center_relu_1011.md §8, fixed before reading spec §7)
+PRED_LABELS_CODEX = {
+    "L1": ("ref", {"FAIL": .97, "PARTIAL": .01, "RESCUED": .00, "OTHER": .02}),
+    "L2": ("C", {"FAIL": .72, "PARTIAL": .20, "RESCUED": .06, "OTHER": .02}),
+    "L3": ("H", {"FAIL": .28, "PARTIAL": .25, "RESCUED": .45, "OTHER": .02}),
+    "L4": ("CH", {"FAIL": .11, "PARTIAL": .17, "RESCUED": .70, "OTHER": .02}),
+    "L5": ("N", {"NEED_C": .06, "NEED_H": .40, "NEED_CH": .32, "NONE_RESCUED": .18, "OTHER": .04}),
+    "L6_v1": ("DOORS_v1", {"DOORS_TRANSFER": .55, "DOORS_PARTIAL": .30, "DOORS_FAIL": .11, "NOT_REPRODUCED": .02,
+                           "INAPPLICABLE": .02}),
+    # the same numbers for the new definition, transcribed as the parent asked (written by Codex after
+    # it had seen Claude's probabilities in verdict.py; no probability for TRANSFER_H_SUFFICES)
+    "L6": ("DOORS", {"DOORS_TRANSFER": .55, "DOORS_PARTIAL": .30, "DOORS_FAIL": .11, "NOT_REPRODUCED": .02,
+                     "INAPPLICABLE": .02}),
+    "L7": ("LAYER", {"LAYER_CORRESPONDENCE": .40, "LAYER_CORRESPONDENCE_NOT_SHOWN": .56, "NOT_REPRODUCED": .04}),
+    "L8": ("Cr", {"CR_UNINFORMATIVE": .55, "CONST_SHIFT_NO_EFFECT": .15, "CONST_SHIFT_ACTS_LIKE_C": .05,
+                  "CR_UNRESOLVED": .23, "OTHER": .02}),
+}
+PRED_BINARY = {"B1": .60, "B2": .55, "B3": .25, "B4": .50, "B5": .50, "B6": .70, "B7": .35, "B8": .12,
+               "B9": .90, "B10": .75, "B11": .45, "B12": .80}
+PRED_TEXT = {
+    "B1": "ref's FAIL subtype is FAIL_FLOOR (scored only if ref FAIL)",
+    "B2": "ref's first failing layers include c2 in >= 9 seeds",
+    "B3": "C's T_f is LATER than ref's",
+    "B4": "H's t30 mob_c1 (seed median) < 0.01",
+    "B5": "CH's main-window online (seed median) >= 0.90",
+    "B6": "RESIDUAL_LOSS set on CH",
+    "B7": "CH's drop (seed median) < LRc's drop (seed median, leaky, same seeds)",
+    "B8": "T1_LOWER set on CH",
+    "B9": "CH is EVALOFF_DEPENDS",
+    "B10": "CH's b-path share t0->t30 > 0.5 in both c2 and f2",
+    "B11": "CH's b-path share t0->t30 > 0.5 in f1",
+    "B12": "ref's c2 dz t0->t30 < -50",
+}
+
+
+def realised(res: dict) -> dict:
+    lab = {"ref": res["arms"]["ref"]["label"], "C": res["arms"]["C"]["label"], "H": res["arms"]["H"]["label"],
+           "CH": res["arms"]["CH"]["label"], "N": res["N"], "DOORS": res["DOORS"], "DOORS_v1": res["DOORS_v1"],
+           "LAYER": res["LAYER"]["label"], "Cr": res["Cr"]["label"]}
+    return lab
+
+
+def score_labels(res: dict, table: dict) -> dict:
+    lab = realised(res)
+    out = {}
+    for key, (item, probs) in table.items():
+        r = lab[item]
+        bucket = r if r in probs else "OTHER"
+        p = probs.get(bucket, 0.0)
+        brier = sum((pk - (1.0 if k == bucket else 0.0)) ** 2 for k, pk in probs.items()) + \
+            (0.0 if bucket in probs else 1.0)
+        top = max(probs, key=probs.get)
+        out[key] = {"item": item, "realised": r, "p_realised": p, "mode": top, "mode_hit": top == bucket,
+                    "brier": brier}
+    return out
+
+
+def score(res: dict, mech: dict | None, leaky: dict) -> dict:
+    lab = realised(res)
+    out = {"labels": {}, "binary": {}, "labels_fable": score_labels(res, PRED_LABELS_FABLE),
+           "labels_codex": score_labels(res, PRED_LABELS_CODEX)}
+    for key, (item, probs) in PRED_LABELS.items():
+        r = lab[item]
+        bucket = r if r in probs else "OTHER"
+        p = probs.get(bucket, 0.0)
+        brier = sum((pk - (1.0 if k == bucket else 0.0)) ** 2 for k, pk in probs.items()) + \
+            (0.0 if bucket in probs else 1.0)
+        top = max(probs, key=probs.get)
+        out["labels"][key] = {"item": item, "realised": r, "p_realised": p, "mode": top, "mode_hit": top == bucket,
+                              "brier": brier}
+    st = res["_seed_tables"]
+    truth: dict[str, bool | None] = {}
+    truth["B1"] = (res["arms"]["ref"].get("fail_subtype") == "FAIL_FLOOR") if lab["ref"] == "FAIL" else None
+    vr = st["ref"][st["ref"].valid]
+    truth["B2"] = (int(sum("c2" in s.split(",") for s in vr.first_layers if s)) >= 9) if len(vr) == 10 else None
+    truth["B3"] = res["timing_T_f"]["C"]["vs_ref"]["label"] == "LATER"
+    vh = st["H"][st["H"].valid]
+    truth["B4"] = float(vh.mob_t30_c1.median()) < 0.01
+    truth["B5"] = res["arms"]["CH"].get("W_median", float("nan")) >= 0.90
+    truth["B6"] = res["flags"]["RESIDUAL_LOSS_CH"]["set"]
+    truth["B7"] = (res["arms"]["CH"].get("drop_median", float("nan")) < leaky["LRc"]["drop_median"]) \
+        if "LRc" in leaky else None
+    truth["B8"] = res["flags"]["T1_LOWER"]["CH"]["set"]
+    truth["B9"] = res["EVALOFF"]["CH"]["label"] == "EVALOFF_DEPENDS"
+    if mech is not None and len(mech["path"]):
+        pth = mech["path"]
+
+        def share(arm, layer):
+            q = pth[(pth.arm == arm) & (pth.layer == layer) & (pth["from"] == 0) & (pth.t == N_TASKS)]
+            return float(q.b_share_med.iloc[0]) if len(q) else float("nan")
+
+        truth["B10"] = share("CH", "c2") > 0.5 and share("CH", "f2") > 0.5
+        truth["B11"] = share("CH", "f1") > 0.5
+        q = pth[(pth.arm == "ref") & (pth.layer == "c2") & (pth["from"] == 0) & (pth.t == N_TASKS)]
+        truth["B12"] = float(q.dz_med.iloc[0]) < -50 if len(q) else None
+    else:
+        truth["B10"] = truth["B11"] = truth["B12"] = None
+    for k, p in PRED_BINARY.items():
+        o = truth.get(k)
+        out["binary"][k] = {"claim": PRED_TEXT[k], "p": p, "true": o,
+                            "brier": None if o is None else (p - (1.0 if o else 0.0)) ** 2}
+    return out
+
+
+# --------------------------------------------------------------------------
+# io
+# --------------------------------------------------------------------------
+
+REQUIRED = ("online_acc", "memo_acc", "major_frac") + tuple(f"{q}_{l}" for q in ("mob", "dead_frac") for l in LAYERS)
+REQUIRED_H = tuple(f"h_upd_{l}" for l in LAYERS) + ("memo_acc_m0",)
+
+
+def validate_frame(df: pd.DataFrame, arm: str, seeds) -> list[str]:
+    """Problems that make the table not the registered box (empty list = valid)."""
+    bad = []
+    if "arm" not in df or set(df.arm.astype(str)) != {arm}:
+        bad.append(f"{arm}: arm column {sorted(set(df.arm.astype(str))) if 'arm' in df else 'missing'}")
+    if set(int(x) for x in df.seed) != set(seeds):
+        bad.append(f"{arm}: seeds {sorted(set(int(x) for x in df.seed))} != {list(seeds)}")
+    for seed, g in df.groupby("seed"):
+        t = sorted(int(x) for x in g.task)
+        if t != list(range(1, N_TASKS + 1)):
+            bad.append(f"{arm}: seed {seed} tasks not exactly 1..{N_TASKS} once (n={len(t)})")
+    need = REQUIRED + (REQUIRED_H if arm in H_ARMS else ())
+    miss = [c for c in need if c not in df]
+    if miss:
+        bad.append(f"{arm}: missing columns {miss}")
+    else:
+        nonfinite = [c for c in need if not np.isfinite(df[c].to_numpy(float)).all()]
+        if nonfinite:
+            bad.append(f"{arm}: non-finite values in {nonfinite}")
+    return bad
+
+
+def load_frames(base: Path = OUT) -> tuple[dict, pd.DataFrame | None]:
+    frames = {a: pd.read_csv(base / a / "per_task.csv") for a in MAIN_ARMS}
+    crp = base / "Cr" / "per_task.csv"
+    return frames, (pd.read_csv(crp) if crp.exists() else None)
+
+
+def engine_sha_at(commit: str) -> str | None:
+    import hashlib
+    import subprocess
+    r = subprocess.run(["git", "-C", str(REPO), "show", f"{commit}:src/cnn_center_relu_1011.py"],
+                       capture_output=True)
+    return hashlib.sha256(r.stdout).hexdigest() if r.returncode == 0 else None
+
+
+EXPECTED = {"n_tasks": N_TASKS, "epochs": 400, "lr": 0.001, "beta_h": 0.01}
+
+
+def provenance_gate(base: Path = OUT) -> dict:
+    """Every arm's provenance.json is the registered configuration, from a clean tree, with the engine
+    that the checks ran on (the same sha256 at the checks commit and at every run commit)."""
+    bad = []
+    c = json.loads((base / "checks.json").read_text()) if (base / "checks.json").exists() else {}
+    if not c.get("all_pass"):
+        bad.append("checks.json missing or not all_pass")
+    chk_commit = c.get("_meta", {}).get("git_hash")
+    chk_sha = engine_sha_at(chk_commit) if chk_commit else None
+    if c.get("_meta", {}).get("git_dirty_code"):
+        bad.append("checks ran on a dirty tree")
+    shas, data = set(), set()
+    for a in MAIN_ARMS + ("Cr",):
+        pp = base / a / "provenance.json"
+        if not pp.exists():
+            if a != "Cr":
+                bad.append(f"{a}: provenance.json missing")
+            continue
+        pv = json.loads(pp.read_text())
+        seeds = [CR_SEED] if a == "Cr" else list(SEEDS)
+        if pv.get("arm") != a or pv.get("slots") != [[a, s] for s in seeds]:
+            bad.append(f"{a}: provenance arm/slots {pv.get('arm')} {pv.get('slots')}")
+        for k, v in EXPECTED.items():
+            if pv.get(k) != v:
+                bad.append(f"{a}: provenance {k} = {pv.get(k)} != {v}")
+        for g in pv.get("gits", []):
+            if g.get("git_dirty_code"):
+                bad.append(f"{a}: run from a dirty tree ({g.get('git_hash')})")
+            shas.add(engine_sha_at(g.get("git_hash")))
+        data.add(json.dumps(pv.get("data_sha256"), sort_keys=True))
+    if chk_sha is None or shas != {chk_sha}:
+        bad.append(f"engine sha256 of runs {sorted(str(x)[:12] for x in shas)} != checks {str(chk_sha)[:12]}")
+    if len(data) != 1:
+        bad.append("data sha256 differs between arms")
+    return {"ok": not bad, "problems": bad, "engine_sha256": chk_sha}
+
+
+def c_door_from_runs() -> dict:
+    """(C) for C and CH from the runs themselves: the t0 mean input patch of c1 is < 0.1 x ref's, per seed."""
+    out = {}
+    pr = find_units("ref")
+    if pr is None:
+        return {"ok": None, "reason": "units.npz of ref not found"}
+    raw = np.linalg.norm(np.load(pr)["m_in_c1"][0], axis=1)
+    for a in ("C", "CH"):
+        pa = find_units(a)
+        if pa is None:
+            return {"ok": None, "reason": f"units.npz of {a} not found"}
+        cen = np.linalg.norm(np.load(pa)["m_in_c1"][0], axis=1)
+        out[a] = {"ratio_max": float((cen / raw).max()), "ok": bool((cen < 0.1 * raw).all())}
+    return {"ok": all(v["ok"] for v in out.values()), **out}
+
+
+def steps_per_task(base: Path = OUT) -> int:
+    prov = json.loads((base / "CH" / "provenance.json").read_text())
+    return int(prov["epochs"]) * 75
+
+
+def checks_state(base: Path = OUT) -> tuple[bool, bool]:
+    p = base / "checks.json"
+    if not p.exists():
+        return False, False
+    c = json.loads(p.read_text())
+    return bool(c.get("all_pass")), bool(c.get("K-center", {}).get("pass"))
+
+
+def fmt(x, nd=4):
+    return "—" if x is None or (isinstance(x, float) and not np.isfinite(x)) else (
+        f"{x:.{nd}f}" if isinstance(x, float) else str(x))
+
+
+def write_report(res: dict, mech: dict, leaky: dict, sc: dict, base: Path = OUT) -> None:
+    (base / "tables").mkdir(parents=True, exist_ok=True)
+    for a, s in res["_seed_tables"].items():
+        s.to_csv(base / "tables" / f"seeds_{a}.csv")
+    if len(mech["path"]):
+        mech["path"].to_csv(base / "tables" / "mu_b_path.csv", index=False)
+        mech["layers"].to_csv(base / "tables" / "layers.csv", index=False)
+    clean = {k: v for k, v in res.items() if k not in ("_seed_tables", "posthoc")}
+    if "posthoc" in res:
+        clean["posthoc"] = {k: v for k, v in res["posthoc"].items() if k != "_res"}
+        clean["posthoc"]["prediction_scoring"] = sc.get("posthoc")
+    clean["leaky_reference"] = leaky
+    clean["prediction_scoring"] = {k: v for k, v in sc.items() if k != "posthoc"}
+    (base / "verdict.json").write_text(json.dumps(clean, indent=1, default=lambda o: o if not isinstance(
+        o, (np.integer, np.floating, np.bool_)) else o.item()))
+    L = ["# cnn_center_relu_1011 — ReLU の CNN に中心化の扉 C・H・CH", "",
+         "Kumar らの CNN・RL-CIFAR・ReLU・seed 10–19・30 課題・主窓 t21–30（spec `specs/spec_cnn_center_relu_1011.md`）。", "",
+         "## 腕（主窓 = t21–30 の online、seed ごとに平均してから seed 中央値）", "",
+         "| 腕 | ラベル | 主窓 中央値 | 範囲 | KEPT（≥ 0.5） | 床以下 | t1 中央値 | 低下（t1–5 − t26–30）中央値 | T_f 中央値 |",
+         "|---|---|---|---|---|---|---|---|---|"]
+    for a in MAIN_ARMS:
+        r = res["arms"][a]
+        lab = r["label"] + (f"（{r['fail_subtype']}）" if r.get("fail_subtype") and r["label"] == "FAIL" else "")
+        if r["label"] == "INAPPLICABLE" and "posthoc" in res:
+            lab += f"（§5.4 (C) の扉の記録）。事後 {res['posthoc']['labels'][a]}" + (
+                f"（{res['posthoc']['fail_subtypes'][a]}）" if res['posthoc']['fail_subtypes'][a] else "")
+        L.append(f"| {a} | **{lab}** | {fmt(r.get('W_median'))} | {fmt(r.get('W_min'))}–{fmt(r.get('W_max'))} | "
+                 f"{r.get('kept')}/{r.get('n_valid')} | {r.get('at_floor')}/{r.get('n_valid')} | {fmt(r.get('t1_median'))} | "
+                 f"{fmt(r.get('drop_median'))} | {fmt(res['timing_T_f'][a]['median'], 1)} |")
+    L += ["", "## 登録判定", ""]
+    L.append(f"- **DOORS** = `{res['DOORS']}`（spec §13 の主判定。C が課題 1 を学ぶ: {res['C_learned_t1']}）。"
+             f"登録時の規則（fdb97c2b、§5.6）では `{res['DOORS_v1']}`")
+    L.append(f"- **N** = `{res['N']}`")
+    L.append(f"- **M_H** = `{res['M_H']['label']}`（{res['M_H']['vs_MLP']}）")
+    lay = res["LAYER"]
+    L.append(f"- **LAYER** = `{lay['label']}` — " + ", ".join(f"{k} {v}" for k, v in lay.items() if k != "label"))
+    for k, v in res["signs"].items():
+        L.append(f"- {k}: `{v['label']}` — 中央値 {fmt(v['median'])}, +{v['pos']}/−{v['neg']}（同値 {v['ties']}）, p {fmt(v['p'])}")
+    f = res["flags"]
+    L.append(f"- RESIDUAL_LOSS（CH）: {f['RESIDUAL_LOSS_CH']['set']} — 中央値 {fmt(f['RESIDUAL_LOSS_CH']['median'])}, "
+             f"+{f['RESIDUAL_LOSS_CH']['pos']}/−{f['RESIDUAL_LOSS_CH']['neg']}, p {fmt(f['RESIDUAL_LOSS_CH']['p'])}")
+    for a, t in f["T1_LOWER"].items():
+        L.append(f"- T1_LOWER（{a}）: {t['set']} — t1 の差の中央値 {fmt(t['median'])}, +{t['pos']}/−{t['neg']}, p {fmt(t['p'])}")
+    for a, t in res["EVALOFF"].items():
+        L.append(f"- EVALOFF（{a}）: `{t['label']}` — t30 の memo {fmt(t['memo_t30_median'])}、m = 0 で {fmt(t['memo_m0_t30_median'])}")
+    cr = res["Cr"]
+    L.append(f"- Cr（seed {CR_SEED}）: `{cr['label']}` — 分ける窓 {cr.get('separating_windows')}, 側 {cr.get('sides')}, Cr の値 "
+             + ", ".join(f"{k} {fmt(v)}" for k, v in cr.get("Cr", {}).items()))
+    c = res["conditions"]
+    if "provenance_gate" in c:
+        L.append(f"- 入力と provenance の検査: 表の問題 {c.get('validation_problems') or 'なし'}、"
+                 f"provenance {('OK' if c['provenance_gate']['ok'] else c['provenance_gate']['problems'])}、"
+                 f"エンジンの sha256 {str(c['provenance_gate'].get('engine_sha256'))[:12]}…、"
+                 f"走から見た C の扉 {c.get('C_door_from_runs')}")
+    L.append(f"- 適用条件: (A) 検査 all_pass ∧ 入力と provenance の検査 {c['A_checks_all_pass']}・有効 seed {c['n_valid']}、(B) ref FAIL {c['B_ref_fail']}、"
+             f"(C) H の扉 {{{', '.join(f'{a}: {v['ok']}' for a, v in c['C_h_door'].items())}}}・C の扉の検査 {c['C_c_door_check']}")
+    if "posthoc" in res:
+        ph = res["posthoc"]
+        L += ["", "## 事後の読み（登録判定ではない。spec §15）: (C) の扉の記録を判定に使わない場合", "",
+              f"- 腕: " + "、".join(f"{a} `{ph['labels'][a]}`" + (f"（{ph['fail_subtypes'][a]}）" if ph['fail_subtypes'][a] else "")
+                                for a in MAIN_ARMS),
+              f"- DOORS `{ph['DOORS']}`（DOORS_v1 `{ph['DOORS_v1']}`）、N `{ph['N']}`、M_H `{ph['M_H']['label']}`（{ph['M_H']['vs_MLP']}）、"
+              f"LAYER `{ph['LAYER']['label']}` — " + ", ".join(f"{k} {v}" for k, v in ph['LAYER'].items() if k != 'label'),
+              f"- (C) の記録の不足は {len(ph['record_shortfalls'])} 件、すべて T_f（網の機能の低下）の後: {ph['record_shortfalls_all_after_T_f']}",
+              "", "| 腕 | 層 | seed | 課題 | h_upd の最小（満点 30,000） | 死亡率 | 生きた単位 | 死んだ単位の最大 \\|m\\| | 生きた単位の開いた割合の最小 | T_f |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
+        sh = pd.DataFrame(ph["record_shortfalls"])
+        if len(sh):
+            (base / "tables").mkdir(parents=True, exist_ok=True)
+            sh.to_csv(base / "tables" / "record_shortfalls.csv", index=False)
+            for (a_, l_, s_), g in sh.groupby(["arm", "layer", "seed"]):
+                L.append(f"| {a_} | {l_} | {s_} | {g.task.min()}–{g.task.max()}（{len(g)}） | {g.h_upd.min()} | "
+                         f"{g.dead_frac.min():.2f}–{g.dead_frac.max():.2f} | {g.n_live.min()}–{g.n_live.max()} | "
+                         f"{g.max_abs_m_dead.max():.1e} | {g.live_open_min.min():.3f} | {g.T_f.iloc[0]:.0f} |")
+        for k, v in ph["signs"].items():
+            L.append(f"- 事後 {k}: `{v['label']}` — 中央値 {fmt(v['median'])}, +{v['pos']}/−{v['neg']}（同値 {v['ties']}）, p {fmt(v['p'])}")
+        for a, t in ph["EVALOFF"].items():
+            L.append(f"- 事後 EVALOFF（{a}）: `{t['label']}` — t30 の memo {fmt(t['memo_t30_median'])}、m = 0 で {fmt(t['memo_m0_t30_median'])}")
+    L += ["", "## T_f（網の機能の低下、適合率 < 1/2）と ref との符号検定（報告のみ）", ""]
+    for a in MAIN_ARMS:
+        t = res["timing_T_f"][a]
+        L.append(f"- {a}: 中央値 {fmt(t['median'], 1)}、対 ref `{t['vs_ref']['label']}`（+{t['vs_ref']['pos']}/−{t['vs_ref']['neg']}, p {fmt(t['vs_ref']['p'])}）")
+    if len(mech["layers"]):
+        L += ["", "## 層ごと（seed 中央値。位置・幅は単位中央値、開いた割合・死亡率は層の平均）", "",
+              "| 腕 | 層 | t | z̄ | sd | z̄/sd | 開いた割合 | 死亡率 | ‖m_in‖ |", "|---|---|---|---|---|---|---|---|---|"]
+        for _, r in mech["layers"].iterrows():
+            if r.t in (0, 1, 3, 10, 30):
+                L.append(f"| {r.arm} | {r.layer} | {r.t} | {r.zbar_med:.3f} | {r.sd_med:.3f} | {r.rel_pos_med:.2f} | "
+                         f"{r.open_mean:.3f} | {r.dead_frac:.3f} | {r.m_in_norm:.3f} |")
+        L += ["", "## µ 経路と b 経路（起点 → t、単位中央値の seed 中央値。b の取り分 = |Δb|/(|Δb| + |Δ⟨W, m_in⟩|)。起点 0 が登録、起点 1 は報告のみ: H の腕では m が t0 に 0 で課題 1 に立ち上がる）", "",
+              "| 腕 | 層 | 起点 | t | Δz̄ | Δb | Δ⟨W, m_in⟩ | b の取り分 |", "|---|---|---|---|---|---|---|---|"]
+        for _, r in mech["path"].iterrows():
+            if r.t in (3, 10, 30):
+                L.append(f"| {r.arm} | {r.layer} | {r['from']} | {r.t} | {r.dz_med:.3f} | {r.db_med:.3f} | {r.dwm_med:.3f} | {r.b_share_med:.2f} |")
+    tw = mech.get("three_way")
+    if tw is not None and len(tw):
+        tw.to_csv(base / "tables" / "mu_path_split.csv", index=False)
+        L += ["", "## µ 経路の内訳（t0 → t、自分の重み ⟨ΔW, m₀⟩・上流 ⟨W₀, Δm⟩・交差 ⟨ΔW, Δm⟩。単位中央値の seed 中央値、報告のみ）", "",
+              "| 腕 | 層 | t | 自分 | 上流 | 交差 | Δ⟨W, m_in⟩ |", "|---|---|---|---|---|---|---|"]
+        for _, r in tw.iterrows():
+            if r.layer != "c1":
+                L.append(f"| {r.arm} | {r.layer} | {r.t} | {r.own_med:.3f} | {r.up_med:.3f} | {r.cross_med:.3f} | {r.dwm_med:.3f} |")
+    if leaky:
+        L += ["", "## 同じ seed・同じエンジンの leaky（報告のみ）", ""]
+        for k, v in leaky.items():
+            L.append(f"- {k}: 主窓 {fmt(v['W_median'])}、低下 中央値 {fmt(v['drop_median'])}（平均 {fmt(v['drop_mean'])}）")
+    L += ["", "## 予測の採点（Claude、spec §7.1）", "", "| # | 項目 | 実現 | p(実現) | 最頻 | 的中 | Brier |", "|---|---|---|---|---|---|---|"]
+    for k, v in sc["labels"].items():
+        L.append(f"| {k} | {v['item']} | {v['realised']} | {v['p_realised']:.2f} | {v['mode']} | {'○' if v['mode_hit'] else '✗'} | {v['brier']:.3f} |")
+    L += ["", "### Fable（spec §7.2、本走の前の記入）", "", "| # | 項目 | 実現 | p(実現) | 最頻 | 的中 | Brier |",
+          "|---|---|---|---|---|---|---|"]
+    for k, v in sc["labels_fable"].items():
+        L.append(f"| {k} | {v['item']} | {v['realised']} | {v['p_realised']:.2f} | {v['mode']} | {'○' if v['mode_hit'] else '✗'} | {v['brier']:.3f} |")
+    L += ["", "### Codex（監査 §8、spec §7 を読む前に固定）", "", "| # | 項目 | 実現 | p(実現) | 最頻 | 的中 | Brier |",
+          "|---|---|---|---|---|---|---|"]
+    for k, v in sc["labels_codex"].items():
+        L.append(f"| {k} | {v['item']} | {v['realised']} | {v['p_realised']:.2f} | {v['mode']} | {'○' if v['mode_hit'] else '✗'} | {v['brier']:.3f} |")
+    if "posthoc" in sc:
+        L += ["", "### 事後の読みのラベルに対する採点（参考。登録の採点は上の表）", "", "| # | 予測者 | 項目 | 実現（事後） | p(実現) | 最頻 | 的中 | Brier |",
+              "|---|---|---|---|---|---|---|---|"]
+        for who, key in (("Claude", "labels"), ("Fable", "labels_fable"), ("Codex", "labels_codex")):
+            for k, v in sc["posthoc"][key].items():
+                L.append(f"| {k} | {who} | {v['item']} | {v['realised']} | {v['p_realised']:.2f} | {v['mode']} | {'○' if v['mode_hit'] else '✗'} | {v['brier']:.3f} |")
+    L += ["", "### 二値（Claude）", "", "| # | 主張 | p | 真偽 | Brier |", "|---|---|---|---|---|"]
+    for k, v in sc["binary"].items():
+        truth = "—" if v["true"] is None else ("○" if v["true"] else "✗")
+        brier = "—" if v["brier"] is None else f"{v['brier']:.3f}"
+        L.append(f"| {k} | {v['claim']} | {v['p']:.2f} | {truth} | {brier} |")
+    (base / "summary.md").write_text("\n".join(L) + "\n")
+
+
+def main() -> None:
+    frames, crf = load_frames()  # noqa: F841
+    problems = [x for a in MAIN_ARMS for x in validate_frame(frames[a], a, SEEDS)]
+    if crf is not None:
+        cr_bad = validate_frame(crf, "Cr", (CR_SEED,))
+        if cr_bad:
+            problems += cr_bad
+            crf = None
+    gate = provenance_gate()
+    checks_ok, c_ok = checks_state()
+    cdoor = c_door_from_runs()
+    c_ok = c_ok and cdoor.get("ok") is not False
+    res = analyze_frames(frames, checks_ok and gate["ok"] and not problems, steps_per_task(), cr_frame=crf,
+                         c_door_ok=c_ok)
+    res["conditions"]["validation_problems"] = problems
+    res["conditions"]["provenance_gate"] = gate
+    res["conditions"]["C_door_from_runs"] = cdoor
+    res["posthoc"] = posthoc(frames, steps_per_task(), checks_ok and gate["ok"] and not problems, crf, c_ok, res)
+    mech = mechanism_tables()
+    mech["three_way"] = three_way_table()
+    leaky = leaky_reference()
+    sc = score(res, mech, leaky)
+    sc["posthoc"] = score(res["posthoc"]["_res"], mech, leaky)
+    write_report(res, mech, leaky, sc)
+    print(json.dumps({k: (v if isinstance(v, str) else v.get("label") if isinstance(v, dict) else v)
+                      for k, v in res.items() if k in ("N", "DOORS", "M_H", "LAYER", "Cr")}, default=str))
+    print({a: res["arms"][a]["label"] for a in MAIN_ARMS})
+
+
+if __name__ == "__main__":
+    main()

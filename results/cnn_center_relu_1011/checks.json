@@ -1,0 +1,944 @@
+{
+ "_meta": {
+  "git_hash": "f5e9471d780f93c6d53eeb7bb6389fe2f66c8142",
+  "git_dirty_code": false,
+  "torch": "2.13.0+cu130",
+  "gpu": "NVIDIA GeForce RTX 5060 Ti",
+  "time": "2026-10-11 17:00:57"
+ },
+ "K-same": {
+  "title": "ref \u675f = cnn_drive_verify_1009_lr.BundleLR('R')\uff082 epoch\u30fb\u5168\u72b6\u614b\u30fbevaluate\u30fbswitch_eval\uff09",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "bit \u4e00\u81f4\uff08\u8a31\u5bb9 0\uff09",
+  "state_bit_identical": true,
+  "V_bit_identical": true,
+  "evaluate_identical": true,
+  "switch_eval_identical": true,
+  "door_m_stays_zero": true,
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "ref \u3067\u3082 H \u304c\u50cd\u304f",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "state_bit_identical": false,
+     "V_bit_identical": false,
+     "evaluate_identical": false,
+     "switch_eval_identical": false,
+     "door_m_stays_zero": false
+    }
+   },
+   {
+    "mutation": "ReLU \u3092 leaky 0.01 \u306b",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "state_bit_identical": false,
+     "V_bit_identical": false,
+     "evaluate_identical": false,
+     "switch_eval_identical": false,
+     "door_m_stays_zero": true
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 4.1637303829193115,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-repro": {
+  "title": "CLI \u306e ref\u30fbR=1\u30fbseed 10\u30fb3 \u8ab2\u984c\u304c results/cnn_drive_verify_1009/R \u3068 per_task \u306e\u5171\u901a\u5217\uff08\u6587\u5b57\u5217\uff09\u3068 curves \u3067\u4e00\u81f4",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "\u6587\u5b57\u5217\u4e00\u81f4\u30fbbit \u4e00\u81f4\uff08\u8a31\u5bb9 0\uff09",
+  "n_common_columns": 57,
+  "columns_missing_in_new": [],
+  "columns_differing": [],
+  "curves_bit_identical": true,
+  "pass": true,
+  "mutations": [],
+  "seconds": 72.39102745056152,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-center": {
+  "title": "C \u306e\u5165\u529b = cnn_center_1010 \u306e LRc \u306e\u5165\u529b\uff08bit\uff09\u3001\u5e73\u5747\u30d1\u30c3\u30c1 < 0.1 \u500d\u3001Cr \u306e r \u3068\u5165\u529b",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "bit \u4e00\u81f4\u3002Cr \u306e\u5e73\u5747\u306e\u30ce\u30eb\u30e0\u6bd4\u3068\u5411\u304d\u306e\u8a31\u5bb9\u306f\u90e8\u5206\u96c6\u5408\u306e\u5e73\u5747\u3068\u8a13\u7df4\u96c6\u5408\u306e\u5e73\u5747\u306e\u5dee d \u304b\u3089 2|d|/(|mu|-|d|)\uff08spec \u306e 5% \u3088\u308a\u72ed\u3044\uff09",
+  "C_input_bit_identical_to_LRc": true,
+  "mean_patch_norm_raw": [
+   3.7853677569122954,
+   3.761127526144336,
+   3.776702574912664,
+   3.795699356930693,
+   3.7878311207031983,
+   3.808736879883355,
+   3.758565068135042,
+   3.7747765174091983,
+   3.7858001521261744,
+   3.8420775306629213
+  ],
+  "mean_patch_norm_C": [
+   0.023591426954507565,
+   0.045027951386384345,
+   0.03089280529385476,
+   0.017568149814138796,
+   0.02199196513540523,
+   0.014900429777133756,
+   0.04961251569647921,
+   0.03486500041901094,
+   0.022746670182316877,
+   0.04573133190778494
+  ],
+  "C_mean_patch_below_0.1_raw": true,
+  "Cr_r": [
+   0.25621694326400757,
+   0.09054985642433167,
+   1.1281994581222534
+  ],
+  "Cr_v": [
+   0.286607900129941,
+   0.4772378694608708,
+   -0.8307225334222941
+  ],
+  "Cr_r_matches_formula": true,
+  "Cr_input_is_raw_minus_r": true,
+  "Cr_mean_norm_ratio_to_raw": [
+   1.001358495840829,
+   1.0088315829917551,
+   1.005848667501559,
+   0.9981705985028342,
+   1.0016011762611798,
+   0.9937554076158157,
+   1.0121478739316447,
+   0.9996214086881733,
+   1.0001859201376948,
+   0.9892102500059964
+  ],
+  "Cr_cos_to_raw_mean": [
+   -0.0023580648843639527,
+   -0.0065564361284743584,
+   -0.0025100966313007502,
+   0.0011856331291813375,
+   0.00029047134456592017,
+   0.002990775633668724,
+   -0.005212474866417822,
+   -0.008707641001804918,
+   -0.002109632608838361,
+   0.01595914795038652
+  ],
+  "Cr_bound": [
+   0.006019449851483947,
+   0.015589898465916541,
+   0.00900849611025165,
+   0.0033763466194970185,
+   0.002596573693702904,
+   0.010870612444161654,
+   0.01902593848699311,
+   0.012494709290920598,
+   0.005217272612037061,
+   0.028592602768511565
+  ],
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "C \u304c\u5e73\u5747\u3067\u5272\u308b",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "C_input_bit_identical_to_LRc": false,
+     "C_mean_patch_below_0.1_raw": false,
+     "Cr_r_matches_formula": true,
+     "Cr_input_is_raw_minus_r": false
+    }
+   },
+   {
+    "mutation": "C \u304c\u5225\u306e\u5b9a\u6570\u3092\u5f15\u304f",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "C_input_bit_identical_to_LRc": false,
+     "C_mean_patch_below_0.1_raw": false,
+     "Cr_r_matches_formula": true,
+     "Cr_input_is_raw_minus_r": true
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 6.283085584640503,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-relu": {
+  "title": "\u03c6 = clamp(z, 0)\u3001\u8a3a\u65ad\u306e\u30b2\u30fc\u30c8 z>0\u3001\u8a13\u7df4\u306e\u5fae\u5206",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "bit \u4e00\u81f4",
+  "phi_is_clamp": true,
+  "diagnostic_gate_is_z_gt_0": true,
+  "train_grad_1_for_z_gt_0": true,
+  "train_grad_0_for_z_lt_0": true,
+  "train_grad_at_z_eq_0_reported": [
+   1.0
+  ],
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "\u03c6 \u3092 leaky 0.01 \u306b",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "phi_is_clamp": false,
+     "diagnostic_gate_is_z_gt_0": true,
+     "train_grad_1_for_z_gt_0": true,
+     "train_grad_0_for_z_lt_0": false
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 0.009465932846069336,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-host": {
+  "title": "1 step \u306e\u640d\u5931\u3068\u52fe\u914d: ref\u30fbC \u306f\u5bbf\u4e3b\u306e forward_cnn\u3001H\u30fbCH \u306f\u72ec\u7acb\u306b\u66f8\u3044\u305f\u6249\u3064\u304d\u306e 1 run \u306e\u9806\u4f1d\u64ad",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "\u640d\u5931\u306e\u76f8\u5bfe\u5dee 1e-5\u30fb\u52fe\u914d\u306e\u76f8\u5bfe\u5dee 1e-4\uff08cnn_center_1010 \u306e K-host \u3068\u540c\u3058\u3002\u675f\u306d\u306e bmm \u3068\u5bbf\u4e3b\u306e mm \u306e float32 \u306e\u4e38\u3081\u306e\u5dee\u30011 step \u3067 1e-7 \u7a0b\u5ea6\uff09",
+  "ref_loss_rel": 0.0,
+  "ref_grad_rel_max": 1.6544821335173765e-07,
+  "ref_door_m_norms": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "C_loss_rel": 0.0,
+  "C_grad_rel_max": 1.8036999449577706e-07,
+  "C_door_m_norms": [
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "H_loss_rel": 0.0,
+  "H_grad_rel_max": 1.514357705900693e-07,
+  "H_door_m_norms": [
+   0.8663488030433655,
+   0.3744358420372009,
+   0.3596283495426178,
+   0.3371099531650543
+  ],
+  "CH_loss_rel": 0.0,
+  "CH_grad_rel_max": 1.6757880416662374e-07,
+  "CH_door_m_norms": [
+   0.37974733114242554,
+   0.21835418045520782,
+   0.2360459715127945,
+   0.33779600262641907
+  ],
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "\u03c6 \u306e\u4e2d\u3067\u4e2d\u5fc3\u5316\uff08\u03c6(z \u2212 m)\uff09",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "ref_loss_rel": 0.0,
+     "ref_grad_rel_max": 1.6544821335173765e-07,
+     "C_loss_rel": 0.0,
+     "C_grad_rel_max": 1.8036999449577706e-07,
+     "H_loss_rel": 0.00045500090597525527,
+     "H_grad_rel_max": 1.3856881856918335,
+     "CH_loss_rel": 0.00023189896315121343,
+     "CH_grad_rel_max": 1.0231940746307373
+    }
+   },
+   {
+    "mutation": "conv \u306e m \u3092\u5f15\u304b\u306a\u3044\uff08fc \u3060\u3051\uff09",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "ref_loss_rel": 0.0,
+     "ref_grad_rel_max": 1.6544821335173765e-07,
+     "C_loss_rel": 0.0,
+     "C_grad_rel_max": 1.8036999449577706e-07,
+     "H_loss_rel": 0.0008334972348396269,
+     "H_grad_rel_max": 1.8227519989013672,
+     "CH_loss_rel": 0.0004139871864455263,
+     "CH_grad_rel_max": 1.6172586679458618
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 3.901703119277954,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-H-ema": {
+  "title": "m \u306e\u66f4\u65b0 = \u4e2d\u5fc3\u5316\u524d\u306e\u51fa\u529b\uff08conv \u306f pool \u306e\u5f8c\uff09\u306e\u30d0\u30c3\u30c1\u5e73\u5747\u3092 \u03b2=0.01 \u3067\u8ffd\u3046\uff08\u66f4\u65b0\u524d\u306e\u91cd\u307f\u306e z\uff09\u3001\u5883\u754c\u3067\u5909\u308f\u3089\u306a\u3044",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "bit \u4e00\u81f4\uff08\u8a31\u5bb9 0\uff09",
+  "ema_bit_identical_every_step": true,
+  "m_moved_every_step": true,
+  "new_labels_keeps_m": true,
+  "h_upd_counts_steps": true,
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "\u4e2d\u5fc3\u5316\u5f8c\u3092\u8ffd\u3046",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "ema_bit_identical_every_step": false,
+     "m_moved_every_step": true,
+     "new_labels_keeps_m": true,
+     "h_upd_counts_steps": true
+    }
+   },
+   {
+    "mutation": "\u03b2 = 0.1",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "ema_bit_identical_every_step": false,
+     "m_moved_every_step": true,
+     "new_labels_keeps_m": true,
+     "h_upd_counts_steps": true
+    }
+   },
+   {
+    "mutation": "pool \u306e\u524d\u306e\u5e73\u5747\u3092\u8ffd\u3046",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "ema_bit_identical_every_step": false,
+     "m_moved_every_step": true,
+     "new_labels_keeps_m": true,
+     "h_upd_counts_steps": true
+    }
+   },
+   {
+    "mutation": "Adam \u306e\u5f8c\u306e\u91cd\u307f\u3067 bm \u3092\u53d6\u308b",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "ema_bit_identical_every_step": false,
+     "m_moved_every_step": true,
+     "new_labels_keeps_m": true,
+     "h_upd_counts_steps": true
+    }
+   },
+   {
+    "mutation": "\u5883\u754c\uff08new_labels\uff09\u3067 m \u3092\u30ea\u30bb\u30c3\u30c8",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "ema_bit_identical_every_step": true,
+     "m_moved_every_step": true,
+     "new_labels_keeps_m": false,
+     "h_upd_counts_steps": true
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 0.14629316329956055,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-H-grad": {
+  "title": "m \u306f\u52fe\u914d\u3092\u6301\u305f\u305a\u3001\u52fe\u914d\u304c m \u3092\u5b9a\u6570\u3068\u3057\u305f\u72ec\u7acb\u306e\u518d\u8a08\u7b97\u3068 bit \u4e00\u81f4",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "bit \u4e00\u81f4\uff08\u8a31\u5bb9 0\uff09",
+  "m_requires_no_grad": true,
+  "grads_bit_identical_to_constant_m": true,
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "\u52fe\u914d\u3092\u901a\u3059\uff08\u5024\u306f\u540c\u3058\u3067\u52fe\u914d\u3060\u3051\u30d0\u30c3\u30c1\u5e73\u5747\u3092\u901a\u308b\uff09",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "m_requires_no_grad": true,
+     "grads_bit_identical_to_constant_m": false
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 0.043476104736328125,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-H-eval": {
+  "title": "\u8ab2\u984c\u672b\u306e fit CE\u30fb\u5207\u66ff\u306e CE \u304c\u305d\u306e\u6642\u70b9\u306e m \u3067\u306e\u518d\u8a08\u7b97\u3068 bit \u4e00\u81f4\u3057\u3001m=0 \u3067\u306f\u4e00\u81f4\u3057\u306a\u3044",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "bit \u4e00\u81f4\uff08\u8a31\u5bb9 0\uff09",
+  "fit_ce_uses_current_m": true,
+  "fit_ce_differs_without_m": true,
+  "switch_eval_uses_current_m": true,
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "\u8a55\u4fa1\u3067 m \u3092\u4f7f\u308f\u306a\u3044",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "fit_ce_uses_current_m": false,
+     "fit_ce_differs_without_m": false,
+     "switch_eval_uses_current_m": false
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 1.0798189640045166,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-H-first": {
+  "title": "H \u306e\u6700\u521d\u306e\u66f4\u65b0 = ref \u306e\u6700\u521d\u306e\u66f4\u65b0\uff08CH = C\uff09\u3001\u305d\u306e\u76f4\u5f8c\u306e m \u306f\u975e\u96f6\u30013 \u66f4\u65b0\u5f8c\u306f\u9055\u3046",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "bit \u4e00\u81f4\uff08\u8a31\u5bb9 0\uff09",
+  "H_first_update_equals_ref": true,
+  "H_m_nonzero_after_first": true,
+  "H_differs_after_3": true,
+  "CH_first_update_equals_C": true,
+  "CH_m_nonzero_after_first": true,
+  "CH_differs_after_3": true,
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "m \u306e\u521d\u671f\u5024\u304c\u975e\u96f6",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "H_first_update_equals_ref": false,
+     "H_m_nonzero_after_first": true,
+     "H_differs_after_3": true,
+     "CH_first_update_equals_C": false,
+     "CH_m_nonzero_after_first": true,
+     "CH_differs_after_3": true
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 1.6991875171661377,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-evaloff": {
+  "title": "m = 0 \u306e\u8a55\u4fa1\u306f\u8aad\u3080\u3060\u3051\uff08\u72b6\u614b\u30fbm\u30fb\u4e71\u6570\u306e\u6d41\u308c\u30fb2 epoch \u306e\u8ecc\u9053\u304c\u4e0d\u5909\uff09",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "bit \u4e00\u81f4\uff08\u8a31\u5bb9 0\uff09",
+  "read_only": true,
+  "m0_columns_present": true,
+  "trajectory_unchanged": true,
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "m = 0 \u306e\u8a55\u4fa1\u304c m \u3092\u305d\u306e\u5834\u3067 0 \u306b\u3059\u308b",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "read_only": false,
+     "m0_columns_present": true,
+     "trajectory_unchanged": false
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 1.9419896602630615,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-ident": {
+  "title": "z\u0304_j = \u27e8W_j, m_in\u27e9 + b_j \u304c TF32 \u3068 float32 \u306e\u4e38\u3081\u306e\u4e0a\u754c\u306e\u5185\uff08ref\u30fbCH\u3001\u5168 4 \u5c64\uff09",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "\u4e0a\u754c (2^-10 + \u03b3_{K+1})(\u27e8|W|, mean|p|\u27e9 + |b|): \u5165\u529b\u3068\u91cd\u307f\u306e TF32 \u306e\u4e38\u3081\uff08\u5404 2^-11\uff09\u3068 K \u9805\u306e float32 \u306e\u548c",
+  "ref_max_ratio_c1": 7.891788264059657e-06,
+  "ref_max_ratio_c2": 0.03292321947449108,
+  "ref_max_ratio_f1": 1.9857735143504756e-05,
+  "ref_max_ratio_f2": 2.881662298156167e-05,
+  "CH_max_ratio_c1": 6.82957494455423e-06,
+  "CH_max_ratio_c2": 0.01578970299020924,
+  "CH_max_ratio_f1": 8.009923807614401e-06,
+  "CH_max_ratio_f2": 1.3538061338280922e-05,
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "\u5e73\u5747\u30d1\u30c3\u30c1\u306e\u4e26\u3073\u3092\u8ee2\u7f6e",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "ref_max_ratio_c1": 1.2223027336191528,
+     "ref_max_ratio_c2": 50.4720859217094,
+     "ref_max_ratio_f1": 1.9857735143504756e-05,
+     "ref_max_ratio_f2": 2.881662298156167e-05,
+     "CH_max_ratio_c1": 2.8026538258939016,
+     "CH_max_ratio_c2": 3.6051785777570706,
+     "CH_max_ratio_f1": 8.009923807614401e-06,
+     "CH_max_ratio_f2": 1.3538061338280922e-05
+    }
+   },
+   {
+    "mutation": "H \u306e\u8155\u3067 m_in \u3092\u4e2d\u5fc3\u5316\u524d\u306e\u5165\u529b\u304b\u3089\u53d6\u308b",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "ref_max_ratio_c1": 7.891788264059657e-06,
+     "ref_max_ratio_c2": 0.03292321947449108,
+     "ref_max_ratio_f1": 1.9857735143504756e-05,
+     "ref_max_ratio_f2": 2.881662298156167e-05,
+     "CH_max_ratio_c1": 6.82957494455423e-06,
+     "CH_max_ratio_c2": 353.8760432195754,
+     "CH_max_ratio_f1": 325.2630296582561,
+     "CH_max_ratio_f2": 261.8670726093286
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 3.3478074073791504,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-graph": {
+  "title": "H\u30fbCH \u306e\u675f\u3067 CUDA graph \u3068 eager \u304c 2 epoch \u3067 m\u30fbh_upd \u3092\u542b\u3081\u3066 bit \u4e00\u81f4",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "bit \u4e00\u81f4",
+  "H_graph_eq_eager_and_moved": true,
+  "CH_graph_eq_eager_and_moved": true,
+  "pass": true,
+  "mutations": [],
+  "seconds": 2.0730977058410645,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-indep": {
+  "title": "run 1 \u306e\u91cd\u307f\u30fb\u5165\u529b\u30fbm \u3092\u4e71\u3057\u3066\u3082 run 0\u30fb2 \u306f bit \u3067\u4e0d\u5909\u3001run 1 \u306f\u5909\u308f\u308b",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "bit \u4e00\u81f4",
+  "param": true,
+  "input": true,
+  "door_m": true,
+  "pass": true,
+  "mutations": [],
+  "seconds": 0.543043851852417,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-loop": {
+  "title": "run\uff08eager\uff09= \u8ab2\u984c\u306e\u624b\u3067\u306e\u518d\u751f\u3001m \u306f\u8ab2\u984c\u306e\u5883\u754c\u3092\u8d8a\u3048\u3066\u5f15\u304d\u7d99\u304c\u308c\u308b\u3001h_upd = 150/\u8ab2\u984c",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "bit \u4e00\u81f4",
+  "params_equal_manual": true,
+  "door_m_equal_manual": true,
+  "h_upd_150_each_task": true,
+  "units_and_t0": true,
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "\u8ab2\u984c\u306e\u5883\u754c\u3067 m \u3092\u30ea\u30bb\u30c3\u30c8\uff08run\uff09",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "params_equal_manual": false,
+     "door_m_equal_manual": false,
+     "h_upd_150_each_task": true,
+     "units_and_t0": true
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 14.020033359527588,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-resume": {
+  "title": "2 \u8ab2\u984c\u3092\u901a\u3057\u3067\u56de\u3059\u306e\u3068 1 \u8ab2\u984c\u3067\u6b62\u3081\u3066\u518d\u958b\u3059\u308b\u306e\u3068\u3067 per_task\u30fbt0\u30fbcurves\u30fbunits\u30fb\u72b6\u614b\u304c\u4e00\u81f4",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "\u6587\u5b57\u5217\u30fbbit \u4e00\u81f4",
+  "stopped_after_task1": true,
+  "per_task_and_t0_identical": true,
+  "curves_identical": true,
+  "units_identical": true,
+  "state_identical": true,
+  "pass": true,
+  "mutations": [],
+  "seconds": 18.9857656955719,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-verdict": {
+  "title": "\u5408\u6210\u306e per_task \u3067\u8a2d\u8a08\u3069\u304a\u308a\u306e\u30e9\u30d9\u30eb",
+  "target": "analysis/cnn_center_relu_1011/verdict.py",
+  "threshold_derivation": "\u5408\u6210\u30c7\u30fc\u30bf\u306e\u671f\u5f85\u5024\uff08\u8a2d\u8a08\u304b\u3089\uff09",
+  "n_expectations": 74,
+  "failed": [],
+  "kstar_8_9_10": true,
+  "sign_test_9_1": true,
+  "n_combinations": 972,
+  "invariant_violations": [],
+  "table_validation": {
+   "wrong_arm": true,
+   "foreign_seed": true,
+   "duplicate_task": true,
+   "missing_task": true,
+   "nan_online": true
+  },
+  "t_f_undefined_and_value": true,
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "k* \u306e\u53d6\u308a\u9055\u3048",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": false,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "0.5 \u306e\u7dda\u3092 > \u306b",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "\u5e8a\u306e \u221a10 \u3092 \u221a30 \u306b",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "\u4e3b\u7a93\u306e\u8ab2\u984c\u7bc4\u56f2",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "TRANSFER \u306e CH\u2212C HELPS \u3092\u843d\u3068\u3059",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "TRANSFER \u304c H \u3092\u898b\u306a\u3044",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "TRANSFER \u306e C \u3092 FAIL \u306b\u53b3\u3057\u304f\u3059\u308b",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "FAIL \u304c C\u30fbH \u3092\u898b\u306a\u3044",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "Cr \u306e valid \u3092\u898b\u306a\u3044",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "seed \u96c6\u5408\u306e\u691c\u67fb\u3092\u843d\u3068\u3059",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "\u91cd\u8907 task \u306e\u691c\u67fb\u3092\u843d\u3068\u3059",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "EVALOFF \u306e TIE \u3092\u300c\u4f9d\u5b58\u306a\u3057\u300d\u3068\u547c\u3076",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "A(1) \u2264 0.1 \u306e T_f \u3092 1 \u306b\u3059\u308b",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": false
+    }
+   },
+   {
+    "mutation": "\u68af\u5b50\u306e\u9806\u5e8f",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "LAYER \u306e c1 \u306e\u5224\u5b9a",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "(C) \u306e\u6b7b\u3093\u3060\u5c64\u306e\u514d\u9664\u3092\u843d\u3068\u3059",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 47.87976908683777,
+  "git_hash": "f5e9471d780f93c6d53eeb7bb6389fe2f66c8142",
+  "git_dirty_code": false
+ },
+ "K-cost": {
+  "title": "CH \u306e\u675f\uff08R=10\uff09\u306e 1 epoch \u306e\u79d2\u6570\uff08\u5358\u72ec\u3068\u4e3b 4 \u8155\u306e\u540c\u6642\uff09\u3068 GPU \u30e1\u30e2\u30ea\u306e\u5cf0\uff08seed 100\u2013109\u3001\u7cbe\u5ea6\u306f\u8aad\u307e\u306a\u3044\uff09",
+  "target": "src/cnn_center_relu_1011.py",
+  "threshold_derivation": "\u2014",
+  "single_CH": {
+   "arm": "CH",
+   "R": 10,
+   "epochs": 40,
+   "s_per_epoch": 0.12489121556282043,
+   "first_epoch_s": 0.4586985111236572,
+   "diagnostics_s": 0.6326689720153809,
+   "pid": 2164409,
+   "max_mem_allocated_mb": 512.89404296875,
+   "max_mem_reserved_mb": 772.0
+  },
+  "concurrent_4": {
+   "ref": {
+    "arm": "ref",
+    "R": 10,
+    "epochs": 40,
+    "s_per_epoch": 0.493810361623764,
+    "first_epoch_s": 1.0987584590911865,
+    "diagnostics_s": 3.069591999053955,
+    "pid": 2164492,
+    "max_mem_allocated_mb": 512.85546875,
+    "max_mem_reserved_mb": 772.0
+   },
+   "C": {
+    "arm": "C",
+    "R": 10,
+    "epochs": 40,
+    "s_per_epoch": 0.4952966749668121,
+    "first_epoch_s": 0.6311047077178955,
+    "diagnostics_s": 2.9788920879364014,
+    "pid": 2164493,
+    "max_mem_allocated_mb": 512.85546875,
+    "max_mem_reserved_mb": 772.0
+   },
+   "H": {
+    "arm": "H",
+    "R": 10,
+    "epochs": 40,
+    "s_per_epoch": 0.5210302352905274,
+    "first_epoch_s": 0.5275964736938477,
+    "diagnostics_s": 2.0882461071014404,
+    "pid": 2164494,
+    "max_mem_allocated_mb": 512.89404296875,
+    "max_mem_reserved_mb": 772.0
+   },
+   "CH": {
+    "arm": "CH",
+    "R": 10,
+    "epochs": 40,
+    "s_per_epoch": 0.5218814492225647,
+    "first_epoch_s": 0.6780366897583008,
+    "diagnostics_s": 2.0310370922088623,
+    "pid": 2164495,
+    "max_mem_allocated_mb": 512.89404296875,
+    "max_mem_reserved_mb": 772.0
+   }
+  },
+  "nvidia_smi_peak_mb": {
+   "ref": 1160,
+   "C": 1160,
+   "H": 1170,
+   "CH": 1170
+  },
+  "projected_30_tasks_single_CH_min": 24.978243112564087,
+  "projected_30_tasks_concurrent_min": {
+   "ref": 98.76207232475281,
+   "C": 99.05933499336243,
+   "H": 104.20604705810548,
+   "CH": 104.37628984451295
+  },
+  "pass": true,
+  "mutations": [],
+  "seconds": 58.35934376716614
+ },
+ "K-mech": {
+  "title": "\u5831\u544a\u306e\u307f\u306e\u8868\uff08\u00b5 \u7d4c\u8def\u306e\u81ea\u5206\u30fb\u4e0a\u6d41\u30fb\u4ea4\u5dee\u3001\u8d77\u70b9 t0\u30fbt1 \u306e\u5206\u89e3\uff09\u304c\u72ec\u7acb\u306e\u518d\u8a08\u7b97\u3068\u4e00\u81f4",
+  "target": "analysis/cnn_center_relu_1011/verdict.py",
+  "threshold_derivation": "float64 \u306e\u540c\u3058\u91cf\uff081e-12\uff09\u30fb\u6052\u7b49\u5f0f\u306e\u6b8b\u5dee 1e-9",
+  "n_compared": 48,
+  "max_abs_diff": 0.0,
+  "identity_res_max": 3.7643499428696714e-16,
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "\u81ea\u5206\u3068\u4e0a\u6d41\u306e\u53d6\u308a\u9055\u3048",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_compared": 48,
+     "max_abs_diff": 0.19266618959801213,
+     "identity_res_max": 3.7643499428696714e-16
+    }
+   },
+   {
+    "mutation": "\u8d77\u70b9 t1 \u306e\u5206\u89e3\u304c t0 \u304b\u3089\u5f15\u304f",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_compared": 48,
+     "max_abs_diff": 0.0901828333735466,
+     "identity_res_max": 3.7643499428696714e-16
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 0.31688809394836426,
+  "git_hash": "f5e9471d780f93c6d53eeb7bb6389fe2f66c8142",
+  "git_dirty_code": false
+ },
+ "K-gate": {
+  "title": "provenance \u306e\u95a2\u9580: \u767b\u9332\u3069\u304a\u308a\u306a\u3089\u901a\u3057\u3001epochs\u30fb\u30a8\u30f3\u30b8\u30f3\u30fb\u6c5a\u308c\u30fbslots\u30fb\u30c7\u30fc\u30bf\u306e\u98df\u3044\u9055\u3044\u3092\u843d\u3068\u3059",
+  "target": "analysis/cnn_center_relu_1011/verdict.py",
+  "threshold_derivation": "\u5408\u6210\u306e provenance \u306e\u671f\u5f85\u5024\uff08\u8a2d\u8a08\u304b\u3089\uff09",
+  "gate_ok_clean": true,
+  "gate_ok_epochs_399": false,
+  "gate_ok_other_engine": false,
+  "gate_ok_dirty_run": false,
+  "gate_ok_wrong_slots": false,
+  "gate_ok_other_data": false,
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "\u30a8\u30f3\u30b8\u30f3\u306e sha256 \u3092\u7167\u5408\u3057\u306a\u3044",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "gate_ok_clean": true,
+     "gate_ok_epochs_399": false,
+     "gate_ok_other_engine": true,
+     "gate_ok_dirty_run": false,
+     "gate_ok_wrong_slots": false,
+     "gate_ok_other_data": false
+    }
+   },
+   {
+    "mutation": "\u6c5a\u308c\u305f\u6728\u304b\u3089\u306e\u8d70\u3092\u901a\u3059",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "gate_ok_clean": true,
+     "gate_ok_epochs_399": false,
+     "gate_ok_other_engine": false,
+     "gate_ok_dirty_run": true,
+     "gate_ok_wrong_slots": false,
+     "gate_ok_other_data": false
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 0.2301180362701416,
+  "git_hash": "f5e9471d780f93c6d53eeb7bb6389fe2f66c8142",
+  "git_dirty_code": false
+ },
+ "all_pass": true
+}
