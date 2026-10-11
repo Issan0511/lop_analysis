@@ -366,3 +366,9 @@ Fable の列は親の依頼文の値をそのまま写した（2026-10-11、H′
 - Fable: L1 ✗（FAIL .25、最頻 RESCUED）・L2 ○（.40）・L3 ✗（NOT_A_DOOR .30、最頻 SUFFICES）。
 - Codex（Claude・Fable の予測が視界に入った後の記入）: L1 ✗（.24）・L2 ○（.57）・L3 ✗（.20）・L4 ✗（NO_TIMING_DIFF .23）。
 - 訂正: 検査の commit `ce096430` のメッセージの「変異 51/51」は誤記で、正しくは 46/46（`checks.json`）。
+
+## 15. 追補 4 — 片付け（CLAUDE.md §4）と時刻の訂正
+
+- git 外のファイル 315 本（520.2 MiB: 4 走の `units.npz`・`ckpt/`・`state.pt`・ログ、検査の作業場所）を `~/Projects/obsidian-research-data/cnn_center_feat_1011/` へ同じ相対パスで移し、`results/cnn_center_feat_1011/backup_manifest.json`（source・backup・bytes・sha256）を commit した。`data` の symlink は辿らず移さない。
+- 退避の後に `verdict.py` を回し直した。機構の入力の関門（§13.3）は退避先のファイルをこの manifest の sha256 と照合して通り、`verdict.json`・`summary.md`・`tables/` は「この集計」の commit の行を除いて同じだった。
+- 時刻の訂正: §14 の見出しの「19:4x」は commit `e41ecd59` の 19:36:10。
