@@ -2,20 +2,36 @@
   "run_id": "adamw_dose2_1011",
   "spec": "specs/spec_adamw_dose2_1011.md",
   "prereg_commit": "7525f9747a6a2872c30eb380fe3da4809bc6fa95",
-  "git_head": "b45a3eb8a5bbba48d7bdd676cb981575e1b460e8",
+  "git_head": "6957428ee1e727e771ddb815d7de005152c69021",
   "source_sha256": {
     "src/adamw_dose2_1011.py": "d26dc4e5bfb0c8ae1a0d84ea7016e8fb519756e136fc79210f8eceb7e625a26e",
     "src/adamw_dose2_1011_c51.py": "7286640e3bc14f3c00479cdcfbe5d6bf320e592e58cef7ee533e158ee82794da",
-    "src/adamw_dose2_1011_run.py": "f687689b9bc5c3df2c71786f4aeb00370c224588de85a0eaff20a3cd31cb7e02",
-    "analysis/adamw_dose2_1011/checks.py": "4a4e1877065e9b74f9fc2d53ed8af00246dae23fb24a69478da04bc9972d7bd2",
-    "analysis/adamw_dose2_1011/rule.py": "18d46c092b0d92bfb9cdc6c456e65ed24e3198eb51e6ee3236da43ac3a749297"
+    "src/adamw_dose2_1011_run.py": "6466e9e5dc166ff0a20d5a5bbeab5558648b3761bfff39a39e9c8d15277c31a3",
+    "analysis/adamw_dose2_1011/checks.py": "c62752ed7b86abda19b1ba6e589ff53ece7154ccaa65f4697f0c27bcdba02660",
+    "analysis/adamw_dose2_1011/rule.py": "18d46c092b0d92bfb9cdc6c456e65ed24e3198eb51e6ee3236da43ac3a749297",
+    "analysis/adamw_dose2_1011/lines.py": "b21f7cf1629ec340a3fe5d048498bb379049b985a28f87c6a5a904c0a57a461a"
   },
-  "verdict_sha256": "a7878b4dbf9fc4de8b068b415b2e570881d26c76e99bf683b0493b471f3e837a",
+  "verdict_sha256": "e8bb0b17d98c7b4e4567fccaa35391512c6241be18aeed633dbb4c36d49cf326",
   "merged_from": [
-    "results/_checks_adamw_dose2_1011/checks_partial_S-verdict_S-wd_S-torch_S0_S-branch_S-graph_S-resume_S-ctrl.json",
+    "results/_checks_adamw_dose2_1011/checks_partial_S-verdict_S-line_S-wd_S-torch_S0_S-branch_S-graph_S-resume_S-ctrl.json",
     "results/_checks_adamw_dose2_1011/checks_partial_S-nochange_S-host-repro_S-coupled-host_S-mut_S-graph-c51_S-fresh-c51_S-cli.json",
     "results/_checks_adamw_dose2_1011/checks_partial_S-cost.json"
   ],
+  "environment": {
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.1",
+    "python": "3.12.3 (main, Apr 15 2024, 18:25:56) [Clang 17.0.6 ]",
+    "cuda": "13.0",
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "driver": "580.178.04",
+    "tf32": false,
+    "matmul_precision": "highest",
+    "deterministic": true,
+    "threads": 2,
+    "cublas": ":4096:8",
+    "cpu_smallest_subnormal_preserved": true,
+    "cuda_smallest_subnormal_preserved": true
+  },
   "S-verdict": {
     "title": "S-verdict the verdict returns the designed labels",
     "target": "analysis/adamw_dose2_1011/verdict.py",
@@ -36,7 +52,10 @@
       "2A_no_impairment": true,
       "2B_rfo_au": true,
       "2B_depth_unresolved": true,
-      "2B_rule_partial": true,
+      "2B_rule_main_holds": true,
+      "2B_rule_depth_fails": true,
+      "2B_rule_registered_partial": true,
+      "2B_rule_not_stands": true,
       "2B_dose_peaked": true,
       "2B_equilibrium": true,
       "2B_width": true,
@@ -46,6 +65,9 @@
       "2E_dose_other": true,
       "2G_task1_base_rescued": true,
       "2G_bonferroni_rfo": true,
+      "2H_impaired_not_saved": true,
+      "2H_eq_ratio1_off_low": true,
+      "2H_width_tolerance": true,
       "2D_dose_flat": true,
       "2E_incomplete": true,
       "2E_diverged": true,
@@ -53,10 +75,11 @@
       "2E_s0_check_failed": true,
       "2E_not_reproduced": true,
       "2E_inapplicable": true,
-      "3a_norm_partial": true,
-      "3b_both_worse_impaired": true,
-      "3c_no_rescue_box": true,
+      "3a_norm_both": true,
+      "3b_both_target_worse_impaired": true,
+      "3c_no_rescue_target": true,
       "3d_partial_box": true,
+      "3f_unresolved_and_both": true,
       "3e_incomplete": true,
       "3e_check_failed": true,
       "3e_inapplicable": true,
@@ -67,7 +90,12 @@
     "cap_standin_rule": {
       "label": "RULE_HOLDS",
       "n_match": 3,
+      "depth_label": "RULE_DEPTH_HOLDS",
+      "n_depth_match": 3,
+      "registered_label": "RULE_HOLDS",
+      "n_registered_match": 3,
       "n_label_only_match": 3,
+      "rule_stands": true,
       "rows": [
         {
           "arm": "wd3e-2",
@@ -75,11 +103,13 @@
           "class": "FAILS",
           "call": "FAILS",
           "label": "SPLIT",
+          "impaired_early": false,
           "depth": "DEPTH_AT_LINE",
           "outcome": "NOT_SAVED",
-          "outcome3": "NOT_SAVED_Z>=0.5",
           "match": true,
-          "label_only_match": true
+          "depth_side_match": true,
+          "registered_conjunction_match": true,
+          "Z_band": "Z>=0.5"
         },
         {
           "arm": "wd1e-1",
@@ -87,11 +117,13 @@
           "class": "BORDERLINE",
           "call": "FAILS",
           "label": "SPLIT",
+          "impaired_early": false,
           "depth": "DEPTH_AT_LINE",
           "outcome": "NOT_SAVED",
-          "outcome3": "NOT_SAVED_Z>=0.5",
           "match": true,
-          "label_only_match": true
+          "depth_side_match": true,
+          "registered_conjunction_match": true,
+          "Z_band": "Z>=0.5"
         },
         {
           "arm": "wd1e0",
@@ -99,22 +131,34 @@
           "class": "SAVES",
           "call": "SAVES",
           "label": "RESCUED",
+          "impaired_early": false,
           "depth": "DEPTH_ABOVE_LINE",
           "outcome": "SAVED",
-          "outcome3": "SAVED",
           "match": true,
-          "label_only_match": true
+          "depth_side_match": true,
+          "registered_conjunction_match": true,
+          "Z_band": "Z<0.1"
         }
       ]
     },
     "mutations": [
       {
-        "mutation": "Mv1: the RULE outcome without DEPTH",
+        "mutation": "Mv1: the main RULE outcome requires DEPTH too (the registration's conjunction)",
         "check_pass_on_mutant": false,
         "detected": true,
         "mutant_result": {
           "failed_items": [
-            "2B_rule_partial"
+            "2B_rule_main_holds"
+          ]
+        }
+      },
+      {
+        "mutation": "Mv1b: IMPAIRED_EARLY not excluded from SAVED",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "2H_impaired_not_saved"
           ]
         }
       },
@@ -150,12 +194,12 @@
             "2A_dose_monotone",
             "2A_width",
             "2B_rfo_au",
-            "2B_rule_partial",
+            "2B_rule_main_holds",
+            "2B_rule_depth_fails",
+            "2B_rule_registered_partial",
             "2B_dose_peaked",
             "2B_width",
-            "2C_rule_fails",
-            "2E_dose_other",
-            "2G_task1_base_rescued"
+            "2C_rule_fails"
           ]
         }
       },
@@ -175,25 +219,109 @@
         "detected": true,
         "mutant_result": {
           "failed_items": [
-            "3a_norm_partial",
+            "3a_norm_both",
             "3d_partial_box"
           ]
         }
       },
       {
-        "mutation": "Mv7: the reading ignores the L2 Init comparison",
+        "mutation": "Mv7: the reading bands at 1/3 and 2/3",
         "check_pass_on_mutant": false,
         "detected": true,
         "mutant_result": {
           "failed_items": [
-            "3b_both_worse_impaired"
+            "3f_unresolved_and_both"
+          ]
+        }
+      },
+      {
+        "mutation": "Mv8: a straddling interval read as BOTH",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "3f_unresolved_and_both"
+          ]
+        }
+      },
+      {
+        "mutation": "Mv9: EQUILIBRIUM back to x1/2 .. x2",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "2H_eq_ratio1_off_low"
+          ]
+        }
+      },
+      {
+        "mutation": "Mv10: WIDTH tolerance fixed at 0.1",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "2H_width_tolerance"
           ]
         }
       }
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 14.2
+    "seconds": 23.1
+  },
+  "S-line": {
+    "title": "S-line the float32 lines of F.elu on this GPU",
+    "target": "analysis/adamw_dose2_1011/rule.py",
+    "threshold_derivation": "On this GPU (analysis/adamw_dose2_1011/lines.py, bisection over float32): (i) the largest z with F.elu(z) == -1\n    equals rule.ZF_CUDA bit for bit; (ii) the rule's zero line rule.Z0 lies in (the last z whose local derivative is\n    exactly 0, the next float32 above it], i.e. Z0 is the derivative's float32 zero to one ulp; (iii) report only:\n    the last zero of dy * e^z for dy = 1e-4 and 1e-8.  The raw values are kept in this record.",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_forward_line_is_ZF_CUDA": true,
+      "ii_Z0_is_the_local_derivative_zero": true
+    },
+    "measured": {
+      "device": "cuda",
+      "torch": "2.13.0+cu130",
+      "cuda": "13.0",
+      "gpu": "NVIDIA GeForce RTX 5060 Ti",
+      "zf": -16.982107162475586,
+      "z0_last_zero": -103.97208404541016,
+      "z0_first_nonzero": -103.97207641601562,
+      "z0_first_nonzero_grad": 1.401298464324817e-45,
+      "ln2_m150": -103.97207708399179,
+      "ln2_m24": -16.635532333438686,
+      "ln2_m25": -17.328679513998633,
+      "measured_at": "2026-10-11 16:26:19 JST",
+      "z0_dy0.0001_last_zero": -94.76164245605469,
+      "z0_dy1e-08_last_zero": -85.55139923095703,
+      "driver": "580.178.04"
+    },
+    "mutations": [
+      {
+        "mutation": "Ml1: the CPU forward line taken for the CUDA one",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_forward_line_is_ZF_CUDA"
+          ]
+        }
+      },
+      {
+        "mutation": "Ml2: the MNIST host's line taken as the zero",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_Z0_is_the_local_derivative_zero"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 4.7
   },
   "S-wd": {
     "title": "S-wd decoupled on synthetic tensors (A1)",
@@ -308,7 +436,7 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 11.8
+    "seconds": 11.2
   },
   "S-torch": {
     "title": "S-torch torch.optim.AdamW's formula within the rounding band (A1)",
@@ -367,7 +495,7 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 57.0
+    "seconds": 57.4
   },
   "S0": {
     "title": "S0 A1's lambda = 0 path reproduces the cap_cifar_ee_0920 ref (tasks 1-10)",
@@ -440,7 +568,7 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 1200.6
+    "seconds": 1156.6
   },
   "S-branch": {
     "title": "S-branch one prefix, three arms, the first update decays",
@@ -499,7 +627,7 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 254.5
+    "seconds": 204.8
   },
   "S-graph": {
     "title": "S-graph CUDA graph = eager (A1)",
@@ -531,7 +659,7 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 36.6
+    "seconds": 30.1
   },
   "S-resume": {
     "title": "S-resume an epoch-boundary resume = no interruption (A1)",
@@ -561,7 +689,7 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 62.2
+    "seconds": 49.4
   },
   "S-ctrl": {
     "title": "S-ctrl readout-only WD lets the hidden widths grow",
@@ -605,7 +733,7 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 418.8
+    "seconds": 293.5
   },
   "S-nochange": {
     "title": "S-nochange A2's lambda = 0 path is the host's R",
@@ -697,7 +825,7 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 821.0
+    "seconds": 804.1
   },
   "S-host-repro": {
     "title": "the L2 Init record reproduces from the unmodified host in this environment",
@@ -737,7 +865,7 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 150.7
+    "seconds": 150.6
   },
   "S-coupled-host": {
     "title": "S-coupled-host the coupled arms are the host's iv='l2' byte for byte",
@@ -799,7 +927,7 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 1224.0
+    "seconds": 876.0
   },
   "S-mut": {
     "title": "S-mut L2 after Adam = decoupled (A2 mutation control)",
@@ -888,7 +1016,7 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 94.2
+    "seconds": 31.0
   },
   "S-graph-c51": {
     "title": "S-graph-c51 CUDA graph = eager (A2)",
@@ -935,7 +1063,7 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 38.9
+    "seconds": 5.9
   },
   "S-fresh-c51": {
     "title": "S-fresh-c51 the fresh controls (A2)",
@@ -984,7 +1112,7 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 32.0
+    "seconds": 9.4
   },
   "S-cli": {
     "title": "S-cli the CLI maps, defaults and admits",
@@ -1054,36 +1182,36 @@
     ],
     "all_mutations_detected": true,
     "mutations_raised": 0,
-    "seconds": 179.6
+    "seconds": 89.0
   },
   "S-cost": {
     "pass": true,
     "gate": "both CLI runs exit 0",
     "rlcifar": {
-      "task_seconds": 6.661436319351196,
-      "ms_per_update": 4.440957546234131,
+      "task_seconds": 1.730665683746338,
+      "ms_per_update": 1.1537771224975586,
       "peak_cuda_reserved_mib": 620.0,
       "gpu_mib_nvidia_smi": 904,
-      "peak_rss_gib": 1.6568069458007812,
-      "process_wall_s": 13.521044492721558,
-      "projected_arm_minutes": 108.8034598827362
+      "peak_rss_gib": 1.4771842956542969,
+      "process_wall_s": 8.29761290550232,
+      "projected_arm_minutes": 28.26753950119019
     },
     "c51": {
-      "ms_per_update": 3.171071639427772,
+      "ms_per_update": 1.0094147462111254,
       "gpu_mib_nvidia_smi": 1958,
-      "peak_rss_gib": 1.7501983642578125,
-      "wall_clock_s": 108.01941061019897,
-      "process_wall_s": 109.74079060554504
+      "peak_rss_gib": 1.7505989074707031,
+      "wall_clock_s": 28.440781354904175,
+      "process_wall_s": 30.165916681289673
     },
     "rl_returncode": 0,
     "c51_returncode": 0,
     "rl_err": "",
     "c51_err": "",
-    "measured_at": "2026-10-11 15:50:38 JST",
-    "seconds": 123.3
+    "measured_at": "2026-10-11 16:59:35 JST",
+    "seconds": 38.5
   },
   "all_pass": true,
-  "n_checks": 16,
-  "n_mutations": 42,
-  "n_mutations_detected": 42
+  "n_checks": 17,
+  "n_mutations": 48,
+  "n_mutations_detected": 48
 }
