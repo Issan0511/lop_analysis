@@ -370,7 +370,7 @@ CH の束（R = 10）の 1 プロセスは、定常の VmRSS が 2,345 MiB、読
 
 ### 13.4 検査
 
-K-verdict に、監査の矛盾 3 例（H が救って CH も救う／C が救って CH は落ちる／H が救って CH は落ちる）、全 972 の組合せ（腕のラベル 3⁴ × D_{H|C} 3 × C が課題 1 を学ぶか 2 × 適用条件 2）での不変条件（TRANSFER ⇒ C・H が FAIL で N = `NEED_CH`、FAIL ⇒ 全扉の腕が FAIL で N = `NONE_RESCUED`、単独の扉が救えば TRANSFER でも FAIL でもない、ほか）、表の関門（腕名の取り違え・seed 20 の混入・課題の重複・欠落・NaN）、T_f の未定義を足した。K-mech（µ 経路の表）と K-gate（provenance の関門: 登録どおりは通し、epoch・エンジン・汚れ・slots・データの食い違いを落とす）を足した。変異を新しく足した（TRANSFER が H を見ない・TRANSFER の C を FAIL に厳しくする・TRANSFER の CH − C HELPS を落とす・FAIL が C と H を見ない・Cr の valid を見ない・seed 集合と重複の検査を落とす・EVALOFF の名前・T_f・µ 経路の取り違え 2・エンジンの照合と汚れの検査を落とす）。新しい定義に合わせて合成の場面も足した（C が PARTIAL で CH − C が HELPS なら TRANSFER、H が RESCUED で CH が PARTIAL なら PARTIAL、H が救えば TRANSFER_H_SUFFICES）。全部の検査は、修正を commit した後、本走の直前に起動 commit の上でもう一度回す。
+K-verdict に、監査の矛盾 3 例（H が救って CH も救う／C が救って CH は落ちる／H が救って CH は落ちる）、全 972 の組合せ（腕のラベル 3⁴ × D_{H|C} 3 × C が課題 1 を学ぶか 2 × 適用条件 2）での不変条件（TRANSFER ⇒ C・H が FAIL で N = `NEED_CH`、FAIL ⇒ 全扉の腕が FAIL で N = `NONE_RESCUED`、単独の扉が救えば TRANSFER でも FAIL でもない、ほか）、表の関門（腕名の取り違え・seed 20 の混入・課題の重複・欠落・NaN）、T_f の未定義を足した。K-mech（µ 経路の表）と K-gate（provenance の関門: 登録どおりは通し、epoch・エンジン・汚れ・slots・データの食い違いを落とす）を足した。変異を新しく足した（TRANSFER が H を見ない・TRANSFER の C を FAIL に厳しくする・TRANSFER の CH − C HELPS を落とす・FAIL が C と H を見ない・Cr の valid を見ない・seed 集合と重複の検査を落とす・EVALOFF の名前・T_f・µ 経路の取り違え 2・エンジンの照合と汚れの検査を落とす）。新しい定義に合わせて合成の場面も足した（C が PARTIAL で CH − C が HELPS なら TRANSFER、H が RESCUED で CH が PARTIAL なら PARTIAL、H が救えば TRANSFER_H_SUFFICES）。全部の検査は、修正を commit した後、本走の直前に起動 commit の上でもう一度回す。**実行（14:10〜14:15、commit `7ec5cf18`、作業木 clean）: 18 項目 all_pass、変異 39/39 を検出。** K-cost だけは回し直していない（エンジンは `0a5c0873` から不変で、4 本同時の計測は別 agent の検査が走っている今は RAM の 6 GiB の余裕を割るため。値は §11 の `0a5c0873` の実行のもの）。
 
 ### 13.5 見たもの（開示）
 

@@ -1,10 +1,10 @@
 {
  "_meta": {
-  "git_hash": "0a5c08739a4737c9ea0cd310eb261cbc6394cef5",
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
   "git_dirty_code": false,
   "torch": "2.13.0+cu130",
   "gpu": "NVIDIA GeForce RTX 5060 Ti",
-  "time": "2026-10-11 13:36:53"
+  "time": "2026-10-11 14:10:21"
  },
  "K-same": {
   "title": "ref \u675f = cnn_drive_verify_1009_lr.BundleLR('R')\uff082 epoch\u30fb\u5168\u72b6\u614b\u30fbevaluate\u30fbswitch_eval\uff09",
@@ -43,9 +43,10 @@
    }
   ],
   "all_mutations_detected": true,
-  "seconds": 4.1883156299591064
+  "seconds": 4.1637303829193115,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
- "all_pass": true,
  "K-repro": {
   "title": "CLI \u306e ref\u30fbR=1\u30fbseed 10\u30fb3 \u8ab2\u984c\u304c results/cnn_drive_verify_1009/R \u3068 per_task \u306e\u5171\u901a\u5217\uff08\u6587\u5b57\u5217\uff09\u3068 curves \u3067\u4e00\u81f4",
   "target": "src/cnn_center_relu_1011.py",
@@ -56,7 +57,9 @@
   "curves_bit_identical": true,
   "pass": true,
   "mutations": [],
-  "seconds": 46.440858125686646
+  "seconds": 72.39102745056152,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-center": {
   "title": "C \u306e\u5165\u529b = cnn_center_1010 \u306e LRc \u306e\u5165\u529b\uff08bit\uff09\u3001\u5e73\u5747\u30d1\u30c3\u30c1 < 0.1 \u500d\u3001Cr \u306e r \u3068\u5165\u529b",
@@ -162,7 +165,9 @@
    }
   ],
   "all_mutations_detected": true,
-  "seconds": 6.295958995819092
+  "seconds": 6.283085584640503,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-relu": {
   "title": "\u03c6 = clamp(z, 0)\u3001\u8a3a\u65ad\u306e\u30b2\u30fc\u30c8 z>0\u3001\u8a13\u7df4\u306e\u5fae\u5206",
@@ -190,7 +195,9 @@
    }
   ],
   "all_mutations_detected": true,
-  "seconds": 0.010281085968017578
+  "seconds": 0.009465932846069336,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-host": {
   "title": "1 step \u306e\u640d\u5931\u3068\u52fe\u914d: ref\u30fbC \u306f\u5bbf\u4e3b\u306e forward_cnn\u3001H\u30fbCH \u306f\u72ec\u7acb\u306b\u66f8\u3044\u305f\u6249\u3064\u304d\u306e 1 run \u306e\u9806\u4f1d\u64ad",
@@ -262,7 +269,9 @@
    }
   ],
   "all_mutations_detected": true,
-  "seconds": 3.938511610031128
+  "seconds": 3.901703119277954,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-H-ema": {
   "title": "m \u306e\u66f4\u65b0 = \u4e2d\u5fc3\u5316\u524d\u306e\u51fa\u529b\uff08conv \u306f pool \u306e\u5f8c\uff09\u306e\u30d0\u30c3\u30c1\u5e73\u5747\u3092 \u03b2=0.01 \u3067\u8ffd\u3046\uff08\u66f4\u65b0\u524d\u306e\u91cd\u307f\u306e z\uff09\u3001\u5883\u754c\u3067\u5909\u308f\u3089\u306a\u3044",
@@ -331,7 +340,9 @@
    }
   ],
   "all_mutations_detected": true,
-  "seconds": 0.1464090347290039
+  "seconds": 0.14629316329956055,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-H-grad": {
   "title": "m \u306f\u52fe\u914d\u3092\u6301\u305f\u305a\u3001\u52fe\u914d\u304c m \u3092\u5b9a\u6570\u3068\u3057\u305f\u72ec\u7acb\u306e\u518d\u8a08\u7b97\u3068 bit \u4e00\u81f4",
@@ -352,7 +363,9 @@
    }
   ],
   "all_mutations_detected": true,
-  "seconds": 0.04098939895629883
+  "seconds": 0.043476104736328125,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-H-eval": {
   "title": "\u8ab2\u984c\u672b\u306e fit CE\u30fb\u5207\u66ff\u306e CE \u304c\u305d\u306e\u6642\u70b9\u306e m \u3067\u306e\u518d\u8a08\u7b97\u3068 bit \u4e00\u81f4\u3057\u3001m=0 \u3067\u306f\u4e00\u81f4\u3057\u306a\u3044",
@@ -375,7 +388,9 @@
    }
   ],
   "all_mutations_detected": true,
-  "seconds": 1.0897653102874756
+  "seconds": 1.0798189640045166,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-H-first": {
   "title": "H \u306e\u6700\u521d\u306e\u66f4\u65b0 = ref \u306e\u6700\u521d\u306e\u66f4\u65b0\uff08CH = C\uff09\u3001\u305d\u306e\u76f4\u5f8c\u306e m \u306f\u975e\u96f6\u30013 \u66f4\u65b0\u5f8c\u306f\u9055\u3046",
@@ -404,7 +419,9 @@
    }
   ],
   "all_mutations_detected": true,
-  "seconds": 1.6975021362304688
+  "seconds": 1.6991875171661377,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-evaloff": {
   "title": "m = 0 \u306e\u8a55\u4fa1\u306f\u8aad\u3080\u3060\u3051\uff08\u72b6\u614b\u30fbm\u30fb\u4e71\u6570\u306e\u6d41\u308c\u30fb2 epoch \u306e\u8ecc\u9053\u304c\u4e0d\u5909\uff09",
@@ -427,7 +444,9 @@
    }
   ],
   "all_mutations_detected": true,
-  "seconds": 1.8081538677215576
+  "seconds": 1.9419896602630615,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-ident": {
   "title": "z\u0304_j = \u27e8W_j, m_in\u27e9 + b_j \u304c TF32 \u3068 float32 \u306e\u4e38\u3081\u306e\u4e0a\u754c\u306e\u5185\uff08ref\u30fbCH\u3001\u5168 4 \u5c64\uff09",
@@ -475,7 +494,9 @@
    }
   ],
   "all_mutations_detected": true,
-  "seconds": 3.3307650089263916
+  "seconds": 3.3478074073791504,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-graph": {
   "title": "H\u30fbCH \u306e\u675f\u3067 CUDA graph \u3068 eager \u304c 2 epoch \u3067 m\u30fbh_upd \u3092\u542b\u3081\u3066 bit \u4e00\u81f4",
@@ -485,7 +506,9 @@
   "CH_graph_eq_eager_and_moved": true,
   "pass": true,
   "mutations": [],
-  "seconds": 2.1036252975463867
+  "seconds": 2.0730977058410645,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-indep": {
   "title": "run 1 \u306e\u91cd\u307f\u30fb\u5165\u529b\u30fbm \u3092\u4e71\u3057\u3066\u3082 run 0\u30fb2 \u306f bit \u3067\u4e0d\u5909\u3001run 1 \u306f\u5909\u308f\u308b",
@@ -496,7 +519,9 @@
   "door_m": true,
   "pass": true,
   "mutations": [],
-  "seconds": 0.5449631214141846
+  "seconds": 0.543043851852417,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-loop": {
   "title": "run\uff08eager\uff09= \u8ab2\u984c\u306e\u624b\u3067\u306e\u518d\u751f\u3001m \u306f\u8ab2\u984c\u306e\u5883\u754c\u3092\u8d8a\u3048\u3066\u5f15\u304d\u7d99\u304c\u308c\u308b\u3001h_upd = 150/\u8ab2\u984c",
@@ -521,7 +546,9 @@
    }
   ],
   "all_mutations_detected": true,
-  "seconds": 13.81731128692627
+  "seconds": 14.020033359527588,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-resume": {
   "title": "2 \u8ab2\u984c\u3092\u901a\u3057\u3067\u56de\u3059\u306e\u3068 1 \u8ab2\u984c\u3067\u6b62\u3081\u3066\u518d\u958b\u3059\u308b\u306e\u3068\u3067 per_task\u30fbt0\u30fbcurves\u30fbunits\u30fb\u72b6\u614b\u304c\u4e00\u81f4",
@@ -534,16 +561,28 @@
   "state_identical": true,
   "pass": true,
   "mutations": [],
-  "seconds": 18.83317804336548
+  "seconds": 18.9857656955719,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-verdict": {
   "title": "\u5408\u6210\u306e per_task \u3067\u8a2d\u8a08\u3069\u304a\u308a\u306e\u30e9\u30d9\u30eb",
   "target": "analysis/cnn_center_relu_1011/verdict.py",
   "threshold_derivation": "\u5408\u6210\u30c7\u30fc\u30bf\u306e\u671f\u5f85\u5024\uff08\u8a2d\u8a08\u304b\u3089\uff09",
-  "n_expectations": 52,
+  "n_expectations": 74,
   "failed": [],
   "kstar_8_9_10": true,
   "sign_test_9_1": true,
+  "n_combinations": 972,
+  "invariant_violations": [],
+  "table_validation": {
+   "wrong_arm": true,
+   "foreign_seed": true,
+   "duplicate_task": true,
+   "missing_task": true,
+   "nan_online": true
+  },
+  "t_f_undefined_and_value": true,
   "pass": true,
   "mutations": [
    {
@@ -551,9 +590,11 @@
     "check_pass_on_mutant": false,
     "detected": true,
     "mutant_result": {
-     "n_expectations": 52,
+     "n_expectations": 74,
      "kstar_8_9_10": false,
-     "sign_test_9_1": true
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
     }
    },
    {
@@ -561,9 +602,11 @@
     "check_pass_on_mutant": false,
     "detected": true,
     "mutant_result": {
-     "n_expectations": 52,
+     "n_expectations": 74,
      "kstar_8_9_10": true,
-     "sign_test_9_1": true
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
     }
    },
    {
@@ -571,9 +614,11 @@
     "check_pass_on_mutant": false,
     "detected": true,
     "mutant_result": {
-     "n_expectations": 52,
+     "n_expectations": 74,
      "kstar_8_9_10": true,
-     "sign_test_9_1": true
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
     }
    },
    {
@@ -581,19 +626,119 @@
     "check_pass_on_mutant": false,
     "detected": true,
     "mutant_result": {
-     "n_expectations": 52,
+     "n_expectations": 74,
      "kstar_8_9_10": true,
-     "sign_test_9_1": true
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
     }
    },
    {
-    "mutation": "TRANSFER \u306e\u6761\u4ef6 4 \u3092\u843d\u3068\u3059",
+    "mutation": "TRANSFER \u306e CH\u2212C HELPS \u3092\u843d\u3068\u3059",
     "check_pass_on_mutant": false,
     "detected": true,
     "mutant_result": {
-     "n_expectations": 52,
+     "n_expectations": 74,
      "kstar_8_9_10": true,
-     "sign_test_9_1": true
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "TRANSFER \u304c H \u3092\u898b\u306a\u3044",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "TRANSFER \u306e C \u3092 FAIL \u306b\u53b3\u3057\u304f\u3059\u308b",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "FAIL \u304c C\u30fbH \u3092\u898b\u306a\u3044",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "Cr \u306e valid \u3092\u898b\u306a\u3044",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "seed \u96c6\u5408\u306e\u691c\u67fb\u3092\u843d\u3068\u3059",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "\u91cd\u8907 task \u306e\u691c\u67fb\u3092\u843d\u3068\u3059",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "EVALOFF \u306e TIE \u3092\u300c\u4f9d\u5b58\u306a\u3057\u300d\u3068\u547c\u3076",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
+    }
+   },
+   {
+    "mutation": "A(1) \u2264 0.1 \u306e T_f \u3092 1 \u306b\u3059\u308b",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_expectations": 74,
+     "kstar_8_9_10": true,
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": false
     }
    },
    {
@@ -601,9 +746,11 @@
     "check_pass_on_mutant": false,
     "detected": true,
     "mutant_result": {
-     "n_expectations": 52,
+     "n_expectations": 74,
      "kstar_8_9_10": true,
-     "sign_test_9_1": true
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
     }
    },
    {
@@ -611,9 +758,11 @@
     "check_pass_on_mutant": false,
     "detected": true,
     "mutant_result": {
-     "n_expectations": 52,
+     "n_expectations": 74,
      "kstar_8_9_10": true,
-     "sign_test_9_1": true
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
     }
    },
    {
@@ -621,14 +770,18 @@
     "check_pass_on_mutant": false,
     "detected": true,
     "mutant_result": {
-     "n_expectations": 52,
+     "n_expectations": 74,
      "kstar_8_9_10": true,
-     "sign_test_9_1": true
+     "sign_test_9_1": true,
+     "n_combinations": 972,
+     "t_f_undefined_and_value": true
     }
    }
   ],
   "all_mutations_detected": true,
-  "seconds": 17.709494590759277
+  "seconds": 46.12297320365906,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  },
  "K-cost": {
   "title": "CH \u306e\u675f\uff08R=10\uff09\u306e 1 epoch \u306e\u79d2\u6570\uff08\u5358\u72ec\u3068\u4e3b 4 \u8155\u306e\u540c\u6642\uff09\u3068 GPU \u30e1\u30e2\u30ea\u306e\u5cf0\uff08seed 100\u2013109\u3001\u7cbe\u5ea6\u306f\u8aad\u307e\u306a\u3044\uff09",
@@ -707,5 +860,85 @@
   "pass": true,
   "mutations": [],
   "seconds": 58.35934376716614
+ },
+ "all_pass": true,
+ "K-mech": {
+  "title": "\u5831\u544a\u306e\u307f\u306e\u8868\uff08\u00b5 \u7d4c\u8def\u306e\u81ea\u5206\u30fb\u4e0a\u6d41\u30fb\u4ea4\u5dee\u3001\u8d77\u70b9 t0\u30fbt1 \u306e\u5206\u89e3\uff09\u304c\u72ec\u7acb\u306e\u518d\u8a08\u7b97\u3068\u4e00\u81f4",
+  "target": "analysis/cnn_center_relu_1011/verdict.py",
+  "threshold_derivation": "float64 \u306e\u540c\u3058\u91cf\uff081e-12\uff09\u30fb\u6052\u7b49\u5f0f\u306e\u6b8b\u5dee 1e-9",
+  "n_compared": 48,
+  "max_abs_diff": 0.0,
+  "identity_res_max": 3.7643499428696714e-16,
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "\u81ea\u5206\u3068\u4e0a\u6d41\u306e\u53d6\u308a\u9055\u3048",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_compared": 48,
+     "max_abs_diff": 0.19266618959801213,
+     "identity_res_max": 3.7643499428696714e-16
+    }
+   },
+   {
+    "mutation": "\u8d77\u70b9 t1 \u306e\u5206\u89e3\u304c t0 \u304b\u3089\u5f15\u304f",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "n_compared": 48,
+     "max_abs_diff": 0.0901828333735466,
+     "identity_res_max": 3.7643499428696714e-16
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 0.18480825424194336,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
+ },
+ "K-gate": {
+  "title": "provenance \u306e\u95a2\u9580: \u767b\u9332\u3069\u304a\u308a\u306a\u3089\u901a\u3057\u3001epochs\u30fb\u30a8\u30f3\u30b8\u30f3\u30fb\u6c5a\u308c\u30fbslots\u30fb\u30c7\u30fc\u30bf\u306e\u98df\u3044\u9055\u3044\u3092\u843d\u3068\u3059",
+  "target": "analysis/cnn_center_relu_1011/verdict.py",
+  "threshold_derivation": "\u5408\u6210\u306e provenance \u306e\u671f\u5f85\u5024\uff08\u8a2d\u8a08\u304b\u3089\uff09",
+  "gate_ok_clean": true,
+  "gate_ok_epochs_399": false,
+  "gate_ok_other_engine": false,
+  "gate_ok_dirty_run": false,
+  "gate_ok_wrong_slots": false,
+  "gate_ok_other_data": false,
+  "pass": true,
+  "mutations": [
+   {
+    "mutation": "\u30a8\u30f3\u30b8\u30f3\u306e sha256 \u3092\u7167\u5408\u3057\u306a\u3044",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "gate_ok_clean": true,
+     "gate_ok_epochs_399": false,
+     "gate_ok_other_engine": true,
+     "gate_ok_dirty_run": false,
+     "gate_ok_wrong_slots": false,
+     "gate_ok_other_data": false
+    }
+   },
+   {
+    "mutation": "\u6c5a\u308c\u305f\u6728\u304b\u3089\u306e\u8d70\u3092\u901a\u3059",
+    "check_pass_on_mutant": false,
+    "detected": true,
+    "mutant_result": {
+     "gate_ok_clean": true,
+     "gate_ok_epochs_399": false,
+     "gate_ok_other_engine": false,
+     "gate_ok_dirty_run": true,
+     "gate_ok_wrong_slots": false,
+     "gate_ok_other_data": false
+    }
+   }
+  ],
+  "all_mutations_detected": true,
+  "seconds": 0.21224522590637207,
+  "git_hash": "7ec5cf18e661a0e742e9f1faa4acfb3ae69f49ee",
+  "git_dirty_code": false
  }
 }
