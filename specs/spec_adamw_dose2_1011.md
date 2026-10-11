@@ -232,7 +232,7 @@ Claude の列は本 spec の起草者（Opus 5.5、2026-10-11 13:30 JST）。こ
 
 略号: RFO = RESCUED_FUNCTION_ONLY、AU = ALIVE_UNRESOLVED、他 = INAPPLICABLE・NOT_REPRODUCED・CHECK_FAILED・INCOMPLETE・DIVERGED をまとめた桶。
 
-**Fable の列（追記、2026-10-11 15:58 JST）**: 親（Fable）から受け取った予測を、検査 all_pass（`838e0820`）の後・本走の前（Codex の監査の間）に記入した。親はこの時点で、検査の結果と §13 の 6 の開示（S-ctrl の λ = 1 の幅）と、確認の連絡の要約（規則の当て・Claude の予測）を見ている。書かれていない項目は空欄のまま。
+**Fable の列（追記、2026-10-11 15:56 JST）**: 親（Fable）から受け取った予測を、検査 all_pass（`838e0820`）の後・本走の前（Codex の監査の間）に記入した。親はこの時点で、検査の結果と §13 の 6 の開示（S-ctrl の λ = 1 の幅）と、確認の連絡の要約（規則の当て・Claude の予測）を見ている。書かれていない項目は空欄のまま。
 
 ### 7.1 ラベルの項目
 
