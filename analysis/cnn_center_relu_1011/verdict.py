@@ -20,7 +20,7 @@ import pandas as pd
 
 REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "results" / "cnn_center_relu_1011"
-BACKUP = Path.home() / "Projects" / "obsidian-research-data" / "cnn_center_relu_1011_1011"
+BACKUP = Path.home() / "Projects" / "obsidian-research-data" / "cnn_center_relu_1011" / "results" / "cnn_center_relu_1011"
 MAIN_ARMS = ("ref", "C", "H", "CH")
 H_ARMS = ("H", "CH")
 SEEDS = tuple(range(10, 20))
