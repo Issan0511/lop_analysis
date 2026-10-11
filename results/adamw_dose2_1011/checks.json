@@ -1,0 +1,1089 @@
+{
+  "run_id": "adamw_dose2_1011",
+  "spec": "specs/spec_adamw_dose2_1011.md",
+  "prereg_commit": "7525f9747a6a2872c30eb380fe3da4809bc6fa95",
+  "git_head": "b45a3eb8a5bbba48d7bdd676cb981575e1b460e8",
+  "source_sha256": {
+    "src/adamw_dose2_1011.py": "d26dc4e5bfb0c8ae1a0d84ea7016e8fb519756e136fc79210f8eceb7e625a26e",
+    "src/adamw_dose2_1011_c51.py": "7286640e3bc14f3c00479cdcfbe5d6bf320e592e58cef7ee533e158ee82794da",
+    "src/adamw_dose2_1011_run.py": "f687689b9bc5c3df2c71786f4aeb00370c224588de85a0eaff20a3cd31cb7e02",
+    "analysis/adamw_dose2_1011/checks.py": "4a4e1877065e9b74f9fc2d53ed8af00246dae23fb24a69478da04bc9972d7bd2",
+    "analysis/adamw_dose2_1011/rule.py": "18d46c092b0d92bfb9cdc6c456e65ed24e3198eb51e6ee3236da43ac3a749297"
+  },
+  "verdict_sha256": "a7878b4dbf9fc4de8b068b415b2e570881d26c76e99bf683b0493b471f3e837a",
+  "merged_from": [
+    "results/_checks_adamw_dose2_1011/checks_partial_S-verdict_S-wd_S-torch_S0_S-branch_S-graph_S-resume_S-ctrl.json",
+    "results/_checks_adamw_dose2_1011/checks_partial_S-nochange_S-host-repro_S-coupled-host_S-mut_S-graph-c51_S-fresh-c51_S-cli.json",
+    "results/_checks_adamw_dose2_1011/checks_partial_S-cost.json"
+  ],
+  "S-verdict": {
+    "title": "S-verdict the verdict returns the designed labels",
+    "target": "analysis/adamw_dose2_1011/verdict.py",
+    "threshold_derivation": "(1) The recorded arms of cap_cifar_ee_0920 put in as stand-ins (cap1 as wd3e-2, cap2 as wd1e-1, cap12 as wd1e0)\n    reproduce that run's registered labels (SPLIT, SPLIT, RESCUED), its E1/E2 means (to 1e-12) and floor counts, and\n    give RULE_HOLDS; (2) synthetic A1 sets return every designed label: the five labels, IMPAIRED_EARLY, the three\n    DEPTH labels, the four RULE labels, the four DOSE labels, the EQUILIBRIUM layer labels and levels, the WIDTH layer\n    labels and levels, INCOMPLETE, DIVERGED, CHECK_FAILED, NOT_REPRODUCED, INAPPLICABLE; (3) synthetic A2 sets return\n    RESCUED / PARTIAL / NO_RESCUE, WORSE, IMPAIRED, the three readings, the three box labels, INCOMPLETE,\n    CHECK_FAILED, INAPPLICABLE, NOT_REPRODUCED; (4) t quantiles match the published table to 5e-7 and the n = 10\n    sign-test p values are the exact binomial ones.",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "1_cap_labels": true,
+      "1_cap_endpoints": true,
+      "1_cap_rule_holds": true,
+      "2A_labels": true,
+      "2A_depth": true,
+      "2A_rule_holds": true,
+      "2A_dose_monotone": true,
+      "2A_width": true,
+      "2A_equilibrium": true,
+      "2A_no_impairment": true,
+      "2B_rfo_au": true,
+      "2B_depth_unresolved": true,
+      "2B_rule_partial": true,
+      "2B_dose_peaked": true,
+      "2B_equilibrium": true,
+      "2B_width": true,
+      "2C_rule_fails": true,
+      "2C_impaired_early": true,
+      "2C_off_low": true,
+      "2E_dose_other": true,
+      "2G_task1_base_rescued": true,
+      "2G_bonferroni_rfo": true,
+      "2D_dose_flat": true,
+      "2E_incomplete": true,
+      "2E_diverged": true,
+      "2E_hash_check_failed": true,
+      "2E_s0_check_failed": true,
+      "2E_not_reproduced": true,
+      "2E_inapplicable": true,
+      "3a_norm_partial": true,
+      "3b_both_worse_impaired": true,
+      "3c_no_rescue_box": true,
+      "3d_partial_box": true,
+      "3e_incomplete": true,
+      "3e_check_failed": true,
+      "3e_inapplicable": true,
+      "3e_not_reproduced": true,
+      "4_t_quantiles": true,
+      "4_sign_test": true
+    },
+    "cap_standin_rule": {
+      "label": "RULE_HOLDS",
+      "n_match": 3,
+      "n_label_only_match": 3,
+      "rows": [
+        {
+          "arm": "wd3e-2",
+          "lam": 0.03,
+          "class": "FAILS",
+          "call": "FAILS",
+          "label": "SPLIT",
+          "depth": "DEPTH_AT_LINE",
+          "outcome": "NOT_SAVED",
+          "outcome3": "NOT_SAVED_Z>=0.5",
+          "match": true,
+          "label_only_match": true
+        },
+        {
+          "arm": "wd1e-1",
+          "lam": 0.1,
+          "class": "BORDERLINE",
+          "call": "FAILS",
+          "label": "SPLIT",
+          "depth": "DEPTH_AT_LINE",
+          "outcome": "NOT_SAVED",
+          "outcome3": "NOT_SAVED_Z>=0.5",
+          "match": true,
+          "label_only_match": true
+        },
+        {
+          "arm": "wd1e0",
+          "lam": 1.0,
+          "class": "SAVES",
+          "call": "SAVES",
+          "label": "RESCUED",
+          "depth": "DEPTH_ABOVE_LINE",
+          "outcome": "SAVED",
+          "outcome3": "SAVED",
+          "match": true,
+          "label_only_match": true
+        }
+      ]
+    },
+    "mutations": [
+      {
+        "mutation": "Mv1: the RULE outcome without DEPTH",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "2B_rule_partial"
+          ]
+        }
+      },
+      {
+        "mutation": "Mv2: the floor with 3 sd instead of the t quantile",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "2B_rfo_au"
+          ]
+        }
+      },
+      {
+        "mutation": "Mv3: no Bonferroni (95%)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "2G_bonferroni_rfo"
+          ]
+        }
+      },
+      {
+        "mutation": "Mv4: E1/E2 from each arm's task 2",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "1_cap_endpoints",
+            "2A_labels",
+            "2A_rule_holds",
+            "2A_dose_monotone",
+            "2A_width",
+            "2B_rfo_au",
+            "2B_rule_partial",
+            "2B_dose_peaked",
+            "2B_width",
+            "2C_rule_fails",
+            "2E_dose_other",
+            "2G_task1_base_rescued"
+          ]
+        }
+      },
+      {
+        "mutation": "Mv5: WIDTH's reference slope from the ref's main window",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "2A_width"
+          ]
+        }
+      },
+      {
+        "mutation": "Mv6: A2's midpoint = R",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "3a_norm_partial",
+            "3d_partial_box"
+          ]
+        }
+      },
+      {
+        "mutation": "Mv7: the reading ignores the L2 Init comparison",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "3b_both_worse_impaired"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 14.2
+  },
+  "S-wd": {
+    "title": "S-wd decoupled on synthetic tensors (A1)",
+    "target": "src/adamw_dose2_1011.py",
+    "threshold_derivation": "A1's update on CUDA with the stacked shapes (R = 2), the registered lambda of 'wd1e0' (1) on SCOPES['all'],\n    wd_c filled with M.decay_factor(lambda) into a float32 0-dim tensor as WDEngine does, inv1/inv2 filled per step\n    from python doubles as Engine.one_update does, K = 40 steps of random gradients in which a fixed third of every\n    tensor's entries gets an exactly-0 gradient: (i) those entries equal np.float32 iteration p <- p * c,\n    c = np.float32(1 - 1e-3 * 1), after 1 and after K steps; (ii) the whole update equals the independent\n    'p * c, then Engine.step's Adam ops' bit for bit, m and v too, and the device counters read K; (iii) coupled L2\n    (lambda theta added to the gradient, then Adam), computed here, moves the (i) entries by Adam's exact first step\n    eta g / (|g| + eps), g = lambda theta (within 1e-3 eta), which is eta sign(theta) to 1.1% where |g| >= 100 eps,\n    and so differs from (i).",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_zero_grad_one_step_is_c": true,
+      "i_zero_grad_K_steps_is_c_iterated": true,
+      "ii_update_is_decay_then_host_adam": true,
+      "ii_counters": true,
+      "iii_coupled_is_adam_first_step": true,
+      "iii_coupled_moves_eta_sign": true,
+      "iii_coupled_differs": true
+    },
+    "coupled_max_dev_from_first_step": 2.184009812843807e-09,
+    "coupled_max_dev_from_eta_sign": 9.857769124209902e-06,
+    "c_hex": "0x1.ff7cee0000000p-1",
+    "mutations": [
+      {
+        "mutation": "Mw1: coupled L2 (lambda theta into the gradient)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 2.184009812843807e-09,
+          "coupled_max_dev_from_eta_sign": 9.857769124209902e-06,
+          "c_hex": "0x1.ff7cee0000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw2: the decay after the Adam step",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 2.184009812843807e-09,
+          "coupled_max_dev_from_eta_sign": 9.857769124209902e-06,
+          "c_hex": "0x1.ff7cee0000000p-1",
+          "failed_items": [
+            "ii_update_is_decay_then_host_adam"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw3: biases not decayed",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 2.184009812843807e-09,
+          "coupled_max_dev_from_eta_sign": 9.857769124209902e-06,
+          "c_hex": "0x1.ff7cee0000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam",
+            "ii_counters"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw4: W3 only",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 2.184009812843807e-09,
+          "coupled_max_dev_from_eta_sign": 9.857769124209902e-06,
+          "c_hex": "0x1.ff7cee0000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam",
+            "ii_counters"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw5: c = 1 - lambda (the lr forgotten)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 2.184009812843807e-09,
+          "coupled_max_dev_from_eta_sign": 9.857769124209902e-06,
+          "c_hex": "0x1.ff7cee0000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam"
+          ]
+        }
+      },
+      {
+        "mutation": "Mw6: lambda doubled",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "coupled_max_dev_from_first_step": 2.184009812843807e-09,
+          "coupled_max_dev_from_eta_sign": 9.857769124209902e-06,
+          "c_hex": "0x1.ff7cee0000000p-1",
+          "failed_items": [
+            "i_zero_grad_one_step_is_c",
+            "i_zero_grad_K_steps_is_c_iterated",
+            "ii_update_is_decay_then_host_adam"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 11.8
+  },
+  "S-torch": {
+    "title": "S-torch torch.optim.AdamW's formula within the rounding band (A1)",
+    "target": "src/adamw_dose2_1011.py",
+    "threshold_derivation": "Seeds 100-101 stacked (R = 2), the arm wd1e0 (registered lambda 1), task 1 from the initial values, eager,\n    the first 150 updates' gradients taken from the step hook and fed in lockstep to (a) M.adamw_update_ on a shadow\n    copy -- which must equal the run's own parameters bit for bit after every update --, (b) torch.optim.AdamW(lr 1e-3,\n    betas (0.9, 0.999), eps 1e-8, weight_decay 1, foreach=False) on the stacked tensors, within RegBand, with second\n    moments identical at every update, and (c) torch.optim.Adam(weight_decay 1) (coupled), outside the band.|dp_K| <= sum_t [n_op u eta |s_t| + 2 u |p_t|] element by element (adamw_dose_1010 spec 6), n_op = 21,\n    u = 2^-24, |s_t| = |m_hat / (sqrt(v_hat) + eps)| of our code, |p_t| = the larger of the two codes' values\n    before and after the update.",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "a_shadow_equals_run_every_update": true,
+      "b_adamw_within_band": true,
+      "b_second_moments_identical": true,
+      "c_coupled_adam_outside_band": true,
+      "n_updates": true
+    },
+    "worst_ratio_adamw": 0.10327623931294547,
+    "n_outside_adamw": 0,
+    "worst_ratio_coupled": 169851.31632392717,
+    "n_outside_coupled": 636818,
+    "n_elements": 636820,
+    "band_per_update_median": 6.631345537312011e-09,
+    "mutations": [
+      {
+        "mutation": "Mt1: the decay after the Adam step",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "worst_ratio_adamw": 280.95575653761597,
+          "n_outside_adamw": 623351,
+          "worst_ratio_coupled": 169214.41368409715,
+          "n_outside_coupled": 636817,
+          "n_elements": 636820,
+          "band_per_update_median": 6.632516627263026e-09,
+          "failed_items": [
+            "b_adamw_within_band"
+          ]
+        }
+      },
+      {
+        "mutation": "Mt2: lambda theta added to the gradient",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "worst_ratio_adamw": 88328.32980300515,
+          "n_outside_adamw": 636817,
+          "worst_ratio_coupled": 3.059606483513567,
+          "n_outside_coupled": 1,
+          "n_elements": 636820,
+          "band_per_update_median": 6.371727782537316e-09,
+          "failed_items": [
+            "b_adamw_within_band",
+            "b_second_moments_identical"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 57.0
+  },
+  "S0": {
+    "title": "S0 A1's lambda = 0 path reproduces the cap_cifar_ee_0920 ref (tasks 1-10)",
+    "target": "src/adamw_dose2_1011.py",
+    "threshold_derivation": "(a) seeds 0-9, task 1 from the initial values on the lambda = 0 path of WDEngine (arm 'ref0', CUDA graph):\n    the core state (P, m, v, tc, label and batch generator states, Y) hashes to the archived prefix/t01.pt's, every\n    row equals the committed prefix/rows.json on every key the host writes, every host unit array equals the archived\n    prefix/units.npz; (b) from prefix/t01.pt, tasks 2-10 on the same path: each task's rows equal the committed\n    arms/ref/rows.json and its unit arrays the archived arms/ref/units_tXX.npz, and the core state after task 10\n    hashes to the archived arms/ref/t10.pt.  Bit comparisons; the first task that differs ends the check (fail-fast).",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "a_t1_core_state": true,
+      "a_t1_rows": true,
+      "a_t1_units": true,
+      "b_t2_rows": true,
+      "b_t2_units": true,
+      "b_t3_rows": true,
+      "b_t3_units": true,
+      "b_t4_rows": true,
+      "b_t4_units": true,
+      "b_t5_rows": true,
+      "b_t5_units": true,
+      "b_t6_rows": true,
+      "b_t6_units": true,
+      "b_t7_rows": true,
+      "b_t7_units": true,
+      "b_t8_rows": true,
+      "b_t8_units": true,
+      "b_t9_rows": true,
+      "b_t9_units": true,
+      "b_t10_rows": true,
+      "b_t10_units": true,
+      "b_t10_core_state": true
+    },
+    "a_rows_diff": [],
+    "a_units_bad": [],
+    "mutations": [
+      {
+        "mutation": "Ms1: the lambda = 0 path decayed with lambda 1e-3",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "a_t1_core_state",
+            "a_t1_rows",
+            "a_t1_units"
+          ]
+        }
+      },
+      {
+        "mutation": "Ms2: Adam eps 1e-7",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "a_t1_core_state",
+            "a_t1_rows",
+            "a_t1_units"
+          ]
+        }
+      },
+      {
+        "mutation": "Ms3: the diagnostic draws from the batch stream",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "a_t1_core_state"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 1200.6
+  },
+  "S-branch": {
+    "title": "S-branch one prefix, three arms, the first update decays",
+    "target": "src/adamw_dose2_1011.py",
+    "threshold_derivation": "Check seeds 100-109, a task-1 prefix on the lambda = 0 path (computed once with the real module).\n    (i) run_arm for ref0 and the three registered arms from that prefix (task 2 x 2 epochs): each branch.json records\n    the prefix's core hash as its own starting state; task 2's label_hash and order_hash are equal across the four\n    arms and the label_hash equals the hash of labels drawn here, independently, from the prefix's saved label\n    generators; the task-2 end states differ between the arms; (ii) the first update of wd1e0 (eager) equals\n    fl(fl(p0 * c) - a) element by element, with a = Engine.step's Adam term recomputed from the same update's m and v\n    and c = np.float32(1 - 1e-3 * 1), on all six tensors; (iii) ARM_LAMBDA and ARM_SCOPE of the registered arms are\n    the registered values (written here).",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_branch_from_prefix": true,
+      "i_task2_hashes_equal_across_arms": true,
+      "i_task2_labels_continue_prefix_stream": true,
+      "i_end_states_differ": true,
+      "ii_first_update_is_decay_then_adam": true,
+      "iii_lambda_map_registered": true
+    },
+    "cores": {
+      "ref0": "2f11276bd034cb40d94582f2da2c8bd7978127d49b516ca794c5d1eb6c064937",
+      "wd3e-2": "4199e0660fa37adaec177457fcd83e3471da82f69cb362a16d87e25f1be5c906",
+      "wd1e-1": "af3cdde2a69dbefca765bf5a3795c9dc8a0373519321927c41555b09e29d3a95",
+      "wd1e0": "0eae2089d1ae5514e2688f3c5853e7668051af2160c1e8689f4f8d45de1b8b9b"
+    },
+    "mutations": [
+      {
+        "mutation": "Mb1: the decay factor never written (the graph and the eager step multiply by 1)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_end_states_differ",
+            "ii_first_update_is_decay_then_adam"
+          ]
+        }
+      },
+      {
+        "mutation": "Mb2: the label streams re-initialised per arm",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "i_branch_from_prefix",
+            "i_task2_labels_continue_prefix_stream"
+          ]
+        }
+      },
+      {
+        "mutation": "Mb3: lambda map swapped (wd3e-2 <-> wd1e-1)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "iii_lambda_map_registered"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 254.5
+  },
+  "S-graph": {
+    "title": "S-graph CUDA graph = eager (A1)",
+    "target": "src/adamw_dose2_1011.py",
+    "threshold_derivation": "wd1e0 on check seeds 100-109 from the prefix, task 2 x 4 epochs (300 updates): the CUDA graph and eager steps\n    give byte-identical per_task.csv and wd_task.csv and bit-identical final P, m, v; the decays were counted (300).",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "per_task.csv_identical": true,
+      "wd_task.csv_identical": true,
+      "final_P_m_v_bitwise": true,
+      "decays_counted": true,
+      "wd_c_ok": true
+    },
+    "mutations": [
+      {
+        "mutation": "Mg1: the decay factor rebound outside the graph (the graph keeps reading 1)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "per_task.csv_identical",
+            "wd_task.csv_identical",
+            "final_P_m_v_bitwise"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 36.6
+  },
+  "S-resume": {
+    "title": "S-resume an epoch-boundary resume = no interruption (A1)",
+    "target": "src/adamw_dose2_1011.py",
+    "threshold_derivation": "wd1e0 on check seeds 100-109 from the prefix, tasks 2-3 x 4 epochs: a run stopped after epoch 2 of task 2 (its\n    epoch-boundary checkpoint) and resumed gives byte-identical per_task.csv and wd_task.csv, and a bit-identical\n    final state, to an uninterrupted run.",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "stopped_first": true,
+      "resumed_done": true,
+      "per_task.csv_identical": true,
+      "wd_task.csv_identical": true,
+      "final_state_bitwise": true
+    },
+    "mutations": [
+      {
+        "mutation": "Mr1: the resumed engine ignores the saved decay count",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "wd_task.csv_identical"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 62.2
+  },
+  "S-ctrl": {
+    "title": "S-ctrl readout-only WD lets the hidden widths grow",
+    "target": "src/adamw_dose2_1011.py",
+    "threshold_derivation": "Seed 100 alone (R = 1): task 1 on the lambda = 0 path (computed once with the real module), then tasks 2-4\n    (400 epochs each, graph) for ref0, ro1 (lambda 1 on W3 and b3 only) and wd1e0 (lambda 1 on all six).  The unit\n    median of each hidden layer's width s (sd of z over the 1200 images) at the end of task 4: in both layers\n    s_ro > sqrt(s_ref * s_wd) (the geometric midpoint of the two references, not a value chosen after seeing them) and\n    s_wd < s_ref.  Online accuracy is not read.",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "l1_readout_only_above_midpoint": true,
+      "l1_all_tensors_below_ref": true,
+      "l2_readout_only_above_midpoint": true,
+      "l2_all_tensors_below_ref": true
+    },
+    "widths_t4": {
+      "ref0": {
+        "1": 115.37094954106323,
+        "2": 281.51351068803194
+      },
+      "ro1": {
+        "1": 102.06452807538484,
+        "2": 306.4941273104072
+      },
+      "wd1e0": {
+        "1": 6.255864799499342,
+        "2": 1.2534188684301983
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "Mc1: ro1 applied to all six tensors",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "l1_readout_only_above_midpoint",
+            "l2_readout_only_above_midpoint"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 418.8
+  },
+  "S-nochange": {
+    "title": "S-nochange A2's lambda = 0 path is the host's R",
+    "target": "src/adamw_dose2_1011_c51.py",
+    "threshold_derivation": "spec 2.4 / adamw_dose_1010 2.3 (a)(b): the lambda = 0 path, seeds 0-9, 30 tasks, graph, 2 threads, fresh:\n    (a) per_task.csv and fresh_control.csv byte-identical to the unmodified host run() in this environment; (b)\n    identical to the committed R record in every column but eff_rank, the committed eff_rank inside the\n    cap_cifar5p1_1007 spec 7.1 band around the value recomputed here (the band rejects the next task's value:\n    non-vacuity), fresh_control.csv byte-identical to the committed one; (c) a 4-task run is byte-identical to the\n    host's 4-task run.  The real module's outputs are kept in results/adamw_dose2_1011/c51/_nochange/.",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "a_per_task_identical_to_host_now": true,
+      "a_fresh_identical_to_host_now": true,
+      "b_same_rows": true,
+      "b_same_columns": true,
+      "b_non_eff_rank_identical": true,
+      "b_fresh_identical_to_committed": true,
+      "b_eff_rank_inside_band": true,
+      "b_observer_reproduces_printed_eff_rank": true,
+      "b_band_rejects_a_shifted_column": true,
+      "c_short_per_task_identical_to_host_now": true,
+      "c_short_fresh_identical_to_host_now": true
+    },
+    "b_non_eff_rank_diff_cells": [],
+    "eff_rank_cells": 600,
+    "eff_rank_outside_band": [],
+    "shifted_column_rejected": "580/580",
+    "nochange_per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+    "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+    "mutations": [
+      {
+        "mutation": "Mn1: the lambda = 0 path gets coupled L2 1e-2",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "eff_rank_cells": 600,
+          "shifted_column_rejected": "580/580",
+          "nochange_per_task_sha256": "3feb7032aac34ffdb529a0cddf987814b803c24e1b2057caa0bb8ced513d69a4",
+          "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+          "failed_items": [
+            "a_per_task_identical_to_host_now",
+            "a_fresh_identical_to_host_now",
+            "b_non_eff_rank_identical",
+            "b_fresh_identical_to_committed",
+            "b_eff_rank_inside_band",
+            "c_short_per_task_identical_to_host_now",
+            "c_short_fresh_identical_to_host_now"
+          ]
+        }
+      },
+      {
+        "mutation": "Mn2: lr 1.0001e-4",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "eff_rank_cells": 600,
+          "shifted_column_rejected": "580/580",
+          "nochange_per_task_sha256": "b76510a1a3744133b50ed6ee38d055874f005eb3c6cc69db2bce88485ca937de",
+          "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+          "failed_items": [
+            "a_per_task_identical_to_host_now",
+            "a_fresh_identical_to_host_now",
+            "b_non_eff_rank_identical",
+            "b_fresh_identical_to_committed",
+            "b_eff_rank_inside_band",
+            "c_short_per_task_identical_to_host_now",
+            "c_short_fresh_identical_to_host_now"
+          ]
+        }
+      },
+      {
+        "mutation": "Mn3: the Adam update count restarts every task",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "eff_rank_cells": 600,
+          "shifted_column_rejected": "580/580",
+          "nochange_per_task_sha256": "b005966b048afbd924b5f9b727350a0fc32dc564149d62318dbf73c14a0277fc",
+          "committed_per_task_sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81",
+          "failed_items": [
+            "a_per_task_identical_to_host_now",
+            "a_fresh_identical_to_host_now",
+            "b_non_eff_rank_identical",
+            "b_fresh_identical_to_committed",
+            "b_eff_rank_inside_band",
+            "c_short_per_task_identical_to_host_now",
+            "c_short_fresh_identical_to_host_now"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 821.0
+  },
+  "S-host-repro": {
+    "title": "the L2 Init record reproduces from the unmodified host in this environment",
+    "target": "src/cifar5p1_mlp_0920.py",
+    "threads": 2,
+    "threshold_derivation": "byte identity of every column but eff_rank (cap_cifar5p1_1007 1.4)",
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "per_task_non_eff_rank_identical": true,
+      "fresh_identical": true
+    },
+    "diff": [],
+    "mutations": [
+      {
+        "mutation": "Mh1: compared with the l2init 1e-3 record",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "per_task_non_eff_rank_identical",
+            "fresh_identical"
+          ]
+        }
+      },
+      {
+        "mutation": "Mh2: compared with the seeds 10-19 record",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "per_task_non_eff_rank_identical",
+            "fresh_identical"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 150.7
+  },
+  "S-coupled-host": {
+    "title": "S-coupled-host the coupled arms are the host's iv='l2' byte for byte",
+    "target": "src/adamw_dose2_1011_c51.py",
+    "threshold_derivation": "The coupled arms l2c1e-2 and l2c5e-3 on check seeds 100-109, 30 tasks, graph, fresh: per_task.csv byte-identical\n    to the unmodified host run('R', iv='l2:<lambda>') on the same seeds; fresh_self.csv's fresh and continual values\n    equal the host's fresh_control.csv (the host applies its iv to the fresh net too); the registered\n    (mode, lambda) are written here and must match.",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "l2c1e-2_registered_spec": true,
+      "l2c1e-2_per_task_identical_to_host_l2": true,
+      "l2c1e-2_fresh_equals_host": true,
+      "l2c1e-2_l2_counted": true,
+      "l2c5e-3_registered_spec": true,
+      "l2c5e-3_per_task_identical_to_host_l2": true,
+      "l2c5e-3_fresh_equals_host": true,
+      "l2c5e-3_l2_counted": true
+    },
+    "mutations": [
+      {
+        "mutation": "Mc1: lambda theta instead of 2 lambda theta",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "l2c1e-2_per_task_identical_to_host_l2",
+            "l2c1e-2_fresh_equals_host",
+            "l2c5e-3_per_task_identical_to_host_l2",
+            "l2c5e-3_fresh_equals_host"
+          ]
+        }
+      },
+      {
+        "mutation": "Mc2: L2 only on the weights (biases skipped)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "l2c1e-2_per_task_identical_to_host_l2",
+            "l2c1e-2_fresh_equals_host",
+            "l2c5e-3_per_task_identical_to_host_l2",
+            "l2c5e-3_fresh_equals_host"
+          ]
+        }
+      },
+      {
+        "mutation": "Mc3: the L2 term in m only (v sees the raw gradient)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "l2c1e-2_per_task_identical_to_host_l2",
+            "l2c1e-2_fresh_equals_host",
+            "l2c5e-3_per_task_identical_to_host_l2",
+            "l2c5e-3_fresh_equals_host"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 1224.0
+  },
+  "S-mut": {
+    "title": "S-mut L2 after Adam = decoupled (A2 mutation control)",
+    "target": "src/adamw_dose2_1011_c51.py",
+    "threshold_derivation": "A2's mutation control (spec 6): seed 100 alone (R = 1), 2 tasks x 780 updates of 'mut_after1e-2' (eager), each\n    update's gradients fed in lockstep to three shadows from the same initial values through M.adam_update_:\n    'after' (lambda 1e-2: 2 lam theta_old subtracted after Adam's step), 'decoupled' (lambda_W = 2e-2) and 'coupled'\n    (lambda 1e-2).  The after and decoupled shadows feed the raw gradient to m and v (so their m, v and Adam terms\n    are the same) and differ only in the roundings of the decay and the two subtractions (after: 3, decoupled: 2, the\n    rounding of c: 1), so |p_after - p_dec| <= sum_t 6 u (|p_t| + eta |s_t|) element by element (|p_t| the larger of\n    the two shadows before and after the update).  (i) after vs decoupled within that band for every element;\n    (ii) coupled vs decoupled outside it for >= 99% of the elements (the coupled pull is 2 eta lam |p| / sqrt(v_hat)\n    per update, ~500x the decoupled 2 eta lam |p| at sqrt(v_hat) ~ 2e-3).  (iii) report only: 30-task runs (graph)\n    of nochange, mut_after1e-2 and dec2e-2 on seed 100 -- late-window online and row norms; kept in c51/_mut/.",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "n_updates": true,
+      "i_after_equals_decoupled_within_band": true,
+      "ii_coupled_outside_band_99pct": true,
+      "after_and_dec_same_m_v": true
+    },
+    "worst_ratio_after_vs_dec": 0.2704678858649903,
+    "frac_coupled_outside": 0.9999022900763359,
+    "median_ratio_coupled_over_band_per_tensor": [
+      1191.7355700819078,
+      1018.3818536766167,
+      386.57870746000344,
+      584.3270199301634,
+      1632.8560355407571,
+      1322.1643442174682
+    ],
+    "iii_seed100_runs": {
+      "nochange": {
+        "late_online": 0.47185096154000006,
+        "early_online": 0.61096955128,
+        "w1_row_med_t29": 1.094018999,
+        "w2_row_med_t29": 0.7073290711,
+        "dead_frac_l2_late": 0.32199999094000004
+      },
+      "mut_after1e-2": {
+        "late_online": 0.5034375,
+        "early_online": 0.6093990384600001,
+        "w1_row_med_t29": 1.030644114,
+        "w2_row_med_t29": 0.6895917623,
+        "dead_frac_l2_late": 0.34399998783999997
+      },
+      "dec2e-2": {
+        "late_online": 0.47741185895999994,
+        "early_online": 0.6124439102599999,
+        "w1_row_med_t29": 1.01417068,
+        "w2_row_med_t29": 0.6808416178,
+        "dead_frac_l2_late": 0.32999998927999996
+      }
+    },
+    "mutations": [
+      {
+        "mutation": "Mm1: after's L2 moved back before Adam (= coupled)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "worst_ratio_after_vs_dec": 5598.331926762069,
+          "frac_coupled_outside": 0.9998473282442748,
+          "failed_items": [
+            "i_after_equals_decoupled_within_band",
+            "after_and_dec_same_m_v"
+          ]
+        }
+      },
+      {
+        "mutation": "Mm2: after's L2 doubled",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "worst_ratio_after_vs_dec": 5.608199772083301,
+          "frac_coupled_outside": 0.9998900763358779,
+          "failed_items": [
+            "i_after_equals_decoupled_within_band"
+          ]
+        }
+      },
+      {
+        "mutation": "Mm3: after's L2 dropped",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "worst_ratio_after_vs_dec": 5.748320626054103,
+          "frac_coupled_outside": 0.9998900763358779,
+          "failed_items": [
+            "i_after_equals_decoupled_within_band"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 94.2
+  },
+  "S-graph-c51": {
+    "title": "S-graph-c51 CUDA graph = eager (A2)",
+    "target": "src/adamw_dose2_1011_c51.py",
+    "threshold_derivation": "l2c1e-2 on seeds 100-109, 4 tasks x 100 updates: graph and eager give byte-identical per_task.csv,\n    l2_task.csv and fresh_self.csv and bit-identical final P, m, v; the graph was used; the L2 ops were counted (100).",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "per_task.csv_identical": true,
+      "l2_task.csv_identical": true,
+      "fresh_self.csv_identical": true,
+      "final_state_bitwise": true,
+      "graph_was_used": true,
+      "l2_counted": true
+    },
+    "mutations": [
+      {
+        "mutation": "Mg1: lambda doubled after the capture (eager reads it, the graph keeps the captured one)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "per_task.csv_identical",
+            "l2_task.csv_identical",
+            "fresh_self.csv_identical",
+            "final_state_bitwise"
+          ]
+        }
+      },
+      {
+        "mutation": "Mg2: static_idx one batch behind while replaying",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "per_task.csv_identical",
+            "l2_task.csv_identical",
+            "fresh_self.csv_identical",
+            "final_state_bitwise"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 38.9
+  },
+  "S-fresh-c51": {
+    "title": "S-fresh-c51 the fresh controls (A2)",
+    "target": "src/adamw_dose2_1011_c51.py",
+    "threshold_derivation": "Short runs (seeds 100-102, 3 tasks, 200/100 updates): (i) the last hard task's batches have the same sha256 in\n    l2c1e-2, l2c5e-3 and the lambda = 0 path; (ii) l2c1e-2 writes fresh_self.csv and no fresh_control.csv, its\n    continual column is its own task-3 online accuracy, and the lambda = 0 path's fresh_control.csv is the host's byte\n    for byte; (iii) at the start of fresh_self, P equals the initial values and m = v = 0, and the first fresh_self\n    update has update count 1; (iv) every fresh_self update carries the L2 op (l2_steps = 200).",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_same_last_hard_batches": true,
+      "ii_nochange_fresh_is_host": true,
+      "ii_l2c_writes_fresh_self_only": true,
+      "ii_continual_is_own_t3": true,
+      "iv_fresh_self_l2_every_update": true,
+      "iii_start_state_initial": true,
+      "iii_first_update_count_1": true
+    },
+    "fresh_batches_sha256": {
+      "nochange": "0ec13ae6b8edaaab6d268b78868b39fc99ee2b8a8babf3f2be237021557806df",
+      "l2c1e-2": "0ec13ae6b8edaaab6d268b78868b39fc99ee2b8a8babf3f2be237021557806df",
+      "l2c5e-3": "0ec13ae6b8edaaab6d268b78868b39fc99ee2b8a8babf3f2be237021557806df"
+    },
+    "mutations": [
+      {
+        "mutation": "Mf1: the Adam moments not zeroed before fresh_self",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_nochange_fresh_is_host",
+            "iii_start_state_initial"
+          ]
+        }
+      },
+      {
+        "mutation": "Mf2: fresh_self starts from the end state (the reset skipped)",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "failed_items": [
+            "ii_nochange_fresh_is_host",
+            "iii_start_state_initial"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 32.0
+  },
+  "S-cli": {
+    "title": "S-cli the CLI maps, defaults and admits",
+    "target": "src/adamw_dose2_1011_run.py",
+    "threshold_derivation": "(i) rlcifar: the CLI (a subprocess) on check seeds 100-109 with --prefix (the task-1 state saved here), arm\n    wd1e0, tasks 2 x 2 epochs, writes per_task.csv and wd_task.csv byte-identical to the in-process run_arm with the\n    same arguments; (ii) c51: main(['c51', ...]) for l2c1e-2 on seeds 100-102 (3 tasks, 200/100 updates) equals the\n    in-process run byte for byte; (iii) the parser's defaults are the registered ones (A1: 50 tasks x 400 epochs,\n    2 threads, seeds 0-9; A2: 30 tasks, lr 1e-4, 780/780 updates, 2 threads, seeds 0-9); (iv) admission refuses a\n    registered output for a missing / not-all_pass / stale checks.json, an unregistered arm, check seeds, 30 tasks,\n    an unregistered A2 arm, and --prefix at the registered place, and accepts the registered configuration when the\n    tree is clean.",
+    "threads": 2,
+    "pass": true,
+    "failed_items": [],
+    "detail": {
+      "i_rlcifar_cli_equals_function": true,
+      "ii_c51_cli_equals_function": true,
+      "iii_defaults_rlcifar": true,
+      "iii_defaults_c51": true,
+      "iv_refuse_missing_checks": true,
+      "iv_refuse_not_all_pass": true,
+      "iv_refuse_stale": true,
+      "iv_refuse_unregistered_arm": true,
+      "iv_refuse_check_seeds": true,
+      "iv_refuse_30_tasks": true,
+      "iv_refuse_c51_unregistered_arm": true,
+      "iv_refuse_prefix_at_registered_place": true,
+      "iv_accept_registered_when_clean": true
+    },
+    "cli_rc": 0,
+    "cli_err": "",
+    "tree_clean_at_check": true,
+    "mutations": [
+      {
+        "mutation": "Mcli1: the default horizon is 30 tasks",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "cli_rc": 0,
+          "cli_err": "",
+          "tree_clean_at_check": true,
+          "failed_items": [
+            "iii_defaults_rlcifar"
+          ]
+        }
+      },
+      {
+        "mutation": "Mcli2: admission does not check the A1 arm",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "cli_rc": 0,
+          "cli_err": "",
+          "tree_clean_at_check": true,
+          "failed_items": [
+            "iv_refuse_unregistered_arm"
+          ]
+        }
+      },
+      {
+        "mutation": "Mcli3: --prefix allowed at the registered place",
+        "check_pass_on_mutant": false,
+        "detected": true,
+        "mutant_result": {
+          "cli_rc": 0,
+          "cli_err": "",
+          "tree_clean_at_check": true,
+          "failed_items": [
+            "iv_refuse_prefix_at_registered_place"
+          ]
+        }
+      }
+    ],
+    "all_mutations_detected": true,
+    "mutations_raised": 0,
+    "seconds": 179.6
+  },
+  "S-cost": {
+    "pass": true,
+    "gate": "both CLI runs exit 0",
+    "rlcifar": {
+      "task_seconds": 6.661436319351196,
+      "ms_per_update": 4.440957546234131,
+      "peak_cuda_reserved_mib": 620.0,
+      "gpu_mib_nvidia_smi": 904,
+      "peak_rss_gib": 1.6568069458007812,
+      "process_wall_s": 13.521044492721558,
+      "projected_arm_minutes": 108.8034598827362
+    },
+    "c51": {
+      "ms_per_update": 3.171071639427772,
+      "gpu_mib_nvidia_smi": 1958,
+      "peak_rss_gib": 1.7501983642578125,
+      "wall_clock_s": 108.01941061019897,
+      "process_wall_s": 109.74079060554504
+    },
+    "rl_returncode": 0,
+    "c51_returncode": 0,
+    "rl_err": "",
+    "c51_err": "",
+    "measured_at": "2026-10-11 15:50:38 JST",
+    "seconds": 123.3
+  },
+  "all_pass": true,
+  "n_checks": 16,
+  "n_mutations": 42,
+  "n_mutations_detected": 42
+}
