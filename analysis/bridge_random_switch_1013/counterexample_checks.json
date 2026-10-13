@@ -1,0 +1,85 @@
+{
+  "model": {
+    "inputs": "x_n=e_n in R^5",
+    "activation": "ReLU",
+    "lambda_": "1",
+    "both_layers_and_biases_trained": true,
+    "loss": "mean binary CE",
+    "Z": [
+      [
+        "-8",
+        "-8",
+        "-8"
+      ],
+      [
+        "-14",
+        "-8",
+        "-18"
+      ],
+      [
+        "4",
+        "8",
+        "2"
+      ],
+      [
+        "-16",
+        "-6",
+        "-18"
+      ],
+      [
+        "16",
+        "10",
+        "12"
+      ]
+    ],
+    "readout": [
+      "1",
+      "1",
+      "1"
+    ],
+    "output_bias": "-7",
+    "old_labels": [
+      0,
+      0,
+      1,
+      0,
+      1
+    ],
+    "logits": [
+      -7,
+      -7,
+      7,
+      -7,
+      31
+    ]
+  },
+  "exact": {
+    "A": "-27/1325",
+    "self": "84/1075",
+    "chi": "-387/1484",
+    "J_grad_chi_active": [
+      "75779237/88090240",
+      "113881973/88090240"
+    ],
+    "J_grad_A_active": [
+      "819627/11236000",
+      "342111/2247200"
+    ],
+    "minimum_old_correct_probability_strict_lower": "999/1000",
+    "exp7_rational_lower": "2959911103/2851200",
+    "expected_direction_chi_strict_upper": "-9464094379/44045120000",
+    "expected_direction_A_strict_upper": "-631280409/28090000000"
+  },
+  "presentation_only": {
+    "minimum_old_correct_probability": 0.9990889488055994,
+    "expected_direction_chi": -0.21514657295885778,
+    "expected_direction_A": -0.022505238124646283
+  },
+  "scope": [
+    "True strict hold, with open fraction 2/5 and old accuracy 100%.",
+    "Local fresh-label expected derivative points farther into A<0; chi decreases too.",
+    "By smoothness this gives negative expected changes for sufficiently small positive steps.",
+    "Not asserted to be previous-task stationary or an exact MSE/minimum-norm fit.",
+    "Does not disprove relative-pattern noise, finite-word exit, or eventual exit."
+  ]
+}
