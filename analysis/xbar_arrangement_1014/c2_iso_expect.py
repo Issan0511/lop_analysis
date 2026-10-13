@@ -39,6 +39,7 @@ for j, i in enumerate(alive_units):
     for k, A, E, v in (("f", Ag, Ef, vf), ("b", Aw, Eb, vb), ("r", Ar, Er, vr)):
         r.update({f"A_{k}": A, f"Efull_{k}": float(E), f"Eiso_{k}": float(v.mean()), f"sdiso_{k}": float(v.std()), f"q025_{k}": q(v, 2.5), f"q975_{k}": q(v, 97.5),
                   f"rank_{k}": float((v < A).mean())})
+    r["draws"] = dict(p=p_iso.tolist(), f=vf.tolist(), b=vb.tolist(), r=vr.tolist())          # per-draw values (same rng stream; added after the a01/a03 s0 first pass)
     rows.append(r)
     if j % 20 == 0: print(f"[{time.time() - T0:.0f}s] unit {j + 1}/{len(alive_units)}", flush=True)
 OUT = "/home/issan/Projects/claude/wt/xbar_arrangement_1014/results/xbar_arrangement_1014"

@@ -10,7 +10,7 @@ THR = {"a01": 0.14, "a03": 0.11, "a05": 0.08}
 
 def nbeta_files(cond, with_grid):
     out = {}
-    if cond.endswith("s0"):
+    if cond in ("a01s0", "a03s0", "a05s0"):
         tag = cond[:-2]
         for f in glob.glob(os.path.join(NB, "nbeta_time/full", f"p172c_{tag}_T*_real_slim.json")):
             out[int(re.search(r"_T(\d+)_", f).group(1))] = f

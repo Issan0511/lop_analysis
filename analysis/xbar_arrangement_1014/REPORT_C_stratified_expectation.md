@@ -41,6 +41,128 @@ All 6 states: the 5 P149 log lines (units / gate full / gate probe / screening /
 4. **Units with actual > E_full** (excluded from the gap closed): full M has 1 (a05 s1); probe M has 1 (a01 s1) and 3 (a05 s1). The a05 s1 full-M case is the P177 unit-75 type (actual/E_full max 1.22). Probe-M actual > E_strat: 3/82 (a01 s0) and 5/100 (a05 s1). With few units near the denominator zero, the per-unit gap-closed ranges have outliers (a05 s1 probe max 8.35), so use the medians and the 10–90% ranges.
 5. **C4 profile.** M_nn rises with brightness: in all 6 states the decile mean / all-input mean goes from 0.43–0.51 (D1) to 1.66–1.84 (D10). The row sum of M is 0.06–0.10 x M_nn in every decile, for both M versions; no decile row-sum mean is negative in any unit. At a01, e' and (d - a) mass sit in the dim half: mean mass in D1–D5 is 0.78 (e') and 0.85 (d - a) for s0, and 0.70 and 0.80 for s1. At a05, e' mass is flat across deciles (D1–D5 mass 0.49 and 0.48), while (d - a) still leans dim (0.58 and 0.58). The e'-weighted M_nn (relative) has median 0.76 / 0.80 at a01, 0.95 / 0.94 at a03 and 1.01 / 1.02 at a05.
 
+## iso null (follow-up c2_; same states, same M versions)
+
+Construction (agent B's isotropic-direction null for the gate push; [measured, MC150]). M (full and probe) is held fixed. For each alive unit i, only the target's pre-activation pattern is replaced:
+- m_i = mean_n z_in; s_perp_i = sd_n(z_in - m_i K_n/Kbar), with Kbar = xbar . xbar (= mean_n K_n).
+- Draw g ~ N(0, I_785) and set g <- g - xbar (xbar.g)/Kbar.
+- u = Xt g, rescaled so that sd_n(u) = s_perp_i.
+- z_iso = m_i K/Kbar + u.
+- e'_iso = K * Dp(z_iso), d_iso = D(z_iso), f_iso = F(z_iso), using the unit's own tau_i (0.1 sd_n(z_i), as in P149).
+- A^g,iso = e'_iso^T M d_iso, and readout = (K d_iso)^T Ebar f_iso.
+- 150 draws per unit (rng 20261014 + 10*seed + tag index), giving E_iso and sd_iso.
+
+Checks:
+- actual and E_full are identical (relative difference 0) to the c_strat_expect values, which reproduce P149.
+- For every unit, D, Dp and F rebuilt from the actual z_i equal the script's D, Dp, F (asserted).
+- a01 s0 and a03 s0 were rerun to store per-draw values; the summary lines are identical to the first pass.
+
+Band = |z_iso| <= 2. The empirical 2.5–97.5% band of the 150 draws is also given in the tables.
+
+### Verdicts (iso null)
+
+- **iso closes this share of the gap, probe / full (median over units):**
+  - a01: 93% / 46% (s0), 93% / 43% (s1)
+  - a03: 78% / 49% (s0), 70% / 46% (s1)
+  - a05: 98% / 68% (s0), 110% / 68% (s1)
+  - For comparison, K-decile stratification closes -16% to 59% (probe) and -9% to 32% (full).
+- **actual within the iso band (|z_iso| <= 2), probe / full:**
+  - a01: 89% / 59% (s0), 85% / 56% (s1)
+  - a03: 88% / 40% (s0), 90% / 36% (s1)
+  - a05: 91% / 73% (s0), 88% / 81% (s1)
+  - Empirical 2.5–97.5% band: probe 85–89%, full 30–71%.
+- **z_iso median [10, 90]:**
+  - probe: -0.1 [-1.5, +1.7], -0.5 [-1.8, +1.2], -0.1 [-1.5, +1.7] (s0); -0.1 [-1.6, +1.5], -0.7 [-1.8, +1.3], +0.3 [-1.4, +2.0] (s1)
+  - full: -1.6, -2.3, -1.4 (s0); -1.7, -2.3, -1.4 (s1)
+- **actual < E_iso:**
+  - probe: 57%, 66%, 54% (s0); 56%, 68%, 40% (s1)
+  - full: 87%, 97%, 95% (s0); 90%, 95%, 93% (s1)
+- **E_iso > 0:** every unit in every state, for both probe and full M.
+- **actual/E_iso median [10, 90]:**
+  - probe: 0.94 [0.49, 2.57], 0.91 [0.65, 1.22], 0.99 [0.79, 1.22] (s0); 0.95, 0.89, 1.04 (s1)
+  - full: 0.32 [0.19, 1.30], 0.63 [0.49, 0.84], 0.81 [0.65, 0.97] (s0); 0.30, 0.63, 0.80 (s1)
+- **Rank of the actual among the iso draws (median):** probe 0.25–0.62; full 0.01–0.08.
+- **Readout part:**
+  - iso closes 63% / 66% / 77% of the gap (s0) and 69% / 67% / 79% (s1). The units with E_full <= actual (2–31 per state) are excluded.
+  - The actual stays below E_iso: z_iso median -1.3 / -5.2 / -5.5 (s0) and -1.1 / -4.7 / -5.4 (s1).
+  - actual < E_iso in 78–100% of units. actual/E_iso median 0.04–0.24.
+  - Within the band: 66% / 15% / 0% (s0) and 63% / 15% / 0% (s1).
+  - E_iso > 0 in 80/82, 99/100, 100/100, 89/91, 99/100 and 100/100 units.
+- **Is the iso target wider?**
+  - p_iso/p_act median 1.07 / 1.15 / 1.14 (s0) and 1.13 / 1.16 / 1.13 (s1). The 10–90% range is [0.27, 2.27] / [0.34, 2.67] at a01 and within [0.90, 1.50] at a03 and a05.
+  - (d - a) mass iso/actual median 1.01–1.13; e' mass iso/actual median 0.99–1.13.
+- **Flag: at a01, 14.7% (s0) and 11.4% (s1) of iso draws have no open input (p_iso = 0).** It is <= 0.3% at a03 and a05.
+  - Restricting the draws to p_iso > 0, or to p_iso in [p_act/2, 2 p_act], moves the gap closed by at most 0.12 (a01 s1 probe 0.93 -> 0.81, p-matched). Full M moves by at most 0.04.
+  - The probe in-band share under p-matching is 86–96% (a01 s0 79/82).
+  - Conclusions unchanged.
+
+### iso tables (from results/xbar_arrangement_1014/c2_tables.md)
+
+| state | n | max rel diff of actual/E_full vs c_strat_expect | p_act median | p_iso/p_act median [10,90] | p_iso median | draws with p_iso = 0 (mean frac) | (d-a) mass iso/act median [10,90] | e' mass iso/act median [10,90] |
+|---|---|---|---|---|---|---|---|---|
+| a01_s0 | 82 | 0.0e+00 | 0.0063 | 1.07 [0.27, 2.27] | 0.0071 | 0.147 | 1.01 [0.34, 1.75] | 0.99 [0.45, 1.70] |
+| a03_s0 | 100 | 0.0e+00 | 0.0558 | 1.15 [0.90, 1.45] | 0.0666 | 0.002 | 1.13 [0.92, 1.39] | 1.11 [0.88, 1.42] |
+| a05_s0 | 100 | 0.0e+00 | 0.1613 | 1.14 [0.99, 1.25] | 0.1880 | 0.000 | 1.11 [0.99, 1.21] | 1.04 [0.92, 1.25] |
+| a01_s1 | 91 | 0.0e+00 | 0.0067 | 1.13 [0.34, 2.67] | 0.0078 | 0.114 | 1.08 [0.43, 2.05] | 1.06 [0.59, 1.53] |
+| a03_s1 | 100 | 0.0e+00 | 0.0496 | 1.16 [0.90, 1.50] | 0.0591 | 0.003 | 1.13 [0.87, 1.39] | 1.13 [0.90, 1.33] |
+| a05_s1 | 100 | 0.0e+00 | 0.1862 | 1.13 [0.99, 1.25] | 0.2088 | 0.000 | 1.10 [1.00, 1.22] | 1.01 [0.92, 1.18] |
+
+**probe M**
+
+| state | actual/E_iso med [10,90] | z_iso med [10,90] | actual < E_iso | gap closed (E_full-E_iso)/(E_full-actual) med [10,90] | E_iso > 0 | abs(z_iso) <= 2 | actual in iso 2.5-97.5% band | rank of actual in iso draws (med) |
+|---|---|---|---|---|---|---|---|---|
+| a01_s0 | 0.94 [0.49, 2.57] | -0.1 [-1.5, +1.7] | 47/82 (57%) | +0.93 [-0.71, +1.78] (den<=0: 0) | 82/82 | 73/82 (89%) | 73/82 (89%) | 0.48 |
+| a03_s0 | 0.91 [0.65, 1.22] | -0.5 [-1.8, +1.2] | 66/100 (66%) | +0.78 [+0.02, +1.51] (den<=0: 0) | 100/100 | 88/100 (88%) | 85/100 (85%) | 0.30 |
+| a05_s0 | 0.99 [0.79, 1.22] | -0.1 [-1.5, +1.7] | 54/100 (54%) | +0.98 [+0.43, +1.69] (den<=0: 0) | 100/100 | 91/100 (91%) | 86/100 (86%) | 0.48 |
+| a01_s1 | 0.95 [0.48, 2.33] | -0.1 [-1.6, +1.5] | 51/91 (56%) | +0.93 [-0.36, +1.91] (den<=0: 1) | 91/91 | 77/91 (85%) | 81/91 (89%) | 0.47 |
+| a03_s1 | 0.89 [0.70, 1.21] | -0.7 [-1.8, +1.3] | 68/100 (68%) | +0.70 [+0.16, +1.52] (den<=0: 0) | 100/100 | 90/100 (90%) | 85/100 (85%) | 0.25 |
+| a05_s1 | 1.04 [0.83, 1.27] | +0.3 [-1.4, +2.0] | 40/100 (40%) | +1.10 [+0.61, +2.63] (den<=0: 3) | 100/100 | 88/100 (88%) | 88/100 (88%) | 0.62 |
+
+**full M**
+
+| state | actual/E_iso med [10,90] | z_iso med [10,90] | actual < E_iso | gap closed (E_full-E_iso)/(E_full-actual) med [10,90] | E_iso > 0 | abs(z_iso) <= 2 | actual in iso 2.5-97.5% band | rank of actual in iso draws (med) |
+|---|---|---|---|---|---|---|---|---|
+| a01_s0 | 0.32 [0.19, 1.30] | -1.6 [-4.2, +0.2] | 71/82 (87%) | +0.46 [-0.17, +1.05] (den<=0: 0) | 82/82 | 48/82 (59%) | 41/82 (50%) | 0.03 |
+| a03_s0 | 0.63 [0.49, 0.84] | -2.3 [-3.2, -0.7] | 97/100 (97%) | +0.49 [+0.02, +0.82] (den<=0: 0) | 100/100 | 40/100 (40%) | 33/100 (33%) | 0.01 |
+| a05_s0 | 0.81 [0.65, 0.97] | -1.4 [-2.5, -0.2] | 95/100 (95%) | +0.68 [+0.32, +0.95] (den<=0: 0) | 100/100 | 73/100 (73%) | 65/100 (65%) | 0.07 |
+| a01_s1 | 0.30 [0.19, 0.86] | -1.7 [-4.3, -0.1] | 82/91 (90%) | +0.43 [-0.14, +0.96] (den<=0: 0) | 91/91 | 51/91 (56%) | 45/91 (49%) | 0.02 |
+| a03_s1 | 0.63 [0.52, 0.81] | -2.3 [-3.2, -1.0] | 95/100 (95%) | +0.46 [+0.10, +0.75] (den<=0: 0) | 100/100 | 36/100 (36%) | 30/100 (30%) | 0.01 |
+| a05_s1 | 0.80 [0.67, 0.96] | -1.4 [-2.3, -0.3] | 93/100 (93%) | +0.68 [+0.44, +0.94] (den<=0: 1) | 100/100 | 81/100 (81%) | 71/100 (71%) | 0.08 |
+
+**readout (u = K d_iso, f_iso = F(z_iso), Ebar)**
+
+| state | actual/E_iso med [10,90] | z_iso med [10,90] | actual < E_iso | gap closed (E_full-E_iso)/(E_full-actual) med [10,90] | E_iso > 0 | abs(z_iso) <= 2 | actual in iso 2.5-97.5% band | rank of actual in iso draws (med) |
+|---|---|---|---|---|---|---|---|---|
+| a01_s0 | 0.23 [0.05, 2.20] | -1.3 [-5.0, +0.8] | 64/82 (78%) | +0.63 [-0.36, +0.94] (den<=0: 31) | 80/82 | 54/82 (66%) | 42/82 (51%) | 0.07 |
+| a03_s0 | 0.10 [0.05, 0.29] | -5.2 [-6.8, -1.5] | 99/100 (99%) | +0.66 [+0.26, +0.76] (den<=0: 20) | 99/100 | 15/100 (15%) | 13/100 (13%) | 0.00 |
+| a05_s0 | 0.05 [0.04, 0.08] | -5.5 [-5.9, -4.8] | 100/100 (100%) | +0.77 [+0.52, +0.85] (den<=0: 8) | 100/100 | 0/100 (0%) | 0/100 (0%) | 0.00 |
+| a01_s1 | 0.24 [0.05, 1.66] | -1.1 [-4.4, +0.5] | 72/91 (79%) | +0.69 [+0.35, +1.01] (den<=0: 27) | 89/91 | 57/91 (63%) | 52/91 (57%) | 0.09 |
+| a03_s1 | 0.11 [0.06, 0.24] | -4.7 [-6.4, -1.7] | 99/100 (99%) | +0.67 [+0.35, +0.75] (den<=0: 26) | 99/100 | 15/100 (15%) | 11/100 (11%) | 0.00 |
+| a05_s1 | 0.04 [0.03, 0.06] | -5.4 [-5.9, -4.9] | 100/100 (100%) | +0.79 [+0.59, +0.86] (den<=0: 2) | 100/100 | 0/100 (0%) | 0/100 (0%) | 0.00 |
+
+**Conditional iso expectation (sensitivity): restrict the 150 draws to p_iso > 0, or to p_iso in [p_act/2, 2 p_act]**
+
+| state | M | gap closed (p>0) | z_iso med (p>0) | actual < E (p>0) | gap closed (p-matched) | z_iso med (p-matched) | actual < E (p-matched) | abs(z) <= 2 (p-matched) | draws used per unit (p-matched, med) | units |
+|---|---|---|---|---|---|---|---|---|---|---|
+| a01_s0 | probe | +0.86 | -0.3 | 54/82 | +0.87 | -0.3 | 50/82 | 79/82 | 98 | 82 |
+| a01_s0 | full | +0.42 | -1.6 | 78/82 | +0.44 | -1.7 | 80/82 | 47/82 | 98 | 82 |
+| a01_s0 | readout | +0.63 | -1.3 | 69/82 | +0.63 | -1.4 | 73/82 | 52/82 | 98 | 82 |
+| a03_s0 | probe | +0.78 | -0.5 | 66/100 | +0.77 | -0.6 | 65/100 | 86/100 | 150 | 100 |
+| a03_s0 | full | +0.49 | -2.3 | 97/100 | +0.49 | -2.3 | 98/100 | 36/100 | 150 | 100 |
+| a03_s0 | readout | +0.66 | -5.2 | 99/100 | +0.65 | -5.2 | 100/100 | 13/100 | 150 | 100 |
+| a05_s0 | probe | +0.98 | -0.1 | 54/100 | +0.98 | -0.1 | 54/100 | 91/100 | 150 | 100 |
+| a05_s0 | full | +0.68 | -1.4 | 95/100 | +0.68 | -1.4 | 95/100 | 73/100 | 150 | 100 |
+| a05_s0 | readout | +0.77 | -5.5 | 100/100 | +0.77 | -5.5 | 100/100 | 0/100 | 150 | 100 |
+| a01_s1 | probe | +0.88 | -0.3 | 57/91 | +0.81 | -0.4 | 56/90 | 84/90 | 88 | 90 |
+| a01_s1 | full | +0.40 | -1.7 | 89/91 | +0.43 | -2.1 | 86/90 | 44/90 | 88 | 90 |
+| a01_s1 | readout | +0.69 | -1.2 | 79/91 | +0.69 | -1.3 | 82/90 | 53/90 | 88 | 90 |
+| a03_s1 | probe | +0.70 | -0.7 | 68/100 | +0.70 | -0.7 | 68/99 | 89/99 | 149 | 99 |
+| a03_s1 | full | +0.46 | -2.3 | 95/100 | +0.44 | -2.3 | 96/99 | 35/99 | 149 | 99 |
+| a03_s1 | readout | +0.67 | -4.7 | 99/100 | +0.67 | -4.7 | 98/99 | 10/99 | 149 | 99 |
+| a05_s1 | probe | +1.10 | +0.3 | 40/100 | +1.10 | +0.3 | 40/100 | 88/100 | 150 | 100 |
+| a05_s1 | full | +0.68 | -1.4 | 93/100 | +0.68 | -1.4 | 93/100 | 81/100 | 150 | 100 |
+| a05_s1 | readout | +0.79 | -5.4 | 100/100 | +0.79 | -5.4 | 100/100 | 0/100 | 150 | 100 |
+
 ## Cross-state tables (C1–C3; from results/xbar_arrangement_1014/c_cross_tables.md)
 
 | state | n | MATCH (log lines) | max rel diff vs P149 json | P149 ratio medians full / probe |
@@ -448,4 +570,11 @@ C4 per K-decile profiles (decile 1 = dimmest; pooled = median over 100 units; M 
   - `p_open`, and `prof` (the C4 per-decile profiles per unit)
   - all P149 keys, unchanged
 - Summaries: results/xbar_arrangement_1014/c_summary.json, c_tables.md, c_cross_tables.md, c_strat_sensitivity_<tag>_s<seed>.json. Logs are in results/xbar_arrangement_1014/logs/c_*.log.
+- iso null (c2_): `analysis/xbar_arrangement_1014/c2_iso_expect.py` (usage `c2_iso_expect.py <a01|a03|a05> [seed]`) and `c2_summarize.py`. Per-unit JSON: results/xbar_arrangement_1014/c2_iso_expect_<tag>_s<seed>.json. Keys per unit (k = f full / b probe / r readout):
+  - `A_k`, `Efull_k`, `Eiso_k`, `sdiso_k`
+  - `q025_k` and `q975_k` (the band), `rank_k`
+  - `p_act`, `p_iso_mean`, `p_iso_med`, `p_iso_zero`
+  - `m`, `s_perp`, `tau`, `mass_act`, `mass_iso_mean`, `emass_act`, `emass_iso_mean`
+  - `draws` (per-draw p, f, b, r)
+  Summary files: c2_summary.json and c2_tables.md. Logs: logs/c2_*.log (the a01/a03 s0 first pass is kept as *_pass1.log).
 - Not committed. The reference data under obsidian-research-data/push_direction_proof_0930 was only read.

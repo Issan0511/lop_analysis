@@ -27,8 +27,11 @@ def load_nbeta(cond):
     """returns dict T -> dict unit -> (n_b, A, self)"""
     out = {}
     if cond.endswith("s0") and cond[:-2] in ("a01", "a03", "a05"):
-        for f in glob.glob(os.path.join(NB_FULL, f"p172c_{cond[:-2]}_T*_real_slim.json")):
+        # seed 0: nbeta_time/full/ holds 81 states per arm; the other 9 (T = 10, 20, ..., 100) are in nbeta_time/grid/ (verifier V3, 1014)
+        files = glob.glob(os.path.join(NB_FULL, f"p172c_{cond[:-2]}_T*_real_slim.json")) + glob.glob(os.path.join(NB_FULL, "..", "grid", f"p172c_{cond[:-2]}_T*_real*.json"))
+        for f in files:
             T = int(re.search(r"_T(\d+)_", f).group(1)); d = json.load(open(f))
+            if T in out: continue
             out[T] = {int(r["i"]): (float(r["n_b"]), float(r["A"]), float(r["self"])) for r in d["real"]}
     else:
         for f in glob.glob(os.path.join(NB_SWEEP, f"p172c_{cond}_t*_real.json")):
