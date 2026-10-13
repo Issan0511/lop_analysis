@@ -1,0 +1,345 @@
+{
+ "check1_eq3_from_eq2": {
+  "pass_": true,
+  "numeric_exact_fraction": {
+   "trials": 2400,
+   "viol_first": 0,
+   "viol_second": 0,
+   "tight_trials": 600,
+   "tight_not_equal": 0,
+   "mutation_kappa_dropped_violations": 1164,
+   "ensemble_viol": 0,
+   "ensemble_paths": 7200,
+   "ensemble_paths_violating_eq2": 4783
+  },
+  "symbolic_small_T": {
+   "1": {
+    "summed_eq2_equals_reduced": true,
+    "kappa_x_first_gap_equals_reduced": true,
+    "second_gap_equals_uT_over_kappa": true,
+    "reduced_equals_sum_of_slacks": true
+   },
+   "2": {
+    "summed_eq2_equals_reduced": true,
+    "kappa_x_first_gap_equals_reduced": true,
+    "second_gap_equals_uT_over_kappa": true,
+    "reduced_equals_sum_of_slacks": true
+   },
+   "3": {
+    "summed_eq2_equals_reduced": true,
+    "kappa_x_first_gap_equals_reduced": true,
+    "second_gap_equals_uT_over_kappa": true,
+    "reduced_equals_sum_of_slacks": true
+   },
+   "4": {
+    "summed_eq2_equals_reduced": true,
+    "kappa_x_first_gap_equals_reduced": true,
+    "second_gap_equals_uT_over_kappa": true,
+    "reduced_equals_sum_of_slacks": true
+   },
+   "5": {
+    "summed_eq2_equals_reduced": true,
+    "kappa_x_first_gap_equals_reduced": true,
+    "second_gap_equals_uT_over_kappa": true,
+    "reduced_equals_sum_of_slacks": true
+   },
+   "6": {
+    "summed_eq2_equals_reduced": true,
+    "kappa_x_first_gap_equals_reduced": true,
+    "second_gap_equals_uT_over_kappa": true,
+    "reduced_equals_sum_of_slacks": true
+   }
+  },
+  "mutation_failed_as_expected": true,
+  "symbolic_general_T": {
+   "summand_is_telescoping_plus_linear": true,
+   "telescoped_sum_equals_u0_minus_uT": true
+  }
+ },
+ "check2_eq5_from_eq4": {
+  "pass_": true,
+  "numeric_exact_fraction": {
+   "trials": 2400,
+   "viol_first": 0,
+   "viol_second": 0,
+   "tight_trials": 600,
+   "tight_not_equal": 0,
+   "mutation_kappa_dropped_violations": 451
+  },
+  "symbolic_small_T": {
+   "1": {
+    "summed_eq4_equals_reduced": true,
+    "kappa_x_first_gap_equals_reduced": true,
+    "second_gap_equals_VT_over_kappa": true,
+    "eq2_is_eq4_with_V_eq_u": true
+   },
+   "2": {
+    "summed_eq4_equals_reduced": true,
+    "kappa_x_first_gap_equals_reduced": true,
+    "second_gap_equals_VT_over_kappa": true,
+    "eq2_is_eq4_with_V_eq_u": true
+   },
+   "3": {
+    "summed_eq4_equals_reduced": true,
+    "kappa_x_first_gap_equals_reduced": true,
+    "second_gap_equals_VT_over_kappa": true,
+    "eq2_is_eq4_with_V_eq_u": true
+   },
+   "4": {
+    "summed_eq4_equals_reduced": true,
+    "kappa_x_first_gap_equals_reduced": true,
+    "second_gap_equals_VT_over_kappa": true,
+    "eq2_is_eq4_with_V_eq_u": true
+   },
+   "5": {
+    "summed_eq4_equals_reduced": true,
+    "kappa_x_first_gap_equals_reduced": true,
+    "second_gap_equals_VT_over_kappa": true,
+    "eq2_is_eq4_with_V_eq_u": true
+   },
+   "6": {
+    "summed_eq4_equals_reduced": true,
+    "kappa_x_first_gap_equals_reduced": true,
+    "second_gap_equals_VT_over_kappa": true,
+    "eq2_is_eq4_with_V_eq_u": true
+   }
+  },
+  "mutation_failed_as_expected": true
+ },
+ "check3_eq7_adam_summation_by_parts": {
+  "pass_": true,
+  "printed_form_exact_for_T_1_to_6": true,
+  "symbolic_T_values_where_LHS_minus_RHS_nonzero": {
+   "printed": [],
+   "mut_m0_sign_flipped": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "mut_m0_uses_aT": [
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "mut_adiff_flipped": [
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "mut_coef_beta": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ]
+  },
+  "proof_step_g_substitution_ok": true,
+  "fixed_a_bracket_is_a_times_mT_minus_m0": true,
+  "numeric_float64_vs_torch_adam": {
+   "window_k0=0_T=600": {
+    "max_abs_residual_eq7": 3.0531133177191805e-16,
+    "tol": 1.825081348874208e-12,
+    "max_abs_torch_displacement_minus_sum_a_m": 2.7755575615628914e-17,
+    "tol_disp": 8.326046941125316e-14,
+    "max_abs_sum_a_m": 0.15623825792300516,
+    "max_abs_m0": 0.0,
+    "mut_m0_sign_flipped_residual": 3.0531133177191805e-16
+   },
+   "window_k0=200_T=300": {
+    "max_abs_residual_eq7": 4.163336342344337e-17,
+    "tol": 4.2051437976256785e-13,
+    "max_abs_torch_displacement_minus_sum_a_m": 8.326672684688674e-17,
+    "tol_disp": 4.163023470562658e-14,
+    "max_abs_sum_a_m": 0.06779151083670253,
+    "max_abs_m0": 1.2724513964234407,
+    "mut_m0_sign_flipped_residual": 0.00891572204179579
+   }
+  },
+  "mutation_failed_as_expected": true
+ },
+ "check4_eq6_tower_identity": {
+  "pass_": true,
+  "cases": {
+   "markov_T=1": {
+    "n_paths": 16,
+    "total_prob": "1",
+    "lhs": "-1243/2160",
+    "sum_Eb": "-1243/2160",
+    "mut_off_by_one": 0,
+    "stopped": [
+     "211/540",
+     "211/540"
+    ],
+    "mut_nonstopping": [
+     "-2449/2160",
+     "-22717/51840"
+    ],
+    "ok": true,
+    "mutations_fail": true,
+    "b_equals_q_minus_Pq": true,
+    "mut_uniform_reference_average": "-51/160"
+   },
+   "markov_T=2": {
+    "n_paths": 64,
+    "total_prob": "1",
+    "lhs": "-28741/86400",
+    "sum_Eb": "-28741/86400",
+    "mut_off_by_one": "-1243/2160",
+    "stopped": [
+     "4981/6480",
+     "4981/6480"
+    ],
+    "mut_nonstopping": [
+     "-151051/129600",
+     "-73877/2592000"
+    ],
+    "ok": true,
+    "mutations_fail": true,
+    "b_equals_q_minus_Pq": true,
+    "mut_uniform_reference_average": "-51/80"
+   },
+   "markov_T=3": {
+    "n_paths": 256,
+    "total_prob": "1",
+    "lhs": "-11619023/31104000",
+    "sum_Eb": "-11619023/31104000",
+    "mut_off_by_one": "-28741/86400",
+    "stopped": [
+     "382043/388800",
+     "382043/388800"
+    ],
+    "mut_nonstopping": [
+     "-611891/518400",
+     "770257/3732480"
+    ],
+    "ok": true,
+    "mutations_fail": true,
+    "b_equals_q_minus_Pq": true,
+    "mut_uniform_reference_average": "-153/160"
+   },
+   "markov_T=4": {
+    "n_paths": 1024,
+    "total_prob": "1",
+    "lhs": "-446095421/1244160000",
+    "sum_Eb": "-446095421/1244160000",
+    "mut_off_by_one": "-11619023/31104000",
+    "stopped": [
+     "5137409/4665600",
+     "5137409/4665600"
+    ],
+    "mut_nonstopping": [
+     "-36966061/31104000",
+     "1884214367/5598720000"
+    ],
+    "ok": true,
+    "mutations_fail": true,
+    "b_equals_q_minus_Pq": true,
+    "mut_uniform_reference_average": "-51/40"
+   },
+   "history_dependent_T=1": {
+    "n_paths": 16,
+    "total_prob": "1",
+    "lhs": "64679/102600",
+    "sum_Eb": "64679/102600",
+    "mut_off_by_one": 0,
+    "stopped": [
+     "4541/5400",
+     "4541/5400"
+    ],
+    "mut_nonstopping": [
+     "-12509/34200",
+     "4681687/16245000"
+    ],
+    "ok": true,
+    "mutations_fail": true
+   },
+   "history_dependent_T=2": {
+    "n_paths": 64,
+    "total_prob": "1",
+    "lhs": "1972158497/60138078000",
+    "sum_Eb": "1972158497/60138078000",
+    "mut_off_by_one": "64679/102600",
+    "stopped": [
+     "19026649/15800400",
+     "19026649/15800400"
+    ],
+    "mut_nonstopping": [
+     "-2351176931/6367561200",
+     "35727364665470669/70392075756502500"
+    ],
+    "ok": true,
+    "mutations_fail": true
+   },
+   "history_dependent_T=3": {
+    "n_paths": 256,
+    "total_prob": "1",
+    "lhs": "553667281269577/40053313054755000",
+    "sum_Eb": "553667281269577/40053313054755000",
+    "mut_off_by_one": "1972158497/60138078000",
+    "stopped": [
+     "56995703/44015400",
+     "56995703/44015400"
+    ],
+    "mut_nonstopping": [
+     "-645194083777/1757446891200",
+     "19318871316280447948781/32173120576964006640000"
+    ],
+    "ok": true,
+    "mutations_fail": true
+   },
+   "history_dependent_T=4": {
+    "n_paths": 1024,
+    "total_prob": "1",
+    "lhs": "-4532573835602405484137/193938881256903182400000",
+    "sum_Eb": "-4532573835602405484137/193938881256903182400000",
+    "mut_off_by_one": "553667281269577/40053313054755000",
+    "stopped": [
+     "42912791777071/31804119547200",
+     "42912791777071/31804119547200"
+    ],
+    "mut_nonstopping": [
+     "-120140825213291/326790315852000",
+     "58068913800030889142895636341/89823120098132048162895360000"
+    ],
+    "ok": true,
+    "mutations_fail": true
+   }
+  },
+  "mutation_failed_as_expected": true
+ },
+ "check5_CE_split": {
+  "pass_": true,
+  "exact_sympy_on_logits": {
+   "split_identity_all_27_labels": true,
+   "G_equals_affine_form_in_onehot_all_27": true,
+   "uniform_label_avg_of_G_identically_zero": true,
+   "uniform_label_avg_of_L_equals_LU": true
+  },
+  "torch_float64": {
+   "a_max_abs_LY_minus_LU_plus_GY": 1.7763568394002505e-15,
+   "b_max_abs_avg_gradLY_minus_gradLU": 1.7763568394002505e-15,
+   "b_max_abs_avg_gradGY_uniform": 2.1587669923266932e-16,
+   "b_info_max_abs_avg_gradGY_diag_labels": 2.0354088784794536e-16,
+   "c_max_abs_affine_fit_residual_GY": 2.220446049250313e-15,
+   "mut_b_max_abs_avg_gradGY_nonuniform_labels": 0.6362848639388223,
+   "mut_c_max_abs_affine_fit_residual_GY_squared": 20.5098966021946,
+   "scale_max_abs_grad_or_logit": 8.573311032963025
+  },
+  "tol": 3.289520092977251e-12,
+  "mutation_failed_as_expected": true
+ },
+ "all_pass": true,
+ "all_mutations_fail": true,
+ "eq7_as_printed_exactly_correct": true,
+ "runtime_s": 3.3,
+ "discrepancies": []
+}
