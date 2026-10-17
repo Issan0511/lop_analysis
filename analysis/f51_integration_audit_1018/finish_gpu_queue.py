@@ -34,7 +34,12 @@ def main():
         chb=Q.RUNS[4];cnn=Q.RUNS[5];cap=Q.RUNS[2]
         state['audit_sha256']=Q.verify_audit()
         state['status']='RUNNING';Q.put(destination,state)
-        for run in (chb,cnn,cap):
+        for run in (cap,chb,cnn):
+            paused=Q.pause_policy(run)
+            if paused:
+                state['plan'][run]=[]
+                state.setdefault('skipped_runs',{})[run]=paused
+                Q.put(destination,state);continue
             wt=Q.BASE/'wt'/run;root=wt/'results'/run
             Q.source_identity(wt)
             if run==chb:
@@ -54,6 +59,10 @@ def main():
                 commands=Q.steps(run)
             state['plan'][run]=commands;Q.put(destination,state)
             for name,spec in commands:
+                paused=Q.pause_policy(run)
+                if paused:
+                    state.setdefault('skipped_runs',{})[run]=paused
+                    Q.put(destination,state);break
                 stage=dict(run=run,name=name,status='RUNNING',started_at=Q.utc())
                 state['stages'].append(stage);state['current']=dict(run=run,stage=name)
                 path=Q.OUT/'logs'/f'finish_{run}_{name}.log';stage['log']=str(path);Q.put(destination,state)

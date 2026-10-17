@@ -26,6 +26,10 @@ AUDIT = ROOT / 'results/f51_integration_audit_1018/gpu_host_same_runtime/integra
 RUNS = ['redo_position_2x2_1018', 'nap_cifar5p1_1018', 'cap_act_box_2x2_1018',
         'resp_step_controls_1018', 'chb_decompose_200_1018', 'cnn_chprime_bias_1018']
 
+def pause_policy(run):
+    path=OUT/'run_policy.json'
+    return json.loads(path.read_text()).get('paused_runs',{}).get(run) if path.exists() else None
+
 def utc():
     return datetime.now(timezone.utc).isoformat()
 
@@ -202,6 +206,10 @@ def main():
         for run, items in plan.items():
             wt=BASE/'wt'/run
             for name, spec in items:
+                paused=pause_policy(run)
+                if paused:
+                    state.setdefault('skipped_runs',{})[run]=paused
+                    put(args.state,state);break
                 if (OUT/'STOP').exists():
                     state.update(status='STOPPED_BETWEEN_COMMANDS',finished_at=utc())
                     put(args.state,state);return 75

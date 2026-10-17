@@ -48,11 +48,14 @@ def main():
         for run in state['plan']:
             wt=BASE/run;folder=wt/'results'/run
             try:
+                policy_path=STATE/'run_policy.json'
+                paused=(json.loads(policy_path.read_text()).get('paused_runs',{}).get(run)
+                        if policy_path.exists() else None)
                 files=[p for p in folder.rglob('*') if p.is_file() and p.name!='backup_manifest.json']
                 needed=sum(p.stat().st_size for p in files)
                 if shutil.disk_usage(BACKUP).free < needed + 10*2**30:
                     raise RuntimeError(f'insufficient backup space: need {needed} bytes plus 10 GiB reserve')
-                destination=BACKUP/run/'host_gpu_1018'
+                destination=BACKUP/run/(paused['retention_snapshot'] if paused else 'host_gpu_1018')
                 entries=[]
                 for source in files:
                     target=destination/source.relative_to(wt);target.parent.mkdir(parents=True,exist_ok=True)
@@ -66,6 +69,13 @@ def main():
                         temporary.replace(target)
                     entries.append(dict(source=str(source),backup=str(target),bytes=source.stat().st_size,sha256=digest))
                 put(folder/'backup_manifest.json',entries)
+                if paused:
+                    # The checkpoint manifest binds HEAD. Preserve it until the
+                    # user resumes or closes this run; back up without a commit.
+                    report['runs'][run]=dict(backup_verified=True,files=len(entries),bytes=needed,
+                        status='PAUSED_BY_USER',commit_deferred='Preserve checkpoint-bound HEAD',
+                        git_commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=wt,text=True).strip())
+                    put(STATE/'retention_status.json',report);continue
                 selected=[str(p.relative_to(wt)) for p in folder.rglob('*') if p.is_file()
                           and p.suffix in ('.json','.csv','.md','.txt') and p.stat().st_size < 10*2**20]
                 if subprocess.check_output(['git','diff','--cached','--name-only'],cwd=wt):

@@ -2,6 +2,10 @@
 
 更新: 2026-10-18 JST。依頼者Issaは全6走の実装・実行を指示済み。方向予測も論文の主張から固定済み。既存実装と実験条件を引き継いで残りを実行する。
 
+**最新指示（2026-10-18 02:46 JST）: Issa「一旦走３は飛ばしましょう」。走3は一時停止、明示の再開指示まで自動再開しない。** CH task20完了checkpointで正式STOPし、元controllerも `STOPPED_AT_CHECKPOINT` で終了。checkpoint・source・HEAD・manifestの整合をCPUで確認（`host_continuation/run3_pause_checkpoint.json`）。CHB/追加3腕は未実行。走3の `results/chb_decompose_200_1018/STOP` とG0の `host_continuation/run_policy.json` を保持する。finish queueは走2→（走3をskip）→走6。走3は未完了のままで科学判定は出さない。
+
+再開用HEAD `8f82fc9fff3e3d521d4253792ed8a58228b5a835` を保持するため、retainerは走3のrawを `obsidian-research-data/chb_decompose_200_1018/paused_20261018T0246JST/` にhash照合付きコピーするだけで、そのworktreeでは結果commitも行わない。元データも削除しない。再開が指示された場合は、pause policyとSTOPの解除、同じHEAD/checks/manifestでの `run --resume` が必要（CPU checks再生成も避ける）。以下の「走3を自動resume」の記述はこの指示以前の履歴。
+
 ## ホスト再開の追記（2026-10-18 02:10 JST以降）
 
 この追記以降の現行進捗は `results/f51_integration_audit_1018/host_continuation/` の `state_after_repairs.json`（走4→3→6）、`state_nap_readout.json`（走5の比較対照・判定）、`state_cap_retry.json`（走2）が実行記録。初回サービスの履歴は `state.json` に保持。GPUは全サービス共通のflockで一つずつ利用する。以下の元の引継ぎ本文は停止時点の履歴として保持する。

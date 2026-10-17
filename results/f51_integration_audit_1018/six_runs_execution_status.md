@@ -1,3 +1,11 @@
+## 2026-10-18 02:48 JST — Issaの指示で走3を一時停止
+
+- 走3: CH task20の正式checkpointで停止。HEAD・source・manifest・checkpoint検査PASS。自動resumeは禁止し、未完了として保持。
+- 走2→走6: finish queueで続行。走3のcheck/report/trainを呼ばないことをCPU上のqueueシミュレーションで確認。
+- 走4のRC/F51と合算verdict、走5の比較対照とverdictは正式CLIが成功済み。
+- 走3の原データとworktreeを保持。retainerは専用pause snapshotへコピーし、resume用HEADを変えるcommitを見送る。
+- 根拠: `host_continuation/run_policy.json`、`run3_pause_checkpoint.json`。以下は以前の進行履歴。
+
 # 追加6走の実装・実行記録
 
 ## 2026-10-18 02:28 JST ホスト継続
