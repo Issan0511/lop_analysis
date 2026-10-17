@@ -331,7 +331,9 @@ def preflight(out, baseline):
                          'GPU seed100–102 timing/extra-forward rounding','independent review',
                          'same-precision baseline qualification or fresh CHf run'])
     json_write(out/'preflight.json',record)
-    if not (out/'provenance.json').exists(): json_write(out/'provenance.json',record)
+    previous=json.loads((out/'provenance.json').read_text()) if (out/'provenance.json').exists() else {}
+    if previous.get('status') not in ('RUNNING','COMPLETE','DIVERGED','CHECK_FAILED'):
+        json_write(out/'provenance.json',record)
     shutil.copyfile(SPEC,out/'spec.md')
     shutil.copyfile(COMMON,out/'common_spec.md')
     return record
