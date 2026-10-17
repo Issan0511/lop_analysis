@@ -33,11 +33,11 @@ def main():
     report=dict(status='WAITING_FOR_CONTROLLER',started_at=datetime.now(timezone.utc).isoformat(),runs={})
     put(STATE/'retention_status.json',report)
     with ExitStack() as stack:
-        for name in ('controller.lock','state_nap_readout.lock','state_cap_retry.lock'):
+        for name in ('completion.lock','controller.lock','state_nap_readout.lock','state_cap_retry.lock'):
             lock=stack.enter_context((STATE/name).open('a'))
             fcntl.flock(lock,fcntl.LOCK_EX)
         states=[json.loads((STATE/name).read_text()) for name in
-                ('state_after_repairs.json','state_nap_readout.json','state_cap_retry.json')]
+                ('state_after_repairs.json','state_nap_readout.json','state_cap_retry.json','completion_state.json')]
         state=states[0]
         # A killed controller with a RUNNING state may still have a child. Do not
         # snapshot files whose completion/stop was not acknowledged by the owner.
