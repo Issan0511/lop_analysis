@@ -41,7 +41,7 @@ def put(p, value):
 
 def command(wt, args, log, gpu_lock=False, check=True):
     if gpu_lock:
-        args = ['flock', '-n', '/tmp/lop_analysis_gpu.lock', *args]
+        args = ['flock', *([] if os.environ.get('SIX_GPU_QUEUE')=='1' else ['-n']), '/tmp/lop_analysis_gpu.lock', *args]
     print(utc(), wt.name, args, flush=True)
     log.write('\n' + json.dumps(dict(at=utc(), cwd=str(wt), argv=args)) + '\n')
     log.flush()
@@ -85,11 +85,21 @@ def comparators(wt, log):
         shutil.copy2(q, result / f'reuse_{arm}_historical_rejected.json')
         fresh = result / 'current_runtime_comparators' / arm
         if fresh.exists():
-            raise ValueError('comparator destination exists; explicit recovery required')
+            # Never overwrite/retrain a partial comparator. The full existing
+            # artifact must pass the unchanged immutable-main-history verifier.
+            command(wt,[*base,'--directory',str(fresh),'--out',str(q)],log)
+            continue
         command(wt,[PY,'src/cifar5p1_mlp_0920.py','run','--arm',arm,'--seeds','0-9',
                     '--cond','std','--tasks','30','--lr','0.0001','--device','cuda',
                     '--threads','2','--out',str(fresh)],log,gpu_lock=True)
         freeze(wt,fresh,f'Fix current-runtime {arm} comparator for registered NaP comparison',log)
+        # Fresh controls are complete and source-bound. The unchanged reuse
+        # checker requires their immutable result commits on local main. This is
+        # local integration only, never push; fast-forward refuses divergence.
+        main=BASE/'proj_004_drift'
+        assert not subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],cwd=main), 'main has local changes'
+        head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=wt,text=True).strip()
+        command(main,['git','merge','--ff-only',head],log)
         command(wt,[*base,'--directory',str(fresh),'--out',str(q)],log)
 
 def steps(run):
@@ -162,14 +172,22 @@ def main():
     parser.add_argument('--state',type=Path,default=OUT/'state.json')
     parser.add_argument('--resume-chb',action='store_true',
                         help='Resume the already validated CHB launch manifest without rewriting its CPU check evidence')
+    parser.add_argument('--resume-nap-readout',action='store_true')
+    parser.add_argument('--independent-queue',action='store_true',
+                        help='Separate controller lock, with blocking shared GPU admission for explicit queued recovery')
     args=parser.parse_args()
     plan={r:steps(r) for r in args.runs}
     if args.resume_chb and RUNS[4] in plan:
         plan[RUNS[4]]=[('resume',dict(argv=[PY,'-m','analysis.'+RUNS[4]+'.launch','run','--resume'],lock=False))]
+    if args.resume_nap_readout and RUNS[1] in plan:
+        plan[RUNS[1]]=[x for x in plan[RUNS[1]] if x[0] in ('comparators','verdict')]
+    if args.independent_queue:
+        os.environ['SIX_GPU_QUEUE']='1'
     if args.mode=='plan':
         print(json.dumps(plan,indent=2));return 0
     OUT.mkdir(exist_ok=True)
-    with (OUT/'controller.lock').open('a') as lock:
+    lockpath=args.state.with_suffix('.lock') if args.independent_queue else OUT/'controller.lock'
+    with lockpath.open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         if args.state.exists():
             raise ValueError('state exists; explicit review and separate state path required')
