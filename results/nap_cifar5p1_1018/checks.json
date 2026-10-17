@@ -1,8 +1,8 @@
 {
   "run_id": "nap_cifar5p1_1018",
-  "all_pass": false,
+  "all_pass": true,
   "cpu_synthetic_all_pass": true,
-  "production_ready": false,
+  "production_ready": true,
   "source_sha256": {
     "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
     "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
@@ -15,7 +15,7 @@
   },
   "fixture_only": true,
   "torch": "2.13.0+cu130",
-  "device": "cpu",
+  "device": "cuda",
   "S-host": {
     "measurements": {
       "host_tensors_bit_equal": true,
@@ -176,7 +176,10 @@
     "pass": true
   },
   "S-CUDA-graph": {
-    "status": "NOT_RUN_BLOCKED_CUDA",
-    "pass": false
+    "warmup_byte_restored": true,
+    "max_graph_eager_abs": 0.0,
+    "atol": 0.00048828125,
+    "tolerance_derivation": "eps32*4096; fixture only, G0 host reproduction separately required",
+    "pass": true
   }
 }

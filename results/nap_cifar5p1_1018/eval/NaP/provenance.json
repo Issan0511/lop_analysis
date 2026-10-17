@@ -1,0 +1,144 @@
+{
+  "run_id": "nap_cifar5p1_1018",
+  "phase": "eval",
+  "status": "COMPLETE",
+  "blockers": [],
+  "cuda_available": true,
+  "torch": "2.13.0+cu130",
+  "cuda_build": "13.0",
+  "candidate": {
+    "name": "NaP",
+    "candidates": 1,
+    "linear_bias": false,
+    "output_bias": false,
+    "ln_affine": true,
+    "ln_eps": 1e-05,
+    "ln_axis": "per image, hidden=100",
+    "projection": "per-seed Frobenius sphere on W1/W2/W3 at t0",
+    "affine_projection": "joint gamma/beta sphere sqrt(100)",
+    "lr": 0.0001,
+    "dims": [
+      3072,
+      100,
+      100,
+      100
+    ],
+    "cond": "std",
+    "steps": 780,
+    "tasks": 30,
+    "batch": 32,
+    "R": 10
+  },
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "git_hash": "d0f6d1f5b46faee0d4ad27df9fbf942e4f388d1b",
+  "spec_sha256": "5c08b0420af02a32dd691f5eedc7eacfcb9f0a9a0beb817688be3b40e21cadff",
+  "common_spec_sha256": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+  "source_sha256": {
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/nap_cifar5p1_1018.py": "2c335d5301ebbda3fb2d674ef1f1af73b29aacacf235f30adf5df49b6a5b9acc",
+    "analysis/nap_cifar5p1_1018/checks.py": "5a33528b8548314d34f65197f808684f958a27677616084d03e2bf5d83fa9d99",
+    "analysis/nap_cifar5p1_1018/verdict.py": "018bb449f5404e57e7aa6a0911ee2269bb647e44ff04bf8bfddaca1a4dea5f50"
+  },
+  "integration_audit": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json",
+  "integration_audit_sha256": "b8aeac0f0ec176411c423beb5ad52c0048050564b4de64db0608e8724ffa4543",
+  "checks_sha256": "43a50251be2bbc1c8fb6b33e8cd0abe271fc91b92d53c473aefe7bc704dfb55c",
+  "data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "attempted_at": "2026-10-17T17:18:42Z",
+  "prediction": {
+    "vs_R": "IMPROVES_DIRECTION",
+    "vs_SNA": "OPEN_COMPARISON",
+    "vs_KKT1": "OPEN_COMPARISON"
+  },
+  "runtime_s": 39.297311544418335,
+  "seed_slots": [
+    {
+      "seed": 0,
+      "slot": 0
+    },
+    {
+      "seed": 1,
+      "slot": 1
+    },
+    {
+      "seed": 2,
+      "slot": 2
+    },
+    {
+      "seed": 3,
+      "slot": 3
+    },
+    {
+      "seed": 4,
+      "slot": 4
+    },
+    {
+      "seed": 5,
+      "slot": 5
+    },
+    {
+      "seed": 6,
+      "slot": 6
+    },
+    {
+      "seed": 7,
+      "slot": 7
+    },
+    {
+      "seed": 8,
+      "slot": 8
+    },
+    {
+      "seed": 9,
+      "slot": 9
+    }
+  ],
+  "class_sha256": {
+    "0": "7487cc5ba7a5670094d2c8c701beae782530a141ef1cf31f07ab70673f992cd8",
+    "1": "a12ed45d3a05fd7fcf0927bb65417a3549f318a28ba23d85f488c9d37635e650",
+    "2": "5e27dd1c103b2617d199083c9909fea1c81078144102b53c93c491d435bd46ee",
+    "3": "c34bc8e8fdec85d19338aa1dfcada4ce48eb6e137020247e2604ec012eb0c12d",
+    "4": "04eb2beb4f183339e971eff4b55c8f4825e6795a81d5fe037fb0da1d22bc4daf",
+    "5": "1e363ce037e64574e24fb7e322b208669808dc2657deae88b47172e99a4f9f6c",
+    "6": "8c86984870465812064f4a9de9c365524adb6b167047241936f460f0b08ae79a",
+    "7": "1d1733cbd77116c196133d7c8ccde0f1d9359b22787506979b09596972a7c614",
+    "8": "3821dd6cf078d23a864be2eecdbe130453ab37fc988d2938a00da94f70503ed6",
+    "9": "c5bdda2b5323c5ec1e2cd939fd7e740f7061b367eb4a5c3d3cc9b4d91feb0845"
+  },
+  "initial_sha256": "dd8c3b4d54918652699c2672f1d8bcec601332cc09efd8d0c5c2038308e48167",
+  "checkpoint_sha256": "a8be665dce3c23658b95db481694497ea599a5f70d985fbd57da1c74c99812a2",
+  "outputs_sha256": {
+    "per_task.csv": "7e49ad1213ebaf26b41ee0bf95cb8602f00dfcf0906b4de07dbbd3ef6a49baea",
+    "unit_diagnostics.csv": "21fcab345bfdc6c33b3a909324ced4152385de3c3fd802583e2ba0c8407b4d4f",
+    "batch_hashes.json": "a409bc0cf58cd3e2893c02a015725e17271f055a2203127bab98de5c7881e274",
+    "fresh_self.csv": "fb9b6486d5ecb49fb53754d7f515648bfc1973f024dcc9c91f27c1644b3c769e",
+    "fresh_control.csv": "a42f3c03fd22fc7d53c39ff64bdd5dbef3a588242cabe4b58d74d9e7804b333c"
+  },
+  "diagnostics": {
+    "s_correction": 1,
+    "var_phi_prime_correction": 0,
+    "m_s_r": "unitwise before median",
+    "zero_s": "null r and signed count",
+    "postLN_gate_variance": "variance of pointwise ReLU derivative, not full LN Jacobian"
+  },
+  "tf32": false,
+  "deterministic": true,
+  "R": 10,
+  "graph": true
+}
