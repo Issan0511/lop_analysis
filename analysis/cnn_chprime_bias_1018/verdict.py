@@ -16,7 +16,8 @@ def classify(rows, arm='CHf_B'):
             if k in index: problems.append('duplicate:'+str(k))
             if row.get('arm')!=arm: problems.append('arm:'+str(k))
             value=float(row['online_acc'])
-            if not math.isfinite(value): problems.append('nonfinite:'+str(k))
+            if not math.isfinite(value):
+                problems.append('nonfinite:'+str(k));diverged=True
             if str(row.get('diverged','false')).lower()=='true': diverged=True
             index[k]=value
         except (ValueError,KeyError,TypeError): problems.append('invalid row')
@@ -48,6 +49,11 @@ def report(out, baseline, checks):
     primary=classify(read(out/'per_task.csv'))
     integrity=[]
     prov=json.loads((out/'provenance.json').read_text()) if (out/'provenance.json').exists() else {}
+    failure=json.loads((out/'failure.json').read_text()) if (out/'failure.json').exists() else {}
+    if prov.get('status')=='DIVERGED' or failure.get('status')=='DIVERGED':
+        primary=dict(label='DIVERGED',observed=primary,problems=['numerical stop recorded in provenance/failure'],failure=failure)
+    elif prov.get('status')=='CHECK_FAILED' or failure.get('status')=='CHECK_FAILED':
+        primary=dict(label='CHECK_FAILED',observed=primary,problems=['implementation failure recorded in provenance/failure'],failure=failure)
     if primary['label'] in ('RESCUED','FAIL','PARTIAL'):
         release=out.parent/'gpu_release.json'
         gpu=json.loads(release.read_text()) if release.exists() else {}

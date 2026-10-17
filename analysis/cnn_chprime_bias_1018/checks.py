@@ -35,7 +35,7 @@ def host(device='cpu',R=1):
 def same(a,b):
     if isinstance(a,torch.Tensor):
         if a.dtype!=b.dtype or a.shape!=b.shape: return False
-        return bool(((a==b)|(torch.isnan(a)&torch.isnan(b)) if a.dtype.is_floating_point else a==b).all())
+        return a.detach().contiguous().cpu().numpy().tobytes()==b.detach().contiguous().cpu().numpy().tobytes()
     if isinstance(a,dict): return a.keys()==b.keys() and all(same(a[k],b[k]) for k in a)
     if isinstance(a,(list,tuple)): return len(a)==len(b) and all(same(x,y) for x,y in zip(a,b))
     return a==b
@@ -134,8 +134,8 @@ def run(device='cpu'):
     # Disabled path, original P183 step, RNG and all optimizer/EMA state.
     b=bundle(device,enabled=False);h=host(device);b.new_labels();h.new_labels();b.new_order();h.new_order()
     for j in range(3): b.step(j);h.step(j)
-    put('S-P183',same(train_state(b),train_state(h)),
-        {'wrong_mode_channel':not same(b.act.m[0].shape,torch.zeros(1,16).shape)},R=1,seeds=[100],steps=3,production_R10_pending=device=='cpu')
+    put('S-P183',same(train_state(b),train_state(h)) and not same(torch.tensor([0.]),torch.tensor([-0.])),
+        {'signed_zero_byte_change':not same(torch.tensor([0.]),torch.tensor([-0.])),'wrong_mode_channel':not same(b.act.m[0].shape,torch.zeros(1,16).shape)},R=1,seeds=[100],steps=3,production_R10_pending=device=='cpu')
     # Actual training-order comparison with nonzero bias and nonzero moments.
     b=bundle(device);varied_bias(b);b.new_labels();b.new_order()
     h=host(device);h.load_full_state(train_state(b));h.order.copy_(b.order);h.Y.copy_(b.Y)
@@ -203,10 +203,19 @@ def run(device='cpu'):
     boundaries={str(k):V.classify(rows(k))['label'] for k in (0,1,2,8,9,10)}
     miss=rows(9);miss.pop();dup=rows(9)+[rows(9)[0]]
     diverged=rows(9);diverged[0]['diverged']=True
+    nonfinite=rows(9);nonfinite[0]['online_acc']=float('nan')
+    # Real run() writes failure/provenance when stopping before complete rows.
+    import tempfile
+    with tempfile.TemporaryDirectory() as temp:
+        parent=Path(temp);runout=parent/'CHf_B';runout.mkdir()
+        M.json_write(runout/'provenance.json',dict(status='DIVERGED'))
+        M.json_write(runout/'failure.json',dict(status='DIVERGED',reason='synthetic numeric stop'))
+        evidence=V.report(runout,parent/'CHf',parent/'checks.json')
+        divergent_file_precedence=evidence['primary']['label']=='DIVERGED'
     expected={'0':'FAIL','1':'FAIL','2':'PARTIAL','8':'PARTIAL','9':'RESCUED','10':'RESCUED'}
-    put('S-verdict',boundaries==expected and V.classify(miss)['label']=='INCOMPLETE' and V.classify(dup)['label']=='INCOMPLETE' and V.classify(diverged)['label']=='DIVERGED',
+    put('S-verdict',boundaries==expected and V.classify(miss)['label']=='INCOMPLETE' and V.classify(dup)['label']=='INCOMPLETE' and V.classify(diverged)['label']=='DIVERGED' and V.classify(nonfinite)['label']=='DIVERGED' and divergent_file_precedence,
         {'strict_gt_point5':V.classify(rows(9))['label']!='FAIL','eight_rescued':V.classify(rows(8))['label']!='RESCUED',
-         'drop_missing_seed':V.classify(miss)['label']=='INCOMPLETE'},boundaries=boundaries)
+         'drop_missing_seed':V.classify(miss)['label']=='INCOMPLETE','numeric_stop_called_incomplete':divergent_file_precedence},boundaries=boundaries)
     reuse=M.reuse_audit(ROOT/'results/cnn_center_feat_1011/CHf')
     put('S-reference',reuse['qualified'] is False and any('INCOMPATIBLE_PRECISION' in p for p in reuse['problems']) and len(reuse['hashes'])==75,
         {'ignore_precision':reuse['qualified'] is not True,'seed_exchange':[['CHf',s] for s in range(0,10)]!=[['CHf',s] for s in M.SEEDS]},
