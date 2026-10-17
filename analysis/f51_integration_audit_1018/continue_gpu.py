@@ -196,6 +196,7 @@ def main():
                     logfile=OUT/'logs'/f'{run}_{name}_{os.getpid()}.log'
                     logfile.parent.mkdir(exist_ok=True)
                     stage['log']=str(logfile)
+                    put(args.state,state)
                     with logfile.open('x',buffering=1) as log:
                         if spec.get('action')=='calibration':calibration(wt,log)
                         elif spec.get('action')=='comparators':comparators(wt,log)
