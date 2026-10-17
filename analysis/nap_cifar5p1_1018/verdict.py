@@ -123,7 +123,10 @@ def qualification(arm, directory, audit):
         if p.get("class_sha256",{}).get(str(s)) != correct:
             errors.append(f"CLASS_STREAM_{s}")
     try:
-        values=seed_window(load_rows(rows_path), list(range(10)))
+        records=load_rows(rows_path)
+        values=seed_window(records, list(range(10)))
+        if any(int(r["slot"]) != int(r["seed"]) for r in records):
+            errors.append("SEED_SLOT_ORDER")
     except (ValueError, KeyError) as e:
         values=None; errors.append(str(e))
     commit=p.get("git_hash", "")
@@ -139,6 +142,7 @@ def qualification(arm, directory, audit):
     return dict(arm=arm, all_pass=not errors, eligible=not errors, errors=errors,
                 path=str(directory), per_task_sha256=N.sha_file(rows_path),
                 provenance_sha256=N.sha_file(prov_path), original_git_hash=commit,
+                data_sha256=p.get("data_sha256"),
                 current_source_sha256={n:N.sha_file(N.ROOT/n) for n in N.HOST_SOURCES},
                 historical_source_sha256=historical,
                 integration_audit_sha256=N.sha_file(audit) if audit.is_file() else None,
@@ -180,12 +184,19 @@ def main():
     prov=json.loads((a.nap/"provenance.json").read_text())
     if prov.get("status") != "COMPLETE" or prov.get("phase") != "eval" or prov.get("source_sha256") != N.source_hashes():
         raise SystemExit("NaP evaluation incomplete or source mismatch")
+    for filename,digest in prov.get("outputs_sha256",{}).items():
+        if N.sha_file(a.nap/filename) != digest:
+            raise SystemExit("NaP output changed after completion")
+    if "per_task.csv" not in prov.get("outputs_sha256",{}):
+        raise SystemExit("NaP per-task artifact not fixed")
     nap=seed_window(load_rows(a.nap/"per_task.csv"), list(range(10)))
     comparators, manifests={},{}
     for arm in ("R","SNA","KKT1"):
         manifest, values=validate_qualification(getattr(a,arm.lower()+"_qualification"))
         if manifest["arm"] != arm:
             raise ValueError("wrong comparator qualification")
+        if manifest.get("data_sha256") != prov.get("data_sha256"):
+            raise ValueError("comparator dataset differs from NaP")
         comparators[arm]=values; manifests[arm]=manifest
     result=dict(status="COMPLETE", primary=compare(nap, {k:comparators[k] for k in ("SNA","KKT1")}),
                 nap_window=nap, R_difference_report_only={s:nap[s]-comparators["R"][s] for s in nap},

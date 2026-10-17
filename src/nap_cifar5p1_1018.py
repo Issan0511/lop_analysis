@@ -7,6 +7,8 @@ All numerical constants, seeds, tasks and step counts are fixed by the preregist
 from __future__ import annotations
 
 import argparse
+import contextlib
+import fcntl
 import hashlib
 import json
 import math
@@ -39,7 +41,7 @@ HOST_SOURCES = ("src/cifar5p1_mlp_0920.py", "src/pmnist_0905.py",
 OWN_SOURCES = ("src/nap_cifar5p1_1018.py", "analysis/nap_cifar5p1_1018/checks.py",
                "analysis/nap_cifar5p1_1018/verdict.py")
 SOURCES = HOST_SOURCES + ("src/pmnist_rlmnist_0906.py",) + OWN_SOURCES
-CHECK_KEYS = ("S-host", "S-LN", "S-Wproject", "S-affine", "S-grad", "S-fresh", "S-stats")
+CHECK_KEYS = ("S-host", "S-LN", "S-Wproject", "S-affine", "S-grad", "S-fresh", "S-stats", "S-admission")
 CANDIDATE = dict(name="NaP", candidates=1, linear_bias=False, output_bias=False,
                  ln_affine=True, ln_eps=EPS_LN, ln_axis="per image, hidden=100",
                  projection="per-seed Frobenius sphere on W1/W2/W3 at t0",
@@ -295,6 +297,12 @@ def check_audit(path: Path):
             errors.append("G0_"+key.upper())
     if not audit.get("independent_auditor") or not audit.get("audited_commit"):
         errors.append("G0_NO_INDEPENDENT_AUDITOR")
+    if "/run5_nap" in audit.get("independent_auditor", ""):
+        errors.append("G0_AUDITOR_IS_IMPLEMENTER")
+    commit = audit.get("audited_commit", "")
+    if not commit or subprocess.run(["git", "merge-base", "--is-ancestor", commit, "main"],
+                                    cwd=ROOT, capture_output=True).returncode:
+        errors.append("G0_AUDITED_COMMIT_NOT_MAIN_ANCESTOR")
     if audit.get("schema_version") != 1:
         errors.append("G0_SCHEMA")
     for name in HOST_SOURCES:
@@ -325,6 +333,13 @@ def validate_checks(path):
     return errors
 
 
+@contextlib.contextmanager
+def gpu_exclusive():
+    with Path("/tmp/lop_analysis_gpu.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        yield
+
+
 def preflight(phase, data, audit, checks, out):
     errors = []
     cuda = torch.cuda.is_available()
@@ -353,6 +368,8 @@ def preflight(phase, data, audit, checks, out):
             selection = json.loads(selected.read_text())
             if selection.get("candidate") != CANDIDATE or selection.get("source_sha256") != source_hashes():
                 errors.append("CALIBRATION_MISMATCH")
+            if selection.get("calibration_data_sha256") != data_hash:
+                errors.append("CALIBRATION_DATA_MISMATCH")
             artifacts = selection.get("calibration_artifacts_sha256", {})
             if not artifacts or any(not (ROOT/name).is_file() or sha_file(ROOT/name) != sha
                                     for name,sha in artifacts.items()):
@@ -439,7 +456,8 @@ def run_production(phase, data, out, admission):
     fs = []
     for r,s in enumerate(seeds):
         valid = not bool(model.invalid[r] | model.bad[r]) and all(bool(torch.isfinite(p[r]).all()) for p in model.P)
-        fs.append(dict(seed=s, task=29, control="NaP_self", status="COMPLETE" if valid else "DIVERGED",
+        fresh_status = "PROJECTION_UNDEFINED" if bool(model.invalid[r]) else "COMPLETE" if valid else "DIVERGED"
+        fs.append(dict(seed=s, task=29, control="NaP_self", status=fresh_status,
                        fresh_online_acc=float(fresh_self[r]) if valid else None, continual_online_acc=continual[s],
                        gap_self=float(fresh_self[r])-continual[s] if valid and continual[s] is not None else None,
                        batch_sha256=sha_tensor(saved29[r])))
@@ -496,6 +514,7 @@ def main(argv=None):
         seed_window(load_rows(prov.parent/"per_task.csv"), CALIB_SEEDS)
         artifacts = {str(q.relative_to(ROOT)):sha_file(q) for q in prov.parent.iterdir() if q.is_file()}
         write_json(OUT/"calib/selected.json", dict(candidate=CANDIDATE, source_sha256=source_hashes(),
+                                                  calibration_data_sha256=p["data_sha256"],
                                                   calibration_artifacts_sha256=artifacts,
                                                   rule="one preregistered candidate; no performance selection"))
         return
@@ -504,7 +523,8 @@ def main(argv=None):
     if admission["blockers"]:
         raise SystemExit(2)
     if a.stage == "run":
-        run_production(a.phase, a.data, out, admission)
+        with gpu_exclusive():
+            run_production(a.phase, a.data, out, admission)
 
 
 if __name__ == "__main__":

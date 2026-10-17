@@ -9,6 +9,7 @@ import argparse
 import itertools
 import json
 import math
+import subprocess
 import tempfile
 from pathlib import Path
 import numpy as np
@@ -330,6 +331,31 @@ def check_graph(device):
                 tolerance_derivation="eps32*4096; fixture only, G0 host reproduction separately required")
 
 
+def check_admission():
+    with tempfile.TemporaryDirectory(prefix="nap_admission_fixture_") as tmp:
+        path=Path(tmp)/"audit.json"
+        # A fixture solely exercises rejection logic; it is not production audit evidence.
+        audit=dict(schema_version=1,all_pass=True,main_ancestor_verified=True,
+                   host_reproduction_pass=True,mutation_checks_pass=True,
+                   independent_auditor="synthetic independent reviewer fixture",
+                   audited_commit=subprocess.check_output(["git","rev-parse","main"],cwd=N.ROOT,text=True).strip(),
+                   source_sha256={p:N.sha_file(N.ROOT/p) for p in N.HOST_SOURCES})
+        N.write_json(path,audit)
+        valid=not N.check_audit(path)
+        mutations={}
+        for key in ("all_pass","main_ancestor_verified","host_reproduction_pass","mutation_checks_pass"):
+            N.write_json(path,dict(audit,**{key:False}))
+            mutations[key+"_missing"]=bool(N.check_audit(path))
+        N.write_json(path,dict(audit,source_sha256={}))
+        mutations["source_hash_missing"]=bool(N.check_audit(path))
+        N.write_json(path,dict(audit,audited_commit="not_a_commit"))
+        mutations["invalid_audited_commit"]=bool(N.check_audit(path))
+        N.write_json(path,dict(audit,independent_auditor="Codex /root/run5_nap"))
+        mutations["self_audit"]=bool(N.check_audit(path))
+    return item(valid,dict(valid_synthetic_schema_accepted=valid,
+                           production_audit_not_substituted=True),mutations)
+
+
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--out",type=Path,default=N.OUT/"checks.json")
@@ -340,7 +366,7 @@ def main():
     torch.backends.cuda.matmul.allow_tf32=False
     torch.backends.cudnn.allow_tf32=False
     results={}
-    functions={"S-host":check_host,"S-fresh":check_fresh,"S-stats":check_stats}
+    functions={"S-host":check_host,"S-fresh":check_fresh,"S-stats":check_stats,"S-admission":check_admission}
     for name,fn in functions.items():
         try: results[name]=fn()
         except Exception as e: results[name]=dict(pass_=False,error=f"{type(e).__name__}: {e}")
