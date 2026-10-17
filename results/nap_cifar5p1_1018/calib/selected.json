@@ -1,0 +1,53 @@
+{
+  "candidate": {
+    "name": "NaP",
+    "candidates": 1,
+    "linear_bias": false,
+    "output_bias": false,
+    "ln_affine": true,
+    "ln_eps": 1e-05,
+    "ln_axis": "per image, hidden=100",
+    "projection": "per-seed Frobenius sphere on W1/W2/W3 at t0",
+    "affine_projection": "joint gamma/beta sphere sqrt(100)",
+    "lr": 0.0001,
+    "dims": [
+      3072,
+      100,
+      100,
+      100
+    ],
+    "cond": "std",
+    "steps": 780,
+    "tasks": 30,
+    "batch": 32,
+    "R": 10
+  },
+  "source_sha256": {
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/nap_cifar5p1_1018.py": "2c335d5301ebbda3fb2d674ef1f1af73b29aacacf235f30adf5df49b6a5b9acc",
+    "analysis/nap_cifar5p1_1018/checks.py": "5a33528b8548314d34f65197f808684f958a27677616084d03e2bf5d83fa9d99",
+    "analysis/nap_cifar5p1_1018/verdict.py": "018bb449f5404e57e7aa6a0911ee2269bb647e44ff04bf8bfddaca1a4dea5f50"
+  },
+  "calibration_data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "calibration_artifacts_sha256": {
+    "results/nap_cifar5p1_1018/calib/NaP/summary.md": "1430bd60838ccecaed5a06f4b08c717a9fcaa04b7540920af2827307dcd6c062",
+    "results/nap_cifar5p1_1018/calib/NaP/fresh_control.csv": "435a3c72eb437bc7fee95eae48bcebe2edfbb32b6149f3fd8ead2a08cd472b23",
+    "results/nap_cifar5p1_1018/calib/NaP/initial.pt": "5bf93bac29992021f44aada22277144268daff9130ee686d548095dc4bfbf503",
+    "results/nap_cifar5p1_1018/calib/NaP/checkpoint.pt": "a487e220869a03a341073fa73d90212040a61a867a8624ff1eee4f9d6f837376",
+    "results/nap_cifar5p1_1018/calib/NaP/preflight.json": "7591fc6461962e48b9869fbd06ff054b4db18e9832e73fe62b30559db81a4772",
+    "results/nap_cifar5p1_1018/calib/NaP/per_task.csv": "1bc621ede6e8c339714f0915dfce021f0b110e89a9f9cedd57d817acca3db3b3",
+    "results/nap_cifar5p1_1018/calib/NaP/verdict.json": "0c44e70099be2dd7c12ecf890076ca08cb498cfa5ad1289187994bd2bca3310b",
+    "results/nap_cifar5p1_1018/calib/NaP/unit_diagnostics.csv": "91bcdd551df237bd1d4cd354b1e610f572c103de67af95346f4d9078fb21f137",
+    "results/nap_cifar5p1_1018/calib/NaP/spec.md": "55bae067067c1abfe0a50a23798c374d87f0d1f84e2ab9f69b2fc104930c116d",
+    "results/nap_cifar5p1_1018/calib/NaP/provenance.json": "3d6419add689948046ef9abe4b339c64a590f1511734d9d2a9143ccdb20fc8cc",
+    "results/nap_cifar5p1_1018/calib/NaP/fresh_self.csv": "2b6082921268974b3db683a49bf68923324a759d1f351d94f7d938a2d64dc8ec",
+    "results/nap_cifar5p1_1018/calib/NaP/batch_hashes.json": "3538deadcadea0712db3d0e6c383e4354cd40930537751e51a3b1c5df692a0e0"
+  },
+  "rule": "one preregistered candidate; no performance selection"
+}
