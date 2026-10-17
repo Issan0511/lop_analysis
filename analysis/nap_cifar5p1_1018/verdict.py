@@ -96,6 +96,21 @@ def compare(nap, comparators):
     return {name:classify(d,p) for name,d,p in zip(names,differences,adjusted)}
 
 
+def committed_artifact(path):
+    """Bind legacy output bytes to the immutable main-history result commit."""
+    name=str(Path(path).resolve().relative_to(N.ROOT))
+    commit=subprocess.check_output(["git","log","-1","--format=%H","--",name],
+                                    cwd=N.ROOT,text=True).strip()
+    if not commit or subprocess.run(["git","merge-base","--is-ancestor",commit,"main"],
+                                    cwd=N.ROOT,capture_output=True).returncode:
+        raise ValueError("legacy artifact is not committed on main")
+    historical=subprocess.check_output(["git","show",f"{commit}:{name}"],cwd=N.ROOT)
+    digest=__import__("hashlib").sha256(historical).hexdigest()
+    if digest!=N.sha_file(path):
+        raise ValueError("legacy artifact differs from immutable result commit")
+    return dict(path=name,commit=commit,sha256=digest)
+
+
 def qualification(arm, directory, audit):
     """Mechanical reuse proof; historical changes need an independent equivalence audit.
 
@@ -106,6 +121,19 @@ def qualification(arm, directory, audit):
     rows_path, prov_path=directory/"per_task.csv", directory/"provenance.json"
     errors=N.check_audit(audit)
     p=json.loads(prov_path.read_text())
+    committed={}
+    for path in (rows_path,prov_path):
+        try:
+            committed[path.name]=committed_artifact(path)
+        except (ValueError,subprocess.CalledProcessError) as e:
+            errors.append("LEGACY_OUTPUT_UNBOUND:"+str(e))
+    verified_data=None
+    try:
+        verified_data=N.C.Cifar100(N.DEFAULT_DATA).sha256
+        if p.get("data_sha256") != verified_data:
+            errors.append("DATASET_DIFFERS_FROM_VERIFIED_CIFAR100")
+    except (OSError,ValueError) as e:
+        errors.append("CIFAR100_VERIFICATION_FAILED:"+str(e))
     required=dict(arm=arm, cond="std", seeds=list(range(10)), R=10, lr=1e-4,
                   n_tasks=30, steps_per_task=780, batch=32, dims=[3072,100,100,100],
                   n_classes=100, hard_classes=5, optimizer="adam", weight_decay=0.0)
@@ -143,6 +171,7 @@ def qualification(arm, directory, audit):
                 path=str(directory), per_task_sha256=N.sha_file(rows_path),
                 provenance_sha256=N.sha_file(prov_path), original_git_hash=commit,
                 data_sha256=p.get("data_sha256"),
+                verified_data_sha256=verified_data,committed_artifacts=committed,
                 current_source_sha256={n:N.sha_file(N.ROOT/n) for n in N.HOST_SOURCES},
                 historical_source_sha256=historical,
                 integration_audit_sha256=N.sha_file(audit) if audit.is_file() else None,
@@ -158,6 +187,11 @@ def validate_qualification(manifest):
     for name, key in (("per_task.csv", "per_task_sha256"), ("provenance.json", "provenance_sha256")):
         if N.sha_file(directory/name) != q.get(key):
             raise ValueError("reused comparator changed since qualification")
+        proof=q.get("committed_artifacts",{}).get(name)
+        if not proof or committed_artifact(directory/name)!=proof:
+            raise ValueError("reused comparator lacks immutable historical artifact proof")
+    if q.get("data_sha256") != q.get("verified_data_sha256"):
+        raise ValueError("reused comparator dataset is unverified")
     if q.get("current_source_sha256") != {n:N.sha_file(N.ROOT/n) for n in N.HOST_SOURCES}:
         raise ValueError("host sources changed since qualification")
     return q, seed_window(load_rows(directory/"per_task.csv"), list(range(10)))
