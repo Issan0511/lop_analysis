@@ -26,7 +26,9 @@
 
 走2はデスクトップのNUL区切りargvとChromiumが書き換えた単一文字列のprocess titleの両方を処理するよう再修正。実際の4形式をテストし、競合する訓練は拒否する。`six-gpu-cap-retry-1018.service` はCUDA検査から再実行する。過去2回はGPU競合検知で止まり、較正腕は作成されていない。明示された回復サービスは共有flockで待機し、走4などとGPUを同時使用しない。
 
-`six-gpu-retain-final-1018.service` は全controllerのlock解放を待ち、完走/停止が確認できてから原データを `obsidian-research-data/<run>/host_gpu_1018/` へコピーしてsha256照合、backup_manifest作成、10MiB未満のcompact結果をlocal commitする。元データとworktreeは保持。無確認のRUNNING状態・容量不足・異なる既存backup・他のstaged変更は停止して記録する。監視のpollは行わない。保存状況は `retention_status.json`。
+`six-gpu-finish-1018.service` は元controllerと走2/5の回復queueが全部終わるまでlockで待機する。途中で競合によるnonblocking admission拒否があっても、走3は正当なcheckpointからresumeし、走6は未完了腕だけを正式CLIで続行する。完了済み走は再訓練せず正式reportを検証する。記録は `completion_state.json`。
+
+`six-gpu-retain-all-1018.service` は上記finishも含む全controllerのlock解放を待ち、完走/停止が確認できてから原データを `obsidian-research-data/<run>/host_gpu_1018/` へコピーしてsha256照合、backup_manifest作成、10MiB未満のcompact結果をlocal commitする。元データとworktreeは保持。無確認のRUNNING状態・容量不足・異なる既存backup・他のstaged変更は停止して記録する。監視のpollは行わない。保存状況は `retention_status.json`。旧retain/retain-finalサービスは停止済みで、このretain-allが現行。
 
 走3の初期CH実測は約40秒/課題で、同程度なら5腕×200課題はおよそ11時間（実測に基づく概算。CNN等の時間は別）。長時間実行が続くため、サービスが稼働している間は同じCLIを重ねて起動しない。
 

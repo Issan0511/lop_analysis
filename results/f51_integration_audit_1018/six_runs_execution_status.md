@@ -1,5 +1,18 @@
 # 追加6走の実装・実行記録
 
+## 2026-10-18 02:28 JST ホスト継続
+
+CUDA利用可能。G0は現環境で旧実装を再実行して全列を照合し、CPU/main/iv/doors実測PASS。最初の環境差による停止証跡も保持している。
+
+- 走1: 全10seed完走、MIXED。結果 `abd5220b`、生データ約564MBのbackup/hash照合済み。
+- 走5: 較正と評価は各30課題×10seed完走。較正選択は評価前にlocal commit。新規R対照の再利用資格PASS、SNA/KKT1と最終比較は進行中。
+- 走2: 較正段階。走4: RC評価段階。GPUの実行/待機は共有flockで直列化。
+- 走3: CH task4 checkpointを保持し、同一source/manifestからresumeを予約。走6は後続。
+- RMの完了済み結果は保存当時の無改変コードで再検証PASS。再訓練・provenance変更なし。
+- 結果はlocalに保存。NaP再走対照は資格要件に合わせlocal mainへfast-forward、GitHubへの追加pushはしていない。
+
+実行状態は `host_continuation/state_after_repairs.json`、`state_nap_readout.json`、`state_cap_retry.json`、`completion_state.json`。保存は `retention_status.json`。サービス・回復・停止の詳細は `analysis/f51_integration_audit_1018/HANDOFF_GPU.md` の先頭追記が正本。以下はホスト再開前の履歴。
+
 Issaの「サブエージェントで全部実装実行」「予測は論文の主張で」の指示に基づく記録。6担当が別worktreeで実装し、別担当が相互監査した。方向予測は介入結果を観測する前の共通spec §8に固定した。確率・精度の数値予測は代筆していない。
 
 ## 固定した実装と方向予測
