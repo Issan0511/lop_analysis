@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import csv
 import hashlib
 import json
 import os
@@ -14,17 +15,23 @@ from datetime import datetime, timezone
 
 
 BASE = "063b7c6085340475549981494e713a7ceea6dbbb"
+HISTORICAL = "0eff0529e9d22df7e6d8b6c29000c1611ca5306d"
 
 
 def sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def execute_stage(repo: Path, output: Path, stage: str, device: str) -> dict:
+def execute_stage(repo: Path, output: Path, stage: str, device: str,
+                  reference: Path | None = None) -> dict:
     target = output / (device + "_" + stage)
     target.mkdir(parents=True, exist_ok=True)
     command = [sys.executable, "src/cifar5p1_mlp_0920_checks.py", "--stage", stage,
                "--device", device, "--out", str(target)]
+    if reference is not None:
+        command = [sys.executable, str(Path(__file__).with_name("reference_stage.py")),
+                   "--repo", str(repo), "--reference", str(reference),
+                   "--stage", stage, "--device", device, "--out", str(target)]
     with (target / "stdout.log").open("w") as stream:
         result = subprocess.run(command, cwd=repo, stdout=stream,
                                 stderr=subprocess.STDOUT, check=False)
@@ -36,13 +43,61 @@ def execute_stage(repo: Path, output: Path, stage: str, device: str) -> dict:
                 details=content)
 
 
+def historical_reference(repo: Path, historical: Path, output: Path) -> dict:
+    """Re-execute the pre-intervention source, never substitute current-host rows.
+
+    The 0920 cu126 artifacts differ in float64 effective-rank diagnostics under
+    cu130 (already documented in spec_resp_cifar5p1_1007 §1.2/§7). Old-versus-new
+    environment comparison reports these columns separately. All columns,
+    including effective rank, remain byte-exact in S-nochange in one environment.
+    """
+    head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=historical, text=True).strip()
+    assert head == HISTORICAL, "historical reference must use immutable pre-intervention commit"
+    assert not subprocess.check_output(["git", "status", "--porcelain", "--", "src"],
+                                       cwd=historical), "historical source tree is dirty"
+    reference = output / "historical_current_runtime"
+    reference.mkdir()
+    evidence = {}
+    for arm in ("R", "SNA"):
+        target = reference / f"{arm}_std_lr0.0001"
+        command = [sys.executable, "src/cifar5p1_mlp_0920.py", "run", "--arm", arm,
+                   "--seeds", "0-9", "--cond", "std", "--tasks", "30", "--lr", "0.0001",
+                   "--device", "cuda", "--threads", "2", "--out", str(target)]
+        with (reference / f"{arm}.log").open("w") as stream:
+            subprocess.run(command, cwd=historical, stdout=stream, stderr=subprocess.STDOUT, check=True)
+        old = repo / "results/cifar5p1_mlp_0920" / target.name
+        left = list(csv.DictReader((old / "per_task.csv").open()))
+        right = list(csv.DictReader((target / "per_task.csv").open()))
+        assert len(left) == len(right) == 300
+        assert {(int(r['seed']), int(r['task'])) for r in right} == {(s,t) for s in range(10) for t in range(1,31)}
+        assert all(x.keys() == y.keys() for x,y in zip(left,right))
+        differences = [dict(seed=x['seed'], task=x['task'], column=k, historical=x[k], current=y[k])
+                       for x,y in zip(left,right) for k in x if x[k] != y[k]]
+        non_diagnostic = [x for x in differences if x['column'] not in ('eff_rank_l1','eff_rank_l2')]
+        fresh_exact = (old / "fresh_control.csv").read_bytes() == (target / "fresh_control.csv").read_bytes()
+        evidence[arm] = dict(command=command, all_pass=not non_diagnostic and fresh_exact,
+                             non_diagnostic_differences=non_diagnostic, fresh_byte_exact=fresh_exact,
+                             report_only_effective_rank_differences=differences,
+                             outputs_sha256={p.name:sha(p) for p in target.iterdir() if p.is_file()},
+                             recorded_outputs_sha256={n:sha(old/n) for n in ('per_task.csv','fresh_control.csv','provenance.json')})
+    result = dict(all_pass=all(x['all_pass'] for x in evidence.values()), reference=str(reference),
+                  historical_commit=head, historical_source_sha256={str(p.relative_to(historical)):sha(p) for p in sorted((historical/'src').glob('*.py'))},
+                  scope='Historical source re-execution under current runtime; exact all-column comparison in S-nochange. No tolerance enlarged.',
+                  prior_environment_rule='specs/spec_resp_cifar5p1_1007.md §1.2 and §7', arms=evidence)
+    (reference / 'reference_evidence.json').write_text(json.dumps(result, indent=2)+'\n')
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--cuda-validation", action="store_true")
+    parser.add_argument("--historical-repo", type=Path,
+                        help="Optional clean detached checkout of 0eff0529 for same-runtime historical reproduction")
     args = parser.parse_args()
     repo = args.repo.resolve()
+    args.out = args.out.resolve()
     args.out.mkdir(parents=True, exist_ok=True)
     import torch
     sys.path.insert(0, str(repo))
@@ -66,9 +121,13 @@ def main() -> int:
     cpu = execute_stage(repo, args.out, "pilot", "cpu")
     cuda = torch.cuda.is_available()
     gpu_stages = {}
+    reference_evidence = None
     if cuda and args.cuda_validation:
+        if args.historical_repo is not None:
+            reference_evidence = historical_reference(repo, args.historical_repo.resolve(), args.out)
         for stage in ("main", "iv", "doors"):
-            gpu_stages[stage] = execute_stage(repo, args.out, stage, "cuda")
+            reference = Path(reference_evidence['reference']) if reference_evidence and stage in ('iv', 'doors') else None
+            gpu_stages[stage] = execute_stage(repo, args.out, stage, "cuda", reference)
             if not gpu_stages[stage]["all_pass"]:
                 break
     full_cuda = set(gpu_stages) == {"main", "iv", "doors"} and all(
@@ -86,6 +145,8 @@ def main() -> int:
         blockers.append("AUDITED_BASE_NOT_IN_MAIN")
     if constants != expected or not syntax_valid:
         blockers.append("STATIC_CONTRACT_FAILED")
+    if reference_evidence is not None and not reference_evidence['all_pass']:
+        blockers.append("HISTORICAL_PRIMARY_REPRODUCTION_FAILED")
     all_pass = not blockers and full_cuda
     report = dict(schema_version=1, status="PASS" if all_pass else "BLOCKED_CUDA" if not cuda else "INCOMPLETE",
                   all_pass=all_pass,
@@ -95,6 +156,7 @@ def main() -> int:
                   host_reproduction_pass=full_cuda,
                   mutation_checks_pass=cpu["all_pass"] and full_cuda,
                   cpu_checks_pass=cpu["all_pass"], constants=constants,
+                  historical_current_runtime=reference_evidence,
                   checks=[dict(name="constants", pass_=constants == expected),
                           dict(name="local_main_ancestry", pass_=base_in_main),
                           dict(name="host_ast", pass_=syntax_valid),
