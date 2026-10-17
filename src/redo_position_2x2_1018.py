@@ -48,7 +48,10 @@ DEFAULT_AUDIT = Path('/tmp/issa_six_specs_1018/integration_audit.json')
 HOST_PATHS = ('src/resp_cifar5p1_1007.py', 'src/cifar5p1_mlp_0920.py',
               'src/baselines_cifar5p1_1008.py', 'src/rlcifar_mlp_battle_0918.py',
               'src/pmnist_0905.py', 'src/pmnist_rlcifar_0907.py',
-              'src/cifar_interventions_0920.py')
+              'src/pmnist_rlmnist_0906.py', 'src/cifar_interventions_0920.py',
+              'analysis/cifar_ledger_0920/ledger.py',
+              'analysis/cifar_ledger_0920/replay.py',
+              'analysis/resp_cifar_ee_0920/stats.py')
 
 
 def now():
