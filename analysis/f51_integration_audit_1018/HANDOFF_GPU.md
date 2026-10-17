@@ -4,7 +4,7 @@
 
 ## ホスト再開の追記（2026-10-18 02:10 JST以降）
 
-この追記以降の現行進捗は `results/f51_integration_audit_1018/host_continuation/state_after_repairs.json` が実行記録。初回サービスの履歴は同フォルダの `state.json` に保持。以下の元の引継ぎ本文は停止時点の履歴として保持する。
+この追記以降の現行進捗は `results/f51_integration_audit_1018/host_continuation/` の `state_after_repairs.json`（走4→3→6）、`state_nap_readout.json`（走5の比較対照・判定）、`state_cap_retry.json`（走2）が実行記録。初回サービスの履歴は `state.json` に保持。GPUは全サービス共通のflockで一つずつ利用する。以下の元の引継ぎ本文は停止時点の履歴として保持する。
 
 - ホストのRTX 5060 Tiとtorch 2.13.0+cu130でCUDA利用を実測した。
 - 初回G0は `gpu_host/` に保持。旧cu126結果との `eff_rank_l2` 111件だけが一致せず停止した。精度など他の全列とfreshは一致。既存 `spec_resp_cifar5p1_1007.md` §1.2/§7にも同じ環境差の規定がある。
@@ -14,13 +14,21 @@
 - 走1完走、登録判定MIXED。独立したdf9の閉形式による7同時区間の再計算も一致。結果local commit `abd5220b`。55ファイル、563,928,622 bytesを `~/Projects/obsidian-research-data/redo_position_2x2_1018/` に追加バックアップし、hashを照合した。worktreeの原データも保持。
 - 走3のGPU競合検知はNVIDIAが列挙するデスクトップC+Gプロセスを訓練と誤認していた。既存宿主と同じPython訓練プロセスの検知へ揃えた。共有flockは維持。自己PID/デスクトップ/別Pythonの検査とCPU全15群を通し、local commit `8f82fc9f` に固定。
 - 65件の以前の検査・停止証跡を `host_continuation/prior_evidence/` に退避してhashを保存。RMの既存本走は再実行しない。
-- GitHubへの追加公開・main統合・実験worktree削除は行っていない。
+- GitHubへの追加公開・実験worktree削除は行っていない。NaPの新規対照は既存資格検査がmain上の不変commitを要求するため、完走した対照のcommitだけローカルmainへfast-forwardする（02:23以降）。remote mainは更新しない。
 
 02:18 JST追記: 初回サービスは走5の一時的な未固定ソース判定、走2のnautilus/ptyxis誤検知、走4の検査fixture不一致で各走を停止した。走5はソース無変更で清浄状態とCUDA検査を再確認。走2は自走の競合検知だけを修正（宿主・G0対象は無変更）、走4は比較する両側のラベル乱数を進める検査fixture修正を行い、CPU/CUDA全検査PASS。走3はCHのtask4完了checkpointを保存して停止し、同一HEAD/manifestの `run --resume` を後段に予約した。CPU checksを再生成するとtimestamp付きhashが変わるため、resume時は保存済みの検査証跡をそのまま検証させる。
 
 現行サービスは **`six-gpu-1018b.service`**。走5→2→4→3(resume)→6。較正後NaPは実際にselected.jsonと較正証跡のlocal commitを完了してから評価へ移った。旧R/SNA/KKT1がソース差だけで再利用不適格なら、同じ全30課題/10seed条件の現環境対照を新規保存・commit・資格確認する。走4のRMは修正前の保存commit `d3d235d7` の無改変検証器でhash/admission/schedule/全結果を検証する `combined_resp_verdict.py` を用い、RC/F51は現行ソースで検証してから合算する。RM原データ・元provenanceを書き換えない。このRM独立経路は実行してPASS確認済み。
 
 監視は通常5分以上の間隔。短い検査がその前に終わる見込みの場合と障害対応だけ例外とする。常駐サービスのログは `journalctl --user -u six-gpu-1018b.service`、段階はstate_after_repairs.jsonで確認する。停止が必要な場合は走のSTOP/checkpoint仕様を先に確認し、途中腕の上書き禁止を守る。controllerの `host_continuation/STOP` は次のコマンド開始を止める。走3のSTOPによるexit75ではcontrollerも後続を開始せず停止する。
+
+02:24 JST追記: NaPの較正・評価は各30課題×10seed完走。比較対照は旧ソースとの差で資格が通らないため再走し、Rは新規対照commit `a00f342b` をローカルmainへfast-forwardして無改変の資格検査を通した。SNA/KKT1も同じ正式CLI・10seed/30課題で走らせる。`six-gpu-nap-readout-1018.service` は比較対照以降だけを実行し、NaPの較正・評価を再走しない。NaPの当初の未固定ソース判定と同時刻に、別セッションが `761530e3`（02:10:59 JST）でIssaのKKT1/SNA対NaPの予測追記を固定していた。追記は保持し、開始時のソース・specを証跡に残した。
+
+走2はデスクトップのNUL区切りargvとChromiumが書き換えた単一文字列のprocess titleの両方を処理するよう再修正。実際の4形式をテストし、競合する訓練は拒否する。`six-gpu-cap-retry-1018.service` はCUDA検査から再実行する。過去2回はGPU競合検知で止まり、較正腕は作成されていない。明示された回復サービスは共有flockで待機し、走4などとGPUを同時使用しない。
+
+`six-gpu-retain-final-1018.service` は全controllerのlock解放を待ち、完走/停止が確認できてから原データを `obsidian-research-data/<run>/host_gpu_1018/` へコピーしてsha256照合、backup_manifest作成、10MiB未満のcompact結果をlocal commitする。元データとworktreeは保持。無確認のRUNNING状態・容量不足・異なる既存backup・他のstaged変更は停止して記録する。監視のpollは行わない。保存状況は `retention_status.json`。
+
+走3の初期CH実測は約40秒/課題で、同程度なら5腕×200課題はおよそ11時間（実測に基づく概算。CNN等の時間は別）。長時間実行が続くため、サービスが稼働している間は同じCLIを重ねて起動しない。
 
 ## いまの状態
 
