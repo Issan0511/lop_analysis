@@ -339,8 +339,20 @@ def main(out):
     with tempfile.TemporaryDirectory() as temp:
         errors, _ = R.audit_errors(Path(temp) / 'missing.json')
         assert errors and errors[0].startswith('G0_MISSING')
+        admission = R.preflight(Path(temp) / 'launch', Path(temp) / 'missing.json')
+        assert not admission['all_pass'] and admission['production_started'] is False
+        assert any(e.startswith('G0_MISSING') for e in admission['blockers'])
+        assert admission['protocol']['device'] == 'cuda' and admission['protocol']['R'] == 10
+        assert admission['protocol']['seeds'] == list(range(10))
+        assert admission['protocol']['steps_per_task'] == 780
+        if not torch.cuda.is_available():
+            assert admission['status'] == 'BLOCKED_CUDA'
+            assert any(e.startswith('BLOCKED_CUDA') for e in admission['blockers'])
+        assert not (Path(temp) / 'launch' / 'per_task.csv').exists()
         tests['S-admission'] = dict(pass_=True, missing_G0_rejected=True,
-                                    CUDA_and_registered_protocol_are_not_overridden=True)
+                                    actual_launch_preflight_executed=True,
+                                    CUDA_and_registered_protocol_are_not_overridden=True,
+                                    production_started=False, evaluation_rows_absent=True)
     report = dict(run_id=R.RUN, scope='CPU_SYNTHETIC_ONLY', evaluated_cifar_seed_count=0,
                   generated_utc=R.now(), environment=R.safe_environment(),
                   source_sha256=R.source_hashes(), checks=tests, mutation_negatives=mutations,

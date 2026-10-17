@@ -137,6 +137,9 @@ def preflight(out, audit_path=DEFAULT_AUDIT, checks_path=CHECKS):
     dirty = git('status', '--porcelain', '--', 'src', 'analysis', 'specs')
     if dirty:
         blockers.append('IMPLEMENTATION_UNCOMMITTED')
+    if subprocess.run(['git', 'merge-base', '--is-ancestor', REGISTRATION, 'HEAD'],
+                      cwd=ROOT, capture_output=True).returncode:
+        blockers.append('PREREGISTRATION_NOT_ANCESTOR')
     if torch.__version__ != '2.13.0+cu130':
         blockers.append('TORCH_VERSION_CHANGED')
     selected = json.loads((ROOT / 'results/baselines_cifar5p1_1008/calib/selected.json').read_text())
@@ -152,7 +155,7 @@ def preflight(out, audit_path=DEFAULT_AUDIT, checks_path=CHECKS):
                   protocol=dict(device='cuda', dtype='float32', R=10, seeds=SEEDS,
                                 prefix_tasks=29, branch_task=28, steps_per_task=780,
                                 arms=list(ARMS), prediction='POSITION_CARRIES'),
-                  production_started=False)
+                  production_started=False, argv=sys.argv)
     put(out / 'launch_preflight.json', report)
     if blockers:
         put(out / 'status.json', dict(status=report['status'], blockers=blockers, checked_utc=now(),
@@ -694,7 +697,10 @@ def main():
             write_summary(args.out, result)
             raise
         except Exception as exc:
-            put(args.out / 'status.json', dict(status='CHECK_FAILED', reason=repr(exc), updated_utc=now()))
+            result = dict(status='CHECK_FAILED', label=None, reason=repr(exc), updated_utc=now())
+            put(args.out / 'status.json', result)
+            put(args.out / 'verdict.json', result)
+            write_summary(args.out, result)
             raise
 
 
