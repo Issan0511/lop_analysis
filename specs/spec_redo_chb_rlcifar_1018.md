@@ -6,7 +6,7 @@ run id: `redo_chb_rlcifar_1018`。予測者・改訂指示者Issa、起草Codex�
 
 - 旧走 `redo_position_2x2_1018` は5+1/ReLU/stdでt28末の一回ReDo/物理bias shiftを比較した事前登録試行であり、ホストCodexが既に2026-10-18 02:10 JSTに完走した。保存commit `abd5220b`、主判定MIXED、採用予測POSITION_CARRIESは支持されなかった。旧spec・全結果・予測不成立を保存し、未実施や成功へ変更しない。主走から外した理由と旧結果を報告する。今後の旧走再実行は行わない。
 - 改訂時点で、RC/rawのCHBが200課題まで高いonlineを保った旧結果と、走4RMの交換/lr対照結果は既知である。CHB seed10–19の既存結果も参照して設計するため、CHBそのものの未知予測の成功とは数えない。新しいReDo×CHBの比較を、新しい評価結果が出る前に登録する。
-- 旧5+1の比較から「死亡を直しても位置を直しても性能差が残る」という観測は記述できるが、その差をすべて階数喪失の因果寄与へ帰属しない。ReDo43%とH約49%はseed集合・集約法が異なる。旧F51を残差の因果分解へ読み替えない。
+- 旧5+1の一回介入ではReDo/物理bias shiftはいずれも改善したが、POSITION_CARRIESは成立せずMIXEDだった。周期ReDo/扉Hの旧結果とこの試行は別プロトコルであり、同一の操作確認とも扱わない。その性能差をすべて階数喪失の因果寄与へ帰属しない。ReDo43%とH約49%はseed集合・集約法が異なる。旧F51を残差の因果分解へ読み替えない。
 
 ## 1. 問いと比較の射程
 
@@ -74,6 +74,8 @@ POSは下端>0、NI(A,B)はA−Bの下端>−.005、EQは区間全体が[−.005
 
 reset generationを追跡し、再初期化直後にも死んでいたunit（復活不成立）と、一度復活してから後に死んだ世代を分ける。ReDoが実際に死亡/休眠を低下させたか、なお位置が沈むかは操作確認と機構診断として出す。性能ラベルの成立から死亡除去やdrift停止を逆算しない。
 
+世代診断の主定義は固定1200枚上のstrict alive=max_x z_i(x)>0、dead=max_x z_i(x)≤0。native微分が全て0かは別列とする。各reset後は両層の入力行/出力列操作を全て終えた後に測り、post-reset aliveだけを復活成立とする。後の登録snapshotでalive→deadを観測したときに観測上の再死亡を記録し、連続時間の寿命とは称さない。生存したまま次のresetで置換された世代は置換による打切りとする。自己resetされていないunitがReDo前alive→直後deadとなった場合はEVENT_ASSOCIATED_DEATHとして別記し、driftによる再死亡へ数えない。イベント間のsnapshotで観測された死亡も原因をdriftだけへ断定しない。
+
 CHBがnoneを改善しなければ、この箱での予防効果は支持されない。ReDoが改善してCHB水準へ非劣性で届けば、今回の「継続ReDoでは不足しCHBが運ぶ」という予測を限定/撤回する。bothだけが高ければ相補性として報告する。CHBが優越してもC/H・b1固定・b2 WDの必要性はこの2×2だけでは分離できない。bias経路の分解は走3などと合わせて議論する。正しく実装された予測外れをS不合格にして捨てない。
 
 「Drift, Not Death」は、死亡/低活動unitを除くこの方策だけでCHBの長期性能を再現できなかった場合の、箱と方策を限定した説明として扱う。普遍的な死の無関係、純粋なdrift mediation、5+1にも共通する単一機構を確立したとはしない。
@@ -88,6 +90,7 @@ CHBがnoneを改善しなければ、この箱での予防効果は支持され�
 | S-redo | 元recycler独立参照と入力行・出力列・moments・draw順が一致 | bias moment/tcもゼロ、出力列を残す、層順を逆転 |
 | S-composition | 非零EMA/bias/momentでCHB→ReDo、EMA保持、B/H再適用なし | EMA reset、順逆転、b1/b2以外WD、ReDo後B/H再実行 |
 | S-observer | 記録有無でP/EMA/RNG/stream軌道一致、resumeとgeneration一致 | 診断でbatch/reinit RNG消費、buffer/generator復元漏れ |
+| S-generation | 全recycler後のstrict revival、置換打切り、event前後とイベント間の死亡を区別 | nativeゼロ点をstrict aliveへ算入、置換を死亡に数える、他層reset直後の死亡をdrift扱い |
 | S-readout | 4×10×200完全行、seed結合・7区間・境界・独立ADDITIVE・非有意を未決 | seed並べ替え誤対応、欠測除外、nonsigをfailure/EQ、有限CSV書換え |
 
 CPU合成検査と実データCUDA releaseを分ける。独立担当のsource-bound承認、CUDA検査、実データ/stream/出力hashの証跡が揃うまで本走へ進まない。原ソースは編集しない。GPU不在・競合は実行状態として保存し、偽のPASSを作らない。
