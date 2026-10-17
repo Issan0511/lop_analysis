@@ -1,16 +1,11 @@
 {
   "run_id": "redo_position_2x2_1018",
-  "status": "BLOCKED_CUDA",
-  "all_pass": false,
-  "blockers": [
-    "BLOCKED_CUDA: torch.cuda.is_available() is False",
-    "G0_ALL_PASS",
-    "G0_HOST_REPRODUCTION_PASS",
-    "G0_MUTATION_CHECKS_PASS"
-  ],
-  "checked_utc": "2026-10-17T16:29:12.095588+00:00",
+  "status": "ADMITTED",
+  "all_pass": true,
+  "blockers": [],
+  "checked_utc": "2026-10-17T17:09:52.592016+00:00",
   "registration_commit": "fd2e6682",
-  "git_hash": "7a6c1e74639fec6483c57e673e182f0d8d521abb",
+  "git_hash": "585b80fb633b6e67eb8795a7ca35aa77c67515e2",
   "source_sha256": {
     "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
@@ -35,20 +30,24 @@
     "torch": "2.13.0+cu130",
     "numpy": "2.5.1",
     "cuda_build": "13.0",
-    "cuda_available": false,
+    "cuda_available": true,
     "nvidia_devices": [
-      "/dev/nvidia-caps"
+      "/dev/nvidia-modeset",
+      "/dev/nvidia-uvm",
+      "/dev/nvidia-uvm-tools",
+      "/dev/nvidia0",
+      "/dev/nvidiactl"
     ],
-    "nvidia_smi_returncode": 9,
-    "nvidia_smi_output": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.",
+    "nvidia_smi_returncode": 0,
+    "nvidia_smi_output": "Sun Oct 18 02:09:52 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 580.178.04             Driver Version: 580.178.04     CUDA Version: 13.0     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 5060 Ti     Off |   00000000:01:00.0  On |                  N/A |\n|  0%   41C    P3             14W /  180W |    1493MiB /  16311MiB |      3%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            7543    C+G   ...c/gnome-remote-desktop-daemon        130MiB |\n|    0   N/A  N/A            7587      G   /usr/bin/gnome-shell                    222MiB |\n|    0   N/A  N/A            8123      G   /usr/bin/Xwayland                         6MiB |\n|    0   N/A  N/A           15733    C+G   /usr/bin/nautilus                        92MiB |\n|    0   N/A  N/A           17382    C+G   ...rack-uuid=3190708988185955192         91MiB |\n|    0   N/A  N/A           20685    C+G   ...rack-uuid=3190708988185955192         99MiB |\n|    0   N/A  N/A          321730    C+G   ...88185955192 --disable-logging        125MiB |\n|    0   N/A  N/A          639398      G   /opt/YouTube Music/youtube-music         49MiB |\n|    0   N/A  N/A          748476      G   ...rack-uuid=3190708988185955192        182MiB |\n|    0   N/A  N/A          890678    C+G   /usr/bin/ptyxis                          46MiB |\n|    0   N/A  N/A         3477114      G   ...nap-store/1447/bin/snap-store         58MiB |\n+-----------------------------------------------------------------------------------------+",
     "tf32": false,
     "matmul_precision": "highest",
     "deterministic": false,
     "threads": 20,
     "cublas": ":4096:8"
   },
-  "audit_path": "/tmp/issa_six_specs_1018/integration_audit.json",
-  "audit_sha256": "f452ad2e4ee67c3c2730e8e7f6cc06cbf49414fa6f56f68aac6cf9d9c00236ed",
+  "audit_path": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json",
+  "audit_sha256": "b8aeac0f0ec176411c423beb5ad52c0048050564b4de64db0608e8724ffa4543",
   "checks_path": "/home/issan/Projects/claude/wt/redo_position_2x2_1018/results/_checks_redo_position_2x2_1018/checks.json",
   "checks_sha256": "21e8395eaf68a89950a8f78c839e52425ad0f60f66e900c87327f8d5ec2eed82",
   "protocol": {
@@ -83,6 +82,6 @@
     "/home/issan/Projects/claude/wt/redo_position_2x2_1018/src/redo_position_2x2_1018.py",
     "run",
     "--integration-audit",
-    "/tmp/issa_six_specs_1018/integration_audit.json"
+    "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"
   ]
 }
