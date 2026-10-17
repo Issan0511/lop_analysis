@@ -1,0 +1,191 @@
+{
+  "run_id": "cnn_chprime_bias_1018",
+  "scope": "CPU_SYNTHETIC",
+  "all_pass": true,
+  "checks": {
+    "S-scale": {
+      "mutations": {
+        "image_position_mixed": true,
+        "shared_layer_median": true
+      },
+      "actual": [
+        [
+          1.0,
+          100.0,
+          1.0000000195414814e-25,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "expected": [
+        [
+          1.0,
+          100.0,
+          1.0000000195414814e-25,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "absolute_bound": [
+        [
+          3.552713678800501e-15,
+          3.552713678800501e-13,
+          3.552713748225789e-40,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "tolerance_basis": "gamma16*f64 width; zero separate",
+      "pass": true
+    },
+    "S-B-scalar": {
+      "mutations": {
+        "fixed_absolute_cap": true,
+        "epsilon_width_floor": true
+      },
+      "max_relative_ratio": 0.20000000949949026,
+      "pass": true
+    },
+    "S-P183": {
+      "mutations": {
+        "signed_zero_byte_change": true,
+        "wrong_mode_channel": true
+      },
+      "R": 1,
+      "seeds": [
+        100
+      ],
+      "steps": 3,
+      "production_R10_pending": true,
+      "pass": true
+    },
+    "S-B-state": {
+      "mutations": {
+        "omit_f2": true,
+        "shrink_moment": true
+      },
+      "width_max_error": 2.7755575615628914e-17,
+      "tolerance_basis": "gamma32*f64 width; bias clip rounds f32",
+      "native_optimizer_unchanged": true,
+      "pass": true
+    },
+    "S-order": {
+      "mutations": {
+        "all_widths_before_correction": true,
+        "extra_forward_updates_EMA": true
+      },
+      "pass": true
+    },
+    "S-Hprime": {
+      "mutations": {
+        "spatial_axis_averaged": true,
+        "reset_each_task": true
+      },
+      "beta": 0.01,
+      "initial_zero": true,
+      "pass": true
+    },
+    "S-moments": {
+      "mutations": {
+        "gate_zgt0_called_native": true,
+        "mixed_variance_named_image_variance": true,
+        "ratio_of_medians": "True"
+      },
+      "native_derivative_at_zero": 1.0,
+      "pass": true
+    },
+    "S-resume": {
+      "mutations": {
+        "resume_changes_kappa": true,
+        "logger_consumes_rng": true
+      },
+      "all_layer_position_keys": true,
+      "pass": true
+    },
+    "S-verdict": {
+      "mutations": {
+        "strict_gt_point5": true,
+        "eight_rescued": true,
+        "drop_missing_seed": true,
+        "numeric_stop_called_incomplete": true
+      },
+      "boundaries": {
+        "0": "FAIL",
+        "1": "FAIL",
+        "2": "PARTIAL",
+        "8": "PARTIAL",
+        "9": "RESCUED",
+        "10": "RESCUED"
+      },
+      "pass": true
+    },
+    "S-reference": {
+      "mutations": {
+        "ignore_precision": true,
+        "seed_exchange": true
+      },
+      "recorded_issues": [
+        "INCOMPATIBLE_PRECISION: new spec TF32 off; P183 recorded cudnn TF32 on"
+      ],
+      "verified_artifact_count": 75,
+      "pass": true
+    }
+  },
+  "sources": {
+    "analysis/cnn_chprime_bias_1018/checks.py": "0b5e5604e76596ea7a4dd90daca394c89f1411303d07c397f71a1c2d3ada1fc5",
+    "analysis/cnn_chprime_bias_1018/gpu_checks.py": "774eacfca9f135d59bab562cb87c1a847381a34fe1f79da5b063d793f5fd7d36",
+    "analysis/cnn_chprime_bias_1018/verdict.py": "2dc61f1794ab6f79e0cc59bd8ce80823e063464e942ca2f053ac756b31f51c01",
+    "specs/spec_cnn_chprime_bias_1018.md": "0a5489dcb1cab3a391835d9eb7e76d026c15bdb1701c1142ea26cda826bfc240",
+    "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/cnn_center_feat_1011.py": "55f63b6627cba8f7e1acc0cffec2b3fb2affd8cd08ff4190c9d573350f7ba753",
+    "src/cnn_center_relu_1011.py": "a7517aa588ca4df3f0b23cf0a143d7c9b0542dce7cd37d1cf6ba59744a26229e",
+    "src/cnn_chprime_bias_1018.py": "c80ebf487b206104c60e576dd468184e9852464a29ce7bf76ca549774f1956b7",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/rlcifar_cnn_0908.py": "168f624eb1475dea1a9cad4ceb010a74f40adefcf1db3af8c5617198e991b00f",
+    "src/sna_cnn_cause_1009.py": "24d64b4ea9fd2f09ae424167dad8bca7ebcd39faf47d2aa08df8a67ae0bd3ed2"
+  },
+  "torch": "2.13.0+cu130",
+  "seconds": 3.1506757736206055,
+  "pending": [
+    "CUDA R10 P183 equality",
+    "CUDA capture rewind and graph/eager equality",
+    "GPU timing seeds100\u2013102",
+    "independent review"
+  ]
+}
