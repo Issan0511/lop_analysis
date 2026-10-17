@@ -1,6 +1,6 @@
 # NaP on F51: implementation complete, production blocked
 
-The full calibration command was attempted on 2026-10-17 16:22 UTC. The installed torch build is 2.13.0+cu130, but CUDA is unavailable. The run stopped at the registered preflight and produced no calibration/evaluation performance. G0 host reproduction and mutation proofs remain incomplete; the CUDA graph S check has not run.
+The full calibration command was attempted on 2026-10-17T16:26:39Z. The installed torch build is 2.13.0+cu130, but CUDA is unavailable. The run stopped at the registered preflight and produced no calibration/evaluation performance. G0 host reproduction and mutation proofs remain incomplete; the CUDA graph S check has not run.
 
 All eight CPU synthetic S categories pass, including exact host R=10 online/parameter reproduction (maximum residual 0), an independent float64 LN/gradient reference, full-matrix/affine projection mutation checks, fresh-state and diagnostic-isolation checks, exhaustive exact-sign/Holm checks, and fail-closed audit admission mutations. `all_pass` and `production_ready` remain false.
 
