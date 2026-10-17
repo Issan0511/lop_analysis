@@ -1,0 +1,299 @@
+{
+  "run_id": "redo_position_2x2_1018",
+  "scope": "CPU_SYNTHETIC_ONLY",
+  "evaluated_cifar_seed_count": 0,
+  "generated_utc": "2026-10-17T16:22:21.408547+00:00",
+  "environment": {
+    "python": "3.12.3 (main, Apr 15 2024, 18:25:56) [Clang 17.0.6 ]",
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.1",
+    "cuda_build": "13.0",
+    "cuda_available": false,
+    "nvidia_devices": [
+      "/dev/nvidia-caps"
+    ],
+    "nvidia_smi_returncode": 9,
+    "nvidia_smi_output": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.",
+    "tf32": false,
+    "matmul_precision": "highest",
+    "deterministic": false,
+    "threads": 2,
+    "cublas": ":4096:8"
+  },
+  "source_sha256": {
+    "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
+    "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
+    "analysis/redo_position_2x2_1018/checks.py": "aaffa6babe22c0a55a727542740c90ed7232209f5b5fba19801ececf1044d8fd",
+    "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0",
+    "specs/spec_redo_position_2x2_1018.md": "97cd76a2289dd4815f7cc81b632738a3027711737e70bdd83086da84f630660f",
+    "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/baselines_cifar5p1_1008.py": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/cifar_interventions_0920.py": "d079b5185249114d035afcce69d9636ef1db2807e642c3fd879cb2168907f37f",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/redo_position_2x2_1018.py": "e74251bb057827b1178751880ea08385b84f7c2e9479a2a3d5ac2220b4a9c0ab",
+    "src/resp_cifar5p1_1007.py": "c8d6bedb04d0895f1fea97d2c4a14a11dcfb1eaa5fd64565f8b9668b9b5c729c",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+  },
+  "checks": {
+    "S-redo": {
+      "pass_": true,
+      "existing_nested_recycler_directly_executed": true,
+      "original_source_sha256": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "exact_parameter_moment_rng_match": true,
+      "reset_counts": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ]
+    },
+    "S-live": {
+      "pass_": true,
+      "natural_L": [
+        [
+          true,
+          true,
+          false
+        ],
+        [
+          true,
+          true,
+          false
+        ]
+      ],
+      "post_redo_L": [
+        [
+          true,
+          true,
+          false
+        ],
+        [
+          true,
+          true,
+          true
+        ]
+      ],
+      "native_zero_includes_ineligible": true,
+      "overlap_D2_L": [
+        1,
+        1
+      ]
+    },
+    "S-shift": {
+      "pass_": true,
+      "exact_float32_optimum": [
+        {
+          "seed": 100,
+          "c": 0.014999999664723873,
+          "c_float32_bits": 1014350479,
+          "live_units": 2,
+          "target_native_count": 8,
+          "initial_native_count": 6,
+          "achieved_native_count": 8,
+          "absolute_target_error": 0,
+          "lower_crossing_c": 0.014999998733401299,
+          "upper_crossing_c": 0.014999999664723873,
+          "lower_crossing_count": 7,
+          "upper_crossing_count": 8,
+          "search_evaluations": 66,
+          "status": "EXACT_TARGET",
+          "solver": "ordered_float32_bits_native_baddbmm",
+          "s_correction": 1
+        },
+        {
+          "seed": 101,
+          "c": 0.014999999664723873,
+          "c_float32_bits": 1014350479,
+          "live_units": 2,
+          "target_native_count": 8,
+          "initial_native_count": 6,
+          "achieved_native_count": 8,
+          "absolute_target_error": 0,
+          "lower_crossing_c": 0.014999998733401299,
+          "upper_crossing_c": 0.014999999664723873,
+          "lower_crossing_count": 7,
+          "upper_crossing_count": 8,
+          "search_evaluations": 66,
+          "status": "EXACT_TARGET",
+          "solver": "ordered_float32_bits_native_baddbmm",
+          "s_correction": 1
+        }
+      ],
+      "unreachable_tie": [
+        {
+          "seed": 100,
+          "c": 0.0,
+          "c_float32_bits": 0,
+          "live_units": 2,
+          "target_native_count": 1,
+          "initial_native_count": 0,
+          "achieved_native_count": 0,
+          "absolute_target_error": 1,
+          "lower_crossing_c": 0.9999999403953552,
+          "upper_crossing_c": 1.0,
+          "lower_crossing_count": 0,
+          "upper_crossing_count": 2,
+          "search_evaluations": 36,
+          "status": "UNREACHABLE_TIE_BLOCK",
+          "solver": "ordered_float32_bits_native_baddbmm",
+          "s_correction": 1
+        },
+        {
+          "seed": 101,
+          "c": 0.0,
+          "c_float32_bits": 0,
+          "live_units": 2,
+          "target_native_count": 1,
+          "initial_native_count": 0,
+          "achieved_native_count": 0,
+          "absolute_target_error": 1,
+          "lower_crossing_c": 0.9999999403953552,
+          "upper_crossing_c": 1.0,
+          "lower_crossing_count": 0,
+          "upper_crossing_count": 2,
+          "search_evaluations": 36,
+          "status": "UNREACHABLE_TIE_BLOCK",
+          "solver": "ordered_float32_bits_native_baddbmm",
+          "s_correction": 1
+        }
+      ],
+      "already_met_noop": true,
+      "independent_exact_oracle": [
+        {
+          "target": 0,
+          "expected_count": 0,
+          "expected_c": 0.0
+        },
+        {
+          "target": 1,
+          "expected_count": 1,
+          "expected_c": 1.0
+        },
+        {
+          "target": 2,
+          "expected_count": 1,
+          "expected_c": 1.0
+        },
+        {
+          "target": 3,
+          "expected_count": 3,
+          "expected_c": 2.0
+        }
+      ],
+      "tolerance": "byte-exact for states; exact integer gate counts"
+    },
+    "S-composition": {
+      "pass_": true,
+      "independent_host_redo_then_shift_byte_exact": true,
+      "same_masks_and_replacement_draws": true,
+      "both_shift": [
+        {
+          "seed": 100,
+          "c": 0.21633580327033997,
+          "c_float32_bits": 1046316834,
+          "live_units": 2,
+          "target_native_count": 8,
+          "initial_native_count": 5,
+          "achieved_native_count": 8,
+          "absolute_target_error": 0,
+          "lower_crossing_c": 0.21633578836917877,
+          "upper_crossing_c": 0.21633580327033997,
+          "lower_crossing_count": 7,
+          "upper_crossing_count": 8,
+          "search_evaluations": 66,
+          "status": "EXACT_TARGET",
+          "solver": "ordered_float32_bits_native_baddbmm",
+          "s_correction": 1
+        },
+        {
+          "seed": 101,
+          "c": 0.0,
+          "c_float32_bits": 0,
+          "live_units": 2,
+          "target_native_count": 8,
+          "initial_native_count": 8,
+          "achieved_native_count": 8,
+          "absolute_target_error": 0,
+          "lower_crossing_c": 0.0,
+          "upper_crossing_c": 0.0,
+          "lower_crossing_count": 8,
+          "upper_crossing_count": 8,
+          "search_evaluations": 66,
+          "status": "TARGET_ALREADY_MET",
+          "solver": "ordered_float32_bits_native_baddbmm",
+          "s_correction": 1
+        }
+      ]
+    },
+    "S-prefix": {
+      "pass_": true,
+      "host_engine_real_eager_steps": 3,
+      "full_parameter_shapes": true,
+      "seeds": [
+        100,
+        101
+      ],
+      "resumed_state_online_ce_bit_exact": true,
+      "diagnostic_state_rng_unchanged": true,
+      "limit": "CPU synthetic only; CUDA graph and R=10 host equivalence still require independent G0"
+    },
+    "S-readout": {
+      "pass_": true,
+      "label_cases": [
+        "POSITION_CARRIES",
+        "DEAD_CARRIES",
+        "ADDITIVE",
+        "MIXED"
+      ],
+      "correct_seed_join": true,
+      "missing_duplicate_nonfinite_rejected": true,
+      "zero_pos_strict_and_equivalence_inclusive": true,
+      "wide_nonsignificant_is_not_equivalent": true,
+      "simultaneous_intervals": 7,
+      "df": 9,
+      "seed_count": 10
+    },
+    "S-admission": {
+      "pass_": true,
+      "missing_G0_rejected": true,
+      "CUDA_and_registered_protocol_are_not_overridden": true
+    }
+  },
+  "mutation_negatives": {
+    "redo_zero_bias_moments": true,
+    "redo_keep_output_columns": true,
+    "redo_tau_strict_boundary": true,
+    "live_recomputed_after_redo": true,
+    "live_native_zero_gate": true,
+    "shift_all_b2": true,
+    "shift_unit_specific_c": true,
+    "shift_reapplied_each_update": true,
+    "composition_reversed": true,
+    "composition_different_random_draws": true,
+    "prefix_adam_clock_reset": true,
+    "prefix_batch_shift_one": true,
+    "readout_positional_seed_join": true,
+    "readout_nonsignificant_means_eq": true
+  },
+  "tolerances": {
+    "state": "byte exact; no empirical tolerance widening",
+    "gates": "exact integer count",
+    "intervals": "float64 registered Student t routine"
+  },
+  "all_pass": true,
+  "unperformed": [
+    "CUDA graph warmup rollback check on this new launch",
+    "R=10 CUDA prefix/none equality on real CIFAR",
+    "G0 independent CUDA host reproduction",
+    "all four 10-seed production arms"
+  ]
+}
