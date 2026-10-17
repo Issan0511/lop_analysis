@@ -123,13 +123,58 @@ def verdict(inputs):
                 prediction='NOT_LR_ALL_THREE',scope='Registered constant layer-specific LR_G and LR_U only; no claim about arbitrary lr or preconditioning')
 
 
+def validate_bundle(directory,box,phase):
+    """Stored production evidence suffices for analysis; CUDA need not exist now."""
+    directory=Path(directory)
+    proof=json.loads((directory/'completion.json').read_text())
+    if proof.get('status')!='COMPLETE' or proof.get('phase')!=phase or proof.get('box')!=box:
+        raise ValueError('INCOMPLETE: production completion evidence missing')
+    mandatory={'per_task.json','per_task.csv','trace.json','trace.csv','group_trace.csv','data_manifest.json','provenance.json','admission_checks.json','spec.md','common.md'}
+    if phase=='calibrate':mandatory.add('schedule.json')
+    if box=='F51':mandatory.add('integration_audit.json')
+    hashes=proof.get('output_sha256',{})
+    if not mandatory.issubset(hashes):raise ValueError('CHECK_FAILED: output proof incomplete')
+    for name,digest in hashes.items():
+        if Path(name).name!=name or R.sha(directory/name)!=digest:raise ValueError('CHECK_FAILED: completed output modified')
+    ident=json.loads((directory/'provenance.json').read_text())
+    if ident!=proof.get('identity') or ident.get('phase')!=phase or ident.get('box')!=box:
+        raise ValueError('CHECK_FAILED: missing or wrong production identity')
+    if ident.get('source_sha256')!=R.source_hashes():raise ValueError('CHECK_FAILED: scientific readout source mismatch')
+    if ident.get('seeds')!=(R.CAL_SEEDS if phase=='calibrate' else R.EVAL_SEEDS):raise ValueError('INCOMPLETE: production cohort mismatch')
+    checks=json.loads((directory/'admission_checks.json').read_text())
+    flag='cpu_pass' if box=='RM' else 'cuda_pass'
+    if checks.get(flag) is not True or checks.get('source_sha256')!=ident['source_sha256'] or R.sha(directory/'admission_checks.json')!=ident.get('admission_checks_sha256'):
+        raise ValueError('CHECK_FAILED: admitted implementation proof mismatch')
+    data=json.loads((directory/'data_manifest.json').read_text())
+    if 'dataset_signature' not in ident or data.get('dataset_signature')!=ident['dataset_signature'] or data.get('subset_or_plan_sha256')!=ident.get('subset_or_plan_sha256'):
+        raise ValueError('CHECK_FAILED: data identity missing or changed')
+    if box=='F51':
+        if R.require_g0(directory/'integration_audit.json')!=ident.get('integration_audit_sha256'):raise ValueError('CHECK_FAILED: stored G0 mismatch')
+    return proof,ident
+
+
+def load_completed_evaluation(path,box):
+    directory=Path(path) if Path(path).is_dir() else Path(path).parent
+    proof,ident=validate_bundle(directory,box,'evaluate')
+    calibration=Path(proof['calibration_directory'])
+    _,cal_ident=validate_bundle(calibration,box,'calibrate')
+    if cal_ident['dataset_signature']!=ident['dataset_signature']:raise ValueError('CHECK_FAILED: calibration and evaluation data differ')
+    schedule=calibration/'schedule.json'
+    R.load_schedule(schedule,box,ident['dataset_signature'])
+    if R.sha(schedule)!=ident.get('schedule_sha256'):raise ValueError('CHECK_FAILED: locked schedule changed')
+    return json.loads((directory/'per_task.json').read_text())
+
+
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--RC',type=Path);p.add_argument('--RM',type=Path);p.add_argument('--F51',type=Path);p.add_argument('--out',type=Path,required=True);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--check-only',action='store_true',help='explicit bare-row synthetic fixture mode; never scientific evidence');p.add_argument('--RC',type=Path);p.add_argument('--RM',type=Path);p.add_argument('--F51',type=Path);p.add_argument('--out',type=Path,required=True);a=p.parse_args()
     inputs={}
     for b in R.BOXES:
         path=getattr(a,b)
-        if path and path.exists():inputs[b]=json.loads(path.read_text())
-    out=verdict(inputs);R.put(a.out/'verdict.json',out)
+        if path and path.exists():inputs[b]=json.loads(path.read_text()) if a.check_only else load_completed_evaluation(path,b)
+    out=verdict(inputs)
+    if a.check_only:out['status']='CHECK_ONLY';out['scientific_evidence']=False
+    else:out['scientific_evidence']=True
+    R.put(a.out/'verdict.json',out)
     lines=[f"{R.RUN}: {out['status']}",f"Overall label: {out['label']}",'15 Bonferroni paired t intervals; n=10 seed pairs; equivalence margin 0.005.','']
     for b,v in out['boxes'].items():
         lines.append(f"{b}: {v['status']} {v.get('label','')}")

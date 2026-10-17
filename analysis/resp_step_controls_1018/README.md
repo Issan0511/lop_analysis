@@ -7,7 +7,7 @@ The implementation imports the original response engines, with a native-loop RM 
 
 First 256 updates log each W and bias separately: gradient, m, v, bias-corrected moment norms, candidate and actual displacement norms, relative displacement, actual LR and cosine to N. qU and group U use physical P_after−P_before displacement computed after casting both states to float64. Candidate versus actual displacement is checked with a rounding-derived bound. Whole-layer W+b norms and cosines are exported separately. Diagnostics never use or advance training RNG. Prefix and arm checkpoints have SHA256 digests and strict source/config identities. Resume preserves completed prefixes/seeds/arms, rerunning an interrupted arm from the exact branch checkpoint.
 
-The independent CPU checks exercise real host loop parity, nonzero moments, logging invariance, native field gradients, CPU/CUDA-ELU distinction, RMS ratios, explicit zero cases, calibration-only seeds, fail-closed G0, and the 15-interval verdict. Eighteen specified adversarial mutations must be detected. The short timing fixture uses real MNIST and is explicitly CHECK_ONLY, with no shortened production CLI.
+The independent CPU checks exercise real host loop parity, nonzero moments, logging invariance, native field gradients, CPU/CUDA-ELU distinction, RMS ratios, explicit zero cases, calibration-only seeds, fail-closed G0, and the 15-interval verdict. Twenty specified adversarial mutations must be detected. The short timing fixture uses real MNIST and is explicitly CHECK_ONLY, with no shortened production CLI.
 
 Run checks:
 
@@ -43,3 +43,5 @@ The readout refuses missing/duplicate seed-arm rows, mismatched label/order stre
 Raw gradient caches, checkpoint `.pt` and unit `.npz` files must be retained and archived under the repository's CLAUDE.md policy before the worktree is removed. They should not be committed as large blobs. Source and compact check/blocked-status evidence are versioned.
 
 Current data identity is bound before any prefix/checkpoint reuse. Calibration/evaluation require the same archive and actual MNIST tensor hash; manifests cannot be overwritten on mismatch. A schedule without a source/cohort/data identity is rejected.
+
+Standalone verdict CLI defaults to scientific admission: completed evaluate/calibration bundles, all output digests (including finite CSV bytes), mandatory source/cohort/data identity, stored CPU/CUDA checks and F51 G0, and locked source/data-bound schedule must validate. It can analyze valid saved CUDA results without CUDA on the current machine. Bare-row fixtures require explicit `--check-only` and output CHECK_ONLY.

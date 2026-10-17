@@ -568,6 +568,13 @@ def _execute(box,phase,out,checks,audit,schedule_path=None,workers=1):
         if schedule_path is None:raise RuntimeError('CALIBRATION_REQUIRED: --schedule')
         schedule=load_schedule(schedule_path,box,ident['dataset_signature']);ident['schedule_sha256']=sha(schedule_path)
     bind_manifest(out/'data_manifest.json',data_manifest)
+    check_snapshot=out/'admission_checks.json'
+    if check_snapshot.exists():assert sha(check_snapshot)==sha(checks),'stored admission checks changed'
+    else:check_snapshot.write_bytes(Path(checks).read_bytes())
+    if box=='F51':
+        audit_snapshot=out/'integration_audit.json'
+        if audit_snapshot.exists():assert sha(audit_snapshot)==sha(audit),'stored G0 audit changed'
+        else:audit_snapshot.write_bytes(Path(audit).read_bytes())
     saved=out/'provenance.json'
     if saved.exists():assert json.loads(saved.read_text())==ident,'resume identity mismatch'
     else:put(saved,ident)
@@ -596,6 +603,12 @@ def _execute(box,phase,out,checks,audit,schedule_path=None,workers=1):
     write_csv(out/'group_trace.csv',group_rows(traces))
     if phase=='calibrate':
         q=q_from_rows(traces);put(out/'schedule.json',dict(run=RUN,box=box,**q,trace_sha256={'trace.json':sha(out/'trace.json')},identity=ident))
+    proof_files=['per_task.json','per_task.csv','trace.json','trace.csv','group_trace.csv','data_manifest.json','provenance.json','admission_checks.json','spec.md','common.md']
+    if phase=='calibrate':proof_files.append('schedule.json')
+    if box=='F51':proof_files.append('integration_audit.json')
+    put(out/'completion.json',dict(status='COMPLETE',phase=phase,box=box,identity=ident,
+        output_sha256={name:sha(out/name) for name in proof_files},
+        calibration_directory=str(Path(schedule_path).resolve().parent) if phase=='evaluate' else None))
     put(out/'status.json',dict(status='COMPLETE',phase=phase,box=box,elapsed_s=time.time()-t0))
     return allrows
 

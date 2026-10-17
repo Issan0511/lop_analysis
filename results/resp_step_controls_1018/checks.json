@@ -6,7 +6,7 @@
   "checks": {
     "S-host/noop/logging": {
       "pass_": true,
-      "seconds": 0.3141492020804435,
+      "seconds": 0.34263139497488737,
       "detail": {
         "updates": 75,
         "nonzero_initial_moments": true
@@ -14,14 +14,14 @@
     },
     "S-log": {
       "pass_": true,
-      "seconds": 0.0008773701265454292,
+      "seconds": 0.0008736460004001856,
       "detail": {
         "independent_scalar": true
       }
     },
     "S-norm": {
       "pass_": true,
-      "seconds": 0.2704612349625677,
+      "seconds": 0.2695016539655626,
       "detail": {
         "independent_numpy_float64": true,
         "qG": [
@@ -39,7 +39,7 @@
     },
     "S-host/field": {
       "pass_": true,
-      "seconds": 0.012712768046185374,
+      "seconds": 0.013933464186266065,
       "detail": {
         "branch_batches": 2,
         "native_kernel_distinction": true
@@ -47,7 +47,7 @@
     },
     "S-schedule": {
       "pass_": true,
-      "seconds": 0.5144768620375544,
+      "seconds": 0.5192707551177591,
       "detail": {
         "eval_seeds_rejected": true,
         "missing_g0_rejected": true
@@ -55,7 +55,7 @@
     },
     "S-verdict": {
       "pass_": true,
-      "seconds": 0.027917191153392196,
+      "seconds": 0.027913994854316115,
       "detail": {
         "m": 15,
         "scenarios": 6
@@ -63,12 +63,21 @@
     },
     "S-workers": {
       "pass_": true,
-      "seconds": 1.6967452589888126,
+      "seconds": 1.692588975885883,
       "detail": {
         "serial_spawn_bit_equal": true,
         "missing_duplicate_shards_rejected": true,
         "workers": 2,
         "threads_per_worker": 1
+      }
+    },
+    "S-readout-evidence": {
+      "pass_": true,
+      "seconds": 0.2151050081010908,
+      "detail": {
+        "finite_csv_tamper_rejected": true,
+        "missing_identity_rejected": true,
+        "bare_rows_rejected": true
       }
     },
     "S-cost": {
@@ -82,8 +91,8 @@
           "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
         },
         "updates": 75,
-        "seconds": 0.1397205691318959,
-        "seconds_per_update": 0.001862940921758612,
+        "seconds": 0.13916799798607826,
+        "seconds_per_update": 0.0018555733064810436,
         "full_RM_updates": 2160000,
         "historical_runtime_warning": "First 256 updates incur detailed probes; prefix has no probes; current fixture includes all probes."
       }
@@ -155,6 +164,14 @@
       "detected": true
     },
     {
+      "name": "finite CSV tamper ignored",
+      "detected": true
+    },
+    {
+      "name": "completion identity ignored",
+      "detected": true
+    },
+    {
       "name": "one-box all-three",
       "detected": true
     },
@@ -175,9 +192,9 @@
     "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
     "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
-    "analysis/resp_step_controls_1018/checks.py": "62fcb4c47494b1bfe9842e0673d8c8487cff84dbcfd9e2f248ad7a47bdefbba8",
+    "analysis/resp_step_controls_1018/checks.py": "813601544f9481032a07b41648fc22112dc8257e433ca3cdf17d9a793b0d6a11",
     "analysis/resp_step_controls_1018/run_rm.py": "d5effba8f03de499d30eff8039bfdca488f2bbd3186cfb8a9b763257438ffe58",
-    "analysis/resp_step_controls_1018/verdict.py": "ccca13130be806745193d5fe55828f42d6b6f0deae7e8e7c51b3bcc612555d3b",
+    "analysis/resp_step_controls_1018/verdict.py": "d703cbb450bdcb634e2f01dae9af66ffa5f9336f91ef9a136ca0ee1e6bad8832",
     "specs/spec_resp_step_controls_1018.md": "34032c3a1323d9402c8080373bc5b02f5a3a55330243920f7eef4a2580a7c9ca",
     "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
     "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -196,7 +213,7 @@
     "src/resp_cifar5p1_1007.py": "c8d6bedb04d0895f1fea97d2c4a14a11dcfb1eaa5fd64565f8b9668b9b5c729c",
     "src/resp_cifar_ee_0920.py": "3b74d0cabba63241738d1988edfdec3fff48ab070e4d8a74e9e21a8e53b1b7eb",
     "src/resp_ee_0917.py": "699a403375f53829f72cde9f2b47a413c7d5bf9639e278b0e70eed64541a5e6f",
-    "src/resp_step_controls_1018.py": "f1e90d64ed356767cfe6f29e5d8c24f552d812f662b8ab683df16838a57b7943",
+    "src/resp_step_controls_1018.py": "b1ccd62be237c1330569945364e292ba502f72a818d1971108a92e0ef87d0d33",
     "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
     "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9"
   },

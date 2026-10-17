@@ -237,6 +237,38 @@ def real_data_cost():
                 historical_runtime_warning='First 256 updates incur detailed probes; prefix has no probes; current fixture includes all probes.')
 
 
+def evidence_check(m=V):
+    import tempfile
+    with tempfile.TemporaryDirectory() as temporary:
+        d=Path(temporary)
+        sources=R.source_hashes();data=dict(dataset_signature={'fixture':'CHECK_ONLY'},subset_or_plan_sha256='fixture')
+        checks=dict(cpu_pass=True,source_sha256=sources)
+        R.put(d/'admission_checks.json',checks)
+        ident=dict(phase='evaluate',box='RM',seeds=R.EVAL_SEEDS,source_sha256=sources,
+                   admission_checks_sha256=R.sha(d/'admission_checks.json'),**data)
+        R.put(d/'provenance.json',ident);R.put(d/'data_manifest.json',data)
+        for name in ('per_task.json','trace.json'):R.put(d/name,[])
+        for name in ('per_task.csv','trace.csv','group_trace.csv'):(d/name).write_text('seed,online_acc\n0,0.5\n')
+        for name in ('spec.md','common.md'):(d/name).write_text('CHECK_ONLY fixture; not production performance')
+        hashes={p.name:R.sha(p) for p in d.iterdir()}
+        proof=dict(status='COMPLETE',phase='evaluate',box='RM',identity=ident,output_sha256=hashes)
+        R.put(d/'completion.json',proof);m.validate_bundle(d,'RM','evaluate')
+        (d/'per_task.csv').write_text('seed,online_acc\n0,0.9\n')
+        try:m.validate_bundle(d,'RM','evaluate')
+        except ValueError:pass
+        else:raise AssertionError('finite production CSV tampering accepted')
+        (d/'per_task.csv').write_text('seed,online_acc\n0,0.5\n')
+        proof.pop('identity');R.put(d/'completion.json',proof)
+        try:m.validate_bundle(d,'RM','evaluate')
+        except ValueError:pass
+        else:raise AssertionError('completion without production identity accepted')
+        (d/'completion.json').unlink()
+        try:m.load_completed_evaluation(d/'per_task.json','RM')
+        except FileNotFoundError:pass
+        else:raise AssertionError('bare rows accepted as production evidence')
+    return dict(finite_csv_tamper_rejected=True,missing_identity_rejected=True,bare_rows_rejected=True)
+
+
 def worker_check(m=R):
     import concurrent.futures
     import multiprocessing
@@ -301,7 +333,7 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--cuda',action='store_true');p.add_argument('--out',type=Path,default=ROOT/f'results/{R.RUN}/checks.json');a=p.parse_args()
     torch.set_num_threads(1);torch.set_flush_denormal(True);R.RM.H.setup('cpu')
     checks={};mutations=[]
-    for name,fn in [('S-host/noop/logging',host_check),('S-log',log_check),('S-norm',norm_check),('S-host/field',field_check),('S-schedule',schedule_check),('S-verdict',verdict_check),('S-workers',worker_check)]:
+    for name,fn in [('S-host/noop/logging',host_check),('S-log',log_check),('S-norm',norm_check),('S-host/field',field_check),('S-schedule',schedule_check),('S-verdict',verdict_check),('S-workers',worker_check),('S-readout-evidence',evidence_check)]:
         st=time.monotonic()
         try:detail=fn();checks[name]=dict(pass_=True,seconds=time.monotonic()-st,detail=detail)
         except Exception as e:checks[name]=dict(pass_=False,error=repr(e));raise
@@ -322,6 +354,8 @@ def main():
       ('eval seed schedule',R,schedule_check,"obj['seeds']==CAL_SEEDS","obj['seeds'] in (CAL_SEEDS,EVAL_SEEDS)"),
       ('non-significance implies reproduction',V,verdict_check,"if cn['lo']>0 and cr['lo']>-EQ:","if cn['lo']>0 and cr['hi']>0:"),
       ('missing/duplicate shard accepted',R,worker_check,"assert len(got)==len(set(got)) and set(got)==set(seeds),'INCOMPLETE: duplicate or missing seed shard'","pass # mutated shard admission"),
+      ('finite CSV tamper ignored',V,evidence_check,"if Path(name).name!=name or R.sha(directory/name)!=digest:","if Path(name).name!=name:"),
+      ('completion identity ignored',V,evidence_check,"if ident!=proof.get('identity') or ident.get('phase')!=phase or ident.get('box')!=box:","if ident.get('phase')!=phase or ident.get('box')!=box:"),
       ('one-box all-three',V,verdict_check,"labels==['NOT_LR']*3","'NOT_LR' in labels"),
     ]
     train_source=Path(R.__file__).read_text().split('def rm_train(',1)[1].split('def rm_prefix(',1)[0]
