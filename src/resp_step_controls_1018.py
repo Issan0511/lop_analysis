@@ -220,14 +220,18 @@ def q_from_rows(rows, seeds=CAL_SEEDS, k=K):
     return dict(**ratios,zero_over_zero=zeros,per_seed=per_seed,K=k,seeds=list(seeds),method='RMS W+b; per-seed R/N; median seeds')
 
 
-def load_schedule(path,box):
+def load_schedule(path,box,dataset_signature=None):
     obj=json.loads(Path(path).read_text())
     assert obj['run']==RUN and obj['box']==box and obj['seeds']==CAL_SEEDS and obj['K']==K, 'S-schedule: calibration identity'
     for metric in ('qG','qU'):
         assert len(obj[metric])==3 and all(math.isfinite(v) and v>0 for v in obj[metric])
-    if 'identity' in obj:
-        assert obj['identity']['source_sha256']==source_hashes(), 'S-schedule: calibration source differs from evaluation'
-        assert obj['identity']['phase']=='calibrate' and obj['identity']['box']==box
+    assert 'identity' in obj,'S-schedule: missing calibration identity'
+    ci=obj['identity']
+    assert ci['source_sha256']==source_hashes(), 'S-schedule: calibration source differs from evaluation'
+    assert ci['phase']=='calibrate' and ci['box']==box and ci['seeds']==CAL_SEEDS and ci['K']==K, 'S-schedule: source cohort identity'
+    assert 'dataset_signature' in ci,'S-schedule: dataset identity missing'
+    if dataset_signature is not None:
+        assert ci['dataset_signature']==dataset_signature,'S-schedule: changed dataset between calibration and evaluation'
     parent=Path(path).parent
     for rel,h in obj['trace_sha256'].items(): assert sha(parent/rel)==h, 'S-schedule: trace hash mismatch'
     rows=[]
@@ -281,6 +285,7 @@ def rm_train(params,adam,x,y,g_batch,epochs,fwd=None,rates=(1e-3,)*3,trace=None,
             step=ep*RM.SPE+j+1;ob=order[j*RM.BATCH:(j+1)*RM.BATCH]
             xb,yb=xs[j*RM.BATCH:(j+1)*RM.BATCH],ys[j*RM.BATCH:(j+1)*RM.BATCH]
             vals=RM.forward(params,xb,ob,fwd);loss=F.cross_entropy(vals[-1],yb)
+            if not bool(torch.isfinite(loss)):raise RuntimeError(f'DIVERGED: RM seed{seed} arm{arm} task{task} step{step}')
             ce[step-1]=loss.detach();acc[step-1]=(vals[-1].detach().argmax(1)==yb).float().mean()
             grads=torch.autograd.grad(loss,params)
             record=trace is not None and step<=K
@@ -363,6 +368,7 @@ def cuda_probe(eng,box,ids,arm,task,step,cache):
     if box=='RC':xb,yb=eng.X[eng.ar,ids],eng.Y[eng.ar,ids];ncls=10;invs=(eng.inv1,eng.inv2)
     else:xb,yb=eng.data.X[ids],eng.data.Y[ids];ncls=100;invs=(eng.inv_c1,eng.inv_c2)
     loss=F.cross_entropy(eng.forward(xb,ids)[-1].reshape(-1,ncls),yb.reshape(-1),reduction='none').view(eng.R,-1).mean(1).sum()
+    if not bool(torch.isfinite(loss)):raise RuntimeError(f'DIVERGED: {box} arm{arm} task{task} step{step}')
     grads=torch.autograd.grad(loss,eng.P)
     invs[0].fill_(1/(1-.9**(eng.tc+1)));invs[1].fill_(1/(1-.999**(eng.tc+1)))
     capture=probe_begin(eng.P,grads,eng.m,eng.v,eng.tc+1,eng.rates,box,invs)
@@ -380,7 +386,7 @@ def cuda_cohort(box,out,ident,phase,schedule):
     else:
         dev=F51.setup();data=F51.Data(dev);eng=F51.Engine(seeds,data)
         natural=F51.Engine;branch=28;donor=2;end=29
-    put(out/'data_manifest.json',dict(data_sha256=data.sha256,
+    bind_manifest(out/'cuda_input_manifest.json',dict(data_sha256=data.sha256,
         input_hash=RC.tree_hash(X) if box=='RC' else RC.tree_hash(data.X),
         subset={str(s):RC.E.RC.subset_idx(s).tolist() for s in seeds} if box=='RC' else
         {str(s):F51.C.task_plan(s) for s in seeds}))
@@ -466,29 +472,123 @@ def cuda_cohort(box,out,ident,phase,schedule):
     return allrows,traces
 
 
-def execute(box,phase,out,checks,audit,schedule_path=None):
+def bind_manifest(path,obj):
+    """Existing data descriptions are evidence, never overwritten on resume."""
+    if Path(path).exists():
+        assert json.loads(Path(path).read_text())==json.loads(json.dumps(obj)), 'DATA_IDENTITY_MISMATCH: existing data manifest'
+    else:put(path,obj)
+
+
+def describe_data(box,seeds):
+    mnist=None
+    if box=='RM':
+        RM.H.DATA_DIR=DATA_ROOT/'mnist';RM.H.setup('cpu');mnist=RM.H.Mnist(torch.device('cpu'))
+        signature=dict(archive_sha256=mnist.sha256,train_tensor_sha256=RC.tree_hash(mnist.train_x),
+                       transform='native float32 /255, flat 784',loader_source_sha256=sha(ROOT/'src/pmnist_0905.py'))
+        subsets={str(s):RM.RL.subset_idx(s).tolist() for s in seeds}
+    elif box=='RC':
+        RC.E.RC.DATA_DIR=RC.DATA;data=RC.E.RC.Cifar10()
+        signature=dict(archive_sha256=data.sha256,raw_train_sha256=RC.tree_hash(data.train_u8),
+                       transform='native RC slot_inputs std',loader_source_sha256=sha(ROOT/'src/pmnist_rlcifar_0907.py'),
+                       transform_source_sha256=sha(ROOT/'src/rlcifar_mlp_battle_0918.py'))
+        subsets={str(s):RC.E.RC.subset_idx(s).tolist() for s in seeds}
+    else:
+        data=F51.C.Cifar100(F51.DATA)
+        signature=dict(archive_sha256=data.sha256,raw_train_sha256=RC.tree_hash(data.train_u8),
+                       train_labels_sha256=RC.tree_hash(data.train_y),transform='native F51 inputs train std',
+                       loader_source_sha256=sha(ROOT/'src/cifar5p1_mlp_0920.py'))
+        subsets={str(s):json.loads(json.dumps(F51.C.task_plan(s))) for s in seeds}
+    manifest=dict(dataset_signature=signature,subsets_or_class_plans=subsets,
+                  subset_or_plan_sha256=hashlib.sha256(json.dumps(subsets,sort_keys=True).encode()).hexdigest())
+    return manifest,mnist
+
+
+def worker_setup():
+    torch.set_num_threads(1);torch.set_flush_denormal(True);RM.H.setup('cpu')
+
+
+def rm_seed_job(seed,out,ident,phase,schedule):
+    """Spawn target: each seed owns its data, streams, checkpoints and one CPU thread."""
+    worker_setup()
+    manifest,mnist=describe_data('RM',[seed])
+    assert manifest['dataset_signature']==ident['dataset_signature'],'DATA_IDENTITY_MISMATCH: spawned worker data'
+    rows,traces=rm_seed(seed,mnist,Path(out),ident,phase,schedule)
+    return seed,rows,traces
+
+
+def order_seed_shards(shards,seeds):
+    got=[int(s[0]) for s in shards]
+    assert len(got)==len(set(got)) and set(got)==set(seeds),'INCOMPLETE: duplicate or missing seed shard'
+    by={s[0]:s for s in shards}
+    return [by[s] for s in seeds]
+
+
+def combine_rm_shards(shards,seeds,phase):
+    rows=[];traces=[]
+    arms=('N','R') if phase=='calibrate' else ARMS
+    for seed,rr,tt in order_seed_shards(shards,seeds):
+        rk=[(r['seed'],r['arm'],r['task']) for r in rr]
+        expected={(seed,a,t) for a in arms for t in (11,12)}
+        assert len(rk)==len(set(rk)) and set(rk)==expected,'INCOMPLETE: RM arm/task shard'
+        tk=[(r['seed'],r['arm'],r['step'],r['param']) for r in tt]
+        expected={(seed,a,k,p) for a in arms for k in range(1,K+1) for p in PARAMS}
+        assert len(tk)==len(set(tk)) and set(tk)==expected,'INCOMPLETE: RM trace shard'
+        rows.extend(rr);traces.extend(tt)
+    return rows,traces
+
+
+def worker_equivalence_fixture(seed):
+    """CHECK_ONLY: one genuine native-shape epoch; not a production performance CLI."""
+    worker_setup();g=torch.Generator().manual_seed(seed)
+    x=torch.randn(1200,784,generator=g);y=RM.RL.task_labels(RM.H.stream('rl_labels',seed))
+    p=RM.H.init_params(seed,torch.device('cpu'))
+    adam=([torch.zeros_like(q) for q in p],[torch.zeros_like(q) for q in p],[0]);gb=RM.H.stream('rl_batch',seed)
+    ce,acc,stp,epsf,chain=rm_train(p,adam,x,y,gb,1)
+    return seed,RC.tree_hash((p,adam,gb.get_state(),ce,acc)),chain
+
+
+def _execute(box,phase,out,checks,audit,schedule_path=None,workers=1):
+    assert 1<=workers<=4,'workers must be 1..4; each worker uses one CPU thread'
     out=Path(out);out.mkdir(parents=True,exist_ok=True)
     try:admission(box,checks,audit)
     except (RuntimeError,FileNotFoundError) as e:
         put(out/'status.json',dict(status=str(e).split(':')[0],reason=str(e)));raise
     torch.set_num_threads(1 if box=='RM' else 2);torch.set_flush_denormal(True)
-    ident=identity(box,phase);ident['admission_checks_sha256']=sha(checks)
+    seeds=CAL_SEEDS if phase=='calibrate' else EVAL_SEEDS
+    data_manifest,mnist=describe_data(box,seeds)
+    if box=='RM':
+        canonical=json.loads(Path(checks).read_text())['checks']['S-cost']['detail']['real_data_sha256']
+        assert data_manifest['dataset_signature']['archive_sha256']==canonical,'DATA_IDENTITY_MISMATCH: current MNIST differs from verified check data'
+    ident=identity(box,phase);ident['dataset_signature']=data_manifest['dataset_signature']
+    ident['subset_or_plan_sha256']=data_manifest['subset_or_plan_sha256']
+    ident['admission_checks_sha256']=sha(checks)
     if box=='F51':ident['integration_audit_sha256']=require_g0(audit)
     schedule=None
     if phase=='evaluate':
         if schedule_path is None:raise RuntimeError('CALIBRATION_REQUIRED: --schedule')
-        schedule=load_schedule(schedule_path,box);ident['schedule_sha256']=sha(schedule_path)
+        schedule=load_schedule(schedule_path,box,ident['dataset_signature']);ident['schedule_sha256']=sha(schedule_path)
+    bind_manifest(out/'data_manifest.json',data_manifest)
     saved=out/'provenance.json'
     if saved.exists():assert json.loads(saved.read_text())==ident,'resume identity mismatch'
     else:put(saved,ident)
     (out/'spec.md').write_text(SPEC.read_text());(out/'common.md').write_text(COMMON.read_text())
     t0=time.time();allrows=[];traces=[]
     if box=='RM':
-        RM.H.DATA_DIR=DATA_ROOT/'mnist';RM.H.setup('cpu');mnist=RM.H.Mnist(torch.device('cpu'))
-        put(out/'data_manifest.json',dict(data_sha256=mnist.sha256,subsets={str(s):RM.RL.subset_idx(s).tolist() for s in ident['seeds']}))
-        for seed in ident['seeds']:
-            rows,logs=rm_seed(seed,mnist,out/f's{seed}',ident,phase,schedule);allrows+=rows;traces+=logs
-            put(out/'status.json',dict(status='RUNNING',completed_seed=seed,elapsed_s=time.time()-t0))
+        shards=[]
+        if workers==1:
+            for seed in ident['seeds']:
+                rows,logs=rm_seed(seed,mnist,out/f's{seed}',ident,phase,schedule);shards.append((seed,rows,logs))
+                put(out/'status.json',dict(status='RUNNING',completed_seed=seed,completed_seeds=[s[0] for s in shards],workers=workers,elapsed_s=time.time()-t0))
+        else:
+            import concurrent.futures
+            import multiprocessing
+            del mnist
+            with concurrent.futures.ProcessPoolExecutor(max_workers=workers,mp_context=multiprocessing.get_context('spawn')) as pool:
+                futures=[pool.submit(rm_seed_job,seed,str(out/f's{seed}'),ident,phase,schedule) for seed in ident['seeds']]
+                for future in concurrent.futures.as_completed(futures):
+                    shard=future.result();shards.append(shard)
+                    put(out/'status.json',dict(status='RUNNING',completed_seed=shard[0],completed_seeds=sorted(s[0] for s in shards),workers=workers,elapsed_s=time.time()-t0))
+        allrows,traces=combine_rm_shards(shards,ident['seeds'],phase)
     else:
         with F51.gpu_lock():allrows,traces=cuda_cohort(box,out,ident,phase,schedule)
     put(out/'per_task.json',allrows);write_csv(out/'per_task.csv',allrows)
@@ -500,17 +600,30 @@ def execute(box,phase,out,checks,audit,schedule_path=None):
     return allrows
 
 
+def semantic_status(error):
+    status=str(error).split(':')[0]
+    known=('BLOCKED_CUDA','BLOCKED_G0','CHECK_FAILED','CALIBRATION_REQUIRED','CALIBRATION_UNDEFINED','INCOMPLETE','DIVERGED','DATA_IDENTITY_MISMATCH')
+    return status if status in known else 'CHECK_FAILED'
+
+
+def execute(box,phase,out,checks,audit,schedule_path=None,workers=1):
+    try:return _execute(box,phase,out,checks,audit,schedule_path,workers)
+    except Exception as e:
+        put(Path(out)/'status.json',dict(status=semantic_status(e),reason=str(e),phase=phase,box=box))
+        raise
+
+
 def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--box',choices=BOXES,required=True);p.add_argument('--phase',choices=('calibrate','evaluate'),required=True)
     p.add_argument('--out',required=True);p.add_argument('--schedule')
     p.add_argument('--checks',default=str(ROOT/f'results/{RUN}/checks.json'))
-    p.add_argument('--integration-audit')
+    p.add_argument('--integration-audit');p.add_argument('--workers',type=int,default=1)
     a=p.parse_args(argv)
-    try:execute(a.box,a.phase,a.out,a.checks,a.integration_audit,a.schedule)
+    try:execute(a.box,a.phase,a.out,a.checks,a.integration_audit,a.schedule,a.workers)
     except (RuntimeError,FileNotFoundError,AssertionError,ValueError) as e:
         status=str(e).split(':')[0]
-        if status not in ('BLOCKED_CUDA','BLOCKED_G0','CHECK_FAILED','CALIBRATION_REQUIRED','CALIBRATION_UNDEFINED','INCOMPLETE','DIVERGED'):status='CHECK_FAILED'
+        if status not in ('BLOCKED_CUDA','BLOCKED_G0','CHECK_FAILED','CALIBRATION_REQUIRED','CALIBRATION_UNDEFINED','INCOMPLETE','DIVERGED','DATA_IDENTITY_MISMATCH'):status='CHECK_FAILED'
         put(Path(a.out)/'status.json',dict(status=status,reason=str(e)))
         print(str(e),file=sys.stderr);return 2
     return 0

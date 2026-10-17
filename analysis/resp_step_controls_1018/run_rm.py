@@ -9,15 +9,15 @@ from analysis.resp_step_controls_1018 import verdict as V
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--out',type=Path,default=ROOT/f'results/{R.RUN}/RM')
-    p.add_argument('--checks',type=Path,default=ROOT/f'results/{R.RUN}/checks.json');a=p.parse_args()
+    p.add_argument('--checks',type=Path,default=ROOT/f'results/{R.RUN}/checks.json');p.add_argument('--workers',type=int,default=1);a=p.parse_args()
     try:
-        R.execute('RM','calibrate',a.out/'calibration',a.checks,None)
-        rows=R.execute('RM','evaluate',a.out/'evaluation',a.checks,None,a.out/'calibration/schedule.json')
+        R.execute('RM','calibrate',a.out/'calibration',a.checks,None,workers=a.workers)
+        rows=R.execute('RM','evaluate',a.out/'evaluation',a.checks,None,a.out/'calibration/schedule.json',workers=a.workers)
         # Report the observed RM box with registered m=15; unavailable boxes retain INCOMPLETE.
         result=V.verdict({'RM':rows});R.put(a.out/'verdict.json',result)
         (a.out/'summary.md').write_text(f"RM: {result['boxes']['RM'].get('label',result['boxes']['RM']['status'])}\nOverall: {result['status']} (RC and F51 required for the three-box claim).\n")
     except Exception as e:
-        R.put(a.out/'status.json',dict(status='STOPPED',reason=str(e)));raise
+        R.put(a.out/'status.json',dict(status=R.semantic_status(e),reason=str(e)));raise
     R.put(a.out/'status.json',dict(status='COMPLETE_RM_ONLY',overall_verdict_status=result['status']))
 
 if __name__=='__main__':main()

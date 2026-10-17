@@ -7,7 +7,7 @@ The implementation imports the original response engines, with a native-loop RM 
 
 First 256 updates log each W and bias separately: gradient, m, v, bias-corrected moment norms, candidate and actual displacement norms, relative displacement, actual LR and cosine to N. qU and group U use physical P_after−P_before displacement computed after casting both states to float64. Candidate versus actual displacement is checked with a rounding-derived bound. Whole-layer W+b norms and cosines are exported separately. Diagnostics never use or advance training RNG. Prefix and arm checkpoints have SHA256 digests and strict source/config identities. Resume preserves completed prefixes/seeds/arms, rerunning an interrupted arm from the exact branch checkpoint.
 
-The independent CPU checks exercise real host loop parity, nonzero moments, logging invariance, native field gradients, CPU/CUDA-ELU distinction, RMS ratios, explicit zero cases, calibration-only seeds, fail-closed G0, and the 15-interval verdict. Thirteen specified adversarial mutations must be detected. The short timing fixture uses real MNIST and is explicitly CHECK_ONLY, with no shortened production CLI.
+The independent CPU checks exercise real host loop parity, nonzero moments, logging invariance, native field gradients, CPU/CUDA-ELU distinction, RMS ratios, explicit zero cases, calibration-only seeds, fail-closed G0, and the 15-interval verdict. Eighteen specified adversarial mutations must be detected. The short timing fixture uses real MNIST and is explicitly CHECK_ONLY, with no shortened production CLI.
 
 Run checks:
 
@@ -17,7 +17,7 @@ Run checks:
 /home/issan/Projects/claude/proj_004_drift/.venv/bin/python analysis/resp_step_controls_1018/checks.py --cuda
 ```
 
-After independent review, the standalone CPU RM production entry point runs all 10 calibration and all 10 evaluation seeds with exactly 80 epochs/task, t2 donor/t10 recipient, and both t11/t12 continuations. It is restartable; run it on the same committed source. The full workload is 2.16 million updates. The real-data timing fixture includes all logger work and gives a conservative sequential estimate; prefix updates are faster.
+After independent review, the standalone CPU RM production entry point runs all 10 calibration and all 10 evaluation seeds with exactly 80 epochs/task, t2 donor/t10 recipient, and both t11/t12 continuations. It is restartable at the same committed HEAD; even a result-only commit changes its strict identity. `--workers 1..4` runs independent processes with one CPU thread each; parent results are ordered by seed and require complete shards. The full workload is 2.16 million updates. The real-data timing fixture includes all logger work and gives a conservative sequential estimate; prefix updates are faster.
 
 ```bash
 /home/issan/Projects/claude/proj_004_drift/.venv/bin/python analysis/resp_step_controls_1018/run_rm.py --out results/resp_step_controls_1018/RM
@@ -41,3 +41,5 @@ Readout:
 The readout refuses missing/duplicate seed-arm rows, mismatched label/order streams or non-finite results. It reports m=15 Bonferroni paired t intervals, ordinary intervals, all ten seed differences, signs, medians, degenerate-SD flags, box labels and the three-box result. A missing box yields INCOMPLETE, never an all-three conclusion. NOT_LR applies to the two registered constant layerwise schedules only.
 
 Raw gradient caches, checkpoint `.pt` and unit `.npz` files must be retained and archived under the repository's CLAUDE.md policy before the worktree is removed. They should not be committed as large blobs. Source and compact check/blocked-status evidence are versioned.
+
+Current data identity is bound before any prefix/checkpoint reuse. Calibration/evaluation require the same archive and actual MNIST tensor hash; manifests cannot be overwritten on mismatch. A schedule without a source/cohort/data identity is rejected.

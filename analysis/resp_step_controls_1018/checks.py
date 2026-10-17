@@ -53,6 +53,16 @@ def host_check(m=R):
     p4,a4=clone_state(fixture()[2],fixture()[3]);gb4=R.RM.H.stream('rl_batch',100)
     m.rm_train(p4,a4,x,y,gb4,1,rates=(.002,.0005,.003))
     assert R.RC.tree_hash(p3)!=R.RC.tree_hash(p4),'q != 1 changed only metadata'
+    # Independent continuation using the native operation helper; changing grads rather
+    # than real LR cannot reproduce this nonzero-moment trajectory.
+    p5,a5=clone_state(fixture()[2],fixture()[3]);gb5=R.RM.H.stream('rl_batch',100)
+    order=torch.randperm(1200,generator=gb5);xs,ys=x[order],y[order]
+    for j in range(75):
+        out=R.RM.EL.forward2(p5,xs[j*16:(j+1)*16],R.RM.ACT,R.RM.ACT)
+        loss=F.cross_entropy(out[-1],ys[j*16:(j+1)*16]);grads=torch.autograd.grad(loss,p5);a5[2][0]+=1
+        R.native_update(p5,grads,a5[0],a5[1],a5[2][0],(.002,.0005,.003),'RM')
+    assert R.RC.tree_hash((p4,a4,gb4.get_state()))==R.RC.tree_hash((p5,a5,gb5.get_state())), 'rates must change actual Adam LR, not gradients'
+
     return dict(updates=75,nonzero_initial_moments=True)
 
 
@@ -185,12 +195,27 @@ def verdict_check(m=V):
 
 
 def schedule_check(m=R):
+    assert m.semantic_status(ValueError('CALIBRATION_UNDEFINED: zero denominator'))=='CALIBRATION_UNDEFINED'
     # Gate mutation: evaluation seeds cannot supply a schedule and unaudited F51 always fails.
     import tempfile
     with tempfile.TemporaryDirectory() as d:
         p=Path(d);rows=norm_fixture();R.put(p/'trace.json',rows);q=R.q_from_rows(rows)
-        schedule=dict(run=R.RUN,box='RM',**q,trace_sha256={'trace.json':R.sha(p/'trace.json')})
-        R.put(p/'schedule.json',schedule);m.load_schedule(p/'schedule.json','RM')
+        dataset=dict(archive_sha256={'fixture':'fixed'},train_tensor_sha256='fixture',transform='CHECK_ONLY')
+        ci=dict(source_sha256=R.source_hashes(),phase='calibrate',box='RM',seeds=R.CAL_SEEDS,K=R.K,dataset_signature=dataset)
+        schedule=dict(run=R.RUN,box='RM',**q,trace_sha256={'trace.json':R.sha(p/'trace.json')},identity=ci)
+        R.put(p/'schedule.json',schedule);m.load_schedule(p/'schedule.json','RM',dataset)
+        schedule.pop('identity');R.put(p/'schedule.json',schedule)
+        try:m.load_schedule(p/'schedule.json','RM',dataset)
+        except (AssertionError,KeyError):pass
+        else:raise AssertionError('identity-less schedule accepted')
+        schedule['identity']=ci;R.put(p/'schedule.json',schedule)
+        try:m.load_schedule(p/'schedule.json','RM',dict(dataset,train_tensor_sha256='changed'))
+        except AssertionError:pass
+        else:raise AssertionError('changed dataset accepted by schedule')
+        m.bind_manifest(p/'data_manifest.json',dataset)
+        try:m.bind_manifest(p/'data_manifest.json',dict(dataset,train_tensor_sha256='changed'))
+        except AssertionError:pass
+        else:raise AssertionError('changed dataset overwrote resume manifest')
         schedule['seeds']=list(range(10));R.put(p/'schedule.json',schedule)
         try:m.load_schedule(p/'schedule.json','RM')
         except AssertionError:pass
@@ -210,6 +235,22 @@ def real_data_cost():
     return dict(status='CHECK_ONLY',real_data_sha256=mnist.sha256,updates=75,seconds=elapsed,seconds_per_update=elapsed/75,
                 full_RM_updates=20*(12+2*2)*6000+10*2*2*6000,
                 historical_runtime_warning='First 256 updates incur detailed probes; prefix has no probes; current fixture includes all probes.')
+
+
+def worker_check(m=R):
+    import concurrent.futures
+    import multiprocessing
+    seeds=[100,101]
+    serial=[m.worker_equivalence_fixture(s) for s in seeds]
+    with concurrent.futures.ProcessPoolExecutor(max_workers=2,mp_context=multiprocessing.get_context('spawn')) as pool:
+        parallel=list(pool.map(R.worker_equivalence_fixture,seeds))
+    assert serial==parallel,'serial and spawned native seed trajectories differ'
+    assert m.order_seed_shards(list(reversed(serial)),seeds)==serial
+    for bad in (serial+[serial[0]],serial[:1]):
+        try:m.order_seed_shards(bad,seeds)
+        except AssertionError:pass
+        else:raise AssertionError('missing/duplicate worker shard accepted')
+    return dict(serial_spawn_bit_equal=True,missing_duplicate_shards_rejected=True,workers=2,threads_per_worker=1)
 
 
 def cuda_suite():
@@ -260,7 +301,7 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--cuda',action='store_true');p.add_argument('--out',type=Path,default=ROOT/f'results/{R.RUN}/checks.json');a=p.parse_args()
     torch.set_num_threads(1);torch.set_flush_denormal(True);R.RM.H.setup('cpu')
     checks={};mutations=[]
-    for name,fn in [('S-host/noop/logging',host_check),('S-log',log_check),('S-norm',norm_check),('S-host/field',field_check),('S-schedule',schedule_check),('S-verdict',verdict_check)]:
+    for name,fn in [('S-host/noop/logging',host_check),('S-log',log_check),('S-norm',norm_check),('S-host/field',field_check),('S-schedule',schedule_check),('S-verdict',verdict_check),('S-workers',worker_check)]:
         st=time.monotonic()
         try:detail=fn();checks[name]=dict(pass_=True,seconds=time.monotonic()-st,detail=detail)
         except Exception as e:checks[name]=dict(pass_=False,error=repr(e));raise
@@ -275,10 +316,17 @@ def main():
       ('mean not RMS',R,norm_check,"math.sqrt(sum(float(by[s,a,j,p][col])**2", "math.sqrt(sum(float(by[s,a,j,p][col])"),
       ('W-only ratio',R,norm_check,"for p in PARAMS[2*l:2*l+2])/k)","for p in PARAMS[2*l:2*l+1])/k)"),
       ('metadata-only lr',R,host_check,"upd=rates[i//2]*(mi/c1)/((vi/c2).sqrt()+1e-8);p-=upd","upd=1e-3*(mi/c1)/((vi/c2).sqrt()+1e-8);p-=upd"),
+      ('identity-less schedule',R,schedule_check,"assert 'identity' in obj,'S-schedule: missing calibration identity'","if 'identity' not in obj:return obj"),
+      ('changed dataset calibration accepted',R,schedule_check,"assert ci['dataset_signature']==dataset_signature,'S-schedule: changed dataset between calibration and evaluation'","pass # mutated dataset equality"),
+      ('changed dataset overwrites resume',R,schedule_check,"assert json.loads(Path(path).read_text())==json.loads(json.dumps(obj)), 'DATA_IDENTITY_MISMATCH: existing data manifest'","put(path,obj) # mutated existing manifest"),
       ('eval seed schedule',R,schedule_check,"obj['seeds']==CAL_SEEDS","obj['seeds'] in (CAL_SEEDS,EVAL_SEEDS)"),
       ('non-significance implies reproduction',V,verdict_check,"if cn['lo']>0 and cr['lo']>-EQ:","if cn['lo']>0 and cr['hi']>0:"),
+      ('missing/duplicate shard accepted',R,worker_check,"assert len(got)==len(set(got)) and set(got)==set(seeds),'INCOMPLETE: duplicate or missing seed shard'","pass # mutated shard admission"),
       ('one-box all-three',V,verdict_check,"labels==['NOT_LR']*3","'NOT_LR' in labels"),
     ]
+    train_source=Path(R.__file__).read_text().split('def rm_train(',1)[1].split('def rm_prefix(',1)[0]
+    gradient_scaling=train_source.replace('grads=torch.autograd.grad(loss,params)', 'grads=[g*(rates[i//2]/1e-3) for i,g in enumerate(torch.autograd.grad(loss,params))]').replace('upd=rates[i//2]*(mi/c1)', 'upd=1e-3*(mi/c1)')
+    cases.append(('gradient scaling instead of actual LR',R,host_check,train_source,gradient_scaling))
     for name,module,fn,old,new in cases:
         try:fn(mutant(module,old,new))
         except (AssertionError,ValueError,RuntimeError):mutations.append(dict(name=name,detected=True))
