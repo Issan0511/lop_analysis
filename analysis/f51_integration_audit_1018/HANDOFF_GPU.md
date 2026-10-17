@@ -2,6 +2,22 @@
 
 更新: 2026-10-18 JST。依頼者Issaは全6走の実装・実行を指示済み。方向予測も論文の主張から固定済み。既存実装と実験条件を引き継いで残りを実行する。
 
+## ホスト再開の追記（2026-10-18 02:10 JST以降）
+
+この追記以降の進捗は `results/f51_integration_audit_1018/host_continuation/state.json` が実行記録。以下の元の引継ぎ本文は停止時点の履歴として保持する。
+
+- ホストのRTX 5060 Tiとtorch 2.13.0+cu130でCUDA利用を実測した。
+- 初回G0は `gpu_host/` に保持。旧cu126結果との `eff_rank_l2` 111件だけが一致せず停止した。精度など他の全列とfreshは一致。既存 `spec_resp_cifar5p1_1007.md` §1.2/§7にも同じ環境差の規定がある。
+- `0eff0529` の旧実装をクリーンな一時worktreeで現環境再実行し、無改変の旧S-nochangeにその独立参照を渡した。現環境同士の全列byte一致（eff_rankを含む）と変異検出を要求したまま、main/iv/doorsすべてPASS。許容値を広げていない。一時worktreeは削除済みで、再実行結果とソースhashは保存済み。
+- 現行G0正本: `results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json`。共有 `/tmp/issa_six_specs_1018/integration_audit.json` に同じbytesを配置。
+- `analysis/f51_integration_audit_1018/continue_gpu.py` が正式CLIを直列実行する。user service `six-gpu-1018.service` で開始。段階ごとのログと失敗は `host_continuation/` へ保存。一走の失敗はその依存段階を停止し、独立した後続走は継続する。部分出力の自動上書き・自動resumeはしない。
+- 走1完走、登録判定MIXED。独立したdf9の閉形式による7同時区間の再計算も一致。結果local commit `abd5220b`。55ファイル、563,928,622 bytesを `~/Projects/obsidian-research-data/redo_position_2x2_1018/` に追加バックアップし、hashを照合した。worktreeの原データも保持。
+- 走3のGPU競合検知はNVIDIAが列挙するデスクトップC+Gプロセスを訓練と誤認していた。既存宿主と同じPython訓練プロセスの検知へ揃えた。共有flockは維持。自己PID/デスクトップ/別Pythonの検査とCPU全15群を通し、local commit `8f82fc9f` に固定。
+- 65件の以前の検査・停止証跡を `host_continuation/prior_evidence/` に退避してhashを保存。RMの既存本走は再実行しない。
+- GitHubへの追加公開・main統合・実験worktree削除は行っていない。
+
+監視は通常5分以上の間隔。短い検査がその前に終わる見込みの場合と障害対応だけ例外とする。常駐サービスのログは `journalctl --user -u six-gpu-1018.service`、段階はstate.jsonで確認する。停止が必要な場合は走のSTOP/checkpoint仕様を先に確認し、途中腕の上書き禁止を守る。
+
 ## いまの状態
 
 全6走を別サブエージェントが実装し、別担当が相互監査した。CPU検査と指定変異の検出は合格。CUDA本走の起動は試みたが、Workの実行環境からデバイスを使えず停止した。

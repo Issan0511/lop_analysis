@@ -6,6 +6,7 @@ or given a forged current-source identity. Its original offline verifier runs in
 a clean temporary checkout of the saved result commit.
 """
 import hashlib
+import argparse
 import importlib
 import json
 from pathlib import Path
@@ -23,6 +24,9 @@ OUT=WT/'results/resp_step_controls_1018/readout'
 def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 
 def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--verify-rm-only',action='store_true')
+    args=parser.parse_args()
     OUT.mkdir(parents=True,exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='resp-rm-source-1018-') as folder:
         old=Path(folder)/'source'
@@ -44,6 +48,9 @@ def main():
             for cache in old.rglob('__pycache__'):
                 shutil.rmtree(cache)
             subprocess.run(['git','worktree','remove',str(old)],cwd=WT,check=True)
+    (OUT/'rm_historical_source_proof.json').write_text(json.dumps(proof,indent=2)+'\n')
+    if args.verify_rm_only:
+        print('RM original-source verification PASS');return
     sys.path.insert(0,str(WT))
     V=importlib.import_module('analysis.resp_step_controls_1018.verdict')
     inputs={b:V.load_completed_evaluation(WT/f'results/resp_step_controls_1018/{b}/evaluation/per_task.json',b)
