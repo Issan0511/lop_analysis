@@ -1,12 +1,12 @@
 {
   "run": "resp_step_controls_1018",
   "cpu_pass": true,
-  "cuda_pass": false,
-  "all_pass": false,
+  "cuda_pass": true,
+  "all_pass": true,
   "checks": {
     "S-host/noop/logging": {
       "pass_": true,
-      "seconds": 0.34263139497488737,
+      "seconds": 0.32099562301300466,
       "detail": {
         "updates": 75,
         "nonzero_initial_moments": true
@@ -14,14 +14,14 @@
     },
     "S-log": {
       "pass_": true,
-      "seconds": 0.0008736460004001856,
+      "seconds": 0.0008616258855909109,
       "detail": {
         "independent_scalar": true
       }
     },
     "S-norm": {
       "pass_": true,
-      "seconds": 0.2695016539655626,
+      "seconds": 0.28026697505265474,
       "detail": {
         "independent_numpy_float64": true,
         "qG": [
@@ -39,7 +39,7 @@
     },
     "S-host/field": {
       "pass_": true,
-      "seconds": 0.013933464186266065,
+      "seconds": 0.013046545907855034,
       "detail": {
         "branch_batches": 2,
         "native_kernel_distinction": true
@@ -47,7 +47,7 @@
     },
     "S-schedule": {
       "pass_": true,
-      "seconds": 0.5192707551177591,
+      "seconds": 0.463810205925256,
       "detail": {
         "eval_seeds_rejected": true,
         "missing_g0_rejected": true
@@ -55,7 +55,7 @@
     },
     "S-verdict": {
       "pass_": true,
-      "seconds": 0.027913994854316115,
+      "seconds": 0.028190676122903824,
       "detail": {
         "m": 15,
         "scenarios": 6
@@ -63,7 +63,7 @@
     },
     "S-workers": {
       "pass_": true,
-      "seconds": 1.692588975885883,
+      "seconds": 1.7063927659764886,
       "detail": {
         "serial_spawn_bit_equal": true,
         "missing_duplicate_shards_rejected": true,
@@ -73,7 +73,7 @@
     },
     "S-readout-evidence": {
       "pass_": true,
-      "seconds": 0.2151050081010908,
+      "seconds": 0.18204002897255123,
       "detail": {
         "finite_csv_tamper_rejected": true,
         "missing_identity_rejected": true,
@@ -91,8 +91,8 @@
           "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
         },
         "updates": 75,
-        "seconds": 0.13916799798607826,
-        "seconds_per_update": 0.0018555733064810436,
+        "seconds": 0.1386572599876672,
+        "seconds_per_update": 0.0018487634665022294,
         "full_RM_updates": 2160000,
         "historical_runtime_warning": "First 256 updates incur detailed probes; prefix has no probes; current fixture includes all probes."
       }
@@ -181,10 +181,30 @@
     }
   ],
   "cuda_checks": {
-    "pass_": false,
-    "status": "BLOCKED_CUDA"
+    "pass_": true,
+    "status": "PASS",
+    "detail": {
+      "RC": {
+        "R": 10,
+        "real_data_sha256": {
+          "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+        },
+        "graph_rollback": true,
+        "native_noop_probe_exact": true,
+        "nonzero_moments": true
+      },
+      "F51": {
+        "R": 10,
+        "real_data_sha256": {
+          "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+        },
+        "graph_rollback": true,
+        "native_noop_probe_exact": true,
+        "nonzero_moments": true
+      }
+    }
   },
-  "cuda_status": "BLOCKED_CUDA",
+  "cuda_status": "PASS",
   "limitations": [
     "CUDA graph host reproduction, warmup rollback and CUDA probe invariance not executed; production RC/F51 admission fails closed."
   ],
@@ -192,7 +212,7 @@
     "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
     "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
-    "analysis/resp_step_controls_1018/checks.py": "813601544f9481032a07b41648fc22112dc8257e433ca3cdf17d9a793b0d6a11",
+    "analysis/resp_step_controls_1018/checks.py": "c5da9e0268bcbfad58b2b7e8f609099f047ff5552035f670f8019277b1e95b82",
     "analysis/resp_step_controls_1018/run_rm.py": "d5effba8f03de499d30eff8039bfdca488f2bbd3186cfb8a9b763257438ffe58",
     "analysis/resp_step_controls_1018/verdict.py": "d703cbb450bdcb634e2f01dae9af66ffa5f9336f91ef9a136ca0ee1e6bad8832",
     "specs/spec_resp_step_controls_1018.md": "34032c3a1323d9402c8080373bc5b02f5a3a55330243920f7eef4a2580a7c9ca",

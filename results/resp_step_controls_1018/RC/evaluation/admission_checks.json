@@ -1,0 +1,241 @@
+{
+  "run": "resp_step_controls_1018",
+  "cpu_pass": true,
+  "cuda_pass": true,
+  "all_pass": true,
+  "checks": {
+    "S-host/noop/logging": {
+      "pass_": true,
+      "seconds": 0.32099562301300466,
+      "detail": {
+        "updates": 75,
+        "nonzero_initial_moments": true
+      }
+    },
+    "S-log": {
+      "pass_": true,
+      "seconds": 0.0008616258855909109,
+      "detail": {
+        "independent_scalar": true
+      }
+    },
+    "S-norm": {
+      "pass_": true,
+      "seconds": 0.28026697505265474,
+      "detail": {
+        "independent_numpy_float64": true,
+        "qG": [
+          4.560701700396552,
+          4.17612260356422,
+          4.04888165089458
+        ],
+        "qU": [
+          7.0,
+          7.0,
+          7.0
+        ],
+        "sub_ulp_candidate_positive_actual_zero": true
+      }
+    },
+    "S-host/field": {
+      "pass_": true,
+      "seconds": 0.013046545907855034,
+      "detail": {
+        "branch_batches": 2,
+        "native_kernel_distinction": true
+      }
+    },
+    "S-schedule": {
+      "pass_": true,
+      "seconds": 0.463810205925256,
+      "detail": {
+        "eval_seeds_rejected": true,
+        "missing_g0_rejected": true
+      }
+    },
+    "S-verdict": {
+      "pass_": true,
+      "seconds": 0.028190676122903824,
+      "detail": {
+        "m": 15,
+        "scenarios": 6
+      }
+    },
+    "S-workers": {
+      "pass_": true,
+      "seconds": 1.7063927659764886,
+      "detail": {
+        "serial_spawn_bit_equal": true,
+        "missing_duplicate_shards_rejected": true,
+        "workers": 2,
+        "threads_per_worker": 1
+      }
+    },
+    "S-readout-evidence": {
+      "pass_": true,
+      "seconds": 0.18204002897255123,
+      "detail": {
+        "finite_csv_tamper_rejected": true,
+        "missing_identity_rejected": true,
+        "bare_rows_rejected": true
+      }
+    },
+    "S-cost": {
+      "pass_": true,
+      "detail": {
+        "status": "CHECK_ONLY",
+        "real_data_sha256": {
+          "train-images-idx3-ubyte.gz": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+          "train-labels-idx1-ubyte.gz": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+          "t10k-images-idx3-ubyte.gz": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+          "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+        },
+        "updates": 75,
+        "seconds": 0.1386572599876672,
+        "seconds_per_update": 0.0018487634665022294,
+        "full_RM_updates": 2160000,
+        "historical_runtime_warning": "First 256 updates incur detailed probes; prefix has no probes; current fixture includes all probes."
+      }
+    }
+  },
+  "mutations": [
+    {
+      "name": "logged gradient after Adam",
+      "detected": true
+    },
+    {
+      "name": "logger consumes RNG",
+      "detected": true
+    },
+    {
+      "name": "backward doubled",
+      "detected": true
+    },
+    {
+      "name": "field image IDs rolled",
+      "detected": true
+    },
+    {
+      "name": "cached whole-image z0",
+      "detected": true
+    },
+    {
+      "name": "candidate norm substituted for actual U",
+      "detected": true
+    },
+    {
+      "name": "moment reset",
+      "detected": true
+    },
+    {
+      "name": "mean not RMS",
+      "detected": true
+    },
+    {
+      "name": "W-only ratio",
+      "detected": true
+    },
+    {
+      "name": "metadata-only lr",
+      "detected": true
+    },
+    {
+      "name": "identity-less schedule",
+      "detected": true
+    },
+    {
+      "name": "changed dataset calibration accepted",
+      "detected": true
+    },
+    {
+      "name": "changed dataset overwrites resume",
+      "detected": true
+    },
+    {
+      "name": "eval seed schedule",
+      "detected": true
+    },
+    {
+      "name": "non-significance implies reproduction",
+      "detected": true
+    },
+    {
+      "name": "missing/duplicate shard accepted",
+      "detected": true
+    },
+    {
+      "name": "finite CSV tamper ignored",
+      "detected": true
+    },
+    {
+      "name": "completion identity ignored",
+      "detected": true
+    },
+    {
+      "name": "one-box all-three",
+      "detected": true
+    },
+    {
+      "name": "gradient scaling instead of actual LR",
+      "detected": true
+    }
+  ],
+  "cuda_checks": {
+    "pass_": true,
+    "status": "PASS",
+    "detail": {
+      "RC": {
+        "R": 10,
+        "real_data_sha256": {
+          "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+        },
+        "graph_rollback": true,
+        "native_noop_probe_exact": true,
+        "nonzero_moments": true
+      },
+      "F51": {
+        "R": 10,
+        "real_data_sha256": {
+          "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+        },
+        "graph_rollback": true,
+        "native_noop_probe_exact": true,
+        "nonzero_moments": true
+      }
+    }
+  },
+  "cuda_status": "PASS",
+  "limitations": [
+    "CUDA graph host reproduction, warmup rollback and CUDA probe invariance not executed; production RC/F51 admission fails closed."
+  ],
+  "source_sha256": {
+    "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
+    "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
+    "analysis/resp_step_controls_1018/checks.py": "c5da9e0268bcbfad58b2b7e8f609099f047ff5552035f670f8019277b1e95b82",
+    "analysis/resp_step_controls_1018/run_rm.py": "d5effba8f03de499d30eff8039bfdca488f2bbd3186cfb8a9b763257438ffe58",
+    "analysis/resp_step_controls_1018/verdict.py": "d703cbb450bdcb634e2f01dae9af66ffa5f9336f91ef9a136ca0ee1e6bad8832",
+    "specs/spec_resp_step_controls_1018.md": "34032c3a1323d9402c8080373bc5b02f5a3a55330243920f7eef4a2580a7c9ca",
+    "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/boundary_gradient_0908.py": "22948b971cd32a18e108788889501b03d59a8436fbf98fe757e6940271a91b5a",
+    "src/boundary_groups_0908.py": "f33cbe2606adf9b9cafbe772584415d4cc22e9802f49c544088b6c1539e2df8e",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/cifar_interventions_0920.py": "d079b5185249114d035afcce69d9636ef1db2807e642c3fd879cb2168907f37f",
+    "src/elu_growth_0909.py": "65385b18847bbb77d7512f33095b1d6b30c2325ef0ce20e6b51c143c1f40e883",
+    "src/l2cap_ee_0917.py": "858a9f36a4368c85a3b53e632616624bb40100773fff105ab40f05bd7c600135",
+    "src/mucap_el_0916.py": "4f337bfa9aff872fce30a3b880cd57cf552034e30ae77edd04d8de812633e67a",
+    "src/mucap_el_run_0916.py": "a397eed57a84f20ce3fae0de3c20d6455b6d0e3077189cdb2c3a4a3069234606",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_boundary_host_0908.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/resp_cifar5p1_1007.py": "c8d6bedb04d0895f1fea97d2c4a14a11dcfb1eaa5fd64565f8b9668b9b5c729c",
+    "src/resp_cifar_ee_0920.py": "3b74d0cabba63241738d1988edfdec3fff48ab070e4d8a74e9e21a8e53b1b7eb",
+    "src/resp_ee_0917.py": "699a403375f53829f72cde9f2b47a413c7d5bf9639e278b0e70eed64541a5e6f",
+    "src/resp_step_controls_1018.py": "b1ccd62be237c1330569945364e292ba502f72a818d1971108a92e0ef87d0d33",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+    "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9"
+  },
+  "thresholds": "Same path bit exact; candidate actual delta <= u*(|p|+|upd|)+tiny; scalar float64 1e-12 relative; norm 1e-14 relative."
+}
