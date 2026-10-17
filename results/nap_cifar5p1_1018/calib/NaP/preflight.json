@@ -1,0 +1,75 @@
+{
+  "run_id": "nap_cifar5p1_1018",
+  "phase": "calib",
+  "status": "BLOCKED_CUDA",
+  "blockers": [
+    "BLOCKED_CUDA",
+    "G0_ALL_PASS",
+    "G0_HOST_REPRODUCTION_PASS",
+    "G0_MUTATION_CHECKS_PASS",
+    "CHECKS_NOT_PRODUCTION_READY"
+  ],
+  "cuda_available": false,
+  "torch": "2.13.0+cu130",
+  "cuda_build": "13.0",
+  "candidate": {
+    "name": "NaP",
+    "candidates": 1,
+    "linear_bias": false,
+    "output_bias": false,
+    "ln_affine": true,
+    "ln_eps": 1e-05,
+    "ln_axis": "per image, hidden=100",
+    "projection": "per-seed Frobenius sphere on W1/W2/W3 at t0",
+    "affine_projection": "joint gamma/beta sphere sqrt(100)",
+    "lr": 0.0001,
+    "dims": [
+      3072,
+      100,
+      100,
+      100
+    ],
+    "cond": "std",
+    "steps": 780,
+    "tasks": 30,
+    "batch": 32,
+    "R": 10
+  },
+  "seeds": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109
+  ],
+  "git_hash": "234588033b78e12908ad74bb1c16703a46849114",
+  "spec_sha256": "5c08b0420af02a32dd691f5eedc7eacfcb9f0a9a0beb817688be3b40e21cadff",
+  "common_spec_sha256": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+  "source_sha256": {
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/nap_cifar5p1_1018.py": "6419ec28b097fc6a95cf429217561149646a88db45b815c9b8a746bad7ab12e9",
+    "analysis/nap_cifar5p1_1018/checks.py": "1891bc6c917b2c88973e9dee5ff8538132dc4f88616d566f6e89f76518e43042",
+    "analysis/nap_cifar5p1_1018/verdict.py": "e4a61624d0a96ebde0526148ce238a8c89507d6a00a69904b4a7ede3c78d8734"
+  },
+  "integration_audit": "/tmp/issa_six_specs_1018/integration_audit.json",
+  "integration_audit_sha256": "b6994a30c1e686504f9eed53a730d16cccecd6369f9ddb6e389582dd6476d444",
+  "checks_sha256": "19f7614dea0345838c3b04124ccc28eeebb5b0e2450cf89ef3d8d4e9886b1ba6",
+  "data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "attempted_at": "2026-10-17T16:22:33Z",
+  "prediction": {
+    "vs_R": "IMPROVES_DIRECTION",
+    "vs_SNA": "OPEN_COMPARISON",
+    "vs_KKT1": "OPEN_COMPARISON"
+  }
+}
