@@ -103,9 +103,38 @@ def schedule_from_rows(ref, cap):
     return q
 
 
+def seal_completed_arm(base,seeds,tasks):
+    """Freeze every arm artifact before its COMPLETED status is published."""
+    base=Path(base)
+    files={str(p.relative_to(base)):dict(bytes=p.stat().st_size,sha256=sha256_file(p))
+           for p in sorted(base.rglob('*')) if p.is_file() and p.name not in ('status.json','output_manifest.json')}
+    if not files:raise ValueError('CHECK_FAILED: cannot seal empty arm')
+    put(base/'output_manifest.json',dict(source_sha256=source_hashes(),files=files))
+    put(base/'status.json',dict(status='COMPLETED',tasks=tasks,seeds=seeds,
+        output_manifest_sha256=sha256_file(base/'output_manifest.json')))
+
+
+def verify_completed_arm(base):
+    base=Path(base);status=json.loads((base/'status.json').read_text())
+    if status.get('status')!='COMPLETED':raise ValueError('CHECK_FAILED: arm is not COMPLETED')
+    path=base/'output_manifest.json'
+    if status.get('output_manifest_sha256')!=sha256_file(path):raise ValueError('CHECK_FAILED: output manifest changed')
+    manifest=json.loads(path.read_text())
+    if manifest.get('source_sha256')!=source_hashes() or not manifest.get('files'):
+        raise ValueError('CHECK_FAILED: stale/missing completed output source closure')
+    for relative,record in manifest['files'].items():
+        rel=Path(relative)
+        if rel.is_absolute() or '..' in rel.parts:raise ValueError('CHECK_FAILED: invalid output manifest path')
+        p=base/rel
+        if p.stat().st_size!=record['bytes'] or sha256_file(p)!=record['sha256']:
+            raise ValueError('CHECK_FAILED: completed output changed: '+relative)
+    return manifest
+
+
 def validate_calibration_arm(base,arm):
     """A schedule cannot admit a failed, incomplete, stale or mismatched arm."""
     base=Path(base)
+    verify_completed_arm(base)
     status=json.loads((base/'status.json').read_text())
     if status.get('status')!='COMPLETED' or status.get('seeds')!=CALIB_SEEDS:
         raise ValueError('SCHEDULE_UNDEFINED: calibration status/seeds '+arm)
@@ -127,7 +156,7 @@ def validate_calibration_arm(base,arm):
             raise ValueError('SCHEDULE_UNDEFINED: calibration performance')
         c=indexed['cap_task.csv'][key]
         for l in (1,2):
-            if int(c[f'viol_w{l}'])!=0 or not np.isfinite(float(c[f'U_l{l}'])) or float(c[f'U_l{l}'])<=0:
+            if int(c[f'viol_w{l}'])!=0 or not np.isfinite(float(c[f'U_l{l}'])) or float(c[f'U_l{l}'])<0 or (arm=='ref' and float(c[f'U_l{l}'])==0):
                 raise ValueError('SCHEDULE_UNDEFINED: calibration cap integrity/U')
             if (arm=='ref' or key[1]==1) and int(c[f'rows_w{l}'])!=0:
                 raise ValueError('SCHEDULE_UNDEFINED: unregistered calibration cap writes')
@@ -153,7 +182,7 @@ def validate_calibration_arm(base,arm):
             bound=OLD_F51.gamma(2*w.shape[2]+2,OLD_F51.U32)*n+math.sqrt(w.shape[2])*OLD_F51.TINY32
             if not np.all(np.abs(n-r)<=bound):raise ValueError('SCHEDULE_UNDEFINED: t1 radius anchor')
             if prov['radii_sha256'][f'r_l{l}']!=hashlib.sha256(r.tobytes()).hexdigest():raise ValueError('SCHEDULE_UNDEFINED: radius hash')
-    files=('status.json','provenance.json','per_task.csv','cap_task.csv','fresh_control.csv','radii.npz','radius_anchor.npz','stream_manifest.json')
+    files=('status.json','output_manifest.json','provenance.json','per_task.csv','cap_task.csv','fresh_control.csv','radii.npz','radius_anchor.npz','stream_manifest.json')
     return {name:dict(path=str((base/name).resolve()),sha256=sha256_file(base/name)) for name in files}
 
 
@@ -729,7 +758,7 @@ def execute_rc(out,activation,arm,seeds,expected_data=None):
             put(out/'status.json',dict(status='CHECK_FAILED',reason='row radius bound'));return
         print(f'{activation} RC {arm} {task}/50',flush=True)
     put(out/'provenance.json',dict(**prov,finished_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),s_correction=0))
-    put(out/'status.json',dict(status='COMPLETED',tasks=50,seeds=seeds))
+    seal_completed_arm(out,seeds,50)
 
 
 def execute_f51(out,activation,arm,seeds,schedule=None,expected_data=None):
@@ -751,7 +780,8 @@ def execute_f51(out,activation,arm,seeds,schedule=None,expected_data=None):
     cr=list(csv.DictReader((out/'cap_task.csv').open()))
     cap_ok=all(int(r[f'viol_w{l}'])==0 for r in cr for l in (1,2))
     status='DIVERGED' if not good else 'CHECK_FAILED' if not cap_ok else 'COMPLETED'
-    put(out/'status.json',dict(status=status,tasks=30,seeds=seeds))
+    if status=='COMPLETED':seal_completed_arm(out,seeds,30)
+    else:put(out/'status.json',dict(status=status,tasks=30,seeds=seeds))
 
 
 def write_schedule(base):

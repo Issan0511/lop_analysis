@@ -201,7 +201,22 @@ def calibration_admission_check(N,tmp):
         put(base/'provenance.json',dict(registration=dict(box='F51',activation='ReLU',arm=arm,seeds=list(range(100,110)),R=10,source_sha256=N.source_hashes()),
             data_sha256={'SYNTHETIC_CHECK_ONLY':'same'},fresh_rows_written=[0,0],radii_sha256=hashes))
         put(base/'stream_manifest.json',dict(seeds=list(range(100,110)),input_tensor_sha256='SYNTHETIC_CHECK_ONLY'))
+        N.seal_completed_arm(base,list(range(100,110)),30)
     obj=N.write_schedule(tmp);assert N.validate_schedule(obj)['2']==[3.,.5]
+    numerator_path=tmp/'calibration/cap12/cap_task.csv';saved_numerator=numerator_path.read_text()
+    numerator_rows=list(csv.DictReader(numerator_path.open()))
+    for row in numerator_rows:
+        if int(row['task'])==2:row['U_l1']=0.
+    N.H.write_csv(numerator_path,numerator_rows)
+    N.seal_completed_arm(numerator_path.parent,list(range(100,110)),30)
+    assert N.write_schedule(tmp)['q']['2'][0]==0.,'zero cap numerator is valid; only zero ref denominator is undefined'
+    numerator_path.write_text(saved_numerator);N.seal_completed_arm(numerator_path.parent,list(range(100,110)),30);obj=N.write_schedule(tmp)
+    edited=tmp/'calibration/ref/per_task.csv';old_csv=edited.read_text()
+    changed=list(csv.DictReader(edited.open()));changed[0]['online_acc']=.5;N.H.write_csv(edited,changed)
+    try:N.validate_schedule(obj)
+    except ValueError:pass
+    else:raise AssertionError('edited finite CSV accepted after completion')
+    edited.write_text(old_csv)
     path=tmp/'calibration/cap12/status.json';old=path.read_text()
     put(path,dict(status='CHECK_FAILED',seeds=list(range(100,110))))
     try:N.validate_schedule(obj)

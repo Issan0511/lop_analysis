@@ -116,6 +116,7 @@ def analyze(root):
         for box,a in CELLS:
             for arm in ('ref','cap12'):
                 p=root/'evaluation'/box/a/arm
+                M.verify_completed_arm(p)
                 st=json.loads((p/'status.json').read_text())
                 if st.get('status')!='COMPLETED':raise ValueError(st.get('status','INCOMPLETE')+': '+str(p))
                 prov=json.loads((p/'provenance.json').read_text());reg=prov.get('registration',prov)
@@ -125,6 +126,7 @@ def analyze(root):
         validate_streams(datasets,root,preflight["data_sha256"])
         for arm in ('cap12b','lr_only'):
             p=root/'evaluation/F51/ReLU'/arm
+            M.verify_completed_arm(p)
             if json.loads((p/'status.json').read_text()).get('status')!='COMPLETED':raise ValueError('INCOMPLETE: '+arm)
             prov=json.loads((p/'provenance.json').read_text());reg=prov.get('registration',prov)
             if reg.get('source_sha256')!=M.source_hashes() or reg.get('data_sha256')!=preflight['data_sha256']['F51']:
