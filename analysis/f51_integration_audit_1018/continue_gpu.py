@@ -122,11 +122,7 @@ def steps(run):
                          '--out',root+'/calibration',*extra)),
                       (box+'_evaluate',mod('src.'+run,'--box',box,'--phase','evaluate',
                          '--schedule',root+'/calibration/schedule.json','--out',root+'/evaluation',*extra))]
-        items.append(('verdict',file('analysis/'+run+'/verdict.py',
-                      '--RM','results/'+run+'/RM/evaluation/per_task.json',
-                      '--RC','results/'+run+'/RC/evaluation/per_task.json',
-                      '--F51','results/'+run+'/F51/evaluation/per_task.json',
-                      '--out','results/'+run+'/readout')))
+        items.append(('verdict',file(str(Path(__file__).with_name('combined_resp_verdict.py')))))
         return items
     if run == RUNS[4]:
         return [(s,mod('analysis.'+run+'.launch',s)) for s in ('check','plan','run')]
@@ -164,8 +160,12 @@ def main():
     parser.add_argument('mode',choices=('plan','run'))
     parser.add_argument('--runs',nargs='+',choices=RUNS,default=RUNS)
     parser.add_argument('--state',type=Path,default=OUT/'state.json')
+    parser.add_argument('--resume-chb',action='store_true',
+                        help='Resume the already validated CHB launch manifest without rewriting its CPU check evidence')
     args=parser.parse_args()
     plan={r:steps(r) for r in args.runs}
+    if args.resume_chb and RUNS[4] in plan:
+        plan[RUNS[4]]=[('resume',dict(argv=[PY,'-m','analysis.'+RUNS[4]+'.launch','run','--resume'],lock=False))]
     if args.mode=='plan':
         print(json.dumps(plan,indent=2));return 0
     OUT.mkdir(exist_ok=True)
@@ -184,6 +184,9 @@ def main():
         for run, items in plan.items():
             wt=BASE/'wt'/run
             for name, spec in items:
+                if (OUT/'STOP').exists():
+                    state.update(status='STOPPED_BETWEEN_COMMANDS',finished_at=utc())
+                    put(args.state,state);return 75
                 stage=dict(run=run,name=name,status='RUNNING',started_at=utc())
                 state['stages'].append(stage);state['current']=dict(run=run,stage=name)
                 put(args.state,state)
@@ -202,6 +205,9 @@ def main():
                     stage.update(status='FAILED',finished_at=utc(),error=repr(exc),traceback=traceback.format_exc())
                     put(args.state,state)
                     print(run,name,'FAILED',repr(exc),flush=True)
+                    if isinstance(exc,subprocess.CalledProcessError) and exc.returncode==75:
+                        stage['status']='STOPPED';state['status']='STOPPED_AT_CHECKPOINT'
+                        put(args.state,state);return 75
                     break
                 put(args.state,state)
         state['status']='NEEDS_ATTENTION' if any(s['status']=='FAILED' for s in state['stages']) else 'COMMANDS_COMPLETED'
