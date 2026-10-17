@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Finish runs 3/6 after all earlier explicit GPU queues have drained.
+"""Finish runs 3/6 and the unstarted run 2 after prior processes have exited.
 
 Their original nonblocking admission may refuse a queued recovery job. Resume
 only their registered checkpoints; do not repeat a completed scientific run.
+Run 2's last admission saw the preceding RC process after its GPU lock was
+released but before process exit. Its calibration never started. Retry it only
+after whole controller processes exit, preserving the strict GPU admission.
 """
 from contextlib import ExitStack
 import fcntl
@@ -28,22 +31,27 @@ def main():
         preceding=[load(Q.OUT/name) for name in ('state_after_repairs.json','state_nap_readout.json','state_cap_retry.json')]
         if any(not s or s.get('status')=='RUNNING' for s in preceding):
             state['status']='NEEDS_EXPLICIT_STOP_VERIFICATION';Q.put(destination,state);return 2
-        chb=Q.RUNS[4];cnn=Q.RUNS[5]
+        chb=Q.RUNS[4];cnn=Q.RUNS[5];cap=Q.RUNS[2]
+        state['audit_sha256']=Q.verify_audit()
         state['status']='RUNNING';Q.put(destination,state)
-        for run in (chb,cnn):
+        for run in (chb,cnn,cap):
             wt=Q.BASE/'wt'/run;root=wt/'results'/run
             Q.source_identity(wt)
             if run==chb:
                 commands=[] if load(root/'execution_status.json').get('status')=='COMPLETE' else [
                     ('resume',dict(argv=[Q.PY,'-m','analysis.'+run+'.launch','run','--resume'],lock=False))]
                 commands.append(('report',dict(argv=[Q.PY,'-m','analysis.'+run+'.launch','report'],lock=False)))
-            else:
+            elif run==cnn:
                 commands=[]
                 for name,spec in Q.steps(run):
                     if name=='cpu_checks' and load(root/'checks.json').get('all_pass') is True:continue
                     if name=='gpu_checks' and load(root/'gpu_release.json').get('all_pass') is True:continue
                     if name in ('CHf','CHf_B') and load(root/name/'provenance.json').get('status')=='COMPLETE':continue
                     commands.append((name,spec))
+            else:
+                # Official calibrate/run reject any existing arm or evaluation
+                # admission. No partial data are overwritten or auto-resumed.
+                commands=Q.steps(run)
             state['plan'][run]=commands;Q.put(destination,state)
             for name,spec in commands:
                 stage=dict(run=run,name=name,status='RUNNING',started_at=Q.utc())
