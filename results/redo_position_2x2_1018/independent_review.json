@@ -1,0 +1,59 @@
+{
+  "reviewer": "/root/run3_chb",
+  "approved": true,
+  "scope": "CPU_SOURCE_REVIEW",
+  "reviewed_commit": "7a6c1e74639fec6483c57e673e182f0d8d521abb",
+  "reviewed_at": "2026-10-17T16:30:33.835923+00:00",
+  "source_sha256": {
+    "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
+    "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
+    "analysis/redo_position_2x2_1018/checks.py": "34705e8ea8f7c04328251deaf2010eaa9530a8d5b7cff03fffa8fb0c1b9f7779",
+    "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0",
+    "specs/spec_redo_position_2x2_1018.md": "97cd76a2289dd4815f7cc81b632738a3027711737e70bdd83086da84f630660f",
+    "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/baselines_cifar5p1_1008.py": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/cifar_interventions_0920.py": "d079b5185249114d035afcce69d9636ef1db2807e642c3fd879cb2168907f37f",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/redo_position_2x2_1018.py": "76bba031c9fed8f1a1d7740d7a6fd5c54a8ad25a2259dab88f91b52155353cc1",
+    "src/resp_cifar5p1_1007.py": "c8d6bedb04d0895f1fea97d2c4a14a11dcfb1eaa5fd64565f8b9668b9b5c729c",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+  },
+  "independent_proof": {
+    "path": "/tmp/run1_independent_review_checks_final/checks.json",
+    "sha256": "db26f4cf6d9a45deb5755aa4e31939851f24a7e1f5dfbedaacaab062b2d90e23",
+    "all_pass": true,
+    "check_groups": 7,
+    "detected_mutations": 14
+  },
+  "resolved_findings": [
+    {
+      "finding": "Constant paired vectors could acquire numerical nonzero SD instead of the registered point interval.",
+      "fix_commit": "7a6c1e74639fec6483c57e673e182f0d8d521abb",
+      "resolution": "Explicit constant-vector mean/SD=0 branch and exact point CI/DEGENERATE_SD test verified."
+    },
+    {
+      "finding": "Standalone analyze could overwrite a blocked verdict using naked rows without production admission and provenance.",
+      "fix_commit": "7a6c1e74639fec6483c57e673e182f0d8d521abb",
+      "resolution": "Read-only analyze_registered requires saved admitted G0/check/source proof, complete output and arm hashes, exact none/prefix checkpoint identity, and agreement with the saved registered verdict; naked-row rejection verified."
+    }
+  ],
+  "reviewed_mechanisms": [
+    "Native physical b2 shift with exact float32 count optimum and tie-break",
+    "Natural pre-ReDo survivor mask preserved for both arm",
+    "Inherited recycler mask/reinit/output-column/moment-reset/order parity",
+    "Natural no-intervention replay and checkpoint structure",
+    "Seven simultaneous interval predicates and overlap handling",
+    "Current-source admission and artifact-bound read-only reanalysis"
+  ],
+  "limitations": [
+    "Approval covers implementation/source and independent CPU synthetic checks only.",
+    "CUDA graph and R=10 real-CIFAR prefix reproduction were not executed.",
+    "Independent G0 empirical CUDA qualification remains pending.",
+    "No evaluation-seed production result or scientific hypothesis outcome is approved by this review."
+  ]
+}
