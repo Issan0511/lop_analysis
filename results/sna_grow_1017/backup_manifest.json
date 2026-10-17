@@ -1,0 +1,927 @@
+{
+ "experiment": "sna_grow_1017",
+ "created": "2026-10-17 21:05:04",
+ "note": "git 外の生データ。CNN のチェックポイント（t1,2,3,5,10,20,30 × 2 腕 × seed 10–19、V_max と grow フラグ入り）と state.pt、MLP 本走の end.pt・V_history.npz（V・vmax・grow を課題ごと）、MLP の smoke（seed 100–109、Q2 には使わない）。source は worktree からの相対パス",
+ "n_files": 153,
+ "total_bytes": 317401759,
+ "files": [
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t01.pt",
+   "bytes": 1473665,
+   "sha256": "2af5f0ca0ba48a01de54b9eeb6f516cf1b9386ed0a4a5a1abb8f15ef08b22397"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t02.pt",
+   "bytes": 1473665,
+   "sha256": "99573005e5c437303175c3e5ec03eff29a20be141a8ebcdf9a84ce6643f324e7"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t03.pt",
+   "bytes": 1473665,
+   "sha256": "c57f207029b51bfc0a6d38aeb7ed4d9e2cd9d4e938d5cae6dc87eb218817da6f"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t05.pt",
+   "bytes": 1473665,
+   "sha256": "1311fbd17cd941c2b555ea340cd2244e45c341929ad08322add3a42831dfbf0b"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t10.pt",
+   "bytes": 1473665,
+   "sha256": "a3c8694bd2a0878c66da652b3f23d55ac891a77f223f5e8c33e19e85025e19b3"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t20.pt",
+   "bytes": 1473665,
+   "sha256": "9e4360879fa4479de5592ffe1c0cc1dc1fe0eaee4c2002c953a834d23fb9d01b"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed10_t30.pt",
+   "bytes": 1473665,
+   "sha256": "a90ab3cb9d3ef3cfa493ba3848e6505b159768ff6a1a65beca82cf58224de5f4"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t01.pt",
+   "bytes": 1473665,
+   "sha256": "89e318b699234543b5f778bcc2c523c614b7b40a70a3e162be1250f56664aead"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t02.pt",
+   "bytes": 1473665,
+   "sha256": "95356e884ef9ddb941ed395988e98aeea7aa43e7b7d37ba3d1718eda85710b3f"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t03.pt",
+   "bytes": 1473665,
+   "sha256": "da8bb9975b94c6f2fe36b9172122d15b020aad5ca51f6c2caaf125ff3b6dc404"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t05.pt",
+   "bytes": 1473665,
+   "sha256": "81b166ab80531f6134ed135038e450124700c65b134c36dde27ddff6c1e25994"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t10.pt",
+   "bytes": 1473665,
+   "sha256": "99ec0bd1a2949b1d366985b45a2283e0104106018bf45e1a4f45ab0415238abb"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t20.pt",
+   "bytes": 1473665,
+   "sha256": "bdedb59db9766c77d933f4038e86e75f666a1d4cf7a5a3aace04b33cc02edd6f"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed11_t30.pt",
+   "bytes": 1473665,
+   "sha256": "d17b0d3694adc845312924e31050e3aebaa42270fdaa485538bc2bb9253a297c"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t01.pt",
+   "bytes": 1473665,
+   "sha256": "79770f788f684d9da4982eb08106783874f8610b7b9a824a9a8b49b385bc2972"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t02.pt",
+   "bytes": 1473665,
+   "sha256": "8d20fd0662e7141f05d2288c415dc17b003ef22d7ea1a2304b8b5313ce51b5eb"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t03.pt",
+   "bytes": 1473665,
+   "sha256": "cd3b4669a8b8e21eea2ef7dd558faf829dbdb778746db053d10d48561e739c6f"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t05.pt",
+   "bytes": 1473665,
+   "sha256": "5a31c3c3860c119c18326115de575683ad781764fcc828fcf401df9d48d176d4"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t10.pt",
+   "bytes": 1473665,
+   "sha256": "fdbac482fb5132e7535c40eed782b94438ff2341894899ed6929e43fb6e89f71"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t20.pt",
+   "bytes": 1473665,
+   "sha256": "ec1aa51a0f095853c062cf3043e3a5e10136afcf217eb61b0ba9c3605022efa1"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed12_t30.pt",
+   "bytes": 1473665,
+   "sha256": "e9a7fa147a9c552cd382da4cb62ce4a69ffe24ad77f6200d9fded2987e75110c"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t01.pt",
+   "bytes": 1473665,
+   "sha256": "643b9774d3a76a73e821843f129dd4087897c6930f957c75eaa10cf5a2afe58a"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t02.pt",
+   "bytes": 1473665,
+   "sha256": "63c459731963588b4792776c4b9c323d758d982f5131b2e4ff58f103b3087641"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t03.pt",
+   "bytes": 1473665,
+   "sha256": "77f64771777a578a646b5643967a46a486d30d8370c39753e244c161f7d276f6"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t05.pt",
+   "bytes": 1473665,
+   "sha256": "465227f56ce6e5da6f8bbc2253de89ee5859deb6d50c0b5ea023c4da5051331e"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t10.pt",
+   "bytes": 1473665,
+   "sha256": "59f6b1739bd05c1797feb7a34ddad1d8c794b3e0b14db3aedfb13ef8f3396ca1"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t20.pt",
+   "bytes": 1473665,
+   "sha256": "83d9a925df95299f64a451a3150ab068c9552eed523499ea39b4916697d5cd46"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed13_t30.pt",
+   "bytes": 1473665,
+   "sha256": "e3bea8633975d9120a0277c9e266cda7819da285be44815abfb7e4eb61352915"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t01.pt",
+   "bytes": 1473665,
+   "sha256": "1cbbe890e1af745af90e295d16d64e810130a9b3f17bccb6bf8f02ddfeb3eea9"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t02.pt",
+   "bytes": 1473665,
+   "sha256": "7107b43ad3fe5a576b6e299024948627a02391f9f9e767d2bb4d843113ac9d54"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t03.pt",
+   "bytes": 1473665,
+   "sha256": "2507d3f2f8e6d56639d0e7584b7d83a663acc05a135bd7749a227a9b6e65618c"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t05.pt",
+   "bytes": 1473665,
+   "sha256": "3c7f48af121e61866e249274396ce2f6a764020674f88cc9e99ef818ab61c4ea"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t10.pt",
+   "bytes": 1473665,
+   "sha256": "d9e72ead2e21836e8e2c1ed061ca852fdad3adc5d05c0e6b1b0d93179803451a"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t20.pt",
+   "bytes": 1473665,
+   "sha256": "3704dcf486707b2eb447ef586f92b8af44bd54834ba6d75e10e16b132bad8e90"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed14_t30.pt",
+   "bytes": 1473665,
+   "sha256": "afed39e0023d7aa8a0b02f4b52c0c0fb5572961d4886da83ea0a11a8fe7b5ec3"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t01.pt",
+   "bytes": 1473665,
+   "sha256": "1a5eaab757b9cfb26413d3cfdd1d4176f876680ce7d6166fa99f253a5a00649d"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t02.pt",
+   "bytes": 1473665,
+   "sha256": "604af4f481da518db9c0810130480b0ecc0d44dc31ec00ad4640716f4515da10"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t03.pt",
+   "bytes": 1473665,
+   "sha256": "4f70f3d626832e1c68e46d208fe246ef90e177cd4ebac046c218191396e2da57"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t05.pt",
+   "bytes": 1473665,
+   "sha256": "4948f538f45b6761e3156fe8a0f4a3021b3170ec2992955623574d91f06362c4"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t10.pt",
+   "bytes": 1473665,
+   "sha256": "c430a78a89581c8600b77956598928708517db0d5ec1a00cc684913527a0afc5"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t20.pt",
+   "bytes": 1473665,
+   "sha256": "640a07e6d9f95252c0941cd37aaf2305c1b5214f0e7dd86e194b70dcae24f7e1"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed15_t30.pt",
+   "bytes": 1473665,
+   "sha256": "98cc78c1d83e9461f6cf67712151d33420a698b42aaa4f882835bb44da7c5c00"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t01.pt",
+   "bytes": 1473665,
+   "sha256": "cdbb22e221bed152482ce0cdedf92296548edeef91fbaa886d0e64914c041fb6"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t02.pt",
+   "bytes": 1473665,
+   "sha256": "1eb38746f623d2e01e1543c03217e4f9723ea9d6d68363d80789d26e4da8b4cf"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t03.pt",
+   "bytes": 1473665,
+   "sha256": "f55120d2d97f0cc6f3470cccb7114286c6ec18e5067274cf51f78ca83821b787"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t05.pt",
+   "bytes": 1473665,
+   "sha256": "cc0df1616f8237f98d7a12fa908fc37ea111d1f344dd6bb284d83240ecd03b3c"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t10.pt",
+   "bytes": 1473665,
+   "sha256": "72189b743a4a0d39deeb777fcb8143ab28e90229eb7b554a9d9b0f418028c2a3"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t20.pt",
+   "bytes": 1473665,
+   "sha256": "1fce7383fc76ab6421cfc6b6c354f5246e59c60aa1e31765009a470af38d8f93"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed16_t30.pt",
+   "bytes": 1473665,
+   "sha256": "43a23e0848d2d6688a8cae519719aa43e36a891f8153d85d3d64bed25394b278"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t01.pt",
+   "bytes": 1473665,
+   "sha256": "972e7118f1f79062389027a4b9b08678ee83adaf3f5ac94216c4db1325b2a847"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t02.pt",
+   "bytes": 1473665,
+   "sha256": "aaf8a7b6fa5d1e59a5bd1d2f42b0f95d43029ba94c0bd28f1269934d1ccae12e"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t03.pt",
+   "bytes": 1473665,
+   "sha256": "2a81b738c63eedb0922efa21ef68f3381c838fcb175c524545028be6d083f5c2"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t05.pt",
+   "bytes": 1473665,
+   "sha256": "999f93d11509db60d15df21341da211cb3c71e183b7f97e496744bdb6b7604f0"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t10.pt",
+   "bytes": 1473665,
+   "sha256": "6f34f8419d36cd5c706a4818e9ac25e4d84f2e4b505158e13bd6026a6fd9c98f"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t20.pt",
+   "bytes": 1473665,
+   "sha256": "e0a5c8828609a70be79ea9ec71fb3ab695d6eff5947743d83d0e8777f6eca3ba"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed17_t30.pt",
+   "bytes": 1473665,
+   "sha256": "0428ee50701029ad05114f4d757ea9efaf61b939685517501a51f6dff3c0ec68"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t01.pt",
+   "bytes": 1473665,
+   "sha256": "0345eae5045186c1fa856d22b1e12a740947633e7bf254bb8123ea7b2725ee33"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t02.pt",
+   "bytes": 1473665,
+   "sha256": "8b708c7ee033c60148d230d9f9f59929002d78e50f95ed40c33c9b85f2c57f23"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t03.pt",
+   "bytes": 1473665,
+   "sha256": "e1d7d417bc85868c44487b1b5da8fd498c88e5cfcf0402eb7778717a59885af8"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t05.pt",
+   "bytes": 1473665,
+   "sha256": "67224f3de4c291fdd943088cdd86db2534623d4cceffa5fdecfac82e6a88fe91"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t10.pt",
+   "bytes": 1473665,
+   "sha256": "7e212b1540f1d235d784d0972a6aaa86bbd77bc820c7b76736e35fc0e483fe9a"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t20.pt",
+   "bytes": 1473665,
+   "sha256": "9eac0ea23f572e89c9b854ff211b1cead9275ffa3f73ac99ba37e1e7439ff1f4"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed18_t30.pt",
+   "bytes": 1473665,
+   "sha256": "666e5de49136c1c2628a0894cd010cdad48aa27600b5ef6b8f1759ba4ef5716a"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t01.pt",
+   "bytes": 1473665,
+   "sha256": "3ee313feefc5f5637223db606fa78fc876ea71d9f7a1539f54368aaa00cde494"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t02.pt",
+   "bytes": 1473665,
+   "sha256": "ec327198482b7b2b33a6946d0f03e31be29c5fba946f3a881341fb9cec5df9c0"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t03.pt",
+   "bytes": 1473665,
+   "sha256": "8c42e2f3a88b90f4afde6a098ea226b03b0bed9b16f1c4ccd3f3d5b33500d52c"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t05.pt",
+   "bytes": 1473665,
+   "sha256": "7262b09699fa62e553f11d9b60eb04ea267f136426da2b14fe69f0d020ccba43"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t10.pt",
+   "bytes": 1473665,
+   "sha256": "074ed4457c08faf8781421a803c6365bbd15f00239dbf32e407e6a96b13d20b6"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t20.pt",
+   "bytes": 1473665,
+   "sha256": "c6113cf548faf3eb14e1214c33fe9e73cd4632a594a78fceed6f6158accc439e"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA+grow1_seed19_t30.pt",
+   "bytes": 1473665,
+   "sha256": "b254516775dc2522d1fe2c41774fad703c31587dc772b3ba9efc5bdde66b5bcf"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed10_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed10_t01.pt",
+   "bytes": 1473241,
+   "sha256": "31126a3db9a6c54c80fbf6f6dcf5876eb4979157193442ecc213336998f91fae"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed10_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed10_t02.pt",
+   "bytes": 1473241,
+   "sha256": "8137fe9d67d0d2e3dad93a0cbe0f746c017d59fd83bc6000c27ab56bad79069b"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed10_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed10_t03.pt",
+   "bytes": 1473241,
+   "sha256": "477e8f25a05667b0b70d1ac422c0f83aba2a4ace6fd5cb90708a1974475e7a87"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed10_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed10_t05.pt",
+   "bytes": 1473241,
+   "sha256": "5d62e527fddf4ee0c821e1e1c4b0c323a25c9c4fcd61bfbc3eca9e719d4874f8"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed10_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed10_t10.pt",
+   "bytes": 1473241,
+   "sha256": "4aa64c0e93b6e9832f006867d1e6e55b9df0f823527dbc663dc481717c151755"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed10_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed10_t20.pt",
+   "bytes": 1473241,
+   "sha256": "52a5e3c07e70afcb569c1015da76ba0a23a627592f2aa76fdc3698d8a8e62349"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed10_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed10_t30.pt",
+   "bytes": 1473241,
+   "sha256": "279ba0547357af46e68c376e61a473a5653a67902f9b78665592e3cf9505036c"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed11_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed11_t01.pt",
+   "bytes": 1473241,
+   "sha256": "dbf63c127edc4258b8af25e6cefc3c022ac3813460c07e782008bbbf5172b8fa"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed11_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed11_t02.pt",
+   "bytes": 1473241,
+   "sha256": "b1dc203726bd5fba05a56c6ac45bc4ea9bcf0414140c5f6e900c0f5e5b9eef59"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed11_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed11_t03.pt",
+   "bytes": 1473241,
+   "sha256": "306a0bc639ef0982ab1ce9eefb2d986b4f846602a55526ceec1547fb22b9d47f"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed11_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed11_t05.pt",
+   "bytes": 1473241,
+   "sha256": "350b871ab2ebefbe068d0d6233e92a45085d3dd0d2f45d6ee5a38bccc718fd40"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed11_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed11_t10.pt",
+   "bytes": 1473241,
+   "sha256": "cc63bae9ffd3bbf727082ae4dd2386d52350b66b0fdc75dfaf778a49cd1689da"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed11_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed11_t20.pt",
+   "bytes": 1473241,
+   "sha256": "ff8839b7cb74d200a60a190104162cf871a22e696ee8201d8ed2be741468fb5e"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed11_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed11_t30.pt",
+   "bytes": 1473241,
+   "sha256": "80a7623b02e62cfb6a9ea21d217b058c489a45eb77963e5a80fba4094c3b9800"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed12_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed12_t01.pt",
+   "bytes": 1473241,
+   "sha256": "af47c0f5b4da34336b8e536e4c36283c216d4bffc0a496cc726113f657d5cd1a"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed12_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed12_t02.pt",
+   "bytes": 1473241,
+   "sha256": "103de23061525fc09049dc699211e146d2d13de55f8ae5cad45291cf6db666ae"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed12_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed12_t03.pt",
+   "bytes": 1473241,
+   "sha256": "073ccea416162fa3a7db7c902e2626f0c5aa35d6a6fea3084f4ccd4a8a6462d1"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed12_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed12_t05.pt",
+   "bytes": 1473241,
+   "sha256": "dcd0a9942778d809622e7819fb6d840b2b0e263352fbf900419abdf86287b892"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed12_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed12_t10.pt",
+   "bytes": 1473241,
+   "sha256": "4daef87dec09bda95dc710e67381672648ee643faa81529b013f0056412231ea"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed12_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed12_t20.pt",
+   "bytes": 1473241,
+   "sha256": "d3b87a50de8836d82aa37dda136e700e89fa251b7917065295a90c1da63375f5"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed12_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed12_t30.pt",
+   "bytes": 1473241,
+   "sha256": "98c74ca203d0d3ea773230d2682c23ef7519d8f78baedc1ad5241fcf739abde6"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed13_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed13_t01.pt",
+   "bytes": 1473241,
+   "sha256": "41b58baacc5dec25db5567c149d07d8c3be80f3ec11404d4b71b4afde180246a"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed13_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed13_t02.pt",
+   "bytes": 1473241,
+   "sha256": "f9c6d5e9cccd40580f3046a073b0c0fa375714d88f3eb94162963edb27d91cca"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed13_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed13_t03.pt",
+   "bytes": 1473241,
+   "sha256": "664587c55e4cecb6d6d5add8486d15a84111d0b7e87cc5e7119b35501f56e1b0"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed13_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed13_t05.pt",
+   "bytes": 1473241,
+   "sha256": "765edd3de9ea1450f1639aec7a0cdb5d9d9a77c3fb37fe64dea59910b73ce667"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed13_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed13_t10.pt",
+   "bytes": 1473241,
+   "sha256": "b21a2302b906a32cd5945c4540b7aec1b3ac4106ad976a58691f2a233a4b71fb"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed13_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed13_t20.pt",
+   "bytes": 1473241,
+   "sha256": "aa92340352f1255fe5e3344cdcd9d649c821aab748a8464eb7eadf5f48da08d2"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed13_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed13_t30.pt",
+   "bytes": 1473241,
+   "sha256": "7cbe8edcc3fa96959bb5c0674647d55bde0c21ab71f78121457803944903c66d"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed14_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed14_t01.pt",
+   "bytes": 1473241,
+   "sha256": "934e6fb57d23415676cd32137811fd62c1c5a9e657df6c31e40b02be84eaa720"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed14_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed14_t02.pt",
+   "bytes": 1473241,
+   "sha256": "da45f279ef1afca9507c16e37841e31a43d8ab522815946a9276315730c6194f"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed14_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed14_t03.pt",
+   "bytes": 1473241,
+   "sha256": "deeb10009f3abef09b3aeb3a6e51718c1212f16b6febed0596fed3750c81eb3b"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed14_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed14_t05.pt",
+   "bytes": 1473241,
+   "sha256": "eae419f5be65e5f9a04dfb3cbc8821c5a6c8d89e7de6094c0dffd7984f5d03d8"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed14_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed14_t10.pt",
+   "bytes": 1473241,
+   "sha256": "65295c8361a89f21f626cd9396cc45f1be11867a68d710441b973ebe5b644c67"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed14_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed14_t20.pt",
+   "bytes": 1473241,
+   "sha256": "cef42c9653ba291f21e7d2975dca49e95e46348212203f752563dda3c015eb56"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed14_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed14_t30.pt",
+   "bytes": 1473241,
+   "sha256": "27534740309e945bd177afccce5fb95aba523feb0364f09b58c88e9e4235bb3f"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed15_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed15_t01.pt",
+   "bytes": 1473241,
+   "sha256": "fd9b35890753a049a0d5a373ae89c0315cdc5643dfaf001dc53e6795d332c11d"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed15_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed15_t02.pt",
+   "bytes": 1473241,
+   "sha256": "15762fe7ab0ddf43dec7cd585fb2753f3f6561c48d0b4ac417f11afa296cbf5b"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed15_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed15_t03.pt",
+   "bytes": 1473241,
+   "sha256": "3a03b057d6c955befb2c1a8d598bfab529eb32b8425c129d9b532e9db9277726"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed15_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed15_t05.pt",
+   "bytes": 1473241,
+   "sha256": "2ee92f696bf849ce560e840b9d1d8c267ecaa535d12862144397698594f8a146"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed15_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed15_t10.pt",
+   "bytes": 1473241,
+   "sha256": "00e8a070d8b37f926263d338b2284ea68196f7c1465f9f5f212d483ff84284b6"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed15_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed15_t20.pt",
+   "bytes": 1473241,
+   "sha256": "bd497c173c1cb113cbe4a13f24a6b8a76c2bb9822b46e9ce3785ef73678250a7"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed15_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed15_t30.pt",
+   "bytes": 1473241,
+   "sha256": "cff3253e0b85b9b6b015067d6ed34fc482a76022067207c56991bea13ca355d1"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed16_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed16_t01.pt",
+   "bytes": 1473241,
+   "sha256": "08cedb6a32ef89186e9e1bb5a3af63f6599f7f03b2c88a35d7ec2956b5fe46a7"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed16_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed16_t02.pt",
+   "bytes": 1473241,
+   "sha256": "9f8ce711826e4bb6f0f5f754b2d58ec1dd646a506c8663bdba318293c2953ea0"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed16_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed16_t03.pt",
+   "bytes": 1473241,
+   "sha256": "00281eae100aef65c846cd727ad4e594cdfc44b79c8127400cf2e289c859383d"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed16_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed16_t05.pt",
+   "bytes": 1473241,
+   "sha256": "74319103a3944036e27cbc263af7476e6b06c1679b64041b736a57a3c269a562"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed16_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed16_t10.pt",
+   "bytes": 1473241,
+   "sha256": "5f5b3dedde41b874599b9dcd3282938d75122ecfaca29ffd68badd6a620f23e8"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed16_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed16_t20.pt",
+   "bytes": 1473241,
+   "sha256": "57b78f18cefe92c86927105450443acdd1651042f136849cde28fc8164c17885"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed16_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed16_t30.pt",
+   "bytes": 1473241,
+   "sha256": "0b9b69e66acef0e6e0bea91974f3368eb8de4a20cf41a3c465cf1799d1547ac5"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed17_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed17_t01.pt",
+   "bytes": 1473241,
+   "sha256": "90eaaa9651a5a21e6637b361a68516c091e9c539a849d4a4a5d7df613bef26f9"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed17_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed17_t02.pt",
+   "bytes": 1473241,
+   "sha256": "4cc7344dd2ee50aeca3a537e4c53681a1306df2ec14fe023b50cced600606af6"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed17_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed17_t03.pt",
+   "bytes": 1473241,
+   "sha256": "ea83d9fad8193f2ccc8077aa249aadf81585f770f0afd67ad7976cb49d6fe049"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed17_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed17_t05.pt",
+   "bytes": 1473241,
+   "sha256": "1d5ffa1d73ec80dc405b4519b0911b122df41ea45f52646bcf4496657468a277"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed17_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed17_t10.pt",
+   "bytes": 1473241,
+   "sha256": "72147458b840a17089820b874f0a4b25a861a974aedf14413b01b3a200006558"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed17_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed17_t20.pt",
+   "bytes": 1473241,
+   "sha256": "43d3eb8f02142759def0c006e8304e76cc7d320bfc3d2b14c9a4a6b392ba9eaa"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed17_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed17_t30.pt",
+   "bytes": 1473241,
+   "sha256": "3ddf7b83dc8fc2b996d4e09350ead04a172d6931ebe8046a2a44c189e2aacc2e"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed18_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed18_t01.pt",
+   "bytes": 1473241,
+   "sha256": "66026510605dcae659acff8b4d7958ffe8e8120c4d1f79e7b10209c669e6e4c2"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed18_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed18_t02.pt",
+   "bytes": 1473241,
+   "sha256": "c533f84065061ed70e9883fe76a19a4bbf5d3e9d4e035f5b32a9cc2bf36cbbb4"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed18_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed18_t03.pt",
+   "bytes": 1473241,
+   "sha256": "4967bd55a35337ec86b91b080993788be00ce0af22c0d9e9ebbe35332fbfa517"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed18_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed18_t05.pt",
+   "bytes": 1473241,
+   "sha256": "a9a8c8a35ea46c9d8b4a89a22488800050a27e68f773159496f68f506ac20b37"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed18_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed18_t10.pt",
+   "bytes": 1473241,
+   "sha256": "76b907549baf27fa037c52d2dbd6352441e8bbf2cf293ac3aaaf0ea003a8ea93"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed18_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed18_t20.pt",
+   "bytes": 1473241,
+   "sha256": "7a7a56cbbf81259318a893a8f96838b46ef5976bf613976120a3808cbf548b88"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed18_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed18_t30.pt",
+   "bytes": 1473241,
+   "sha256": "fe08111778a1f542f78c6f632580af93ef96492e55e72eb2584f0e409b99e34f"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed19_t01.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed19_t01.pt",
+   "bytes": 1473241,
+   "sha256": "5047e843bf66d8a8691f8eef75d41f11a97e43a7e7d5bd81fab646a8189fc632"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed19_t02.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed19_t02.pt",
+   "bytes": 1473241,
+   "sha256": "276f37b2ede5f06247fcfc947ea826e3e785a8f32768cd9487dd73e9a01e4b15"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed19_t03.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed19_t03.pt",
+   "bytes": 1473241,
+   "sha256": "dd54f4e2d39722be79efc861710f8792cf1227bb691d5002fe8269bc2f06f47d"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed19_t05.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed19_t05.pt",
+   "bytes": 1473241,
+   "sha256": "60b0a8bcb73735d85b0d170d6a99bf8d617e088c50527adbe3e224bd71efa8cf"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed19_t10.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed19_t10.pt",
+   "bytes": 1473241,
+   "sha256": "8ce423dbc7c629f3b0b925e755c739f2fabb65b3e7c5d7d91cb399da96194adc"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed19_t20.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed19_t20.pt",
+   "bytes": 1473241,
+   "sha256": "f43b13c4dcfdfcdc76dfe76d572674308e7920072ceffc5e90f69993f664d1da"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/ckpt/SNA_seed19_t30.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/ckpt/SNA_seed19_t30.pt",
+   "bytes": 1473241,
+   "sha256": "cee720eb2c20d84f62daa806ca43d4b2b03c19fbde84b82b84a4e59ecb9a9447"
+  },
+  {
+   "source": "results/sna_grow_1017/cnn/state.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/cnn/state.pt",
+   "bytes": 31370707,
+   "sha256": "8e31e465369c895556000c15d5a93606035c00658300fadc3b87431ae2c910be"
+  },
+  {
+   "source": "results/sna_grow_1017/mlp/SNA_grow/V_history.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/mlp/SNA_grow/V_history.npz",
+   "bytes": 471096,
+   "sha256": "f2c2752cebc28520964ae8dfdbdf91d5f7852a7649b625b5f0c10708964ecfa9"
+  },
+  {
+   "source": "results/sna_grow_1017/mlp/SNA_grow/end.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/mlp/SNA_grow/end.pt",
+   "bytes": 39322365,
+   "sha256": "0dc14ad09f75274f29770cdfa39c502e3b00bac87c833e1316ace1fa2176f379"
+  },
+  {
+   "source": "results/sna_grow_1017/mlp_smoke_s100-109/SNA_grow/V_history.npz",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/mlp_smoke_s100-109/SNA_grow/V_history.npz",
+   "bytes": 470936,
+   "sha256": "c87c27d2ccdc7b0e72e8d2fe3375b02d16f32d509d9911bf155ed338de532b56"
+  },
+  {
+   "source": "results/sna_grow_1017/mlp_smoke_s100-109/SNA_grow/arm_provenance.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/mlp_smoke_s100-109/SNA_grow/arm_provenance.json",
+   "bytes": 390,
+   "sha256": "89019aed8beabcb283e1b30732a867084478c7e88e3246642abd0ea9cdeea21c"
+  },
+  {
+   "source": "results/sna_grow_1017/mlp_smoke_s100-109/SNA_grow/done.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/mlp_smoke_s100-109/SNA_grow/done.json",
+   "bytes": 14453,
+   "sha256": "286445d1b785ad4523929481df56f772ae8873b16e3980c493cba25965005afc"
+  },
+  {
+   "source": "results/sna_grow_1017/mlp_smoke_s100-109/SNA_grow/end.pt",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/mlp_smoke_s100-109/SNA_grow/end.pt",
+   "bytes": 39322365,
+   "sha256": "0d810b99d0ebe20f97b6343e930fb095498552dac21f73532aaa378dcf9b2bfe"
+  },
+  {
+   "source": "results/sna_grow_1017/mlp_smoke_s100-109/SNA_grow/fresh_control.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/mlp_smoke_s100-109/SNA_grow/fresh_control.csv",
+   "bytes": 735,
+   "sha256": "5b50af76a4a3513a9b0851049b0bc50a86dc177dbc61f68cdac79e054446a66f"
+  },
+  {
+   "source": "results/sna_grow_1017/mlp_smoke_s100-109/SNA_grow/per_task.csv",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/mlp_smoke_s100-109/SNA_grow/per_task.csv",
+   "bytes": 107299,
+   "sha256": "ad789e0d83202e8510b629b6c0712701380e3127a7b81c48905d216c6eee2b32"
+  },
+  {
+   "source": "results/sna_grow_1017/mlp_smoke_s100-109/input_manifest.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/mlp_smoke_s100-109/input_manifest.json",
+   "bytes": 9418,
+   "sha256": "27722bb8f0e3b6dbc13cdaf56a1d533cb67a474cbc928e604162c967000691e4"
+  },
+  {
+   "source": "results/sna_grow_1017/mlp_smoke_s100-109/provenance_end.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/mlp_smoke_s100-109/provenance_end.json",
+   "bytes": 14138,
+   "sha256": "20407f4e2b963ec3858614af46837dc8d95be584839cb6c7790510ff3cdb12ad"
+  },
+  {
+   "source": "results/sna_grow_1017/mlp_smoke_s100-109/provenance_start.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/mlp_smoke_s100-109/provenance_start.json",
+   "bytes": 14357,
+   "sha256": "399da041a50d240a112c6213d76d3b6e26577d01f5700514bfc22dd6bd6bc9ed"
+  },
+  {
+   "source": "results/sna_grow_1017/mlp_smoke_s100-109/status.json",
+   "backup": "/home/issan/Projects/obsidian-research-data/sna_grow_1017/results/sna_grow_1017/mlp_smoke_s100-109/status.json",
+   "bytes": 80,
+   "sha256": "a7c64cd688478ea8060afbbcc8b9dda9a84e624490418d10697a94b4f2008739"
+  }
+ ]
+}
