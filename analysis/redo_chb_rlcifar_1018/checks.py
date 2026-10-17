@@ -256,7 +256,7 @@ def run(out):
         record('S-redo',redo_check)
 
         def composition_check():
-            rec=Recorder();execute(adapted,root/'composition','both',lifecycle=rec)
+            rec=Recorder();cp=execute(adapted,root/'composition','both',lifecycle=rec)
             pre=next(e for e in rec.events if e['stage']=='redo_pre')
             post=next(e for e in rec.events if e['stage']=='redo_post')
             assert C.digest(pre['act'])==C.digest(post['act'])
@@ -274,6 +274,13 @@ def run(out):
             reference_rng=host_recycler_reference(reference,rm,rv,probe,act,[100,101],pre['reinit_rng'])
             assert C.digest([post['P'],post['m'],post['v']])==C.digest([reference,rm,rv]), 'actual composition differs from native CHB then inherited recycler'
             assert C.digest(post['reinit_rng'])==C.digest({s:g.get_state() for s,g in reference_rng.items()})
+            # The final event is at the last actual update (tc12). Compare
+            # the persisted endpoint too, so a bad operation placed after the
+            # redo_post audit callback cannot evade the composition check.
+            final_post=[e for e in rec.events if e['stage']=='redo_post'][-1]
+            assert final_post['tc']==cp['tc']==12
+            assert C.digest([cp['P'],cp['m'],cp['v'],cp['act_state']])==C.digest(
+                [final_post['P'],final_post['m'],final_post['v'],final_post['act']]), 'post-audit operation changed the persisted transaction endpoint'
             extra=[p.clone() for p in post['P']];extra[3].mul_(1-.001*.1713)
             # Some recycled biases are zero, but surviving biases remain nonzero.
             altered_ema=copy.deepcopy(post['act']);altered_ema['m'][0].zero_()
