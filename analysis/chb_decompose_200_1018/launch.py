@@ -20,6 +20,27 @@ from analysis.chb_decompose_200_1018.diagnostics import Observer, digest
 LOCK = Path("/tmp/lop_analysis_gpu.lock")
 
 
+def competing_gpu_jobs(pids):
+    """Match the host scheduler: desktop C+G contexts are not Python jobs.
+
+    Recent NVIDIA drivers include gnome/Chrome/terminal graphics contexts in
+    query-compute-apps. Keep the shared exclusive lock and reject other Python
+    users, as resp_cifar5p1_1007.other_gpu_python does.
+    """
+    busy = []
+    for value in pids.splitlines():
+        if not value.strip().isdigit() or int(value) == os.getpid():
+            continue
+        pid = int(value)
+        try:
+            command = Path(f'/proc/{pid}/cmdline').read_bytes().replace(b'\0', b' ')
+        except FileNotFoundError:
+            continue
+        if b'python' in command:
+            busy.append(dict(pid=pid, command=command.decode(errors='replace')))
+    return busy
+
+
 def environment():
     try:
         smi = subprocess.run(["nvidia-smi", "--query-gpu=name,driver_version", "--format=csv,noheader"],
@@ -155,8 +176,11 @@ def production(args):
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         smi = subprocess.run(["nvidia-smi", "--query-compute-apps=pid", "--format=csv,noheader,nounits"],
                              check=True, capture_output=True, text=True)
-        if any(x.strip().isdigit() and int(x) != os.getpid() for x in smi.stdout.splitlines()):
-            raise RuntimeError("GPU compute job active; scheduler must retry when idle")
+        busy = competing_gpu_jobs(smi.stdout)
+        C.put(C.OUT / 'gpu_admission.json', dict(at=C.utc(), nvidia_compute_pids=smi.stdout,
+                                               competing_python_jobs=busy, shared_lock=str(LOCK)))
+        if busy:
+            raise RuntimeError("GPU compute job active; scheduler must retry when idle: " + repr(busy))
         torch.set_num_threads(2)
         device = D.E.H.setup("cuda")
         torch.backends.cuda.matmul.allow_tf32 = False
