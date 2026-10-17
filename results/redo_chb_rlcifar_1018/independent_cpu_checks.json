@@ -1,0 +1,291 @@
+{
+  "run_id": "redo_chb_rlcifar_1018",
+  "scope": "CPU_SYNTHETIC_ONLY",
+  "all_pass": true,
+  "checks": {
+    "S-native": {
+      "mutations": {
+        "raw_std_none": true,
+        "initial_b1_zero_none": true,
+        "raw_std_CHB": true,
+        "initial_b1_zero_CHB": true,
+        "task_clock_reset": true,
+        "signed_zero_bit_comparison": true
+      },
+      "arms": [
+        "none",
+        "CHB"
+      ],
+      "actual_native_function_cloned": true,
+      "native_source_sha256": "2478c8339decaee3aacb90ac7aa87f8cff6b49d2da30833c6e3dbea0dfa82da4",
+      "synthetic": {
+        "R": 2,
+        "seeds": [
+          100,
+          101
+        ],
+        "tasks": 3,
+        "steps_per_task": 4,
+        "batch": 16,
+        "dims": [
+          8,
+          4,
+          3,
+          10
+        ]
+      },
+      "pass": true
+    },
+    "S-cadence": {
+      "mutations": {
+        "task_local_cadence": true,
+        "two_batch_probe": true,
+        "before_update_ReDo": true
+      },
+      "actual_events": [
+        6,
+        12
+      ],
+      "probe_images": 64,
+      "probe_batches": 4,
+      "production_event_count": 3846,
+      "cuda_warmup": "separate GPU release, not executed here",
+      "pass": true
+    },
+    "S-score": {
+      "mutations": {
+        "preH_only_score": true,
+        "strict_tau": true,
+        "double_EMA_update": true
+      },
+      "tau": 0.1,
+      "score": "actual delivered feature",
+      "pass": true
+    },
+    "S-redo": {
+      "mutations": {
+        "zero_bias_moments": true,
+        "keep_output_columns": true,
+        "reverse_layer_draw_order": true
+      },
+      "inherited_AST_recycler_executed": true,
+      "all_P_m_v_and_reinit_rng_byte_exact": true,
+      "mask_counts": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "pass": true
+    },
+    "S-composition": {
+      "mutations": {
+        "reset_EMA": true,
+        "reapply_B": true,
+        "weight_WD": true,
+        "reverse_policy_order": true
+      },
+      "bias_moments_and_EMA_retained": true,
+      "b3_unchanged": true,
+      "pass": true
+    },
+    "S-observer": {
+      "mutations": {
+        "diagnostic_consumes_batch_rng": true,
+        "diagnostic_consumes_reinit_rng": true,
+        "tamper_P": true,
+        "tamper_probe_ring": true,
+        "tamper_reinit_rng": true,
+        "omit_generator_restore": true,
+        "omit_probe_ring_restore": true,
+        "logger_consumes_batch_rng": true
+      },
+      "arms": {
+        "none": {
+          "resume_native_and_extension_byte_exact": true,
+          "read_only_recording_byte_exact": true
+        },
+        "redo": {
+          "resume_native_and_extension_byte_exact": true,
+          "read_only_recording_byte_exact": true
+        },
+        "CHB": {
+          "resume_native_and_extension_byte_exact": true,
+          "read_only_recording_byte_exact": true
+        },
+        "both": {
+          "resume_native_and_extension_byte_exact": true,
+          "read_only_recording_byte_exact": true
+        }
+      },
+      "pass": true
+    },
+    "S-generation": {
+      "mutations": {
+        "native_zero_called_strict_alive": true,
+        "replacement_counted_as_death": true,
+        "upstream_event_called_drift": true
+      },
+      "revived_then_between_event_death": true,
+      "gen0_event_associated_death": true,
+      "full_recycler_strict_definition": true,
+      "pass": true
+    },
+    "S-readout": {
+      "mutations": {
+        "seed_position_join": true,
+        "missing_seed_deleted": true,
+        "nonsignificant_called_EQ": true,
+        "finite_csv_edit": true,
+        "parent_initializer_changed": true
+      },
+      "primary_and_additive_orthogonal": true,
+      "complete_rows": 8000,
+      "paired_intervals": 7,
+      "blocked_folder_does_not_get_performance_label": true,
+      "pass": true
+    }
+  },
+  "source_sha256": {
+    "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/redo_chb_rlcifar_1018/checks.py": "050458e5d10a19412913f02b4cc5ccd84d01fe3065255347f280dcf8d4bea04e",
+    "analysis/redo_chb_rlcifar_1018/common.py": "0acddc4514819778040726832adf157cbbf115b15775a52e2e6569ba9d2c415e",
+    "analysis/redo_chb_rlcifar_1018/diagnostics.py": "5693bfd7d3d44c8b012092f83ba4b46fe928830367eefb2182474d097c88d0ef",
+    "analysis/redo_chb_rlcifar_1018/gpu_checks.py": "a5e753acf21d4601c03d865e3b7e2080dee59be974e497a777d97a68a96fd587",
+    "analysis/redo_chb_rlcifar_1018/launch.py": "66caa85a624f4e7791dc7432fbb2aeb0fe35d942a9dab375ed464ac679e80f66",
+    "analysis/redo_chb_rlcifar_1018/report.py": "b3731032482119efe9a4cf75ed4e45387c1a97773175f57dd2a53e95d9e7770f",
+    "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0",
+    "specs/spec_redo_chb_rlcifar_1018.md": "9d2422a358e31cf66e93aadbf57b94336a8c9b1b1f1905f05e5326370ccfdbe4",
+    "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/baselines_cifar5p1_1008.py": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/redo_chb_rlcifar_1018.py": "e78fa9592c501086bdbc46e140000a10a1f41ca525de599e1b481a1e8526f435",
+    "src/relu_doors_0919.py": "2478c8339decaee3aacb90ac7aa87f8cff6b49d2da30833c6e3dbea0dfa82da4",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+  },
+  "registration": {
+    "run_id": "redo_chb_rlcifar_1018",
+    "base_commit": "094489c30bcdf196946179ba07ed0e8cadd3a53f",
+    "prereg_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+    "initial_prereg_commit": "de8a437fef35f7942023fc581e81f4e6cbbad5bd",
+    "spec_sha256": "9d2422a358e31cf66e93aadbf57b94336a8c9b1b1f1905f05e5326370ccfdbe4",
+    "common_spec_sha256": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "protocol": {
+      "run_id": "redo_chb_rlcifar_1018",
+      "arms": [
+        "none",
+        "redo",
+        "CHB",
+        "both"
+      ],
+      "seeds": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "conds": [
+        "raw"
+      ],
+      "R": 10,
+      "n_tasks": 200,
+      "epochs": 400,
+      "steps_per_epoch": 75,
+      "steps_per_task": 30000,
+      "total_updates": 6000000,
+      "batch": 16,
+      "n_images": 1200,
+      "dims": [
+        3072,
+        100,
+        100,
+        10
+      ],
+      "device": "cuda",
+      "dtype": "float32",
+      "lr": 0.001,
+      "lam": 0.1713,
+      "beta": 0.01,
+      "adam_betas": [
+        0.9,
+        0.999
+      ],
+      "adam_eps": 1e-08,
+      "threads": 2,
+      "tf32_matmul": false,
+      "tf32_cudnn": false,
+      "deterministic": true,
+      "redo_tau": 0.1,
+      "redo_period": 1560,
+      "redo_probe_batches": 4,
+      "redo_probe_images": 64,
+      "redo_events_per_arm": 3846,
+      "redo_stream": "b5_redo_reinit",
+      "redo_order": "native Adam then B then EMA then one-shot recycle outside graph",
+      "retain": [
+        "bias moments",
+        "Adam global time",
+        "hidden EMA"
+      ],
+      "score": "actual delivered features after H",
+      "late_window": [
+        181,
+        200
+      ],
+      "early_window": [
+        31,
+        50
+      ]
+    },
+    "prediction": {
+      "primary": "CHB_POLICY_CARRIES",
+      "redo_shortfall": true,
+      "numeric_probability": null,
+      "attribution": "Issa 2026-10-18 02:36:16 JST revision formalized by Codex",
+      "known_reference": "old CHB/none results informed design; these are not new predictive successes"
+    }
+  },
+  "environment": {
+    "python": "3.12.3 (main, Apr 15 2024, 18:25:56) [Clang 17.0.6 ]",
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.1",
+    "cuda_build": "13.0",
+    "cuda_available": false,
+    "nvidia_devices": [
+      "/dev/nvidia-caps"
+    ],
+    "nvidia_smi_returncode": 9,
+    "nvidia_smi_output": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.",
+    "tf32_matmul": false,
+    "tf32_cudnn": true,
+    "deterministic": true,
+    "threads": 2,
+    "cublas_workspace": ":4096:8"
+  },
+  "generated_utc": "2026-10-17T17:59:26.696675+00:00",
+  "evaluation_seed_count": 0,
+  "tolerances": {
+    "states": "raw byte equality including signed zero",
+    "gate_counts": "exact integers",
+    "intervals": "registered float64 t; explicit equal-vector point branch"
+  },
+  "pending": [
+    "independent source review",
+    "real-data CUDA R10 release",
+    "full registered production"
+  ]
+}

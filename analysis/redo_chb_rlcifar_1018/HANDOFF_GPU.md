@@ -42,3 +42,9 @@ cwdは `/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018`。Pythonは `/home
 本走はnone→redo→CHB→bothを全て新規に実行し、4×10×200行と全診断を要求する。途中の正当な保存状態だけをresumeし、source/HEAD・データ・generator・probe buffer・世代・時刻の不一致を拒否する。実行中にsource/HEADを変更しない。判定前に保存物のhash・対応を検証する。
 
 完了後は本runのrawデータを別途退避してmanifestを保存する。既存controllerのretentionはこの新runを自動処理しない。他のworktreeを消さず、CLAUDE.mdに従って統合・片付けを進める。追加GitHub公開は本引継ぎの許可範囲に含めず、従前の自動承認拒否の制約を保持する。
+
+## Work側の最終確認
+
+実装source commit `5e44f9a9bc7143e4ba567da81c5aea0754e45188`。CPU全8群・指定負例35件がPASS。別担当2名がソースと実行検査を独立確認し、実ソースへのextra-B（診断前/後）・世代死亡理由の誤りも検出した。19ソースのreviewed hashが上記commitのblobと一致することを `source_commit_verification.json` に保存。
+
+GPU検査CLIと `launch run --arm all` を実際に起動したが、Workではいずれもexit2/BLOCKED_CUDA。本走は未開始、科学labelはnull、gpu_release.jsonはall_pass=falseで全CUDA検査NOT_RUNのまま。ホスト上で本物のGPU releaseを通してから実行する。証跡は `results/redo_chb_rlcifar_1018/`、旧走1の完走記録や既存controllerは変更していない。
