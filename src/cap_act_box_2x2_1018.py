@@ -103,9 +103,73 @@ def schedule_from_rows(ref, cap):
     return q
 
 
+def validate_calibration_arm(base,arm):
+    """A schedule cannot admit a failed, incomplete, stale or mismatched arm."""
+    base=Path(base)
+    status=json.loads((base/'status.json').read_text())
+    if status.get('status')!='COMPLETED' or status.get('seeds')!=CALIB_SEEDS:
+        raise ValueError('SCHEDULE_UNDEFINED: calibration status/seeds '+arm)
+    prov=json.loads((base/'provenance.json').read_text())
+    reg=prov.get('registration',{})
+    expected=dict(box='F51',activation='ReLU',arm=arm,seeds=CALIB_SEEDS,R=10)
+    if any(reg.get(k)!=v for k,v in expected.items()) or reg.get('source_sha256')!=source_hashes():
+        raise ValueError('SCHEDULE_UNDEFINED: calibration provenance '+arm)
+    expected_keys={(s,t) for s in CALIB_SEEDS for t in range(1,31)}
+    indexed={}
+    for filename in ('per_task.csv','cap_task.csv'):
+        rr=list(csv.DictReader((base/filename).open()))
+        keys=[(int(r['seed']),int(r['task'])) for r in rr]
+        if len(keys)!=300 or set(keys)!=expected_keys:
+            raise ValueError('SCHEDULE_UNDEFINED: calibration coverage '+filename)
+        indexed[filename]=dict(zip(keys,rr))
+    for key,r in indexed['per_task.csv'].items():
+        if not np.isfinite(float(r.get('online_acc','nan'))) or not 0<=float(r['online_acc'])<=1:
+            raise ValueError('SCHEDULE_UNDEFINED: calibration performance')
+        c=indexed['cap_task.csv'][key]
+        for l in (1,2):
+            if int(c[f'viol_w{l}'])!=0 or not np.isfinite(float(c[f'U_l{l}'])) or float(c[f'U_l{l}'])<=0:
+                raise ValueError('SCHEDULE_UNDEFINED: calibration cap integrity/U')
+            if (arm=='ref' or key[1]==1) and int(c[f'rows_w{l}'])!=0:
+                raise ValueError('SCHEDULE_UNDEFINED: unregistered calibration cap writes')
+            actual=float(c[f'actual_lr_l{l}']);want=float(f'{float(torch.tensor(1e-4)):.10g}')
+            if actual!=want:raise ValueError('SCHEDULE_UNDEFINED: calibration lr')
+    fresh=list(csv.DictReader((base/'fresh_control.csv').open()))
+    keys=[int(r['seed']) for r in fresh]
+    if len(keys)!=10 or set(keys)!=set(CALIB_SEEDS):
+        raise ValueError('SCHEDULE_UNDEFINED: missing fresh control')
+    for r in fresh:
+        if int(r['task'])!=29 or not all(np.isfinite(float(r[k])) for k in ('fresh_online_acc','continual_online_acc','fresh_gap')):
+            raise ValueError('SCHEDULE_UNDEFINED: fresh control')
+        # Each host CSV is printed to ten significant digits; a priori sum of
+        # decimal rounding errors is < 1.5e-9 on accuracy/gap scales <=1.
+        if abs(float(r['fresh_online_acc'])-float(r['continual_online_acc'])-float(r['fresh_gap']))>1.5e-9:
+            raise ValueError('SCHEDULE_UNDEFINED: fresh gap closure')
+    if prov.get('fresh_rows_written')!=[0,0]:raise ValueError('SCHEDULE_UNDEFINED: cap active in fresh')
+    with np.load(base/'radii.npz') as radii,np.load(base/'radius_anchor.npz') as anchor:
+        if radii['seeds'].tolist()!=CALIB_SEEDS:raise ValueError('SCHEDULE_UNDEFINED: radii seeds')
+        for l in (1,2):
+            r=radii[f'r_l{l}'];w=anchor[f'W{l}'];n=np.linalg.norm(w.astype(np.float64),axis=2)
+            if r.shape!=(10,100) or not np.isfinite(r).all() or (r<0).any():raise ValueError('SCHEDULE_UNDEFINED: radii')
+            bound=OLD_F51.gamma(2*w.shape[2]+2,OLD_F51.U32)*n+math.sqrt(w.shape[2])*OLD_F51.TINY32
+            if not np.all(np.abs(n-r)<=bound):raise ValueError('SCHEDULE_UNDEFINED: t1 radius anchor')
+            if prov['radii_sha256'][f'r_l{l}']!=hashlib.sha256(r.tobytes()).hexdigest():raise ValueError('SCHEDULE_UNDEFINED: radius hash')
+    files=('status.json','provenance.json','per_task.csv','cap_task.csv','fresh_control.csv','radii.npz','radius_anchor.npz','stream_manifest.json')
+    return {name:dict(path=str((base/name).resolve()),sha256=sha256_file(base/name)) for name in files}
+
+
 def validate_schedule(obj):
     if obj.get('calibration_seeds')!=CALIB_SEEDS or obj.get('source_sha256')!=source_hashes():
         raise ValueError('SCHEDULE_UNDEFINED: seeds/source mismatch')
+    evidence=obj.get('calibration_evidence',{})
+    for arm in ('ref','cap12'):
+        base=Path(obj['input_csv'][arm]['path']).parent
+        current=validate_calibration_arm(base,arm)
+        if evidence.get(arm)!=current:raise ValueError('SCHEDULE_UNDEFINED: stale calibration evidence')
+    ref_base=Path(obj['input_csv']['ref']['path']).parent;cap_base=Path(obj['input_csv']['cap12']['path']).parent
+    if json.loads((ref_base/'stream_manifest.json').read_text())!=json.loads((cap_base/'stream_manifest.json').read_text()):
+        raise ValueError('SCHEDULE_UNDEFINED: unpaired calibration streams')
+    if json.loads((ref_base/'provenance.json').read_text())['data_sha256']!=json.loads((cap_base/'provenance.json').read_text())['data_sha256']:
+        raise ValueError('SCHEDULE_UNDEFINED: unpaired calibration data')
     q=obj['q']; expected={str(t) for t in range(1,31)}
     if set(q)!=expected or q['1']!=[1.,1.]:
         raise ValueError('SCHEDULE_UNDEFINED: task coverage')
@@ -147,6 +211,7 @@ def run_f51(cap_arm: str, seeds: list[int], n_tasks: int, device, out: Path, lr:
     Y_all = cifar.train_y.to(device)
     X_test = cifar.inputs("test", cond, device)
     Y_test = cifar.test_y.to(device)
+    input_tensor_hash=I.tree_hash(X_all)
     tr_rows, te_rows = C.class_rows(cifar.train_y), C.class_rows(cifar.test_y)
     plans = [C.task_plan(s) for s in seeds]
     g_batch = {s: H.stream("c51_batch", s) for s in seeds}
@@ -314,7 +379,7 @@ def run_f51(cap_arm: str, seeds: list[int], n_tasks: int, device, out: Path, lr:
                                for r, s in enumerate(seeds)]).to(device)
         batch_manifest.append(dict(task=t,batch_hash=I.tree_hash(batches),
             image_ids_hash=I.tree_hash(rows_t),label_hash=I.tree_hash([Y_all[q] for q in rows_t])))
-        put(out / "stream_manifest.json",dict(seeds=seeds,initial_hash=I.tree_hash(P0),tasks=batch_manifest))
+        put(out / "stream_manifest.json",dict(seeds=seeds,initial_hash=I.tree_hash(P0),data_sha256=cifar.sha256,input_tensor_sha256=input_tensor_hash,tasks=batch_manifest))
         if t == last_hard and fresh:
             saved[t] = batches.clone()
         if debug is not None:
@@ -440,8 +505,9 @@ def run_f51(cap_arm: str, seeds: list[int], n_tasks: int, device, out: Path, lr:
             "cap_layers": [f"W{l + 1}" for l in layers], "radius_task": RADIUS_TASK,
             "cap_from_task": CAP_FROM,
             "cap_rule": "after every Adam update from the cap task on: n = ||w_i|| (float32); "
-                        "rows with n > r_i become w_i * r_i / n; others untouched; W1 then W2; "
-                        "biases, W3/b3, Adam moments, step counter, RNG untouched",
+                        "rows with n > r_i become w_i * r_i / n; others untouched; W1 then W2; " +
+                        ("b1/b2 multiplied by corresponding W-only row coefficient; " if cap_arm == "cap12b" else "biases untouched; ") +
+                        "W3/b3, Adam moments, step counter, RNG untouched",
             "radii_sha256": {k: hashlib.sha256(v.tobytes()).hexdigest() for k, v in radii.items()},
             "rows_written_total": {k: totals[k] for k in ("rows_w1", "rows_w2")},
             "violations_total": {k: totals[k] for k in ("viol_w1", "viol_w2")},
@@ -460,7 +526,7 @@ def run_f51(cap_arm: str, seeds: list[int], n_tasks: int, device, out: Path, lr:
                 np.asarray(C.seed_classes(s), dtype=np.int64).tobytes()).hexdigest() for s in seeds},
             "rng_roles": ["c51_classes", "c51_batch", "init"],
             "fresh_control": {"task": last_hard, "n": len(fresh_rows)} if fresh else None,
-            "engine": "host run() of cifar5p1_mlp_0920 copied for R/std + row-norm projection; "
+            "engine": "native run() of cifar5p1_mlp_0920 via inherited cap host; activation=" + activation + "; std; "
                       "stacked baddbmm, autograd, elementwise Adam"
                       + (", one step captured as a CUDA graph" if use_graph else ", eager"),
             "activation": activation, "native_dphi": "autograd of host phi, including zero convention",
@@ -600,6 +666,7 @@ def integration_issues(path):
 def preflight(out,audit=None,checks=None):
     out=Path(out);out.mkdir(parents=True,exist_ok=True)
     issues=[]
+    data_sha256={}
     if not torch.cuda.is_available():issues.append('BLOCKED_CUDA: native CUDA device unavailable')
     issues += integration_issues(audit)
     checkpath=Path(checks) if checks else OUT_ROOT/'checks.json'
@@ -613,10 +680,11 @@ def preflight(out,audit=None,checks=None):
     for label,p in [('F51',Path('/home/issan/Projects/claude/proj_004_drift/data/cifar100')/C.ARCHIVE),
                     ('RC',I.DATA/'cifar-10-python.tar.gz')]:
         if not p.is_file():issues.append('BLOCKED_DATA: '+label+' '+str(p))
+        else:data_sha256[label]={p.name:sha256_file(p)}
     obj=dict(run_id=RUN,status='READY' if not issues else ('BLOCKED_CUDA' if not torch.cuda.is_available() else 'BLOCKED'),
         blockers=issues,configuration=dict(F51=dict(tasks=30,steps=780,batch=32,lr=1e-4),RC=dict(tasks=50,epochs=400,updates=30000,batch=16,lr=1e-3),
             eval_seeds=EVAL_SEEDS,calibration_seeds=CALIB_SEEDS,R=10,activation_order=['ELU','ReLU'],historical_reuse='disabled: rerun both historical cells'),
-        source_sha256=source_hashes(),git_hash=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+        source_sha256=source_hashes(),data_sha256=data_sha256,git_hash=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
         torch=torch.__version__,cuda_build=torch.version.cuda,cuda_available=torch.cuda.is_available(),argv=sys.argv,
         integration_audit_sha256=sha256_file(Path(audit)) if audit and Path(audit).exists() else None,
         checks_sha256=sha256_file(checkpath) if checkpath.exists() else None,
@@ -638,8 +706,9 @@ def provenance(out,box,activation,arm,seeds,data):
     return obj
 
 
-def execute_rc(out,activation,arm,seeds):
+def execute_rc(out,activation,arm,seeds,expected_data=None):
     X,cifar=I.make_inputs(seeds,torch.device('cuda'));out.mkdir(parents=True,exist_ok=True)
+    if expected_data is not None and cifar.sha256!=expected_data:raise ValueError('CHECK_FAILED: RC data changed after preflight')
     prov=provenance(out,'RC',activation,arm,seeds,cifar.sha256)
     put(out/'input_manifest.json',dict(input_hash=I.tree_hash(X),subset_order={str(s):B.RC.subset_idx(s).tolist() for s in seeds}))
     engine=RCEngine(seeds,X,activation,arm)
@@ -663,10 +732,12 @@ def execute_rc(out,activation,arm,seeds):
     put(out/'status.json',dict(status='COMPLETED',tasks=50,seeds=seeds))
 
 
-def execute_f51(out,activation,arm,seeds,schedule=None):
+def execute_f51(out,activation,arm,seeds,schedule=None,expected_data=None):
     out.mkdir(parents=True,exist_ok=True)
     C.DATA_DIR=Path('/home/issan/Projects/claude/proj_004_drift/data/cifar100')
-    cifar=C.Cifar100();prov=provenance(out,'F51',activation,arm,seeds,cifar.sha256)
+    cifar=C.Cifar100()
+    if expected_data is not None and cifar.sha256!=expected_data:raise ValueError('CHECK_FAILED: F51 data changed after preflight')
+    prov=provenance(out,'F51',activation,arm,seeds,cifar.sha256)
     init_hash=I.tree_hash([C.init_params('R',s,torch.device('cpu')) for s in seeds])
     def observer(t,state):
         I.save_pt(out/f't{t:02d}.pt',dict(P=state['P'],m=state['m'],v=state['v'],task=t))
@@ -686,7 +757,8 @@ def execute_f51(out,activation,arm,seeds,schedule=None):
 def write_schedule(base):
     base=Path(base); paths={a:base/'calibration'/a/'cap_task.csv' for a in ('ref','cap12')}
     ref,cap=[list(csv.DictReader(paths[a].open())) for a in ('ref','cap12')]
-    obj=dict(calibration_seeds=CALIB_SEEDS,source_sha256=source_hashes(),q=schedule_from_rows(ref,cap),
+    evidence={a:validate_calibration_arm(p.parent,a) for a,p in paths.items()}
+    obj=dict(calibration_seeds=CALIB_SEEDS,source_sha256=source_hashes(),calibration_evidence=evidence,q=schedule_from_rows(ref,cap),
         input_csv={a:dict(path=str(p.resolve()),sha256=sha256_file(p)) for a,p in paths.items()},
         definition='median_seed RMS_k(||real ΔW||_F/||W_before||_F) cap/ref; task1=1; NO CLIP',
         timestamp_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()))
@@ -721,22 +793,29 @@ def main(argv=None):
             for arm in ('ref','cap12'):
                 dest=args.out/'calibration'/arm
                 if dest.exists():raise SystemExit('Output exists: do not overwrite partial or complete arms')
-                execute_f51(dest,'ReLU',arm,CALIB_SEEDS)
+                execute_f51(dest,'ReLU',arm,CALIB_SEEDS,expected_data=report['data_sha256']['F51'])
             write_schedule(args.out)
         else:
             schedule_path=args.out/'lr_schedule.json'
             if not schedule_path.exists():raise SystemExit('Run calibration first: schedule must predate evaluation')
-            schedule=validate_schedule(json.loads(schedule_path.read_text()))
-            put(args.out/'evaluation_admission.json',dict(preflight_sha256=sha256_file(args.out/'preflight.json'),schedule_sha256=sha256_file(schedule_path)))
+            schedule_obj=json.loads(schedule_path.read_text());schedule=validate_schedule(schedule_obj)
+            for arm in ('ref','cap12'):
+                calibration_prov=json.loads(Path(schedule_obj['calibration_evidence'][arm]['provenance.json']['path']).read_text())
+                if calibration_prov['data_sha256']!=report['data_sha256']['F51']:
+                    raise ValueError('CHECK_FAILED: calibration data differs from evaluation preflight')
+            if (args.out/'evaluation').exists() or (args.out/'evaluation_admission.json').exists():
+                raise SystemExit('Evaluation output/admission exists; explicit recovery required, never silently overwrite')
+            put(args.out/'evaluation_preflight.json',report)
+            put(args.out/'evaluation_admission.json',dict(preflight_sha256=sha256_file(args.out/'evaluation_preflight.json'),schedule_sha256=sha256_file(schedule_path)))
             for box in ('RC','F51'):
                 for activation in ('ELU','ReLU'):
                     for arm in ('ref','cap12'):
                         dest=args.out/'evaluation'/box/activation/arm
                         if dest.exists():raise SystemExit('Output exists: explicit recovery required, never silently overwrite')
-                        if box=='RC':execute_rc(dest,activation,arm,EVAL_SEEDS)
-                        else:execute_f51(dest,activation,arm,EVAL_SEEDS)
+                        if box=='RC':execute_rc(dest,activation,arm,EVAL_SEEDS,expected_data=report['data_sha256']['RC'])
+                        else:execute_f51(dest,activation,arm,EVAL_SEEDS,expected_data=report['data_sha256']['F51'])
             for arm in ('cap12b','lr_only'):
-                execute_f51(args.out/'evaluation/F51/ReLU'/arm,'ReLU',arm,EVAL_SEEDS,schedule if arm=='lr_only' else None)
+                execute_f51(args.out/'evaluation/F51/ReLU'/arm,'ReLU',arm,EVAL_SEEDS,schedule if arm=='lr_only' else None,expected_data=report['data_sha256']['F51'])
     return 0
 
 

@@ -181,6 +181,47 @@ def lr_check(N,tmp):
         assert int(r['rows_w1'])==int(r['rows_w2'])==0,'lr_only wrote cap'
 
 
+def calibration_admission_check(N,tmp):
+    # Complete synthetic admission records, distinct from any scientific run.
+    for arm in ('ref','cap12'):
+        base=tmp/'calibration'/arm;base.mkdir(parents=True)
+        rows=[dict(seed=s,task=t,online_acc=.4) for s in range(100,110) for t in range(1,31)]
+        cr=[dict(seed=s,task=t,U_l1=2. if arm=='ref' else 6.,U_l2=4. if arm=='ref' else 2.,
+            viol_w1=0,viol_w2=0,rows_w1=0,rows_w2=0,
+            actual_lr_l1=float(torch.tensor(1e-4)),actual_lr_l2=float(torch.tensor(1e-4)))
+            for s in range(100,110) for t in range(1,31)]
+        N.H.write_csv(base/'per_task.csv',rows);N.H.write_csv(base/'cap_task.csv',cr)
+        N.H.write_csv(base/'fresh_control.csv',[dict(seed=s,task=29,fresh_online_acc=.6,continual_online_acc=.4,fresh_gap=.2) for s in range(100,110)])
+        put(base/'status.json',dict(status='COMPLETED',seeds=list(range(100,110))))
+        arrays={};anchors={};hashes={}
+        for l,dim in ((1,3072),(2,100)):
+            w=torch.ones(10,100,dim);r=N.row_norms(w)[...,0].numpy()
+            arrays[f'r_l{l}']=r;anchors[f'W{l}']=w.numpy();hashes[f'r_l{l}']=N.hashlib.sha256(r.tobytes()).hexdigest()
+        np.savez(base/'radii.npz',seeds=np.arange(100,110),**arrays);np.savez(base/'radius_anchor.npz',**anchors)
+        put(base/'provenance.json',dict(registration=dict(box='F51',activation='ReLU',arm=arm,seeds=list(range(100,110)),R=10,source_sha256=N.source_hashes()),
+            data_sha256={'SYNTHETIC_CHECK_ONLY':'same'},fresh_rows_written=[0,0],radii_sha256=hashes))
+        put(base/'stream_manifest.json',dict(seeds=list(range(100,110)),input_tensor_sha256='SYNTHETIC_CHECK_ONLY'))
+    obj=N.write_schedule(tmp);assert N.validate_schedule(obj)['2']==[3.,.5]
+    path=tmp/'calibration/cap12/status.json';old=path.read_text()
+    put(path,dict(status='CHECK_FAILED',seeds=list(range(100,110))))
+    try:N.validate_schedule(obj)
+    except ValueError:pass
+    else:raise AssertionError('failed calibration arm accepted')
+    path.write_text(old)
+    path=tmp/'calibration/cap12/cap_task.csv';old=path.read_text()
+    rr=list(csv.DictReader(path.open()));rr[0]['viol_w1']=1;N.H.write_csv(path,rr)
+    try:N.validate_schedule(obj)
+    except ValueError:pass
+    else:raise AssertionError('calibration cap violation accepted')
+    path.write_text(old)
+    path=tmp/'calibration/cap12/fresh_control.csv';old=path.read_text();path.unlink()
+    try:N.validate_schedule(obj)
+    except (ValueError,FileNotFoundError):pass
+    else:raise AssertionError('missing fresh calibration control accepted')
+    path.write_text(old)
+    assert N.validate_schedule(obj)['2']==[3.,.5]
+
+
 def verdict_check(N):
     pos=np.full(10,.1);neg=np.full(10,-.04);zero=np.zeros(10)
     assert N.judge({('RC','ELU'):pos,('RC','ReLU'):neg,('F51','ELU'):pos,('F51','ReLU'):neg})['main_label']=='ACTIVATION_SPLITS'
@@ -213,8 +254,15 @@ def streams_check(tmp):
             p=tmp/'evaluation'/b/a/arm;p.mkdir(parents=True)
             rr=[dict(seed=s,task=t,online_acc=.2,label_hash=f'L{s}/{t}',order_hash=f'O{s}/{t}') for s in range(10) for t in range(1,(51 if b=='RC' else 31))]
             data[b,a,arm]=rr
+            put(p/'provenance.json',dict(data_sha256={'synthetic':'same-image-hash'}))
             put(p/('input_manifest.json' if b=='RC' else 'stream_manifest.json'),dict(seeds=list(range(10)),hash='same'))
     V.validate_streams(data,tmp)
+    changed=tmp/'evaluation/F51/ELU/cap12/provenance.json'
+    put(changed,dict(data_sha256={'synthetic':'different-image-bytes'}))
+    try:V.validate_streams(data,tmp)
+    except ValueError:pass
+    else:raise AssertionError('changed image archive accepted')
+    put(changed,dict(data_sha256={'synthetic':'same-image-hash'}))
     data['RC','ELU','cap12'][0]['label_hash']='wrong swapped box/seed'
     try:V.validate_streams(data,tmp)
     except ValueError:pass
@@ -273,7 +321,7 @@ def main():
         tests={'S-act':lambda N,p:act_check(N),'S-capb':lambda N,p:cap_check(N),
                'S-cap':radius_check,'S-capb-training':capb_path_check,'S-reuse-host-F51':f51_host_check,
                'S-reuse-host-RC':lambda N,p:rc_host_check(N),'S-lr':lr_check,
-               'S-verdict':lambda N,p:verdict_check(N)}
+               'S-verdict':lambda N,p:verdict_check(N),'S-calibration-admission':calibration_admission_check}
         for key,fn in tests.items():
             try:fn(V if key=='S-verdict' else M,tmp/key);out['checks'][key]=dict(status='PASS',pass_=True)
             except Exception as e:

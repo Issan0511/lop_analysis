@@ -74,10 +74,14 @@ def endpoints(rows,box):
     return np.asarray(out,dtype=np.float64)
 
 
-def validate_streams(datasets,root):
+def validate_streams(datasets,root,expected_data=None):
     """Pairing is checked across all cells inside each box, never inferred from means."""
     for box in ('RC','F51'):
         paths=[root/'evaluation'/box/a/arm for a in ('ELU','ReLU') for arm in ('ref','cap12')]
+        provenances=[json.loads((p/'provenance.json').read_text()) for p in paths]
+        data=[p.get('registration',p)['data_sha256'] for p in provenances]
+        if any(d!=data[0] for d in data[1:]) or (expected_data is not None and data[0]!=expected_data[box]):
+            raise ValueError('CHECK_FAILED: archive image content/hash mismatch')
         if box=='F51':
             manifests=[json.loads((p/'stream_manifest.json').read_text()) for p in paths]
             if any(m!=manifests[0] for m in manifests[1:]):raise ValueError('CHECK_FAILED: F51 stream/init pairing')
@@ -102,8 +106,8 @@ def analyze(root):
     try:
         from src import cap_act_box_2x2_1018 as M
         admission=json.loads((root/'evaluation_admission.json').read_text())
-        preflight=json.loads((root/'preflight.json').read_text())
-        if admission['preflight_sha256']!=M.sha256_file(root/'preflight.json') or preflight['blockers']:
+        preflight=json.loads((root/'evaluation_preflight.json').read_text())
+        if admission['preflight_sha256']!=M.sha256_file(root/'evaluation_preflight.json') or preflight['blockers']:
             raise ValueError('CHECK_FAILED: evaluation admission/preflight')
         if preflight['source_sha256']!=M.source_hashes():raise ValueError('CHECK_FAILED: stale source closure')
         schedule_obj=json.loads((root/'lr_schedule.json').read_text());M.validate_schedule(schedule_obj)
@@ -114,11 +118,17 @@ def analyze(root):
                 p=root/'evaluation'/box/a/arm
                 st=json.loads((p/'status.json').read_text())
                 if st.get('status')!='COMPLETED':raise ValueError(st.get('status','INCOMPLETE')+': '+str(p))
+                prov=json.loads((p/'provenance.json').read_text());reg=prov.get('registration',prov)
+                if reg.get('source_sha256')!=M.source_hashes() or reg.get('seeds')!=list(range(10)):
+                    raise ValueError('CHECK_FAILED: per-arm source/seed provenance')
                 rows=list(csv.DictReader((p/'per_task.csv').open()));datasets[box,a,arm]=rows;ep[box,a,arm]=endpoints(rows,box)
-        validate_streams(datasets,root)
+        validate_streams(datasets,root,preflight["data_sha256"])
         for arm in ('cap12b','lr_only'):
             p=root/'evaluation/F51/ReLU'/arm
             if json.loads((p/'status.json').read_text()).get('status')!='COMPLETED':raise ValueError('INCOMPLETE: '+arm)
+            prov=json.loads((p/'provenance.json').read_text());reg=prov.get('registration',prov)
+            if reg.get('source_sha256')!=M.source_hashes() or reg.get('data_sha256')!=preflight['data_sha256']['F51']:
+                raise ValueError('CHECK_FAILED: separation provenance/data')
             if json.loads((p/'stream_manifest.json').read_text())!=json.loads((root/'evaluation/F51/ReLU/ref/stream_manifest.json').read_text()):
                 raise ValueError('CHECK_FAILED: separation stream/init mismatch')
             ep['F51','ReLU',arm]=endpoints(list(csv.DictReader((p/'per_task.csv').open())),'F51')
