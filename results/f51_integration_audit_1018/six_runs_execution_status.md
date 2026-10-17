@@ -77,3 +77,9 @@ Issaの「サブエージェントで全部実装実行」「予測は論文の�
 全6specの事前登録remote commitは `remote_registrations.json` に保存した。追加実装は走3だけremote commit `b068d4ea4a7c93863d79676550f09217eae66238` に到達した。その後、走6のGitHub commit作成が自動承認レビューに拒否された。理由は「実装・実行の指示はあるが、この外部へのコード・結果・履歴の送信は明示的に許可されていない」。以降の公開操作・再試行・迂回はしていない。
 
 実際のlocal/remote対応と未公開状態は `remote_implementations.json` に記録した。ローカルcommitとworktreeは保持している。CUDA本走は未完了であり、main統合やworktree削除は行っていない。生ログを持つworktreeは退避・完了前に消さない。
+
+## NaP順位予測の追補（02:08:13 JSTの指示まで反映）
+
+当初のNaP対SNA/KKT1はOPEN_COMPARISONだった。Issaは02:07:26/02:08:13 JSTに **KKT1 > NaP、SNA > NaP** の方向予測を追加した。KKT1とSNAの間の順位、数値確率、有意差が出る確率は未指定。既存の両側検定・Holm2・閾値はそのまま。NaPの較正・評価が未開始であることを、精度を開かずrootと別担当が確認した。走4RMの結果は既知の時点の追加であり、初回登録時の予測とは区別する。
+
+追補commit: `761530e3eb6fd00f0a2c85f6f31aed2f3a0d5818`（走5ブランチ）。原ソース/spec/検査bytesは54effd45と同一。追補MD/JSONは `specs/amendments/spec_nap_cifar5p1_1018_prediction_20261018T020813JST`。固定済みrunnerのOPEN表示は原登録を指すので、最終報告にはこの追補を併記する。

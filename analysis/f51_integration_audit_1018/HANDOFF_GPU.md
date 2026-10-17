@@ -17,7 +17,7 @@
 | 2 | cap_act_box_2x2_1018 | 1352d2e67548bc5ac8f9f06fd25ed5a96b00b100 | ACTIVATION_SPLITS |
 | 3 | chb_decompose_200_1018 | ea66eb792564517f6bad00daae0c371006377510 | BIAS_STOP_SUFFICES |
 | 4 | resp_step_controls_1018 | d3d235d7e0dd3d3f34db75f23273d539c047728a | NOT_LR_ALL_THREE |
-| 5 | nap_cifar5p1_1018 | 54effd4585992892e996729a0e1f8440a2e3164a | Rより改善する方向。対SNA/KKT1はOPEN_COMPARISON |
+| 5 | nap_cifar5p1_1018 | 761530e3eb6fd00f0a2c85f6f31aed2f3a0d5818（実装54effd45と同一） | Rより改善する方向。追補でKKT1 > NaP、SNA > NaP |
 | 6 | cnn_chprime_bias_1018 | bba6291cccf7e8ed7a5f4a4b0da397e633360994 | RESCUED |
 
 各走のspecはそのworktreeの `specs/spec_<run id>.md` と `specs/spec_six_runs_common_1018.md`。CLIと中断時の扱いは `analysis/<run id>/README.md` を正本にする。
@@ -50,7 +50,7 @@ F51を使う走1/2/4/5には独立G0が必要。過去のBLOCKED証跡は保持�
 推奨順は走1→5→2→4のRC/F51→3→6。各cwdでREADMEの正式CLIを使い、必要なGPU検査を先に通す。seed数・課題数・lr・演算形状を短縮しない。CPUへの本走移植は登録条件ではない。
 
 - **走1**: `python -m src.redo_position_2x2_1018 run --integration-audit <上記G0絶対パス>`。共通接頭部と4分岐、freshを実行する。
-- **走5**: CUDA S検査→phase calib→select→selected.jsonと較正証跡をcommit→phase eval→R/SNA/KKT1の再利用資格確認→verdict。NaPの順位予測は新しく作らない。
+- **走5**: CUDA S検査→phase calib→select→selected.jsonと較正証跡をcommit→phase eval→R/SNA/KKT1の再利用資格確認→verdict。NaP順位予測は02:07:26/02:08:13JSTのIssa指示に基づく追補を採用する（KKT1 > NaP、SNA > NaP）。`specs/amendments/spec_nap_cifar5p1_1018_prediction_20261018T020813JST.md` とJSONを読み、原OPEN履歴と追補commit/hashを最終報告に併記する。
 - **走2**: `python -m analysis.cap_act_box_2x2_1018.checks` → `python -m src.cap_act_box_2x2_1018 preflight --integration-audit <G0>` → `calibrate --integration-audit <G0>` → `run --integration-audit <G0>` → `analyze`。既存セルも再走する構成。部分腕は自動resumeできず、上書き拒否を守って中断証跡を保存する。
 - **走4**: `analysis/resp_step_controls_1018/checks.py --cuda` の後、RC/F51それぞれcalibrate全10seed→固定schedule→evaluate全10seed。F51にはG0を渡す。完了したRMを合わせてverdict。RMS勾配比と物理的なAdam実変位比の両対照を実行する。
 - **走3**: `python -m analysis.chb_decompose_200_1018.launch check` → `plan` → `run`。3新腕に加えCH/CHBも現環境で再走。seed10–19、200課題。resumeはこのrunの正当な保存状態だけから行う。
