@@ -38,7 +38,7 @@ sha256_file = OLD_F51.sha256_file
 def exclusive():
     """Keep the lab lock; allow known desktop C+G contexts on the host."""
     with Path('/tmp/lop_analysis_gpu.lock').open('a') as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        fcntl.flock(lock, fcntl.LOCK_EX)
         result = subprocess.run(['nvidia-smi','--query-compute-apps=pid',
                                  '--format=csv,noheader,nounits'], capture_output=True,
                                 text=True, check=True)
