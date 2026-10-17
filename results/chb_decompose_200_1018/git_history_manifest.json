@@ -1,0 +1,124 @@
+{
+  "run": "chb_decompose_200_1018",
+  "local_base": "063b7c6085340475549981494e713a7ceea6dbbb",
+  "local_head": "ea66eb792564517f6bad00daae0c371006377510",
+  "local_registration": "5c741be80fe5bfe812dd6cc32d1fba0cd6948e48",
+  "remote_registration": "e2cb1ba6094f6b861e60527408ad57497bb5114d",
+  "remote_parent_tree": "56ad4a966ab5e5ef447ec879679f47b2cfffdc18",
+  "bundle_sha256": "7721484b2a7d1c800bba45db2ab2569fce34abd6f30b31593d12a4c90540bb87",
+  "bundle_bytes": 43301,
+  "bundle_encoding": "base64 ASCII in UTF-8 file; no line wrapping",
+  "local_commits": [
+    "5c741be80fe5bfe812dd6cc32d1fba0cd6948e48",
+    "0aeafb6706dabb45fba1b10413d0cd564c84762f",
+    "3c849ea1567b9f3b2463a8c15143b546fb2e5bae",
+    "f8cfd0f032b7ada9987494712c843a3084b4993c",
+    "ea66eb792564517f6bad00daae0c371006377510"
+  ],
+  "restore": [
+    "base64 --decode results/chb_decompose_200_1018/local_history.bundle.b64 > /tmp/chb_decompose_200_1018.bundle",
+    "git cat-file -e 063b7c6085340475549981494e713a7ceea6dbbb^{commit} || git fetch origin 063b7c6085340475549981494e713a7ceea6dbbb",
+    "git bundle verify /tmp/chb_decompose_200_1018.bundle",
+    "git fetch /tmp/chb_decompose_200_1018.bundle HEAD:refs/heads/archive/codex/chb_decompose_200_1018",
+    "git rev-parse archive/codex/chb_decompose_200_1018 # expected ea66eb792564517f6bad00daae0c371006377510"
+  ],
+  "note": "The API-created implementation commit has a different SHA. This bundle retains exact local preregistration/code/review/history identities. No production success is implied.",
+  "files": [
+    {
+      "path": "analysis/chb_decompose_200_1018/README.md",
+      "bytes": 3985,
+      "sha256": "23c6e3d9c5e450bde111112cc202c43b7f783f16566ec6f950b25ffac93674eb",
+      "local_blob_sha": "18f2507344a38af6f29deb15849d22ba995e1dc5"
+    },
+    {
+      "path": "analysis/chb_decompose_200_1018/checks.py",
+      "bytes": 18987,
+      "sha256": "c135ff0b5f9a46c325cf091952e09e41c67fe29aa9e901d7c9fe68a39f4479ec",
+      "local_blob_sha": "3f0e32f91f115c34a87cff9cb98e04d753db5178"
+    },
+    {
+      "path": "analysis/chb_decompose_200_1018/common.py",
+      "bytes": 4723,
+      "sha256": "a9942461bfc8959572762035bc1bec63dd72b328bb01167e250286754cc0f832",
+      "local_blob_sha": "7ae86c9b82e9bfe4ed3acf11193e07ac21842ee4"
+    },
+    {
+      "path": "analysis/chb_decompose_200_1018/diagnostics.py",
+      "bytes": 12150,
+      "sha256": "93dce488b55612617573a19c09802c9dabd36a94620703903a0d32b9260649e7",
+      "local_blob_sha": "17c7bb2f030f0cb4f8e718d92b02465c98cab39d"
+    },
+    {
+      "path": "analysis/chb_decompose_200_1018/launch.py",
+      "bytes": 14733,
+      "sha256": "e6ecc83375d72b4a8242983580f39c3859be2551c83913926ef1bc6dac8bce3a",
+      "local_blob_sha": "5c76b31e5781772c8d0ead2ffb6296a39797da31"
+    },
+    {
+      "path": "analysis/chb_decompose_200_1018/report.py",
+      "bytes": 9795,
+      "sha256": "0cd6972379c2dac594b2f6f7c11a4dda6e45bf0978cccc9937ae5ea7f1c6607c",
+      "local_blob_sha": "2ca820c062fdb94ef301200cd023789245769ccd"
+    },
+    {
+      "path": "results/chb_decompose_200_1018/checks.json",
+      "bytes": 5023,
+      "sha256": "2c9eb8d4badb4eb37b9144bf29de5f10e7106b090814e3df99a51379cbb096e0",
+      "local_blob_sha": "c1188b570e620968a7f00ffd70ad3446b45bf501"
+    },
+    {
+      "path": "results/chb_decompose_200_1018/execution_status.json",
+      "bytes": 3575,
+      "sha256": "ff4f40aa70d0cad611a9817d805909c29815665946d191cf9c1b9ec1e870925a",
+      "local_blob_sha": "d88cf0be96fdde8705d8d4b0fe86cbf10025214d"
+    },
+    {
+      "path": "results/chb_decompose_200_1018/provenance.json",
+      "bytes": 3575,
+      "sha256": "ff4f40aa70d0cad611a9817d805909c29815665946d191cf9c1b9ec1e870925a",
+      "local_blob_sha": "d88cf0be96fdde8705d8d4b0fe86cbf10025214d"
+    },
+    {
+      "path": "results/chb_decompose_200_1018/reference_qualification.json",
+      "bytes": 878,
+      "sha256": "a109536ef46327415b99b82a56edbe716ed0e8034ba5dba4ca086c403f1a9121",
+      "local_blob_sha": "73344c754df5761c01e306c9bcf3bc1c967cbf06"
+    },
+    {
+      "path": "results/chb_decompose_200_1018/spec.md",
+      "bytes": 7411,
+      "sha256": "865bae69dad34496f9978e24ace590b48cac99bdee58c7f861b70e29e710c301",
+      "local_blob_sha": "77f74c55bc7a56a6ff737f638bbf1005806fd371"
+    },
+    {
+      "path": "results/chb_decompose_200_1018/summary.md",
+      "bytes": 380,
+      "sha256": "0ab915924862823a78c2a42689f2aa6d10321d4a80ab0f06e781b00d3a3893b8",
+      "local_blob_sha": "ae2c2c158073c8c7caacb4b0e3bb5b9369b1e633"
+    },
+    {
+      "path": "results/chb_decompose_200_1018/verdict.json",
+      "bytes": 262,
+      "sha256": "c09ff95ba5dd7039e471b9f1e22fd5406b179d304cd5810659d1900d8d08b16f",
+      "local_blob_sha": "6dbc350d1555dbad3c69668dc1ac95cd210709df"
+    },
+    {
+      "path": "specs/spec_chb_decompose_200_1018.md",
+      "bytes": 7411,
+      "sha256": "865bae69dad34496f9978e24ace590b48cac99bdee58c7f861b70e29e710c301",
+      "local_blob_sha": "77f74c55bc7a56a6ff737f638bbf1005806fd371"
+    },
+    {
+      "path": "specs/spec_six_runs_common_1018.md",
+      "bytes": 14339,
+      "sha256": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+      "local_blob_sha": "e767e92f5520e2139458f1c8fba1284ff5a43125"
+    },
+    {
+      "path": "src/chb_decompose_200_1018.py",
+      "bytes": 3789,
+      "sha256": "26dc9969d07e77d695453968d03115f0634dcd92f3f0d6c81e68b5dca40dc6c7",
+      "local_blob_sha": "e83118cd398468cbddc891fbfcbd00b7375d787b"
+    }
+  ]
+}
