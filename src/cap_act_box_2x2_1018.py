@@ -7,7 +7,7 @@ cifar_interventions_0920.Engine. Historical cells are rerun by default; historic
 means are never used as new independent successes.
 """
 from __future__ import annotations
-import argparse, contextlib, csv, hashlib, json, math, os, shutil, subprocess, sys, time
+import argparse, contextlib, csv, fcntl, hashlib, json, math, os, shutil, subprocess, sys, time
 from pathlib import Path
 os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 import numpy as np
@@ -18,7 +18,7 @@ from src import rlcifar_mlp_battle_0918 as B
 from src import cifar5p1_mlp_0920 as C
 from src import cap_cifar5p1_1007 as OLD_F51
 from src import cifar_interventions_0920 as I
-from analysis.cifar_ledger_0920.replay import put, save_npz, exclusive
+from analysis.cifar_ledger_0920.replay import put, save_npz
 ROOT = Path(__file__).resolve().parents[1]
 RUN = EXPERIMENT = "cap_act_box_2x2_1018"
 SPEC = "specs/spec_cap_act_box_2x2_1018.md"
@@ -32,6 +32,28 @@ CALIB_SEEDS = list(range(100,110))
 EVAL_SEEDS = list(range(10))
 row_norms, monitor_, cap_stats = OLD_F51.row_norms, OLD_F51.monitor_, OLD_F51.cap_stats
 sha256_file = OLD_F51.sha256_file
+
+
+@contextlib.contextmanager
+def exclusive():
+    """Keep the lab lock; allow known desktop C+G contexts on the host."""
+    with Path('/tmp/lop_analysis_gpu.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        result = subprocess.run(['nvidia-smi','--query-compute-apps=pid',
+                                 '--format=csv,noheader,nounits'], capture_output=True,
+                                text=True, check=True)
+        for line in result.stdout.splitlines():
+            if not line.strip().isdigit() or int(line) == os.getpid():
+                continue
+            try:
+                words = Path(f'/proc/{int(line)}/cmdline').read_bytes().split(b'\0')
+            except FileNotFoundError:
+                continue
+            executable = Path(os.fsdecode(words[0])).name
+            desktop = executable in {'gnome-remote-desktop-daemon','gnome-shell','nautilus','ptyxis'}
+            chromium_gpu = b'--type=gpu-process' in words
+            assert desktop or chromium_gpu, f'GPU busy: {line} {words!r}'
+        yield
 
 
 def native_act(name):
