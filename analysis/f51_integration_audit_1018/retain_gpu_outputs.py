@@ -5,6 +5,7 @@ Waits on the controller's lock (no polling). Never moves live data, deletes a
 worktree, publishes remotely, changes a scientific verdict, or reruns training.
 """
 from datetime import datetime, timezone
+from contextlib import ExitStack
 import fcntl
 import hashlib
 import json
@@ -31,14 +32,18 @@ def put(path,data):
 def main():
     report=dict(status='WAITING_FOR_CONTROLLER',started_at=datetime.now(timezone.utc).isoformat(),runs={})
     put(STATE/'retention_status.json',report)
-    with (STATE/'controller.lock').open('a') as lock:
-        fcntl.flock(lock,fcntl.LOCK_EX)
-        state=json.loads((STATE/'state_after_repairs.json').read_text())
+    with ExitStack() as stack:
+        for name in ('controller.lock','state_nap_readout.lock','state_cap_retry.lock'):
+            lock=stack.enter_context((STATE/name).open('a'))
+            fcntl.flock(lock,fcntl.LOCK_EX)
+        states=[json.loads((STATE/name).read_text()) for name in
+                ('state_after_repairs.json','state_nap_readout.json','state_cap_retry.json')]
+        state=states[0]
         # A killed controller with a RUNNING state may still have a child. Do not
         # snapshot files whose completion/stop was not acknowledged by the owner.
-        if state['status']=='RUNNING':
+        if any(s['status']=='RUNNING' for s in states):
             report['status']='NEEDS_EXPLICIT_STOP_VERIFICATION';put(STATE/'retention_status.json',report);return 2
-        report['controller_status']=state['status'];report['status']='RETAINING'
+        report['controller_statuses']=[s['status'] for s in states];report['status']='RETAINING'
         put(STATE/'retention_status.json',report)
         for run in state['plan']:
             wt=BASE/run;folder=wt/'results'/run
@@ -68,7 +73,7 @@ def main():
                 subprocess.run(['git','add','--',*selected],cwd=wt,check=True)
                 if subprocess.run(['git','diff','--cached','--quiet'],cwd=wt).returncode:
                     subprocess.run(['git','commit','-m',f'Retain GPU execution artifacts and raw hashes for {run}'],cwd=wt,check=True)
-                stages=[s for s in state['stages'] if s['run']==run]
+                stages=[s for controller in states for s in controller['stages'] if s['run']==run]
                 report['runs'][run]=dict(backup_verified=True,files=len(entries),bytes=needed,
                     scientific_execution_stages=stages,
                     git_commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=wt,text=True).strip())
