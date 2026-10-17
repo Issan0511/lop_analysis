@@ -186,6 +186,9 @@ def production(args):
             raise ValueError("CUDA S checks failed")
         for arm in C.ARMS:
             if (C.OUT / "STOP").exists():
+                C.put(C.OUT / "execution_status.json", dict(status="STOPPED", next_arm=arm, at=C.utc()))
+                C.put(C.OUT / "verdict.json", dict(status="INCOMPLETE", label=None,
+                      reason="STOP requested before registered run completed", hypothesis_evaluated=False))
                 return 75
             out = C.OUT / arm
             cp = None
@@ -207,13 +210,36 @@ def production(args):
                       prereg_commit=manifest["registration"]["commit"], lifecycle=observer)
             cp = torch.load(out / "ckpt.pt", map_location="cpu", weights_only=False)
             if validate_checkpoint(cp, arm, manifest["registration"]["commit"]) != 200:
+                C.put(C.OUT / "execution_status.json", dict(status="STOPPED", arm=arm,
+                      completed_task=cp["t"], at=C.utc(), reason="STOP requested at checkpoint boundary"))
+                C.put(C.OUT / "verdict.json", dict(status="INCOMPLETE", label=None,
+                      reason="STOP requested before registered run completed", hypothesis_evaluated=False))
                 return 75
             C.validate_rows(C.read_rows(out / "per_task.csv"), arm)
         from analysis.chb_decompose_200_1018.report import report
         report()
     status.update(status="COMPLETE", finished_at=C.utc())
     C.put(C.OUT / "execution_status.json", status)
+    C.put(C.OUT / "provenance.json", status)
     return 0
+
+
+def guarded_production(args):
+    """Persist execution failures as failures, never as hypothesis outcomes."""
+    try:
+        return production(args)
+    except Exception as exc:
+        message = str(exc)
+        status = ("DIVERGED" if message.startswith("DIVERGED") else
+                  "INCOMPLETE" if message.startswith("INCOMPLETE") or isinstance(exc, FileNotFoundError) else
+                  "BLOCKED_RESOURCE" if isinstance(exc, BlockingIOError) or message.startswith("GPU compute job active") else
+                  "CHECK_FAILED")
+        record = dict(status=status, label=None, reason=message, error_type=type(exc).__name__,
+                      at=C.utc(), hypothesis_evaluated=False, source_sha256=C.sources())
+        C.put(C.OUT / "failure.json", record)
+        C.put(C.OUT / "execution_status.json", record)
+        C.put(C.OUT / "verdict.json", record)
+        raise
 
 
 def main():
@@ -230,7 +256,7 @@ def main():
     if a.mode == "report":
         from analysis.chb_decompose_200_1018.report import report
         report(); return 0
-    return production(a)
+    return guarded_production(a)
 
 
 if __name__ == "__main__":

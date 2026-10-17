@@ -266,6 +266,27 @@ def statistical_checks():
                  detected=["zero-containing interval treated as equality", "NI boundary", "wrong seed pairing", "missing", "duplicate", "seed0-9 reference", "wrong endpoint window", "nonfinite"], tolerance="float64; exact registered strict/inclusive boundary predicates")]
 
 
+def failure_status_checks():
+    from analysis.chb_decompose_200_1018 import launch as L
+    with tempfile.TemporaryDirectory(prefix="chb-failures-") as temp, patch.object(C,"OUT",Path(temp)):
+        for exception, status in ((ValueError("DIVERGED: fixture"),"DIVERGED"),
+                                  (ValueError("INCOMPLETE: fixture"),"INCOMPLETE"),
+                                  (ValueError("CHECK_FAILED: fixture"),"CHECK_FAILED"),
+                                  (BlockingIOError("fixture"),"BLOCKED_RESOURCE")):
+            with patch.object(L,"production",side_effect=exception):
+                try:
+                    L.guarded_production(SimpleNamespace())
+                except type(exception):
+                    pass
+                else:
+                    raise AssertionError("execution exception was swallowed")
+                value = json.loads((Path(temp)/"verdict.json").read_text())
+                assert value["status"] == status and value["label"] is None and not value["hypothesis_evaluated"]
+    return [dict(check="S-failure_status_persistence",pass_=True,
+                 detected=["divergence discarded", "missingness treated as null hypothesis result", "failed check reported as hypothesis failure"],
+                 tolerance="exact registered status and no performance imputation")]
+
+
 def gpu_checks(device):
     records = engine_checks(str(device), full=True)
     return dict(all_pass=all(r["pass_"] for r in records), records=records,
@@ -276,7 +297,8 @@ def run_checks():
     torch.set_num_threads(1)
     records = []
     failed = []
-    for name, function in (("engine",engine_checks), ("policy",policy_checks), ("statistics",statistical_checks)):
+    for name, function in (("engine",engine_checks), ("policy",policy_checks), ("statistics",statistical_checks),
+                           ("failure_status",failure_status_checks)):
         try:
             records.extend(function())
         except Exception as exc:
