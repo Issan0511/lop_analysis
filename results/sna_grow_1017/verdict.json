@@ -2,7 +2,7 @@
   "run_id": "sna_grow_1017",
   "spec": "specs/spec_sna_grow_1017.md",
   "script": "analysis/sna_grow_1017/verdict.py",
-  "generated": "2026-10-17 20:55:09",
+  "generated": "2026-10-17 21:02:13",
   "Q1": {
     "status": {
       "checks_file": "results/sna_grow_1017/cnn_checks.json",
@@ -91,13 +91,109 @@
       "K-mlp-grow_all_pass": true,
       "K-mlp-graph_all_pass": true,
       "reference_per_seed_sha256": "da8764a036acaa756094a61ada760ae741a18a2346a861b4e60300eb52022203",
-      "main_output": "results/sna_grow_1017/mlp/SNA_grow (no done.json)"
+      "complete": true,
+      "missing": [],
+      "run_status": {
+        "stage": "completed",
+        "divergences": [],
+        "wall_s": 25.394537210464478
+      },
+      "reference_late_recomputed_max_abs_diff": {
+        "SNA": 4.000000330961484e-11,
+        "SNA_fixT1": 4.000000330961484e-11,
+        "SNA_fix0": 4.00001143319173e-11
+      }
     },
-    "label": "NOT_RUN"
+    "label": "LOSS",
+    "M": -0.022197916661999995,
+    "M_t95": [
+      -0.027727470339244567,
+      -0.016668362984755422
+    ],
+    "M_low": -0.027727470339244567,
+    "M_high": -0.016668362984755422,
+    "M_sd": 0.007729783037101397,
+    "M_se": 0.0024443720216174233,
+    "n_positive": 0,
+    "M_min": -0.03594551284000003,
+    "M_max": -0.007323717979999977,
+    "M_per_seed": {
+      "0": -0.022660256440000026,
+      "1": -0.02498397431999999,
+      "2": -0.007323717979999977,
+      "3": -0.02098557685999991,
+      "4": -0.01421474360000008,
+      "5": -0.019374999960000028,
+      "6": -0.026706730740000073,
+      "7": -0.03594551284000003,
+      "8": -0.022491987199999897,
+      "9": -0.027291666679999937
+    },
+    "bands": {
+      "NO_LOSS": "M >= -0.005 and 95% low >= -0.01",
+      "LOSS": "M <= -0.01",
+      "UNRESOLVED": "otherwise"
+    },
+    "late_mean": {
+      "SNA_grow": 0.6425761217979999,
+      "SNA": 0.6647740384599999,
+      "SNA_fixT1": 0.67167147436,
+      "SNA_fix0": 0.60343349357
+    },
+    "late_per_seed": {
+      "SNA_grow": [
+        0.62522435896,
+        0.65729166668,
+        0.64457532052,
+        0.6228605769400001,
+        0.6329727564,
+        0.65907051284,
+        0.6554887820599999,
+        0.63612179486,
+        0.6484455128000001,
+        0.64370993592
+      ],
+      "SNA": [
+        0.6478846154,
+        0.682275641,
+        0.6518990385,
+        0.6438461538,
+        0.6471875,
+        0.6784455128,
+        0.6821955128,
+        0.6720673077,
+        0.6709375,
+        0.6710016026
+      ],
+      "SNA_fixT1": [
+        0.66125,
+        0.6833814103,
+        0.6676842949,
+        0.6470833334,
+        0.6676201923,
+        0.6894711538,
+        0.6896634615,
+        0.6699759615,
+        0.6654407051,
+        0.6751442308
+      ],
+      "SNA_fix0": [
+        0.5835737179,
+        0.6164823718,
+        0.6046955128,
+        0.5750961538,
+        0.5950641025,
+        0.6163942308,
+        0.6280208333,
+        0.5997275641,
+        0.6039423077,
+        0.611338141
+      ]
+    }
   },
   "labels": {
     "Q1": "GROW_RESCUES",
-    "Q2": "NOT_RUN"
+    "Q2": "LOSS"
   },
   "Q1_secondary": {
     "window_t11_20": {
@@ -2017,6 +2113,109 @@
       }
     },
     "runaway_definition": "(seed, task t) with switch_ce(t) > 100 and zsd_f2 at the end of task t-1 (the network that met the new labels) > 24; alt: zsd_f2 at the end of task t"
+  },
+  "Q2_secondary": {
+    "SNA_grow-SNA_fixT1": {
+      "mean": -0.02909535256200001,
+      "t95": [
+        -0.0335532074084868,
+        -0.024637497715513216
+      ],
+      "sd": 0.006231651374691916,
+      "n_positive": 0,
+      "per_seed": {
+        "0": -0.036025641040000056,
+        "1": -0.02608974361999994,
+        "2": -0.023108974380000036,
+        "3": -0.02422275645999994,
+        "4": -0.03464743590000008,
+        "5": -0.030400640960000058,
+        "6": -0.03417467944000008,
+        "7": -0.03385416664000007,
+        "8": -0.016995192299999906,
+        "9": -0.031434294879999936
+      }
+    },
+    "SNA_grow-SNA_fix0": {
+      "mean": 0.039142628228,
+      "t95": [
+        0.034901206634244425,
+        0.043384049821755574
+      ],
+      "sd": 0.005929098549766612,
+      "n_positive": 10,
+      "per_seed": {
+        "0": 0.04165064105999994,
+        "1": 0.04080929488000007,
+        "2": 0.03987980771999999,
+        "3": 0.04776442314000007,
+        "4": 0.03790865389999998,
+        "5": 0.04267628203999996,
+        "6": 0.027467948759999916,
+        "7": 0.036394230759999924,
+        "8": 0.044503205100000054,
+        "9": 0.032371794920000085
+      }
+    },
+    "layers_t29_median_over_seeds": {
+      "SNA_grow": {
+        "l1": {
+          "alpha_med": 0.025079207495,
+          "zsd": 9.9752597825,
+          "two_alpha_zsd": 0.5029289408210256,
+          "stored_two_alpha_W_med_from_V": 0.5205836295999999
+        },
+        "l2": {
+          "alpha_med": 0.02852552291,
+          "zsd": 8.7563390735,
+          "two_alpha_zsd": 0.5141399705037122,
+          "stored_two_alpha_W_med_from_V": 0.51325778665
+        }
+      },
+      "SNA": {
+        "l1": {
+          "alpha_med": 0.08092559129,
+          "zsd": 7.5456838610000005,
+          "two_alpha_zsd": 1.2204444683735078,
+          "stored_two_alpha_W_med_from_V": 1.200000048
+        },
+        "l2": {
+          "alpha_med": 0.10919151085,
+          "zsd": 5.661965131500001,
+          "two_alpha_zsd": 1.2414579753710688,
+          "stored_two_alpha_W_med_from_V": 1.200000048
+        }
+      },
+      "SNA_fixT1": {
+        "l1": {
+          "alpha_med": 0.15380607545,
+          "zsd": 10.51396084,
+          "two_alpha_zsd": 3.2581036446126834,
+          "stored_two_alpha_W_med_from_V": 1.200000048
+        },
+        "l2": {
+          "alpha_med": 0.1743158847,
+          "zsd": 7.014886379,
+          "two_alpha_zsd": 2.389794692781183,
+          "stored_two_alpha_W_med_from_V": 1.200000048
+        }
+      },
+      "SNA_fix0": {
+        "l1": {
+          "alpha_med": 0.6000000238,
+          "zsd": 6.227800846,
+          "two_alpha_zsd": 7.47336131164332,
+          "stored_two_alpha_W_med_from_V": 1.200000048
+        },
+        "l2": {
+          "alpha_med": 0.6000000238,
+          "zsd": 4.468918085,
+          "two_alpha_zsd": 5.3627019147205,
+          "stored_two_alpha_W_med_from_V": 1.200000048
+        }
+      }
+    },
+    "layers_note": "two_alpha_zsd = median over seeds of 2 * alpha_med * zsd (unit medians from the end-of-task evaluation); stored_two_alpha_W_med_from_V uses the EMA V (not V_max / the frozen alpha)."
   },
   "cnn_mechanism": "Mean slope (mean over all inputs of 1 + sin(2 alpha z)), task 20 -> 21 replay, mean over seeds 10-12.\n\n| frame | SNA c2 | SNA f1 | SNA f2 | SNA+grow1 c2 | SNA+grow1 f1 | SNA+grow1 f2 |\n|---|---:|---:|---:|---:|---:|---:|\n| 0 updates | 0.552 | 0.699 | 0.689 | 0.519 | 0.573 | 0.580 |\n| 75 updates | 0.487 | 0.221 | 0.077 | 0.345 | 0.209 | 0.139 |\n| 3 epochs | 0.600 | 0.321 | 0.161 | 0.365 | 0.198 | 0.147 |\n| 5 epochs | 0.517 | 0.411 | 0.277 | 0.374 | 0.222 | 0.160 |\n| 10 epochs | 0.571 | 0.507 | 0.383 | 0.398 | 0.288 | 0.208 |\n\nSame trajectory, alpha held at its value at the switch (counterfactual, report only):\n\n| frame | SNA c2 | SNA f1 | SNA f2 | SNA+grow1 c2 | SNA+grow1 f1 | SNA+grow1 f2 |\n|---|---:|---:|---:|---:|---:|---:|\n| 0 updates | 0.552 | 0.699 | 0.689 | 0.519 | 0.573 | 0.580 |\n| 75 updates | 0.445 | 0.200 | 0.162 | 0.345 | 0.209 | 0.139 |\n| 3 epochs | 0.409 | 0.422 | 0.453 | 0.365 | 0.198 | 0.147 |\n| 5 epochs | 0.284 | 0.605 | 0.647 | 0.374 | 0.222 | 0.160 |\n| 10 epochs | 0.225 | 0.725 | 0.754 | 0.398 | 0.288 | 0.208 |\n\nMedian alpha / alpha_at_switch (median over seeds 10-12 of the unit median):\n\n| frame | SNA c2 | SNA f1 | SNA f2 | SNA+grow1 c2 | SNA+grow1 f1 | SNA+grow1 f2 |\n|---|---:|---:|---:|---:|---:|---:|\n| 0 updates | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |\n| 75 updates | 1.02 | 1.30 | 1.38 | 1.00 | 1.00 | 1.00 |\n| 3 epochs | 1.15 | 2.24 | 2.70 | 1.00 | 1.00 | 1.00 |\n| 5 epochs | 1.31 | 3.42 | 4.38 | 1.00 | 1.00 | 1.00 |\n| 10 epochs | 1.77 | 5.21 | 6.01 | 1.00 | 1.00 | 1.00 |\n\nKnown (sna_cnn_cause_1009 bundle A, SNA, seeds 10-12; dist_anim/chase_cf.json):\n\n| frame | SNA c2 | SNA f1 | SNA f2 |\n|---|---:|---:|---:|\n| 切替の直前 | 0.574 | 0.732 | 0.661 |\n| 75 更新 | 0.508 | 0.240 | 0.099 |\n| 3 epoch | 0.517 | 0.325 | 0.165 |\n| 5 epoch | 0.597 | 0.424 | 0.299 |\n| 10 epoch | 0.619 | 0.505 | 0.384 |\n\nReplay vs run (task-21 row of per_task.csv, 1080 values): 0 mismatches."
 }
