@@ -1,0 +1,1473 @@
+{
+  "schema_version": 1,
+  "run_id": "redo_chb_rlcifar_1018",
+  "artifact": "historical_context_audit",
+  "created_utc": "2026-10-17T17:46:25.936751+00:00",
+  "author": "Codex /root/run2_cap, requested by /root",
+  "audited_checkout": "/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018",
+  "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+  "prior_audit_main_commit": "094489c30bcdf196946179ba07ed0e8cadd3a53f",
+  "method": "Read-only historical CSV/JSON/git-object audit; archival descriptive recomputation in float64; no GPU, new experiment, external API or Obsidian retrieval",
+  "environment": {
+    "python": "3.12.3",
+    "numpy": "2.5.1"
+  },
+  "f51_protocol": {
+    "dataset": "CIFAR-100 natural labels",
+    "input": "std",
+    "architecture": [
+      3072,
+      100,
+      100,
+      100
+    ],
+    "tasks": 30,
+    "updates_per_task": 780,
+    "batch": 32,
+    "lr": 0.0001,
+    "late_tasks": [
+      21,
+      23,
+      25,
+      27,
+      29
+    ],
+    "early_tasks": [
+      1,
+      3,
+      5,
+      7,
+      9
+    ],
+    "pooling": "First mean over tasks inside seed, then median/mean across seeds. Diagnostics at task end.",
+    "periodic_ReDo": "tau0.1, period1560, 64 recent training images; starts during training, not one-shot"
+  },
+  "historical_periodic_redo_43": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "n": 20,
+    "formula": "median_seed(online_late_ReDo - online_late_R) / median_seed(online_late_SNA - online_late_R)",
+    "numerator": 0.09510016026000007,
+    "denominator": 0.22126602563999997,
+    "ratio": 0.42980010141605796,
+    "type": "REPORT_ONLY descriptive ratio to SNA comparator; not an identified causal mediation fraction",
+    "arms": {
+      "R": {
+        "per_seed": {
+          "late": [
+            0.4234695513,
+            0.47637820511999995,
+            0.42479967947999997,
+            0.42197115384000006,
+            0.46266826924000004,
+            0.39792467948,
+            0.42286057691999995,
+            0.41624999999999995,
+            0.43443108974,
+            0.4853205128,
+            0.45804487182000003,
+            0.38190705127999997,
+            0.43032852561999996,
+            0.45797275641999996,
+            0.4414823718,
+            0.3755849359,
+            0.47902243592,
+            0.46096153846,
+            0.4464823718,
+            0.42684294871999995
+          ],
+          "dead_frac_l2_late": [
+            0.33999999165999994,
+            0.28399999439999996,
+            0.34799998402,
+            0.35199999808,
+            0.30799999238,
+            0.36999999288,
+            0.40399999022,
+            0.33199999332,
+            0.34399998787999997,
+            0.30999999046000004,
+            0.36199998854,
+            0.35599999427999995,
+            0.27399999199999997,
+            0.32399999201999996,
+            0.35399999022,
+            0.33999999164,
+            0.33199999332,
+            0.30199999211999995,
+            0.31800000074,
+            0.22199999394
+          ],
+          "eff_rank_l2_late": [
+            9.1215623788,
+            10.6477561104,
+            9.410447964,
+            9.7247636774,
+            10.6436474422,
+            8.8461903322,
+            8.224436231,
+            10.0856247596,
+            9.2169495872,
+            11.272294074399998,
+            9.4297103442,
+            8.9783195278,
+            9.710710114200001,
+            8.9651668688,
+            9.2654579184,
+            7.608217681000001,
+            10.4712331424,
+            9.325694351600001,
+            9.429931002,
+            10.129565176800002
+          ],
+          "eff_rank_l2_t29": [
+            10.96056507,
+            8.011500342,
+            8.084444581,
+            9.776711139,
+            9.16632439,
+            7.463532307,
+            6.116530098,
+            12.70684038,
+            8.947396032,
+            11.7248045,
+            8.39457566,
+            6.894604748,
+            8.940529736,
+            9.597867071,
+            9.467780419,
+            6.394875294,
+            10.28953402,
+            6.552741284,
+            8.774473422,
+            10.35317468
+          ]
+        },
+        "median": {
+          "late": 0.43237980767999995,
+          "dead_frac_l2_late": 0.33599999248,
+          "eff_rank_l2_late": 9.4200791541,
+          "eff_rank_l2_t29": 8.943962884000001
+        }
+      },
+      "REDO": {
+        "per_seed": {
+          "late": [
+            0.48679487180000003,
+            0.56809294872,
+            0.51363782052,
+            0.5236217948599999,
+            0.5248477564,
+            0.5541666666599999,
+            0.54998397438,
+            0.5234695513000001,
+            0.5334695512800001,
+            0.55269230768,
+            0.5391666666800001,
+            0.4803926282,
+            0.50875801284,
+            0.55646634616,
+            0.5552323718000001,
+            0.51032852564,
+            0.5464182692399999,
+            0.55241987182,
+            0.53066506412,
+            0.5352243589800001
+          ],
+          "dead_frac_l2_late": [
+            0.0019999999552,
+            0.0039999999100000004,
+            0.0,
+            0.0019999999552,
+            0.0019999999552,
+            0.0,
+            0.0,
+            0.0019999999552,
+            0.0039999999104,
+            0.0039999999104,
+            0.0119999993592,
+            0.0019999999552,
+            0.0059999998655999994,
+            0.0019999999552,
+            0.009999999403999999,
+            0.005999999866,
+            0.0019999999552,
+            0.0,
+            0.0019999999552,
+            0.0019999999552
+          ],
+          "eff_rank_l2_late": [
+            18.76375266,
+            16.8902232884,
+            17.581931806,
+            20.721449056,
+            19.33178643,
+            20.905126622,
+            16.814727400000002,
+            15.921026268000002,
+            18.53113729,
+            20.088246681999998,
+            15.703790984,
+            15.773280288,
+            17.66954583,
+            17.54248455,
+            17.444726987999996,
+            15.78369194,
+            18.916114868,
+            18.60647836,
+            17.719743484,
+            19.504166176
+          ],
+          "eff_rank_l2_t29": [
+            11.29431554,
+            18.89371543,
+            19.48188654,
+            22.53004671,
+            20.78905055,
+            25.51300856,
+            12.3948958,
+            16.32381438,
+            15.9470894,
+            22.47596142,
+            13.33285812,
+            21.28845642,
+            20.31646094,
+            20.28262401,
+            18.5625626,
+            19.39145907,
+            19.82918602,
+            16.19929021,
+            18.12968164,
+            22.18871519
+          ]
+        },
+        "median": {
+          "late": 0.5343469551300001,
+          "dead_frac_l2_late": 0.0019999999552,
+          "eff_rank_l2_late": 17.694644656999998,
+          "eff_rank_l2_t29": 19.436672805
+        }
+      },
+      "SNA": {
+        "per_seed": {
+          "late": [
+            0.64788461538,
+            0.68227564104,
+            0.6518990384800001,
+            0.64384615384,
+            0.64718750002,
+            0.67844551282,
+            0.68219551282,
+            0.6720673076999999,
+            0.6709375,
+            0.67100160256,
+            0.6575240384600001,
+            0.62890224358,
+            0.64083333332,
+            0.6759214743399999,
+            0.68045673076,
+            0.6274679487,
+            0.6558253205200001,
+            0.6729807692399999,
+            0.66363782052,
+            0.6475
+          ],
+          "dead_frac_l2_late": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "eff_rank_l2_late": [
+            49.113922112,
+            50.100770784000005,
+            51.101563968,
+            49.14685299399999,
+            49.826269168,
+            51.957146394000006,
+            49.507249804000004,
+            48.776629228000004,
+            48.95087558,
+            50.760156752,
+            46.528817833999994,
+            49.923627248,
+            51.078546234,
+            48.415204167999995,
+            47.28025469000001,
+            45.657857568,
+            50.155644582,
+            47.320979062000006,
+            49.639082834,
+            48.238045698
+          ],
+          "eff_rank_l2_t29": [
+            51.44061871,
+            47.571717,
+            49.88844093,
+            53.83307203,
+            50.84051908,
+            56.10391993,
+            45.01751293,
+            51.04884517,
+            52.26400598,
+            53.94323448,
+            43.59326502,
+            49.21570642,
+            53.72978999,
+            50.20072245,
+            51.02625825,
+            51.40121545,
+            51.79728537,
+            41.25426787,
+            50.68309189,
+            46.72689983
+          ]
+        },
+        "median": {
+          "late": 0.66058092949,
+          "dead_frac_l2_late": 0.0,
+          "eff_rank_l2_late": 49.327051399,
+          "eff_rank_l2_t29": 50.933388664999995
+        }
+      }
+    }
+  },
+  "user_49_percent": {
+    "arm": "H",
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "formula": "(median(H)-median(R))/(median(SNA)-median(R))",
+    "ratio": 0.4928745333043785,
+    "not_same_estimand_as_periodic_43": true
+  },
+  "common_seed0_9": {
+    "R": {
+      "source": "results/cifar5p1_mlp_0920/R_std_lr0.0001/per_task.csv",
+      "fresh_source": "results/cifar5p1_mlp_0920/R_std_lr0.0001/fresh_control.csv",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "per_seed": {
+        "online_late": [
+          0.4234695513,
+          0.47637820511999995,
+          0.42479967947999997,
+          0.42197115384000006,
+          0.46266826924000004,
+          0.39792467948,
+          0.42286057691999995,
+          0.41624999999999995,
+          0.43443108974,
+          0.4853205128
+        ],
+        "online_early": [
+          0.64331730768,
+          0.61896634616,
+          0.64770032052,
+          0.59036858976,
+          0.61063301282,
+          0.6532051282,
+          0.5398076922999999,
+          0.6331330128200001,
+          0.57080929484,
+          0.58309294872
+        ],
+        "death_l2_late": [
+          0.33999999165999994,
+          0.28399999439999996,
+          0.34799998402,
+          0.35199999808,
+          0.30799999238,
+          0.36999999288,
+          0.40399999022,
+          0.33199999332,
+          0.34399998787999997,
+          0.30999999046000004
+        ],
+        "effrank_l2_late": [
+          9.121562516400001,
+          10.647756105600001,
+          9.4104478418,
+          9.724763835,
+          10.643647546,
+          8.8461904082,
+          8.224436276999999,
+          10.085625024999999,
+          9.216949575000001,
+          11.2722940978
+        ],
+        "effrank_l2_t29": [
+          10.96056499,
+          8.011499878,
+          8.084444563,
+          9.776711905,
+          9.166324374,
+          7.463532714,
+          6.116530045,
+          12.70684102,
+          8.947396056,
+          11.72480455
+        ],
+        "fresh_online_acc_t29": [
+          0.6682291667,
+          0.5379407051,
+          0.5591746795,
+          0.6601762821,
+          0.6096153846,
+          0.6051282051,
+          0.6310496795,
+          0.6592147436,
+          0.6161458333,
+          0.7125400641
+        ],
+        "continual_online_acc_t29": [
+          0.4179887821,
+          0.2795673077,
+          0.3536458333,
+          0.4551282051,
+          0.3774038462,
+          0.3604967949,
+          0.3947516026,
+          0.4640224359,
+          0.3923878205,
+          0.5469551282
+        ],
+        "fresh_gap_t29": [
+          0.2502403846,
+          0.2583733974,
+          0.2055288462,
+          0.2050480769,
+          0.2322115385,
+          0.2446314103,
+          0.2362980769,
+          0.1951923077,
+          0.2237580128,
+          0.1655849359
+        ],
+        "early_minus_late": [
+          0.21984775637999993,
+          0.14258814104000006,
+          0.22290064104000007,
+          0.1683974359199999,
+          0.14796474358,
+          0.25528044872,
+          0.11694711537999997,
+          0.21688301282000017,
+          0.13637820509999998,
+          0.09777243591999996
+        ]
+      },
+      "median": {
+        "online_late": 0.42413461538999997,
+        "online_early": 0.61479967949,
+        "death_l2_late": 0.34199998976999996,
+        "effrank_l2_late": 9.567605838399999,
+        "effrank_l2_t29": 9.056860215,
+        "fresh_online_acc_t29": 0.6235977563999999,
+        "continual_online_acc_t29": 0.39356971155,
+        "fresh_gap_t29": 0.22798477565,
+        "early_minus_late": 0.15818108974999995
+      },
+      "mean": {
+        "online_late": 0.436607371792,
+        "online_early": 0.609103365382,
+        "death_l2_late": 0.33919999153,
+        "effrank_l2_late": 9.719367322779998,
+        "effrank_l2_t29": 9.295865009500002,
+        "fresh_online_acc_t29": 0.6259214743599999,
+        "continual_online_acc_t29": 0.40423477565,
+        "fresh_gap_t29": 0.22168669872,
+        "early_minus_late": 0.17249599358999998
+      }
+    },
+    "H": {
+      "source": "results/cifar5p1_mlp_0920/H_std_doors/per_task.csv",
+      "fresh_source": "results/cifar5p1_mlp_0920/H_std_doors/fresh_control.csv",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "per_seed": {
+        "online_late": [
+          0.5078445512599999,
+          0.55745993588,
+          0.5241426282,
+          0.57905448716,
+          0.52052884614,
+          0.5776362179400001,
+          0.56706730768,
+          0.54267628202,
+          0.5225160256400001,
+          0.5489102564199999
+        ],
+        "online_early": [
+          0.59036057694,
+          0.54560096156,
+          0.54227564102,
+          0.5290705128,
+          0.5447516025600001,
+          0.59912660258,
+          0.47712339742000004,
+          0.58892628204,
+          0.52604967948,
+          0.52147435898
+        ],
+        "death_l2_late": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "effrank_l2_late": [
+          15.081867218,
+          14.839511378000001,
+          14.071014434,
+          11.913363119200001,
+          14.29725513,
+          15.468627829999999,
+          13.808210238000001,
+          15.833932612000002,
+          13.320970657999998,
+          13.178457666
+        ],
+        "effrank_l2_t29": [
+          11.89827029,
+          11.91213995,
+          17.18019384,
+          12.56199198,
+          13.38486929,
+          19.78165152,
+          13.64448286,
+          16.56943945,
+          11.51820406,
+          19.31412484
+        ],
+        "fresh_online_acc_t29": [
+          0.5874198718,
+          0.4794471154,
+          0.4941105769,
+          0.5661858974,
+          0.5612580128,
+          0.5072916667,
+          0.5649839744,
+          0.559375,
+          0.5288862179,
+          0.6649038462
+        ],
+        "continual_online_acc_t29": [
+          0.5051682692,
+          0.4257211538,
+          0.4602564103,
+          0.6065304487,
+          0.5266426282,
+          0.5512419872,
+          0.5460737179,
+          0.5163862179,
+          0.4249198718,
+          0.6201522436
+        ],
+        "fresh_gap_t29": [
+          0.08225160256,
+          0.05372596154,
+          0.03385416667,
+          -0.04034455128,
+          0.03461538462,
+          -0.04395032051,
+          0.01891025641,
+          0.04298878205,
+          0.1039663462,
+          0.04475160256
+        ],
+        "early_minus_late": [
+          0.08251602568000005,
+          -0.011858974319999938,
+          0.018133012820000016,
+          -0.049983974360000016,
+          0.024222756420000158,
+          0.02149038463999986,
+          -0.08994391025999998,
+          0.046250000020000015,
+          0.0035336538399999284,
+          -0.027435897439999857
+        ]
+      },
+      "median": {
+        "online_late": 0.5457932692199999,
+        "online_early": 0.5435136217900001,
+        "death_l2_late": 0.0,
+        "effrank_l2_late": 14.184134782000001,
+        "effrank_l2_t29": 13.514676075,
+        "fresh_online_acc_t29": 0.5603165064,
+        "continual_online_acc_t29": 0.52151442305,
+        "fresh_gap_t29": 0.038802083335,
+        "early_minus_late": 0.010833333329999972
+      },
+      "mean": {
+        "online_late": 0.544783653834,
+        "online_early": 0.5464759615379999,
+        "death_l2_late": 0.0,
+        "effrank_l2_late": 14.181321028320003,
+        "effrank_l2_t29": 14.776536808,
+        "fresh_online_acc_t29": 0.55138621795,
+        "continual_online_acc_t29": 0.5183092948600001,
+        "fresh_gap_t29": 0.033076923082,
+        "early_minus_late": 0.0016923077040000233
+      }
+    },
+    "SNA": {
+      "source": "results/cifar5p1_mlp_0920/SNA_std_lr0.0001/per_task.csv",
+      "fresh_source": "results/cifar5p1_mlp_0920/SNA_std_lr0.0001/fresh_control.csv",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "per_seed": {
+        "online_late": [
+          0.64788461538,
+          0.68227564104,
+          0.6518990384800001,
+          0.64384615384,
+          0.64718750002,
+          0.67844551282,
+          0.68219551282,
+          0.6720673076999999,
+          0.6709375,
+          0.67100160256
+        ],
+        "online_early": [
+          0.7227083333400001,
+          0.6969471154000001,
+          0.71836538462,
+          0.6712099359000001,
+          0.6880288461399999,
+          0.72956730768,
+          0.62217948718,
+          0.70977564102,
+          0.6543669871600001,
+          0.66284455128
+        ],
+        "death_l2_late": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "effrank_l2_late": [
+          49.113922112,
+          50.100770784000005,
+          51.101563968,
+          49.14685299399999,
+          49.826269168,
+          51.957146394000006,
+          49.507249804000004,
+          48.776629228000004,
+          48.95087558,
+          50.760156752
+        ],
+        "effrank_l2_t29": [
+          51.44061871,
+          47.571717,
+          49.88844093,
+          53.83307203,
+          50.84051908,
+          56.10391993,
+          45.01751293,
+          51.04884517,
+          52.26400598,
+          53.94323448
+        ],
+        "fresh_online_acc_t29": [
+          0.7243990385,
+          0.5854166667,
+          0.6115785256,
+          0.7110977564,
+          0.6552884615,
+          0.6578926282,
+          0.6763221154,
+          0.7165064103,
+          0.6577724359,
+          0.7542067308
+        ],
+        "continual_online_acc_t29": [
+          0.6942708333,
+          0.5598958333,
+          0.5524038462,
+          0.6661057692,
+          0.603125,
+          0.6361378205,
+          0.6438301282,
+          0.6681089744,
+          0.626161859,
+          0.723838141
+        ],
+        "fresh_gap_t29": [
+          0.03012820513,
+          0.02552083333,
+          0.05917467949,
+          0.04499198718,
+          0.05216346154,
+          0.02175480769,
+          0.03249198718,
+          0.0483974359,
+          0.03161057692,
+          0.03036858974
+        ],
+        "early_minus_late": [
+          0.07482371796000009,
+          0.014671474360000047,
+          0.06646634613999991,
+          0.02736378206000012,
+          0.0408413461199999,
+          0.051121794860000014,
+          -0.06001602563999997,
+          0.03770833332000012,
+          -0.016570512839999885,
+          -0.008157051279999994
+        ]
+      },
+      "median": {
+        "online_late": 0.67096955128,
+        "online_early": 0.69248798077,
+        "death_l2_late": 0.0,
+        "effrank_l2_late": 49.666759486000004,
+        "effrank_l2_t29": 51.24473194,
+        "fresh_online_acc_t29": 0.6671073718,
+        "continual_online_acc_t29": 0.63998397435,
+        "fresh_gap_t29": 0.032051282050000005,
+        "early_minus_late": 0.03253605769000012
+      },
+      "mean": {
+        "online_late": 0.6647740384659999,
+        "online_early": 0.687599358972,
+        "death_l2_late": 0.0,
+        "effrank_l2_late": 49.9241436784,
+        "effrank_l2_t29": 51.195188624,
+        "fresh_online_acc_t29": 0.67504807693,
+        "continual_online_acc_t29": 0.63738782051,
+        "fresh_gap_t29": 0.03766025641,
+        "early_minus_late": 0.022825320506000037
+      }
+    },
+    "ReDo": {
+      "source": "results/baselines_cifar5p1_1008/per_seed.csv",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "per_seed": {
+        "online_late": [
+          0.48679487180000003,
+          0.56809294872,
+          0.51363782052,
+          0.5236217948599999,
+          0.5248477564,
+          0.5541666666599999,
+          0.54998397438,
+          0.5234695513000001,
+          0.5334695512800001,
+          0.55269230768
+        ],
+        "online_early": [
+          0.6201842948599999,
+          0.61516826924,
+          0.6371233974200001,
+          0.57387019232,
+          0.5907772436000001,
+          0.6514423076800001,
+          0.5347756410200001,
+          0.5953846154,
+          0.5575961538399999,
+          0.5611698718
+        ],
+        "death_l2_late": [
+          0.0019999999552,
+          0.0039999999100000004,
+          0.0,
+          0.0019999999552,
+          0.0019999999552,
+          0.0,
+          0.0,
+          0.0019999999552,
+          0.0039999999104,
+          0.0039999999104
+        ],
+        "effrank_l2_late": [
+          18.76375266,
+          16.8902232884,
+          17.581931806,
+          20.721449056,
+          19.33178643,
+          20.905126622,
+          16.814727400000002,
+          15.921026268000002,
+          18.53113729,
+          20.088246681999998
+        ],
+        "effrank_l2_t29": [
+          11.29431554,
+          18.89371543,
+          19.48188654,
+          22.53004671,
+          20.78905055,
+          25.51300856,
+          12.3948958,
+          16.32381438,
+          15.9470894,
+          22.47596142
+        ]
+      },
+      "median": {
+        "online_late": 0.52915865384,
+        "online_early": 0.5930809295,
+        "death_l2_late": 0.0019999999552,
+        "effrank_l2_late": 18.647444975,
+        "effrank_l2_t29": 19.187800985000003
+      },
+      "mean": {
+        "online_late": 0.5330777243600001,
+        "online_early": 0.5937491987179999,
+        "death_l2_late": 0.00199999995516,
+        "effrank_l2_late": 18.55494075024,
+        "effrank_l2_t29": 18.564378433
+      }
+    }
+  },
+  "common_seed0_9_consistent_effect_ratios": {
+    "ReDo": {
+      "paired_differences_vs_R": [
+        0.0633253205,
+        0.09171474360000009,
+        0.08883814103999998,
+        0.10165064101999988,
+        0.06217948715999999,
+        0.15624198717999993,
+        0.12712339746000006,
+        0.1072195513000001,
+        0.09903846154000007,
+        0.06737179488
+      ],
+      "paired_median_effect": 0.09537660257000008,
+      "SNA_minus_R_paired_median": 0.22575721154000003,
+      "paired_median_effect_ratio": 0.4224742231682867,
+      "marginal_median_difference_ratio": 0.4254828761225403,
+      "mean_paired_effect_ratio": 0.42280651233703176,
+      "positive_seeds": 10,
+      "independent_replicates": 10,
+      "no_interval_or_causal_mediation_inference": true
+    },
+    "H": {
+      "paired_differences_vs_R": [
+        0.08437499995999992,
+        0.08108173076000003,
+        0.09934294872000005,
+        0.1570833333199999,
+        0.057860576899999905,
+        0.1797115384600001,
+        0.14420673076000007,
+        0.12642628202,
+        0.0880849359000001,
+        0.06358974361999992
+      ],
+      "paired_median_effect": 0.09371394231000008,
+      "SNA_minus_R_paired_median": 0.22575721154000003,
+      "paired_median_effect_ratio": 0.41510940745029395,
+      "marginal_median_difference_ratio": 0.4928745333043785,
+      "mean_paired_effect_ratio": 0.4741108051359672,
+      "positive_seeds": 10,
+      "independent_replicates": 10,
+      "no_interval_or_causal_mediation_inference": true
+    },
+    "SNA": {
+      "paired_differences_vs_R": [
+        0.22441506407999995,
+        0.2058974359200001,
+        0.2270993590000001,
+        0.22187499999999993,
+        0.18451923078,
+        0.28052083334,
+        0.25933493590000006,
+        0.25581730769999994,
+        0.23650641025999997,
+        0.18568108975999997
+      ],
+      "paired_median_effect": 0.22575721154000003,
+      "SNA_minus_R_paired_median": 0.22575721154000003,
+      "paired_median_effect_ratio": 1.0,
+      "marginal_median_difference_ratio": 1.0,
+      "mean_paired_effect_ratio": 1.0,
+      "positive_seeds": 10,
+      "independent_replicates": 10,
+      "no_interval_or_causal_mediation_inference": true
+    }
+  },
+  "rank_definition": {
+    "source": "src/pmnist_0905.py",
+    "formula": "exp(-sum_i p_i log(p_i)), p_i = sigma_i(A)/sum_j sigma_j(A)",
+    "activation_matrix": "Native post-activation A on task images, no extra sample-mean centering inside eff_rank",
+    "distinction": "Effective rank is spectral concentration, not algebraic rank, a learning-speed bound or identified causal mediator",
+    "endpoint_vs_window": "SNA eff_rank51.2447 is t29 seed median; late-window seed median49.6668. H corresponding13.5147 and14.1841."
+  },
+  "source_note_corrections": {
+    "path": "specs/spec_cifar5p1_mlp_0920.md",
+    "sections": [
+      "16.6(g)",
+      "17.4"
+    ],
+    "limits": [
+      "Late absolute performance gap to SNA is not automatically accumulated plasticity loss; compare early performance and own-method fresh gap.",
+      "A_H=A-1*m^T is rank-one change at fixed features. The hard-rank +/-1 bound does not bound entropy effective-rank changes by1 or constrain learned trajectories.",
+      "Reported associations do not identify all residual loss as rank; H changes training trajectories, scale and conditioning as well as gates.",
+      "Longer-budget historical CH experiments demonstrate dependence on update budget."
+    ]
+  },
+  "completed_old_run1": {
+    "result_commit": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb",
+    "status": "COMPLETE",
+    "label": "MIXED",
+    "prediction": "POSITION_CARRIES",
+    "adopted_prediction_confirmed": false,
+    "arm_online_means": {
+      "none": 0.40423477564102567,
+      "redo": 0.5558052884615384,
+      "shift": 0.5271434294871795,
+      "both": 0.5596474358974359
+    },
+    "contrasts": {
+      "R": {
+        "mean": 0.15157051282051284,
+        "low": 0.10877188223414602,
+        "high": 0.19436914340687966,
+        "level": 0.9928571428571429,
+        "m": 7,
+        "df": 9
+      },
+      "S": {
+        "mean": 0.12290865384615383,
+        "low": 0.09553620633456027,
+        "high": 0.1502811013577474,
+        "level": 0.9928571428571429,
+        "m": 7,
+        "df": 9
+      },
+      "B": {
+        "mean": 0.15541266025641026,
+        "low": 0.11372919902322523,
+        "high": 0.1970961214895953,
+        "level": 0.9928571428571429,
+        "m": 7,
+        "df": 9
+      },
+      "B_minus_S": {
+        "mean": 0.03250400641025642,
+        "low": 0.003739140391920505,
+        "high": 0.06126887242859234,
+        "level": 0.9928571428571429,
+        "m": 7,
+        "df": 9
+      },
+      "B_minus_R": {
+        "mean": 0.0038421474358974472,
+        "low": -0.0020637310909036484,
+        "high": 0.009748025962698543,
+        "level": 0.9928571428571429,
+        "m": 7,
+        "df": 9
+      },
+      "S_minus_R": {
+        "mean": -0.028661858974358974,
+        "low": -0.05917750498809139,
+        "high": 0.001853787039373448,
+        "level": 0.9928571428571429,
+        "m": 7,
+        "df": 9
+      },
+      "I": {
+        "mean": -0.11906650641025637,
+        "low": -0.14689733444421038,
+        "high": -0.09123567837630235,
+        "level": 0.9928571428571429,
+        "m": 7,
+        "df": 9
+      }
+    },
+    "protocol": "F51/std/ReLU seeds0–9, one intervention at t28 end, score t29 online (780 updates); one-shot ReDo tau0.1 and physical live-b2 shift; not periodic ReDo and not anchored response-field shift",
+    "attribution_limit": "ReDo tau=0.1 includes live low-activity units; DEAD_CARRIES is an operation label",
+    "sources": {
+      "summary.md": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb:results/redo_position_2x2_1018/summary.md",
+      "verdict.json": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb:results/redo_position_2x2_1018/verdict.json",
+      "spec.md": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb:results/redo_position_2x2_1018/spec.md",
+      "provenance.json": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb:results/redo_position_2x2_1018/provenance.json"
+    }
+  },
+  "rc_raw_200_task_context": {
+    "seeds": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "n": 10,
+    "primary_window": [
+      181,
+      200
+    ],
+    "early_window": [
+      31,
+      50
+    ],
+    "arms": {
+      "CH": {
+        "early": {
+          "mean": 0.9863358020834999,
+          "median": 0.98600713542,
+          "min": 0.98361083334,
+          "max": 0.9898766666700001
+        },
+        "late": {
+          "mean": 0.6298264895854999,
+          "median": 0.69373833333,
+          "min": 0.281689166665,
+          "max": 0.8835107291750001
+        },
+        "drop": {
+          "mean": 0.356509312498,
+          "median": 0.2917126041675001,
+          "min": 0.10138854165999989,
+          "max": 0.7081875000050001
+        }
+      },
+      "CHB": {
+        "early": {
+          "mean": 0.9853504583334999,
+          "median": 0.9855665104175002,
+          "min": 0.9826283333399999,
+          "max": 0.98772520833
+        },
+        "late": {
+          "mean": 0.9903330312515,
+          "median": 0.9908507291699999,
+          "min": 0.9883172916599999,
+          "max": 0.9913565624999998
+        },
+        "drop": {
+          "mean": -0.004982572917999961,
+          "median": -0.004760416669999712,
+          "min": -0.008646354170000148,
+          "max": -0.001870520839999834
+        }
+      }
+    },
+    "paired_effect": {
+      "n": 10,
+      "mean": 0.36050654166600005,
+      "sample_sd": 0.21807593693494365,
+      "standard_error": 0.06896166635896606,
+      "t_critical": 2.2621571628540993,
+      "df": 9,
+      "ci95": [
+        0.2045044141497104,
+        0.5165086691822897
+      ],
+      "mean_pp": 36.050654166600005,
+      "ci95_pp": [
+        20.450441414971042,
+        51.650866918228964
+      ],
+      "differences": [
+        0.27031927082000007,
+        0.35344072916000024,
+        0.580096354175,
+        0.20410677083500017,
+        0.10737614582999988,
+        0.2967637500100001,
+        0.11883760416000033,
+        0.6680537499949999,
+        0.2964036458399997,
+        0.7096673958349998
+      ],
+      "positive": 10,
+      "zero": 0,
+      "negative": 0,
+      "contrast": "late_CHB_minus_CH",
+      "direction": "CHB_higher"
+    },
+    "protocol": {
+      "dataset": "CIFAR-10, seed-specific fixed1200 images",
+      "labels": "new iid uniform labels each task",
+      "input": "raw /255, subtract subset mean image C",
+      "architecture": [
+        3072,
+        100,
+        100,
+        10
+      ],
+      "tasks": 200,
+      "updates_per_task": 30000,
+      "batch": 16,
+      "adam_lr": 0.001,
+      "H_EMA_beta": 0.01,
+      "WD_lambda": 0.1713,
+      "CH": "C + H; biases free",
+      "CHB": "C + H + zero b1 after each Adam update + decoupled WD on b2; b3 free; no weight WD"
+    },
+    "interpretation": "Preventive bundled B effect conditional on C+H. Not b2-only, post-collapse recovery, natural-label CIFAR classification, or rank mediation."
+  },
+  "supported_new_spec_rationale": "The new RC/raw four-arm design uses native ref without C/H for none/redo, and full CHB (C+H+B) for CHB/both. It tests the transferred ReDo policy against and in combination with the complete CHB policy bundle. Only the historical CH-to-CHB contrast fixes C+H and identifies a conditional bundled B intervention. This is not a shared-C+H experiment isolating B alone; preserve the old F51 MIXED result and use a new run identity.",
+  "unsupported_claims": [
+    "43% or49% is an identified fraction of plasticity loss caused by death/gates.",
+    "All remaining F51 performance gap is causally due to rank.",
+    "CHB99% is natural-CIFAR classification accuracy or demonstrates recovery after collapse.",
+    "Old one-shot F51 POSITION_CARRIES prediction was confirmed."
+  ],
+  "source_files": {
+    "results/baselines_cifar5p1_1008/per_seed.csv": {
+      "path": "results/baselines_cifar5p1_1008/per_seed.csv",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "83a8f73f7445355002b24587996b5723fbd8abdc",
+      "git_blob": "66dfd47e89c31873528605284e5b9f41cf6b8511",
+      "bytes": 45250,
+      "sha256": "3845c59a1867983730ca28ca61db57a8a9dc70dbe22e1229858bc98ca91a7f04"
+    },
+    "results/baselines_cifar5p1_1008/secondary.csv": {
+      "path": "results/baselines_cifar5p1_1008/secondary.csv",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "83a8f73f7445355002b24587996b5723fbd8abdc",
+      "git_blob": "bdf69ead561d2d14d14e563867dcca111402370f",
+      "bytes": 2771,
+      "sha256": "7b0c1c0f8081346cf8883b86043e13bf6be29972e19522d89ade5fad63a8783b"
+    },
+    "results/baselines_cifar5p1_1008/summary.md": {
+      "path": "results/baselines_cifar5p1_1008/summary.md",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "4a9d7df079f060dc54997dbb2c360982b1749575",
+      "git_blob": "48e1bbecad0d2279c7ee9cd0cf29bba9b42a95ff",
+      "bytes": 18983,
+      "sha256": "157c8efbb8ef42dd7879ee482d9c4604652aab27714b9806907ef324b9339a26"
+    },
+    "specs/spec_baselines_cifar5p1_1008.md": {
+      "path": "specs/spec_baselines_cifar5p1_1008.md",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "e2e384363830f3929bc7214c045618f792763492",
+      "git_blob": "37a46b8d39e55a144a9655736e6749b6116ddc2d",
+      "bytes": 42903,
+      "sha256": "4ae1427fd0e3c4ee700e8ed9babeb26dd5ed3cde72171572a570c5783e0777b4"
+    },
+    "results/baselines_cifar5p1_1008/calib/selected.json": {
+      "path": "results/baselines_cifar5p1_1008/calib/selected.json",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "d7d435b054408af5172563974d47748af734b8fb",
+      "git_blob": "526488b6cdda500c8a3de852874b30a5a63c1e97",
+      "bytes": 751,
+      "sha256": "b02496c2b0fff7c91c74a167efeee5a5a174b9ef0f5386dc9be8400fd266c247"
+    },
+    "results/cifar5p1_mlp_0920/R_std_lr0.0001/per_task.csv": {
+      "path": "results/cifar5p1_mlp_0920/R_std_lr0.0001/per_task.csv",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "1669141aca8ac226a6d8ae9de521b9c12040fc57",
+      "git_blob": "9f021fabbb0ab798d1913b18a819151534d8ec51",
+      "bytes": 75285,
+      "sha256": "464d3d2d2d913e55125d528ca1e40f93d12d0b0e07d0ed8d8f43b56013e5db81"
+    },
+    "results/cifar5p1_mlp_0920/R_std_lr0.0001/fresh_control.csv": {
+      "path": "results/cifar5p1_mlp_0920/R_std_lr0.0001/fresh_control.csv",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "1669141aca8ac226a6d8ae9de521b9c12040fc57",
+      "git_blob": "1378e2bf48c9e0a787a50d00bb7260ea7574bd80",
+      "bytes": 640,
+      "sha256": "6632bacc36735e442787d361bcf4254f4395e3f869ea558aeb1c49e72a729038"
+    },
+    "results/cifar5p1_mlp_0920/R_std_lr0.0001/provenance.json": {
+      "path": "results/cifar5p1_mlp_0920/R_std_lr0.0001/provenance.json",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "1669141aca8ac226a6d8ae9de521b9c12040fc57",
+      "git_blob": "a53d3770cb45a4bc04e01c4b2194cecc4adc49f2",
+      "bytes": 2832,
+      "sha256": "1dbc85385bc2bd1bef8a4e04c05c62b7e3bce93055dc9b0c928441fa7fbcbbbc"
+    },
+    "results/cifar5p1_mlp_0920/H_std_doors/per_task.csv": {
+      "path": "results/cifar5p1_mlp_0920/H_std_doors/per_task.csv",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "02993652bdb26f3783d16c39d20aa6ff05517f3d",
+      "git_blob": "7316d8c909b2764a4e5ca298e1d9b82852114d2b",
+      "bytes": 80534,
+      "sha256": "5cbc908e210d425425dda93b2904cb61b73610592362ccc3bf270f64e43dfa98"
+    },
+    "results/cifar5p1_mlp_0920/H_std_doors/fresh_control.csv": {
+      "path": "results/cifar5p1_mlp_0920/H_std_doors/fresh_control.csv",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "02993652bdb26f3783d16c39d20aa6ff05517f3d",
+      "git_blob": "16c33d91538b2b9229e449ac3b46904d139a9471",
+      "bytes": 647,
+      "sha256": "d2ae5a549c2c174679b41169e84c30d014df73e62a4191b38288903a72f2a7b9"
+    },
+    "results/cifar5p1_mlp_0920/H_std_doors/provenance.json": {
+      "path": "results/cifar5p1_mlp_0920/H_std_doors/provenance.json",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "02993652bdb26f3783d16c39d20aa6ff05517f3d",
+      "git_blob": "18f6b250608582b4d9cccfe39bece3984e11c229",
+      "bytes": 2988,
+      "sha256": "1d649e9c76db68430da5dcd1248fbfa7bb684e1dd35418e1be07208ef8d6477b"
+    },
+    "results/cifar5p1_mlp_0920/SNA_std_lr0.0001/per_task.csv": {
+      "path": "results/cifar5p1_mlp_0920/SNA_std_lr0.0001/per_task.csv",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "1669141aca8ac226a6d8ae9de521b9c12040fc57",
+      "git_blob": "2259452691f19be9a72d40c727c99dbaa536865f",
+      "bytes": 103804,
+      "sha256": "b185069abaacd1cc5b1449cc6490a0cf97f2da5458a22b322ec1c6df48231177"
+    },
+    "results/cifar5p1_mlp_0920/SNA_std_lr0.0001/fresh_control.csv": {
+      "path": "results/cifar5p1_mlp_0920/SNA_std_lr0.0001/fresh_control.csv",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "1669141aca8ac226a6d8ae9de521b9c12040fc57",
+      "git_blob": "89804d2794135af64c3fbad959efadde447cadfd",
+      "bytes": 663,
+      "sha256": "96b5ff5a46c27527aed23e0622dc9325b40500e002d8cfb763f4ca4e6f878438"
+    },
+    "results/cifar5p1_mlp_0920/SNA_std_lr0.0001/provenance.json": {
+      "path": "results/cifar5p1_mlp_0920/SNA_std_lr0.0001/provenance.json",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "1669141aca8ac226a6d8ae9de521b9c12040fc57",
+      "git_blob": "36031fe578f2155ce6d3d96b26c10171dab07c11",
+      "bytes": 2790,
+      "sha256": "2431c7905fead6a0ea15d5bc0ededd35385fffdcc120df1b589bbe57dadaa75f"
+    },
+    "src/pmnist_0905.py": {
+      "path": "src/pmnist_0905.py",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "a592a4aa6978dc3b5c3d715e4104e993afca1b20",
+      "git_blob": "fb69bbd6e5435493aeb999e77d03d70fdcb8d801",
+      "bytes": 36721,
+      "sha256": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec"
+    },
+    "src/cifar5p1_mlp_0920.py": {
+      "path": "src/cifar5p1_mlp_0920.py",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "75419809b46edafe6a6989a9370e56eef836ef0a",
+      "git_blob": "edab0b8d32433edce5c83e0738ed3accbce682fe",
+      "bytes": 36080,
+      "sha256": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194"
+    },
+    "specs/spec_cifar5p1_mlp_0920.md": {
+      "path": "specs/spec_cifar5p1_mlp_0920.md",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "18e38cf10d6f68238b995a6c23462a51d8b80980",
+      "git_blob": "9cb38840446e9e6b4093569a8316a0ace66faf82",
+      "bytes": 88471,
+      "sha256": "25a431053fe85f3fb9b729e731df1572f16a3490d87cc6433c16b4d7a452fab8"
+    },
+    "abd5220ba3670c13afacb31cfe9974edfdf3f9cb:results/redo_position_2x2_1018/summary.md": {
+      "path": "results/redo_position_2x2_1018/summary.md",
+      "read_method": "git_object",
+      "snapshot_commit": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb",
+      "last_change_commit": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb",
+      "git_blob": "69a7a1a3810afa560d555b0d5f60bbc162dfde76",
+      "bytes": 703,
+      "sha256": "54351c25f84e819d1d5c00c03acd01883de1f3aafa25c104f3b01998a9755258"
+    },
+    "abd5220ba3670c13afacb31cfe9974edfdf3f9cb:results/redo_position_2x2_1018/verdict.json": {
+      "path": "results/redo_position_2x2_1018/verdict.json",
+      "read_method": "git_object",
+      "snapshot_commit": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb",
+      "last_change_commit": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb",
+      "git_blob": "4adc1c24e736adf1b31d92e9712bf9e6b27411d3",
+      "bytes": 9706,
+      "sha256": "f0e30a13e663d16abe346517714c9e71c4b78e26433ac9edcf7135c53344cdd7"
+    },
+    "abd5220ba3670c13afacb31cfe9974edfdf3f9cb:results/redo_position_2x2_1018/spec.md": {
+      "path": "results/redo_position_2x2_1018/spec.md",
+      "read_method": "git_object",
+      "snapshot_commit": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb",
+      "last_change_commit": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb",
+      "git_blob": "be8aa33e903ff17264eb86cf7ea3f8da206d6907",
+      "bytes": 6773,
+      "sha256": "97cd76a2289dd4815f7cc81b632738a3027711737e70bdd83086da84f630660f"
+    },
+    "abd5220ba3670c13afacb31cfe9974edfdf3f9cb:results/redo_position_2x2_1018/provenance.json": {
+      "path": "results/redo_position_2x2_1018/provenance.json",
+      "read_method": "git_object",
+      "snapshot_commit": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb",
+      "last_change_commit": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb",
+      "git_blob": "8bfe3886eae8e63af24e6679758b7b59bd8e40e2",
+      "bytes": 17551,
+      "sha256": "cddfd90e1531fe09fc11772f0c3e44dc1d20135a0c86a2bacda93e38e901367e"
+    },
+    "results/ch_chb_performance_1011/summary.md": {
+      "path": "results/ch_chb_performance_1011/summary.md",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "93ecc444758d7ae7ba7bd2efb0447f16ccf1d737",
+      "git_blob": "1b146ce317985e07b3ac5ecb294c452a8b3504df",
+      "bytes": 2309,
+      "sha256": "16c7bcf44bbf0f37f40f5ffd7d292c6323308c40fa41ebc02917f151e135cda8"
+    },
+    "results/ch_chb_performance_1011/paired_ci.json": {
+      "path": "results/ch_chb_performance_1011/paired_ci.json",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "93ecc444758d7ae7ba7bd2efb0447f16ccf1d737",
+      "git_blob": "d91254a985f93f24998235533facc8bd5cf8fed4",
+      "bytes": 18155,
+      "sha256": "33d1b2e497e37c708a2c9f51102be1dbd829cb96ff76dda7f51ba34065c7d105"
+    },
+    "results/ch_chb_performance_1011/CH/provenance.json": {
+      "path": "results/ch_chb_performance_1011/CH/provenance.json",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "93ecc444758d7ae7ba7bd2efb0447f16ccf1d737",
+      "git_blob": "0dfbfc8f69c5e373bff7ca5e3e99e55fad4ae634",
+      "bytes": 6210,
+      "sha256": "43c3cc78e29604a6b434994c7a7d9f43d1f86dc013344fc17972f148b6f12de8"
+    },
+    "results/ch_chb_performance_1011/CHB/provenance.json": {
+      "path": "results/ch_chb_performance_1011/CHB/provenance.json",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "93ecc444758d7ae7ba7bd2efb0447f16ccf1d737",
+      "git_blob": "c627c9eaafefed0f64349d8d987800edbdb1dee3",
+      "bytes": 6667,
+      "sha256": "4209f957cf5e63b0e28c8e134dbd18c7afcf53684eaa3f40177c790758ba414e"
+    },
+    "specs/spec_ch_chb_performance_1011.md": {
+      "path": "specs/spec_ch_chb_performance_1011.md",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "e6d40977b69687eb49fb8d6d387b8c803c51fbf7",
+      "git_blob": "cfcfbc1e7ad2b9f598bfde37ff452f017c5dcb2d",
+      "bytes": 8208,
+      "sha256": "e7cfeafa4e20d50852b51880814d17121ba2acbbc370acc9a4ede79c8a3f4ed8"
+    },
+    "src/relu_doors_0919.py": {
+      "path": "src/relu_doors_0919.py",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "663a841e38e93030e3d9cbdc803850b58187d5f9",
+      "git_blob": "4382471857c9f23c381c840a124e8157c2f0e0bf",
+      "bytes": 41438,
+      "sha256": "2478c8339decaee3aacb90ac7aa87f8cff6b49d2da30833c6e3dbea0dfa82da4"
+    },
+    "results/ch_chb_performance_1011/per_seed.csv": {
+      "path": "results/ch_chb_performance_1011/per_seed.csv",
+      "read_method": "current_checkout",
+      "snapshot_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+      "last_change_commit": "93ecc444758d7ae7ba7bd2efb0447f16ccf1d737",
+      "git_blob": "5ac4a7cdaf4440d6e384e14447eae9344c70d0d5",
+      "bytes": 1652,
+      "sha256": "9b8d5c7224b4c747f102852313be56ba59e6c695c7fc5f1fc6b6d91ecde9627d"
+    }
+  }
+}
