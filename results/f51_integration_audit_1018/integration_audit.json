@@ -5,6 +5,16 @@
   "independent_auditor": "Codex /root (independent of six implementers)",
   "audited_commit": "063b7c6085340475549981494e713a7ceea6dbbb",
   "source_sha256": {
+    "analysis/cifar_ledger_0920/audit.py": "31960b20233a1313760fae0baf195e7ca19553afc83d60f6e823ef931180631a",
+    "analysis/cifar_ledger_0920/checks.py": "a0b114cb376cf6b5555fda5d33b268a669fcf898ebe84f6072bdf8800b93cbda",
+    "analysis/cifar_ledger_0920/describe.py": "a9720249d9c38cecfedf8b8b28a6bf3f8a4a1b2917796dd711ea2057b8bf0309",
+    "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
+    "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
+    "analysis/cifar_ledger_0920/report.py": "81fe34ecee627c9c5d9099d0e81c7c28ba8d8859f3aaa1ec6055b7674c1fce73",
+    "analysis/resp_cifar_ee_0920/archive.py": "d9c9c5f58752abe3a87e0c34bb2e78f874102cab869c2e81a41f098275934111",
+    "analysis/resp_cifar_ee_0920/checks.py": "720975fed3ea2a3fecdb4eb9f290e3c7d3575eca0f0641a0216b0ebf889d76a7",
+    "analysis/resp_cifar_ee_0920/report.py": "fd495e13e0b7987763a667ecfa68904869b2f94977ddd98e077b8a7583fe20c5",
+    "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0",
     "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "src/act_chimera_0913.py": "df47bb3868168e2abae41500ce1c332f029f20b0b303648090ffadeff5ccf542",
     "src/act_chimera_launch_0913.py": "ef3203491e1e65fb7f7fa8ebedd62175773956d01899836b9add9bc089005bc7",
@@ -399,7 +409,7 @@
         ],
         "returncode": 0,
         "checks_json": "/tmp/issa_six_specs_1018/g0_independent/cpu_pilot/checks.json",
-        "checks_sha256": "91c24e2ab04947d7736486a6c6bcd3dac11f4a7ec79c472b1b37d4d8c8361342",
+        "checks_sha256": "8076313d3364257595d99292f593b1d75f203090156faa4e621d847646ffce4b",
         "all_pass": true,
         "details": {
           "S-data": {
@@ -567,21 +577,21 @@
             "pass": true,
             "LK07": {
               "vjp_max_err": 0.0,
-              "bound": 1.5928488892313908e-06,
+              "bound": 1.732174268909148e-06,
               "dphi_vs_jacobian_norm": 0.0,
               "out_width": 1,
               "in_width": 1
             },
             "CR": {
               "vjp_max_err": 0.0,
-              "bound": 1.8153062910641893e-06,
+              "bound": 1.71999306530779e-06,
               "dphi_vs_jacobian_norm": 0.0,
               "out_width": 2,
               "in_width": 1
             },
             "DF": {
               "vjp_max_err": 0.0,
-              "bound": 1.9482674815662904e-06,
+              "bound": 1.840199274738552e-06,
               "dphi_vs_jacobian_norm": 5.960464477539063e-08,
               "out_width": 2,
               "in_width": 1
@@ -610,6 +620,6 @@
   "blockers": [
     "BLOCKED_CUDA: torch.cuda.is_available() is false; no NVIDIA device visible"
   ],
-  "created_at": "2026-10-17T16:18:36.407501+00:00",
+  "created_at": "2026-10-17T16:24:46.513979+00:00",
   "scope": "G0 only. New six-run implementations and comparator reuse need their own independent checks."
 }

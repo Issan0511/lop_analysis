@@ -48,7 +48,10 @@ def main() -> int:
     sys.path.insert(0, str(repo))
     from src import cifar5p1_mlp_0920 as host
 
-    hashes = {str(p.relative_to(repo)): sha(p) for p in sorted((repo / "src").glob("*.py"))}
+    inherited = set((repo / "src").glob("*.py"))
+    inherited.update((repo / "analysis/cifar_ledger_0920").glob("*.py"))
+    inherited.update((repo / "analysis/resp_cifar_ee_0920").glob("*.py"))
+    hashes = {str(p.relative_to(repo)): sha(p) for p in sorted(inherited)}
     constants = dict(dims=list(host.DIMS), n_classes=host.N_CLASSES,
                      batch=host.BATCH, steps_per_task=host.STEPS_PER_TASK,
                      n_tasks=host.N_TASKS, lr=host.LR,
