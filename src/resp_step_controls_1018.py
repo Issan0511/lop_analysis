@@ -159,12 +159,12 @@ def probe_finish(P, m, v, capture, seeds, arm, task, step, rates, baseline=None)
         for slot,seed in enumerate(seeds):
             def take(x): return x[slot] if stacked else x
             def norm(x): return float(take(x).double().norm())
-            pn=norm(c['p']); un=norm(c['upd'])
+            pn=norm(c['p']); un=norm(c['upd']); physical=norm(delta)
             row=dict(seed=seed,arm=arm,task=task,step=step,param=PARAMS[i],layer=i//2+1,
                      grad_norm=norm(c['g']),m_norm=norm(mi),v_norm=norm(vi),
                      mhat_norm=norm(c['mhat']),vhat_norm=norm(c['vhat']),
-                     adam_candidate_norm=un,actual_delta_norm=norm(delta),
-                     param_norm=pn,relative_update=None if pn==0 else un/pn,
+                     adam_candidate_norm=un,actual_delta_norm=physical,
+                     param_norm=pn,relative_update=None if pn==0 else physical/pn,candidate_relative_update=None if pn==0 else un/pn,
                      zero_param_norm=pn==0,lr=rates[i//2],tc=None)
             if baseline is not None:
                 a,b=take(c['g']).double().flatten(),take(baseline[i]).double().flatten()
@@ -183,7 +183,7 @@ def group_rows(rows):
     for (seed,arm,task,step,layer), rr in sorted(by.items()):
         assert len(rr)==2 and {r['param'] for r in rr}==set(PARAMS[(layer-1)*2:layer*2]),'INCOMPLETE W+b group'
         norm=lambda key:math.sqrt(sum(r[key]**2 for r in rr))
-        pn=norm('param_norm');un=norm('adam_candidate_norm');gn=norm('grad_norm')
+        pn=norm('param_norm');un=norm('actual_delta_norm');gn=norm('grad_norm')
         row=dict(seed=seed,arm=arm,task=task,step=step,layer=layer,
                  G=gn,U=un,relative_U=None if pn==0 else un/pn,zero_param_norm=pn==0,
                  W_grad_norm=next(r['grad_norm'] for r in rr if r['param'].startswith('W')),
@@ -202,7 +202,7 @@ def q_from_rows(rows, seeds=CAL_SEEDS, k=K):
     if len(keys)!=len(set(keys)) or set(keys)!=expected: raise ValueError('INCOMPLETE calibration trace')
     by={key:r for key,r in zip(keys,[r for r in rows if r['arm'] in ('N','R')])}
     ratios={}; zeros=[]; per_seed=[]
-    for metric,col in (('qG','grad_norm'),('qU','adam_candidate_norm')):
+    for metric,col in (('qG','grad_norm'),('qU','actual_delta_norm')):
         ratios[metric]=[]
         for l in range(3):
             rr=[]

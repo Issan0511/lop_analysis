@@ -85,7 +85,7 @@ def norm_fixture():
                     # Variable steps make mean(norm) and RMS diverge; high bias prevents W-only passing.
                     val=(1+k%7)*(i+1)*(1+s/1000)
                     q=(2 if i%2==0 else 5) if a=='R' else 1
-                    rows.append(dict(seed=s,arm=a,step=k,param=p,grad_norm=val*q,adam_candidate_norm=val*(3 if a=='R' else 1)))
+                    rows.append(dict(seed=s,arm=a,step=k,param=p,grad_norm=val*q,adam_candidate_norm=val*(3 if a=='R' else 1),actual_delta_norm=val*(7 if a=='R' else 1)))
     return rows
 
 
@@ -93,7 +93,7 @@ def norm_check(m=R):
     rows=norm_fixture();out=m.q_from_rows(rows)
     vals={k:[] for k in ('qG','qU')}
     # independent numpy RMS [seed,arm,step,parameter] over W+b, with explicit axes
-    arr=np.asarray([[r['grad_norm'],r['adam_candidate_norm']] for r in rows],dtype=np.float64).reshape(10,2,256,6,2)
+    arr=np.asarray([[r['grad_norm'],r['actual_delta_norm']] for r in rows],dtype=np.float64).reshape(10,2,256,6,2)
     for col,name in enumerate(('qG','qU')):
         for l in range(3):
             rms=np.sqrt((arr[:,:,:,l*2:l*2+2,col]**2).sum(axis=3).mean(axis=2))
@@ -109,7 +109,18 @@ def norm_check(m=R):
     try:m.q_from_rows(zeros)
     except ValueError as e:assert 'CALIBRATION_UNDEFINED' in str(e)
     else:raise AssertionError('one-sided zero accepted')
-    return dict(independent_numpy_float64=True,qG=out['qG'],qU=out['qU'])
+    # Exact sub-ULP physical displacement is zero although Adam's candidate is nonzero.
+    P=[torch.full((2,2) if i%2==0 else (2,),1e20,dtype=torch.float32) for i in range(6)]
+    grads=[torch.ones_like(p) for p in P];mom=[torch.zeros_like(p) for p in P];var=[torch.zeros_like(p) for p in P]
+    cap=R.probe_begin(P,grads,mom,var,1,(1e-3,)*3,'RM')
+    R.native_update(P,grads,mom,var,1,(1e-3,)*3,'RM')
+    actual=R.probe_finish(P,mom,var,cap,[100],'N',11,1,(1e-3,)*3)
+    assert all(r['adam_candidate_norm']>0 and r['actual_delta_norm']==0 for r in actual)
+    ulp=copy.deepcopy(rows)
+    for r in ulp:r['actual_delta_norm']=0.
+    q=m.q_from_rows(ulp)
+    assert q['qU']==[1.,1.,1.] and len([z for z in q['zero_over_zero'] if z['metric']=='qU'])==30,'candidate mistaken for physical displacement'
+    return dict(independent_numpy_float64=True,qG=out['qG'],qU=out['qU'],sub_ulp_candidate_positive_actual_zero=True)
 
 
 def field_check(m=R.RM):
@@ -259,6 +270,7 @@ def main():
       ('backward doubled',R,host_check,"grads=torch.autograd.grad(loss,params)","grads=[2*g for g in torch.autograd.grad(loss,params)]"),
       ('field image IDs rolled',R.RM,field_check,"e2 = d2[ob]","e2 = d2[ob.roll(1)]"),
       ('cached whole-image z0',R.RM,field_check,"z02 = a01 @ p0[2].T + p0[3]","z02 = (a01 @ p0[2].T + p0[3])[:1].expand(N_IMG, -1)"),
+      ('candidate norm substituted for actual U',R,norm_check,"('qU','actual_delta_norm')","('qU','adam_candidate_norm')"),
       ('moment reset',R,log_check,"mm=mi.clone().mul_(.9).add_(g,alpha=1-.9)","mm=torch.zeros_like(mi).add_(g,alpha=1-.9)"),
       ('mean not RMS',R,norm_check,"math.sqrt(sum(float(by[s,a,j,p][col])**2", "math.sqrt(sum(float(by[s,a,j,p][col])"),
       ('W-only ratio',R,norm_check,"for p in PARAMS[2*l:2*l+2])/k)","for p in PARAMS[2*l:2*l+1])/k)"),

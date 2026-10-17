@@ -6,7 +6,7 @@
   "checks": {
     "S-host/noop/logging": {
       "pass_": true,
-      "seconds": 0.32556605711579323,
+      "seconds": 0.2921105199493468,
       "detail": {
         "updates": 75,
         "nonzero_initial_moments": true
@@ -14,14 +14,14 @@
     },
     "S-log": {
       "pass_": true,
-      "seconds": 0.0008763610385358334,
+      "seconds": 0.0009108991362154484,
       "detail": {
         "independent_scalar": true
       }
     },
     "S-norm": {
       "pass_": true,
-      "seconds": 0.2488198629580438,
+      "seconds": 0.28061656607314944,
       "detail": {
         "independent_numpy_float64": true,
         "qG": [
@@ -30,15 +30,16 @@
           4.04888165089458
         ],
         "qU": [
-          3.0,
-          3.0,
-          3.0
-        ]
+          7.0,
+          7.0,
+          7.0
+        ],
+        "sub_ulp_candidate_positive_actual_zero": true
       }
     },
     "S-host/field": {
       "pass_": true,
-      "seconds": 0.014382747933268547,
+      "seconds": 0.012981721898540854,
       "detail": {
         "branch_batches": 2,
         "native_kernel_distinction": true
@@ -46,7 +47,7 @@
     },
     "S-schedule": {
       "pass_": true,
-      "seconds": 0.1844599349424243,
+      "seconds": 0.19202201790176332,
       "detail": {
         "eval_seeds_rejected": true,
         "missing_g0_rejected": true
@@ -54,7 +55,7 @@
     },
     "S-verdict": {
       "pass_": true,
-      "seconds": 0.028522065840661526,
+      "seconds": 0.027916247956454754,
       "detail": {
         "m": 15,
         "scenarios": 6
@@ -71,8 +72,8 @@
           "t10k-labels-idx1-ubyte.gz": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
         },
         "updates": 75,
-        "seconds": 0.17958922102116048,
-        "seconds_per_update": 0.0023945229469488063,
+        "seconds": 0.14236264303326607,
+        "seconds_per_update": 0.0018981685737768808,
         "full_RM_updates": 2160000,
         "historical_runtime_warning": "First 256 updates incur detailed probes; prefix has no probes; current fixture includes all probes."
       }
@@ -97,6 +98,10 @@
     },
     {
       "name": "cached whole-image z0",
+      "detected": true
+    },
+    {
+      "name": "candidate norm substituted for actual U",
       "detected": true
     },
     {
@@ -140,10 +145,10 @@
     "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
     "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
-    "analysis/resp_step_controls_1018/checks.py": "3e055aabae0c41a864203db77077093323b4993837e30a41cdb00270530f3d61",
+    "analysis/resp_step_controls_1018/checks.py": "8515342daa5db41eae6b2dfe7c7946a6972f538204ef18f2107a886614d9ff27",
     "analysis/resp_step_controls_1018/run_rm.py": "da1a733cc917215ed3fe6b213185d79388437878bdca9b0bd7654742ed9a0a19",
     "analysis/resp_step_controls_1018/verdict.py": "ccca13130be806745193d5fe55828f42d6b6f0deae7e8e7c51b3bcc612555d3b",
-    "specs/spec_resp_step_controls_1018.md": "eb645f37ada6f4368e9b377cc690244f78d8270a536fcfceddc06b61818c9305",
+    "specs/spec_resp_step_controls_1018.md": "2ca05f1904e64bac3f1b5759a3aa16ade601238ca83892d629ecc90a224cfba7",
     "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
     "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "src/boundary_gradient_0908.py": "22948b971cd32a18e108788889501b03d59a8436fbf98fe757e6940271a91b5a",
@@ -161,7 +166,7 @@
     "src/resp_cifar5p1_1007.py": "c8d6bedb04d0895f1fea97d2c4a14a11dcfb1eaa5fd64565f8b9668b9b5c729c",
     "src/resp_cifar_ee_0920.py": "3b74d0cabba63241738d1988edfdec3fff48ab070e4d8a74e9e21a8e53b1b7eb",
     "src/resp_ee_0917.py": "699a403375f53829f72cde9f2b47a413c7d5bf9639e278b0e70eed64541a5e6f",
-    "src/resp_step_controls_1018.py": "9453ac0c1147f0e70f5754ff0eae1b879e00d59b96650e44db6fe1242aa44dbe",
+    "src/resp_step_controls_1018.py": "457c128e59b6a6dbcd6285e5c802969fff026062b97bf4130a4819b3d50d59fd",
     "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
     "src/shell_l2_rlmnist_0913.py": "1a3f50e390d0e558935394340edeccd47692d508af23afdfce62a8321c37ced9"
   },
