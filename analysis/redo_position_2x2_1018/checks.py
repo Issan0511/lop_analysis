@@ -331,6 +331,9 @@ def main(out):
     assert R.classify_intervals(boundary)[0] == 'MIXED', 'EQ rejects just outside boundary'
     overlap = R.verdict(synthetic_rows(.001, .1, .101))
     assert overlap['label'] == 'MIXED' and overlap['mixed_reason'] == 'OVERLAPPING_EVIDENCE'
+    constant = R.interval([.1] * 10)
+    assert constant['sd'] == 0 and constant['low'] == constant['high'] == .1
+    assert constant['flags'] == ['DEGENERATE_SD']
     tests['S-readout'] = dict(pass_=True, label_cases=list(label_cases), correct_seed_join=True,
                               missing_duplicate_nonfinite_rejected=True,
                               zero_pos_strict_and_equivalence_inclusive=True,
@@ -349,10 +352,24 @@ def main(out):
             assert admission['status'] == 'BLOCKED_CUDA'
             assert any(e.startswith('BLOCKED_CUDA') for e in admission['blockers'])
         assert not (Path(temp) / 'launch' / 'per_task.csv').exists()
+        # A standalone analyzer must not manufacture a production result from
+        # naked synthetic rows, nor overwrite the saved blocked status.
+        unqualified = Path(temp) / 'unqualified'
+        unqualified.mkdir()
+        R.put(unqualified / 'all_rows.json', synthetic_rows(0, .1, .1))
+        R.put(unqualified / 'verdict.json', dict(status='BLOCKED_CUDA', label=None))
+        previous = R.sha(unqualified / 'verdict.json')
+        try:
+            R.analyze_registered(unqualified)
+            rejected = False
+        except (AssertionError, OSError, ValueError, KeyError):
+            rejected = True
+        assert rejected and R.sha(unqualified / 'verdict.json') == previous
         tests['S-admission'] = dict(pass_=True, missing_G0_rejected=True,
                                     actual_launch_preflight_executed=True,
                                     CUDA_and_registered_protocol_are_not_overridden=True,
-                                    production_started=False, evaluation_rows_absent=True)
+                                    production_started=False, evaluation_rows_absent=True,
+                                    unqualified_analysis_refused_without_overwriting_blocked_verdict=True)
     report = dict(run_id=R.RUN, scope='CPU_SYNTHETIC_ONLY', evaluated_cifar_seed_count=0,
                   generated_utc=R.now(), environment=R.safe_environment(),
                   source_sha256=R.source_hashes(), checks=tests, mutation_negatives=mutations,

@@ -27,6 +27,12 @@ the output directory requests a stop at the next prefix-task or arm boundary.
 Rerunning resumes from a hash-bound task checkpoint or a completed arm; it never
 changes the seed count or falls back to CPU.
 
+`analyze` is a read-only verification of completed registered artifacts. It checks
+the saved admission/G0/check snapshots, current source identity, full output and
+per-arm hashes, and the none/prefix checkpoint equality before recomputing the
+label. It works offline without a currently attached GPU. Raw rows alone cannot
+turn a blocked or synthetic folder into a completed performance result.
+
 `checks.json` distinguishes executable synthetic assertions/mutation negatives
 from the CUDA reproduction that still requires the independent G0 audit.
 Existing recycler compatibility is tested by executing its unchanged nested

@@ -383,7 +383,8 @@ def diagnostic(eng, ids, update, phase):
 def interval(values, simultaneous=True):
     x = np.asarray(values, dtype=np.float64)
     assert x.shape == (10,) and np.isfinite(x).all(), 'ten finite paired seeds required'
-    mean, sd = float(x.mean()), float(x.std(ddof=1))
+    mean = float(x[0]) if bool(np.all(x == x[0])) else float(x.mean())
+    sd = 0.0 if bool(np.all(x == x[0])) else float(x.std(ddof=1))
     level = 1 - .05 / 7 if simultaneous else .95
     width = t_quantile((1 + level) / 2, 9) * sd / math.sqrt(10)
     return dict(mean=mean, median=float(np.median(x)), sd=sd, low=mean - width,
@@ -452,6 +453,70 @@ def write_summary(out, result):
     else:
         text += 'No evaluation accuracy was produced.\n'
     (Path(out) / 'summary.md').write_text(text)
+
+
+def analyze_registered(out):
+    """Reanalyze only complete, source-bound production artifacts, even offline.
+
+    This deliberately has no raw-row shortcut and needs no currently attached
+    GPU. A blocked or synthetic folder cannot acquire a performance verdict by
+    placing forty plausible rows in it.
+    """
+    out = Path(out)
+    provenance = json.loads((out / 'provenance.json').read_text())
+    ident = provenance['identity']
+    assert ident['run_id'] == RUN and ident['source_sha256'] == source_hashes(), 'analysis source identity'
+    assert ident['seeds'] == SEEDS and ident['R'] == 10 and ident['steps'] == STEPS
+    assert ident['branch_task'] == 28 and ident['score_task'] == 29 and ident['tau'] == TAU
+    assert ident['registration_commit'] == REGISTRATION and ident['lr'] == RS.LR
+    admission = json.loads((out / 'admission.json').read_text())
+    assert admission['all_pass'] is True and admission['status'] == 'ADMITTED', 'no admitted production launch'
+    assert admission['source_sha256'] == source_hashes() and admission['environment']['cuda_available'] is True
+    assert admission['protocol']['R'] == 10 and admission['protocol']['device'] == 'cuda'
+    audit_path = out / 'admission_audit.json'
+    assert sha(audit_path) == ident['audit_sha256'] == admission['audit_sha256'], 'admission audit snapshot hash'
+    audit_issues, _ = audit_errors(audit_path)
+    assert not audit_issues, ('invalid saved independent G0', audit_issues)
+    checks_path = out / 'checks.json'
+    assert sha(checks_path) == ident['checks_sha256'] == admission['checks_sha256'], 'admission checks snapshot hash'
+    checks = json.loads(checks_path.read_text())
+    assert checks['all_pass'] is True and checks['source_sha256'] == source_hashes()
+    status = json.loads((out / 'status.json').read_text())
+    assert status['status'] == 'COMPLETE', 'analysis requires a completed production run'
+    manifest = json.loads((out / 'output_manifest.json').read_text())
+    require_identity(manifest['identity'], ident)
+    required = {'admission.json', 'admission_audit.json', 'checks.json', 'provenance.json',
+                'prefix/initial.pt', 'prefix/t01.pt', 'prefix/t28.pt', 'prefix/t29.pt',
+                'intervention_plan.pt', 'fresh_control.csv', 'fresh_end.pt', 'per_task.csv'}
+    for arm in ARMS:
+        required.update(f'arms/{arm}/{name}' for name in
+                        ('done.json', 'rows.json', 'intervention.json', 'post_intervention.pt',
+                         'end.pt', 'diagnostics.json', 'diagnostic_units.npz', 'per_task.csv'))
+    assert required <= set(manifest['files']), 'incomplete production output manifest'
+    for name, digest in manifest['files'].items():
+        p = Path(name)
+        assert not p.is_absolute() and '..' not in p.parts
+        assert sha(out / p) == digest, ('production output hash mismatch', name)
+    rows = []
+    for arm in ARMS:
+        folder = out / 'arms' / arm
+        marker = json.loads((folder / 'done.json').read_text())
+        require_identity(marker['identity'], ident)
+        for name, digest in marker['files'].items():
+            assert Path(name).name == name and sha(folder / name) == digest, ('arm output hash mismatch', arm, name)
+        rows.extend(json.loads((folder / 'rows.json').read_text()))
+    natural_info = json.loads((out / 'arms/none/intervention.json').read_text())['prefix_check']
+    assert all(natural_info.get(k) is True for k in
+               ('all_pass', 'state_bit_exact', 'batches_bit_exact', 'host_rows_exact')), 'none prefix check missing'
+    natural_end = RS.load_pt(out / 'arms/none/end.pt')
+    prefix_end = RS.load_pt(out / 'prefix/t29.pt')
+    assert tree_hash(RS.core_state(natural_end)) == tree_hash(RS.core_state(prefix_end)), 'none prefix checkpoint differs'
+    result = verdict(rows)
+    assert result['status'] == 'COMPLETE', 'completed manifest has incomplete or diverged primary rows'
+    # Deterministic reanalysis is read-only: a differing derivation is an error,
+    # never permission to overwrite a registered result and invalidate its hashes.
+    assert result == json.loads((out / 'verdict.json').read_text()), 'rederived verdict differs from registered output'
+    return result
 
 
 def record_diagnostics(folder, history):
@@ -570,6 +635,9 @@ def run(out, admission):
     shutil.copyfile(ROOT / ('specs/spec_' + RUN + '.md'), out / 'spec.md')
     shutil.copyfile(ROOT / 'specs/spec_six_runs_common_1018.md', out / 'spec_common.md')
     shutil.copyfile(CHECKS, out / 'checks.json')
+    assert sha(admission['audit_path']) == admission['audit_sha256'], 'G0 changed after admission'
+    shutil.copyfile(admission['audit_path'], out / 'admission_audit.json')
+    put(out / 'admission.json', admission)
     prefix = out / 'prefix'
     prefix.mkdir(exist_ok=True)
     active = prefix / 'active.pt'
@@ -679,11 +747,8 @@ def main():
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     if args.command == 'analyze':
-        rows = json.loads((args.out / 'all_rows.json').read_text()) if (args.out / 'all_rows.json').exists() else \
-            [row for arm in ARMS for row in json.loads((args.out / 'arms' / arm / 'rows.json').read_text())]
-        result = verdict(rows)
-        put(args.out / 'verdict.json', result)
-        write_summary(args.out, result)
+        result = analyze_registered(args.out)
+        print(json.dumps(dict(status=result['status'], label=result['label'])))
         return
     report = preflight(args.out, args.integration_audit)
     print(json.dumps(dict(status=report['status'], blockers=report['blockers']), ensure_ascii=False), flush=True)
