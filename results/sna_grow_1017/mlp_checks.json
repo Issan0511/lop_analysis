@@ -1,0 +1,338 @@
+{
+  "run_id": "sna_grow_1017",
+  "part": "mlp",
+  "registration_commit": "2bb76f325dfb087f8c007d8e6eb648dc1ed53246",
+  "source_sha256": {
+    "src/sna_grow_1017_mlp.py": "b615cbcdb06768a19bf5bd4f1ef78873769db1e92723565a9f39f8c224bbcff9",
+    "specs/spec_sna_grow_1017.md": "6fe1df68f72480d5309b7b2bb3a9b23aa46b8f04b91b2ff9602ace2378995f46",
+    "src/controls_cifar5p1_1008.py": "c8f05f3dab2a8a577f277947c08e7a4914990c0161044727345178ed50d715d4",
+    "src/resp_cifar5p1_1007.py": "c8d6bedb04d0895f1fea97d2c4a14a11dcfb1eaa5fd64565f8b9668b9b5c729c",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/cifar_interventions_0920.py": "d079b5185249114d035afcce69d9636ef1db2807e642c3fd879cb2168907f37f",
+    "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341"
+  },
+  "engine_unmodified": {
+    "all_pass": true,
+    "files": {
+      "src/controls_cifar5p1_1008.py": "c8f05f3dab2a8a577f277947c08e7a4914990c0161044727345178ed50d715d4",
+      "src/resp_cifar5p1_1007.py": "c8d6bedb04d0895f1fea97d2c4a14a11dcfb1eaa5fd64565f8b9668b9b5c729c",
+      "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+      "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+      "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+      "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+      "src/cifar_interventions_0920.py": "d079b5185249114d035afcce69d9636ef1db2807e642c3fd879cb2168907f37f",
+      "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341"
+    },
+    "mismatches": {},
+    "reference": "results/controls_cifar5p1_1008/admission_checks.json"
+  },
+  "determinism": {
+    "use_deterministic_algorithms": true,
+    "cudnn_benchmark": false,
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": true,
+    "float32_matmul_precision": "highest",
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "torch_num_threads": 2,
+    "OMP_NUM_THREADS": "2",
+    "torch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "graph": "one training step captured as a CUDA graph (3 warmup steps rolled back), as the host"
+  },
+  "environment": {
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.1",
+    "python": "3.12.3 (main, Apr 15 2024, 18:25:56) [Clang 17.0.6 ]",
+    "cuda": "13.0",
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "driver": "580.178.04",
+    "tf32": false,
+    "matmul_precision": "highest",
+    "deterministic": true,
+    "threads": 2,
+    "cublas": ":4096:8",
+    "cpu_smallest_subnormal_preserved": true,
+    "cuda_smallest_subnormal_preserved": true
+  },
+  "git_hash": "2bb76f325dfb087f8c007d8e6eb648dc1ed53246",
+  "started": "2026-10-17T19:06:28+0900",
+  "K-mlp-grow": {
+    "all_pass": true,
+    "bit_criteria_pass": true,
+    "float64_rel_within_4u": true,
+    "rel_bound_4u": 2.384185791015625e-07,
+    "literal_float64_rel_1em7_pass": false,
+    "literal_float64_rel_1em7_note": "not gating: float32 c/sqrt(x) itself carries up to 4u of rounding; the host SNA alpha on the same fixture misses rel 1e-7 too (max 1.774e-07, 20147/240000 values)",
+    "criteria": {
+      "pre_V_equals_host": true,
+      "pre_alpha_equals_host": true,
+      "switch_vmax_equals_V": true,
+      "switch_flags_all_up": true,
+      "switch_alpha_equals_host_alpha_of_V": true,
+      "post_V_equals_host": true,
+      "post_vmax_equals_running_max": true,
+      "post_alpha_monotone_nonincreasing": true,
+      "post_alpha_bit_equals_float32_formula_of_running_max": true,
+      "post_alpha_rel_le_4u_vs_float64_clip_c_over_sqrt_max_V": true,
+      "post_alpha_rel_le_1e-7_vs_float64_clip_c_over_sqrt_max_V": false
+    },
+    "info": {
+      "post_alpha_rel_max_vs_float64": 1.7745657886322253e-07,
+      "post_alpha_rel_gt_1em7_count": 41614,
+      "post_alpha_values": 720000,
+      "host_alpha_rel_max_vs_float64_same_formula": 1.7739996808750674e-07,
+      "host_alpha_rel_gt_1em7_count": 20147,
+      "host_alpha_values": 240000,
+      "post_updates": 1200,
+      "post_unit_updates_with_V_below_Vmax": 504657,
+      "post_unit_updates_where_Vmax_rose": 215342,
+      "post_unit_updates_alpha_differs_from_host": 342109,
+      "end_units_alpha_at_hi": 90,
+      "end_units_alpha_at_lo": 60,
+      "end_units_host_alpha_at_lo": 0,
+      "end_units_total": 600
+    },
+    "fixture_exercises_rule": true,
+    "mutants": {
+      "vmax_frozen_after_switch": {
+        "expected_failure": "post_vmax_equals_running_max",
+        "failed_criteria": [
+          "post_alpha_bit_equals_float32_formula_of_running_max",
+          "post_vmax_equals_running_max"
+        ],
+        "detected": true
+      },
+      "alpha_follows_V": {
+        "expected_failure": "post_alpha_monotone_nonincreasing",
+        "failed_criteria": [
+          "post_alpha_bit_equals_float32_formula_of_running_max",
+          "post_alpha_monotone_nonincreasing"
+        ],
+        "detected": true
+      },
+      "vmax_initialised_to_1": {
+        "expected_failure": "switch_vmax_equals_V",
+        "failed_criteria": [
+          "post_alpha_bit_equals_float32_formula_of_running_max",
+          "post_vmax_equals_running_max",
+          "switch_alpha_equals_host_alpha_of_V",
+          "switch_vmax_equals_V"
+        ],
+        "detected": true
+      },
+      "vmax_tracked_from_first_update": {
+        "expected_failure": "switch_vmax_equals_V",
+        "failed_criteria": [
+          "post_alpha_bit_equals_float32_formula_of_running_max",
+          "post_vmax_equals_running_max",
+          "switch_alpha_equals_host_alpha_of_V",
+          "switch_vmax_equals_V"
+        ],
+        "detected": true
+      },
+      "ema_of_V_stops_at_switch": {
+        "expected_failure": "post_V_equals_host",
+        "failed_criteria": [
+          "post_V_equals_host"
+        ],
+        "detected": true
+      }
+    },
+    "mutants_all_detected": true,
+    "fixture": {
+      "R": 3,
+      "n": 100,
+      "batch": 32,
+      "updates_before_switch": 400,
+      "updates_after_switch": 1200,
+      "z": "N(0,1) (CPU generator 1017) x per-unit scale; five unit groups per layer (grow / shrink / shrink-then-regrow past the max / tiny -> clip hi / huge then shrink -> clip lo), run r scaled by 1 + 0.25 r",
+      "reference": "independent numpy running max of the recorded float32 V; alpha compared bit-for-bit with clamp(c / sqrt(running max)) in float32 (same op order) and against float64 clip(c / sqrt(max V)) at rel 4u (literal rel 1e-7 reported)"
+    },
+    "seconds": 23.793919801712036
+  },
+  "K-mlp-rep": {
+    "all_pass": true,
+    "host_pass": true,
+    "host": {
+      "rows": {
+        "header_equal": true,
+        "lines": 20,
+        "line_mismatches": 0,
+        "column_mismatches": [],
+        "n_column_mismatches": 0,
+        "bit_equal": true
+      },
+      "V_bit_equal": {
+        "t01_l1": true,
+        "t01_l2": true,
+        "t02_l1": true,
+        "t02_l2": true
+      },
+      "grow_flags_never_raised": true,
+      "vmax_untouched": true,
+      "seconds": 2.2286171913146973
+    },
+    "sna_grow_task1_pass": true,
+    "sna_grow_task1": {
+      "rows": {
+        "header_equal": true,
+        "lines": 10,
+        "line_mismatches": 0,
+        "column_mismatches": [],
+        "n_column_mismatches": 0,
+        "bit_equal": true
+      },
+      "V_bit_equal": true,
+      "vmax_equals_V_after_switch": true,
+      "grow_flags_up_after_switch": true,
+      "switched_after_task": 1
+    },
+    "mutants": {
+      "one_float32_ulp_in_train_acc": {
+        "detected": true,
+        "line_mismatches": 1
+      },
+      "grow_from_first_update": {
+        "detected": true,
+        "line_mismatches": 10,
+        "n_column_mismatches": 243
+      }
+    },
+    "mutants_all_detected": true,
+    "record": {
+      "per_task": "results/controls_cifar5p1_1008/c2/SNA/per_task.csv",
+      "V_history": "/home/issan/Projects/obsidian-research-data/controls_cifar5p1_1008/results/controls_cifar5p1_1008/c2/SNA/V_history.npz",
+      "per_task_sha256": "b185069abaacd1cc5b1449cc6490a0cf97f2da5458a22b322ec1c6df48231177"
+    },
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "tasks": [
+      1,
+      2
+    ],
+    "comparison": "host-formatted CSV lines (%.10g, all columns incl. eff_rank) byte-equal to the record; V after each task bit-equal to the backed-up record V_history.npz",
+    "seconds": 7.4649741649627686
+  },
+  "K-mlp-graph": {
+    "all_pass": true,
+    "real": [
+      {
+        "task": 1,
+        "state_bit_equal": true,
+        "rows_byte_equal": true,
+        "grow_on": true,
+        "units_V_below_Vmax": 0,
+        "units_total": 2000
+      },
+      {
+        "task": 2,
+        "state_bit_equal": true,
+        "rows_byte_equal": true,
+        "grow_on": true,
+        "units_V_below_Vmax": 1838,
+        "units_total": 2000
+      },
+      {
+        "task": 3,
+        "state_bit_equal": true,
+        "rows_byte_equal": true,
+        "grow_on": true,
+        "units_V_below_Vmax": 1785,
+        "units_total": 2000
+      }
+    ],
+    "fresh_control": {
+      "state_bit_equal": true,
+      "flags_down_after_reset": true
+    },
+    "graph_vs_eager_bit_equal": true,
+    "grow_exercised": true,
+    "steps_with_grow_active": 1560,
+    "static_flags_without_recapture": {
+      "per_task": [
+        {
+          "task": 1,
+          "state_bit_equal": true,
+          "rows_byte_equal": true,
+          "grow_on": true,
+          "units_V_below_Vmax": 0,
+          "units_total": 2000
+        },
+        {
+          "task": 2,
+          "state_bit_equal": true,
+          "rows_byte_equal": true,
+          "grow_on": true,
+          "units_V_below_Vmax": 1838,
+          "units_total": 2000
+        }
+      ],
+      "bit_equal": true
+    },
+    "mutants": {
+      "python_flag_no_recapture": {
+        "per_task": [
+          {
+            "task": 1,
+            "state_bit_equal": true,
+            "rows_byte_equal": true,
+            "grow_on": true,
+            "units_V_below_Vmax": 0,
+            "units_total": 2000
+          },
+          {
+            "task": 2,
+            "state_bit_equal": false,
+            "rows_byte_equal": false,
+            "grow_on": true,
+            "units_V_below_Vmax": 1153,
+            "units_total": 2000
+          }
+        ],
+        "detected": true
+      }
+    },
+    "seeds": [
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109
+    ],
+    "tasks": [
+      1,
+      2,
+      3
+    ],
+    "compared": "P, Adam m/v, tc, V, Vmax, grow flags, acc_sum, bad_step, last_hit and the per-task rows after every task; then the host fresh control (flags reset) from the task-3 state",
+    "seconds": 32.51959204673767
+  },
+  "required": [
+    "K-mlp-rep",
+    "K-mlp-grow",
+    "K-mlp-graph"
+  ],
+  "all_pass": true,
+  "seconds": 67.05819249153137,
+  "peak_rss_bytes": 2179231744,
+  "peak_cuda_bytes": 2132135424
+}

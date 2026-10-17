@@ -1,0 +1,182 @@
+{
+  "run_id": "sna_grow_1017",
+  "slots": [
+    [
+      "SNA",
+      10
+    ],
+    [
+      "SNA",
+      11
+    ],
+    [
+      "SNA",
+      12
+    ],
+    [
+      "SNA",
+      13
+    ],
+    [
+      "SNA",
+      14
+    ],
+    [
+      "SNA",
+      15
+    ],
+    [
+      "SNA",
+      16
+    ],
+    [
+      "SNA",
+      17
+    ],
+    [
+      "SNA",
+      18
+    ],
+    [
+      "SNA",
+      19
+    ],
+    [
+      "SNA+grow1",
+      10
+    ],
+    [
+      "SNA+grow1",
+      11
+    ],
+    [
+      "SNA+grow1",
+      12
+    ],
+    [
+      "SNA+grow1",
+      13
+    ],
+    [
+      "SNA+grow1",
+      14
+    ],
+    [
+      "SNA+grow1",
+      15
+    ],
+    [
+      "SNA+grow1",
+      16
+    ],
+    [
+      "SNA+grow1",
+      17
+    ],
+    [
+      "SNA+grow1",
+      18
+    ],
+    [
+      "SNA+grow1",
+      19
+    ]
+  ],
+  "epochs": 400,
+  "lr": 0.001,
+  "n_tasks": 30,
+  "arms": {
+    "SNA": {
+      "c": [
+        0.6,
+        0.6,
+        0.6,
+        0.6
+      ],
+      "site": [
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ]
+      ],
+      "frz": null,
+      "pp": false,
+      "fixconv": false,
+      "fixfc": false,
+      "fcamp": 1.0,
+      "grow": false
+    },
+    "SNA+grow1": {
+      "c": [
+        0.6,
+        0.6,
+        0.6,
+        0.6
+      ],
+      "site": [
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ],
+        [
+          "c",
+          0.6
+        ]
+      ],
+      "frz": 1,
+      "pp": false,
+      "fixconv": false,
+      "fixfc": false,
+      "fcamp": 1.0,
+      "grow": true
+    }
+  },
+  "host": "src/rlcifar_cnn_0908.py (init, subset, streams, net)",
+  "engine": "grouped conv / bmm bundle, one epoch per CUDA graph",
+  "gits": [
+    {
+      "git_hash": "2bb76f325dfb087f8c007d8e6eb648dc1ed53246",
+      "git_dirty_src": true
+    }
+  ],
+  "resumed": [],
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 5060 Ti",
+  "torch": "2.13.0+cu130",
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "wall_clock_s_this_process": 3517.090498685837,
+  "ckpt_tasks": [
+    1,
+    2,
+    3,
+    5,
+    10,
+    20,
+    30,
+    40,
+    50
+  ],
+  "cuda_max_mem_mb": 711.15380859375
+}
