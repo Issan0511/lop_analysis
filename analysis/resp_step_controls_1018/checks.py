@@ -298,7 +298,9 @@ def cuda_suite():
                 graph=R.RC.Engine(R.CAL_SEEDS,X,graph=True)
                 core=R.RC.core_state
                 labels=torch.stack([R.RC.E.RC.task_labels(native.g_lab[s]) for s in native.seeds]).to(dev)
-                native.Y.copy_(labels);graph.Y.copy_(labels)
+                graph_labels=torch.stack([R.RC.E.RC.task_labels(graph.g_lab[s]) for s in graph.seeds]).to(dev)
+                assert torch.equal(labels,graph_labels), 'CUDA fixture label streams differ'
+                native.Y.copy_(labels);graph.Y.copy_(graph_labels)
                 ids=torch.arange(16,device=dev)[None,:].expand(10,-1)
                 for eng in (native,graph):
                     for j in range(3):eng.one_update(ids+j*16)
