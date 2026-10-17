@@ -49,9 +49,11 @@ def exclusive():
                 words = Path(f'/proc/{int(line)}/cmdline').read_bytes().split(b'\0')
             except FileNotFoundError:
                 continue
-            executable = Path(os.fsdecode(words[0])).name
+            executable = Path(os.fsdecode(words[0]).split()[0]).name
             desktop = executable in {'gnome-remote-desktop-daemon','gnome-shell','nautilus','ptyxis'}
-            chromium_gpu = b'--type=gpu-process' in words
+            # Chromium may rewrite /proc cmdline to a single space-separated
+            # process title rather than retaining NUL-separated argv entries.
+            chromium_gpu = b'--type=gpu-process' in b' '.join(words).split()
             assert desktop or chromium_gpu, f'GPU busy: {line} {words!r}'
         yield
 
