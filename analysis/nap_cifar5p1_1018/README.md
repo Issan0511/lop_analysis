@@ -58,3 +58,17 @@ and all thirty tasks, joins by seed, and applies two-sided exact sign tests plus
 across the two registered NaP-versus-KKT1/SNA comparisons. Equivalence uses [d_(2),d_(9)]
 within [-.005,.005]. Unresolved evidence remains unresolved. NaP-versus-R is report-only.
 NaP-versus-SNA/KKT1 is an **OPEN_COMPARISON**, not a paper-predicted winner.
+
+## Added ranking predictions, before NaP production
+
+The OPEN_COMPARISON statement above records the initial registration. Issa added
+**KKT1 > NaP** and **SNA > NaP** at 2026-10-18 02:07:26/02:08:13 JST. No KKT1
+versus SNA order or quantitative probability was supplied. These are Issa's added
+predictions, rather than rankings already established by the paper.
+The authoritative append-only record is
+`specs/amendments/spec_nap_cifar5p1_1018_prediction_20261018T020813JST.md` and its
+JSON. Filename/status-only independent inspection found no NaP calibration or
+evaluation data at 02:08:57 JST; the only calibration launch was BLOCKED_CUDA.
+Sources, original spec/checks, two-sided tests and Holm family of two are unchanged.
+Preserve original runtime prediction metadata and cite the amendment commit/hash
+alongside it in the final report. UNRESOLVED is not a comparator victory.
