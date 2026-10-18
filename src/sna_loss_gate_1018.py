@@ -146,6 +146,7 @@ def run(slots, out, tasks, epochs, device, lr=1e-3, graph=True, resume=True, log
                        status="RUNNING", scientific_verdict=None)
     (out / "provenance.json").write_text(json.dumps(prov, indent=2))
     for task in range(first, tasks + 1):
+        log(f"starting task {task}/{tasks}", flush=True)
         b.new_labels()
         sce, sacc = E.switch_eval(b.P, b.X, b.Y, b.act)
         accs, losses = [], []
@@ -161,6 +162,13 @@ def run(slots, out, tasks, epochs, device, lr=1e-3, graph=True, resume=True, log
                                     last_gate=float(b.act.gate[0][r, 0]),
                                     loss_ref=float(b.act.loss_ref[0][r, 0]),
                                     gate_enabled=bool(b.act.enabled[0][r, 0])))
+            if epoch == 0 or (epoch + 1) % 50 == 0:
+                progress = dict(status="RUNNING", task=task, epoch=epoch + 1,
+                                tasks=tasks, epochs=epochs)
+                tmp = out / "progress.json.tmp"
+                tmp.write_text(json.dumps(progress, indent=2))
+                tmp.replace(out / "progress.json")
+                log(f"progress task={task}/{tasks} epoch={epoch + 1}/{epochs}", flush=True)
             if b.bad.any() or not np.isfinite(mean_loss).all():
                 E.save_atomic(dict(meta=meta, state=b.full_state(), task=task, epoch=epoch + 1),
                               out / "failed_state.pt")
@@ -187,6 +195,7 @@ def run(slots, out, tasks, epochs, device, lr=1e-3, graph=True, resume=True, log
         log(f"task {task}/{tasks}: mean online {a.mean():.5f}", flush=True)
     prov["status"] = "COMPLETED"
     (out / "provenance.json").write_text(json.dumps(prov, indent=2))
+    (out / "progress.json").write_text(json.dumps(dict(status="COMPLETED", task=tasks, epoch=epochs)))
 
 
 def main():
