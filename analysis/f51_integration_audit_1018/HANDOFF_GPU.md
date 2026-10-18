@@ -4,7 +4,7 @@
 
 **2026-10-18 10:00 JST追加: 走2のcap-matched fresh切り分け。** Issa「Capのfreshが悪かったわけではないん？」「切り分けて」を受け、元のfreshはcapなしだった点を確認し、同じ走2worktreeに事後追試を追加した。原spec・訓練ソース・原verdict・原rawは不変。追試spec `spec_cap_act_box_fresh_followup_1018.md` を新しいfresh-cap結果取得前の `7893b589` で固定、実装・原入力manifest・CPU検証・幅の事後集計は `af7bb74f`。F51/ELU・ReLU、seed 0–9、元の後期hard窓21/23/25/27/29を各々P0/Adam初期状態から学習。capには元のtask1終端半径を使い、最初のAdam更新後から適用する。fresh cap差とcontinual cap差の差を10seedで比較する。既存結果を知った後の追試であり独立な事前登録再現とは数えない。
 
-`cap-fresh-followup-1018.service` が共有GPU lock待ちで、現CNN腕の終了後にCUDA graph/eager検証→追試20条件（各10seed）→原task29 fresh完全一致検査→集計→hash照合backupを行う。実装入口は走2worktreeの `analysis/cap_act_box_fresh_followup_1018/run.py`、進行は `results/cap_act_box_2x2_1018/posthoc_fresh/status.json`、ログは同じ場所の `run.log`。部分出力の上書き・自動再走はしない。新raw backup先は `obsidian-research-data/cap_act_box_2x2_1018/posthoc_fresh_1018/`。走3のpauseは維持。CNNとは同時学習しない。
+`cap-fresh-followup-1018b.service` が共有GPU lock待ちで、現CNN腕の終了後にCUDA graph/eager検証→追試20条件（各10seed）→原task29 fresh完全一致検査→集計→hash照合backupを行う。現在の追試HEADは `5c436bd2`。10:07の実行前レビューで、freshのcapヒット0件も正当な結果として保存するよう修正しCPU検証を再PASSした。旧serviceはGPU待機中に停止し、CUDA検証・新学習結果が一切未作成だったことを `prelaunch_review_1018/` に保存した。半径・学習条件・許容誤差の変更ではない。実装入口は走2worktreeの `analysis/cap_act_box_fresh_followup_1018/run.py`、進行は `results/cap_act_box_2x2_1018/posthoc_fresh/status.json`、ログは同じ場所の `run.log`。部分出力の上書き・自動再走はしない。新raw backup先は `obsidian-research-data/cap_act_box_2x2_1018/posthoc_fresh_1018/`。走3のpauseは維持。CNNとは同時学習しない。
 
 Issaの追加指摘「5+1のELUは幅が大幅に増えていないのでは」に対し、原unit診断のhashを照合して `posthoc_fresh/width_summary.md` と全課題・seed別CSVに保存した。capなしELUの前活性幅の平均はF51 t1→29で第1層5.74→10.25、第2層3.20→5.46（t21→29はほぼ横ばい）。RC t1→50では16.98→239.04、12.91→501.45。第2層の平均unit相対位置はF51 −0.43、RC −1.96。F51は幅増加も負側への沈みも小さいという記述と整合する。箱間の学習率・更新数・課題分布が違うため、幅だけが因果的理由とは断定しない。
 
