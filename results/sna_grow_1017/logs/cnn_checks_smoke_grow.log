@@ -1,0 +1,80 @@
+K-cnn-grow: pass=True max_err=0.0
+{
+ "arms": [
+  "SNA",
+  "SNA+grow1",
+  "S:c0.6-a3-c0.6-a0.6+grow1"
+ ],
+ "steps": 2300,
+ "activation_step": 600,
+ "knots_step_s": [
+  [
+   0,
+   1.0
+  ],
+  [
+   300,
+   9.0
+  ],
+  [
+   600,
+   4.0
+  ],
+  [
+   800,
+   0.5
+  ],
+  [
+   1100,
+   30.0
+  ],
+  [
+   1400,
+   0.005
+  ],
+  [
+   1600,
+   0.005
+  ],
+  [
+   1800,
+   100000.0
+  ],
+  [
+   2000,
+   100000.0
+  ],
+  [
+   2300,
+   1.0
+  ]
+ ],
+ "alpha_eq_host_before_activation": true,
+ "V_ema_bit_identical_to_host_all_steps": true,
+ "activation": {
+  "alpha_unchanged_at_activation": true,
+  "Vmax_eq_V_at_activation": true,
+  "grow_on_eq_ada_for_grow_runs": true,
+  "grow_on_run2_sites": [
+   true,
+   false,
+   true,
+   false
+  ],
+  "grow_on_run0_none": true,
+  "ada_unchanged": true
+ },
+ "monotone_violations_grow_runs": 0,
+ "max_rel_err_vs_float32_ref": 0.0,
+ "max_rel_err_vs_float64_ref": 1.0832192026553809e-07,
+ "float64_note": "ref64 = clip(float64(c_f32)/sqrt(float64(maxV_f32))); the float32 alpha carries two roundings (sqrt, divide), bound 2^-23 = 1.19e-7; reported, the pass uses the float32 ref",
+ "fixed_sites_of_grow_run_unchanged": true,
+ "run0_SNA_alpha_eq_host_after_activation": true,
+ "control_host_alpha_increases_count": 180660,
+ "control_mutation_Vmax_from_step1_mismatch_count": 262420,
+ "grow_entries_total": 591948,
+ "grow_entries_at_hi_clip": 27093,
+ "grow_entries_at_lo_clip": 82189,
+ "grow_entries_Vmax_gt_V": 461390
+}
+all_pass True

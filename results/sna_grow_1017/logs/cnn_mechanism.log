@@ -1,0 +1,53 @@
+[20:52:56] loaded R=20 at task 20: {'Vmax_eq_ckpt': True, 'grow_on_eq_rule': True, 'alpha_eq_ckpt_rule': True, 'grow_runs_grow_on_all_true_at_adaptive_sites': True}
+[20:52:58] epoch 1 done
+[20:52:59] epoch 2: SNA f1 0.260 f2 0.101 c2 0.514  SNA+grow1 f1 0.191 f2 0.142 c2 0.355
+[20:52:59] epoch 3: SNA f1 0.321 f2 0.161 c2 0.600  SNA+grow1 f1 0.198 f2 0.147 c2 0.365
+[20:53:00] epoch 5: SNA f1 0.411 f2 0.277 c2 0.517  SNA+grow1 f1 0.222 f2 0.160 c2 0.374
+[20:53:02] epoch 10: SNA f1 0.507 f2 0.383 c2 0.571  SNA+grow1 f1 0.288 f2 0.208 c2 0.398
+[20:53:06] epoch 25: SNA f1 0.635 f2 0.578 c2 0.509  SNA+grow1 f1 0.475 f2 0.426 c2 0.475
+[20:53:14] epoch 50: SNA f1 0.649 f2 0.614 c2 0.549  SNA+grow1 f1 0.560 f2 0.553 c2 0.505
+[20:53:29] epoch 100: SNA f1 0.684 f2 0.657 c2 0.605  SNA+grow1 f1 0.574 f2 0.587 c2 0.509
+[20:54:56] epoch 400: SNA f1 0.705 f2 0.669 c2 0.586  SNA+grow1 f1 0.554 f2 0.566 c2 0.502
+[20:54:56] replay vs run task 21: 1080 values compared, 0 mismatches
+Mean slope (mean over all inputs of 1 + sin(2 alpha z)), task 20 -> 21 replay, mean over seeds 10-12.
+
+| frame | SNA c2 | SNA f1 | SNA f2 | SNA+grow1 c2 | SNA+grow1 f1 | SNA+grow1 f2 |
+|---|---:|---:|---:|---:|---:|---:|
+| 0 updates | 0.552 | 0.699 | 0.689 | 0.519 | 0.573 | 0.580 |
+| 75 updates | 0.487 | 0.221 | 0.077 | 0.345 | 0.209 | 0.139 |
+| 3 epochs | 0.600 | 0.321 | 0.161 | 0.365 | 0.198 | 0.147 |
+| 5 epochs | 0.517 | 0.411 | 0.277 | 0.374 | 0.222 | 0.160 |
+| 10 epochs | 0.571 | 0.507 | 0.383 | 0.398 | 0.288 | 0.208 |
+
+Same trajectory, alpha held at its value at the switch (counterfactual, report only):
+
+| frame | SNA c2 | SNA f1 | SNA f2 | SNA+grow1 c2 | SNA+grow1 f1 | SNA+grow1 f2 |
+|---|---:|---:|---:|---:|---:|---:|
+| 0 updates | 0.552 | 0.699 | 0.689 | 0.519 | 0.573 | 0.580 |
+| 75 updates | 0.445 | 0.200 | 0.162 | 0.345 | 0.209 | 0.139 |
+| 3 epochs | 0.409 | 0.422 | 0.453 | 0.365 | 0.198 | 0.147 |
+| 5 epochs | 0.284 | 0.605 | 0.647 | 0.374 | 0.222 | 0.160 |
+| 10 epochs | 0.225 | 0.725 | 0.754 | 0.398 | 0.288 | 0.208 |
+
+Median alpha / alpha_at_switch (median over seeds 10-12 of the unit median):
+
+| frame | SNA c2 | SNA f1 | SNA f2 | SNA+grow1 c2 | SNA+grow1 f1 | SNA+grow1 f2 |
+|---|---:|---:|---:|---:|---:|---:|
+| 0 updates | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| 75 updates | 1.02 | 1.30 | 1.38 | 1.00 | 1.00 | 1.00 |
+| 3 epochs | 1.15 | 2.24 | 2.70 | 1.00 | 1.00 | 1.00 |
+| 5 epochs | 1.31 | 3.42 | 4.38 | 1.00 | 1.00 | 1.00 |
+| 10 epochs | 1.77 | 5.21 | 6.01 | 1.00 | 1.00 | 1.00 |
+
+Known (sna_cnn_cause_1009 bundle A, SNA, seeds 10-12; dist_anim/chase_cf.json):
+
+| frame | SNA c2 | SNA f1 | SNA f2 |
+|---|---:|---:|---:|
+| 切替の直前 | 0.574 | 0.732 | 0.661 |
+| 75 更新 | 0.508 | 0.240 | 0.099 |
+| 3 epoch | 0.517 | 0.325 | 0.165 |
+| 5 epoch | 0.597 | 0.424 | 0.299 |
+| 10 epoch | 0.619 | 0.505 | 0.384 |
+
+Replay vs run (task-21 row of per_task.csv, 1080 values): 0 mismatches.
+-> /home/issan/Projects/claude/wt/sna_grow_1017/results/sna_grow_1017/cnn_mechanism.json  (126s)

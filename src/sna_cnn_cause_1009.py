@@ -399,6 +399,7 @@ class Bundle:
         logits = out[8]
         lossv = F.cross_entropy(logits.reshape(-1, N_CLASSES), yb.reshape(-1),
                                 reduction="none").view(self.R, BATCH).mean(1)
+        self.observe_loss(lossv.detach())
         self.acc_ep.add_((logits.detach().argmax(-1) == yb).float().mean(1))
         grads = torch.autograd.grad(lossv.sum(), self.P)
         with torch.no_grad():
@@ -414,6 +415,9 @@ class Bundle:
                 else:
                     p.sub_(self.lr * (mi / c1) / ((vi / c2).sqrt() + 1e-8))
             self.act.update([out[0].detach(), out[2].detach(), out[4].detach(), out[6].detach()])
+
+    def observe_loss(self, lossv: torch.Tensor) -> None:
+        """Extension hook; the original engine leaves every training tensor unchanged."""
 
     def epoch_body(self) -> None:
         self.acc_ep.zero_()

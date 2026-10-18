@@ -1,0 +1,497 @@
+MUTANT SUITE: the grow class is _MutFreezeRealloc (this suite must fail)
+  [off host] [19:42:37] task  1   19.5s  SNA 0.9756  SNA+frz1 0.9756
+  [off host] done /home/issan/Projects/claude/wt/sna_grow_1017/results/sna_grow_1017/_cnn_checks_work_mut_freeze_realloc/off_host
+  [off grow] [19:43:01] task  1   20.0s  SNA 0.9756  SNA+grow1 0.9756
+  [off grow] done /home/issan/Projects/claude/wt/sna_grow_1017/results/sna_grow_1017/_cnn_checks_work_mut_freeze_realloc/off_grow
+K-cnn-off: pass=True max_err=0.0
+{
+ "epochs_task1": 400,
+ "seconds_host": 24.79080891609192,
+ "seconds_grow": 24.79081130027771,
+ "grow_SNA_vs_grow_SNA+grow1": {
+  "P": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0
+  },
+  "m": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0
+  },
+  "v": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0
+  },
+  "V": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0
+  }
+ },
+ "grow_SNA_vs_host_SNA": {
+  "P": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0
+  },
+  "m": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0
+  },
+  "v": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0
+  },
+  "V": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0
+  }
+ },
+ "host_SNA_vs_host_SNA+frz1": {
+  "P": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0
+  },
+  "m": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0
+  },
+  "v": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0
+  },
+  "V": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0
+  }
+ },
+ "tc_grow": 30000.0,
+ "tc_host": 30000.0,
+ "curves_all_epochs_identical": true,
+ "per_task_rows_identical_except_arm": true,
+ "hook_end_of_task1": {
+  "grow_on_slot1_all_true": true,
+  "grow_on_slot0_all_false": true,
+  "Vmax_slot1_eq_V_slot1": true,
+  "ada_slot1_still_true": true,
+  "alpha_slot1_eq_alpha_slot0_after_hook": true,
+  "host_frz_slot1_fixA_eq_grow_alpha": true,
+  "ckpt_run_state_has_Vmax_grow_on": true
+ },
+ "alpha_med_task1_end": {
+  "c1": 2.9604506492614746,
+  "c2": 0.7501073479652405,
+  "f1": 0.22991949319839478,
+  "f2": 0.159565269947052
+ }
+}
+K-cnn-grow: pass=True max_err=0.0
+{
+ "synthetic": {
+  "pass": true,
+  "arms": [
+   "SNA",
+   "SNA+grow1",
+   "S:c0.6-a3-c0.6-a0.6+grow1"
+  ],
+  "steps": 2300,
+  "activation_step": 600,
+  "knots_step_s": [
+   [
+    0,
+    1.0
+   ],
+   [
+    300,
+    9.0
+   ],
+   [
+    600,
+    4.0
+   ],
+   [
+    800,
+    0.5
+   ],
+   [
+    1100,
+    30.0
+   ],
+   [
+    1400,
+    0.005
+   ],
+   [
+    1600,
+    0.005
+   ],
+   [
+    1800,
+    100000.0
+   ],
+   [
+    2000,
+    100000.0
+   ],
+   [
+    2300,
+    1.0
+   ]
+  ],
+  "alpha_eq_host_before_activation": true,
+  "V_ema_bit_identical_to_host_all_steps": true,
+  "activation": {
+   "alpha_unchanged_at_activation": true,
+   "Vmax_eq_V_at_activation": true,
+   "grow_on_eq_ada_for_grow_runs": true,
+   "grow_on_run2_sites": [
+    true,
+    false,
+    true,
+    false
+   ],
+   "grow_on_run0_none": true,
+   "ada_unchanged": true
+  },
+  "monotone_violations_grow_runs": 0,
+  "max_rel_err_vs_float32_ref": 0.0,
+  "max_rel_err_vs_float64_ref": 1.0832192026553809e-07,
+  "float64_note": "ref64 = clip(float64(c_f32)/sqrt(float64(maxV_f32))); the float32 alpha carries two roundings (sqrt, divide), bound 2^-23 = 1.19e-7; reported, the pass uses the float32 ref",
+  "fixed_sites_of_grow_run_unchanged": true,
+  "run0_SNA_alpha_eq_host_after_activation": true,
+  "control_host_alpha_increases_count": 180660,
+  "control_mutation_Vmax_from_step1_mismatch_count": 262420,
+  "grow_entries_total": 591948,
+  "grow_entries_at_hi_clip": 27093,
+  "grow_entries_at_lo_clip": 82189,
+  "grow_entries_Vmax_gt_V": 461390
+ },
+ "train_path": {
+  "class": "_MutFreezeRealloc",
+  "epochs": 2,
+  "steps": 150,
+  "pass": true,
+  "asserts": {
+   "P_slot0_eq_slot1_at_start": true,
+   "phi_calls_eq_4_per_step": true,
+   "updates_eq_steps": true,
+   "grow_on_eq_rule_start_and_end": true,
+   "phi_out_eq_grow_rule_every_call": true,
+   "dphi_eq_grow_rule_every_call": true,
+   "alpha_fn_eq_grow_rule_every_call": true,
+   "Vmax_eq_running_max_every_update": true,
+   "power_slot1_grow_rule_output_ne_host_rule_somewhere": true,
+   "slot0_grow_rule_is_host_rule": true,
+   "P_slot1_ne_slot0_after_training": true
+  },
+  "counts_per_slot_[SNA,SNA+grow1]": {
+   "mis_phi": [
+    0,
+    0
+   ],
+   "mis_dphi": [
+    0,
+    0
+   ],
+   "mis_alpha": [
+    0,
+    0
+   ],
+   "mis_vmax": [
+    0,
+    0
+   ],
+   "diff_host": [
+    0,
+    27048194
+   ],
+   "n_entries": [
+    49632000,
+    49632000
+   ]
+  },
+  "frac_slot1_phi_entries_where_host_rule_differs": 0.5449748952288845
+ },
+ "train_path_mutation_controls": {
+  "phi_host": {
+   "control_detects": true,
+   "failed_asserts": [
+    "phi_out_eq_grow_rule_every_call",
+    "dphi_eq_grow_rule_every_call",
+    "P_slot1_ne_slot0_after_training"
+   ],
+   "counts_per_slot_[SNA,SNA+grow1]": {
+    "mis_phi": [
+     0,
+     26918033
+    ],
+    "mis_dphi": [
+     0,
+     26918385
+    ],
+    "mis_alpha": [
+     0,
+     0
+    ],
+    "mis_vmax": [
+     0,
+     0
+    ],
+    "diff_host": [
+     0,
+     26918033
+    ],
+    "n_entries": [
+     49632000,
+     49632000
+    ]
+   }
+  },
+  "alphaV": {
+   "control_detects": true,
+   "failed_asserts": [
+    "phi_out_eq_grow_rule_every_call",
+    "dphi_eq_grow_rule_every_call",
+    "alpha_fn_eq_grow_rule_every_call",
+    "P_slot1_ne_slot0_after_training"
+   ],
+   "counts_per_slot_[SNA,SNA+grow1]": {
+    "mis_phi": [
+     0,
+     26918033
+    ],
+    "mis_dphi": [
+     0,
+     26918385
+    ],
+    "mis_alpha": [
+     0,
+     33042
+    ],
+    "mis_vmax": [
+     0,
+     0
+    ],
+    "diff_host": [
+     0,
+     26918033
+    ],
+    "n_entries": [
+     49632000,
+     49632000
+    ]
+   }
+  }
+ }
+}
+K-cnn-graph: pass=False max_err=0.8125
+{
+ "C_task1_epochs": 20,
+ "A_same_labels": {
+  "bit_identical_P_m_v_tc_acc_bad_V_Vmax_ada_cval_fixA_grow_on": true,
+  "max_abs_diff": 0.0,
+  "epoch_acc_identical": true,
+  "graph_used": true,
+  "Vmax_entries_raised_in_2_epochs_slot1": 232,
+  "entries_Vmax_gt_V_slot1_end": 231,
+  "entries_alpha_slot1_ne_host_rule_end": 223,
+  "alpha_slot1_eq_grow_rule_end": true,
+  "P_slot1_ne_slot0_graph": true,
+  "P_slot1_ne_slot0_eager": true,
+  "n_entries_slot1": 232
+ },
+ "B_task2_labels": {
+  "bit_identical_P_m_v_tc_acc_bad_V_Vmax_ada_cval_fixA_grow_on": true,
+  "max_abs_diff": 0.0,
+  "epoch_acc_identical": true,
+  "graph_used": true,
+  "Vmax_entries_raised_in_2_epochs_slot1": 110,
+  "entries_Vmax_gt_V_slot1_end": 232,
+  "entries_alpha_slot1_ne_host_rule_end": 225,
+  "alpha_slot1_eq_grow_rule_end": true,
+  "P_slot1_ne_slot0_graph": true,
+  "P_slot1_ne_slot0_eager": true,
+  "n_entries_slot1": 232
+ },
+ "mutation_A_no_Vmax_in_state": {
+  "bit_identical_P_m_v_tc_acc_bad_V_Vmax_ada_cval_fixA_grow_on": false,
+  "max_abs_diff": 0.015269279479980469,
+  "epoch_acc_identical": true,
+  "graph_used": true,
+  "Vmax_entries_raised_in_2_epochs_slot1": 232,
+  "entries_Vmax_gt_V_slot1_end": 231,
+  "entries_alpha_slot1_ne_host_rule_end": 223,
+  "alpha_slot1_eq_grow_rule_end": true,
+  "P_slot1_ne_slot0_graph": true,
+  "P_slot1_ne_slot0_eager": true,
+  "n_entries_slot1": 232,
+  "expected": "a difference (shows the check sees a V_max missing from the capture's restore)",
+  "control_detects": true
+ },
+ "C_capture_in_task1": {
+  "bit_identical_P_m_v_tc_acc_bad_V_Vmax_ada_cval_fixA_grow_on": false,
+  "max_abs_diff": 0.8125,
+  "epoch_acc_identical_task1_and_task2": false,
+  "graph_captured_in_task1_and_kept": true,
+  "grow_on_slot1_all_true_end": true,
+  "entries_alpha_slot1_ne_host_rule_end": 227,
+  "P_slot1_ne_slot0_graph": false,
+  "P_slot1_ne_slot0_eager": true
+ },
+ "mutation_C_freeze_reallocates": {
+  "bit_identical_P_m_v_tc_acc_bad_V_Vmax_ada_cval_fixA_grow_on": false,
+  "max_abs_diff": 0.8125,
+  "epoch_acc_identical_task1_and_task2": false,
+  "graph_captured_in_task1_and_kept": true,
+  "grow_on_slot1_all_true_end": true,
+  "entries_alpha_slot1_ne_host_rule_end": 227,
+  "P_slot1_ne_slot0_graph": false,
+  "P_slot1_ne_slot0_eager": true,
+  "expected": "a difference (shows the check sees a graph that misses the hook's writes)",
+  "control_detects": true
+ }
+}
+  [erun uninterrupted] [19:44:23] task  1    3.0s  SNA 0.8264  SNA+grow1 0.8264
+  [erun uninterrupted] [19:44:26] task  2    2.8s  SNA 0.8405  SNA+grow1 0.8405
+  [erun uninterrupted] [19:44:29] task  3    2.8s  SNA 0.8244  SNA+grow1 0.8244
+  [erun uninterrupted] done /home/issan/Projects/claude/wt/sna_grow_1017/results/sna_grow_1017/_cnn_checks_work_mut_freeze_realloc/erun_uninterrupted
+  [erun interrupted] [19:44:37] task  1    3.0s  SNA 0.8264  SNA+grow1 0.8264
+  [erun interrupted] [19:44:40] task  2    2.8s  SNA 0.8405  SNA+grow1 0.8405
+  [erun resumed] [19:44:44] resumed at task 3
+  [erun resumed] [19:44:47] task  3    3.0s  SNA 0.8244  SNA+grow1 0.8299
+  [erun resumed] done /home/issan/Projects/claude/wt/sna_grow_1017/results/sna_grow_1017/_cnn_checks_work_mut_freeze_realloc/erun_interrupted
+K-cnn-resume: pass=False max_err=102.74693775177002
+{
+ "epochs_per_task": 400,
+ "save_at_task2_epoch": 173,
+ "state_act_keys": [
+  "V",
+  "Vmax",
+  "ada",
+  "cval",
+  "fixA",
+  "grow_on"
+ ],
+ "state_has_Vmax_grow_on": true,
+ "at_save_slot1_entries_Vmax_gt_V": 14,
+ "at_save_slot1_P_ne_slot0": false,
+ "resumed": {
+  "bit_identical_P_m_v_tc_acc_bad_V_Vmax_ada_cval_fixA_grow_on": false,
+  "max_abs_diff": 102.74693775177002,
+  "bit_identical_P_m_v_V": false,
+  "max_abs_diff_P_m_v_V": 55.89756393432617,
+  "post_resume_epoch_acc_identical": false,
+  "generators_identical": true
+ },
+ "mutation_Vmax_grow_on_not_loaded": {
+  "bit_identical_P_m_v_tc_acc_bad_V_Vmax_ada_cval_fixA_grow_on": false,
+  "max_abs_diff": 78.80383777618408,
+  "bit_identical_P_m_v_V": true,
+  "max_abs_diff_P_m_v_V": 0.0,
+  "post_resume_epoch_acc_identical": true,
+  "generators_identical": true,
+  "control_detects": false,
+  "control_rule": "detects only if P/m/v/V and the post-resume epoch accuracies both change"
+ },
+ "erun_task_boundary": {
+  "epochs_per_task": 50,
+  "killed_after_task2": true,
+  "resumed_at": [
+   3
+  ],
+  "bit_identical_state": false,
+  "max_abs_diff": 67.4079179763794,
+  "tc_equal": true,
+  "per_task_rows_identical": false,
+  "curves_identical": false,
+  "ckpt_t01_t02_t03_have_Vmax_grow_on": true,
+  "pass": false
+ },
+ "ckpt_reload": {
+  "from": [
+   "SNA_seed10_t02.pt",
+   "SNA+grow1_seed10_t02.pt"
+  ],
+  "against": [
+   "SNA_seed10_t03.pt",
+   "SNA+grow1_seed10_t03.pt"
+  ],
+  "R2_load_runs": {
+   "task": 2,
+   "verify_after_load": {
+    "Vmax_eq_ckpt": true,
+    "grow_on_eq_rule": true,
+    "alpha_eq_ckpt_rule": true,
+    "grow_runs_grow_on_all_true_at_adaptive_sites": true
+   },
+   "task3_vs_ckpt_t03": {
+    "runs": [
+     {
+      "arm": "SNA",
+      "bit_identical": false,
+      "max_abs_diff": 63.955763816833496,
+      "bit_identical_P_m_v_V": true,
+      "max_abs_diff_P_m_v_V": 0.0
+     },
+     {
+      "arm": "SNA+grow1",
+      "bit_identical": false,
+      "max_abs_diff": 67.4079179763794,
+      "bit_identical_P_m_v_V": false,
+      "max_abs_diff_P_m_v_V": 55.620086669921875
+     }
+    ],
+    "tc_equal": true
+   }
+  },
+  "R1_load_run_grow": {
+   "verify_after_load": {
+    "Vmax_eq_ckpt": true,
+    "grow_on_eq_rule": true,
+    "alpha_eq_ckpt_rule": true,
+    "grow_runs_grow_on_all_true_at_adaptive_sites": true
+   },
+   "task3_vs_ckpt_t03_reported": {
+    "runs": [
+     {
+      "arm": "SNA+grow1",
+      "bit_identical": false,
+      "max_abs_diff": 63.98924732208252,
+      "bit_identical_P_m_v_V": false,
+      "max_abs_diff_P_m_v_V": 52.98584747314453
+     }
+    ],
+    "tc_equal": true
+   }
+  },
+  "mutation_posthoc_lib_keys": {
+   "verify_after_load": {
+    "Vmax_eq_ckpt": false,
+    "grow_on_eq_rule": false,
+    "alpha_eq_ckpt_rule": false,
+    "grow_runs_grow_on_all_true_at_adaptive_sites": false
+   },
+   "task3_vs_ckpt_t03": {
+    "runs": [
+     {
+      "arm": "SNA",
+      "bit_identical": false,
+      "max_abs_diff": 63.955763816833496,
+      "bit_identical_P_m_v_V": true,
+      "max_abs_diff_P_m_v_V": 0.0
+     },
+     {
+      "arm": "SNA+grow1",
+      "bit_identical": false,
+      "max_abs_diff": 64.05366516113281,
+      "bit_identical_P_m_v_V": true,
+      "max_abs_diff_P_m_v_V": 0.0
+     }
+    ],
+    "tc_equal": true
+   },
+   "control_detects": false,
+   "control_rule": "detects only if verify_after_load flags the load and the grow run's task-3 P/m/v/V differ from t03"
+  },
+  "pass": false
+ }
+}
+all_pass False -> /home/issan/Projects/claude/wt/sna_grow_1017/results/sna_grow_1017/cnn_checks_mutants/freeze_realloc.json
+mutant freeze_realloc exit=0
