@@ -2,6 +2,10 @@
 
 更新: 2026-10-18 JST。依頼者Issaは全6走の実装・実行を指示済み。方向予測も論文の主張から固定済み。既存実装と実験条件を引き継いで残りを実行する。
 
+**2026-10-18 11:50 JST確認: 走6は完走しRESCUED。** CHf_Bは11:20:01に成功、verdictは11:20:29に成功。task21–30のonline精度はCHf 49.5182%、CHf_B 94.1551%。50%以上は6/10→10/10、全10seedで改善し、paired差+44.6369 pt、95%区間[+23.0946, +66.1792]。CHf_Bのseed別窓精度は91.5516〜95.6409%。raw CSVを独立に再集計してverdictとの一致を確認。CPU checksとGPU releaseはall_pass=true。CNN/乱数ラベル/30課題におけるCH′＋現在幅に応じたbias射影の結果であり、4層のどこが効いたかは未分離。
+
+CNN retainerは11:21:32にRETAINED_LOCALLY。12,591ファイル・35,709,580,467 bytesのbackupをhash検証し、走6の結果をlocal commit `c4e3bbd1` に保存済み。現controllerはCOMMANDS_COMPLETEDで、追加のGPU再走は不要。走1/2/4/5/6は完走、走3だけIssaの指示によりpauseを継続する。以下の走6RUNNING記述は履歴。
+
 **2026-10-18 10:00 JST追加: 走2のcap-matched fresh切り分け。** Issa「Capのfreshが悪かったわけではないん？」「切り分けて」を受け、元のfreshはcapなしだった点を確認し、同じ走2worktreeに事後追試を追加した。原spec・訓練ソース・原verdict・原rawは不変。追試spec `spec_cap_act_box_fresh_followup_1018.md` を新しいfresh-cap結果取得前の `7893b589` で固定、実装・原入力manifest・CPU検証・幅の事後集計は `af7bb74f`。F51/ELU・ReLU、seed 0–9、元の後期hard窓21/23/25/27/29を各々P0/Adam初期状態から学習。capには元のtask1終端半径を使い、最初のAdam更新後から適用する。fresh cap差とcontinual cap差の差を10seedで比較する。既存結果を知った後の追試であり独立な事前登録再現とは数えない。
 
 **10:11 JST追試完了（直後の10:07待機記録は履歴）。** 10:10:12にGPU取得、10:11:03に全20条件を完了。CPU/CUDA検証・全stream照合・課題29の元fresh20 activation/seed値再現すべてPASS。ELUはfreshのcap差−0.056 pt [−0.084, −0.028]に対し継続差−1.999 pt、交互作用−1.943 pt [−2.416, −1.471]。ReLUはfresh差−0.036 pt [−0.073, +0.002]、継続差−3.601 pt、交互作用−3.565 pt [−7.450, +0.319]。6比較の同時95%区間で、ReLU継続差/交互作用は未確定。ELUの約2 pt低下はfresh費用だけでは説明できない。詳しくは走2の `posthoc_fresh/readout_ja.md`。元の8比較の判定は変更しない。
