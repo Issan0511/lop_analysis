@@ -6,6 +6,8 @@
 
 新走の正本は `../redo_chb_rlcifar_1018/analysis/redo_chb_rlcifar_1018/HANDOFF_GPU.md`（worktree基点）と同runのspec。最新状態・ログは新worktreeの `results/redo_chb_rlcifar_1018/host_continuation/{state.json,training.log}`。正式launcherが4腕を逐次実行し、終了後にread-only再検証と新run専用のhash付きraw退避を行う。既存controller/state/serviceおよび走3の停止は変更していない。実行中に新runのsource/HEADを変更しない。GitHub公開・統合・worktree削除は行わない。
 
+**次回以降のGPU実行方針（2026-10-18 Issa指示）:** 「次からでいいけどもっとまとめて実行したらいいやん」。今の10seed単位の束ね方に加え、比較腕もまとめてGPUで処理できる実装を優先して検討・計測する。今回なら4腕×10seedの40モデルをまとめる構成が候補。各モデルのbatch16、更新回数、独立したAdam/RNG/介入状態、課題の逐次依存を保持し、短い実データ検査で数値・stream・介入の一致と実速度・VRAMを確認してから次回本走に採用する。学習バッチを大きくして実験条件を変える指示ではない。現在の本走は変更せず、現時点で高速化率を確約しない。
+
 **2026-10-18 11:50 JST確認: 走6は完走しRESCUED。** CHf_Bは11:20:01に成功、verdictは11:20:29に成功。task21–30のonline精度はCHf 49.5182%、CHf_B 94.1551%。50%以上は6/10→10/10、全10seedで改善し、paired差+44.6369 pt、95%区間[+23.0946, +66.1792]。CHf_Bのseed別窓精度は91.5516〜95.6409%。raw CSVを独立に再集計してverdictとの一致を確認。CPU checksとGPU releaseはall_pass=true。CNN/乱数ラベル/30課題におけるCH′＋現在幅に応じたbias射影の結果であり、4層のどこが効いたかは未分離。
 
 CNN retainerは11:21:32にRETAINED_LOCALLY。12,591ファイル・35,709,580,467 bytesのbackupをhash検証し、走6の結果をlocal commit `c4e3bbd1` に保存済み。現controllerはCOMMANDS_COMPLETEDで、追加のGPU再走は不要。走1/2/4/5/6は完走、走3だけIssaの指示によりpauseを継続する。以下の走6RUNNING記述は履歴。
