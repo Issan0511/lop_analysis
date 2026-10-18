@@ -52,7 +52,7 @@ def check(out,review):
             idx=b.order[:,:M.CF.BATCH];xb=b.X[b.ar,idx]
             # Compare q+b to native bias-fused affine at each layer with identical
             # inputs. Bound gamma(fan_in+2)*sum|w*x| plus subnormal terms.
-            out,ins=M.CF.forward(b.P,xb,b.act,with_inputs=True)
+            activations,ins=M.CF.forward(b.P,xb,b.act,with_inputs=True)
             for l,tag in enumerate(M.CN.SITES):
                 R=b.R;w=b.P[2*l];bias=b.P[2*l+1]
                 if l<2:
@@ -63,7 +63,7 @@ def check(out,review):
                     q=torch.bmm(ins[l],w.transpose(1,2));extra=q+bias[:,None]
                     magnitude=torch.bmm(ins[l].abs(),w.abs().transpose(1,2))+bias.abs()[:,None]
                 k=2*(M.CF.D_IN[l]+2);eps=2**-24;gamma=k*eps/(1-k*eps)
-                residual=(out[2*l]-extra).abs().double();bound=gamma*magnitude.double()+k*np.finfo(np.float32).smallest_subnormal
+                residual=(activations[2*l]-extra).abs().double();bound=gamma*magnitude.double()+k*np.finfo(np.float32).smallest_subnormal
                 roundoff[tag]=dict(max_abs=float(residual.max()),max_bound=float(bound.max()),pass_=bool((residual<=bound).all()),
                                    bound_basis='two affine paths: gamma_(2*(fan_in+2))*sum_abs_products + underflow bound')
         del b
