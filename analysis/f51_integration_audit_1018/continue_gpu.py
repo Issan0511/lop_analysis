@@ -169,6 +169,19 @@ def verify_audit():
     assert data['historical_current_runtime']['all_pass'] is True
     return sha(AUDIT)
 
+def verified_cnn_production_steps():
+    run=RUNS[5];wt=BASE/'wt'/run;root=wt/'results'/run
+    records=[json.loads((root/name).read_text()) for name in ('checks.json','gpu_release.json')]
+    for record in records:
+        assert record.get('all_pass') is True, 'CNN validation incomplete'
+        assert record.get('sources'), 'CNN validation lacks source hashes'
+        for path,digest in record['sources'].items():
+            assert sha(wt/path)==digest, 'stale CNN validation: '+path
+    assert records[0]['sources']==records[1]['sources']
+    assert records[1].get('independent_reviewer'), 'CNN source review absent'
+    assert sha(root/'independent_review.json')==records[1]['review_sha256']
+    return [item for item in steps(run) if item[0] not in ('cpu_checks','gpu_checks')]
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('mode',choices=('plan','run'))
@@ -177,6 +190,8 @@ def main():
     parser.add_argument('--resume-chb',action='store_true',
                         help='Resume the already validated CHB launch manifest without rewriting its CPU check evidence')
     parser.add_argument('--resume-nap-readout',action='store_true')
+    parser.add_argument('--resume-cnn-production',action='store_true',
+                        help='Require current CPU/GPU validation and run only CNN production/readout')
     parser.add_argument('--independent-queue',action='store_true',
                         help='Separate controller lock, with blocking shared GPU admission for explicit queued recovery')
     args=parser.parse_args()
@@ -185,6 +200,8 @@ def main():
         plan[RUNS[4]]=[('resume',dict(argv=[PY,'-m','analysis.'+RUNS[4]+'.launch','run','--resume'],lock=False))]
     if args.resume_nap_readout and RUNS[1] in plan:
         plan[RUNS[1]]=[x for x in plan[RUNS[1]] if x[0] in ('comparators','verdict')]
+    if args.resume_cnn_production and RUNS[5] in plan:
+        plan[RUNS[5]]=verified_cnn_production_steps()
     if args.independent_queue:
         os.environ['SIX_GPU_QUEUE']='1'
     if args.mode=='plan':
