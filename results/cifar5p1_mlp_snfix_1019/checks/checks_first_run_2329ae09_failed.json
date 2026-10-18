@@ -1,0 +1,93 @@
+{
+  "scope": "implementation checks only; no performance verdict",
+  "all_pass": false,
+  "checks": {
+    "S-fixed": {
+      "pass": false,
+      "per_arm": {
+        "SN06": {
+          "autograd_vs_formula_f64": 4.440892098500626e-16,
+          "phi_f32_over_bound": 0.24360982435826714,
+          "dphi_f32_over_bound": 0.14506979971962497,
+          "same_as_SnakeFamily_at_alpha": true,
+          "alpha_constant_after_2_tasks": true,
+          "alpha_constant_in_rows": false,
+          "ok": false
+        },
+        "SN3": {
+          "autograd_vs_formula_f64": 4.440892098500626e-16,
+          "phi_f32_over_bound": 0.3095627979602224,
+          "dphi_f32_over_bound": 0.18564463546752202,
+          "same_as_SnakeFamily_at_alpha": true,
+          "alpha_constant_after_2_tasks": true,
+          "alpha_constant_in_rows": true,
+          "ok": true
+        }
+      },
+      "mutants": {
+        "alpha_drifts_like_SNA": {
+          "detected": true
+        }
+      },
+      "seconds": 3.3
+    },
+    "S-frz": {
+      "pass": false,
+      "frozenSnake_without_freeze_is_SNA": true,
+      "task1_rows_equal_SNA": true,
+      "frozen_alpha_is_SNA_task1_alpha": true,
+      "alpha_kept_at_task3_start": true,
+      "SNA_alpha_moves_after_task1": true,
+      "alpha_stats_constant_in_rows": true,
+      "later_rows_differ_from_SNA": true,
+      "fresh_equals_SNA_fresh": false,
+      "mutants": {
+        "freeze_one_task_late": {
+          "detected": true
+        }
+      },
+      "seconds": 13.3
+    },
+    "S-graph": {
+      "pass": true,
+      "graph_equals_eager": {
+        "SN06": true,
+        "SN3": true,
+        "SNAfrz1": true
+      },
+      "mutants": {
+        "eager_lr_2^-20_larger": {
+          "detected": true
+        }
+      },
+      "seconds": 20.4
+    },
+    "S-nochange-early": {
+      "pass": false,
+      "R": {
+        "rows": 20,
+        "identical_to_committed_0920": false
+      },
+      "SNA": {
+        "rows": 20,
+        "identical_to_committed_0920": true
+      },
+      "mutants": {
+        "R_lr_2^-20_larger": {
+          "detected": true
+        }
+      },
+      "seconds": 5.5
+    }
+  },
+  "git": {
+    "git_hash": "2329ae09e197e18ee58f5021f71157c15c41654c",
+    "dirty_src_analysis": [],
+    "dirty_src_analysis_specs": []
+  },
+  "torch": "2.13.0+cu130",
+  "device": "cuda",
+  "torch_threads": 2,
+  "spec": "specs/spec_cifar5p1_mlp_snfix_1019.md",
+  "seconds": 44.8
+}
