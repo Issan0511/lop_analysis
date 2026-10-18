@@ -2,6 +2,10 @@
 
 更新: 2026-10-18 JST。依頼者Issaは全6走の実装・実行を指示済み。方向予測も論文の主張から固定済み。既存実装と実験条件を引き継いで残りを実行する。
 
+**2026-10-18 12:04 JST: 改訂した新走1をホストGPUで開始。** 新runは別worktree `redo_chb_rlcifar_1018`、RC/raw/ReLUのnone→redo→CHB→both、各200課題・seed10–19。予測はCHB_POLICY_CARRIES＋REDO_SHORTFALL。19ソースはCPU/独立reviewの記録および実装commit `5e44f9a9` と同一。ホストの正式CUDA検査9項目がPASSし、99検査保存物をhash照合した。実行HEADは `c552641ef5de10442564defb5f96fbf74ecba1d1` に固定、専用 `redo-chb-rlcifar-1018.service` で本走を開始し、none腕のRUNNINGとCUDAプロセスを確認。旧5+1走1のCOMPLETE/MIXEDと予測不成立は保持する。以下の「走1完走」は旧走を指す。
+
+新走の正本は `../redo_chb_rlcifar_1018/analysis/redo_chb_rlcifar_1018/HANDOFF_GPU.md`（worktree基点）と同runのspec。最新状態・ログは新worktreeの `results/redo_chb_rlcifar_1018/host_continuation/{state.json,training.log}`。正式launcherが4腕を逐次実行し、終了後にread-only再検証と新run専用のhash付きraw退避を行う。既存controller/state/serviceおよび走3の停止は変更していない。実行中に新runのsource/HEADを変更しない。GitHub公開・統合・worktree削除は行わない。
+
 **2026-10-18 11:50 JST確認: 走6は完走しRESCUED。** CHf_Bは11:20:01に成功、verdictは11:20:29に成功。task21–30のonline精度はCHf 49.5182%、CHf_B 94.1551%。50%以上は6/10→10/10、全10seedで改善し、paired差+44.6369 pt、95%区間[+23.0946, +66.1792]。CHf_Bのseed別窓精度は91.5516〜95.6409%。raw CSVを独立に再集計してverdictとの一致を確認。CPU checksとGPU releaseはall_pass=true。CNN/乱数ラベル/30課題におけるCH′＋現在幅に応じたbias射影の結果であり、4層のどこが効いたかは未分離。
 
 CNN retainerは11:21:32にRETAINED_LOCALLY。12,591ファイル・35,709,580,467 bytesのbackupをhash検証し、走6の結果をlocal commit `c4e3bbd1` に保存済み。現controllerはCOMMANDS_COMPLETEDで、追加のGPU再走は不要。走1/2/4/5/6は完走、走3だけIssaの指示によりpauseを継続する。以下の走6RUNNING記述は履歴。
