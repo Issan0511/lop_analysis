@@ -1,0 +1,279 @@
+{
+  "scope": "implementation checks only; no performance verdict",
+  "all_pass": true,
+  "checks": {
+    "smoke/S-fresh": {
+      "task": 1,
+      "batch_hash_is_the_task": true,
+      "snake_twins_identical": true,
+      "reproduces_continual_task1": true,
+      "initial_state_equals_t00": true,
+      "mutants": {
+        "fresh_keeps_adam_moments": {
+          "detected": true
+        }
+      },
+      "pass": true,
+      "seconds": 3.8
+    },
+    "smoke/S-lref": {
+      "per_run": {
+        "SNA_seed9000": {
+          "recomputed": 0.48204652965068817,
+          "stored": 0.48204652965068817,
+          "ok": "True"
+        },
+        "SNA_seed9001": {
+          "recomputed": 0.6525459885597229,
+          "stored": 0.6525459885597229,
+          "ok": "True"
+        },
+        "SNAfrz1_seed9000": {
+          "recomputed": 0.48204652965068817,
+          "stored": 0.48204652965068817,
+          "ok": "True"
+        },
+        "SNAfrz1_seed9001": {
+          "recomputed": 0.6525459885597229,
+          "stored": 0.6525459885597229,
+          "ok": "True"
+        },
+        "NEO_seed9000": {
+          "recomputed": 0.48204652965068817,
+          "stored": 0.48204652965068817,
+          "ok": "True"
+        },
+        "NEO_seed9001": {
+          "recomputed": 0.6525459885597229,
+          "stored": 0.6525459885597229,
+          "ok": "True"
+        }
+      },
+      "mutants": {
+        "window_shifted_by_2": {
+          "detected": true
+        },
+        "first78": {
+          "detected": true
+        },
+        "mean_not_median": {
+          "detected": true
+        },
+        "all780": {
+          "detected": true
+        },
+        "lower_middle": {
+          "detected": true
+        }
+      },
+      "pass": "True",
+      "seconds": 0.0
+    },
+    "smoke/S-eval": {
+      "task": 1,
+      "per_slot": {
+        "R_seed9000": {
+          "train": {
+            "engine_float64": 0.668,
+            "reference_float64": 0.668,
+            "near_ties": 0,
+            "recorded_float32": 0.668,
+            "recorded_minus_reference_samples": 0
+          },
+          "test": {
+            "engine_float64": 0.684,
+            "reference_float64": 0.684,
+            "near_ties": 0,
+            "recorded_float32": 0.684,
+            "recorded_minus_reference_samples": 0
+          }
+        },
+        "R_seed9001": {
+          "train": {
+            "engine_float64": 0.6312,
+            "reference_float64": 0.6312,
+            "near_ties": 0,
+            "recorded_float32": 0.6312,
+            "recorded_minus_reference_samples": 0
+          },
+          "test": {
+            "engine_float64": 0.604,
+            "reference_float64": 0.604,
+            "near_ties": 0,
+            "recorded_float32": 0.604,
+            "recorded_minus_reference_samples": 0
+          }
+        },
+        "SNA_seed9000": {
+          "train": {
+            "engine_float64": 0.8444,
+            "reference_float64": 0.8444,
+            "near_ties": 0,
+            "recorded_float32": 0.8444,
+            "recorded_minus_reference_samples": 0
+          },
+          "test": {
+            "engine_float64": 0.788,
+            "reference_float64": 0.788,
+            "near_ties": 0,
+            "recorded_float32": 0.788,
+            "recorded_minus_reference_samples": 0
+          }
+        },
+        "SNA_seed9001": {
+          "train": {
+            "engine_float64": 0.7668,
+            "reference_float64": 0.7668,
+            "near_ties": 0,
+            "recorded_float32": 0.7668,
+            "recorded_minus_reference_samples": 0
+          },
+          "test": {
+            "engine_float64": 0.716,
+            "reference_float64": 0.716,
+            "near_ties": 0,
+            "recorded_float32": 0.716,
+            "recorded_minus_reference_samples": 0
+          }
+        },
+        "SNAfrz1_seed9000": {
+          "train": {
+            "engine_float64": 0.8444,
+            "reference_float64": 0.8444,
+            "near_ties": 0,
+            "recorded_float32": 0.8444,
+            "recorded_minus_reference_samples": 0
+          },
+          "test": {
+            "engine_float64": 0.788,
+            "reference_float64": 0.788,
+            "near_ties": 0,
+            "recorded_float32": 0.788,
+            "recorded_minus_reference_samples": 0
+          }
+        },
+        "SNAfrz1_seed9001": {
+          "train": {
+            "engine_float64": 0.7668,
+            "reference_float64": 0.7668,
+            "near_ties": 0,
+            "recorded_float32": 0.7668,
+            "recorded_minus_reference_samples": 0
+          },
+          "test": {
+            "engine_float64": 0.716,
+            "reference_float64": 0.716,
+            "near_ties": 0,
+            "recorded_float32": 0.716,
+            "recorded_minus_reference_samples": 0
+          }
+        },
+        "NEO_seed9000": {
+          "train": {
+            "engine_float64": 0.8444,
+            "reference_float64": 0.8444,
+            "near_ties": 0,
+            "recorded_float32": 0.8444,
+            "recorded_minus_reference_samples": 0
+          },
+          "test": {
+            "engine_float64": 0.788,
+            "reference_float64": 0.788,
+            "near_ties": 0,
+            "recorded_float32": 0.788,
+            "recorded_minus_reference_samples": 0
+          }
+        },
+        "NEO_seed9001": {
+          "train": {
+            "engine_float64": 0.7668,
+            "reference_float64": 0.7668,
+            "near_ties": 0,
+            "recorded_float32": 0.7668,
+            "recorded_minus_reference_samples": 0
+          },
+          "test": {
+            "engine_float64": 0.716,
+            "reference_float64": 0.716,
+            "near_ties": 0,
+            "recorded_float32": 0.716,
+            "recorded_minus_reference_samples": 0
+          }
+        }
+      },
+      "near_ties": 0,
+      "mutants": {
+        "evaluated_with_the_other_activation": {
+          "detected": true
+        }
+      },
+      "pass": "True",
+      "seconds": 81.0
+    },
+    "smoke/S-cost": {
+      "timing": [
+        {
+          "task": 1,
+          "train_s": 3.0018529891967773,
+          "diag_s": 0.5999071598052979,
+          "total_s": 3.7904112339019775
+        },
+        {
+          "task": 2,
+          "train_s": 2.906377077102661,
+          "diag_s": 0.3137052059173584,
+          "total_s": 3.2883007526397705
+        },
+        {
+          "task": "fresh_t1",
+          "total_s": 3.076929807662964
+        }
+      ],
+      "cuda_max_mem_mb": 1758.0234375,
+      "wall_clock_s": 13.16603398323059,
+      "pass": true,
+      "seconds": 0.0
+    }
+  },
+  "env": {
+    "python": "3.12.3",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "torch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "cudnn": 92000,
+    "numpy": "2.5.1",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "torch_threads": 20,
+    "cuda_matmul_fp32_precision": "ieee",
+    "cudnn_conv_fp32_precision": "ieee",
+    "cudnn_enabled": true,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "deterministic_algorithms": true,
+    "deterministic_warn_only": false,
+    "cublas_workspace_config": ":4096:8",
+    "amp": false,
+    "dtype": "float32"
+  },
+  "git": {
+    "git_hash": "cfe6132d18ae79990c86aff6bdfd9f1afb48fedf",
+    "branch": "claude/neokunekune_cifar5p1_cnn_1018",
+    "dirty_src_analysis_specs": [],
+    "time": "2026-10-18 21:34:26 +0900"
+  },
+  "sources_sha256": {
+    "src/neokunekune_cifar5p1_cnn_1018_checks.py": "4cfba7c43dac0fa2a8d59bf15aa47eae503e52aef86dfba6d7a1166d3d2ef691",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/neokunekune_cifar5p1_cnn_1018.py": "bf4d7980d7f144113c31dcd4bac051a1f534be8e4e5507cf857f18cb834bd092",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/rlcifar_cnn_0908.py": "168f624eb1475dea1a9cad4ceb010a74f40adefcf1db3af8c5617198e991b00f",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+    "src/sna_cnn_cause_1009.py": "a05cfaa3867052edc9083a457c99303c69b2b0ccc713eaadeb6203d7b7e14965"
+  },
+  "spec_sha256": "70f5c65b3610ec52e44030f617f20d276a56b08072210781c95b588c92e33842",
+  "seconds": 87.6
+}
