@@ -1,8 +1,8 @@
 {
   "run_id": "redo_chb_rlcifar_1018",
   "scope": "CUDA_REAL_DATA_RELEASE",
-  "all_pass": false,
-  "status": "BLOCKED_CUDA",
+  "all_pass": true,
+  "status": "PASS",
   "source_sha256": {
     "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "analysis/redo_chb_rlcifar_1018/checks.py": "050458e5d10a19412913f02b4cc5ccd84d01fe3065255347f280dcf8d4bea04e",
@@ -139,20 +139,24 @@
     "torch": "2.13.0+cu130",
     "numpy": "2.5.1",
     "cuda_build": "13.0",
-    "cuda_available": false,
+    "cuda_available": true,
     "nvidia_devices": [
-      "/dev/nvidia-caps"
+      "/dev/nvidia-modeset",
+      "/dev/nvidia-uvm",
+      "/dev/nvidia-uvm-tools",
+      "/dev/nvidia0",
+      "/dev/nvidiactl"
     ],
-    "nvidia_smi_returncode": 9,
-    "nvidia_smi_output": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.",
+    "nvidia_smi_returncode": 0,
+    "nvidia_smi_output": "Sun Oct 18 12:02:26 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 580.178.04             Driver Version: 580.178.04     CUDA Version: 13.0     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 5060 Ti     Off |   00000000:01:00.0  On |                  N/A |\n|  0%   38C    P5             13W /  180W |    1466MiB /  16311MiB |     15%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            7543    C+G   ...c/gnome-remote-desktop-daemon        130MiB |\n|    0   N/A  N/A            7587      G   /usr/bin/gnome-shell                    216MiB |\n|    0   N/A  N/A            8123      G   /usr/bin/Xwayland                         6MiB |\n|    0   N/A  N/A           15733    C+G   /usr/bin/nautilus                        92MiB |\n|    0   N/A  N/A           17382    C+G   ...rack-uuid=3190708988185955192        140MiB |\n|    0   N/A  N/A           20685    C+G   ...rack-uuid=3190708988185955192        100MiB |\n|    0   N/A  N/A          321730    C+G   ...88185955192 --disable-logging         76MiB |\n|    0   N/A  N/A          639398      G   /opt/YouTube Music/youtube-music         49MiB |\n|    0   N/A  N/A          748476      G   ...rack-uuid=3190708988185955192        166MiB |\n|    0   N/A  N/A          890678    C+G   /usr/bin/ptyxis                          46MiB |\n|    0   N/A  N/A         3477114      G   ...nap-store/1447/bin/snap-store         58MiB |\n+-----------------------------------------------------------------------------------------+",
     "tf32_matmul": false,
     "tf32_cudnn": false,
     "deterministic": true,
     "threads": 2,
     "cublas_workspace": ":4096:8"
   },
-  "checked_utc": "2026-10-17T18:00:46.705336+00:00",
-  "git_hash": "5e44f9a9bc7143e4ba567da81c5aea0754e45188",
+  "checked_utc": "2026-10-18T03:02:27.054953+00:00",
+  "git_hash": "b672bd88a4de8e6e0888beec4db3e67217cbc33d",
   "proofs": {
     "cpu_checks.json": {
       "path": "/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/results/redo_chb_rlcifar_1018/cpu_checks.json",
@@ -163,54 +167,97 @@
       "sha256": "8fde274684b25027d02469f0a2b5b973833a81cc7c5d74f8b9f57cd31db8329e"
     }
   },
-  "blockers": [
-    "BLOCKED_CUDA: real CUDA checks cannot execute on CPU"
-  ],
+  "blockers": [],
   "checks": {
     "R10_none_native": {
-      "status": "NOT_RUN",
-      "reason": "pending genuine CUDA verification",
-      "pass": false
+      "fixture": "real-data R10 2 tasks x 1 epoch",
+      "core_sha256": "c52295f2e5267b585913b4be3164c131ad86c7519f4cd90f5edb4892f1c440d0",
+      "rows": 20,
+      "normalized_rows_sha256": "c2b0cf6db7ad53d97283289df52db07fc50e8a40598ebc78bb39e6a54dc31d97",
+      "pass": true
     },
     "R10_CHB_native": {
-      "status": "NOT_RUN",
-      "reason": "pending genuine CUDA verification",
-      "pass": false
+      "fixture": "real-data R10 2 tasks x 1 epoch",
+      "core_sha256": "c8a109028ca4f7a2b96127030241e019b331e0d9d96e4bb5672f016cfcd4c403",
+      "rows": 20,
+      "normalized_rows_sha256": "62562ae9d3585b012e6ecd1375fffd53bbf2bb3e383f392b3253aa7bb6172640",
+      "pass": true
     },
     "R10_graph_eager": {
-      "status": "NOT_RUN",
-      "reason": "pending genuine CUDA verification",
-      "pass": false
+      "arms": [
+        "none",
+        "CHB",
+        "both"
+      ],
+      "R": 10,
+      "redo_event_times": [
+        1560,
+        3120
+      ],
+      "native_step_shapes": true,
+      "pass": true
     },
     "capture_rollback": {
-      "status": "NOT_RUN",
-      "reason": "pending genuine CUDA verification",
-      "pass": false
+      "initial_parameters_moments_EMA_streams_byte_equal": true,
+      "real_step_count_at_ready": 0,
+      "real_recycle_events_at_ready": 0,
+      "pass": true
     },
     "event_checkpoint_resume": {
-      "status": "NOT_RUN",
-      "reason": "pending genuine CUDA verification",
-      "pass": false
-    },
-    "same_data_streams": {
-      "status": "NOT_RUN",
-      "reason": "pending genuine CUDA verification",
-      "pass": false
+      "checkpoint_tc": 1575,
+      "event_before_resume": 1560,
+      "event_after_resume": 3120,
+      "model_Adam_EMA_rng_ring_generation_exact": true,
+      "pass": true
     },
     "ReDo_cadence_64probe": {
-      "status": "NOT_RUN",
-      "reason": "pending genuine CUDA verification",
-      "pass": false
+      "period": 1560,
+      "tau": 0.1,
+      "probe_images": 64,
+      "probe_batches": 4,
+      "both_event_times": [
+        1560,
+        3120
+      ],
+      "redo_event_times": [
+        1560,
+        3120,
+        4680,
+        6240,
+        7800
+      ],
+      "exact_task_final_event": 7800,
+      "independent_recycler_reference": true,
+      "bias_moments_global_time_EMA_preserved": true,
+      "pass": true
+    },
+    "same_data_streams": {
+      "archive_sha256": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce",
+      "subset_and_initial_sha256": "81e8a6a74812de08736accaca686ea8f5341c55bec8e6e71b488df1f4b56703f",
+      "paired_native_task_stream_sha256": "c6d14d532471e08922575f34e31e958a10573e6e8e06cd1229a5adf8ed8764fe",
+      "paired_both_task_stream_sha256": "85c4d7ba22f6771d16800060854d0e9748c90156dca9b910aa4c669642c1f094",
+      "center_is_intended_difference": true,
+      "pass": true
     },
     "source_data_review_admission": {
-      "status": "NOT_RUN",
-      "reason": "pending genuine CUDA verification",
-      "pass": false
+      "proofs": {
+        "cpu_checks.json": {
+          "path": "/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/results/redo_chb_rlcifar_1018/cpu_checks.json",
+          "sha256": "11f6b08f9a766f5d865310cf772981a66b003c9f33e02bd121c60093f45ae002"
+        },
+        "independent_review.json": {
+          "path": "/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/results/redo_chb_rlcifar_1018/independent_review.json",
+          "sha256": "8fde274684b25027d02469f0a2b5b973833a81cc7c5d74f8b9f57cd31db8329e"
+        }
+      },
+      "source_unchanged": true,
+      "data_unchanged": true,
+      "pass": true
     },
     "release_artifacts": {
-      "status": "NOT_RUN",
-      "reason": "pending genuine CUDA verification",
-      "pass": false
+      "files": 99,
+      "manifest_sha256": "a4dd8369e3dc3b0ec04bbe71d5700f0bad7e48b25007b79c78af6f62f4b1c983",
+      "pass": true
     }
   },
   "production_started": false,
@@ -224,5 +271,528 @@
     "note": "CPU semantic evidence cannot substitute for real CUDA release checks",
     "sha256": "11f6b08f9a766f5d865310cf772981a66b003c9f33e02bd121c60093f45ae002",
     "scope": "CPU_SYNTHETIC_ONLY"
+  },
+  "data_identity": {
+    "archive": {
+      "path": "/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/data/cifar10/cifar-10-python.tar.gz",
+      "resolved": "/home/issan/Projects/claude/proj_004_drift/data/cifar10/cifar-10-python.tar.gz",
+      "bytes": 170498071,
+      "sha256": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce",
+      "archive": "cifar-10-python.tar.gz"
+    },
+    "inputs": {
+      "100": {
+        "raw_sha256": "84a8df30ff49ca61b68b84d13db1881303f054f09a406cf47773a14bb368ec14",
+        "centered_sha256": "654a17dbe293d364f74fe73b2e3a624fba368637a551eb02a11fa8a6dedc4ea6"
+      },
+      "101": {
+        "raw_sha256": "6366255e439d4bd8cb44aaab50701ca6b3a19e00ba1a75b2af3e67592e7708d9",
+        "centered_sha256": "429df5239beb91a9b009e5f8e5b8f6dd046e262dd0cbb48d0a522316177229e5"
+      },
+      "102": {
+        "raw_sha256": "5bc4064209f70ed7c282230ce84d020248386caec6cc73504874770df0ea37dd",
+        "centered_sha256": "a8fb570b315bf9eeaa745af915e892a89b4153596f8425e87a90b68ba8305faf"
+      },
+      "103": {
+        "raw_sha256": "d6061b0e74e933511a45f8e3ea7ef20f84c9ad0301fdefbf4f979743618c1e07",
+        "centered_sha256": "ccd47a7ea0291b6b19fb024b2ecb46c7152c0511ab0b5eb105ab79bf3512899d"
+      },
+      "104": {
+        "raw_sha256": "ebfe347e28fb34eae4d41831d40dbdde0f1c67aaaed94a581ca80d205176af80",
+        "centered_sha256": "a268324120f21ec327c82d24d7d30aa97104a408634dc01c3e239114db6d6a5a"
+      },
+      "105": {
+        "raw_sha256": "38f3fdbc84cdb4fbd9fe71eaa9b9a5e9c4f5fb48733c1194cbcc3d4188b7a935",
+        "centered_sha256": "12f9c4b8282d05bf571c21a60c5708c6341cdca855ed1f58ba25e717b10878d8"
+      },
+      "106": {
+        "raw_sha256": "e7394451942ba9f6d60094e8bf6214bbb55cec123714a2d60c030783e33ceb08",
+        "centered_sha256": "33fd4bc43e253c28317b6bce52fbdc40fc9418455417ebe3519205d850c81f4b"
+      },
+      "107": {
+        "raw_sha256": "1910c4e81abcc2a7c7fa183ed202f61eb5ef9584f716d1a30296d1eb0117dae1",
+        "centered_sha256": "5defad4ab3de3630f14d182dccda4add06a01e6b8fc2d2f5e907a6401b63af9c"
+      },
+      "108": {
+        "raw_sha256": "f0bd3d6e3ea7f10bdc846e5bb73227c9483c725b70a371e2dd6992080934efd7",
+        "centered_sha256": "0e43cd1f50714f45f1347575b83e0359120da9b2cbd3c7eb5616d82ceaa61602"
+      },
+      "109": {
+        "raw_sha256": "529a7ac505d0903792796f9cfa1fa78f4c67fd79fa44914989de2eb3a734b765",
+        "centered_sha256": "5705be0bdfd55cff719d40b0472aa7f259bf1bc9a89f4aad48e6f78213b11335"
+      }
+    },
+    "initials": {
+      "100": "d6c4487f03c11070d6ca26243efaefb37e336670bef50f8b3939583f5bd2e1c2",
+      "101": "01b7bb2d3647140d63832d193489a8adc9058d8eb02b6534d047cede7a070e3f",
+      "102": "2df88f57eae007ede07481e0f75a18191cc7b53666ad33a3d1d4abcf5045c8b3",
+      "103": "39af2f06da1127b8415ae2ac81d4eeb8b59e5aa25a2897d3e2ff0d2db684cdb6",
+      "104": "9a2c30dd2ba7e670afededce29679115017b2c00407ed1f7664afbcfc4e7fb90",
+      "105": "9a12f31ff3db257ad6f25f31763c4ada08cc987e5b1b7afdce6d27df2be0eefb",
+      "106": "ee0de73f94c05888ae2867bceeb9f3edeb33eaf006b591f72b13b924ee7d2e8b",
+      "107": "3af4eaf7eb68d3b9537bfefbc5ff39209be6e2844ad5a879cfb63bbe1fbdf3e4",
+      "108": "886cca45a69eec979b6f447bbcef532a2e09311bb479d76cc0e4df2f1d3efe59",
+      "109": "d36ebee2ffb05aaf0311511d14dda06474ed156eb4ce89cc9252f4d9fe6d2ab3"
+    },
+    "subset": {
+      "100": {
+        "ids_sha256": "47247332b0411bde0a6db37675ebe0d27a7833b1a925c87968e72023f518f8e0",
+        "count": 1200
+      },
+      "101": {
+        "ids_sha256": "9463dc8820341412e7aba3dfdb9a64b199710537296705fe58ff17a3c8a10159",
+        "count": 1200
+      },
+      "102": {
+        "ids_sha256": "4edd94c861819eff2a299acfbbb88efb85c216dedf7cfc7a42415f808f48b466",
+        "count": 1200
+      },
+      "103": {
+        "ids_sha256": "660c668e37f3d5096c0dfe9dd243dbb3fe61b7f7a9ad228290f8388bbfca9c7f",
+        "count": 1200
+      },
+      "104": {
+        "ids_sha256": "f81315adaecabc62df49b905048883e24af57e574810c6d0b568904a583c5459",
+        "count": 1200
+      },
+      "105": {
+        "ids_sha256": "45b0479093ab1f57184629e580e9fc5d678b30aa6e853137bac69a80240fe552",
+        "count": 1200
+      },
+      "106": {
+        "ids_sha256": "f6fc7422a9d082efe60c75582e27eb5a2811b606109a33db3dc1480091863496",
+        "count": 1200
+      },
+      "107": {
+        "ids_sha256": "62a7662371fe0aec85e0d33ee1542a0333738552b7a7ad775eb18b8675a46f40",
+        "count": 1200
+      },
+      "108": {
+        "ids_sha256": "dc19accb54071905baae8cc8c3ffa3720fe46a3f38ace95dbf48bb128a4fe9c3",
+        "count": 1200
+      },
+      "109": {
+        "ids_sha256": "45d5b843b06d7c8b2b1619082608a5e13dead7c206bf0db774dd9e1ccc727688",
+        "count": 1200
+      }
+    },
+    "native_dimensions": [
+      3072,
+      100,
+      100,
+      10
+    ],
+    "R": 10,
+    "check_seeds": [
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109
+    ]
+  },
+  "artifact_root": "/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/results/redo_chb_rlcifar_1018/gpu_release_artifacts",
+  "files": {
+    "CHB_adapted_eager/checkpoint_digest.json": {
+      "bytes": 3058,
+      "sha256": "ca99bf351d3a002aa307837cda0b0fac29ee7491fad48f7e570fba82e7911919"
+    },
+    "CHB_adapted_eager/ckpt.pt": {
+      "bytes": 38657281,
+      "sha256": "930400741605b858989a1e0d4ae40f5ad5d13854ee201922426da8a2510fea0f"
+    },
+    "CHB_adapted_eager/continuity.json": {
+      "bytes": 499,
+      "sha256": "05b5a1e23c25143bd4874081f771747dca340ffac6010f04f3f66f31cf914dae"
+    },
+    "CHB_adapted_eager/diagnostic_manifest.json": {
+      "bytes": 1020,
+      "sha256": "ce0349bd04e93474eabef98d16fd1b6606f22f2a5e3c16002b1055c62e62f2d6"
+    },
+    "CHB_adapted_eager/diagnostic_units/t001.npz": {
+      "bytes": 131815,
+      "sha256": "c72b90cf675a1e631b5f87fb3185fba6314000479bb649216cdced51a2c53513"
+    },
+    "CHB_adapted_eager/diagnostic_units/t002.npz": {
+      "bytes": 130196,
+      "sha256": "c329175a04a910d4758f6c8bb9c40db14078bb3c5ab66251045eacc816f4aa74"
+    },
+    "CHB_adapted_eager/diagnostics.csv": {
+      "bytes": 23608,
+      "sha256": "40405149ddcae4440e4dd531df452e4aaaee84bc05d82d6407fbe5039d2bb21e"
+    },
+    "CHB_adapted_eager/per_task.csv": {
+      "bytes": 10154,
+      "sha256": "b4fafcb385ca22fac8f172842a45624ae8b464a636e88692aa5ce75da47714e1"
+    },
+    "CHB_adapted_eager/provenance.json": {
+      "bytes": 3328,
+      "sha256": "c968076ff54ae401c2607a8c1976564e35029cece3927e382c4f66edf8cb225b"
+    },
+    "CHB_adapted_graph/checkpoint_digest.json": {
+      "bytes": 3058,
+      "sha256": "5c39a4c2333de29131524c9d065214b1745cdac7a5dd430cd28ea0b712e9df1c"
+    },
+    "CHB_adapted_graph/ckpt.pt": {
+      "bytes": 38657281,
+      "sha256": "4cff093b08b782a9172b8ef9e302297885f6abe527aba1211ebe504533670b17"
+    },
+    "CHB_adapted_graph/continuity.json": {
+      "bytes": 499,
+      "sha256": "05b5a1e23c25143bd4874081f771747dca340ffac6010f04f3f66f31cf914dae"
+    },
+    "CHB_adapted_graph/diagnostic_manifest.json": {
+      "bytes": 1020,
+      "sha256": "ce0349bd04e93474eabef98d16fd1b6606f22f2a5e3c16002b1055c62e62f2d6"
+    },
+    "CHB_adapted_graph/diagnostic_units/t001.npz": {
+      "bytes": 131815,
+      "sha256": "c72b90cf675a1e631b5f87fb3185fba6314000479bb649216cdced51a2c53513"
+    },
+    "CHB_adapted_graph/diagnostic_units/t002.npz": {
+      "bytes": 130196,
+      "sha256": "c329175a04a910d4758f6c8bb9c40db14078bb3c5ab66251045eacc816f4aa74"
+    },
+    "CHB_adapted_graph/diagnostics.csv": {
+      "bytes": 23608,
+      "sha256": "40405149ddcae4440e4dd531df452e4aaaee84bc05d82d6407fbe5039d2bb21e"
+    },
+    "CHB_adapted_graph/per_task.csv": {
+      "bytes": 10154,
+      "sha256": "b4fafcb385ca22fac8f172842a45624ae8b464a636e88692aa5ce75da47714e1"
+    },
+    "CHB_adapted_graph/provenance.json": {
+      "bytes": 3355,
+      "sha256": "dcb7610d59d4fccb4f3461132f19bba54db82e0b3b8c59fee4dfcce6cbb7852c"
+    },
+    "CHB_native_graph/ckpt.pt": {
+      "bytes": 38354088,
+      "sha256": "ca21a23578c0986ba74a1b7cb3e92c508d1888559307c05e0041af01ade7fbfb"
+    },
+    "CHB_native_graph/per_task.csv": {
+      "bytes": 10154,
+      "sha256": "b4fafcb385ca22fac8f172842a45624ae8b464a636e88692aa5ce75da47714e1"
+    },
+    "CHB_native_graph/provenance.json": {
+      "bytes": 3357,
+      "sha256": "7edd2d26dda15beda9f08a2c2e6bdef7e89cc38f4453f13d78c7505f62cbd9ec"
+    },
+    "both_eager/checkpoint_digest.json": {
+      "bytes": 3060,
+      "sha256": "3d47b794e6ff9f413d38fc4fbc27d9ecfa7d42b9fc89fc5bb06c64332b41257b"
+    },
+    "both_eager/ckpt.pt": {
+      "bytes": 38676289,
+      "sha256": "334ab0ebb2050a44a1c566e08b1730ca51b9554356fdac6e1492985310f36f42"
+    },
+    "both_eager/continuity.json": {
+      "bytes": 499,
+      "sha256": "05b5a1e23c25143bd4874081f771747dca340ffac6010f04f3f66f31cf914dae"
+    },
+    "both_eager/diagnostic_manifest.json": {
+      "bytes": 1234,
+      "sha256": "52f9769bd3b021b01d0000195ff869378483e5bf2c4d29883dfd829cd65b1774"
+    },
+    "both_eager/diagnostic_units/t001.npz": {
+      "bytes": 125457,
+      "sha256": "b03719fd5049d72a388f34c39f169dac2e6bcce25ee3a23dde9a82ac4356c300"
+    },
+    "both_eager/diagnostic_units/t002.npz": {
+      "bytes": 126421,
+      "sha256": "969d55e16ba2c45ed2fe25fbf94d91aebd9241f1d3520bead7f5f89995a672ef"
+    },
+    "both_eager/diagnostics.csv": {
+      "bytes": 23204,
+      "sha256": "382ece727aeaf8050d3b282fb9dd873a65e865dbfaaf87516102478d928c95eb"
+    },
+    "both_eager/event_units/e00001_k0001560.npz": {
+      "bytes": 273787,
+      "sha256": "3277132c516373081585076375a175a78ef604ead23170ae7c6d2838fca5f603"
+    },
+    "both_eager/event_units/e00002_k0003120.npz": {
+      "bytes": 275799,
+      "sha256": "a2c9adc1b78dac56e173490d36b5ced53bdc1dc199911be25957a2bc2f37348e"
+    },
+    "both_eager/per_task.csv": {
+      "bytes": 9992,
+      "sha256": "4100a080312cede9251eeb32967bd66924e6137ac9016c1e0c3c9880bfc5ff34"
+    },
+    "both_eager/provenance.json": {
+      "bytes": 3331,
+      "sha256": "0fcfba551091ecb12d86cc1b591f8cfa970f3a2bb96df4dbf2287737d4ec72b6"
+    },
+    "both_eager/redo_events.csv": {
+      "bytes": 3194,
+      "sha256": "e3cbf9825104265c3360392b5dd5a86547ffe49a245aafb2538c2ac28f54f319"
+    },
+    "both_eager/reinit_rng.json": {
+      "bytes": 117,
+      "sha256": "63b4d7b2d0dd8533f2a52fb556fde5228e0de5aa6194c35779bf505eb194a5c7"
+    },
+    "both_graph/checkpoint_digest.json": {
+      "bytes": 3060,
+      "sha256": "ae57aa5e69ad6e316af9d5baa6f96f55b5cfffd74e5b16c1564f1010984e1561"
+    },
+    "both_graph/ckpt.pt": {
+      "bytes": 38676289,
+      "sha256": "e3ec25e7a69e5da00c876f3c1a2429459e9af7e8a022dfd356356f929f6bdaac"
+    },
+    "both_graph/continuity.json": {
+      "bytes": 499,
+      "sha256": "05b5a1e23c25143bd4874081f771747dca340ffac6010f04f3f66f31cf914dae"
+    },
+    "both_graph/diagnostic_manifest.json": {
+      "bytes": 1234,
+      "sha256": "52f9769bd3b021b01d0000195ff869378483e5bf2c4d29883dfd829cd65b1774"
+    },
+    "both_graph/diagnostic_units/t001.npz": {
+      "bytes": 125457,
+      "sha256": "b03719fd5049d72a388f34c39f169dac2e6bcce25ee3a23dde9a82ac4356c300"
+    },
+    "both_graph/diagnostic_units/t002.npz": {
+      "bytes": 126421,
+      "sha256": "969d55e16ba2c45ed2fe25fbf94d91aebd9241f1d3520bead7f5f89995a672ef"
+    },
+    "both_graph/diagnostics.csv": {
+      "bytes": 23204,
+      "sha256": "382ece727aeaf8050d3b282fb9dd873a65e865dbfaaf87516102478d928c95eb"
+    },
+    "both_graph/event_units/e00001_k0001560.npz": {
+      "bytes": 273787,
+      "sha256": "3277132c516373081585076375a175a78ef604ead23170ae7c6d2838fca5f603"
+    },
+    "both_graph/event_units/e00002_k0003120.npz": {
+      "bytes": 275799,
+      "sha256": "a2c9adc1b78dac56e173490d36b5ced53bdc1dc199911be25957a2bc2f37348e"
+    },
+    "both_graph/per_task.csv": {
+      "bytes": 9992,
+      "sha256": "4100a080312cede9251eeb32967bd66924e6137ac9016c1e0c3c9880bfc5ff34"
+    },
+    "both_graph/provenance.json": {
+      "bytes": 3360,
+      "sha256": "d18a768a54ad7e92d0e426211bf353c5d5d892444c71423d6446cfea50eb635e"
+    },
+    "both_graph/redo_events.csv": {
+      "bytes": 3194,
+      "sha256": "e3cbf9825104265c3360392b5dd5a86547ffe49a245aafb2538c2ac28f54f319"
+    },
+    "both_graph/reinit_rng.json": {
+      "bytes": 117,
+      "sha256": "63b4d7b2d0dd8533f2a52fb556fde5228e0de5aa6194c35779bf505eb194a5c7"
+    },
+    "both_resume/checkpoint_digest.json": {
+      "bytes": 3060,
+      "sha256": "68c399e250c9122293d113e0291494483e59d3c8db7d47184453615eaebca11f"
+    },
+    "both_resume/ckpt.pt": {
+      "bytes": 38677249,
+      "sha256": "b55d0a46e133bc0bc8df927eede53e4f52de15f2b5db1a63a9a372e246c9d607"
+    },
+    "both_resume/continuity.json": {
+      "bytes": 499,
+      "sha256": "334c8768341a756608797995318fcd7d240089b4066629a68fd0145e721681af"
+    },
+    "both_resume/diagnostic_manifest.json": {
+      "bytes": 1234,
+      "sha256": "52f9769bd3b021b01d0000195ff869378483e5bf2c4d29883dfd829cd65b1774"
+    },
+    "both_resume/diagnostic_units/t001.npz": {
+      "bytes": 125457,
+      "sha256": "b03719fd5049d72a388f34c39f169dac2e6bcce25ee3a23dde9a82ac4356c300"
+    },
+    "both_resume/diagnostic_units/t002.npz": {
+      "bytes": 126421,
+      "sha256": "969d55e16ba2c45ed2fe25fbf94d91aebd9241f1d3520bead7f5f89995a672ef"
+    },
+    "both_resume/diagnostics.csv": {
+      "bytes": 23204,
+      "sha256": "382ece727aeaf8050d3b282fb9dd873a65e865dbfaaf87516102478d928c95eb"
+    },
+    "both_resume/event_units/e00001_k0001560.npz": {
+      "bytes": 273787,
+      "sha256": "3277132c516373081585076375a175a78ef604ead23170ae7c6d2838fca5f603"
+    },
+    "both_resume/event_units/e00002_k0003120.npz": {
+      "bytes": 275799,
+      "sha256": "a2c9adc1b78dac56e173490d36b5ced53bdc1dc199911be25957a2bc2f37348e"
+    },
+    "both_resume/per_task.csv": {
+      "bytes": 9992,
+      "sha256": "4100a080312cede9251eeb32967bd66924e6137ac9016c1e0c3c9880bfc5ff34"
+    },
+    "both_resume/provenance.json": {
+      "bytes": 3474,
+      "sha256": "c2e751d79ebe218be552129ee818c8d23c540fd166b980920f0c3c97b394220e"
+    },
+    "both_resume/redo_events.csv": {
+      "bytes": 3194,
+      "sha256": "e3cbf9825104265c3360392b5dd5a86547ffe49a245aafb2538c2ac28f54f319"
+    },
+    "both_resume/reinit_rng.json": {
+      "bytes": 117,
+      "sha256": "63b4d7b2d0dd8533f2a52fb556fde5228e0de5aa6194c35779bf505eb194a5c7"
+    },
+    "event_and_stream_checks.json": {
+      "bytes": 5659,
+      "sha256": "1c0a08f76082faa3108e2fc65839d3cda9581e64327f5b84a2db1a2e473ffc05"
+    },
+    "fixture_protocols.json": {
+      "bytes": 1679,
+      "sha256": "4d54e467ed683b40b22c4da3528b1ed40c3512f5ad1e6e102bc09fd0a90972d5"
+    },
+    "none_adapted_eager/checkpoint_digest.json": {
+      "bytes": 3060,
+      "sha256": "c2f455478da0c7ff5385b0edd295720244ef07bbdf39d9929adb06469d3dc972"
+    },
+    "none_adapted_eager/ckpt.pt": {
+      "bytes": 38648135,
+      "sha256": "7350f6b8ba840c184413d8ab230c38ad1beb4e4b7732b301765dec0cc4c0fe6f"
+    },
+    "none_adapted_eager/continuity.json": {
+      "bytes": 499,
+      "sha256": "4872759d3c18e55327f4c3a9bba1411d0bf9acfe0e8d00587a3c3461ebf9cb6f"
+    },
+    "none_adapted_eager/diagnostic_manifest.json": {
+      "bytes": 1020,
+      "sha256": "8102c18eeef39d8a593f1bf956634363782ab03f95d983491db4c5b7b263b12d"
+    },
+    "none_adapted_eager/diagnostic_units/t001.npz": {
+      "bytes": 101539,
+      "sha256": "d60f91d1cf9c49a519ebed77c3f59308d1cb38e4baf879e6b9a4a6bcb4f3601e"
+    },
+    "none_adapted_eager/diagnostic_units/t002.npz": {
+      "bytes": 101221,
+      "sha256": "e6c531ed0cc93965d4856d48304147790d162da7795e7968f2702e2f7ade7cef"
+    },
+    "none_adapted_eager/diagnostics.csv": {
+      "bytes": 21263,
+      "sha256": "b0eb30562e9ce5064155ba628c3902a1ddc214c8c78897e549a5a4686365a408"
+    },
+    "none_adapted_eager/per_task.csv": {
+      "bytes": 10600,
+      "sha256": "1e301e06221ed4af7149755787108e8e40b01c724da1ffe2e50e5233bee47fa6"
+    },
+    "none_adapted_eager/provenance.json": {
+      "bytes": 3332,
+      "sha256": "227723162915177d451b23321b2b9cc4ee591565d798c444ad596c3b97b6b5d7"
+    },
+    "none_adapted_graph/checkpoint_digest.json": {
+      "bytes": 3060,
+      "sha256": "07fb673beb8e2fa45ed25093d075eff9bdba890d8c7e64f36e3512b0ea8edf8e"
+    },
+    "none_adapted_graph/ckpt.pt": {
+      "bytes": 38648135,
+      "sha256": "29dad019fcb045e485cebd436df45942ae450551769d2816075b587c6ecfcc08"
+    },
+    "none_adapted_graph/continuity.json": {
+      "bytes": 499,
+      "sha256": "4872759d3c18e55327f4c3a9bba1411d0bf9acfe0e8d00587a3c3461ebf9cb6f"
+    },
+    "none_adapted_graph/diagnostic_manifest.json": {
+      "bytes": 1020,
+      "sha256": "8102c18eeef39d8a593f1bf956634363782ab03f95d983491db4c5b7b263b12d"
+    },
+    "none_adapted_graph/diagnostic_units/t001.npz": {
+      "bytes": 101539,
+      "sha256": "d60f91d1cf9c49a519ebed77c3f59308d1cb38e4baf879e6b9a4a6bcb4f3601e"
+    },
+    "none_adapted_graph/diagnostic_units/t002.npz": {
+      "bytes": 101221,
+      "sha256": "e6c531ed0cc93965d4856d48304147790d162da7795e7968f2702e2f7ade7cef"
+    },
+    "none_adapted_graph/diagnostics.csv": {
+      "bytes": 21263,
+      "sha256": "b0eb30562e9ce5064155ba628c3902a1ddc214c8c78897e549a5a4686365a408"
+    },
+    "none_adapted_graph/per_task.csv": {
+      "bytes": 10600,
+      "sha256": "1e301e06221ed4af7149755787108e8e40b01c724da1ffe2e50e5233bee47fa6"
+    },
+    "none_adapted_graph/provenance.json": {
+      "bytes": 3361,
+      "sha256": "2b5376b1d07652dcaf6b2b311d2929276a81d8818f9cb3bf115232b028c77c6d"
+    },
+    "none_native_graph/ckpt.pt": {
+      "bytes": 38344942,
+      "sha256": "63455130af03f0735ffc045a362a537ba95847efabc167dd992ecd0424ffd2a9"
+    },
+    "none_native_graph/per_task.csv": {
+      "bytes": 10580,
+      "sha256": "8dfca6d259f2ff0fff71ba1828d2054540e79f3152d5e4ff6779fd30778e74ff"
+    },
+    "none_native_graph/provenance.json": {
+      "bytes": 3361,
+      "sha256": "698e6dd4c7bb5c0c0ab626ab5a03b40e4529a9e2bb511e5bcc5518401dadda70"
+    },
+    "real_data_identity.json": {
+      "bytes": 4686,
+      "sha256": "a093c6465f0557687728c6b5e3561506f9b7f081125c68f551cdeb978a32650c"
+    },
+    "redo_boundary_graph/checkpoint_digest.json": {
+      "bytes": 3060,
+      "sha256": "8790809d17ca3a52a96ce67637e231fd140fb7a20e55b1b585ddb03cd12ebec8"
+    },
+    "redo_boundary_graph/ckpt.pt": {
+      "bytes": 38645767,
+      "sha256": "69f62ca4c76dba996c4e6d0dd695f71b7d3baeed89f2d08fb5fcfd89c3c8acc4"
+    },
+    "redo_boundary_graph/continuity.json": {
+      "bytes": 499,
+      "sha256": "4872759d3c18e55327f4c3a9bba1411d0bf9acfe0e8d00587a3c3461ebf9cb6f"
+    },
+    "redo_boundary_graph/diagnostic_manifest.json": {
+      "bytes": 1447,
+      "sha256": "fc3af6107ab9a78c8830e4cf1db20beb51c662852eae45beba52a0a448430164"
+    },
+    "redo_boundary_graph/diagnostic_units/t001.npz": {
+      "bytes": 128827,
+      "sha256": "38a8e79a80ce1666bb503cdc030957230afda15dfc18a731a1b628c31830741e"
+    },
+    "redo_boundary_graph/diagnostics.csv": {
+      "bytes": 12464,
+      "sha256": "dc492a89a60e2b998e2613a0964c20930466bab77087f81efc6c6605fd2ec0bb"
+    },
+    "redo_boundary_graph/event_units/e00001_k0001560.npz": {
+      "bytes": 221385,
+      "sha256": "ae613535c1078651ec41c7ddbb4065a1d3d78296df2bcfd9fe27737246781cc5"
+    },
+    "redo_boundary_graph/event_units/e00002_k0003120.npz": {
+      "bytes": 231749,
+      "sha256": "4c5bb3127b769beaa18ab02b7991505d9afe5f9786934698ea7efdefbae531bc"
+    },
+    "redo_boundary_graph/event_units/e00003_k0004680.npz": {
+      "bytes": 242387,
+      "sha256": "18bb14d17caedb0077752788b396306ebd118cfe9115b0a5c7b36d393e34c5c1"
+    },
+    "redo_boundary_graph/event_units/e00004_k0006240.npz": {
+      "bytes": 249778,
+      "sha256": "01ba61872233da00771f6b83ccce51e152f6cf6dfd217626c9bc242bb068e5dc"
+    },
+    "redo_boundary_graph/event_units/e00005_k0007800.npz": {
+      "bytes": 256767,
+      "sha256": "04ab3785a5adb09dfb4dd598785286a3c1d0b392f8584e077d6ade27460a237f"
+    },
+    "redo_boundary_graph/per_task.csv": {
+      "bytes": 5546,
+      "sha256": "39531f5a98fbbbdd95f74388c97024d7dcbe823e5b0457c5a1cddf2ec0ede116"
+    },
+    "redo_boundary_graph/provenance.json": {
+      "bytes": 3364,
+      "sha256": "f1fa3747320614aeccfc95f117554024b3d4351e93b363bd6b770bfc50a81a57"
+    },
+    "redo_boundary_graph/redo_events.csv": {
+      "bytes": 7660,
+      "sha256": "a1007bafc9ef7090bd76c09c60f894ebb9df1d994e474fea38dd7265d1ec5b32"
+    },
+    "redo_boundary_graph/reinit_rng.json": {
+      "bytes": 117,
+      "sha256": "18f6b26c1a0f54fdf9cae12612f1a374adc9a52e7e5abb83f02d561f0749d830"
+    }
   }
 }

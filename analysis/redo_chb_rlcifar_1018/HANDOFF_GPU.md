@@ -48,3 +48,13 @@ cwdは `/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018`。Pythonは `/home
 実装source commit `5e44f9a9bc7143e4ba567da81c5aea0754e45188`。CPU全8群・指定負例35件がPASS。別担当2名がソースと実行検査を独立確認し、実ソースへのextra-B（診断前/後）・世代死亡理由の誤りも検出した。19ソースのreviewed hashが上記commitのblobと一致することを `source_commit_verification.json` に保存。
 
 GPU検査CLIと `launch run --arm all` を実際に起動したが、Workではいずれもexit2/BLOCKED_CUDA。本走は未開始、科学labelはnull、gpu_release.jsonはall_pass=falseで全CUDA検査NOT_RUNのまま。ホスト上で本物のGPU releaseを通してから実行する。証跡は `results/redo_chb_rlcifar_1018/`、旧走1の完走記録や既存controllerは変更していない。
+
+## ホストへの継続（2026-10-18）
+
+上記のBLOCKED_CUDAはWork側での履歴。元の5証跡を `results/redo_chb_rlcifar_1018/host_continuation/prior_work_blocked/` にbytes/hash付きで保持した。ホストで19ソースと既存CPU・独立reviewの一致を確認し、正式 `gpu_checks` を実データ・R10・検査seed100–109で実行。新しい `gpu_release.json` は証跡照合を含む全9項目PASS。科学実装と事前登録は変更していない。
+
+専用の `redo-chb-rlcifar-1018.service` から `analysis/host_redo_chb_rlcifar_1018/run_and_retain.py` を使い、正式launcherの `run --arm all` を呼び出す。GPU lockはlauncherだけが所有する。既存queueは変更しない。生データはGPU常駐の既存実装を使い、4腕・各200課題・全10seed・30,000更新/課題を保持する。
+
+最新の実行状態は `results/redo_chb_rlcifar_1018/host_continuation/state.json` と `training.log`、科学判定はrun直下の `verdict.json` を参照する。開始時HEADを `launch_plan.json` に固定する。実行中はsource/HEADを変更しない。途中経過の確認は原則5分以上の間隔とする。
+
+launcher正常終了後は正式 `report --verify-only` を実行する。終了した試行の結果一式を `~/Projects/obsidian-research-data/redo_chb_rlcifar_1018/host_gpu_<UTC時刻>/` にコピーし、全ファイルのbytes/SHA256を照合して `host_continuation/backup_manifest.json` と `retention.json` を残す。原本は保持し、GitHub公開・main統合・worktree削除は行わない。走3の停止を維持する。

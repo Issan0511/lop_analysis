@@ -1,0 +1,235 @@
+{
+  "run_id": "redo_chb_rlcifar_1018",
+  "status": "BLOCKED_CUDA",
+  "all_pass": false,
+  "blockers": [
+    "BLOCKED_CUDA: torch.cuda.is_available() is False",
+    "PROOF_MISSING_STALE_OR_FAILED:gpu_release.json:proof did not pass"
+  ],
+  "checked_utc": "2026-10-17T18:00:52.477962+00:00",
+  "registration": {
+    "run_id": "redo_chb_rlcifar_1018",
+    "base_commit": "094489c30bcdf196946179ba07ed0e8cadd3a53f",
+    "prereg_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+    "initial_prereg_commit": "de8a437fef35f7942023fc581e81f4e6cbbad5bd",
+    "spec_sha256": "9d2422a358e31cf66e93aadbf57b94336a8c9b1b1f1905f05e5326370ccfdbe4",
+    "common_spec_sha256": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "protocol": {
+      "run_id": "redo_chb_rlcifar_1018",
+      "arms": [
+        "none",
+        "redo",
+        "CHB",
+        "both"
+      ],
+      "seeds": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "conds": [
+        "raw"
+      ],
+      "R": 10,
+      "n_tasks": 200,
+      "epochs": 400,
+      "steps_per_epoch": 75,
+      "steps_per_task": 30000,
+      "total_updates": 6000000,
+      "batch": 16,
+      "n_images": 1200,
+      "dims": [
+        3072,
+        100,
+        100,
+        10
+      ],
+      "device": "cuda",
+      "dtype": "float32",
+      "lr": 0.001,
+      "lam": 0.1713,
+      "beta": 0.01,
+      "adam_betas": [
+        0.9,
+        0.999
+      ],
+      "adam_eps": 1e-08,
+      "threads": 2,
+      "tf32_matmul": false,
+      "tf32_cudnn": false,
+      "deterministic": true,
+      "redo_tau": 0.1,
+      "redo_period": 1560,
+      "redo_probe_batches": 4,
+      "redo_probe_images": 64,
+      "redo_events_per_arm": 3846,
+      "redo_stream": "b5_redo_reinit",
+      "redo_order": "native Adam then B then EMA then one-shot recycle outside graph",
+      "retain": [
+        "bias moments",
+        "Adam global time",
+        "hidden EMA"
+      ],
+      "score": "actual delivered features after H",
+      "late_window": [
+        181,
+        200
+      ],
+      "early_window": [
+        31,
+        50
+      ]
+    },
+    "prediction": {
+      "primary": "CHB_POLICY_CARRIES",
+      "redo_shortfall": true,
+      "numeric_probability": null,
+      "attribution": "Issa 2026-10-18 02:36:16 JST revision formalized by Codex",
+      "known_reference": "old CHB/none results informed design; these are not new predictive successes"
+    }
+  },
+  "protocol": {
+    "run_id": "redo_chb_rlcifar_1018",
+    "arms": [
+      "none",
+      "redo",
+      "CHB",
+      "both"
+    ],
+    "seeds": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "conds": [
+      "raw"
+    ],
+    "R": 10,
+    "n_tasks": 200,
+    "epochs": 400,
+    "steps_per_epoch": 75,
+    "steps_per_task": 30000,
+    "total_updates": 6000000,
+    "batch": 16,
+    "n_images": 1200,
+    "dims": [
+      3072,
+      100,
+      100,
+      10
+    ],
+    "device": "cuda",
+    "dtype": "float32",
+    "lr": 0.001,
+    "lam": 0.1713,
+    "beta": 0.01,
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "threads": 2,
+    "tf32_matmul": false,
+    "tf32_cudnn": false,
+    "deterministic": true,
+    "redo_tau": 0.1,
+    "redo_period": 1560,
+    "redo_probe_batches": 4,
+    "redo_probe_images": 64,
+    "redo_events_per_arm": 3846,
+    "redo_stream": "b5_redo_reinit",
+    "redo_order": "native Adam then B then EMA then one-shot recycle outside graph",
+    "retain": [
+      "bias moments",
+      "Adam global time",
+      "hidden EMA"
+    ],
+    "score": "actual delivered features after H",
+    "late_window": [
+      181,
+      200
+    ],
+    "early_window": [
+      31,
+      50
+    ]
+  },
+  "source_sha256": {
+    "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/redo_chb_rlcifar_1018/checks.py": "050458e5d10a19412913f02b4cc5ccd84d01fe3065255347f280dcf8d4bea04e",
+    "analysis/redo_chb_rlcifar_1018/common.py": "0acddc4514819778040726832adf157cbbf115b15775a52e2e6569ba9d2c415e",
+    "analysis/redo_chb_rlcifar_1018/diagnostics.py": "5693bfd7d3d44c8b012092f83ba4b46fe928830367eefb2182474d097c88d0ef",
+    "analysis/redo_chb_rlcifar_1018/gpu_checks.py": "a5e753acf21d4601c03d865e3b7e2080dee59be974e497a777d97a68a96fd587",
+    "analysis/redo_chb_rlcifar_1018/launch.py": "66caa85a624f4e7791dc7432fbb2aeb0fe35d942a9dab375ed464ac679e80f66",
+    "analysis/redo_chb_rlcifar_1018/report.py": "b3731032482119efe9a4cf75ed4e45387c1a97773175f57dd2a53e95d9e7770f",
+    "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0",
+    "specs/spec_redo_chb_rlcifar_1018.md": "9d2422a358e31cf66e93aadbf57b94336a8c9b1b1f1905f05e5326370ccfdbe4",
+    "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/baselines_cifar5p1_1008.py": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/redo_chb_rlcifar_1018.py": "e78fa9592c501086bdbc46e140000a10a1f41ca525de599e1b481a1e8526f435",
+    "src/relu_doors_0919.py": "2478c8339decaee3aacb90ac7aa87f8cff6b49d2da30833c6e3dbea0dfa82da4",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+  },
+  "environment": {
+    "python": "3.12.3 (main, Apr 15 2024, 18:25:56) [Clang 17.0.6 ]",
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.1",
+    "cuda_build": "13.0",
+    "cuda_available": false,
+    "nvidia_devices": [
+      "/dev/nvidia-caps"
+    ],
+    "nvidia_smi_returncode": 9,
+    "nvidia_smi_output": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.",
+    "tf32_matmul": false,
+    "tf32_cudnn": true,
+    "deterministic": false,
+    "threads": 20,
+    "cublas_workspace": ":4096:8"
+  },
+  "archive": {
+    "path": "/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/data/cifar10/cifar-10-python.tar.gz",
+    "resolved": "/home/issan/Projects/claude/proj_004_drift/data/cifar10/cifar-10-python.tar.gz",
+    "bytes": 170498071,
+    "sha256": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce",
+    "archive": "cifar-10-python.tar.gz"
+  },
+  "proof_root": "/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/results/redo_chb_rlcifar_1018",
+  "proof_sha256": {
+    "cpu_checks.json": "11f6b08f9a766f5d865310cf772981a66b003c9f33e02bd121c60093f45ae002",
+    "independent_review.json": "8fde274684b25027d02469f0a2b5b973833a81cc7c5d74f8b9f57cd31db8329e"
+  },
+  "git_hash": "5e44f9a9bc7143e4ba567da81c5aea0754e45188",
+  "argv": [
+    "/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/analysis/redo_chb_rlcifar_1018/launch.py",
+    "run",
+    "--arm",
+    "all"
+  ],
+  "production_started": false,
+  "scheduler": {
+    "lock": "/tmp/lop_analysis_gpu.lock",
+    "owner": "this CLI only",
+    "acquisition": "nonblocking",
+    "external_existing_queues_modified": false
+  }
+}
