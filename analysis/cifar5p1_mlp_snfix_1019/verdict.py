@@ -12,6 +12,7 @@ fresh_control.csv with the committed 0920 files byte for byte.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 from pathlib import Path
@@ -47,17 +48,41 @@ def judge(tests: list[dict]) -> list[dict]:
     return tests
 
 
+def _rows(p: Path) -> list[dict]:
+    with open(p, newline="") as fh:
+        return list(csv.DictReader(fh))
+
+
 def reuse_0920(root: Path, host: Path) -> dict:
-    per, ok = {}, True
+    """The registered byte comparison (`label`), and spec addendum 1's trajectory comparison
+    (`trajectory_label`): every per_task column except eff_rank_* as the same string, fresh_control.csv whole.
+    eff_rank_* is reported as the largest relative difference."""
+    per, ok, traj_ok, eff = {}, True, True, {}
     for arm in OLD:
         same = {}
         for f in ("per_task.csv", "fresh_control.csv"):
             a, b = root / cell(arm) / f, host / cell(arm) / f
             same[f] = a.exists() and b.exists() and a.read_bytes() == b.read_bytes()
+        t_same = False
+        a, b = root / cell(arm) / "per_task.csv", host / cell(arm) / "per_task.csv"
+        if a.exists() and b.exists():
+            got, want = _rows(a), _rows(b)
+            keys = sorted({k for r in want for k in r} | {k for r in got for k in r})
+            exact = [k for k in keys if not k.startswith("eff_rank")]
+            t_same = len(got) == len(want) and all(g.get(k) == w.get(k) for g, w in zip(got, want) for k in exact)
+            for k in (k for k in keys if k.startswith("eff_rank")):
+                d = [abs(float(g[k]) - float(w[k])) / max(abs(float(w[k])), 1e-300) for g, w in zip(got, want)
+                     if g.get(k) not in (None, "") and w.get(k) not in (None, "")]
+                eff[f"{arm}:{k}"] = max(d) if d else 0.0
+        t_same = t_same and same["fresh_control.csv"]
+        same["trajectory_without_eff_rank"] = t_same
         per[arm] = same
-        ok &= all(same.values())
-    return {"label": "PASS" if ok else "FAIL", "per_arm": per,
-            "identical_files": sum(v for s in per.values() for v in s.values()), "files": 2 * len(OLD)}
+        ok &= same["per_task.csv"] and same["fresh_control.csv"]
+        traj_ok &= t_same
+    return {"label": "PASS" if ok else "FAIL", "trajectory_label": "PASS" if traj_ok else "FAIL", "per_arm": per,
+            "identical_files": sum(v for s_ in per.values() for k, v in s_.items() if k.endswith(".csv")),
+            "files": 2 * len(OLD), "eff_rank_max_rel_diff": max(eff.values()) if eff else None,
+            "eff_rank_rel_diff_per_column": eff}
 
 
 def compute(root: Path, host: Path | None = None) -> dict:
@@ -186,7 +211,9 @@ def summary_md(res: dict) -> str:
             L.append(f"| `{a}` | {l} | " + " | ".join(f(tr.get(f't{t}', {}).get(f'two_alpha_W_med_l{l}'), '.2f')
                                                      for t in TRACE_TASKS) + " |")
     ru = res["S_reuse_0920"]
-    L += ["", f"S-reuse-0920 は `{ru['label']}`。16 腕の 32 ファイルのうち {ru['identical_files']} がバイト単位で一致した。", "",
+    L += ["", f"S-reuse-0920 は `{ru['label']}`。16 腕の 32 ファイルのうち {ru['identical_files']} がバイト単位で一致した。",
+          f"追補 1 の軌道の照合は `{ru['trajectory_label']}`。実効ランクを除く全列と fresh の行を文字列で比べた。"
+          f"実効ランクの相対差の最大は {f(ru['eff_rank_max_rel_diff'], '.2e')}。", "",
           "## Claude の予測の採点", ""]
     for k, ok in res["predictions_claude"].items():
         L.append(f"- {k}: {'的中' if ok else '外れ'}")

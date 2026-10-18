@@ -65,7 +65,7 @@ def host_copy(root: Path, host: Path):
 
 
 class Tests(unittest.TestCase):
-    def go(self, off, tamper=False, drop_arm=None):
+    def go(self, off, tamper=False, drop_arm=None, tamper_eff=False):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "results" / "cifar5p1_mlp_snfix_1019"
             host = Path(tmp) / "results" / "cifar5p1_mlp_0920"
@@ -75,6 +75,9 @@ class Tests(unittest.TestCase):
             if tamper:
                 p = host / V.cell("ELU") / "per_task.csv"
                 p.write_bytes(p.read_bytes().replace(b"0.0001", b"0.00010", 1))
+            if tamper_eff:
+                p = host / V.cell("R") / "per_task.csv"
+                p.write_bytes(p.read_bytes().replace(b",40.0,", b",40.00000001,", 1))
             res = V.compute(root)
             self.assertIn("族 N", V.summary_md(res))
             json.dumps(res, default=lambda o: o.item() if hasattr(o, "item") else str(o))
@@ -116,6 +119,15 @@ class Tests(unittest.TestCase):
         self.assertFalse(res["S_reuse_0920"]["per_arm"]["ELU"]["per_task.csv"])
         self.assertTrue(res["S_reuse_0920"]["per_arm"]["ELU"]["fresh_control.csv"])
         self.assertFalse(res["predictions_claude"]["P6_reuse_pass"])
+
+    def test_reuse_eff_rank_only(self):
+        res = self.go({}, tamper_eff=True)
+        ru = res["S_reuse_0920"]
+        self.assertEqual(ru["label"], "FAIL")
+        self.assertEqual(ru["trajectory_label"], "PASS")
+        self.assertAlmostEqual(ru["eff_rank_max_rel_diff"], 1e-8 / 40.00000001, places=12)
+        res = self.go({}, tamper=True)
+        self.assertEqual(res["S_reuse_0920"]["trajectory_label"], "FAIL")
 
     def test_missing_arm(self):
         res = self.go({"SNA": 0.05}, drop_arm="SN3")

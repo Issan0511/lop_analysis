@@ -105,8 +105,8 @@ def check_fixed(device, cifar, work: Path) -> dict:
         a32 = float(torch.tensor(alpha, dtype=torch.float32))
         const = all(bool((t == a32).all()) for t in trained.A)
         stat_rows = rows(work / f"fixed_{arm}" / "per_task.csv")
-        const_rows = all(float(r[f"alpha_{q}_l{l}"]) == a32 for r in stat_rows for q in ("med", "min", "max")
-                         for l in (1, 2))
+        const_rows = all(r[f"alpha_{q}_l{l}"] == f"{a32:.10g}" for r in stat_rows for q in ("med", "min", "max")
+                         for l in (1, 2))                    # H.write_csv prints floats as .10g
         res = {"autograd_vs_formula_f64": err_auto, "phi_f32_over_bound": float(phi_err),
                "dphi_f32_over_bound": float(dphi_err), "same_as_SnakeFamily_at_alpha": same_alpha and same_phi,
                "alpha_constant_after_2_tasks": const, "alpha_constant_in_rows": const_rows}
@@ -143,7 +143,8 @@ def check_frz(device, cifar, work: Path) -> dict:
     rows_const = all(by_task[(s, t)][c] == by_task[(s, "1")][c] for s in {r["slot"] for r in r_frz}
                      for t in ("2", "3") for c in stat_cols)
     later_differs = strip_arm([r for r in r_frz if r["task"] != "1"]) != strip_arm([r for r in r_sna if r["task"] != "1"])
-    fresh_same = strip_arm(f_frz) == strip_arm(f_sna)
+    fresh_cols = lambda fs: [(r["seed"], r["task"], r["fresh_online_acc"]) for r in fs]
+    fresh_same = fresh_cols(f_frz) == fresh_cols(f_sna)       # continual_online_acc and fresh_gap differ by design
     ok = cap_is_sna and task1_same and frozen_is_task1 and kept and sna_moves and rows_const and later_differs and fresh_same
     # mutant: the freeze one task late
     inner, make = with_arm("SNAfrz2", lambda: S.FrozenSnake("SNAfrz2", freeze_after=2 * E))
@@ -176,19 +177,37 @@ def check_graph(device, cifar, work: Path) -> dict:
     return {"pass": ok, "graph_equals_eager": res, "mutants": {"eager_lr_2^-20_larger": {"detected": detected}}}
 
 
+def compare_rows(got: list[dict], want: list[dict]) -> dict:
+    """Spec addendum 1: every column except eff_rank_* must be the same string; eff_rank_* (a float64 Gram on
+    the GPU, then LAPACK eigvalsh on the cpu, computed after the step) is reported, not required, because its
+    last printed digits moved with the torch build (2.13.0+cu126 in 0920, +cu130 now)."""
+    keys = sorted({k for r in want for k in r} | {k for r in got for k in r})
+    exact = [k for k in keys if not k.startswith("eff_rank")]
+    same_len = len(got) == len(want)
+    bad = sorted({k for g, w in zip(got, want) for k in exact if g.get(k) != w.get(k)})
+    rel = {}
+    for k in (k for k in keys if k.startswith("eff_rank")):
+        d = [abs(float(g[k]) - float(w[k])) / max(abs(float(w[k])), 1e-300) for g, w in zip(got, want)
+             if g.get(k) not in (None, "") and w.get(k) not in (None, "")]
+        rel[k] = {"max_rel_diff": max(d) if d else 0.0, "rows_differing": sum(x > 0 for x in d)}
+    return {"same_rows": same_len, "columns_differing_outside_eff_rank": bad, "eff_rank": rel,
+            "trajectory_identical": same_len and not bad,
+            "byte_identical": same_len and all(g == w for g, w in zip(got, want))}
+
+
 def check_nochange_early(device, cifar, work: Path) -> dict:
     res, ok = {}, True
     for arm in ("R", "SNA"):
         want = [r for r in rows(S.HOST_RESULTS / S.cell_name(arm) / "per_task.csv") if r["task"] in ("1", "2")]
         run(arm, work / f"n_{arm}", device, cifar, 2, fresh=False)
         got = rows(work / f"n_{arm}" / "per_task.csv")
-        same = len(want) == 20 and got == want
-        res[arm] = {"rows": len(got), "identical_to_committed_0920": same}
-        ok &= same
+        c = compare_rows(got, want)
+        res[arm] = {"rows": len(got), **c}
+        ok &= len(want) == 20 and c["trajectory_identical"]
     want = [r for r in rows(S.HOST_RESULTS / S.cell_name("R") / "per_task.csv") if r["task"] in ("1", "2")]
     run("R", work / "n_mut", device, cifar, 2, fresh=False, lr=S.LR * (1 + 2.0 ** -20))
     got_lr = [{**r, "lr": want[0]["lr"]} for r in rows(work / "n_mut" / "per_task.csv")]
-    detected = got_lr != want
+    detected = not compare_rows(got_lr, want)["trajectory_identical"]
     return {"pass": ok, **res, "mutants": {"R_lr_2^-20_larger": {"detected": detected}}}
 
 
