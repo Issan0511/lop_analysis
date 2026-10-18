@@ -2,6 +2,12 @@
 
 更新: 2026-10-18 JST。依頼者Issaは全6走の実装・実行を指示済み。方向予測も論文の主張から固定済み。既存実装と実験条件を引き継いで残りを実行する。
 
+**2026-10-18 朝の走6回復:** 走2は較正・本走・analyzeを完了。その後06:11開始の走6GPU検査は、検査器の保存先引数 `out` をforward出力tupleで上書きしてJSON保存時にTypeErrorとなり、本走に進まなかった。09:35以降に調査し、局所変数の2か所だけを `activations` へ変更した（走6 commit `258012d6`）。訓練コード・閾値・条件は同一。元の独立レビューと失敗前証跡を `results/cnn_chprime_bias_1018/host_save_repair_1018/` に保持し、全他ファイルのhash一致と2識別子だけの差分を検証。元レビューを継承する範囲とrootによる保存処理差分監査を明記し、新しい独立担当がレビューしたとは記録していない。
+
+CPU全10群と実CUDA全5項目（R10宿主byte一致、capture巻戻し、graph/eager byte一致、追加forward誤差、レビュー証跡）を再実行してPASS、結果は走6 commit `fc44083b`。`six-gpu-cnn-recovery-1018.service` が検査hashを確認して **CHf→CHf_B→verdictだけ** を実行中。`host_continuation/state_cnn_recovery.json`、ログ `logs/cnn_chprime_bias_1018_*` が現行。CHfのprovenanceがRUNNINGに進んだことを確認した。走3の停止は維持し、他の完了走を再訓練しない。
+
+以前のretainerは全走をローカル保存済み（走3のpause snapshot含む）。新しい `six-gpu-retain-cnn-1018.service` はCNN回復controllerのlock解放を待ち、走6だけを `obsidian-research-data/cnn_chprime_bias_1018/host_gpu_recovery_1018/` にhash照合付き保存してcompact結果をlocal commitする。旧 `host_gpu_1018/` の停止時backupは上書きしない。進行は `retention_cnn_recovery.json`。GitHubへの追加公開はしていない。
+
 **最新指示（2026-10-18 02:46 JST）: Issa「一旦走３は飛ばしましょう」。走3は一時停止、明示の再開指示まで自動再開しない。** CH task20完了checkpointで正式STOPし、元controllerも `STOPPED_AT_CHECKPOINT` で終了。checkpoint・source・HEAD・manifestの整合をCPUで確認（`host_continuation/run3_pause_checkpoint.json`）。CHB/追加3腕は未実行。走3の `results/chb_decompose_200_1018/STOP` とG0の `host_continuation/run_policy.json` を保持する。finish queueは走2→（走3をskip）→走6。走3は未完了のままで科学判定は出さない。
 
 再開用HEAD `8f82fc9fff3e3d521d4253792ed8a58228b5a835` を保持するため、retainerは走3のrawを `obsidian-research-data/chb_decompose_200_1018/paused_20261018T0246JST/` にhash照合付きコピーするだけで、そのworktreeでは結果commitも行わない。元データも削除しない。再開が指示された場合は、pause policyとSTOPの解除、同じHEAD/checks/manifestでの `run --resume` が必要（CPU checks再生成も避ける）。以下の「走3を自動resume」の記述はこの指示以前の履歴。

@@ -1,3 +1,9 @@
+## 2026-10-18 朝 — 走6の検査保存ミスを修正し本走開始
+
+走2は較正・本走・analyze完了。走6は06:11開始のGPU検査結果を保存する際の変数上書きで停止していた。保存用変数2か所だけ修正し、CPU全10群と実GPU全5項目を再実行してPASS。科学的な演算・閾値・条件は変更していない。CHfの本走provenanceがRUNNINGへ進んだことを確認した。
+
+現行: `state_cnn_recovery.json`（CHf→CHf_B→verdict）、`retention_cnn_recovery.json`。走3はIssaの指示どおりCH task20で停止を維持。詳細と元の独立レビューを継承する範囲はHANDOFF_GPU.md先頭。
+
 ## 2026-10-18 02:48 JST — Issaの指示で走3を一時停止
 
 - 走3: CH task20の正式checkpointで停止。HEAD・source・manifest・checkpoint検査PASS。自動resumeは禁止し、未完了として保持。
