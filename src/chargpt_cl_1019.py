@@ -639,6 +639,7 @@ def run(args):
         rows.append(row)
         task_secs.append(time.time() - tt0)
         provenance_tasks.append(dict(task=t, data_sha=ctx.data_sha, rule_sha=ctx.rule_sha, H=ctx.H,
+                                     probe_sha=tensor_sha(ctx.probe) if box == "M" else tensor_sha(W.probe_idx),
                                      pi_iters=getattr(getattr(ctx, "chain", None), "pi_iters", None)))
         if full and wt_rec["points"]:
             for k in ("mu", "sd", "q"):
