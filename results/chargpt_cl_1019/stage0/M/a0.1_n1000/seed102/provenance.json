@@ -1,0 +1,117 @@
+{
+ "run_id": "chargpt_cl_1019",
+ "box": "M",
+ "arm": "C3",
+ "arm_cfg": {
+  "norm": "ln",
+  "ln_bias": false,
+  "lin_bias": false,
+  "lr": 0.001
+ },
+ "seed": 102,
+ "tasks": 5,
+ "n_per_task": 1000,
+ "alpha": 0.1,
+ "engine": "graph",
+ "git_hash": "92f04075cbf024d3d0ad14e3fe444a81d61053a0",
+ "dirty_src": [],
+ "torch": "2.13.0+cu130",
+ "cuda": "13.0",
+ "device": "NVIDIA GeForce RTX 5060 Ti",
+ "init_sha": "2f9bb40a852eecbadccb37667f643fd57fb8d84949d4cabe984d1897047aa8bd",
+ "final_sha": "b1e7dfddb82367f2c37686aa715d1c519a45e084f2131fd3864d1672016e5d01",
+ "tasks_info": [
+  {
+   "task": 1,
+   "data_sha": "ed6b43f3d88b759a8e1967f1baa2547eaff52ab66471df2cc5f6d6da2866b3c4",
+   "rule_sha": "efb52e1f42cc7f344f164c155ee19451a36aec5729299a5450fbb9f16f2fa516",
+   "H": 2.3702157708191383,
+   "probe_sha": "4582e1c8e4b7cdeaf9f3d22e6352effd27a8e5af63a0bd849959f521ffb92e31",
+   "pi_iters": 80
+  },
+  {
+   "task": 2,
+   "data_sha": "84d73b4cad7a60226c7ae5efbc39251bbf8e630519550473dd4b5e5644056721",
+   "rule_sha": "b16da2c5bd3741e8ec8a477e1cc2b8ca3265112dbacb1b2b2c825c56f0e2868d",
+   "H": 2.3677105011148543,
+   "probe_sha": "1876adc22dded7d8e5cf5919cc9566e6efdfda546a68959794fd2e5f64fd156f",
+   "pi_iters": 80
+  },
+  {
+   "task": 3,
+   "data_sha": "09a1c5050d6436383f2b0c0a4283f0e1638e6d7506514b5a0ffac69928128f7e",
+   "rule_sha": "a00fa24ffe31cff99284eb9d549f1da1a3063b2f4758525f82ad8532e5058bb4",
+   "H": 2.3763451550219297,
+   "probe_sha": "540ac33687dbba2e115b6392443298647f1fc977815e0b920ed1a95ef24b41ae",
+   "pi_iters": 79
+  },
+  {
+   "task": 4,
+   "data_sha": "08575a9dfc168e8033d2e70cf41818051440095fc94e9c8f743698565dfe2bd5",
+   "rule_sha": "f0c6aef3c79d5e38cea59f9eadfe283b223309a70747f615f3ec4974695d39fe",
+   "H": 2.372382264153706,
+   "probe_sha": "e9d9ae3b84e6c10122336625b17fb617fb6f6b672b7cb04c54074654ebd148e8",
+   "pi_iters": 80
+  },
+  {
+   "task": 5,
+   "data_sha": "b92f67b5ecc784fbbf2083c02cc3ab49acb8ca002c6cac11f789ac61db9e9752",
+   "rule_sha": "c6876cf5de5f5bccead96a150e185e759e72487955334611bd3d73e7493d7747",
+   "H": 2.37586901136786,
+   "probe_sha": "8b1da01c4373155d918afb5198413465b4c214bcf0dc3acfb91672536620c362",
+   "pi_iters": 80
+  }
+ ],
+ "data_W_sha256": null,
+ "W_window_starts": null,
+ "W_probe_idx": null,
+ "probe_uniform_sha": "21c9d42756214e15cd6a12db06031e88c830af5ab2c05d72142ffd7d80ec6154",
+ "stream_seed_example": {
+  "init": 3786866631673244997,
+  "rule_t1": 7287614655705770216,
+  "data_t1": 823660722908561692
+ },
+ "within_tasks": [
+  1,
+  2,
+  10,
+  11,
+  25,
+  26,
+  49,
+  50
+ ],
+ "fresh_tasks": [
+  10,
+  25,
+  50
+ ],
+ "wall_sec": 49.73663258552551,
+ "task_secs": [
+  10.843590497970581,
+  12.027152299880981,
+  10.073863744735718,
+  10.10319185256958,
+  5.679136276245117
+ ],
+ "argv": [
+  "src/chargpt_cl_1019.py",
+  "run",
+  "--arm",
+  "C3",
+  "--tasks",
+  "5",
+  "--ckpt",
+  "0",
+  "--out",
+  "results/chargpt_cl_1019/stage0/M/a0.1_n1000/seed102",
+  "--box",
+  "M",
+  "--alpha",
+  "0.1",
+  "--n_per_task",
+  "1000",
+  "--seed",
+  "102"
+ ]
+}
