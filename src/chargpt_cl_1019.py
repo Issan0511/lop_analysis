@@ -30,7 +30,7 @@ import torch.nn.functional as F
 
 RUN_ID = "chargpt_cl_1019"
 REPO = Path(__file__).resolve().parents[1]
-DATA_W = Path("/home/issan/Projects/claude/proj_004_drift/data/tinyshakespeare/input.txt")
+DATA_W = Path(os.environ.get("CHARGPT_DATA_W", "/home/issan/Projects/claude/proj_004_drift/data/tinyshakespeare/input.txt"))
 DATA_W_SHA256 = "86c4e6aa9db7c042ec79f339dcb96d42b0075e16b8fc2e86bf0ca57e2dc565ed"
 
 # §2.1 共通のモデル
@@ -703,7 +703,9 @@ def run(args):
     np.savez_compressed(out / "within_task.npz", **WT)
     np.savez_compressed(out / "online.npz", **online)
     gh, dirty = git_info()
-    prov = dict(run_id=RUN_ID, box=box, arm=arm, arm_cfg=ARMS[arm], seed=seed, tasks=n_tasks, n_per_task=n,
+    import socket
+    prov = dict(run_id=RUN_ID, host=socket.gethostname(), numpy=np.__version__, python=sys.version.split()[0],
+                box=box, arm=arm, arm_cfg=ARMS[arm], seed=seed, tasks=n_tasks, n_per_task=n,
                 alpha=args.alpha, engine=args.engine, git_hash=gh, dirty_src=dirty,
                 torch=torch.__version__, cuda=torch.version.cuda,
                 device=torch.cuda.get_device_name(dev) if dev.type == "cuda" else "cpu",

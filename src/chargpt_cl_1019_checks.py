@@ -63,7 +63,7 @@ def s_entropy(dev):
 
 
 # ---------------------------------------------------------------- S-rule
-def s_rule(dev):
+def s_rule(dev, boxes=("M", "W")):
     info = {}
     ok = True
     # 箱 M: 行の和・課題間の独立
@@ -81,6 +81,9 @@ def s_rule(dev):
     mut_r = float(np.corrcoef(Pa.ravel(), Pb.ravel())[0, 1])
     info["M_mutant_reuse_r"] = mut_r
     ok &= mut_r > 4 / math.sqrt(Pa.size)
+    if "W" not in boxes:
+        record("S-rule(generators)", ok, **info)
+        return
     # 箱 W: 窓・ラベルの一様性（Bonferroni）・課題間の独立
     W = C.WindowsW(0, dev)
     st = W.starts.sort().values
@@ -146,9 +149,9 @@ def flat_grads(model):
     return torch.cat([p.grad.detach().double().reshape(-1) for p in model.parameters()])
 
 
-def s_engine(dev):
+def s_engine(dev, boxes=("M", "W")):
     rows, ok = [], True
-    for box in ("M", "W"):
+    for box in boxes:
         W = C.WindowsW(0, dev) if box == "W" else None
         ctx = C.TaskCtx(box, 0, 1, 20, dev, alpha=0.03, W=W)
         for arm in ("C3", "B3", "N4"):
@@ -188,9 +191,9 @@ def s_engine(dev):
 
 
 # ---------------------------------------------------------------- S-online
-def s_online(dev):
+def s_online(dev, boxes=("M", "W")):
     rows, ok = [], True
-    for box in ("M", "W"):
+    for box in boxes:
         W = C.WindowsW(0, dev) if box == "W" else None
         ctx = C.TaskCtx(box, 0, 1, 60, dev, alpha=0.03, W=W)
         m = C.build_model("C3", box, 0, dev)
@@ -249,11 +252,11 @@ def compare_dirs(a, b):
     return files, diff
 
 
-def s_runs(base, dev):
+def s_runs(base, dev, boxes=("M", "W")):
     base = Path(base)
     out = {}
     n = 400
-    for box in ("M", "W"):
+    for box in boxes:
         # S-repro: 同じ走を 2 回（fresh 込み）
         a, b = base / f"repro_{box}_a", base / f"repro_{box}_b"
         sec = run_cli(a, box, "C3", n, extra=["--fresh_tasks", "2"])
@@ -322,21 +325,25 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
     ap.add_argument("--device", default="cuda")
+    ap.add_argument("--boxes", nargs="+", default=["M", "W"], choices=["M", "W"])
     a = ap.parse_args()
+    bx = tuple(a.boxes)
     C.setup_torch()
     dev = torch.device(a.device)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
-    for fn in (lambda: s_entropy(dev), lambda: s_rule(dev), s_init, lambda: s_engine(dev),
-               lambda: s_online(dev), lambda: s_decomp_mutant(dev), lambda: s_runs(out / "runs", dev)):
+    fns = ([lambda: s_entropy(dev)] if "M" in bx else []) + [lambda: s_rule(dev, bx), s_init, lambda: s_engine(dev, bx),
+           lambda: s_online(dev, bx)] + ([lambda: s_decomp_mutant(dev)] if "M" in bx else []) + [lambda: s_runs(out / "runs", dev, bx)]
+    for fn in fns:
         try:
             fn()
         except Exception as e:  # 検査そのものが壊れたら FAIL として残す
             import traceback
             record(f"ERROR in {getattr(fn, '__name__', 'check')}", False, error=repr(e), tb=traceback.format_exc()[-1500:])
     gh, dirty = C.git_info()
-    summary = dict(run_id=C.RUN_ID, git_hash=gh, dirty_src=dirty, torch=torch.__version__,
+    summary = dict(run_id=C.RUN_ID, git_hash=gh, dirty_src=dirty, torch=torch.__version__, boxes=list(bx),
+                   host=__import__("socket").gethostname(),
                    device=torch.cuda.get_device_name(dev) if dev.type == "cuda" else "cpu",
                    wall_sec=time.time() - t0, all_pass=all(r["ok"] for r in RESULTS), results=RESULTS)
     (out / "checks.json").write_text(json.dumps(summary, indent=1, ensure_ascii=False, default=float))

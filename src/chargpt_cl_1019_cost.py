@@ -38,11 +38,14 @@ def main():
     ap.add_argument("--nw", type=int, required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--arms", nargs="*", default=["C3", "B3"])
+    ap.add_argument("--boxes", nargs="+", default=["M", "W"], choices=["M", "W"])
     a = ap.parse_args()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     res = {}
     for box, n in (("M", a.nm), ("W", a.nw)):
+        if box not in a.boxes:
+            continue
         for arm in a.arms:
             r = {}
             r["full"] = run(out / f"{box}_{arm}_full", box, arm, n, a.alpha, [])
@@ -61,14 +64,14 @@ def main():
     # 腕ごとの費用: 測った腕はその値、測っていない腕は同じ形の腕（C4・N4 は C3）で代える
     total = 0.0
     per_box = {}
-    for box in ("M", "W"):
+    for box in a.boxes:
         sb = 0.0
         for arm in ARMS:
             key = f"{box}_{arm}" if f"{box}_{arm}" in res else f"{box}_C3"
             sb += 10 * res[key]["per_run_sec"]
         per_box[box] = sb
         total += sb
-    summary = dict(nm=a.nm, alpha=a.alpha, nw=a.nw, per_box_hours={k: v / 3600 for k, v in per_box.items()},
+    summary = dict(host=__import__("socket").gethostname(), boxes=a.boxes, nm=a.nm, alpha=a.alpha, nw=a.nw, per_box_hours={k: v / 3600 for k, v in per_box.items()},
                    total_hours=total / 3600, rule="10 時間以内なら本走へ、超えたら報告（spec §9）",
                    over_10h=total / 3600 > 10, measured=res)
     (out / "cost.json").write_text(json.dumps(summary, indent=1, ensure_ascii=False))
