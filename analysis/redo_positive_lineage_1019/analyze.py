@@ -2,6 +2,8 @@
 """Held-out background fits, local logit interventions, and individual lifetimes."""
 from __future__ import annotations
 import csv
+import gzip
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -139,7 +141,8 @@ def deep_one(d,r):
 
 def summarize_group(path, method, births, firsts, steps, resetrows, summaries):
     meta=json.loads((path/'trace/events.json').read_text()); seeds=meta['seeds']; ev=meta['events']
-    u=np.load(path/'trace/units.npz'); dd=np.load(path/'trace/deltas.npz')
+    with np.load(path/'trace/units.npz') as f: u={k:f[k] for k in f.files}
+    with np.load(path/'trace/deltas.npz') as f: dd={k:f[k] for k in f.files}
     valid=[j for j,e in enumerate(ev) if e['event'] in ('init','after_step','reset_outgoing_2')]
     for r,seed in enumerate(seeds):
         for scope in ('g','t3'):
@@ -211,7 +214,8 @@ def summarize_group(path, method, births, firsts, steps, resetrows, summaries):
 def analyze_deep(path, method, outrows, eventrows, lookup):
     meta=json.loads((path/'trace/events.json').read_text()); seeds=meta['seeds']; events=meta['events']
     for f in sorted((path/'trace').glob('deep_*.npz')):
-        index=int(f.stem.split('_')[-1]); event=events[index]; d=np.load(f)
+        index=int(f.stem.split('_')[-1]); event=events[index]
+        with np.load(f) as pack: d={k:pack[k] for k in pack.files}
         print(f'DEEP {method} seeds={seeds[0]}-{seeds[-1]} index={index} t={event["task"]} {event["event"]}',flush=True)
         for r,seed in enumerate(seeds):
             met=deep_one(d,r); arrays=met.pop('_arrays')
@@ -288,11 +292,29 @@ def main():
     OUT.mkdir(parents=True,exist_ok=True)
     checks=math_checks()
     births=[]; firsts=[]; steps=[]; resets=[]; summaries=[]; unitdeep=[]; eventdeep=[]; lookup={}
+    analysis_sha=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    pending=[]
     for method in ('redo','none'):
         for group in (0,10):
             path=OUT/'raw'/f'{method}_s{group}-{group+9}'
-            summarize_group(path,method,births,firsts,steps,resets,summaries)
-            analyze_deep(path,method,unitdeep,eventdeep,lookup)
+            if not (path/'reproduction.json').exists():
+                pending.append(path.name); continue
+            cache=path/'analysis_cache.json.gz'
+            bundle=None
+            if cache.exists():
+                with gzip.open(cache,'rt') as f: stored=json.load(f)
+                if stored.get('analysis_sha')==analysis_sha: bundle=stored['data']
+            if bundle is None:
+                bundle=[[],[],[],[],[],[],[]]
+                summarize_group(path,method,*bundle[:5])
+                analyze_deep(path,method,bundle[5],bundle[6],{})
+                with gzip.open(cache,'wt') as f: json.dump(dict(analysis_sha=analysis_sha,data=bundle),f)
+            for dest,source in zip((births,firsts,steps,resets,summaries,unitdeep,eventdeep),bundle):
+                dest.extend(source)
+            for rec in bundle[5]: lookup[(method,rec['seed'],rec['index'],rec['unit'])]=rec
+    if pending:
+        print('Pending replays; completed analyses cached:',pending,flush=True)
+        return
     for b in births:
         for when,j in (('birth',b['event_index']),('before',b['previous_index'])):
             rec=lookup.get((b['method'],b['seed'],j,b['unit']))
