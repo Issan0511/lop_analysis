@@ -60,6 +60,7 @@ M_CHUNK = 250                          # 系列を作る単位（更新数）。
 
 
 def setup_torch():
+    torch.set_num_threads(int(os.environ.get("CHARGPT_THREADS", "2")))
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cudnn.allow_tf32 = False
     torch.set_float32_matmul_precision("highest")
@@ -234,16 +235,13 @@ class ChainM:
         s.hrow = hrow
         s.H = float((s.pi * hrow).sum())
         s.rowsum_err = float(np.abs(P.sum(1) - 1.0).max())
-        s.cum = None
-
-    def to(s, device):
-        s.cum = torch.from_numpy(np.cumsum(s.P.reshape(V * V, V), 1)).to(device)
-        s.pi_cum = torch.from_numpy(np.cumsum(s.pi.reshape(-1))).to(device)
-        s.logP = torch.from_numpy(np.log(np.maximum(s.P.reshape(V * V, V), 1e-300))).to(device)
-        return s
+        # 系列は CPU の乱数で作る（CUDA の乱数は GPU の機種で値が変わり得るため。追補 1）
+        s.cum = torch.from_numpy(np.cumsum(s.P.reshape(V * V, V), 1))
+        s.pi_cum = torch.from_numpy(np.cumsum(s.pi.reshape(-1)))
+        s.logP = torch.from_numpy(np.log(np.maximum(s.P.reshape(V * V, V), 1e-300)))
 
     def sample(s, n, gen):
-        """長さ 129 の系列 n 本。最初の 2 記号は π から、以後 p(·|a,b) から。"""
+        """長さ 129 の系列 n 本（CPU）。最初の 2 記号は π から、以後 p(·|a,b) から。gen は CPU の Generator。"""
         dev = s.cum.device
         u0 = torch.rand(n, 1, generator=gen, device=dev, dtype=torch.float64)
         st = torch.searchsorted(s.pi_cum, u0.squeeze(1), right=True).clamp_(max=V * V - 1)
@@ -257,25 +255,33 @@ class ChainM:
 
     def true_ce(s, seq):
         """真の連鎖そのものの予測の交差エントロピー（系列ごとの平均、目標 s_2..s_128）。"""
+        seq = seq.cpu()
         ctx = seq[:, :-2] * V + seq[:, 1:-1]
         return -s.logP[ctx, seq[:, 2:]].mean(1)
 
 
 def task_data_M(chain, seed, task, n):
-    gen = torch.Generator(device=chain.cum.device).manual_seed(stream_seed(seed, "data", task))
-    out = torch.empty(n, M_BATCH, M_SEQ, dtype=torch.uint8, device=chain.cum.device)
+    gen = cpu_gen(seed, "data", task)
+    out = torch.empty(n, M_BATCH, M_SEQ, dtype=torch.uint8)
     for c0 in range(0, n, M_CHUNK):
         c1 = min(n, c0 + M_CHUNK)
         out[c0:c1] = chain.sample((c1 - c0) * M_BATCH, gen).view(c1 - c0, M_BATCH, M_SEQ).to(torch.uint8)
     return out
 
 
-def probes_M(chain, seed, task, device):
-    g = torch.Generator(device=device).manual_seed(stream_seed(seed, "probe", task, "chain"))
-    chain_probe = chain.sample(M_PROBE, g)[:, :T]
-    g = torch.Generator(device=device).manual_seed(stream_seed(seed, "probe", task, "eval"))
-    eval_seq = chain.sample(M_EVAL, g)
+def probes_M(chain, seed, task):
+    chain_probe = chain.sample(M_PROBE, cpu_gen(seed, "probe", task, "chain"))[:, :T]
+    eval_seq = chain.sample(M_EVAL, cpu_gen(seed, "probe", task, "eval"))
     return chain_probe, eval_seq
+
+
+def task_cpu_M(seed, task, n, alpha):
+    """課題 t の規則・batch 列・probe を CPU で作る（裏のスレッドで先に作れるように分けた）。"""
+    chain = ChainM(seed, task, alpha)
+    data = task_data_M(chain, seed, task, n)
+    probe, eval_seq = probes_M(chain, seed, task)
+    return dict(chain=chain, data=data, probe=probe, eval_seq=eval_seq, data_sha=tensor_sha(data),
+                probe_sha=tensor_sha(probe), rule_sha=hashlib.sha256(chain.P.tobytes()).hexdigest())
 
 
 def uniform_probe_M(seed, device):
@@ -496,15 +502,14 @@ def git_info():
 class TaskCtx:
     """課題 t の規則・データ・probe（継続と fresh で同じものを使う）。"""
 
-    def __init__(s, box, seed, task, n, device, alpha=None, W=None):
+    def __init__(s, box, seed, task, n, device, alpha=None, W=None, cpu=None):
         s.box, s.task, s.n = box, task, n
         if box == "M":
-            s.chain = ChainM(seed, task, alpha).to(device)
-            s.H = s.chain.H
-            s.data = task_data_M(s.chain, seed, task, n)
-            s.probe, s.eval_seq = probes_M(s.chain, seed, task, device)
-            s.data_sha = tensor_sha(s.data)
-            s.rule_sha = hashlib.sha256(s.chain.P.tobytes()).hexdigest()
+            c = cpu if cpu is not None else task_cpu_M(seed, task, n, alpha)
+            s.chain, s.H = c["chain"], c["chain"].H
+            s.data = c["data"].to(device)
+            s.probe, s.eval_seq = c["probe"].to(device), c["eval_seq"].to(device)
+            s.data_sha, s.rule_sha, s.probe_sha = c["data_sha"], c["rule_sha"], c["probe_sha"]
         else:
             s.W = W
             s.H = 0.0
@@ -512,6 +517,7 @@ class TaskCtx:
             s.idx = W.batch_idx(task, n)
             s.data_sha = tensor_sha(s.idx)
             s.rule_sha = tensor_sha(s.labels)
+            s.probe_sha = tensor_sha(W.probe_idx)
 
     def batch(s, u):
         if s.box == "M":
@@ -590,9 +596,15 @@ def run(args):
     WT = {}
     H_list, provenance_tasks = [], []
 
+    from concurrent.futures import ThreadPoolExecutor
+    pool = ThreadPoolExecutor(max_workers=1) if box == "M" else None
+    fut = pool.submit(task_cpu_M, seed, 1, n, args.alpha) if pool else None
     for t in range(1, n_tasks + 1):
         ti = t - 1
-        ctx = TaskCtx(box, seed, t, n, dev, alpha=args.alpha, W=W)
+        cpu = fut.result() if fut is not None else None
+        if pool is not None and t < n_tasks:
+            fut = pool.submit(task_cpu_M, seed, t + 1, n, args.alpha)     # 次の課題の系列を裏で作る
+        ctx = TaskCtx(box, seed, t, n, dev, alpha=args.alpha, W=W, cpu=cpu)
         H_list.append(ctx.H)
         full = t in within
         pts = within_points(n, full) if measure_on else [n]
@@ -640,7 +652,7 @@ def run(args):
         rows.append(row)
         task_secs.append(time.time() - tt0)
         provenance_tasks.append(dict(task=t, data_sha=ctx.data_sha, rule_sha=ctx.rule_sha, H=ctx.H,
-                                     probe_sha=tensor_sha(ctx.probe) if box == "M" else tensor_sha(W.probe_idx),
+                                     probe_sha=ctx.probe_sha,
                                      pi_iters=getattr(getattr(ctx, "chain", None), "pi_iters", None)))
         if full and wt_rec["points"]:
             for k in ("mu", "sd", "q"):

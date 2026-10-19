@@ -40,8 +40,8 @@ def s_entropy(dev):
     for alpha in (0.01, 0.03, 0.1):
         for seed in (0, 1):
             for task in (1, 2):
-                ch = C.ChainM(seed, task, alpha).to(dev)
-                g = torch.Generator(device=dev).manual_seed(C.stream_seed(seed, "check", task, "entropy"))
+                ch = C.ChainM(seed, task, alpha)
+                g = torch.Generator().manual_seed(C.stream_seed(seed, "check", task, "entropy"))
                 seq = ch.sample(8192, g)
                 ce = ch.true_ce(seq).double()
                 m, se = float(ce.mean()), float(ce.std() / math.sqrt(len(ce)))
@@ -52,8 +52,8 @@ def s_entropy(dev):
                 rows.append(dict(alpha=alpha, seed=seed, task=task, H=ch.H, ce=m, diff=d, se=se,
                                  pi_iters=ch.pi_iters, rowsum_err=ch.rowsum_err))
     # 変異対照: 文脈を 1 つずらした予測（壊れた評価）は帯を大きく外れる
-    ch = C.ChainM(0, 1, 0.03).to(dev)
-    g = torch.Generator(device=dev).manual_seed(C.stream_seed(0, "check", 1, "entropy_mut"))
+    ch = C.ChainM(0, 1, 0.03)
+    g = torch.Generator().manual_seed(C.stream_seed(0, "check", 1, "entropy_mut"))
     seq = ch.sample(8192, g)
     ctx = seq[:, :-3] * C.V + seq[:, 1:-2]          # 1 つ古い文脈 (s_{j-3}, s_{j-2}) で s_j を予測
     ce_mut = float(-ch.logP[ctx, seq[:, 3:]].mean())
