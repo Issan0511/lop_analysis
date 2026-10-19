@@ -55,7 +55,7 @@ def s_entropy(dev):
     ch = C.ChainM(0, 1, 0.03).to(dev)
     g = torch.Generator(device=dev).manual_seed(C.stream_seed(0, "check", 1, "entropy_mut"))
     seq = ch.sample(8192, g)
-    ctx = seq[:, 1:-2] * C.V + seq[:, 2:-1]
+    ctx = seq[:, :-3] * C.V + seq[:, 1:-2]          # 1 つ古い文脈 (s_{j-3}, s_{j-2}) で s_j を予測
     ce_mut = float(-ch.logP[ctx, seq[:, 3:]].mean())
     mut_fails = abs(ce_mut - ch.H) >= 0.01
     record("S-entropy", ok_all and mut_fails, worst_abs_diff=worst, max_se=max(r["se"] for r in rows),
@@ -184,7 +184,7 @@ def s_engine(dev):
                 err_m = float((flat_grads(mm) - g64).norm() / g64.norm())
                 rows[-1]["mutant_other_batch_relerr"] = err_m
                 ok &= err_m > 4 * err_e
-    record("S-engine(compile+graph = eager)", ok, rows=rows)
+    record("S-engine(graph = eager)", ok, rows=rows)
 
 
 # ---------------------------------------------------------------- S-online

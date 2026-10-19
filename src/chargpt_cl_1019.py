@@ -322,8 +322,9 @@ class WindowsW:
 class Engine:
     """1 更新 = 更新前のバッチの損失（オンライン成績）を記録して Adam で 1 歩。
 
-    graph=True: torch.compile した損失を CUDA グラフに取り込み、入力・lr は静的な tensor に書き込む。
+    graph=True: eager の 1 更新をそのまま CUDA グラフに取り込み、入力・lr は静的な tensor に書き込む。
     graph=False: そのままの eager（検査の参照）。
+    torch.compile は使わない（追補 0 §A: RoPE を含むモデル全体で勾配が float64 の参照から 3e−5〜3e−4 ずれた）。
     """
 
     def __init__(s, model, arm, box, graph=True):
@@ -337,7 +338,7 @@ class Engine:
             s.lr = torch.tensor(s.base_lr, dtype=torch.float32, device=dev)
             s.opt = torch.optim.Adam(model.parameters(), lr=s.lr, betas=(0.9, 0.999), eps=1e-8,
                                      weight_decay=0.0, foreach=True, capturable=True)
-            s.fn = torch.compile(s._loss)
+            s.fn = s._loss
             s._capture()
         else:
             s.opt = torch.optim.Adam(model.parameters(), lr=s.base_lr, betas=(0.9, 0.999), eps=1e-8,
