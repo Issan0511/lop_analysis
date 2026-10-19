@@ -272,6 +272,16 @@ def main():
                 raise AssertionError(f'Gauge online first50 prefix mismatch: {arm}')
             result['registered_primary_gauge'] = metric == 'online_steps51_780'
             gauge_contrasts.append(result)
+    diagnostic_summary = []
+    for arm in ('zero', 'rand10'):
+        for step in (10, 25, 50):
+            response = next(r for r in grouped if r['arm'] == arm and r['cohort'] == 'first_reset' and
+                            r['event'] == 'after_step' and r['task'] == 3 and r['step'] == step)
+            updates = [r for r in deltas if r['arm'] == arm and r['cohort'] == 'first_reset' and r['step'] == step]
+            row = {'arm': arm, 'step': step, 'cohort': 'first_reset', 'n_seeds': len(updates)}
+            row.update({key: response[key] for key in ('ce_demand_mean_mean', 'ce_brake_mean_mean', 'ce_upward_mean_mean')})
+            row.update({key: float(np.mean([r[key] for r in updates])) for key in ('actual', 'own_w', 'own_b', 'upstream', 'adam_current', 'adam_memory', 'sgd_direction')})
+            diagnostic_summary.append(row)
     verdict = {'analysis_rng': 1019, 'bootstrap_replicates': 20_000, 'bootstrap': 'paired-seed percentile95% interval',
                'seed_unit': '20 paired seed-specific fixed first-reset L2 cohorts; no unit-level pseudoreplication',
                'primary': primary, 'primary_verdict': primary_verdict(primary),
@@ -279,6 +289,7 @@ def main():
                'source_files': sources, 'contrasts': contrasts, 'performance_contrasts': perf_contrasts,
                'route_contrasts': route_contrasts, 'route_registered_support': all(r['registered_support'] for r in route_contrasts),
                'gauge_contrasts': gauge_contrasts,
+               'local_gradient_and_step_diagnostics': diagnostic_summary,
                'limitations': ['Nonzero outgoing initialization changes initial predictions; shock is measured, not matched.',
                                'Random-direction norm replacement is a specific outgoing intervention, not an exhaustive test of all initialization schemes.',
                                'A alone does not establish positive-sidedness as a mediator of worse accuracy.',
@@ -292,7 +303,7 @@ def main():
                        ('performance', performance), ('performance_summary', perf_summary), ('performance_contrasts', perf_contrasts),
                        ('shock', shocks), ('actual_deltas', deltas), ('checks', checks), ('verdict', [primary])]:
         write_csv(args.out / f'{name}.csv', rows)
-    for name, rows in [('online_segments', segments), ('route_contrasts', route_contrasts), ('gauge_contrasts', gauge_contrasts)]:
+    for name, rows in [('online_segments', segments), ('route_contrasts', route_contrasts), ('gauge_contrasts', gauge_contrasts), ('local_gradient_and_step_diagnostics', diagnostic_summary)]:
         write_csv(args.out / f'{name}.csv', rows)
     make_figure(args.out, grouped, contrasts, perf_summary)
     make_report(args.out, primary, verdict, grouped, perf_summary, perf_contrasts, shocks)
@@ -310,6 +321,8 @@ def make_figure(out, grouped, contrasts, perf_summary):
         axes[0].plot(x, [r['task3_near99_mean'] for r in rows], '.-', color=COLORS[arm], label=arm)
     axes[0].set(xlabel='Task-3 updates', ylabel='Fraction of cohort with opening >= .99', ylim=(-.02, 1.02))
     axes[0].set_xscale('symlog', linthresh=1)
+    axes[0].set_xlim(0, 800)
+    axes[0].set_xticks([0, 1, 10, 100, 780], ['0', '1', '10', '100', '780'])
     axes[0].legend(frameon=False, fontsize=8)
     rows = [next(r for r in contrasts if r['arm'] == arm and r['step'] == 50 and r['metric'] == 'task3_near99_mean') for arm in CORE_ARMS[1:]]
     for i, row in enumerate(rows):
@@ -334,6 +347,8 @@ def make_figure(out, grouped, contrasts, perf_summary):
         for axis, key in zip(axes, ('task3_near99_mean', 'task3_mean_mean', 'v_centered_norm_mean')):
             axis.plot([r['step'] for r in rows], [r[key] for r in rows], '.-', color=COLORS[arm], label=arm)
             axis.set_xscale('symlog', linthresh=1)
+            axis.set_xlim(1, 800)
+            axis.set_xticks([1, 10, 100, 780], ['1', '10', '100', '780'])
             axis.set_xlabel('Task-3 updates')
     axes[0].set(ylabel='Fraction of cohort with opening >= .99', ylim=(-.02, 1.02))
     axes[0].legend(frameon=False, fontsize=8)
@@ -389,6 +404,11 @@ def make_report(out, primary, verdict, grouped, perf_summary, perf_contrasts, sh
         after = next(r for r in verdict['gauge_contrasts'] if r['arm'] == arm and r['metric'] == 'online_steps51_780')
         text += f"| {arm} | {100 * before['mean_difference']:.8f} | {100 * after['mean_difference']:+.2f} [{100 * after['ci95_low']:+.2f}, {100 * after['ci95_high']:+.2f}] |\n"
     text += '\nCは活動/readoutの尺度に対するAdam学習の依存を調べる。介入後のゲート軌道は固定されないため、その後までゲートを保った純粋なv介入ではない。図のgauge腕の50更新点は再尺度化直前の値で、変換直後は生データのgauge_postイベントに保存した。\n\n'
+    text += '**局所勾配と実更新（事後診断追補）。** 登録したCE分解と実更新記録から、ここでは10・25・50更新を抜き出した。CEの上向き生勾配を需要−自己抑制に厳密分解すると、rand10では自己抑制項が強い。しかし差し引き後の上向き生勾配まで常に小さいわけではない。\n\n'
+    text += '| 腕・更新 | CE需要 | CE自己抑制 | 差引き上向き | 実Δ平均位置 | 本人W寄与 |\n|---|---:|---:|---:|---:|---:|\n'
+    for r in verdict['local_gradient_and_step_diagnostics']:
+        text += f"| {r['arm']}・{r['step']} | {r['ce_demand_mean_mean']:.6f} | {r['ce_brake_mean_mean']:.6f} | {r['ce_upward_mean_mean']:.6f} | {r['actual']:.6f} | {r['own_w']:.6f} |\n"
+    text += '\nCEは更新後の固定task3・256画像での−dL/dz平均。実更新はその時点の学習minibatchで行われ、実Δ平均位置はその一歩の前後を固定global1000画像で測る。Adam・本人W/bias・前段変化を含む。異なる入力集合と時点の量であり、同じ方向量の完全分解ではなく、比を変換係数とはしない。10・50更新ではrand10の差引き上向き生勾配の方が大きい一方、実際の上方移動は小さい。「自己抑制が復活したから位置差のすべてを説明できた」とは言えず、誤差方向・入力・Adamの正規化と履歴を含めて解釈する。\n\n'
     text += f"再現性：zeroの元保存結果への一致、全腕のreset前・完全reset後・minibatch系列・交換mask一致、登録された座標変換以外の不変を検査済み。B/Cは介入瞬間の予測とゲートの不変も検査。CE分解の閉包最大誤差{verdict['ce_closure_max']:.3g}、自己抑制項の最小値{verdict['ce_brake_min']:.3g}。CE診断は固定256画像・float64での局所勾配であり、Adam実更新そのものではない。\n\n"
     text += 'この介入Aの対象は初回交換後の第3課題まで。長期・CNNへの一般化や、正の片側化から成績低下への矢印は別途必要。元の非ゼロnormで効果がない場合も、すべての読み出し介入が無効とはしない。\n\n'
     text += '数値正本：verdict.json、contrasts.csv、per_seed.csv、performance_contrasts.csv。初期衝撃はshock.csv、個々の実更新分解はactual_deltas.csv。会話中の観測値再計算はposthoc/summary.md。\n'

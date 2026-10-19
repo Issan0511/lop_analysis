@@ -1,0 +1,317 @@
+We have completed the preregistered 9-arm, paired20seed experiment. Continue our review in Japanese. You have NO filesystem/tools in this call; all actual execution/code/data verification was done by Codex and independent agents. Please explicitly distinguish your interpretation review from raw-data inspection.
+
+The user's exact hypothesis is: outgoing-v reset causes positive-side one-sidedness, and that causes poorer adaptation. They do not mean merely small v directly causes poorer accuracy. Please fairly credit arrows supported by this experiment, challenge arrows not established, and correct my reading if warranted. Do not propose an unlimited new experimental programme. Give the most defensible interpretation and a short paper-ready claim with scope. The key question is whether high-open fractions and performance move together consistently across A/B/C. Do not infer all-open units are globally useless; upstream h1 is nonlinear.
+
+All arms first3tasks only. First reset aftertask2 at1560, no next reset duringtask3. Fixed preintervention selectedcohort. Original old v class-centerednorm defines randomdose; keep usesoldraw columns withzeroedmoments. Nonzeroarms alter initialpredictions. Center changes optimizercoordinates plusmeaninputpath, mu fixed; it is not a pure gate-mediator intervention. Gauge atstep50 preserves functionandgates instantly, correct gradient-covector Adamhistory transforms, but futuregates may change. We independently checked gauge chainrule and centergradients on CPUdouble beforeproduction. No weightdecay. Raw CE demand/brake decomposition is not an Adamforce decomposition.
+
+All actual pairing/finite/coordinate/replay checks passed; zero0-9 finalP/m/v matched unchangedengine bitwise;20seedzero all3taskrows matchedarchive exactly. Endpoint high99 is perseed fraction of fixed resetcohort withp>=.99 on2500task3trainimages, then equalaverage20seeds. Primarymeaningful suppression cutoff upperCI<-0.10; bootstrap paired20000 seed1019. Secondaryarm comparisons diagnostic, not tuned-methodsuperiority claims. Do not mistake no performanceimprovement for proof ofno harmfulgating under any conditions.
+
+Please address: (1) what A proves, (2) whether B supplies rescue or counterevidence, (3) C interpretation, (4) a precise revised causal picture and remaining arrow, (5) corrections to any overclaim in report. Response under1800Japanese characters unless essential.
+
+CODEX GENERATED RESULTS REPORT:
+# ReDoのvリセットと正の片側化：初回リセットへの介入（1019）
+
+主解析は **事前基準を満たす正の片側化の抑制**。rand10−zeroの50更新時・高開口率個体割合の対応差は-59.64ポイント、95% bootstrap CI [-62.62, -56.63]。20 seedを反復単位とし、各seedの初回交換群を固定して比較した。
+
+5+1実ラベルCIFAR100のReLU MLP。初回の完全なReDoリセット後、交換された第2層の読み出し列だけを変更。zeroは元のReDo、keepは古い列の保持（momentは元のReDo同様ゼロ）、rand01/03/10は同じ独立ランダム方向で旧クラス中心化normの0.1/0.3/1.0倍。ランダム腕はクラス共通成分を除去した。
+
+| 腕 | 50更新・p≥.99割合 | 780更新・p≥.99割合 | 第3課題online | 第3課題末train | 第3課題末test |
+|---|---:|---:|---:|---:|---:|
+| zero | 88.14% | 93.79% | 62.94% | 75.36% | 66.71% |
+| keep | 31.74% | 39.34% | 66.21% | 79.03% | 68.05% |
+| rand01 | 67.52% | 80.25% | 63.12% | 75.65% | 66.79% |
+| rand03 | 48.56% | 60.80% | 63.62% | 76.09% | 67.01% |
+| rand10 | 28.49% | 35.76% | 65.90% | 78.63% | 67.95% |
+| center | 68.52% | 44.89% | 64.33% | 77.05% | 68.13% |
+| center_random | 96.71% | 86.01% | 64.54% | 76.89% | 68.24% |
+| gauge4 | 88.14% | 90.61% | 63.05% | 75.42% | 66.96% |
+| gauge025 | 88.14% | 88.24% | 63.03% | 75.96% | 67.07% |
+
+開口率は第3課題の全2500学習画像。各seedの割合を等重み平均。onlineは780 minibatchの平均。成績差の対応CIはperformance_contrasts.csv。主比較以外は診断的副解析として全腕を報告した。
+
+| 腕−zero | Online差・ポイント[95%CI] | Test差・ポイント[95%CI] |
+|---|---:|---:|
+| keep | +3.27 [+2.80, +3.77] | +1.34 [+0.79, +1.87] |
+| rand01 | +0.18 [+0.07, +0.29] | +0.08 [-0.18, +0.33] |
+| rand03 | +0.68 [+0.47, +0.91] | +0.30 [-0.05, +0.72] |
+| rand10 | +2.96 [+2.49, +3.47] | +1.24 [+0.81, +1.70] |
+| center | +1.39 [+0.89, +1.89] | +1.42 [+0.70, +2.16] |
+| center_random | +1.60 [+1.20, +2.03] | +1.53 [+0.88, +2.20] |
+| gauge4 | +0.11 [+0.06, +0.17] | +0.25 [-0.01, +0.52] |
+| gauge025 | +0.09 [+0.01, +0.16] | +0.36 [+0.01, +0.73] |
+
+keep/randの非ゼロ読み出し腕では初期予測は一致していない。vを非ゼロ化すると初期logitとCEが変わるため、片側化と成績の同時変化だけで「片側化が成績差を媒介した」とは結論しない。入力側再初期化・旧特徴消失・初期予測の変化と、読み出し初期化の役割を区別する。
+
+| 腕 | 初回介入直後の次課題CE | zero後との差・logit RMS |
+|---|---:|---:|
+| zero | 24.23475 | 0.00000 |
+| keep | 22.67476 | 1.42636 |
+| rand01 | 24.21978 | 0.07361 |
+| rand03 | 24.18990 | 0.22082 |
+| rand10 | 24.08569 | 0.73608 |
+
+上表は固定256画像の次課題プローブ。正確な初期衝撃はseed別shock.csvに残す。
+
+**平均入力の経路への介入B。** centerはz=w·(h−μ)+b′と書き換え、介入瞬間の前活性・予測を保ってからμを固定する。center_randomは同じnormのランダムμを使う比較。読み出しゼロは維持する。
+
+| centerの比較先 | 50更新high99差・ポイント[95%CI] | Online差・ポイント[95%CI] |
+|---|---:|---:|
+| zero | -19.62 [-26.94, -12.59] | +1.39 [+0.89, +1.89] |
+| center_random | -28.19 [-35.77, -21.68] | -0.21 [-0.38, -0.06] |
+
+両比較でhigh99差のCI上端<0、online差の平均≥+0.5ポイントかつCI下端>0という事前の支持条件を**満たさなかった**。この書き換えは平均入力を通る更新経路とAdamの座標を変える。支持条件を満たしても、非線形ゲートが成績差を一意に媒介した証明とはしない。
+
+**正の同次性による再尺度化C。** gauge4/025はzeroと同じ最初の50更新後に、交換群のincomingを1/c倍、outgoingをc倍し、勾配履歴としてmomentを変換。介入瞬間の関数とゲートを保つ。
+
+| 腕−zero | 1〜50更新online差 | 51〜780更新online差・ポイント[95%CI] |
+|---|---:|---:|
+| gauge4 | 0.00000000 | +0.12 [+0.06, +0.18] |
+| gauge025 | 0.00000000 | +0.09 [+0.01, +0.17] |
+
+Cは活動/readoutの尺度に対するAdam学習の依存を調べる。介入後のゲート軌道は固定されないため、その後までゲートを保った純粋なv介入ではない。図のgauge腕の50更新点は再尺度化直前の値で、変換直後は生データのgauge_postイベントに保存した。
+
+再現性：zeroの元保存結果への一致、全腕のreset前・完全reset後・minibatch系列・交換mask一致、登録された座標変換以外の不変を検査済み。B/Cは介入瞬間の予測とゲートの不変も検査。CE分解の閉包最大誤差5.55e-16、自己抑制項の最小値-1.79e-17。CE診断は固定256画像・float64での局所勾配であり、Adam実更新そのものではない。
+
+この介入Aの対象は初回交換後の第3課題まで。長期・CNNへの一般化や、正の片側化から成績低下への矢印は別途必要。元の非ゼロnormで効果がない場合も、すべての読み出し介入が無効とはしない。
+
+数値正本：verdict.json、contrasts.csv、per_seed.csv、performance_contrasts.csv。初期衝撃はshock.csv、個々の実更新分解はactual_deltas.csv。会話中の観測値再計算はposthoc/summary.md。
+
+
+PRIOR OBSERVATION RECOMPUTED (POSTHOC):
+# ReDoの正の片側化：会話中の観測値の再計算（1019）
+
+新規学習なし。保存された個体配列・深部状態から再計算した。特記なければ各seed内で平均・重みの正規化を行い、20 seedを等重みに平均する。vは100クラス共通成分を除いた出力重みのL2norm。
+
+| 時点 | 開口率・単純平均 | v重み | v²重み | 全開寄り個体のv²割合 |
+|---|---:|---:|---:|---:|
+| t3_s780 | 0.740612 | 0.624909 | 0.589816 | 0.055659 |
+| t29_end | 0.493791 | 0.384110 | 0.304129 | 0.051939 |
+
+開口率は各課題の全学習画像。全開寄りはp≥0.99。v²重み開口率は入力bias経路などの局所感度の要約であり、入力共分散・誤差方向・読み出し学習・Adam状態を含む適応全体を表さない。
+
+| 時点 | dL/dz RMS・単純平均 | v重み | v²重み |
+|---|---:|---:|---:|
+| t3_s780 | 0.017720 | 0.024001 | 0.026168 |
+| t29_end | 0.006225 | 0.005287 | 0.004535 |
+
+dL/dzには既にvが含まれる。追加重み付けは記述統計であり実更新量ではない。
+
+第3課題末の初回リセット群783個体のうち、固定global1000画像でp≥0.99は745個体、厳密なp=1は668個体。個体をプールした平均開口率は0.994577。
+
+| リセット群・global1000 | リセット直後 | 第3課題末 |
+|---|---:|---:|
+| mean_z | -0.010243 | 7.960227 |
+| sd_z | 2.202417 | 3.815500 |
+| activation_rms | 1.652394 | 8.846908 |
+| activation_sd | 1.243948 | 3.806303 |
+| incoming_norm | 0.537169 | 0.632322 |
+| bias | 0.000000 | 0.013450 |
+| w_dot_mu | -0.010243 | 7.946778 |
+| cosine_w_mu | -0.001107 | 0.362773 |
+
+活動RMSの増大と分布幅の増大を同一視しない。正側への平均移動が大きい。有限プローブ上の全開は、その集合で折れ目を使わないことを意味するが、全入力上での線形化や成績低下の因果証明ではない。
+
+| 第3課題末・global1000 | リセット群 | 継続群 |
+|---|---:|---:|
+| v_norm | 0.121414 | 0.596204 |
+| activation_rms | 8.846908 | 2.359143 |
+| logit_contribution_rms | 1.066478 | 1.415342 |
+
+予測へのRMS寄与には入力共通成分も含まれるので、特徴の識別力と同じではない。
+
+| 課題末 | ReDo online | 無リセット online | 差・ポイント | ReDo全開個体数/100 | 無リセット全開個体数/100 |
+|---|---:|---:|---:|---:|---:|
+| 1 | 65.6807% | 65.6807% | +0.0000 | 5.90 | 5.90 |
+| 2 | 96.0435% | 96.0435% | +0.0000 | 12.60 | 12.60 |
+| 3 | 62.9401% | 64.1524% | -1.2123 | 34.05 | 5.80 |
+| 29 | 51.8826% | 40.8978% | +10.9848 | 15.10 | 3.00 |
+| 30 | 84.9247% | 84.9085% | +0.0162 | 5.25 | 4.55 |
+
+全開個体数は固定global1000画像・全100個体のseed平均。課題1/2は初回リセット前の段階対照であり、成熟した前段表現を持つ交換直後との厳密な一致対照ではない。第3課題のReDo−無リセット差と、後期の優良活性化手法に対する差を混同しない。第29課題ではReDoは無リセットを上回る。
+
+原典のパス・SHA256はverdict.json、seed別は各per_seed.csv。
+
+
+EXACT PRIMARY/ROUTE/GAUGE:
+{
+  "primary": {
+    "arm": "rand10",
+    "reference": "zero",
+    "step": 50,
+    "cohort": "first_reset",
+    "metric": "task3_near99_mean",
+    "arm_mean": 0.284945979715,
+    "reference_mean": 0.8813639134199999,
+    "n_seeds": 20,
+    "mean_difference": -0.596417933705,
+    "median_difference": -0.6048780233,
+    "ci95_low": -0.6262356140891251,
+    "ci95_high": -0.5662763060385,
+    "positive": 0,
+    "negative": 20,
+    "ties": 0,
+    "sign_p_two_sided": 1.9073486328125e-06,
+    "registered_primary": true
+  },
+  "primary_verdict": "registered_meaningful_suppression",
+  "route_contrasts": [
+    {
+      "arm": "center",
+      "reference": "zero",
+      "metric": "task3_near99_mean",
+      "step": 50,
+      "n_seeds": 20,
+      "mean_difference": -0.196187818065,
+      "median_difference": -0.17286580805,
+      "ci95_low": -0.26938808274362497,
+      "ci95_high": -0.12592000791612498,
+      "positive": 2,
+      "negative": 18,
+      "ties": 0,
+      "sign_p_two_sided": 0.0004024505615234375,
+      "registered_support": true
+    },
+    {
+      "arm": "center",
+      "reference": "zero",
+      "metric": "online_acc",
+      "step": 780,
+      "n_seeds": 20,
+      "mean_difference": 0.013920272430000009,
+      "median_difference": 0.012379807700000023,
+      "ci95_low": 0.008916266019875017,
+      "ci95_high": 0.018914262815250004,
+      "positive": 18,
+      "negative": 2,
+      "ties": 0,
+      "sign_p_two_sided": 0.0004024505615234375,
+      "registered_support": true
+    },
+    {
+      "arm": "center",
+      "reference": "center_random",
+      "metric": "task3_near99_mean",
+      "step": 50,
+      "n_seeds": 20,
+      "mean_difference": -0.28190845849499996,
+      "median_difference": -0.23445120460000002,
+      "ci95_low": -0.35767330737025,
+      "ci95_high": -0.21680918412962505,
+      "positive": 0,
+      "negative": 20,
+      "ties": 0,
+      "sign_p_two_sided": 1.9073486328125e-06,
+      "registered_support": true
+    },
+    {
+      "arm": "center",
+      "reference": "center_random",
+      "metric": "online_acc",
+      "step": 780,
+      "n_seeds": 20,
+      "mean_difference": -0.002115384614999999,
+      "median_difference": -0.0016626602500000032,
+      "ci95_low": -0.0037560597049999893,
+      "ci95_high": -0.0005789262699999964,
+      "positive": 6,
+      "negative": 12,
+      "ties": 2,
+      "sign_p_two_sided": 0.237884521484375,
+      "registered_support": false
+    }
+  ],
+  "route_registered_support": false,
+  "gauge_contrasts": [
+    {
+      "arm": "gauge4",
+      "reference": "zero",
+      "metric": "online_steps1_50",
+      "n_seeds": 20,
+      "mean_difference": 0.0,
+      "median_difference": 0.0,
+      "ci95_low": 0.0,
+      "ci95_high": 0.0,
+      "positive": 0,
+      "negative": 0,
+      "ties": 20,
+      "sign_p_two_sided": 1.0,
+      "registered_primary_gauge": false
+    },
+    {
+      "arm": "gauge4",
+      "reference": "zero",
+      "metric": "online_steps51_780",
+      "n_seeds": 20,
+      "mean_difference": 0.001217893840000006,
+      "median_difference": 0.0013698630500000308,
+      "ci95_low": 0.0006164383450000141,
+      "ci95_high": 0.0018043664499999947,
+      "positive": 15,
+      "negative": 5,
+      "ties": 0,
+      "sign_p_two_sided": 0.04138946533203125,
+      "registered_primary_gauge": true
+    },
+    {
+      "arm": "gauge4",
+      "reference": "zero",
+      "metric": "online_steps1_780",
+      "n_seeds": 20,
+      "mean_difference": 0.0011398237150000046,
+      "median_difference": 0.001282051300000031,
+      "ci95_low": 0.0005769230700000069,
+      "ci95_high": 0.0016887019099999958,
+      "positive": 15,
+      "negative": 5,
+      "ties": 0,
+      "sign_p_two_sided": 0.04138946533203125,
+      "registered_primary_gauge": false
+    },
+    {
+      "arm": "gauge025",
+      "reference": "zero",
+      "metric": "online_steps1_50",
+      "n_seeds": 20,
+      "mean_difference": 0.0,
+      "median_difference": 0.0,
+      "ci95_low": 0.0,
+      "ci95_high": 0.0,
+      "positive": 0,
+      "negative": 0,
+      "ties": 20,
+      "sign_p_two_sided": 1.0,
+      "registered_primary_gauge": false
+    },
+    {
+      "arm": "gauge025",
+      "reference": "zero",
+      "metric": "online_steps51_780",
+      "n_seeds": 20,
+      "mean_difference": 0.0009160958900000071,
+      "median_difference": 0.0013270548000000604,
+      "ci95_low": 0.00010702054987501403,
+      "ci95_high": 0.001680222605125025,
+      "positive": 13,
+      "negative": 7,
+      "ties": 0,
+      "sign_p_two_sided": 0.26317596435546875,
+      "registered_primary_gauge": true
+    },
+    {
+      "arm": "gauge025",
+      "reference": "zero",
+      "metric": "online_steps1_780",
+      "n_seeds": 20,
+      "mean_difference": 0.000857371790000011,
+      "median_difference": 0.0012419872000000165,
+      "ci95_low": 0.00010016024487499177,
+      "ci95_high": 0.0015725160101250244,
+      "positive": 13,
+      "negative": 7,
+      "ties": 0,
+      "sign_p_two_sided": 0.26317596435546875,
+      "registered_primary_gauge": false
+    }
+  ],
+  "ce_closure_max": 5.551115123125783e-16
+}
