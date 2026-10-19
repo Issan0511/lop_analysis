@@ -1,0 +1,135 @@
+{
+ "git_hash": "c319055c34e184726d8e60f86e950a0bb6933a10",
+ "dirty_src": [],
+ "wall_sec": 176.41186571121216,
+ "all_pass": true,
+ "results": [
+  {
+   "name": "S-engine-c(graph = eager)",
+   "ok": true,
+   "rows": [
+    {
+     "arm": "C3H",
+     "step1_grad_diff": 0.0,
+     "step1_buf_diff": 0.0,
+     "step3_param_diff": 0.0002817586064338684,
+     "step3_buf_diff": 2.6851892471313477e-05,
+     "ref_C3_step3_param_diff": 0.00027126818895339966,
+     "ok": true
+    },
+    {
+     "arm": "B3H",
+     "step1_grad_diff": 0.0,
+     "step1_buf_diff": 0.0,
+     "step3_param_diff": 0.0003073429688811302,
+     "step3_buf_diff": 5.1856040954589844e-05,
+     "ref_C3_step3_param_diff": 0.00027126818895339966,
+     "ok": true
+    },
+    {
+     "arm": "B3HB",
+     "step1_grad_diff": 0.0,
+     "step1_buf_diff": 0.0,
+     "step3_param_diff": 0.00023391097784042358,
+     "step3_buf_diff": 2.6747584342956543e-05,
+     "ref_C3_step3_param_diff": 0.00027126818895339966,
+     "ok": true
+    }
+   ],
+   "mutant_buf_diff": 0.206607386469841
+  },
+  {
+   "name": "S-ema(m equals bias-corrected EMA of batch means)",
+   "ok": true,
+   "max_relerr": 5.8407997967333257e-08,
+   "mutant_no_correction_min": 0.9000000065422437
+  },
+  {
+   "name": "S-causal(no future leak in training-mode forward)",
+   "ok": true,
+   "before_j": 0.0,
+   "at_or_after_j": 1.2434911727905273,
+   "mutant_batchmean_before_j": 0.004705667495727539
+  },
+  {
+   "name": "S-repro-c(C3H)",
+   "ok": true,
+   "differing": []
+  },
+  {
+   "name": "S-inert-c(C3H)",
+   "ok": true,
+   "with_measure": "144f1e17f405c451",
+   "without": "144f1e17f405c451"
+  },
+  {
+   "name": "S-decomp-c+S-adam(C3H)",
+   "ok": true,
+   "decomp_maxerr": 1.63965702e-08,
+   "max_lag_rel": 0.433566,
+   "adam_files": [
+    "task1_adam.pt"
+   ],
+   "adam_steps": [
+    300.0
+   ]
+  },
+  {
+   "name": "S-repro-c(B3H)",
+   "ok": true,
+   "differing": []
+  },
+  {
+   "name": "S-inert-c(B3H)",
+   "ok": true,
+   "with_measure": "c8e0c55a2e7fae13",
+   "without": "c8e0c55a2e7fae13"
+  },
+  {
+   "name": "S-decomp-c+S-adam(B3H)",
+   "ok": true,
+   "decomp_maxerr": 3.95311055e-08,
+   "max_lag_rel": 0.467915216,
+   "adam_files": [
+    "task1_adam.pt"
+   ],
+   "adam_steps": [
+    300.0
+   ]
+  },
+  {
+   "name": "S-repro-c(B3HB)",
+   "ok": true,
+   "differing": []
+  },
+  {
+   "name": "S-inert-c(B3HB)",
+   "ok": true,
+   "with_measure": "1c5f3045eed7977c",
+   "without": "1c5f3045eed7977c"
+  },
+  {
+   "name": "S-decomp-c+S-adam(B3HB)",
+   "ok": true,
+   "decomp_maxerr": 1.60702099e-08,
+   "max_lag_rel": 0.43598716,
+   "adam_files": [
+    "task1_adam.pt"
+   ],
+   "adam_steps": [
+    300.0
+   ]
+  },
+  {
+   "name": "S-decomp-c(mutant: drop centering term)",
+   "ok": true,
+   "mutant_err": 1.9611599147319794
+  },
+  {
+   "name": "S-base-unchanged(C3 through the centering module)",
+   "ok": true,
+   "final_equal": true,
+   "per_task_equal": true
+  }
+ ]
+}
