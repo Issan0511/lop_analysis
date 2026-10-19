@@ -265,6 +265,8 @@ def main():
         for metric in ('online_steps1_50', 'online_steps51_780', 'online_steps1_780'):
             values = {r['seed']: r[metric] for r in segments if r['arm'] == arm}
             reference = {r['seed']: r[metric] for r in segments if r['arm'] == 'zero'}
+            if set(values) != set(range(20)) or set(reference) != set(range(20)):
+                raise AssertionError(f'Missing gauge online endpoint seeds: {arm}/{metric}')
             result = {'arm': arm, 'reference': 'zero', 'metric': metric, **contrast(values, reference)}
             if metric == 'online_steps1_50' and any(values[s] != reference[s] for s in values):
                 raise AssertionError(f'Gauge online first50 prefix mismatch: {arm}')
@@ -337,6 +339,7 @@ def make_figure(out, grouped, contrasts, perf_summary):
     axes[0].legend(frameon=False, fontsize=8)
     axes[1].set(ylabel='Mean preactivation on task-3 images')
     axes[2].set(ylabel='Class-centered outgoing norm')
+    fig.suptitle('Coordinate controls: gauge step-50 points precede rescaling', fontsize=10)
     fig.savefig(out / 'coordinate_interventions.png', dpi=180)
     fig.savefig(out / 'coordinate_interventions.pdf')
     plt.close(fig)
@@ -344,7 +347,7 @@ def make_figure(out, grouped, contrasts, perf_summary):
 
 def make_report(out, primary, verdict, grouped, perf_summary, perf_contrasts, shocks):
     labels = {'registered_meaningful_suppression': '事前基準を満たす正の片側化の抑制',
-              'suppression_smaller_than_registered_threshold': '抑制方向だが事前の10ポイント基準は未達',
+              'suppression_smaller_than_registered_threshold': '抑制方向だが10ポイント以上の抑制を支持するCI基準は未達',
               'opposite_direction_for_this_contrast': '今回の対照では予想と反対方向',
               'unresolved_interval_includes_zero': '区間がゼロを含み未解決'}
     text = '# ReDoのvリセットと正の片側化：初回リセットへの介入（1019）\n\n'
@@ -363,7 +366,7 @@ def make_report(out, primary, verdict, grouped, perf_summary, perf_contrasts, sh
             row = next(r for r in perf_contrasts if r['arm'] == arm and r['metric'] == key)
             cols.append(f"{100 * row['mean_difference']:+.2f} [{100 * row['ci95_low']:+.2f}, {100 * row['ci95_high']:+.2f}]")
         text += f'| {arm} | ' + ' | '.join(cols) + ' |\n'
-    text += '\n初期予測は一致していない。vを非ゼロ化すると初期logitとCEが変わるため、片側化と成績の同時変化だけで「片側化が成績差を媒介した」とは結論しない。入力側再初期化・旧特徴消失・初期予測の変化と、読み出し初期化の役割を区別する。\n\n'
+    text += '\nkeep/randの非ゼロ読み出し腕では初期予測は一致していない。vを非ゼロ化すると初期logitとCEが変わるため、片側化と成績の同時変化だけで「片側化が成績差を媒介した」とは結論しない。入力側再初期化・旧特徴消失・初期予測の変化と、読み出し初期化の役割を区別する。\n\n'
     text += '| 腕 | 初回介入直後の次課題CE | zero後との差・logit RMS |\n|---|---:|---:|\n'
     for arm in CORE_ARMS:
         selected = [r for r in shocks if r['arm'] == arm and r['state'] == 'intervention_post' and r['scope'] == 'upcoming_task3']
@@ -385,7 +388,7 @@ def make_report(out, primary, verdict, grouped, perf_summary, perf_contrasts, sh
         before = next(r for r in verdict['gauge_contrasts'] if r['arm'] == arm and r['metric'] == 'online_steps1_50')
         after = next(r for r in verdict['gauge_contrasts'] if r['arm'] == arm and r['metric'] == 'online_steps51_780')
         text += f"| {arm} | {100 * before['mean_difference']:.8f} | {100 * after['mean_difference']:+.2f} [{100 * after['ci95_low']:+.2f}, {100 * after['ci95_high']:+.2f}] |\n"
-    text += '\nCは活動/readoutの尺度に対するAdam学習の依存を調べる。介入後のゲート軌道は固定されないため、その後までゲートを保った純粋なv介入ではない。\n\n'
+    text += '\nCは活動/readoutの尺度に対するAdam学習の依存を調べる。介入後のゲート軌道は固定されないため、その後までゲートを保った純粋なv介入ではない。図のgauge腕の50更新点は再尺度化直前の値で、変換直後は生データのgauge_postイベントに保存した。\n\n'
     text += f"再現性：zeroの元保存結果への一致、全腕のreset前・完全reset後・minibatch系列・交換mask一致、登録された座標変換以外の不変を検査済み。B/Cは介入瞬間の予測とゲートの不変も検査。CE分解の閉包最大誤差{verdict['ce_closure_max']:.3g}、自己抑制項の最小値{verdict['ce_brake_min']:.3g}。CE診断は固定256画像・float64での局所勾配であり、Adam実更新そのものではない。\n\n"
     text += 'この介入Aの対象は初回交換後の第3課題まで。長期・CNNへの一般化や、正の片側化から成績低下への矢印は別途必要。元の非ゼロnormで効果がない場合も、すべての読み出し介入が無効とはしない。\n\n'
     text += '数値正本：verdict.json、contrasts.csv、per_seed.csv、performance_contrasts.csv。初期衝撃はshock.csv、個々の実更新分解はactual_deltas.csv。会話中の観測値再計算はposthoc/summary.md。\n'
