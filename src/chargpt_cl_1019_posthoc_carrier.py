@@ -46,14 +46,14 @@ def load(arm, d, tag):
 def ffn_inputs(model, x):
     """層ごとの FFN の入力 y（LN の affine の後）・z・LN の正規化後 x̂ を返す（勾配なし）。"""
     cap = []
+    out = []
     with torch.no_grad():
         model.body(x, cap)
-    out = []
-    for li, blk in enumerate(model.h):
-        xin, z = cap[2 * li], cap[2 * li + 1]
-        y = blk.n2(xin)
-        xhat = F.layer_norm(xin, (C.D,), eps=blk.n2.eps) if isinstance(blk.n2, nn.LayerNorm) else xin
-        out.append((y.reshape(-1, C.D).double(), z.reshape(-1, C.FF).double(), xhat.reshape(-1, C.D).double()))
+        for li, blk in enumerate(model.h):
+            xin, z = cap[2 * li], cap[2 * li + 1]
+            y = blk.n2(xin)
+            xhat = F.layer_norm(xin, (C.D,), eps=blk.n2.eps) if isinstance(blk.n2, nn.LayerNorm) else xin
+            out.append((y.reshape(-1, C.D).double(), z.reshape(-1, C.FF).double(), xhat.reshape(-1, C.D).double()))
     return out
 
 
