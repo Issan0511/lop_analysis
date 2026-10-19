@@ -17,7 +17,11 @@ def sha(path):
     return h.hexdigest()
 
 
-manifest=[]
+manifest=json.loads((results/'backup_manifest.json').read_text())['files'] if (results/'backup_manifest.json').exists() else []
+def record(row):
+    global manifest
+    manifest=[old for old in manifest if old['source']!=row['source']]
+    manifest.append(row)
 for folder in ('raw','checks','logs'):
     source=results/folder
     for src in sorted(source.rglob('*')):
@@ -31,7 +35,7 @@ for folder in ('raw','checks','logs'):
             src.unlink()
         else:shutil.move(str(src),str(dst))
         if sha(dst)!=digest:raise RuntimeError(f'archive verification failed: {dst}')
-        manifest.append(dict(source=str(src),backup=str(dst),bytes=size,sha256=digest))
+        record(dict(source=str(src),backup=str(dst),bytes=size,sha256=digest))
     if source.exists():shutil.rmtree(source)
 
 exports=dest/'exports'
@@ -40,7 +44,7 @@ for src in sorted(results.iterdir()):
     if not src.is_file() or src.name=='backup_manifest.json':continue
     dst=exports/src.name
     shutil.copy2(src,dst)
-    manifest.append(dict(source=str(src),backup=str(dst),bytes=src.stat().st_size,sha256=sha(dst),kind='report_copy'))
+    record(dict(source=str(src),backup=str(dst),bytes=src.stat().st_size,sha256=sha(dst),kind='report_copy'))
 for sub in ('analysis/redo_positive_lineage_1019','specs/spec_redo_positive_lineage_1019.md'):
     src=root/sub
     if src.is_dir():
