@@ -31,6 +31,8 @@ C.ARMS.update({
     "SNA": dict(norm="ln", ln_bias=False, lin_bias=False, lr=1e-3, act="snake"),
     "SNAfrz1": dict(norm="ln", ln_bias=False, lin_bias=False, lr=1e-3, act="snake", freeze_after_task1=True),
     "GELU": dict(norm="ln", ln_bias=False, lin_bias=False, lr=1e-3, act="gelu"),
+    # 下見（未登録、Issa 1020「下限に張り付いたからじゃないの？撤廃したら？」）: α の下限 0.005 だけ外す。上限 3 は残す
+    "KKT1nolo": dict(norm="ln", ln_bias=False, lin_bias=False, lr=1e-3, act="kkt1", alpha_lo=0.0),
 })
 
 
@@ -61,12 +63,13 @@ class MLPKune(nn.Module):
         s.down = nn.Linear(C.FF, C.D, bias=b)
         s.act = a.get("act", "relu")
         s.snake = s.act in ("snake", "kkt1")
+        s.alpha_lo = a.get("alpha_lo", SN_LO)
         if s.snake:
             s.register_buffer("V", torch.ones(C.FF))
             s.register_buffer("v_rate", torch.tensor(SN_BETA))      # 0 で凍結（SNAfrz1）
 
     def alpha(s):
-        return (SN_C / s.V.sqrt()).clamp(SN_LO, SN_HI)
+        return (SN_C / s.V.sqrt()).clamp(s.alpha_lo, SN_HI)
 
     def phi(s, z):
         if s.act == "relu":
@@ -196,7 +199,8 @@ def measure_kune(model, x):
             th = 2.0 * a[None, :] * z64
             agg.update(alpha_med=float(a.median()), two_alpha_W_med=float((2 * a * Wd).median()),
                        two_alpha_sd_med=float((2 * a * sd).median()),
-                       alpha_clip_frac=float(((raw < SN_LO) | (raw > SN_HI)).double().mean()),
+                       alpha_clip_frac=float(((raw < mlp.alpha_lo) | (raw > SN_HI)).double().mean()),
+                       alpha_below_lo=float((raw < SN_LO).double().mean()),   # 既定の下限 0.005 を割る割合（下限なしの腕でも数える）
                        frac_in_curve=float(((th >= -2.0 * PI) & (th <= PI)).double().mean()))
         units = dict(mu=mu, sd=sd, q=q, t_wgm=t1, t_wbeta=t2, t_b=t3, cos=cos)
         out.append(dict(agg=agg, units={k: v.float().cpu().numpy() for k, v in units.items()}, dead=dead.cpu().numpy()))
