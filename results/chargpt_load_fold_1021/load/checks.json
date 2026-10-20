@@ -1,0 +1,908 @@
+{
+  "all_pass": true,
+  "checks": [
+    {
+      "check": "tied_weight",
+      "pass_": true,
+      "arm": "M/C3"
+    },
+    {
+      "check": "lemma_identity",
+      "pass_": true,
+      "arm": "M/C3",
+      "relative_error": 2.0962140971410447e-16
+    },
+    {
+      "check": "position_closure",
+      "pass_": true,
+      "arm": "M/C3",
+      "max_abs": 6.661338147750939e-16
+    },
+    {
+      "check": "negate_head",
+      "pass_": true,
+      "arm": "M/C3",
+      "kappa": 0.0010422759010304424,
+      "mutant_kappa": -0.0010422759010304424,
+      "note": "head-only mutant intentionally untied; embedding unchanged"
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M/C3",
+      "sign_flips": 271,
+      "uniform_sink": 0.80078125,
+      "one_class_sink": 0.470703125
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M/C3",
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": 0.034130896381042296,
+          "fd": 0.03413089633141908,
+          "relative_error": 1.4539089364996947e-09
+        },
+        {
+          "unit": 255,
+          "ad": -0.0006088455404796023,
+          "fd": -0.0006088454185260161,
+          "relative_error": 2.0030299642580084e-07
+        },
+        {
+          "unit": 511,
+          "ad": -0.000425984199134292,
+          "fd": -0.00042598369276447556,
+          "relative_error": 1.1887056314315994e-06
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M/C3",
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": 0.966039601951129,
+              "fd": 0.9660371453334982,
+              "relative_error": 2.5429781821710243e-06
+            },
+            {
+              "unit": 255,
+              "ad": 0.6121753230339451,
+              "fd": 0.6121753512999817,
+              "relative_error": 4.617310475242451e-08
+            },
+            {
+              "unit": 511,
+              "ad": 0.8096215858401332,
+              "fd": 0.8096213706121347,
+              "relative_error": 2.658377719897793e-07
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "recorded_eval_rounding",
+      "pass_": true,
+      "arm": "M/C3",
+      "computed_float64": 0.04936263636494875,
+      "recorded": 0.0493626785,
+      "abs_error": 4.213505124667227e-08,
+      "relative_error": 8.535811371474154e-07,
+      "tolerance": 9.8775357e-08,
+      "rtol": 2e-06,
+      "csv_rounding_bound": 5e-11,
+      "H_recomputed": 0.7034950662282683,
+      "H_recorded": 0.703495066,
+      "definition": "mean CE over eval_seq[:,2:] (256x127 targets) minus H",
+      "dtype_evidence": "chargpt_cl_1019.py:152-165 creates default-float32 Embedding/Linear; :195-198 build_model only .to(device), no .double(); :468-471 eval_M computes CE in model dtype before float(ce)-H; :697 writes .9g. float64 recomputation differs from float32 evaluation and CSV rounding. Only this check uses the parent (Claude, V13 session)-directed rtol=2e-6.",
+      "registered_rounding_pass": false,
+      "float32_adjusted_pass": true
+    },
+    {
+      "check": "tied_weight",
+      "pass_": true,
+      "arm": "M/SiLU"
+    },
+    {
+      "check": "lemma_identity",
+      "pass_": true,
+      "arm": "M/SiLU",
+      "relative_error": 2.0429577242085562e-16
+    },
+    {
+      "check": "position_closure",
+      "pass_": true,
+      "arm": "M/SiLU",
+      "max_abs": 8.881784197001252e-16
+    },
+    {
+      "check": "negate_head",
+      "pass_": true,
+      "arm": "M/SiLU",
+      "kappa": 0.0010536190850967196,
+      "mutant_kappa": -0.0010536190850967196,
+      "note": "head-only mutant intentionally untied; embedding unchanged"
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M/SiLU",
+      "sign_flips": 285,
+      "uniform_sink": 0.869140625,
+      "one_class_sink": 0.4375
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M/SiLU",
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": 0.031616472607822896,
+          "fd": 0.03161647210703222,
+          "relative_error": 1.5839549181570413e-08
+        },
+        {
+          "unit": 255,
+          "ad": 0.026933850500579087,
+          "fd": 0.02693385070529075,
+          "relative_error": 7.600534603338124e-09
+        },
+        {
+          "unit": 511,
+          "ad": 0.02443074265726835,
+          "fd": 0.024430742762149293,
+          "relative_error": 4.2929904026387006e-09
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M/SiLU",
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": 0.8676772903692495,
+              "fd": 0.8676772904614438,
+              "relative_error": 1.062542079507171e-10
+            },
+            {
+              "unit": 255,
+              "ad": 0.1612053569986508,
+              "fd": 0.16120535684116533,
+              "relative_error": 9.769245392465705e-10
+            },
+            {
+              "unit": 511,
+              "ad": 0.1713815505473645,
+              "fd": 0.17138155050666626,
+              "relative_error": 2.374715959529698e-10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "recorded_eval_rounding",
+      "pass_": true,
+      "arm": "M/SiLU",
+      "computed_float64": 0.041380004823477035,
+      "recorded": 0.0413800072,
+      "abs_error": 2.376522964531169e-09,
+      "relative_error": 5.7431671121873786e-08,
+      "tolerance": 8.28100144e-08,
+      "rtol": 2e-06,
+      "csv_rounding_bound": 5e-11,
+      "H_recomputed": 0.7034950662282683,
+      "H_recorded": 0.703495066,
+      "definition": "mean CE over eval_seq[:,2:] (256x127 targets) minus H",
+      "dtype_evidence": "chargpt_cl_1019.py:152-165 creates default-float32 Embedding/Linear; :195-198 build_model only .to(device), no .double(); :468-471 eval_M computes CE in model dtype before float(ce)-H; :697 writes .9g. float64 recomputation differs from float32 evaluation and CSV rounding. Only this check uses the parent (Claude, V13 session)-directed rtol=2e-6.",
+      "registered_rounding_pass": false,
+      "float32_adjusted_pass": true
+    },
+    {
+      "check": "tied_weight",
+      "pass_": true,
+      "arm": "M/GELU"
+    },
+    {
+      "check": "lemma_identity",
+      "pass_": true,
+      "arm": "M/GELU",
+      "relative_error": 0.0
+    },
+    {
+      "check": "position_closure",
+      "pass_": true,
+      "arm": "M/GELU",
+      "max_abs": 6.661338147750939e-16
+    },
+    {
+      "check": "negate_head",
+      "pass_": true,
+      "arm": "M/GELU",
+      "kappa": 0.0010577656320116201,
+      "mutant_kappa": -0.0010577656320116201,
+      "note": "head-only mutant intentionally untied; embedding unchanged"
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M/GELU",
+      "sign_flips": 277,
+      "uniform_sink": 0.90625,
+      "one_class_sink": 0.443359375
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M/GELU",
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": 0.016251273344267507,
+          "fd": 0.01625127321602804,
+          "relative_error": 7.891041208859509e-09
+        },
+        {
+          "unit": 256,
+          "ad": 0.02752088366435458,
+          "fd": 0.027520883350007352,
+          "relative_error": 1.142213428305254e-08
+        },
+        {
+          "unit": 511,
+          "ad": 0.01887161672124875,
+          "fd": 0.018871616269677816,
+          "relative_error": 2.3928576978548963e-08
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M/GELU",
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": 0.37437033455852203,
+              "fd": 0.3743703345104876,
+              "relative_error": 1.2830720104923844e-10
+            },
+            {
+              "unit": 256,
+              "ad": 0.46652095707783914,
+              "fd": 0.46652095708754615,
+              "relative_error": 2.0807238825465107e-11
+            },
+            {
+              "unit": 511,
+              "ad": 0.29753395024831075,
+              "fd": 0.29753395014431305,
+              "relative_error": 3.4953221054039296e-10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "recorded_eval_rounding",
+      "pass_": true,
+      "arm": "M/GELU",
+      "computed_float64": 0.04204169780436384,
+      "recorded": 0.0420416784,
+      "abs_error": 1.9404363844899297e-08,
+      "relative_error": 4.6155064648654225e-07,
+      "tolerance": 8.41333568e-08,
+      "rtol": 2e-06,
+      "csv_rounding_bound": 5e-11,
+      "H_recomputed": 0.7034950662282683,
+      "H_recorded": 0.703495066,
+      "definition": "mean CE over eval_seq[:,2:] (256x127 targets) minus H",
+      "dtype_evidence": "chargpt_cl_1019.py:152-165 creates default-float32 Embedding/Linear; :195-198 build_model only .to(device), no .double(); :468-471 eval_M computes CE in model dtype before float(ce)-H; :697 writes .9g. float64 recomputation differs from float32 evaluation and CSV rounding. Only this check uses the parent (Claude, V13 session)-directed rtol=2e-6.",
+      "registered_rounding_pass": false,
+      "float32_adjusted_pass": true
+    },
+    {
+      "check": "tied_weight",
+      "pass_": true,
+      "arm": "M/ReLUcap"
+    },
+    {
+      "check": "lemma_identity",
+      "pass_": true,
+      "arm": "M/ReLUcap",
+      "relative_error": 2.0962140971410447e-16
+    },
+    {
+      "check": "position_closure",
+      "pass_": true,
+      "arm": "M/ReLUcap",
+      "max_abs": 6.661338147750939e-16
+    },
+    {
+      "check": "negate_head",
+      "pass_": true,
+      "arm": "M/ReLUcap",
+      "kappa": 0.0010422759010304424,
+      "mutant_kappa": -0.0010422759010304424,
+      "note": "head-only mutant intentionally untied; embedding unchanged"
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M/ReLUcap",
+      "sign_flips": 271,
+      "uniform_sink": 0.80078125,
+      "one_class_sink": 0.470703125
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M/ReLUcap",
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": 0.034130896381042296,
+          "fd": 0.03413089633141908,
+          "relative_error": 1.4539089364996947e-09
+        },
+        {
+          "unit": 255,
+          "ad": -0.0006088455404796023,
+          "fd": -0.0006088454185260161,
+          "relative_error": 2.0030299642580084e-07
+        },
+        {
+          "unit": 511,
+          "ad": -0.000425984199134292,
+          "fd": -0.00042598369276447556,
+          "relative_error": 1.1887056314315994e-06
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M/ReLUcap",
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": 0.966039601951129,
+              "fd": 0.9660371453334982,
+              "relative_error": 2.5429781821710243e-06
+            },
+            {
+              "unit": 255,
+              "ad": 0.6121753230339451,
+              "fd": 0.6121753512999817,
+              "relative_error": 4.617310475242451e-08
+            },
+            {
+              "unit": 511,
+              "ad": 0.8096215858401332,
+              "fd": 0.8096213706121347,
+              "relative_error": 2.658377719897793e-07
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "recorded_eval_rounding",
+      "pass_": true,
+      "arm": "M/ReLUcap",
+      "computed_float64": 0.04936263636494875,
+      "recorded": 0.0493626785,
+      "abs_error": 4.213505124667227e-08,
+      "relative_error": 8.535811371474154e-07,
+      "tolerance": 9.8775357e-08,
+      "rtol": 2e-06,
+      "csv_rounding_bound": 5e-11,
+      "H_recomputed": 0.7034950662282683,
+      "H_recorded": 0.703495066,
+      "definition": "mean CE over eval_seq[:,2:] (256x127 targets) minus H",
+      "dtype_evidence": "chargpt_cl_1019.py:152-165 creates default-float32 Embedding/Linear; :195-198 build_model only .to(device), no .double(); :468-471 eval_M computes CE in model dtype before float(ce)-H; :697 writes .9g. float64 recomputation differs from float32 evaluation and CSV rounding. Only this check uses the parent (Claude, V13 session)-directed rtol=2e-6.",
+      "registered_rounding_pass": false,
+      "float32_adjusted_pass": true
+    },
+    {
+      "check": "tied_weight",
+      "pass_": true,
+      "arm": "M/SiLUcap"
+    },
+    {
+      "check": "lemma_identity",
+      "pass_": true,
+      "arm": "M/SiLUcap",
+      "relative_error": 2.0429577242085562e-16
+    },
+    {
+      "check": "position_closure",
+      "pass_": true,
+      "arm": "M/SiLUcap",
+      "max_abs": 8.881784197001252e-16
+    },
+    {
+      "check": "negate_head",
+      "pass_": true,
+      "arm": "M/SiLUcap",
+      "kappa": 0.0010536190850967196,
+      "mutant_kappa": -0.0010536190850967196,
+      "note": "head-only mutant intentionally untied; embedding unchanged"
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M/SiLUcap",
+      "sign_flips": 285,
+      "uniform_sink": 0.869140625,
+      "one_class_sink": 0.4375
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M/SiLUcap",
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": 0.031616472607822896,
+          "fd": 0.03161647210703222,
+          "relative_error": 1.5839549181570413e-08
+        },
+        {
+          "unit": 255,
+          "ad": 0.026933850500579087,
+          "fd": 0.02693385070529075,
+          "relative_error": 7.600534603338124e-09
+        },
+        {
+          "unit": 511,
+          "ad": 0.02443074265726835,
+          "fd": 0.024430742762149293,
+          "relative_error": 4.2929904026387006e-09
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M/SiLUcap",
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": 0.8676772903692495,
+              "fd": 0.8676772904614438,
+              "relative_error": 1.062542079507171e-10
+            },
+            {
+              "unit": 255,
+              "ad": 0.1612053569986508,
+              "fd": 0.16120535684116533,
+              "relative_error": 9.769245392465705e-10
+            },
+            {
+              "unit": 511,
+              "ad": 0.1713815505473645,
+              "fd": 0.17138155050666626,
+              "relative_error": 2.374715959529698e-10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "recorded_eval_rounding",
+      "pass_": true,
+      "arm": "M/SiLUcap",
+      "computed_float64": 0.041380004823477035,
+      "recorded": 0.0413800072,
+      "abs_error": 2.376522964531169e-09,
+      "relative_error": 5.7431671121873786e-08,
+      "tolerance": 8.28100144e-08,
+      "rtol": 2e-06,
+      "csv_rounding_bound": 5e-11,
+      "H_recomputed": 0.7034950662282683,
+      "H_recorded": 0.703495066,
+      "definition": "mean CE over eval_seq[:,2:] (256x127 targets) minus H",
+      "dtype_evidence": "chargpt_cl_1019.py:152-165 creates default-float32 Embedding/Linear; :195-198 build_model only .to(device), no .double(); :468-471 eval_M computes CE in model dtype before float(ce)-H; :697 writes .9g. float64 recomputation differs from float32 evaluation and CSV rounding. Only this check uses the parent (Claude, V13 session)-directed rtol=2e-6.",
+      "registered_rounding_pass": false,
+      "float32_adjusted_pass": true
+    },
+    {
+      "check": "tied_weight",
+      "pass_": true,
+      "arm": "M/GELUcap"
+    },
+    {
+      "check": "lemma_identity",
+      "pass_": true,
+      "arm": "M/GELUcap",
+      "relative_error": 0.0
+    },
+    {
+      "check": "position_closure",
+      "pass_": true,
+      "arm": "M/GELUcap",
+      "max_abs": 6.661338147750939e-16
+    },
+    {
+      "check": "negate_head",
+      "pass_": true,
+      "arm": "M/GELUcap",
+      "kappa": 0.0010577656320116201,
+      "mutant_kappa": -0.0010577656320116201,
+      "note": "head-only mutant intentionally untied; embedding unchanged"
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M/GELUcap",
+      "sign_flips": 277,
+      "uniform_sink": 0.90625,
+      "one_class_sink": 0.443359375
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M/GELUcap",
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": 0.016251273344267507,
+          "fd": 0.01625127321602804,
+          "relative_error": 7.891041208859509e-09
+        },
+        {
+          "unit": 256,
+          "ad": 0.02752088366435458,
+          "fd": 0.027520883350007352,
+          "relative_error": 1.142213428305254e-08
+        },
+        {
+          "unit": 511,
+          "ad": 0.01887161672124875,
+          "fd": 0.018871616269677816,
+          "relative_error": 2.3928576978548963e-08
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M/GELUcap",
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": 0.37437033455852203,
+              "fd": 0.3743703345104876,
+              "relative_error": 1.2830720104923844e-10
+            },
+            {
+              "unit": 256,
+              "ad": 0.46652095707783914,
+              "fd": 0.46652095708754615,
+              "relative_error": 2.0807238825465107e-11
+            },
+            {
+              "unit": 511,
+              "ad": 0.29753395024831075,
+              "fd": 0.29753395014431305,
+              "relative_error": 3.4953221054039296e-10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "recorded_eval_rounding",
+      "pass_": true,
+      "arm": "M/GELUcap",
+      "computed_float64": 0.04204169780436384,
+      "recorded": 0.0420416784,
+      "abs_error": 1.9404363844899297e-08,
+      "relative_error": 4.6155064648654225e-07,
+      "tolerance": 8.41333568e-08,
+      "rtol": 2e-06,
+      "csv_rounding_bound": 5e-11,
+      "H_recomputed": 0.7034950662282683,
+      "H_recorded": 0.703495066,
+      "definition": "mean CE over eval_seq[:,2:] (256x127 targets) minus H",
+      "dtype_evidence": "chargpt_cl_1019.py:152-165 creates default-float32 Embedding/Linear; :195-198 build_model only .to(device), no .double(); :468-471 eval_M computes CE in model dtype before float(ce)-H; :697 writes .9g. float64 recomputation differs from float32 evaluation and CSV rounding. Only this check uses the parent (Claude, V13 session)-directed rtol=2e-6.",
+      "registered_rounding_pass": false,
+      "float32_adjusted_pass": true
+    },
+    {
+      "check": "tied_weight",
+      "pass_": true,
+      "arm": "M2/C3"
+    },
+    {
+      "check": "lemma_identity",
+      "pass_": true,
+      "arm": "M2/C3",
+      "relative_error": 0.0
+    },
+    {
+      "check": "position_closure",
+      "pass_": true,
+      "arm": "M2/C3",
+      "max_abs": 4.440892098500626e-16
+    },
+    {
+      "check": "negate_head",
+      "pass_": true,
+      "arm": "M2/C3",
+      "kappa": 0.0011918214913631375,
+      "mutant_kappa": -0.0011918214913631375,
+      "note": "head-only mutant intentionally untied; embedding unchanged"
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M2/C3",
+      "sign_flips": 260,
+      "uniform_sink": 0.755859375,
+      "one_class_sink": 0.521484375
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M2/C3",
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": 0.003724582664307285,
+          "fd": 0.0037245833084398328,
+          "relative_error": 1.729408350694991e-07
+        },
+        {
+          "unit": 254,
+          "ad": 0.019173475513226863,
+          "fd": 0.01917347614011078,
+          "relative_error": 3.2695371028386217e-08
+        },
+        {
+          "unit": 511,
+          "ad": -0.021542157905720914,
+          "fd": -0.021542157391252204,
+          "relative_error": 2.388194873233942e-08
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M2/C3",
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": 0.09578352509039104,
+              "fd": 0.0957835250559036,
+              "relative_error": 3.6005608113162806e-10
+            },
+            {
+              "unit": 254,
+              "ad": -0.2333939039749107,
+              "fd": -0.23339390398113835,
+              "relative_error": 2.668303315779843e-11
+            },
+            {
+              "unit": 511,
+              "ad": 0.38819198061866683,
+              "fd": 0.388191980615904,
+              "relative_error": 7.117214280232551e-12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "recorded_eval_rounding",
+      "pass_": true,
+      "arm": "M2/C3",
+      "computed_float64": 0.0748008759486517,
+      "recorded": 0.074800868,
+      "abs_error": 7.948651695177666e-09,
+      "relative_error": 1.0626416387544681e-07,
+      "tolerance": 1.4965173600000002e-07,
+      "rtol": 2e-06,
+      "csv_rounding_bound": 5e-11,
+      "H_recomputed": 0.7034950662282683,
+      "H_recorded": 0.703495066,
+      "definition": "mean CE over eval_seq[:,2:] (256x127 targets) minus H",
+      "dtype_evidence": "chargpt_cl_1019.py:152-165 creates default-float32 Embedding/Linear; :195-198 build_model only .to(device), no .double(); :468-471 eval_M computes CE in model dtype before float(ce)-H; :697 writes .9g. float64 recomputation differs from float32 evaluation and CSV rounding. Only this check uses the parent (Claude, V13 session)-directed rtol=2e-6.",
+      "registered_rounding_pass": false,
+      "float32_adjusted_pass": true
+    },
+    {
+      "check": "tied_weight",
+      "pass_": true,
+      "arm": "M2/SiLU"
+    },
+    {
+      "check": "lemma_identity",
+      "pass_": true,
+      "arm": "M2/SiLU",
+      "relative_error": 2.1370359388697874e-16
+    },
+    {
+      "check": "position_closure",
+      "pass_": true,
+      "arm": "M2/SiLU",
+      "max_abs": 8.881784197001252e-16
+    },
+    {
+      "check": "negate_head",
+      "pass_": true,
+      "arm": "M2/SiLU",
+      "kappa": 0.001285922382880601,
+      "mutant_kappa": -0.001285922382880601,
+      "note": "head-only mutant intentionally untied; embedding unchanged"
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M2/SiLU",
+      "sign_flips": 253,
+      "uniform_sink": 0.787109375,
+      "one_class_sink": 0.4609375
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M2/SiLU",
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": -0.032659839282106445,
+          "fd": -0.03265983927747129,
+          "relative_error": 1.4192211211443112e-10
+        },
+        {
+          "unit": 256,
+          "ad": 0.03390203737616448,
+          "fd": 0.03390203762165811,
+          "relative_error": 7.241264820324576e-09
+        },
+        {
+          "unit": 511,
+          "ad": 0.0582277634795192,
+          "fd": 0.05822776349972969,
+          "relative_error": 3.4709375367776695e-10
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M2/SiLU",
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": 1.1067020639227998,
+              "fd": 1.1067020641020164,
+              "relative_error": 1.6193756869199348e-10
+            },
+            {
+              "unit": 256,
+              "ad": 0.12868558275859304,
+              "fd": 0.12868558263434693,
+              "relative_error": 9.655014239687863e-10
+            },
+            {
+              "unit": 511,
+              "ad": 0.5205474543119489,
+              "fd": 0.5205474542524513,
+              "relative_error": 1.1429818463798342e-10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "recorded_eval_rounding",
+      "pass_": true,
+      "arm": "M2/SiLU",
+      "computed_float64": 0.05774919743329787,
+      "recorded": 0.0577492308,
+      "abs_error": 3.3366702130444015e-08,
+      "relative_error": 5.777860876796997e-07,
+      "tolerance": 1.155484616e-07,
+      "rtol": 2e-06,
+      "csv_rounding_bound": 5e-11,
+      "H_recomputed": 0.7034950662282683,
+      "H_recorded": 0.703495066,
+      "definition": "mean CE over eval_seq[:,2:] (256x127 targets) minus H",
+      "dtype_evidence": "chargpt_cl_1019.py:152-165 creates default-float32 Embedding/Linear; :195-198 build_model only .to(device), no .double(); :468-471 eval_M computes CE in model dtype before float(ce)-H; :697 writes .9g. float64 recomputation differs from float32 evaluation and CSV rounding. Only this check uses the parent (Claude, V13 session)-directed rtol=2e-6.",
+      "registered_rounding_pass": false,
+      "float32_adjusted_pass": true
+    }
+  ],
+  "provenance": {
+    "source_root": "/home/issan/Projects/claude/wt/chargpt_cl_1019",
+    "source_head": "6c80d308d0763ef1f88a8a1a78425159fb4744c9",
+    "required_source_head": "f71be184",
+    "spec_commit": "8122b8b1",
+    "seed": 1000,
+    "device": "cpu",
+    "dtype": "float64",
+    "threads": 8,
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.1",
+    "python": "3.12.3 (main, Apr 15 2024, 18:25:56) [Clang 17.0.6 ]",
+    "script_sha256": "6a504737d670ee00963dcbc3a07abada8a3e5382587cdb625827cc16dd93fc38",
+    "input_code_sha256": {
+      "/home/issan/Projects/claude/wt/chargpt_load_fold_1021/specs/spec_chargpt_load_fold_1021.md": "21c420414567332db898a8e1ba99cb12587c3e4e3291e2305b725305a10037f9",
+      "/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019.py": "35f86e071cf354ce8ce8c9776e3d24bd91160a233727e78ff92ac732b7fe853c",
+      "/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019_kune.py": "cacbe6001171735b119b60783023b9e1695b2f8a85baaa7172f0640c973854e8"
+    },
+    "probe": {
+      "sequences": 64,
+      "tokens_per_sequence": 128,
+      "eval_sequences": 256,
+      "chain_alpha": 0.01
+    },
+    "null": {
+      "permutations": 1000,
+      "seed": 1021000
+    },
+    "rounding_exception": "recorded_eval_rounding only: rtol 2e-6 + .9g rounding bound; 親（Claude、V13 セッション）の指示で変更"
+  },
+  "generated_from": "checks.log",
+  "evaluation_criteria": {
+    "registered_rounding": {
+      "passed": 0,
+      "total": 8,
+      "criterion": ".9g rounding bound only"
+    },
+    "float32_adjusted": {
+      "passed": 8,
+      "total": 8,
+      "criterion": "2e-6 * abs(recorded) + .9g rounding bound"
+    },
+    "change_authority": "親（Claude、V13 セッション）の指示で変更",
+    "reclassified_existing_evaluations": true
+  },
+  "registered_all_pass": false,
+  "all_pass_criterion": "float32-adjusted evaluation tolerance; not original registration"
+}

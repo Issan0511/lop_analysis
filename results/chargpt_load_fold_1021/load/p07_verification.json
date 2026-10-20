@@ -1,0 +1,36 @@
+{
+  "all_pass": true,
+  "scope": "3 audit counterexample states; one live unit per state for reverse-mode next full vs JVP",
+  "checks": [
+    {
+      "arm": "M/C3",
+      "task": 50,
+      "audit_own_delta": -0.217213115,
+      "recomputed_own_delta": -0.21721311475409844,
+      "unit": 180,
+      "next_full_jvp": -29.20827522415856,
+      "next_full_reverse": -29.208275224158555,
+      "relative_error": 1.2163380588327254e-16
+    },
+    {
+      "arm": "M/SiLU",
+      "task": 3,
+      "audit_own_delta": -0.136986301,
+      "recomputed_own_delta": -0.136986301369863,
+      "unit": 473,
+      "next_full_jvp": 3.2243793589799674,
+      "next_full_reverse": 3.2243793589799674,
+      "relative_error": 0.0
+    },
+    {
+      "arm": "M/GELU",
+      "task": 3,
+      "audit_own_delta": -0.17578125,
+      "recomputed_own_delta": -0.17578125,
+      "unit": 337,
+      "next_full_jvp": 2.4826551812200157,
+      "next_full_reverse": 2.4826551812200157,
+      "relative_error": 0.0
+    }
+  ]
+}
