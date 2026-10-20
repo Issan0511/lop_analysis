@@ -1,0 +1,141 @@
+{
+  "run_id": "mlp_center_x10_1020",
+  "git_hash": "036269d318d8a6afbe562f4d57a4d26462d3382f",
+  "dirty_src_analysis": [],
+  "arm": "CHB0",
+  "cond": "std",
+  "seeds": [
+    100
+  ],
+  "slots": [
+    {
+      "seed": 100
+    }
+  ],
+  "R": 1,
+  "lr": 0.0001,
+  "n_tasks": 3,
+  "steps_per_task": 780,
+  "steps_hard": 7800,
+  "steps_easy": 7800,
+  "batch": 32,
+  "hidden": 100,
+  "layer_shapes": [
+    [
+      100,
+      3072
+    ],
+    [
+      100,
+      100
+    ],
+    [
+      100,
+      100
+    ]
+  ],
+  "n_params": 327500,
+  "phi_doubles_width": false,
+  "dims": [
+    3072,
+    100,
+    100,
+    100
+  ],
+  "doors": {
+    "c": true,
+    "h": true,
+    "b": "zero"
+  },
+  "door_lambda": 0.0,
+  "door_beta": 0.01,
+  "door_c_vector": "cifar100 train mean image (3072), subtracted not divided",
+  "n_classes": 100,
+  "hard_classes": 5,
+  "per_class_train": 500,
+  "classes_used": 90,
+  "task_parity": "task 1 hard, alternating (the paper's task 0 hard)",
+  "sna_c": 0.6,
+  "sna_beta": 0.01,
+  "alpha_lo": 0.005,
+  "alpha_hi": 3.0,
+  "optimizer": "adam",
+  "weight_decay": 0.0,
+  "intervention": "none",
+  "iv_kind": "none",
+  "iv_lambda": 0.0,
+  "data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "std": {
+    "mean": [
+      0.5071,
+      0.4865,
+      0.4409
+    ],
+    "std": [
+      0.2673,
+      0.2564,
+      0.2762
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "class_sha256": {
+    "100": "f0f27b396f33d65f355d70a0d32bad2d6c6a0a3dc296793359fa996ee5d539a0"
+  },
+  "rng_roles": [
+    "c51_classes",
+    "c51_batch",
+    "init"
+  ],
+  "rsl_noise_seed": null,
+  "fresh_control": {
+    "task": 3,
+    "n": 1
+  },
+  "engine": "stacked baddbmm from rlcifar_mlp_battle_0918, autograd, elementwise Adam, one step captured as a CUDA graph",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 0.1870270570119222,
+  "wall_clock_s": 6.652949571609497,
+  "divergences": [],
+  "check_hooks": {
+    "nan_slot": null
+  },
+  "spec": "specs/spec_mlp_center_x10_1020.md",
+  "host_run_id": "cifar5p1_mlp_0920",
+  "host_spec": "specs/spec_cifar5p1_mlp_0920.md",
+  "dirty_src_analysis_specs": [],
+  "torch_threads": 2,
+  "cifar_archive": "/home/issan/Projects/claude/proj_004_drift/data/cifar100/cifar-100-python.tar.gz",
+  "diagnostics": true,
+  "mutate": null,
+  "wall_clock_with_diag_s": 6.653641700744629,
+  "hook_calls": {
+    "begin_step_train_task": 31200,
+    "begin_step_other": 4,
+    "evaluate": 3
+  },
+  "probe": {
+    "split": "CIFAR-100 test",
+    "per_class": 12,
+    "n": 1200,
+    "rng_role": "mcx_probe",
+    "preprocessing": "the arm's own X_test (std; CH/CHB0 also minus the train mean image)",
+    "idx_sha256": "0fb599a42ef74392d6de56c35b4d6369e053fa0759a81bc75b8456ad33749829"
+  },
+  "snap_every": 20,
+  "pplus_bins": {
+    "dead": "p+ = 0",
+    "lt005": "0 < p+ < 0.05",
+    "sparse": "0.05 <= p+ < 0.3",
+    "mid": "0.3 <= p+ <= 0.7",
+    "hi": "0.7 < p+ < 0.95",
+    "ge095": "p+ >= 0.95"
+  },
+  "diag_files": {
+    "diag_units.npz": "per-unit arrays (task, slot, unit); slots in `seeds` order",
+    "diag_per_task.csv": "per (seed, task) summaries and learning windows"
+  }
+}

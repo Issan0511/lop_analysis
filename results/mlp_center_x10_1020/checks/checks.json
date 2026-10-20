@@ -1,0 +1,334 @@
+{
+  "scope": "implementation checks only; no performance verdict",
+  "gating": [
+    "S-diag",
+    "S-units",
+    "S-probe",
+    "S-curve",
+    "S-bound",
+    "S-reuse-early",
+    "S-verdict"
+  ],
+  "all_pass": true,
+  "checks": {
+    "S-diag": {
+      "R": {
+        "bytes_equal": {
+          "per_task.csv": true,
+          "fresh_control.csv": true
+        },
+        "hook_calls": {
+          "begin_step_train_task": 31200,
+          "begin_step_other": 4,
+          "evaluate": 3
+        },
+        "hook_calls_expected": {
+          "begin_step_train_task": 31200,
+          "begin_step_other": 4,
+          "evaluate": 3
+        },
+        "ok": true
+      },
+      "CHB0": {
+        "bytes_equal": {
+          "per_task.csv": true,
+          "fresh_control.csv": true
+        },
+        "hook_calls": {
+          "begin_step_train_task": 31200,
+          "begin_step_other": 4,
+          "evaluate": 3
+        },
+        "hook_calls_expected": {
+          "begin_step_train_task": 31200,
+          "begin_step_other": 4,
+          "evaluate": 3
+        },
+        "ok": true
+      },
+      "mutant_touch_b3_caught": true,
+      "pass": true,
+      "seconds": 63.2
+    },
+    "S-units": {
+      "R": {
+        "rows": 6,
+        "bins_not_exhaustive": 0
+      },
+      "CHB0": {
+        "rows": 6,
+        "bins_not_exhaustive": 0
+      },
+      "mismatches_by_column": {
+        "zbar_l1": 0,
+        "zsd_l1": 0,
+        "zbar_min_l1": 0,
+        "dead_frac_l1": 0,
+        "eff_rank_l1": 0,
+        "w_norm_l1": 0,
+        "zbar_l2": 0,
+        "zsd_l2": 0,
+        "zbar_min_l2": 0,
+        "dead_frac_l2": 0,
+        "eff_rank_l2": 0,
+        "w_norm_l2": 0,
+        "w_norm_l3": 0,
+        "m_l1": 0,
+        "m_l2": 0
+      },
+      "pass": true,
+      "seconds": 0.0
+    },
+    "S-probe": {
+      "per_seed": [
+        {
+          "n": 1200,
+          "unique": 1200,
+          "classes": 100,
+          "per_class": [
+            12
+          ],
+          "in_test_split": true
+        },
+        {
+          "n": 1200,
+          "unique": 1200,
+          "classes": 100,
+          "per_class": [
+            12
+          ],
+          "in_test_split": true
+        }
+      ],
+      "same_across_arms": true,
+      "differs_across_seeds": true,
+      "fingerprint_R_is_std_test": true,
+      "fingerprint_CHB0_is_std_test_minus_train_mean": true,
+      "fingerprint_CHB0_differs_from_R": true,
+      "pass": true,
+      "seconds": 0.3
+    },
+    "S-curve": {
+      "segments_checked": [
+        "task1",
+        "task2",
+        "fresh"
+      ],
+      "mismatched_segments": 0,
+      "online_all_equals_per_task": true,
+      "fresh_total_equals_fresh_control": true,
+      "hook_calls_eager": {
+        "begin_step_train_task": 1710,
+        "begin_step_other": 0,
+        "evaluate": 2
+      },
+      "pass": true,
+      "seconds": 1.5
+    },
+    "S-bound": {
+      "comparisons": 12,
+      "max_diff_over_bound": 7.996426076109647e-07,
+      "max_bound_over_eff_rank": 0.0009694276350668954,
+      "pass": true,
+      "seconds": 0.2
+    },
+    "S-reuse-early": {
+      "R": {
+        "same_keys": true,
+        "rows": 20,
+        "mismatches_without_eff_rank": {},
+        "eff_rank_outside_b64": 0,
+        "eff_rank_max_rel_diff": 6.019133526542946e-08,
+        "trajectory_equal": true,
+        "ok": true
+      },
+      "CH": {
+        "same_keys": true,
+        "rows": 20,
+        "mismatches_without_eff_rank": {
+          "online_acc": 20,
+          "test_acc": 19,
+          "zbar_l1": 20,
+          "zsd_l1": 20,
+          "zbar_min_l1": 20,
+          "mob_l1": 19,
+          "zbar_l2": 20,
+          "zsd_l2": 20,
+          "zbar_min_l2": 20,
+          "mob_l2": 19,
+          "w_norm_l1": 20,
+          "w_norm_l2": 20,
+          "w_norm_l3": 20,
+          "m_l1": 20,
+          "m_l2": 20,
+          "train_acc": 12,
+          "acc": 12,
+          "dead_frac_l1": 4,
+          "dead_frac_l2": 5
+        },
+        "eff_rank_outside_b64": 40,
+        "eff_rank_max_rel_diff": 4.2749806172920275,
+        "trajectory_equal": false,
+        "ok": false
+      },
+      "pass": true,
+      "seconds": 29.9
+    },
+    "S-door-repro": {
+      "H": {
+        "trajectory_equal": true,
+        "mismatched_columns": {}
+      },
+      "C": {
+        "trajectory_equal": false,
+        "mismatched_columns": {
+          "zbar_l1": 17,
+          "zsd_l1": 13,
+          "zbar_l2": 19,
+          "zbar_min_l2": 12,
+          "w_norm_l1": 5,
+          "zsd_l2": 12,
+          "zbar_min_l1": 7,
+          "w_norm_l3": 7,
+          "w_norm_l2": 5,
+          "test_acc": 1,
+          "mob_l1": 4,
+          "mob_l2": 4,
+          "online_acc": 2,
+          "train_acc": 1,
+          "acc": 1,
+          "dead_frac_l2": 1,
+          "zeroout_l2": 1
+        }
+      },
+      "door_c_vector": {
+        "max_ulps_from_float64_mean": 407.7417600005865,
+        "elements_differing_gpu_vs_cpu_float32_mean": 2060,
+        "n": 3072
+      },
+      "seconds": 4.0
+    },
+    "S-verdict": {
+      "dose": {
+        "got": {
+          "overall": "DOSE",
+          "W_CHB0_ge_2R": 10,
+          "O_CH": "OPENS",
+          "preds": {
+            "P1": true,
+            "P2": true,
+            "P3": true,
+            "P4": true,
+            "P5": true
+          }
+        },
+        "want": {
+          "overall": "DOSE",
+          "W_CHB0_ge_2R": 10,
+          "O_CH": "OPENS",
+          "preds": {
+            "P1": true,
+            "P2": true,
+            "P3": true,
+            "P4": true,
+            "P5": true
+          }
+        },
+        "ok": true
+      },
+      "one_worse": {
+        "got": {
+          "overall": "ONE_WORSE",
+          "W_CHB0_ge_2R": 0,
+          "O_CH": "FLAT",
+          "preds": {
+            "P1": false,
+            "P2": false,
+            "P3": false,
+            "P4": false,
+            "P5": false
+          }
+        },
+        "want": {
+          "overall": "ONE_WORSE",
+          "W_CHB0_ge_2R": 0,
+          "O_CH": "FLAT",
+          "preds": {
+            "P1": false,
+            "P2": false,
+            "P3": false,
+            "P4": false,
+            "P5": false
+          }
+        },
+        "ok": true
+      },
+      "not_worse": {
+        "got": {
+          "overall": "NOT_WORSE",
+          "W_CHB0_ge_2R": 0,
+          "O_CH": "CLOSES",
+          "preds": {
+            "P1": false,
+            "P2": false,
+            "P3": false,
+            "P4": false,
+            "P5": false
+          }
+        },
+        "want": {
+          "overall": "NOT_WORSE",
+          "W_CHB0_ge_2R": 0,
+          "O_CH": "CLOSES",
+          "preds": {
+            "P1": false,
+            "P2": false,
+            "P3": false,
+            "P4": false,
+            "P5": false
+          }
+        },
+        "ok": true
+      },
+      "both_worse": {
+        "got": {
+          "overall": "BOTH_WORSE",
+          "W_CHB0_ge_2R": 0,
+          "O_CH": "FLAT",
+          "preds": {
+            "P1": false,
+            "P2": false,
+            "P3": false,
+            "P4": false,
+            "P5": false
+          }
+        },
+        "want": {
+          "overall": "BOTH_WORSE",
+          "W_CHB0_ge_2R": 0,
+          "O_CH": "FLAT",
+          "preds": {
+            "P1": false,
+            "P2": false,
+            "P3": false,
+            "P4": false,
+            "P5": false
+          }
+        },
+        "ok": true
+      },
+      "pass": true,
+      "seconds": 0.4
+    }
+  },
+  "git": {
+    "git_hash": "036269d318d8a6afbe562f4d57a4d26462d3382f",
+    "dirty_src_analysis": []
+  },
+  "dirty_src_analysis_specs": [],
+  "torch": "2.13.0+cu130",
+  "device": "cuda",
+  "torch_threads": 2,
+  "spec": "specs/spec_mlp_center_x10_1020.md",
+  "seconds": 101.9
+}
