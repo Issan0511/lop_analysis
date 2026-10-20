@@ -36,6 +36,9 @@ C.ARMS.update({
     # 下見（未登録、Issa 1020 午後）: 共通の書き込みを止める 2 つの形
     "KKT1b3": dict(norm="ln", ln_bias=True, lin_bias=True, lr=1e-3, act="kkt1"),              # 土台を B3（LN の β と線形層の bias あり）に
     "KKT1c": dict(norm="ln", ln_bias=False, lin_bias=False, lr=1e-3, act="kkt1", center_offset=True),  # φ − 1/(2α): sin² の広い分布での平均を引く
+    # 下見（未登録、Issa 1020 夕方「両方回してください」）: KKT1b3 のどちらが効いたかを分ける
+    "KKT1beta": dict(norm="ln", ln_bias=True, lin_bias=False, lr=1e-3, act="kkt1"),   # LN の β だけ
+    "KKT1bias": dict(norm="ln", ln_bias=False, lin_bias=True, lr=1e-3, act="kkt1"),   # 線形層の bias だけ（注意の qkv・o と FFN の up・down）
 })
 
 
