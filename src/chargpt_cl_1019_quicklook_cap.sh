@@ -6,7 +6,10 @@ cd "$(dirname "$0")/.."
 PY=${PY:-/home/issan/Projects/claude/proj_004_drift/.venv/bin/python}
 Q=results/chargpt_cl_1019/quicklook
 mkdir -p $Q/logs
-for spec in SiLU:1 SiLUcap:0 C3:1 ReLUcap:0 GELU:1 GELUcap:0; do
+# 引数で腕を選べる（例: bash ... SiLUcap:0 GELUcap:0）。WAIT_PID を渡すと、その走が終わってから始める。
+SPECS=${*:-"SiLU:1 SiLUcap:0 C3:1 ReLUcap:0 GELU:1 GELUcap:0"}
+if [ -n "$WAIT_PID" ]; then while kill -0 "$WAIT_PID" 2>/dev/null; do sleep 30; done; fi
+for spec in $SPECS; do
   A=${spec%%:*}; D=${spec##*:}
   echo "$(date '+%F %T') start $A seed1000 (quick look; cap study; decomp_ckpt=$D)" >> $Q/launch.log
   CHARGPT_DECOMP_CKPT=$D $PY src/chargpt_cl_1019_kune.py run --box M --arm $A --seed 1000 --tasks 50 --n_per_task 10000 --alpha 0.01 \
