@@ -135,7 +135,7 @@
    "seed": 10,
    "t": 2,
    "a4_varies_over_images": true,
-   "note": "label-only permutation: S_exact and G must be invariant; kappa and A must change when the f2 features vary over images (otherwise F depends on the class counts only)",
+   "note": "\u03ba\u30fbA \u306e\u5909\u5316\u306f\u60c5\u5831\u3068\u3057\u3066\u8a18\u9332\u3001\u5fc5\u9808\u306f G\u30fbS_exact \u306e\u4e0d\u5909\uff08label-only permutation; \u03ba and A need not change, e.g. image-constant features or a head orthogonal to the change\uff09",
    "ref_eq_current": {
     "chance": 0.0019329287218040159,
     "feat": 0.0,
@@ -222,12 +222,26 @@
      },
      "richardson_err": 3.889490352789869e-13,
      "conv_ratio": 1.0,
-     "elementwise_rel_fixed_q": [
-      2.0640201944769995e-13,
-      4.0412099897419655e-13,
-      3.83434924478693e-12
+     "normalization": "max_i |-dm_i/eta - G_i| / max_i |G_i| over the layer's units",
+     "n_units": 16,
+     "n_indeterminate": 0,
+     "floor_G": 5.684341886080802e-14,
+     "unit_rel_raw_eta_min_q": [
+      2.0640201944765532e-13,
+      4.041209989741184e-13,
+      3.834349244772154e-12
      ],
-     "raw_err_eta_min_le_1e-3": true
+     "unit_rel_raw_eta_min_max": 4.8247367769408735e-11,
+     "unit_frac_raw_le_1e3": 1.0,
+     "unit_rel_richardson_q": [
+      2.753294864513865e-13,
+      7.639486368346135e-13,
+      3.96894868768377e-12
+     ],
+     "unit_rel_richardson_max": 1.0445004950512812e-10,
+     "unit_frac_richardson_le_1e3": 1.0,
+     "richardson_pass": true,
+     "registered_raw_pass": true
     },
     "c2": {
      "err_fixed": {
@@ -242,12 +256,26 @@
      },
      "richardson_err": 4.146104979012971e-13,
      "conv_ratio": 2.000000000929535,
-     "elementwise_rel_fixed_q": [
-      1.0132392935947249e-05,
-      7.209136087890671e-05,
-      0.00013595674078989377
+     "normalization": "max_i |-dm_i/eta - G_i| / max_i |G_i| over the layer's units",
+     "n_units": 16,
+     "n_indeterminate": 0,
+     "floor_G": 9.094947017729282e-13,
+     "unit_rel_raw_eta_min_q": [
+      1.0132288528263238e-05,
+      7.208616259128992e-05,
+      0.00013593823577112528
      ],
-     "raw_err_eta_min_le_1e-3": true
+     "unit_rel_raw_eta_min_max": 0.00115961776489514,
+     "unit_frac_raw_le_1e3": 0.9375,
+     "unit_rel_richardson_q": [
+      1.4935203619878126e-13,
+      2.4281558020363626e-13,
+      5.258403152387283e-13
+     ],
+     "unit_rel_richardson_max": 9.52535473202196e-13,
+     "unit_frac_richardson_le_1e3": 1.0,
+     "richardson_pass": true,
+     "registered_raw_pass": true
     },
     "f1": {
      "err_fixed": {
@@ -262,12 +290,26 @@
      },
      "richardson_err": 1.0117301070600046e-07,
      "conv_ratio": 2.0000000013724835,
-     "elementwise_rel_fixed_q": [
-      0.0003389997193302601,
-      0.00041957566635200433,
-      0.0006195138726130634
+     "normalization": "max_i |-dm_i/eta - G_i| / max_i |G_i| over the layer's units",
+     "n_units": 100,
+     "n_indeterminate": 0,
+     "floor_G": 3.637978807091713e-12,
+     "unit_rel_raw_eta_min_q": [
+      0.0003388848373337445,
+      0.0004193996915827064,
+      0.0006191302117409956
      ],
-     "raw_err_eta_min_le_1e-3": true
+     "unit_rel_raw_eta_min_max": 0.0037951666300709186,
+     "unit_frac_raw_le_1e3": 0.89,
+     "unit_rel_richardson_q": [
+      3.622276244356784e-13,
+      1.0548034239624034e-12,
+      2.364183922046156e-09
+     ],
+     "unit_rel_richardson_max": 1.91642194147295e-06,
+     "unit_frac_richardson_le_1e3": 1.0,
+     "richardson_pass": true,
+     "registered_raw_pass": true
     },
     "f2": {
      "err_fixed": {
@@ -282,16 +324,33 @@
      },
      "richardson_err": 1.0385215499264859e-07,
      "conv_ratio": 1.9978876312405425,
-     "elementwise_rel_fixed_q": [
+     "normalization": "max_i |-dm_i/eta - G_i| / max_i |G_i| over the layer's units",
+     "n_units": 100,
+     "n_indeterminate": 0,
+     "floor_G": 3.637978807091713e-12,
+     "unit_rel_raw_eta_min_q": [
       4.1987944681809344e-05,
-      7.981489395284582e-05,
-      0.0001916448013310797
+      7.980852400641976e-05,
+      0.00019160808063593845
      ],
-     "raw_err_eta_min_le_1e-3": true
+     "unit_rel_raw_eta_min_max": 0.1999998103144007,
+     "unit_frac_raw_le_1e3": 0.94,
+     "unit_rel_richardson_q": [
+      6.760787864675514e-08,
+      9.349282500069245e-08,
+      1.3331853168491566e-07
+     ],
+     "unit_rel_richardson_max": 2.505539092200437e-05,
+     "unit_frac_richardson_le_1e3": 1.0,
+     "richardson_pass": true,
+     "registered_raw_pass": true
     }
    },
-   "criterion": "fixed routing (pool winners, leaky/ReLU branches): -dm/eta at eta = 1e-4, 5e-5, 2.5e-5; the Richardson limit 2 r(2.5e-5) - r(5e-5) within 1e-3 x max_i |G_i| per layer and the error halving with eta (ratio 1.5-2.5) unless it is at rounding level; raw error at 2.5e-5 reported (raw_err_eta_min_le_1e-3) -- the first version of this check used the raw error, which is the O(eta) curvature term, not a property of G_full",
-   "seconds": 2.852996587753296
+   "registered_raw_pass": true,
+   "richardson_pass": true,
+   "criterion_registered": "A1.2: fixed routing, -dm/eta at the finite steps; at eta = 2.5e-5 the layer-max-normalized error max_i |(-dm_i/eta) - G_i| / max_i |G_i| <= 1e-3 (registered_raw_pass)",
+   "criterion_pass": "approved change: the Richardson limit 2 r(2.5e-5) - r(5e-5) within 1e-3 of the layer scale and the error halving with eta (ratio 1.5-2.5) unless at rounding level (richardson_pass = pass); the limit is a check of G_full, not a finite GD step meeting the registered accuracy",
+   "seconds": 1.344245195388794
   },
   {
    "name": "K6aux_label_draws",
@@ -510,7 +569,7 @@
    "seed": 10,
    "t": 3,
    "a4_varies_over_images": false,
-   "note": "label-only permutation: S_exact and G must be invariant; kappa and A must change when the f2 features vary over images (otherwise F depends on the class counts only)",
+   "note": "\u03ba\u30fbA \u306e\u5909\u5316\u306f\u60c5\u5831\u3068\u3057\u3066\u8a18\u9332\u3001\u5fc5\u9808\u306f G\u30fbS_exact \u306e\u4e0d\u5909\uff08label-only permutation; \u03ba and A need not change, e.g. image-constant features or a head orthogonal to the change\uff09",
    "ref_eq_current": {
     "chance": 0.0010542711876601136,
     "feat": 0.0,

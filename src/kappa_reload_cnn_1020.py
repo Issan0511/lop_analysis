@@ -558,8 +558,10 @@ def summarize_state(arm, seed, t, q: dict, fl: dict) -> dict:
     row["f2_frac_Sexact_pos"] = frac(Se > 0, ke)
     ks = a2 & (np.abs(Ss) > fS)
     row["f2_frac_Sself_pos"] = frac(Ss > 0, ks)
-    row["f2_agree_self_exact"], row["f2_n_agree_self_exact"] = agree(Ss, Se, ke & ks)
-    ps, po = row["f2_frac_Sself_pos"], row["f2_frac_Sexact_pos"]
+    common = ke & ks                                                     # alive, both above the S floor
+    row["f2_agree_self_exact"], row["f2_n_agree_self_exact"] = agree(Ss, Se, common)
+    ps, po = frac(Ss > 0, common), frac(Se > 0, common)                 # sign rates on the same set
+    row["f2_n_agree_common"] = int(common.sum())
     row["f2_agree_self_exact_chance"] = ps * po + (1 - ps) * (1 - po) if np.isfinite(ps) and np.isfinite(po) else float("nan")
     row["f2_agree_oh_exact"] = agree(So, Se, ke)[0]
     row["f2_agree_proj_exact"] = agree(Sp, Se, ke)[0]
@@ -895,11 +897,10 @@ def check_f64(arms, device, out: Path):
         inv_label = {k: close(ql["units"][k], u[k], 1e-12, 0.0) for k in ("G_full", "G_own", "G_up", "S_exact")}
         changed = {k: abs(ql["scal"][k] - sc[k]) > 1e3 * atol.get(k, 0.0) + 1e-6 * abs(sc[k]) for k in ("kappa", "A")}
         a4_varies = bool(float(q["A4"].std(0).max()) > 0)       # image-constant features: F sees class counts only
-        add("K4_ledger_controls", k4a and all(inv_joint.values()) and all(inv_label.values())
-            and (all(changed.values()) or sc["F_norm2"] == 0 or not a4_varies), arm=arm, seed=seed, t=t,
+        add("K4_ledger_controls", k4a and all(inv_joint.values()) and all(inv_label.values()), arm=arm, seed=seed, t=t,
             a4_varies_over_images=a4_varies,
-            note="label-only permutation: S_exact and G must be invariant; kappa and A must change when the f2 "
-                 "features vary over images (otherwise F depends on the class counts only)",
+            note="κ・A の変化は情報として記録、必須は G・S_exact の不変（label-only permutation; κ and A need not change, "
+                 "e.g. image-constant features or a head orthogonal to the change）",
             ref_eq_current=dict(chance=s3["kap_chance"], feat=s3["kap_feat"], read=s3["kap_read"], kappa=sc["kappa"]),
             joint_perm_invariant=inv_joint, label_perm_invariant=inv_label, label_perm_changes=changed,
             kappa_labelperm=ql["scal"]["kappa"], decomp_absdiff=sc["decomp_absdiff"])
@@ -942,28 +943,45 @@ def check_k6(S, q, add, calib):
         rf = -(tonp(m_of(P2, S.alpha, S.X)) - m0f) / eta
         res[eta] = (rr, rf)
     per = {}
-    ok = True
+    ok_rich = True
+    ok_raw = True
     etas = sorted(res)
+    try:
+        fG = json.loads((OUT / "floors.json").read_text())["G"]
+    except (OSError, KeyError, ValueError):
+        fG = {k: 0.0 for k in LAYERS}
     for name in LAYERS:
         q_ = sl(name)
         sc = np.abs(G[q_]).max()
         e_r = {eta: float(np.abs(res[eta][0][q_] - G[q_]).max() / sc) for eta in etas}
         e_f = {eta: float(np.abs(res[eta][1][q_] - G[q_]).max() / sc) for eta in etas}
         rich = 2 * res[etas[0]][0][q_] - res[etas[1]][0][q_]            # Richardson on the two smallest
+        det = np.abs(G[q_]) > fG.get(name, 0.0)                       # units above the layer's G floor
+        def unit_rel(x):
+            v = np.abs(x - G[q_]) / np.maximum(np.maximum(np.abs(x), np.abs(G[q_])), 1e-300)
+            return v[det]
+        ur, uq = unit_rel(res[etas[0]][0][q_]), unit_rel(rich)
         per[name] = dict(err_fixed=e_r, err_free=e_f,
                          richardson_err=float(np.abs(rich - G[q_]).max() / sc),
                          conv_ratio=e_r[etas[1]] / max(e_r[etas[0]], 1e-300),
-                         elementwise_rel_fixed_q=quart(np.abs(res[etas[0]][0][q_] - G[q_])
-                                                       / np.maximum(np.abs(G[q_]), 1e-300)))
-        # the limit eta -> 0 (Richardson) within rtol 1e-3 of the layer scale, at the first-order rate
-        ok &= per[name]["richardson_err"] <= 1e-3 and (e_r[etas[0]] < 1e-9 or 1.5 <= per[name]["conv_ratio"] <= 2.5)
-        per[name]["raw_err_eta_min_le_1e-3"] = bool(e_r[etas[0]] <= 1e-3)
-    add("K6_gd_steps_converge_to_G_full", ok, arm=S.arm, seed=S.seed, t=S.task, per_layer=per,
-        criterion="fixed routing (pool winners, leaky/ReLU branches): -dm/eta at eta = 1e-4, 5e-5, 2.5e-5; the "
-                  "Richardson limit 2 r(2.5e-5) - r(5e-5) within 1e-3 x max_i |G_i| per layer and the error halving "
-                  "with eta (ratio 1.5-2.5) unless it is at rounding level; raw error at 2.5e-5 reported "
-                  "(raw_err_eta_min_le_1e-3) -- the first version of this check used the raw error, which is the "
-                  "O(eta) curvature term, not a property of G_full",
+                         normalization="max_i |-dm_i/eta - G_i| / max_i |G_i| over the layer's units",
+                         n_units=int(len(det)), n_indeterminate=int((~det).sum()), floor_G=fG.get(name, 0.0),
+                         unit_rel_raw_eta_min_q=quart(ur), unit_rel_raw_eta_min_max=float(ur.max()) if len(ur) else float("nan"),
+                         unit_frac_raw_le_1e3=float((ur <= 1e-3).mean()) if len(ur) else float("nan"),
+                         unit_rel_richardson_q=quart(uq), unit_rel_richardson_max=float(uq.max()) if len(uq) else float("nan"),
+                         unit_frac_richardson_le_1e3=float((uq <= 1e-3).mean()) if len(uq) else float("nan"))
+        r_ok = per[name]["richardson_err"] <= 1e-3 and (e_r[etas[0]] < 1e-9 or 1.5 <= per[name]["conv_ratio"] <= 2.5)
+        per[name]["richardson_pass"] = bool(r_ok)
+        per[name]["registered_raw_pass"] = bool(e_r[etas[0]] <= 1e-3)
+        ok_rich &= r_ok
+        ok_raw &= per[name]["registered_raw_pass"]
+    add("K6_gd_steps_converge_to_G_full", ok_rich, arm=S.arm, seed=S.seed, t=S.task, per_layer=per,
+        registered_raw_pass=bool(ok_raw), richardson_pass=bool(ok_rich),
+        criterion_registered="A1.2: fixed routing, -dm/eta at the finite steps; at eta = 2.5e-5 the layer-max-normalized "
+                             "error max_i |(-dm_i/eta) - G_i| / max_i |G_i| <= 1e-3 (registered_raw_pass)",
+        criterion_pass="approved change: the Richardson limit 2 r(2.5e-5) - r(5e-5) within 1e-3 of the layer scale and "
+                       "the error halving with eta (ratio 1.5-2.5) unless at rounding level (richardson_pass = pass); the "
+                       "limit is a check of G_full, not a finite GD step meeting the registered accuracy",
         seconds=time.time() - t1)
     # auxiliary: real-label directional derivatives
     gen = torch.Generator().manual_seed(1020_006 + S.seed)
@@ -1271,6 +1289,21 @@ def cmd_merge():
                 "counts only; the spec says kappa and A 'may' change, S_exact and G must not",
          "approved_by_parent": "2026-10-20 (Fable, after the interim report)", "raw_values": "a4_varies_over_images, "
                                                                                           "label_perm_changes in K4"}]
+    k6 = [c for c in rep["checks"] if c["name"] == "K6_gd_steps_converge_to_G_full"]
+    rep["K6_registered_raw_pass_all"] = all(c.get("registered_raw_pass", False) for c in k6) if k6 else None
+    rep["K6_richardson_pass_all"] = all(c.get("richardson_pass", c["pass"]) for c in k6) if k6 else None
+    rep["all_pass_with_registered_K6"] = (bool(rep["checks"]) and all(
+        (c.get("registered_raw_pass", c["pass"]) if c["name"] == "K6_gd_steps_converge_to_G_full" else c["pass"])
+        for c in rep["checks"] if c.get("required", True)))
+    rep["K6_summary"] = ("登録基準（固定経路、η = 2.5e−5 の実差分、層の |G| の最大で正規化した相対誤差 ≤ 1e−3）: " +
+                         ", ".join(f"{c['arm']} s{c['seed']} t{c['t']} " +
+                                   ("達" if c.get("registered_raw_pass") else "未達（" + "・".join(
+                                       f"{L} {c['per_layer'][L]['err_fixed']['2.5e-05']:.1e}" for L in LAYERS
+                                       if not c["per_layer"][L].get("registered_raw_pass", True)) + "）")
+                                   for c in k6) +
+                         "。極限の検算（Richardson、承認済みの判定）: " +
+                         ("全部 PASS" if rep["K6_richardson_pass_all"] else "FAIL あり") +
+                         "。all_pass は承認済みの判定、all_pass_with_registered_K6 は登録基準の K6 で数えた値。") if k6 else None
     fl = make_floors()
     rep["floors"] = fl
     (OUT / "checks.json").write_text(json.dumps(rep, indent=1, default=float))

@@ -135,7 +135,7 @@
    "seed": 10,
    "t": 1,
    "a4_varies_over_images": true,
-   "note": "label-only permutation: S_exact and G must be invariant; kappa and A must change when the f2 features vary over images (otherwise F depends on the class counts only)",
+   "note": "\u03ba\u30fbA \u306e\u5909\u5316\u306f\u60c5\u5831\u3068\u3057\u3066\u8a18\u9332\u3001\u5fc5\u9808\u306f G\u30fbS_exact \u306e\u4e0d\u5909\uff08label-only permutation; \u03ba and A need not change, e.g. image-constant features or a head orthogonal to the change\uff09",
    "ref_eq_current": {
     "chance": 0.00028259933898628226,
     "feat": 0.0,
@@ -222,12 +222,26 @@
      },
      "richardson_err": 8.402580017066653e-14,
      "conv_ratio": 0.16510318949343342,
-     "elementwise_rel_fixed_q": [
-      3.9621538384433345e-15,
+     "normalization": "max_i |-dm_i/eta - G_i| / max_i |G_i| over the layer's units",
+     "n_units": 16,
+     "n_indeterminate": 0,
+     "floor_G": 5.684341886080802e-14,
+     "unit_rel_raw_eta_min_q": [
+      3.962153838443319e-15,
       7.05106545320887e-15,
       2.3186672724152018e-14
      ],
-     "raw_err_eta_min_le_1e-3": true
+     "unit_rel_raw_eta_min_max": 7.53929311604558e-14,
+     "unit_frac_raw_le_1e3": 1.0,
+     "unit_rel_richardson_q": [
+      8.170796312001634e-15,
+      1.9996133236307805e-14,
+      3.921922940985642e-14
+     ],
+     "unit_rel_richardson_max": 1.4173305257555665e-13,
+     "unit_frac_richardson_le_1e3": 1.0,
+     "richardson_pass": true,
+     "registered_raw_pass": true
     },
     "c2": {
      "err_fixed": {
@@ -242,12 +256,26 @@
      },
      "richardson_err": 7.5022721695060195e-06,
      "conv_ratio": 1.9948722981490854,
-     "elementwise_rel_fixed_q": [
-      0.0005945461693788996,
-      0.0009058009905990725,
-      0.002641680731819163
+     "normalization": "max_i |-dm_i/eta - G_i| / max_i |G_i| over the layer's units",
+     "n_units": 16,
+     "n_indeterminate": 0,
+     "floor_G": 9.094947017729282e-13,
+     "unit_rel_raw_eta_min_q": [
+      0.0005942771593138963,
+      0.0009049796277253175,
+      0.0026345988032839174
      ],
-     "raw_err_eta_min_le_1e-3": false
+     "unit_rel_raw_eta_min_max": 0.4135593451450129,
+     "unit_frac_raw_le_1e3": 0.5625,
+     "unit_rel_richardson_q": [
+      4.326619921338275e-06,
+      1.1265273716530728e-05,
+      1.8842480127052574e-05
+     ],
+     "unit_rel_richardson_max": 0.0036070321321073815,
+     "unit_frac_richardson_le_1e3": 0.9375,
+     "richardson_pass": true,
+     "registered_raw_pass": false
     },
     "f1": {
      "err_fixed": {
@@ -262,12 +290,26 @@
      },
      "richardson_err": 1.0113176267325424e-05,
      "conv_ratio": 2.0041991790994422,
-     "elementwise_rel_fixed_q": [
+     "normalization": "max_i |-dm_i/eta - G_i| / max_i |G_i| over the layer's units",
+     "n_units": 100,
+     "n_indeterminate": 0,
+     "floor_G": 3.637978807091713e-12,
+     "unit_rel_raw_eta_min_q": [
       0.00185875110056503,
       0.002691168896547716,
       0.004066221568382548
      ],
-     "raw_err_eta_min_le_1e-3": false
+     "unit_rel_raw_eta_min_max": 0.02431461300146043,
+     "unit_frac_raw_le_1e3": 0.08,
+     "unit_rel_richardson_q": [
+      5.4951007885827985e-06,
+      1.0881640669778584e-05,
+      2.0805610064495355e-05
+     ],
+     "unit_rel_richardson_max": 0.0011806260208579388,
+     "unit_frac_richardson_le_1e3": 0.99,
+     "richardson_pass": true,
+     "registered_raw_pass": false
     },
     "f2": {
      "err_fixed": {
@@ -282,16 +324,33 @@
      },
      "richardson_err": 1.2613766155531736e-05,
      "conv_ratio": 2.0003414286841776,
-     "elementwise_rel_fixed_q": [
+     "normalization": "max_i |-dm_i/eta - G_i| / max_i |G_i| over the layer's units",
+     "n_units": 100,
+     "n_indeterminate": 0,
+     "floor_G": 3.637978807091713e-12,
+     "unit_rel_raw_eta_min_q": [
       0.003394920845271048,
       0.004211252305236532,
       0.0057183257220785825
      ],
-     "raw_err_eta_min_le_1e-3": false
+     "unit_rel_raw_eta_min_max": 0.07214655805979711,
+     "unit_frac_raw_le_1e3": 0.02,
+     "unit_rel_richardson_q": [
+      3.770988844507455e-06,
+      9.698264313889045e-06,
+      2.8503786970865957e-05
+     ],
+     "unit_rel_richardson_max": 0.0011308768849705238,
+     "unit_frac_richardson_le_1e3": 0.99,
+     "richardson_pass": true,
+     "registered_raw_pass": false
     }
    },
-   "criterion": "fixed routing (pool winners, leaky/ReLU branches): -dm/eta at eta = 1e-4, 5e-5, 2.5e-5; the Richardson limit 2 r(2.5e-5) - r(5e-5) within 1e-3 x max_i |G_i| per layer and the error halving with eta (ratio 1.5-2.5) unless it is at rounding level; raw error at 2.5e-5 reported (raw_err_eta_min_le_1e-3) -- the first version of this check used the raw error, which is the O(eta) curvature term, not a property of G_full",
-   "seconds": 2.9423792362213135
+   "registered_raw_pass": false,
+   "richardson_pass": true,
+   "criterion_registered": "A1.2: fixed routing, -dm/eta at the finite steps; at eta = 2.5e-5 the layer-max-normalized error max_i |(-dm_i/eta) - G_i| / max_i |G_i| <= 1e-3 (registered_raw_pass)",
+   "criterion_pass": "approved change: the Richardson limit 2 r(2.5e-5) - r(5e-5) within 1e-3 of the layer scale and the error halving with eta (ratio 1.5-2.5) unless at rounding level (richardson_pass = pass); the limit is a check of G_full, not a finite GD step meeting the registered accuracy",
+   "seconds": 1.3811490535736084
   },
   {
    "name": "K6aux_label_draws",

@@ -23,6 +23,8 @@ ARM_JA = {"LR": "LR（leaky 0.1）", "R": "R（ReLU、1 seed）", "SNA": "SNA", 
 LAYERS = ("c1", "c2", "f1", "f2")
 OFF = {"c1": slice(0, 16), "c2": slice(16, 32), "f1": slice(32, 132), "f2": slice(132, 232)}
 T975 = 2.2621571627409915                      # t_{0.975, 9}
+EXPECTED_TASKS = {"LR": (1, 2, 3, 5, 10, 20, 30), "R": (1, 2, 3), **{a: (1, 2, 3, 5, 10, 20, 30, 40, 50) for a in SNAKE}}
+EXPECTED_SEEDS = {"LR": tuple(range(10, 20)), "R": (10,), **{a: tuple(range(10, 20)) for a in SNAKE}}
 INTERVAL_JA = {"init_to_task1": "初期値→課題 1", "replay_with_saved_end": "再生（終端を保存値と照合可）",
                "replay_without_saved_end": "同一エンジンによる再生、終端の直接照合なし",
                "continuation_beyond_original_run": "同一エンジンによる継続、元の走との照合なし"}
@@ -106,14 +108,23 @@ def q_ratio(by, arm, t):
 
 
 def kappa_ratio(by, arm, t, fl):
-    """seed-wise kappa_t / kappa_1 (undefined if kappa_1 is not above the floor)."""
-    k1 = {r["seed"]: r["kappa"] for r in by.get((arm, 1), [])}
+    """seed-wise kappa_t / kappa_1, NaN unless both states have ||F||^2 above the floor (kappa defined) and
+    kappa_1 is above the kappa floor."""
+    r1 = {r["seed"]: r for r in by.get((arm, 1), [])}
     floor = fl["atol"].get("kappa", 0.0)
     out = []
     for r in by.get((arm, t), []):
-        a = k1.get(r["seed"])
-        out.append(r["kappa"] / a if (fin(a) and a > floor and fin(r["kappa"])) else float("nan"))
+        b = r1.get(r["seed"])
+        ok = (b is not None and b.get("kappa_defined", True) and r.get("kappa_defined", True)
+              and fin(b["kappa"]) and b["kappa"] > floor and fin(r["kappa"]))
+        out.append(r["kappa"] / b["kappa"] if ok else float("nan"))
     return out
+
+
+def kappa_ratio_by_seed(by, arm, t, fl):
+    r1 = {r["seed"]: r for r in by.get((arm, 1), [])}
+    vals = dict(zip([r["seed"] for r in by.get((arm, t), [])], kappa_ratio(by, arm, t, fl)))
+    return {s: vals.get(s, float("nan")) for s in EXPECTED_SEEDS[arm]}, {s: (s in r1) for s in EXPECTED_SEEDS[arm]}
 
 
 # --------------------------------------------------------------------------
@@ -248,16 +259,20 @@ def t3(by, fl):
                            "/".join(fmt(stats(col(by, arm, t, f"{L}_cancel_med"))["mean"], 2) for L in ("c2", "f1", "f2")),
                            "/".join(fmt(stats(col(by, arm, t, f"{L}_n_indet_full"))["mean"], 1) for L in LAYERS)])
     md += [table(head, rows), ""]
-    md += ["補表（全 unit。生きていない unit も含む）: G_full > 0 の割合の seed 平均", ""]
+    md += ["補表（全 unit。生きていない unit も含む）: G_full > 0 の割合の seed 平均。括弧は seed 合計の 対象数（全 unit 数 − 不定）/ 不定数", ""]
     head = ["腕", "t"] + [f"{L}（全 {16 if L[0] == 'c' else 100}）" for L in LAYERS]
-    rows = [[ARM_JA[arm], t] + [msd(col(by, arm, t, f"{L}_all_frac_Gfull_pos"), 2) for L in LAYERS]
+    def cnt(arm, t, L):
+        rs = by[(arm, t)]
+        n = sum(r[f"{L}_all_n"] for r in rs); ni = sum(r[f"{L}_all_n_indet_full"] for r in rs)
+        return f"{msd(col(by, arm, t, f'{L}_all_frac_Gfull_pos'), 2)}（{n - ni} / {ni}）"
+    rows = [[ARM_JA[arm], t] + [cnt(arm, t, L) for L in LAYERS]
             for arm in arms_present(by) for t in tasks_of(by, arm, with0=True)]
     md += [table(head, rows), ""]
     md += ["### T3b f2 の自己形と射影帳簿", "",
            "S_exact = N·G_own(f2)。S_self = κ(1 − 1/K)Σ K_n g φ、S_oh = Σ K_n g v^c_{y_n}、S_proj = Σ K_n g (κF)_{y_n}。"
            "一致は生きた unit で両方が床を超えるもの。偶然一致 = p_self p_own + (1 − p_self)(1 − p_own)。"
            "帳簿の各段は |段| / |S_exact| の中央値。", ""]
-    head = ["腕", "t", "S_self > 0", "S_self と S_exact の一致（偶然）", "S_self/S_exact 四分位（中央の seed）",
+    head = ["腕", "t", "S_self > 0", "S_self と S_exact の一致（偶然）", "S_self/S_exact の unit 四分位（seed ごと）の seed 間中央値",
             "S_oh 一致", "S_proj 一致", "Spearman(S_self, S_exact)", "Spearman(S_oh, S_exact)",
             "|S_exact−S_oh|/|S_exact|", "|S_oh−S_proj|/|S_exact|", "|S_proj−S_self|/|S_exact|", "S_self<0 の unit（G_own<0 の割合）",
             "K_n 最小（負の割合）"]
@@ -265,11 +280,11 @@ def t3(by, fl):
     for arm in arms_present(by):
         for t in tasks_of(by, arm):
             rs = by[(arm, t)]
-            qmid = [r["f2_ratio_self_exact_q"][1] for r in rs]
+            qq = [stats([r["f2_ratio_self_exact_q"][k] for r in rs])["med"] for k in range(3)]
             nneg = sum(r["f2_n_Sself_neg"] for r in rs)
             rows.append([ARM_JA[arm], t, msd(col(by, arm, t, "f2_frac_Sself_pos"), 2),
                          f"{msd(col(by, arm, t, 'f2_agree_self_exact'), 2)}（{fmt(stats(col(by, arm, t, 'f2_agree_self_exact_chance'))['mean'], 2)}）",
-                         fmt(stats(qmid)["med"], 3), msd(col(by, arm, t, "f2_agree_oh_exact"), 2),
+                         " / ".join(fmt(v, 3) for v in qq), msd(col(by, arm, t, "f2_agree_oh_exact"), 2),
                          msd(col(by, arm, t, "f2_agree_proj_exact"), 2), msd(col(by, arm, t, "f2_sp_self_exact"), 2),
                          msd(col(by, arm, t, "f2_sp_oh_exact"), 2),
                          fmt(stats(col(by, arm, t, "f2_ledger_exact_minus_oh_medabs_rel"))["med"], 3),
@@ -282,8 +297,11 @@ def t3(by, fl):
     sn = [a for a in arms_present(by) if a in SNAKE]
     if sn:
         md += ["### T3d Snake の谷の則（seat = 2αm、G_full > 0 の AUC。正負両方ある状態だけ）", ""]
-        head = ["腕", "t", "c2 AUC", "c2 谷の上で沈める側", "c2 谷の下で沈める側", "c2 谷の下の数", "f2 AUC"]
-        rows = [[a, t, msd(col(by, a, t, "c2_seat_auc"), 2), msd(col(by, a, t, "c2_frac_sink_above_valley"), 2),
+        head = ["腕", "t", "c2 AUC", "c2 AUC の有効 seed 数（正負両方ある状態）", "c2 谷の上で沈める側", "c2 谷の下で沈める側",
+                "c2 谷の下の数", "f2 AUC"]
+        rows = [[a, t, msd(col(by, a, t, "c2_seat_auc"), 2),
+                 f"{sum(1 for v in col(by, a, t, 'c2_seat_auc') if fin(v))}/{len(by[(a, t)])}",
+                 msd(col(by, a, t, "c2_frac_sink_above_valley"), 2),
                  msd(col(by, a, t, "c2_frac_sink_below_valley"), 2), fmt(stats(col(by, a, t, "c2_n_below_valley"))["mean"], 1),
                  msd(col(by, a, t, "f2_seat_auc"), 2)] for a in sn for t in tasks_of(by, a)]
         md += [table(head, rows), ""]
@@ -322,7 +340,8 @@ def t4(by, fl):
     md = ["## T4 実際の切替（再生、最初の 200 更新）", "",
           "step 0 で生きていた unit。沈める側 = Δm < 0（|Δm| ≤ 再評価差の床は不定）。一致は −G_full（f2 は −G_own も）と Δm の符号。"
           "沈み = −Δm_200 の中央値、沈み/幅 = −Δm_200/s(0) の中央値。seed 平均（SD）。", ""]
-    head = ["腕", "t", "区間", "c1 1 歩/200", "c2 1 歩/200", "f1 1 歩/200", "f2 1 歩/200",
+    head = ["腕", "t", "区間", "対象 c1/c2/f1/f2（seed 合計、step 0 で生きた unit）", "不定 1 歩/200（f2、seed 合計）",
+            "c1 1 歩/200", "c2 1 歩/200", "f1 1 歩/200", "f2 1 歩/200",
             "f2 −G_own と Δm_1 / Δm_200 の一致", "f2 −G_full と Δm_1 / Δm_200", "c2 −G_full と Δm_200", "f2 沈み（沈み/幅）",
             "f2 p⁺: 1/2 を上へ / 下へ（200 更新、seed 合計）"]
     rows = []
@@ -331,7 +350,9 @@ def t4(by, fl):
             rs = by[(arm, t)]
             if not any("rp_f2_frac_sink200" in r for r in rs):
                 continue
-            rows.append([ARM_JA[arm], t, INTERVAL_JA.get(rs[0].get("rp_interval"), "—")]
+            rows.append([ARM_JA[arm], t, INTERVAL_JA.get(rs[0].get("rp_interval"), "—"),
+                         "/".join(str(sum(r[f"{L}_n_alive"] for r in rs)) for L in LAYERS),
+                         f"{sum(r.get('rp_f2_n_indet1', 0) for r in rs)}/{sum(r.get('rp_f2_n_indet200', 0) for r in rs)}"]
                         + [f"{msd(col(by, arm, t, f'rp_{L}_frac_sink1'), 2)} / {msd(col(by, arm, t, f'rp_{L}_frac_sink200'), 2)}"
                            for L in LAYERS]
                         + [f"{msd(col(by, arm, t, 'rp_f2_agree_Gown_1'), 2)} / {msd(col(by, arm, t, 'rp_f2_agree_Gown_200'), 2)}",
@@ -469,7 +490,7 @@ def t7(by):
     md = ["## T7 戻り（g1、保存境界の列 t ≥ 1 で一度閾値未満に入った unit が後の境界で閾値以上に戻った数）", "",
           "一意な seed-unit で数える。リスク集合 = 一度未満になり後続の観測がある unit。疎な観測境界での戻りに限る。", ""]
     head = ["腕", "層", "seed-unit 数", "p⁺<1/2 に入った", "リスク集合", "p⁺≥1/2 に戻った", "戻り / 全", "戻り / リスク",
-            "m<0 に入った", "リスク集合", "m≥0 に戻った", "戻り / 全"]
+            "m<0 に入った", "リスク集合", "m≥0 に戻った", "戻り / 全", "戻り / リスク"]
     rows = []
     for arm in arms_present(by):
         for L in LAYERS:
@@ -478,7 +499,8 @@ def t7(by):
                 continue
             rows.append([ARM_JA[arm], L, p["total"], p["entered"], p["risk"], p["returned"],
                          fmt(p["returned"] / p["total"], 4), fmt(p["returned"] / p["risk"], 4) if p["risk"] else "—",
-                         m["entered"], m["risk"], m["returned"], fmt(m["returned"] / m["total"], 4)])
+                         m["entered"], m["risk"], m["returned"], fmt(m["returned"] / m["total"], 4),
+                         fmt(m["returned"] / m["risk"], 4) if m["risk"] else "—"])
     md += [table(head, rows), ""]
     if who:
         md += ["戻った unit の内訳（p⁺ 基準、最大 40 行）:", "",
@@ -586,21 +608,41 @@ def t_kappaR():
 
 def verdict(by, fl, ret):
     V = {}
+    comp = {}
+    for arm in ARMS:
+        exp = [(t, s_) for t in (0,) + EXPECTED_TASKS[arm] for s_ in EXPECTED_SEEDS[arm]]
+        have = {(r["t"], r["seed"]) for k, v in by.items() if k[0] == arm for r in v}
+        comp[arm] = dict(n_expected=len(exp), n_present=sum(1 for e in exp if e in have),
+                         missing=[list(e) for e in exp if e not in have],
+                         n_kappa_undefined=sum(1 for k, v in by.items() if k[0] == arm for r in v if not r.get("kappa_defined", True)))
+    V["design_completeness"] = comp
     # P1
     p1 = {}
-    for arm in [a for a in arms_present(by) if a != "R"]:
+    for arm in [a for a in ARMS if a != "R"]:
         need = 10 if arm == "LR" else 8
         per = {}
-        for t in tasks_of(by, arm):
-            if t < 2:
-                continue
-            kr = kappa_ratio(by, arm, t, fl)
-            per[t] = dict(n_ge_08=sum(1 for v in kr if fin(v) and v >= 0.8), n_defined=sum(1 for v in kr if fin(v)))
-        undetermined = any(v["n_defined"] < need for v in per.values())
-        ok = all(v["n_ge_08"] >= need for v in per.values())
+        for t in [t for t in EXPECTED_TASKS[arm] if t >= 2]:
+            vals, have1 = kappa_ratio_by_seed(by, arm, t, fl)
+            present = {r["seed"] for r in by.get((arm, t), [])}
+            n_def = sum(1 for v in vals.values() if fin(v))
+            n_succ = sum(1 for v in vals.values() if fin(v) and v >= 0.8)
+            n_exp = len(EXPECTED_SEEDS[arm])
+            if n_def < n_exp:
+                bv = "判定不能"                                   # registered: a missing seed makes it undetermined
+            else:
+                bv = "支持" if n_succ >= need else "不支持"
+            per[t] = dict(n_expected=n_exp, n_present=len(present & set(EXPECTED_SEEDS[arm])),
+                          n_kappa1_present=sum(have1.values()), n_defined=n_def, n_ge_08=n_succ, threshold=need,
+                          boundary_verdict=bv, missing_seeds=[s for s in EXPECTED_SEEDS[arm] if not fin(vals[s])])
+        undetermined = any(v["boundary_verdict"] == "判定不能" for v in per.values())
+        ok = all(v["boundary_verdict"] == "支持" for v in per.values())
+        failed = any(v["boundary_verdict"] == "不支持" for v in per.values())
         qaux = {t: dict(n_Q_ge_08=sum(1 for v in q_ratio(by, arm, t) if fin(v) and v >= 0.8),
                         cos2_mean=stats(col(by, arm, t, "expl_total"))["mean"]) for t in tasks_of(by, arm) if t >= 2}
-        p1[arm] = dict(per_boundary=per, need=need, verdict="判定不能" if undetermined and not ok else ("支持" if ok else "不支持"),
+        p1[arm] = dict(per_boundary=per, n_expected=len(EXPECTED_SEEDS[arm]), threshold=need,
+                       verdict="不支持" if failed else ("判定不能" if undetermined else ("支持" if ok else "不支持")),
+                       n_boundaries_expected=len(per),
+                       n_boundaries_missing=sum(1 for v in per.values() if v["n_present"] == 0),
                        post_hoc_unregistered_Q_ratio_and_cos2=qaux)
     V["P1"] = p1
     # P2
@@ -625,8 +667,14 @@ def verdict(by, fl, ret):
             rec["c1_reproduction"] = dict(values=m["c1"], verdict="支持" if all(fin(v) and v <= 0.5 for v in m["c1"].values()) else "不支持")
         else:
             au = {t: stats(col(by, arm, t, "c2_seat_auc"))["mean"] for t in ts}
-            rec["c2_valley_auc"] = dict(values=au, verdict="支持" if all(fin(v) and v >= 0.8 for v in au.values() if fin(v))
-                                        and any(fin(v) for v in au.values()) else "不支持",
+            nval = {t: sum(1 for v in col(by, arm, t, "c2_seat_auc") if fin(v)) for t in ts}
+            valid_t = [t for t in ts if nval[t] > 0]
+            if not valid_t:
+                av = "判定不能（正負両方ある状態なし）"
+            else:
+                av = "支持" if all(au[t] >= 0.8 for t in valid_t) else "不支持"
+            rec["c2_valley_auc"] = dict(values=au, n_valid_seeds=nval, scored_boundaries=valid_t,
+                                        excluded_boundaries=[t for t in ts if nval[t] == 0], verdict=av,
                                         n_states_undefined=sum(1 for t in ts for v in col(by, arm, t, "c2_seat_auc") if not fin(v)))
         p3[arm] = rec
     if any(k[0] == "R" for k in by):
@@ -654,13 +702,25 @@ def verdict(by, fl, ret):
         if (arm, 0) not in by:
             continue
         r0 = {r["seed"]: r for r in by[(arm, 0)]}; r1 = {r["seed"]: r for r in by[(arm, 1)]}
-        rat = [r0[s]["f2_medabs_Sexact_N"] / r1[s]["f2_medabs_Sexact_N"] for s in sorted(set(r0) & set(r1))
-               if fin(r1[s]["f2_medabs_Sexact_N"]) and r1[s]["f2_medabs_Sexact_N"] > 0]
-        rat_all = [r0[s]["f2_medabs_Sexact_N_all"] / r1[s]["f2_medabs_Sexact_N_all"] for s in sorted(set(r0) & set(r1))]
+        fS = fl["S"] / 1200.0                                     # the S floor in units of S/N
+        seeds = sorted(set(r0) & set(r1))
+        def ratio_k(key):
+            out, nun = [], 0
+            for s_ in seeds:
+                d_ = r1[s_].get(key)
+                if fin(d_) and d_ > fS and fin(r0[s_].get(key)):
+                    out.append(r0[s_][key] / d_)
+                else:
+                    nun += 1
+            return out, nun
+        rat, nu = ratio_k("f2_medabs_Sexact_N")
+        rat_all, nu_all = ratio_k("f2_medabs_Sexact_N_all")
+        com = [common_alive_ratio(arm, s_) for s_ in seeds]
         med_ = stats(rat)["med"]
-        p5[arm] = dict(seed_median=med_, all_units_seed_median=stats(rat_all)["med"],
-                       common_alive_seed_median=stats([common_alive_ratio(arm, s) for s in sorted(set(r0) & set(r1))])["med"],
-                       verdict="支持" if fin(med_) and med_ <= 1 / 30 else "不支持")
+        p5[arm] = dict(seed_median=med_, n_seeds=len(seeds), n_undefined=nu, all_units_seed_median=stats(rat_all)["med"],
+                       all_units_n_undefined=nu_all, common_alive_seed_median=stats(com)["med"],
+                       common_alive_n_undefined=sum(1 for v in com if not fin(v)), denominator_floor_S_over_N=fS,
+                       verdict=("判定不能" if nu else ("支持" if fin(med_) and med_ <= 1 / 30 else "不支持")))
     V["P5"] = p5
     # P6
     p6 = {}
@@ -679,7 +739,9 @@ def verdict(by, fl, ret):
             ch = stats(col(by, arm, t, "f2_agree_self_exact_chance"))["mean"]
             neg = [r for r in by[(arm, t)] if r["f2_n_Sself_neg"] > 0]
             fneg = stats([r["f2_frac_Gown_neg_given_Sself_neg"] for r in neg])["mean"]
-            per[t] = dict(agree_mean=ag, chance=ch, n_Sself_neg=sum(r["f2_n_Sself_neg"] for r in by[(arm, t)]),
+            per[t] = dict(agree_mean=ag, chance=ch, chance_set="alive & |S_exact|, |S_self| > S floor (same as agree)",
+                          n_common_units=sum(r.get("f2_n_agree_common", r.get("f2_n_agree_self_exact", 0)) for r in by[(arm, t)]),
+                          n_Sself_neg=sum(r["f2_n_Sself_neg"] for r in by[(arm, t)]),
                           n_seeds_with_neg=len(neg), frac_Gown_neg_given_Sself_neg=fneg,
                           agree_ok=bool(fin(ag) and ag >= 0.8), neg_ok=bool(len(neg) > 0 and fin(fneg) and fneg > 0.5))
         p1ok = V["P1"].get(arm, {}).get("verdict") == "支持"
