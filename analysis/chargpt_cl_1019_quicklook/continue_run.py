@@ -17,6 +17,7 @@ def main():
     ap.add_argument("--from_task", type=int, required=True); ap.add_argument("--to_task", type=int, required=True)
     ap.add_argument("--seed", type=int, default=1000); ap.add_argument("--n_per_task", type=int, default=10000); ap.add_argument("--alpha", type=float, default=0.01)
     ap.add_argument("--device", default="cuda"); ap.add_argument("--fresh", type=int, default=1)
+    ap.add_argument("--save_tasks", type=int, nargs="*", default=[], help="この課題の末で重みと Adam の状態を保存する（to_task は常に保存）")
     a = ap.parse_args()
     C.setup_torch(); dev = torch.device(a.device); src, out = Path(a.src), Path(a.out); out.mkdir(parents=True, exist_ok=True); (out / "ckpts").mkdir(exist_ok=True)
     gh, dirty = C.git_info(); t_start = time.time()
@@ -53,6 +54,8 @@ def main():
         endm = C.eval_M(model, ctx.eval_seq, ctx.H)
         row = dict(task=t, n=n, H=ctx.H, **C.summarize_online("M", loss, aux, ctx.H), end_metric=endm, data_sha=ctx.data_sha[:16], rule_sha=ctx.rule_sha[:16]); rows.append(row)
         print(f"[M/{a.arm}/s{a.seed} cont] task {t}/{a.to_task} online_all {row['online_all']:.4f} end {endm:.4f} {time.time() - tt0:.0f}s", flush=True)
+        if t in a.save_tasks and t != a.to_task:
+            torch.save(model.state_dict(), out / "ckpts" / f"task{t}.pt"); torch.save(eng.opt.state_dict(), out / "ckpts" / f"task{t}_adam.pt")
         if t == a.to_task:
             torch.save(model.state_dict(), out / "ckpts" / f"task{t}.pt"); torch.save(eng.opt.state_dict(), out / "ckpts" / f"task{t}_adam.pt")
             if a.fresh:
