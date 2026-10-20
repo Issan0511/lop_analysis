@@ -208,3 +208,16 @@ EMA と射影を、捕捉する 1 更新の CUDA graph の中に入れる。演�
   3. GPU の上に他の python のプロセスが無い。
 - 780 → 7800 → verdict の順に回し、最後に `results/cnn_center_budget_1020/exit_code.txt` を書く。
 - 本 spec は実装の前に commit・push する。実装・検査・smoke の commit も本走の前に push する。結果を見たあとで本文を書き換えず、変更は追補で記録する。
+
+## 追補 1（2026-10-20、実装・検査の後、本走の前）
+
+本文の定義・判定・予測は変えていない。実装で決めた細部を記録する。
+
+- **S-proj の Codex との照合の形**。0 方向への丸めで c1 の bias が 1 ulp 変わると、その下流の層の入力も丸めの水準で変わる。そのため c2 より下流は、登録した丸めのままでは Codex とビットで一致しない。照合は 2 段にした。
+  1. 丸めだけを Codex と同じ最近接に差し替えたエンジンの射影が、Codex の `project_bias` と 4 層すべてでビット一致する。
+  2. 登録した丸めと最近接の差は、上流の補正がない c1 で「最近接の値が上限を越えた unit を 0 の方向へ 1 ulp 戻した」ものだけである。
+  照合した Codex のソースは `c4e3bbd1:src/cnn_chprime_bias_1018.py`（sha256 `c80ebf48…`）で、`git show` で読んだ。
+- **束の大きさ 40 の計時**（S-reuse-smoke）は 1 更新 26.6 ms だった。前段の同じ束は 17 ms である。
+- **検査の結果**は `results/cnn_center_budget_1020/checks/checks.json`（src は `40769305`、全検査 PASS、変異はすべて検出）。S-reuse-smoke では、本走と同じ束の課題 1 で、R・ELU の 20 run の毎更新の CE と正誤が前段の生データとビットで一致した。
+- **smoke**（`results/cnn_center_budget_1020/smoke/`）は両予算とも完走し、発散 0。
+- **待ちの条件**（§10）の判定には、MLP の `production.sh` の bash のプロセスだけを数える。他のセッションのシェルの命令文に走の名前が含まれていても数えない（`pgrep` の正規表現を、命令の最初の語が bash・sh で、次の語が `mlp_center_x10_1020/production.sh` を含むものに限った）。
