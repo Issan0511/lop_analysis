@@ -1,0 +1,93 @@
+{
+ "run_id": "chargpt_cl_1019",
+ "host": "byakko.bsd.bbtec.net",
+ "numpy": "2.5.1",
+ "python": "3.12.7",
+ "box": "M",
+ "arm": "C4",
+ "arm_cfg": {
+  "norm": "ln",
+  "ln_bias": false,
+  "lin_bias": false,
+  "lr": 0.0001
+ },
+ "seed": 0,
+ "tasks": 2,
+ "n_per_task": 400,
+ "alpha": 0.03,
+ "engine": "graph",
+ "git_hash": "b071749b5d56620ed3c46d89b5dd3aefc0b2fbe6",
+ "dirty_src": [],
+ "torch": "2.13.0+cu130",
+ "cuda": "13.0",
+ "device": "NVIDIA GeForce RTX 5070 Ti",
+ "init_sha": "9a464fb13590d2dd90340863615104d88014fcd0e6a7a3cbb5bc247b855adf21",
+ "final_sha": "ce89765e5d7801770e464e83d03a24202f8e205b8326a17692c74787f94cc7ae",
+ "tasks_info": [
+  {
+   "task": 1,
+   "data_sha": "2dbbc9783778671bb27f70350f0a4df76c1717b399aeaf0623b89cb406d22f17",
+   "rule_sha": "37d03d19e7b573eee52ee9b1da25286899f48651d4dd40b718e9d484c149d34a",
+   "H": 1.4292837584369935,
+   "probe_sha": "b4eb637d6329e43fa25418697df3d4b17eca36f7b0828a68ac32416f3eeaee79",
+   "pi_iters": 125
+  },
+  {
+   "task": 2,
+   "data_sha": "9ce6c42b3ae15854cd17f6cba724e5291a04f4b6d55a6692e7f99b4022213d6f",
+   "rule_sha": "50d8cae64981d726abe683aab46baff4885fdb3afd07cd7d79cd6103f88ec067",
+   "H": 1.431203689593052,
+   "probe_sha": "82e4446e25b9cebbfa15ea302907754ae146b84562a9f33e2648500407941407",
+   "pi_iters": 129
+  }
+ ],
+ "data_W_sha256": null,
+ "W_window_starts": null,
+ "W_probe_idx": null,
+ "probe_uniform_sha": "c062be9edd092af30bf8b4fdd8226e87720989e5cb3148a819667ffeff7b0dfc",
+ "stream_seed_example": {
+  "init": 797122162718593779,
+  "rule_t1": 4002104911955682461,
+  "data_t1": 1021301493072637121
+ },
+ "within_tasks": [
+  1,
+  2,
+  10,
+  11,
+  25,
+  26,
+  49,
+  50
+ ],
+ "fresh_tasks": [
+  2
+ ],
+ "wall_sec": 4.600419521331787,
+ "task_secs": [
+  1.5158414840698242,
+  1.3926112651824951
+ ],
+ "argv": [
+  "/home/kubo/project/Nakatsuka/lop_analysis_chargpt_cl_1019/src/chargpt_cl_1019.py",
+  "run",
+  "--box",
+  "M",
+  "--arm",
+  "C4",
+  "--seed",
+  "0",
+  "--tasks",
+  "2",
+  "--n_per_task",
+  "400",
+  "--out",
+  "results/chargpt_cl_1019/remote_byakko.bsd.bbtec.net/checks/runs/arm_M_C4",
+  "--ckpt",
+  "0",
+  "--alpha",
+  "0.03",
+  "--fresh_tasks",
+  "2"
+ ]
+}

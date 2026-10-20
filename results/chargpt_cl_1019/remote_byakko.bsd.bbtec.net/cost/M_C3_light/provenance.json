@@ -1,0 +1,82 @@
+{
+ "run_id": "chargpt_cl_1019",
+ "host": "byakko.bsd.bbtec.net",
+ "numpy": "2.5.1",
+ "python": "3.12.7",
+ "box": "M",
+ "arm": "C3",
+ "arm_cfg": {
+  "norm": "ln",
+  "ln_bias": false,
+  "lin_bias": false,
+  "lr": 0.001
+ },
+ "seed": 0,
+ "tasks": 2,
+ "n_per_task": 10000,
+ "alpha": 0.01,
+ "engine": "graph",
+ "git_hash": "b071749b5d56620ed3c46d89b5dd3aefc0b2fbe6",
+ "dirty_src": [],
+ "torch": "2.13.0+cu130",
+ "cuda": "13.0",
+ "device": "NVIDIA GeForce RTX 5070 Ti",
+ "init_sha": "9a464fb13590d2dd90340863615104d88014fcd0e6a7a3cbb5bc247b855adf21",
+ "final_sha": "a5b12586ca23400dd5bf03263a2e0224385cfbf55fc83d7f17f7736d3984091b",
+ "tasks_info": [
+  {
+   "task": 1,
+   "data_sha": "bb3d3c05b5924de5db5580698dc7f1b70d22b7432cacfccd8a1b38863bc4b8d0",
+   "rule_sha": "e7957a4a5725a881f29cf4bb15a6c175e4abf5f516cd6429a7f48fc08a56f2d9",
+   "H": 0.7194636537691628,
+   "probe_sha": "bab864cf3cd6a2bf52c78f0342772b6828f5cd2d3df1b3f878cc04a349d76aeb",
+   "pi_iters": 263
+  },
+  {
+   "task": 2,
+   "data_sha": "bf983bbf6a5389894094ef9526bf3a95b0968141d61d0e2d0d0a7070b4d9e0c3",
+   "rule_sha": "38205ad4159a1a0525e17359de1321b4731c73a90dac22e2c054c1e2ad8ac1c6",
+   "H": 0.7218054000303311,
+   "probe_sha": "175955e7b040bde8483a281ecd1677f21bb9957c9d87bec4f05a0d4be6b29e57",
+   "pi_iters": 301
+  }
+ ],
+ "data_W_sha256": null,
+ "W_window_starts": null,
+ "W_probe_idx": null,
+ "probe_uniform_sha": "c062be9edd092af30bf8b4fdd8226e87720989e5cb3148a819667ffeff7b0dfc",
+ "stream_seed_example": {
+  "init": 797122162718593779,
+  "rule_t1": 4002104911955682461,
+  "data_t1": 1021301493072637121
+ },
+ "within_tasks": [],
+ "fresh_tasks": [],
+ "wall_sec": 59.16068434715271,
+ "task_secs": [
+  28.76162624359131,
+  28.52286958694458
+ ],
+ "argv": [
+  "/home/kubo/project/Nakatsuka/lop_analysis_chargpt_cl_1019/src/chargpt_cl_1019.py",
+  "run",
+  "--box",
+  "M",
+  "--arm",
+  "C3",
+  "--seed",
+  "0",
+  "--tasks",
+  "2",
+  "--n_per_task",
+  "10000",
+  "--out",
+  "results/chargpt_cl_1019/remote_byakko.bsd.bbtec.net/cost/M_C3_light",
+  "--ckpt",
+  "0",
+  "--fresh_tasks",
+  "--alpha",
+  "0.01",
+  "--within_tasks"
+ ]
+}
