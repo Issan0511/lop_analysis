@@ -24,6 +24,10 @@ import torch.nn.functional as F
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import chargpt_cl_1019 as C  # noqa: E402
 
+# 層の数（追補 6 の 2 ブロックの箱）。本走モジュールは L を実行時に読むので、ここで差し替えれば網・記録・fresh の網がそろって変わる
+if os.environ.get("CHARGPT_NLAYER"):
+    C.L = int(os.environ["CHARGPT_NLAYER"])
+
 PI = math.pi
 SN_C, SN_BETA, SN_LO, SN_HI = 0.6, 0.01, 0.005, 3.0
 
@@ -216,7 +220,7 @@ def _step_body_cap(s):
 C.Engine._step_body = _step_body_cap
 
 # ---------------------------------------------------------------- Δμ の分解用の checkpoint（環境変数 CHARGPT_DECOMP_CKPT=1 のときだけ）
-DECOMP_TASKS = set(range(1, 11)) | set(range(40, 51))
+DECOMP_TASKS = set(range(1, 11)) | set(range(40, 51)) | set(range(90, 101))
 _STATE = {}
 _orig_run = C.run
 
@@ -225,8 +229,14 @@ def run_wrap(args):
     _STATE["out"] = Path(args.out)
     if os.environ.get("CHARGPT_DECOMP_CKPT") == "1":
         _STATE["decomp"] = True
-        C.CKPT_TASKS = tuple(sorted(set(C.CKPT_TASKS) | set(range(1, 11)) | set(range(39, 51))))   # 課題末 = 次の課題の更新 0
-    return _orig_run(args)
+        C.CKPT_TASKS = tuple(sorted(set(C.CKPT_TASKS) | set(range(1, 11)) | set(range(39, 51)) | set(range(89, 101))))   # 課題末 = 次の課題の更新 0
+    out = _orig_run(args)
+    pv = Path(args.out) / "provenance.json"                   # 層の数と分解用の checkpoint の範囲を残す
+    if pv.exists():
+        import json
+        d = json.loads(pv.read_text()); d.update(n_layer=C.L, decomp_ckpt=bool(_STATE.get("decomp")), ckpt_tasks=list(C.CKPT_TASKS))
+        pv.write_text(json.dumps(d, indent=1, ensure_ascii=False))
+    return out
 
 
 C.run = run_wrap
@@ -264,6 +274,8 @@ def measure_kune(model, x):
         dpu = dp.mean(0)                                      # unit ごとの φ′ の平均
         resp = (dp >= 0.5).double().mean(0)                   # unit ごとの「応答する」割合（φ′ ≥ 0.5）
         dq = torch.quantile(dpu, torch.tensor([0.1, 0.5], dtype=torch.float64, device=r.device))
+        pu = 1.0 - q                                          # unit ごとの開く割合 p
+        dvar = dp.var(0, unbiased=False)                      # unit ごとの、トークン間の φ′ の分散 Var_x(φ′)
         agg = dict(neg_frac=float((z2 < 0).double().mean()), units_mean_neg=float((mu < 0).double().mean()),
                    r_q25=float(rq[0]), r_med=float(rq[1]), r_q75=float(rq[2]),
                    sunk=float((q >= 0.95).double().mean()), dead=float(dead.double().mean()),
@@ -271,7 +283,9 @@ def measure_kune(model, x):
                    phi1_mean=float(dp.mean()), phi1_unit_q10=float(dq[0]), phi1_unit_med=float(dq[1]),
                    units_phi1_lt01=float((dpu < 0.1).double().mean()),
                    resp_lt005=float((resp < 0.05).double().mean()), resp_005_03=float(((resp >= 0.05) & (resp < 0.3)).double().mean()),
-                   resp_03_07=float(((resp >= 0.3) & (resp <= 0.7)).double().mean()), resp_gt07=float((resp > 0.7).double().mean()))
+                   resp_03_07=float(((resp >= 0.3) & (resp <= 0.7)).double().mean()), resp_gt07=float((resp > 0.7).double().mean()),
+                   p_mean=float(pu.mean()), frac_p_lt005=float((pu < 0.005).double().mean()), frac_p_ge099=float((pu >= 0.99).double().mean()),
+                   phi1_var_med=float(dvar.median()))
         agg.update(mu_med=float(mu.median()), sd_med=float(sd.median()))       # 絶対の深さ（z の単位）
         if getattr(mlp, "capped", False):
             sv = mlp.V.double().sqrt()

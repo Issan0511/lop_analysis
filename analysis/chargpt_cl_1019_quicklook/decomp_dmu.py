@@ -37,6 +37,14 @@ SEED, ALPHA = 1000, 0.01
 TASKS = list(range(1, 11)) + list(range(40, 51))
 
 
+def parse_tasks(spec):
+    out = []
+    for part in spec.split(","):
+        a, _, b = part.partition("-")
+        out += list(range(int(a), int(b or a) + 1))
+    return out
+
+
 def load(arm, d, name):
     m = C.build_model(arm, "M", SEED, "cpu")
     m.load_state_dict(torch.load(d / "ckpts" / f"{name}.pt", map_location="cpu"))
@@ -71,6 +79,10 @@ def window(arm, d, a_name, b_name, probe, self_split):
         dmu = mu_b - mu_a
         resid = float((dmu - (own + up + cross)).abs().max())
         r = dict(layer=li, dmu=dmu / sd, own=own / sd, up=up / sd, cross=cross / sd)
+        # 負の成分の量（unit 平均）。符号付きの和でなく、沈める向きの絶対量。相殺 = 項ごとの負の量の和 − 合計の負の量
+        r["neg_dmu"] = (-dmu / sd).clamp(min=0)
+        r["neg_up"] = (-(up + cross) / sd).clamp(min=0)
+        r["neg_own"] = (-own / sd).clamp(min=0)
         if self_split:
             Kn = a["y"] @ ya                                            # [N]
             z = a["z"]
@@ -90,21 +102,25 @@ def main():
     ap.add_argument("--arms", nargs="+", default=["C3", "SiLU", "GELU"])
     ap.add_argument("--out", required=True)
     ap.add_argument("--threads", type=int, default=8)
+    ap.add_argument("--root", default=str(Q), help="腕のディレクトリの親（2 ブロックは quicklook/M2）")
+    ap.add_argument("--tasks", default="1-10,40-50", help="例: 1-10,40-50,90-100")
     a = ap.parse_args()
+    root = Path(a.root); tasks = parse_tasks(a.tasks)
     torch.set_num_threads(a.threads)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     recs = []
     for arm in a.arms:
-        d = Q / arm / f"seed{SEED}"
-        for t in TASKS:
+        d = root / arm / f"seed{SEED}"
+        for t in tasks:
             probe = C.task_cpu_M(SEED, t, 10, ALPHA)["probe"]
             start = "init" if t == 1 else f"task{t - 1}"
             for wname, (an, bn, ss) in dict(i=(start, f"u100_task{t}", True), ii=(f"u100_task{t}", f"task{t}", False)).items():
                 for r, resid in window(arm, d, an, bn, probe, ss):
                     rec = dict(arm=arm, task=t, window=wname, layer=r["layer"], resid=resid,
                                dmu_mean=float(r["dmu"].mean()), dmu_med=float(r["dmu"].median()),
-                               own_mean=float(r["own"].mean()), up_mean=float(r["up"].mean()), cross_mean=float(r["cross"].mean()))
+                               own_mean=float(r["own"].mean()), up_mean=float(r["up"].mean()), cross_mean=float(r["cross"].mean()),
+                               neg_dmu=float(r["neg_dmu"].mean()), neg_up=float(r["neg_up"].mean()), neg_own=float(r["neg_own"].mean()))
                     if ss:
                         rec.update(self_mean=float(r["self"].mean()), other_mean=float(r["other"].mean()),
                                    cos_dw_d_med=float(r["cos_dw_d"].median()))
@@ -117,7 +133,7 @@ def main():
         for r in recs:
             w.writerow({k: (f"{v:.6g}" if isinstance(v, float) else v) for k, v in r.items()})
     # 集計: 腕 × 窓 × 塊（課題 2〜10 / 40〜50。窓 (i) の課題 1 は切替でなく学び始めなので別）× 層
-    blocks = {"t1": [1], "t2-10": list(range(2, 11)), "t40-50": list(range(40, 51))}
+    blocks = {"t1": [1], "t2-10": list(range(2, 11)), "t40-50": list(range(40, 51)), "t91-100": list(range(91, 101))}
     summ = []
     for arm in a.arms:
         for wname in ("i", "ii"):
@@ -130,7 +146,8 @@ def main():
                     summ.append(dict(arm=arm, window=wname, block=bname, layer=li, n_tasks=len(sel), dmu_mean=m("dmu_mean"), dmu_med=m("dmu_med"),
                                      self=m("self_mean"), upstream=m("up_mean") + m("cross_mean"), other=m("other_mean"),
                                      own=m("own_mean"), up=m("up_mean"), cross=m("cross_mean"), cos_dw_d_med=m("cos_dw_d_med"),
-                                     resid_max=max(r["resid"] for r in sel)))
+                                     resid_max=max(r["resid"] for r in sel),
+                                     neg_dmu=m("neg_dmu"), neg_up=m("neg_up"), neg_own=m("neg_own")))
     keys = list(summ[0])
     with open(out / "decomp_dmu_summary.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=keys)
