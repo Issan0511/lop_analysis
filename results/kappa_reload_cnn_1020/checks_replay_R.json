@@ -1,0 +1,50 @@
+{
+ "checks": [
+  {
+   "name": "K5_record_vs_no_record_R",
+   "pass": true,
+   "required": true,
+   "equal_after_200": true,
+   "equal_after_full_task": true,
+   "note": "full task without records compared only for LR; Snake: both runs equal the saved t02 (made without records)"
+  },
+  {
+   "name": "K5_replay_bit_equal_R",
+   "pass": true,
+   "required": true,
+   "n_slots": 1,
+   "n_all_equal": 1,
+   "n_P_equal": 1,
+   "max_rel_norm_diff_P": 0.0,
+   "record_steps": [
+    0,
+    1,
+    2,
+    5,
+    10,
+    20,
+    50,
+    75,
+    100,
+    150,
+    200,
+    750,
+    7500,
+    15000,
+    30000
+   ],
+   "record_steps_ok": true,
+   "wall_s": 28.51280188560486,
+   "hashes": {
+    "labels_sha256": "0a2d414823db5e7aa218ade9bea6014cdd31be0f6209f0b8399cf0b680e840a6",
+    "orders_sha256": "f7080365a938138ea53d113c50e7d9f112a2ac752e5c98c548c715414a8be571",
+    "steps": 30000,
+    "floor_dm": 0.0
+   },
+   "floor_dm": 0.0,
+   "failed_fields": {}
+  }
+ ],
+ "all_pass": true,
+ "cuda_max_mem_mb": 294.22900390625
+}

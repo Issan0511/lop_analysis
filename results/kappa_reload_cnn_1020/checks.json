@@ -1,0 +1,1828 @@
+{
+ "checks": [
+  {
+   "name": "K1_closed_forms",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 10,
+   "t": 1,
+   "parts": {
+    "f2": true,
+    "f1": true,
+    "conv_own_vs_jvp_block": true,
+    "fc_own_vs_jvp_block": true,
+    "m_patch": true
+   },
+   "atol": {
+    "G_full": 1.1368683772161603e-12,
+    "G_own": 7.105427357601002e-14,
+    "G_up": 1.7053025658242404e-12,
+    "S_exact": 3.637978807091713e-11,
+    "m": 3.552713678800501e-14,
+    "A": 0.0,
+    "D": 0.0,
+    "J": 3.637978807091713e-11,
+    "kappa": 0.0,
+    "ff": 0.0
+   },
+   "f2_absdiff": 4.440892098500626e-15,
+   "f2_scale": 10.840273156672444,
+   "f1_absdiff": 5.329070518200751e-15,
+   "f1_scale": 27.296937909676497,
+   "own_jvp_absdiff": 1.4210854715202004e-14,
+   "mpatch_absdiff": 7.105427357601002e-15,
+   "m_scale": 17.145361015417215
+  },
+  {
+   "name": "K2a_jvp_equals_saved_G_full",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 10,
+   "t": 1,
+   "saved": "results/cnn_drive_verify_1009/LR/measure/measure_LR_s10_t01.npy",
+   "sha256": "e9219f5ac051ac0955ea0c2a638578acfcc6d22cc5783cbbdfd0b0c563d2a73e",
+   "rel": 1.4747720174145627e-16,
+   "max_abs_diff": 1.4210854715202004e-14,
+   "sign_agree": 1.0,
+   "zbar_absdiff": 0.0
+  },
+  {
+   "name": "K2b_reverse_mode_equals_jvp",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 10,
+   "t": 1,
+   "units": [
+    [
+     32,
+     36.759374555754334,
+     36.759374555754356
+    ],
+    [
+     69,
+     2.5935581783638244,
+     2.593558178363838
+    ],
+    [
+     131,
+     0.727505234786296,
+     0.7275052347862832
+    ],
+    [
+     132,
+     94.86109418298464,
+     94.86109418298462
+    ],
+    [
+     182,
+     -221.13399541207897,
+     -221.13399541207895
+    ],
+    [
+     231,
+     141.06620390254457,
+     141.0662039025446
+    ],
+    [
+     19,
+     54.73668542434114,
+     54.73668542434115
+    ]
+   ],
+   "max_abs_diff": 2.842170943040401e-14
+  },
+  {
+   "name": "K2c_full_equals_own_plus_blocks",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 10,
+   "t": 1,
+   "absdiff": 1.1368683772161603e-13,
+   "scale": 488.4569699976244,
+   "zero_blocks_absmax": 0.0
+  },
+  {
+   "name": "K3_identities",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 10,
+   "t": 1,
+   "parts": {
+    "A_two_forms": true,
+    "A_eq_D_plus_J": true,
+    "centering_sums_zero": true,
+    "J_nonneg": true,
+    "K_mean": true
+   },
+   "A": 29039.07239375858,
+   "A_id": 29039.07239375858,
+   "D": 2767.038716270286,
+   "J": 26272.033677488293,
+   "center_max": 1.0800249583553523e-12,
+   "F_norm2": 53054211.71285618,
+   "kappa_defined": true
+  },
+  {
+   "name": "K4_ledger_controls",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 10,
+   "t": 1,
+   "a4_varies_over_images": true,
+   "note": "label-only permutation: S_exact and G must be invariant; kappa and A must change when the f2 features vary over images (otherwise F depends on the class counts only)",
+   "ref_eq_current": {
+    "chance": 0.0005473471654036806,
+    "feat": 0.0,
+    "read": 0.0,
+    "kappa": 0.0005473471654036806
+   },
+   "joint_perm_invariant": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true,
+    "S_self": true,
+    "S_oh": true,
+    "S_proj": true,
+    "m": true,
+    "sd": true,
+    "pplus": true,
+    "kappa": true,
+    "A": true,
+    "D": true,
+    "J": true,
+    "kap_chance": true,
+    "kap_feat": true,
+    "kap_read": true
+   },
+   "label_perm_invariant": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true
+   },
+   "label_perm_changes": {
+    "kappa": true,
+    "A": true
+   },
+   "kappa_labelperm": -5.520555003898687e-05,
+   "decomp_absdiff": 0.0
+  },
+  {
+   "name": "K7b_permutation_null",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 10,
+   "t": 1,
+   "kappa": 0.0005473471654036806,
+   "null_q_1_5_50_95_99": [
+    -0.00010528436680414465,
+    -8.574411520712105e-05,
+    -9.22858329499535e-06,
+    0.00012052049361162486,
+    0.00016462136725212042
+   ],
+   "null_mean": 1.2671722242862765e-06,
+   "null_sd": 6.448656345711084e-05,
+   "kappa_null_quantile": 1.0,
+   "mc_se_null_mean": 2.039244190014522e-06,
+   "perm_head_frac_sink_q": [
+    0.99,
+    0.99,
+    0.99
+   ],
+   "real_frac_sink": 0.99,
+   "note": "reference distribution: 0.5 not required (pi recomputed after the permutation)"
+  },
+  {
+   "name": "K6_gd_steps_converge_to_G_full",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 10,
+   "t": 1,
+   "per_layer": {
+    "c1": {
+     "err_fixed": {
+      "2.5e-05": 5.574584751076358e-13,
+      "5e-05": 1.919968920106363e-13,
+      "0.0001": 8.739630835372151e-14
+     },
+     "err_free": {
+      "2.5e-05": 5.574584751076358e-13,
+      "5e-05": 1.919968920106363e-13,
+      "0.0001": 8.739630835372151e-14
+     },
+     "richardson_err": 1.0275206418615501e-12,
+     "conv_ratio": 0.34441469738811475,
+     "elementwise_rel_fixed_q": [
+      9.80571034740247e-14,
+      2.7280388282034517e-13,
+      9.80367185601741e-13
+     ],
+     "raw_err_eta_min_le_1e-3": true
+    },
+    "c2": {
+     "err_fixed": {
+      "2.5e-05": 1.7224187359315914e-05,
+      "5e-05": 3.444837438489092e-05,
+      "0.0001": 6.889674862038744e-05
+     },
+     "err_free": {
+      "2.5e-05": 0.0007310550393321125,
+      "5e-05": 0.001453456111892326,
+      "0.0001": 0.002830746021654338
+     },
+     "richardson_err": 5.181242790181712e-13,
+     "conv_ratio": 1.9999999806237065,
+     "elementwise_rel_fixed_q": [
+      1.4636584833223558e-05,
+      2.0004124739525882e-05,
+      2.1318117137321627e-05
+     ],
+     "raw_err_eta_min_le_1e-3": true
+    },
+    "f1": {
+     "err_fixed": {
+      "2.5e-05": 2.8079647839395837e-05,
+      "5e-05": 5.615823500853236e-05,
+      "0.0001": 0.00011231222686936995
+     },
+     "err_free": {
+      "2.5e-05": 0.001040553023140953,
+      "5e-05": 0.0019463890863746535,
+      "0.0001": 0.003725400412977825
+     },
+     "richardson_err": 1.0606702593160783e-09,
+     "conv_ratio": 1.9999622263688854,
+     "elementwise_rel_fixed_q": [
+      1.7297144650780504e-05,
+      2.684151793585963e-05,
+      4.343454810895252e-05
+     ],
+     "raw_err_eta_min_le_1e-3": true
+    },
+    "f2": {
+     "err_fixed": {
+      "2.5e-05": 4.4305319402263e-05,
+      "5e-05": 8.860919411624447e-05,
+      "0.0001": 0.00017721260934164295
+     },
+     "err_free": {
+      "2.5e-05": 0.0006704074385727529,
+      "5e-05": 0.001241926328605995,
+      "0.0001": 0.002509660203728044
+     },
+     "richardson_err": 1.963558150413798e-09,
+     "conv_ratio": 1.9999673924417878,
+     "elementwise_rel_fixed_q": [
+      4.3778589936395456e-05,
+      8.265162483335456e-05,
+      0.00013276913986594893
+     ],
+     "raw_err_eta_min_le_1e-3": true
+    }
+   },
+   "criterion": "fixed routing (pool winners, leaky/ReLU branches): -dm/eta at eta = 1e-4, 5e-5, 2.5e-5; the Richardson limit 2 r(2.5e-5) - r(5e-5) within 1e-3 x max_i |G_i| per layer and the error halving with eta (ratio 1.5-2.5) unless it is at rounding level; raw error at 2.5e-5 reported (raw_err_eta_min_le_1e-3) -- the first version of this check used the raw error, which is the O(eta) curvature term, not a property of G_full",
+   "seconds": 2.480006217956543
+  },
+  {
+   "name": "K6aux_label_draws",
+   "pass": true,
+   "required": false,
+   "arm": "LR",
+   "seed": 10,
+   "t": 1,
+   "n_draws": 20,
+   "n_units": 232,
+   "n_indet_se0": 0,
+   "abs_z_q": [
+    0.4091583341019878,
+    0.749048739143777,
+    1.168506313986026
+   ],
+   "max_abs_z": 2.291408204875567,
+   "frac_abs_z_gt3": 0.0,
+   "note": "E_y[grad L_y] = grad L_u exactly, so z should look standard normal (20 draws: t_19)"
+  },
+  {
+   "name": "K7a1_zero_head_kills_hidden_G",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 10,
+   "t": 1,
+   "maxabs": {
+    "G_full": 0.0,
+    "G_own": 0.0,
+    "G_up": 0.0,
+    "S_exact": 0.0
+   }
+  },
+  {
+   "name": "K7a2_common_row_invariance",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 10,
+   "t": 1,
+   "parts": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true,
+    "S_self": true,
+    "S_oh": true,
+    "S_proj": true,
+    "kappa": true
+   },
+   "maxrel": {
+    "G_full": 2.32746883972541e-16,
+    "G_own": 6.81582256114392e-16,
+    "G_up": 2.3365341495177105e-16,
+    "S_exact": 3.0763190726869096e-15,
+    "S_self": 0.0,
+    "S_oh": 3.076295974924205e-15,
+    "S_proj": 0.0
+   }
+  },
+  {
+   "name": "K7a3_class_permutation_invariance",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 10,
+   "t": 1,
+   "parts": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true,
+    "S_self": true,
+    "S_oh": true,
+    "S_proj": true,
+    "kappa": true,
+    "A": true,
+    "D": true,
+    "J": true,
+    "L_old": true
+   }
+  },
+  {
+   "name": "K7a4_one_unit_leaky_sign",
+   "pass": true,
+   "required": true,
+   "synthetic": {
+    "pos": {
+     "z_sign": 1.0,
+     "G_own_autograd": 7.106964119101573,
+     "G_own_closed": 7.106964119101572,
+     "K_min": 1.5243386193018846
+    },
+    "neg": {
+     "z_sign": -1.0,
+     "G_own_autograd": -0.06625101352793243,
+     "G_own_closed": -0.06625101352793245,
+     "K_min": 1.5243386193018846
+    }
+   }
+  },
+  {
+   "name": "K1_closed_forms",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 15,
+   "t": 10,
+   "parts": {
+    "f2": true,
+    "f1": true,
+    "conv_own_vs_jvp_block": true,
+    "fc_own_vs_jvp_block": true,
+    "m_patch": true
+   },
+   "atol": {
+    "G_full": 3.637978807091713e-11,
+    "G_own": 5.684341886080801e-13,
+    "G_up": 3.637978807091713e-11,
+    "S_exact": 7.275957614183426e-11,
+    "m": 7.105427357601002e-14,
+    "A": 7.275957614183426e-11,
+    "D": 0.0,
+    "J": 7.275957614183426e-11,
+    "kappa": 2.168404344971009e-18,
+    "ff": 1.4901161193847656e-07
+   },
+   "f2_absdiff": 1.0658141036401503e-14,
+   "f2_scale": 28.722259045140746,
+   "f1_absdiff": 1.4210854715202004e-14,
+   "f1_scale": 67.88427986068235,
+   "own_jvp_absdiff": 5.684341886080802e-14,
+   "mpatch_absdiff": 1.0658141036401503e-14,
+   "m_scale": 33.38812342171987
+  },
+  {
+   "name": "K2a_jvp_equals_saved_G_full",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 15,
+   "t": 10,
+   "saved": "results/cnn_drive_verify_1009/LR/measure/measure_LR_s15_t10.npy",
+   "sha256": "a511608ae177934ee0f402e2ea34d7599561db5e98a0b727270a2358fd499772",
+   "rel": 1.6481123284090992e-16,
+   "max_abs_diff": 4.547473508864641e-13,
+   "sign_agree": 1.0,
+   "zbar_absdiff": 0.0
+  },
+  {
+   "name": "K2b_reverse_mode_equals_jvp",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 15,
+   "t": 10,
+   "units": [
+    [
+     32,
+     2733.5272683441303,
+     2733.5272683441303
+    ],
+    [
+     69,
+     4523.963956240642,
+     4523.963956240641
+    ],
+    [
+     131,
+     13381.799060193756,
+     13381.799060193753
+    ],
+    [
+     132,
+     2889.557753853501,
+     2889.557753853501
+    ],
+    [
+     182,
+     5763.77882969892,
+     5763.778829698919
+    ],
+    [
+     231,
+     4418.170984498774,
+     4418.170984498774
+    ],
+    [
+     19,
+     1587.7294468467703,
+     1587.72944684677
+    ]
+   ],
+   "max_abs_diff": 3.637978807091713e-12
+  },
+  {
+   "name": "K2c_full_equals_own_plus_blocks",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 15,
+   "t": 10,
+   "absdiff": 3.637978807091713e-12,
+   "scale": 13381.799060193753,
+   "zero_blocks_absmax": 0.0
+  },
+  {
+   "name": "K3_identities",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 15,
+   "t": 10,
+   "parts": {
+    "A_two_forms": true,
+    "A_eq_D_plus_J": true,
+    "centering_sums_zero": true,
+    "J_nonneg": true,
+    "K_mean": true
+   },
+   "A": 44083.595534304135,
+   "A_id": 44083.595534304135,
+   "D": 2762.3052645341095,
+   "J": 41321.29026977002,
+   "center_max": 7.389644451905042e-13,
+   "F_norm2": 44638294.04989335,
+   "kappa_defined": true
+  },
+  {
+   "name": "K4_ledger_controls",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 15,
+   "t": 10,
+   "a4_varies_over_images": true,
+   "note": "label-only permutation: S_exact and G must be invariant; kappa and A must change when the f2 features vary over images (otherwise F depends on the class counts only)",
+   "ref_eq_current": {
+    "chance": 0.0009875734830957202,
+    "feat": 0.0,
+    "read": 0.0,
+    "kappa": 0.0009875734830957202
+   },
+   "joint_perm_invariant": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true,
+    "S_self": true,
+    "S_oh": true,
+    "S_proj": true,
+    "m": true,
+    "sd": true,
+    "pplus": true,
+    "kappa": true,
+    "A": true,
+    "D": true,
+    "J": true,
+    "kap_chance": true,
+    "kap_feat": true,
+    "kap_read": true
+   },
+   "label_perm_invariant": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true
+   },
+   "label_perm_changes": {
+    "kappa": true,
+    "A": true
+   },
+   "kappa_labelperm": 7.211779316324208e-05,
+   "decomp_absdiff": 2.168404344971009e-19
+  },
+  {
+   "name": "K7b_permutation_null",
+   "pass": true,
+   "required": true,
+   "arm": "LR",
+   "seed": 15,
+   "t": 10,
+   "kappa": 0.0009875734830957202,
+   "null_q_1_5_50_95_99": [
+    -0.00019338863102289728,
+    -0.0001569213235559285,
+    -1.275352541584793e-05,
+    0.00021629133975416197,
+    0.0003501571345342762
+   ],
+   "null_mean": 1.2096699825241914e-06,
+   "null_sd": 0.00011802043205906864,
+   "kappa_null_quantile": 1.0,
+   "mc_se_null_mean": 3.732133757438128e-06,
+   "perm_head_frac_sink_q": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "real_frac_sink": 1.0,
+   "note": "reference distribution: 0.5 not required (pi recomputed after the permutation)"
+  },
+  {
+   "name": "K1_closed_forms",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 2,
+   "parts": {
+    "f2": true,
+    "f1": true,
+    "conv_own_vs_jvp_block": true,
+    "fc_own_vs_jvp_block": true,
+    "m_patch": true
+   },
+   "atol": {
+    "G_full": 3.410605131648481e-12,
+    "G_own": 5.684341886080801e-13,
+    "G_up": 4.547473508864641e-12,
+    "S_exact": 3.637978807091713e-11,
+    "m": 7.105427357601002e-14,
+    "A": 0.0,
+    "D": 0.0,
+    "J": 7.275957614183426e-11,
+    "kappa": 2.168404344971009e-18,
+    "ff": 3.725290298461914e-08
+   },
+   "f2_absdiff": 5.329070518200751e-15,
+   "f2_scale": 16.593670566061352,
+   "f1_absdiff": 5.684341886080802e-14,
+   "f1_scale": 281.31980384201165,
+   "own_jvp_absdiff": 2.842170943040401e-14,
+   "mpatch_absdiff": 1.4210854715202004e-14,
+   "m_scale": 44.85313300174496
+  },
+  {
+   "name": "K2a_jvp_equals_saved_G_full",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 2,
+   "saved": "results/cnn_drive_verify_1009/R/measure/measure_R_s10_t02.npy",
+   "sha256": "075fe1f167295e62d7bfb84f2c54decc2f031ec6e5873ef82660b1b06935e104",
+   "rel": 4.617043406473242e-16,
+   "max_abs_diff": 3.410605131648481e-13,
+   "sign_agree": 1.0,
+   "zbar_absdiff": 0.0
+  },
+  {
+   "name": "K2b_reverse_mode_equals_jvp",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 2,
+   "units": [
+    [
+     32,
+     -851.8116836890741,
+     -851.8116836890742
+    ],
+    [
+     69,
+     -422.52061192092043,
+     -422.5206119209204
+    ],
+    [
+     131,
+     -417.6826289994613,
+     -417.6826289994614
+    ],
+    [
+     132,
+     -329.29550123251045,
+     -329.2955012325104
+    ],
+    [
+     182,
+     -479.65849964260065,
+     -479.65849964260065
+    ],
+    [
+     231,
+     62.23236792938125,
+     62.23236792938122
+    ],
+    [
+     19,
+     372.40180741770837,
+     372.40180741770826
+    ]
+   ],
+   "max_abs_diff": 1.1368683772161603e-13
+  },
+  {
+   "name": "K2c_full_equals_own_plus_blocks",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 2,
+   "absdiff": 2.2737367544323206e-13,
+   "scale": 1197.6665819668463,
+   "zero_blocks_absmax": 0.0
+  },
+  {
+   "name": "K3_identities",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 2,
+   "parts": {
+    "A_two_forms": true,
+    "A_eq_D_plus_J": true,
+    "centering_sums_zero": true,
+    "J_nonneg": true,
+    "K_mean": true
+   },
+   "A": 42141.8320381377,
+   "A_id": 42141.83203813769,
+   "D": 2470.190148700918,
+   "J": 39671.64188943678,
+   "center_max": 1.0231815394945443e-12,
+   "F_norm2": 21802062.10542851,
+   "kappa_defined": true
+  },
+  {
+   "name": "K4_ledger_controls",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 2,
+   "a4_varies_over_images": true,
+   "note": "label-only permutation: S_exact and G must be invariant; kappa and A must change when the f2 features vary over images (otherwise F depends on the class counts only)",
+   "ref_eq_current": {
+    "chance": 0.0019329287218040159,
+    "feat": 0.0,
+    "read": 0.0,
+    "kappa": 0.0019329287218040159
+   },
+   "joint_perm_invariant": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true,
+    "S_self": true,
+    "S_oh": true,
+    "S_proj": true,
+    "m": true,
+    "sd": true,
+    "pplus": true,
+    "kappa": true,
+    "A": true,
+    "D": true,
+    "J": true,
+    "kap_chance": true,
+    "kap_feat": true,
+    "kap_read": true
+   },
+   "label_perm_invariant": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true
+   },
+   "label_perm_changes": {
+    "kappa": true,
+    "A": true
+   },
+   "kappa_labelperm": -0.00016593810108896302,
+   "decomp_absdiff": 4.336808689942018e-19
+  },
+  {
+   "name": "K7b_permutation_null",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 2,
+   "kappa": 0.0019329287218040159,
+   "null_q_1_5_50_95_99": [
+    -0.0005761626288178401,
+    -0.00040903605840585534,
+    -2.661330979147913e-05,
+    0.0004939445844799209,
+    0.0007095683589963569
+   ],
+   "null_mean": -9.511202561264543e-06,
+   "null_sd": 0.00027346085378197497,
+   "kappa_null_quantile": 1.0,
+   "mc_se_null_mean": 8.647591488453111e-06,
+   "perm_head_frac_sink_q": [
+    0.93,
+    0.93,
+    0.93
+   ],
+   "real_frac_sink": 0.93,
+   "note": "reference distribution: 0.5 not required (pi recomputed after the permutation)"
+  },
+  {
+   "name": "K6_gd_steps_converge_to_G_full",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 2,
+   "per_layer": {
+    "c1": {
+     "err_fixed": {
+      "2.5e-05": 2.0281687127617233e-13,
+      "5e-05": 2.0281687127617233e-13,
+      "0.0001": 6.559036976325915e-14
+     },
+     "err_free": {
+      "2.5e-05": 2.0281687127617233e-13,
+      "5e-05": 2.0281687127617233e-13,
+      "0.0001": 6.559036976325915e-14
+     },
+     "richardson_err": 3.889490352789869e-13,
+     "conv_ratio": 1.0,
+     "elementwise_rel_fixed_q": [
+      2.0640201944769995e-13,
+      4.0412099897419655e-13,
+      3.83434924478693e-12
+     ],
+     "raw_err_eta_min_le_1e-3": true
+    },
+    "c2": {
+     "err_fixed": {
+      "2.5e-05": 0.00012036807068100327,
+      "5e-05": 0.0002407361414738929,
+      "0.0001": 0.00048147228267491856
+     },
+     "err_free": {
+      "2.5e-05": 0.0001372624125997796,
+      "5e-05": 0.00027760121401410563,
+      "0.0001": 0.0005617693415762392
+     },
+     "richardson_err": 4.146104979012971e-13,
+     "conv_ratio": 2.000000000929535,
+     "elementwise_rel_fixed_q": [
+      1.0132392935947249e-05,
+      7.209136087890671e-05,
+      0.00013595674078989377
+     ],
+     "raw_err_eta_min_le_1e-3": true
+    },
+    "f1": {
+     "err_fixed": {
+      "2.5e-05": 0.00036005698862898834,
+      "5e-05": 0.000720113977752149,
+      "0.0001": 0.0014402279555238522
+     },
+     "err_free": {
+      "2.5e-05": 0.0012499429399466034,
+      "5e-05": 0.002000230543101324,
+      "0.0001": 0.004138696576200147
+     },
+     "richardson_err": 1.0117301070600046e-07,
+     "conv_ratio": 2.0000000013724835,
+     "elementwise_rel_fixed_q": [
+      0.0003389997193302601,
+      0.00041957566635200433,
+      0.0006195138726130634
+     ],
+     "raw_err_eta_min_le_1e-3": true
+    },
+    "f2": {
+     "err_fixed": {
+      "2.5e-05": 4.916383776633329e-05,
+      "5e-05": 9.822382337767394e-05,
+      "0.0001": 0.00019603223002506959
+     },
+     "err_free": {
+      "2.5e-05": 0.0013786078154794234,
+      "5e-05": 0.0026138726063985604,
+      "0.0001": 0.004950836737067458
+     },
+     "richardson_err": 1.0385215499264859e-07,
+     "conv_ratio": 1.9978876312405425,
+     "elementwise_rel_fixed_q": [
+      4.1987944681809344e-05,
+      7.981489395284582e-05,
+      0.0001916448013310797
+     ],
+     "raw_err_eta_min_le_1e-3": true
+    }
+   },
+   "criterion": "fixed routing (pool winners, leaky/ReLU branches): -dm/eta at eta = 1e-4, 5e-5, 2.5e-5; the Richardson limit 2 r(2.5e-5) - r(5e-5) within 1e-3 x max_i |G_i| per layer and the error halving with eta (ratio 1.5-2.5) unless it is at rounding level; raw error at 2.5e-5 reported (raw_err_eta_min_le_1e-3) -- the first version of this check used the raw error, which is the O(eta) curvature term, not a property of G_full",
+   "seconds": 2.852996587753296
+  },
+  {
+   "name": "K6aux_label_draws",
+   "pass": true,
+   "required": false,
+   "arm": "R",
+   "seed": 10,
+   "t": 2,
+   "n_draws": 20,
+   "n_units": 232,
+   "n_indet_se0": 0,
+   "abs_z_q": [
+    0.538666339103637,
+    1.080073440275062,
+    1.2534312360253141
+   ],
+   "max_abs_z": 2.5794296439634623,
+   "frac_abs_z_gt3": 0.0,
+   "note": "E_y[grad L_y] = grad L_u exactly, so z should look standard normal (20 draws: t_19)"
+  },
+  {
+   "name": "K7a1_zero_head_kills_hidden_G",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 2,
+   "maxabs": {
+    "G_full": 0.0,
+    "G_own": 0.0,
+    "G_up": 0.0,
+    "S_exact": 0.0
+   }
+  },
+  {
+   "name": "K7a2_common_row_invariance",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 2,
+   "parts": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true,
+    "S_self": true,
+    "S_oh": true,
+    "S_proj": true,
+    "kappa": true
+   },
+   "maxrel": {
+    "G_full": 3.7969444729739685e-16,
+    "G_own": 6.061793526565707e-16,
+    "G_up": 2.8464302148238075e-16,
+    "S_exact": 9.477516837246545e-16,
+    "S_self": 0.0,
+    "S_oh": 1.011335101933412e-15,
+    "S_proj": 0.0
+   }
+  },
+  {
+   "name": "K7a3_class_permutation_invariance",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 2,
+   "parts": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true,
+    "S_self": true,
+    "S_oh": true,
+    "S_proj": true,
+    "kappa": true,
+    "A": true,
+    "D": true,
+    "J": true,
+    "L_old": true
+   }
+  },
+  {
+   "name": "K1_closed_forms",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 3,
+   "parts": {
+    "f2": true,
+    "f1": true,
+    "conv_own_vs_jvp_block": true,
+    "fc_own_vs_jvp_block": true,
+    "m_patch": true
+   },
+   "atol": {
+    "G_full": 2.7755575615628914e-16,
+    "G_own": 2.0816681711721685e-16,
+    "G_up": 0.0,
+    "S_exact": 0.0,
+    "m": 5.684341886080801e-13,
+    "A": 5.044853423896711e-12,
+    "D": 0.0,
+    "J": 0.0,
+    "kappa": 2.211772431870429e-16,
+    "ff": 1.4551915228366852e-10
+   },
+   "f2_absdiff": 1.6306400674181987e-16,
+   "f2_scale": 0.04190212853424241,
+   "f1_absdiff": 0.0,
+   "f1_scale": 0.0,
+   "own_jvp_absdiff": 1.0408340855860843e-17,
+   "mpatch_absdiff": 5.684341886080802e-14,
+   "m_scale": 216.8554858768619
+  },
+  {
+   "name": "K2a_jvp_equals_saved_G_full",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 3,
+   "saved": "results/cnn_drive_verify_1009/R/measure/measure_R_s10_t03.npy",
+   "sha256": "0da9024695fcad27c897434f78b86cba3c4940d4bc9a8b26ccf1926a4b39f9c3",
+   "rel": NaN,
+   "max_abs_diff": 0.0,
+   "sign_agree": 1.0,
+   "zbar_absdiff": 0.0
+  },
+  {
+   "name": "K2b_reverse_mode_equals_jvp",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 3,
+   "units": [
+    [
+     32,
+     0.0,
+     0.0
+    ],
+    [
+     69,
+     0.0,
+     0.0
+    ],
+    [
+     131,
+     0.0,
+     0.0
+    ],
+    [
+     132,
+     0.0,
+     0.0
+    ],
+    [
+     182,
+     0.0,
+     0.0
+    ],
+    [
+     231,
+     -0.0025080848539367007,
+     -0.0025080848539367003
+    ],
+    [
+     19,
+     0.0,
+     0.0
+    ]
+   ],
+   "max_abs_diff": 4.336808689942018e-19
+  },
+  {
+   "name": "K2c_full_equals_own_plus_blocks",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 3,
+   "absdiff": 1.0408340855860843e-17,
+   "scale": 0.041902128534242515,
+   "zero_blocks_absmax": 0.0
+  },
+  {
+   "name": "K3_identities",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 3,
+   "parts": {
+    "A_two_forms": true,
+    "A_eq_D_plus_J": true,
+    "centering_sums_zero": true,
+    "J_nonneg": true,
+    "K_mean": true
+   },
+   "A": 23.20824641713898,
+   "A_id": 23.20824641713943,
+   "D": 15.647643720458113,
+   "J": 7.560602696680796,
+   "center_max": 5.435651928564766e-13,
+   "F_norm2": 22013.545175836756,
+   "kappa_defined": true
+  },
+  {
+   "name": "K4_ledger_controls",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 3,
+   "a4_varies_over_images": false,
+   "note": "label-only permutation: S_exact and G must be invariant; kappa and A must change when the f2 features vary over images (otherwise F depends on the class counts only)",
+   "ref_eq_current": {
+    "chance": 0.0010542711876601136,
+    "feat": 0.0,
+    "read": 0.0,
+    "kappa": 0.0010542711876601136
+   },
+   "joint_perm_invariant": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true,
+    "S_self": true,
+    "S_oh": true,
+    "S_proj": true,
+    "m": true,
+    "sd": true,
+    "pplus": true,
+    "kappa": true,
+    "A": true,
+    "D": true,
+    "J": true,
+    "kap_chance": true,
+    "kap_feat": true,
+    "kap_read": true
+   },
+   "label_perm_invariant": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true
+   },
+   "label_perm_changes": {
+    "kappa": false,
+    "A": false
+   },
+   "kappa_labelperm": 0.0010542711876601306,
+   "decomp_absdiff": 3.2526065174565133e-18
+  },
+  {
+   "name": "K7b_permutation_null",
+   "pass": true,
+   "required": true,
+   "arm": "R",
+   "seed": 10,
+   "t": 3,
+   "kappa": 0.0010542711876601136,
+   "null_q_1_5_50_95_99": [
+    -0.0013798558891092668,
+    -0.0010645171525711973,
+    -3.719601315942123e-05,
+    0.0011099404520078472,
+    0.0013946031111007502
+   ],
+   "null_mean": -1.2215942906461657e-05,
+   "null_sd": 0.0006563589784983733,
+   "kappa_null_quantile": 0.938,
+   "mc_se_null_mean": 2.0755893347563436e-05,
+   "perm_head_frac_sink_q": [
+    0.4411764705882353,
+    0.5,
+    0.5294117647058824
+   ],
+   "real_frac_sink": 0.47058823529411764,
+   "note": "reference distribution: 0.5 not required (pi recomputed after the permutation)"
+  },
+  {
+   "name": "K1_closed_forms",
+   "pass": true,
+   "required": true,
+   "arm": "SNA",
+   "seed": 10,
+   "t": 1,
+   "parts": {
+    "f2": true,
+    "f1": true,
+    "conv_own_vs_jvp_block": true,
+    "fc_own_vs_jvp_block": true,
+    "m_patch": true
+   },
+   "atol": {
+    "G_full": 4.547473508864641e-12,
+    "G_own": 2.8421709430404007e-13,
+    "G_up": 4.547473508864641e-12,
+    "S_exact": 1.8189894035458565e-11,
+    "m": 8.881784197001252e-15,
+    "A": 3.637978807091713e-11,
+    "D": 0.0,
+    "J": 3.637978807091713e-11,
+    "kappa": 5.421010862427522e-19,
+    "ff": 0.0
+   },
+   "f2_absdiff": 2.6645352591003757e-15,
+   "f2_scale": 4.948813443782761,
+   "f1_absdiff": 2.6645352591003757e-15,
+   "f1_scale": 7.212496641082551,
+   "own_jvp_absdiff": 1.7763568394002505e-14,
+   "mpatch_absdiff": 6.661338147750939e-16,
+   "m_scale": 3.935071454655957
+  },
+  {
+   "name": "K2a_jvp_equals_saved_G_full",
+   "pass": true,
+   "required": true,
+   "arm": "SNA",
+   "seed": 10,
+   "t": 1,
+   "saved": "results/cnn_drive_verify_1009/measure/measure_SNA_s10_t01.npy",
+   "sha256": "57333e37baf6826ae19de79692b3a22b7fd9f9992791ae24ec3160b3d771c969",
+   "rel": 1.9635082626871858e-16,
+   "max_abs_diff": 5.684341886080802e-14,
+   "sign_agree": 1.0,
+   "zbar_absdiff": 0.0
+  },
+  {
+   "name": "K2b_reverse_mode_equals_jvp",
+   "pass": true,
+   "required": true,
+   "arm": "SNA",
+   "seed": 10,
+   "t": 1,
+   "units": [
+    [
+     32,
+     538.8196167518186,
+     538.8196167518184
+    ],
+    [
+     69,
+     -104.83503199636712,
+     -104.83503199636708
+    ],
+    [
+     131,
+     494.6629708402966,
+     494.66297084029657
+    ],
+    [
+     132,
+     -535.806702204075,
+     -535.8067022040749
+    ],
+    [
+     182,
+     904.3382872474493,
+     904.3382872474492
+    ],
+    [
+     231,
+     256.44470388710886,
+     256.4447038871087
+    ],
+    [
+     19,
+     33.46089683097674,
+     33.46089683097676
+    ]
+   ],
+   "max_abs_diff": 1.7053025658242404e-13
+  },
+  {
+   "name": "K2c_full_equals_own_plus_blocks",
+   "pass": true,
+   "required": true,
+   "arm": "SNA",
+   "seed": 10,
+   "t": 1,
+   "absdiff": 4.547473508864641e-13,
+   "scale": 2234.573363449548,
+   "zero_blocks_absmax": 0.0
+  },
+  {
+   "name": "K3_identities",
+   "pass": true,
+   "required": true,
+   "arm": "SNA",
+   "seed": 10,
+   "t": 1,
+   "parts": {
+    "A_two_forms": true,
+    "A_eq_D_plus_J": true,
+    "centering_sums_zero": true,
+    "J_nonneg": true,
+    "K_mean": true
+   },
+   "A": 31468.72890996314,
+   "A_id": 31468.728909963138,
+   "D": 2764.494795333739,
+   "J": 28704.2341146294,
+   "center_max": 9.094947017729282e-13,
+   "F_norm2": 111354573.66193867,
+   "kappa_defined": true
+  },
+  {
+   "name": "K4_ledger_controls",
+   "pass": true,
+   "required": true,
+   "arm": "SNA",
+   "seed": 10,
+   "t": 1,
+   "a4_varies_over_images": true,
+   "note": "label-only permutation: S_exact and G must be invariant; kappa and A must change when the f2 features vary over images (otherwise F depends on the class counts only)",
+   "ref_eq_current": {
+    "chance": 0.00028259933898628226,
+    "feat": 0.0,
+    "read": 0.0,
+    "kappa": 0.00028259933898628226
+   },
+   "joint_perm_invariant": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true,
+    "S_self": true,
+    "S_oh": true,
+    "S_proj": true,
+    "m": true,
+    "sd": true,
+    "pplus": true,
+    "kappa": true,
+    "A": true,
+    "D": true,
+    "J": true,
+    "kap_chance": true,
+    "kap_feat": true,
+    "kap_read": true
+   },
+   "label_perm_invariant": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true
+   },
+   "label_perm_changes": {
+    "kappa": true,
+    "A": true
+   },
+   "kappa_labelperm": 0.00013402424282903615,
+   "decomp_absdiff": 0.0
+  },
+  {
+   "name": "K7b_permutation_null",
+   "pass": true,
+   "required": true,
+   "arm": "SNA",
+   "seed": 10,
+   "t": 1,
+   "kappa": 0.00028259933898628226,
+   "null_q_1_5_50_95_99": [
+    -5.213810639731648e-05,
+    -4.3201168219307606e-05,
+    -2.249220882145976e-06,
+    6.167478752446873e-05,
+    8.83135585804042e-05
+   ],
+   "null_mean": 4.2499655535925214e-07,
+   "null_sd": 3.292837651773887e-05,
+   "kappa_null_quantile": 1.0,
+   "mc_se_null_mean": 1.0412866944765868e-06,
+   "perm_head_frac_sink_q": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "real_frac_sink": 1.0,
+   "note": "reference distribution: 0.5 not required (pi recomputed after the permutation)"
+  },
+  {
+   "name": "K6_gd_steps_converge_to_G_full",
+   "pass": true,
+   "required": true,
+   "arm": "SNA",
+   "seed": 10,
+   "t": 1,
+   "per_layer": {
+    "c1": {
+     "err_fixed": {
+      "2.5e-05": 4.4696358773418424e-14,
+      "5e-05": 7.379511392234187e-15,
+      "0.0001": 5.3669173761703175e-15
+     },
+     "err_free": {
+      "2.5e-05": 4.4696358773418424e-14,
+      "5e-05": 7.379511392234187e-15,
+      "0.0001": 5.3669173761703175e-15
+     },
+     "richardson_err": 8.402580017066653e-14,
+     "conv_ratio": 0.16510318949343342,
+     "elementwise_rel_fixed_q": [
+      3.9621538384433345e-15,
+      7.05106545320887e-15,
+      2.3186672724152018e-14
+     ],
+     "raw_err_eta_min_le_1e-3": true
+    },
+    "c2": {
+     "err_fixed": {
+      "2.5e-05": 0.0011531371743622844,
+      "5e-05": 0.002300361405101233,
+      "0.0001": 0.004576905167935411
+     },
+     "err_free": {
+      "2.5e-05": 0.0011629918965607787,
+      "5e-05": 0.002319057060185091,
+      "0.0001": 0.0046127995634591855
+     },
+     "richardson_err": 7.5022721695060195e-06,
+     "conv_ratio": 1.9948722981490854,
+     "elementwise_rel_fixed_q": [
+      0.0005945461693788996,
+      0.0009058009905990725,
+      0.002641680731819163
+     ],
+     "raw_err_eta_min_le_1e-3": false
+    },
+    "f1": {
+     "err_fixed": {
+      "2.5e-05": 0.0022812289423051724,
+      "5e-05": 0.0045720371735059155,
+      "0.0001": 0.009181689099849866
+     },
+     "err_free": {
+      "2.5e-05": 0.0022134857996442847,
+      "5e-05": 0.004496686987244523,
+      "0.0001": 0.00903526734103864
+     },
+     "richardson_err": 1.0113176267325424e-05,
+     "conv_ratio": 2.0041991790994422,
+     "elementwise_rel_fixed_q": [
+      0.00185875110056503,
+      0.002691168896547716,
+      0.004066221568382548
+     ],
+     "raw_err_eta_min_le_1e-3": false
+    },
+    "f2": {
+     "err_fixed": {
+      "2.5e-05": 0.004338778699797414,
+      "5e-05": 0.008679038783097238,
+      "0.0001": 0.01736203239880325
+     },
+     "err_free": {
+      "2.5e-05": 0.004216678700547267,
+      "5e-05": 0.008452408480056146,
+      "0.0001": 0.017079290723300566
+     },
+     "richardson_err": 1.2613766155531736e-05,
+     "conv_ratio": 2.0003414286841776,
+     "elementwise_rel_fixed_q": [
+      0.003394920845271048,
+      0.004211252305236532,
+      0.0057183257220785825
+     ],
+     "raw_err_eta_min_le_1e-3": false
+    }
+   },
+   "criterion": "fixed routing (pool winners, leaky/ReLU branches): -dm/eta at eta = 1e-4, 5e-5, 2.5e-5; the Richardson limit 2 r(2.5e-5) - r(5e-5) within 1e-3 x max_i |G_i| per layer and the error halving with eta (ratio 1.5-2.5) unless it is at rounding level; raw error at 2.5e-5 reported (raw_err_eta_min_le_1e-3) -- the first version of this check used the raw error, which is the O(eta) curvature term, not a property of G_full",
+   "seconds": 2.9423792362213135
+  },
+  {
+   "name": "K6aux_label_draws",
+   "pass": true,
+   "required": false,
+   "arm": "SNA",
+   "seed": 10,
+   "t": 1,
+   "n_draws": 20,
+   "n_units": 232,
+   "n_indet_se0": 0,
+   "abs_z_q": [
+    0.3981395490530792,
+    0.7974336325162501,
+    1.2532572278024936
+   ],
+   "max_abs_z": 2.9563555322012043,
+   "frac_abs_z_gt3": 0.0,
+   "note": "E_y[grad L_y] = grad L_u exactly, so z should look standard normal (20 draws: t_19)"
+  },
+  {
+   "name": "K7a1_zero_head_kills_hidden_G",
+   "pass": true,
+   "required": true,
+   "arm": "SNA",
+   "seed": 10,
+   "t": 1,
+   "maxabs": {
+    "G_full": 0.0,
+    "G_own": 0.0,
+    "G_up": 0.0,
+    "S_exact": 0.0
+   }
+  },
+  {
+   "name": "K7a2_common_row_invariance",
+   "pass": true,
+   "required": true,
+   "arm": "SNA",
+   "seed": 10,
+   "t": 1,
+   "parts": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true,
+    "S_self": true,
+    "S_oh": true,
+    "S_proj": true,
+    "kappa": true
+   },
+   "maxrel": {
+    "G_full": 4.070104462217907e-16,
+    "G_own": 2.515742520079836e-16,
+    "G_up": 2.0381587656270725e-16,
+    "S_exact": 1.9143787194827786e-15,
+    "S_self": 3.297987115326387e-16,
+    "S_oh": 1.990937668944502e-15,
+    "S_proj": 2.5105460940573216e-16
+   }
+  },
+  {
+   "name": "K7a3_class_permutation_invariance",
+   "pass": true,
+   "required": true,
+   "arm": "SNA",
+   "seed": 10,
+   "t": 1,
+   "parts": {
+    "G_full": true,
+    "G_own": true,
+    "G_up": true,
+    "S_exact": true,
+    "S_self": true,
+    "S_oh": true,
+    "S_proj": true,
+    "kappa": true,
+    "A": true,
+    "D": true,
+    "J": true,
+    "L_old": true
+   }
+  },
+  {
+   "name": "K5_record_vs_no_record_LR",
+   "pass": true,
+   "required": true,
+   "equal_after_200": true,
+   "equal_after_full_task": true,
+   "note": "full task without records compared only for LR; Snake: both runs equal the saved t02 (made without records)"
+  },
+  {
+   "name": "K5_replay_bit_equal_LR",
+   "pass": true,
+   "required": true,
+   "n_slots": 10,
+   "n_all_equal": 10,
+   "n_P_equal": 10,
+   "max_rel_norm_diff_P": 0.0,
+   "record_steps": [
+    0,
+    1,
+    2,
+    5,
+    10,
+    20,
+    50,
+    75,
+    100,
+    150,
+    200,
+    750,
+    7500,
+    15000,
+    30000
+   ],
+   "record_steps_ok": true,
+   "wall_s": 108.70237588882446,
+   "hashes": {
+    "labels_sha256": "6c9e37216ebeefd767c63cbbf9e33ce5db5774504238310926c8aa73638a4176",
+    "orders_sha256": "f4a2092fd364c7dca035000b222f58f10dcb38a1686c285b40c8d1441e27ecf1",
+    "steps": 30000,
+    "floor_dm": 0.0
+   },
+   "floor_dm": 0.0,
+   "failed_fields": {}
+  },
+  {
+   "name": "K5_record_vs_no_record_R",
+   "pass": true,
+   "required": true,
+   "equal_after_200": true,
+   "equal_after_full_task": true,
+   "note": "full task without records compared only for LR; Snake: both runs equal the saved t02 (made without records)"
+  },
+  {
+   "name": "K5_replay_bit_equal_R",
+   "pass": true,
+   "required": true,
+   "n_slots": 1,
+   "n_all_equal": 1,
+   "n_P_equal": 1,
+   "max_rel_norm_diff_P": 0.0,
+   "record_steps": [
+    0,
+    1,
+    2,
+    5,
+    10,
+    20,
+    50,
+    75,
+    100,
+    150,
+    200,
+    750,
+    7500,
+    15000,
+    30000
+   ],
+   "record_steps_ok": true,
+   "wall_s": 28.51280188560486,
+   "hashes": {
+    "labels_sha256": "0a2d414823db5e7aa218ade9bea6014cdd31be0f6209f0b8399cf0b680e840a6",
+    "orders_sha256": "f7080365a938138ea53d113c50e7d9f112a2ac752e5c98c548c715414a8be571",
+    "steps": 30000,
+    "floor_dm": 0.0
+   },
+   "floor_dm": 0.0,
+   "failed_fields": {}
+  },
+  {
+   "name": "K5_replay_bit_equal_SNA10",
+   "pass": false,
+   "required": false,
+   "n_slots": 10,
+   "n_all_equal": 0,
+   "n_P_equal": 0,
+   "max_rel_norm_diff_P": 0.5915910736261871,
+   "record_steps": [
+    0,
+    1,
+    2,
+    5,
+    10,
+    20,
+    50,
+    75,
+    100,
+    150,
+    200,
+    750,
+    7500,
+    15000,
+    30000
+   ],
+   "record_steps_ok": true,
+   "wall_s": 62.51720666885376,
+   "hashes": {
+    "labels_sha256": "6c9e37216ebeefd767c63cbbf9e33ce5db5774504238310926c8aa73638a4176",
+    "orders_sha256": "f4a2092fd364c7dca035000b222f58f10dcb38a1686c285b40c8d1441e27ecf1",
+    "steps": 30000
+   },
+   "floor_dm": 0.0,
+   "failed_fields": {
+    "SNA_10": [
+     "P",
+     "m",
+     "v",
+     "V"
+    ],
+    "SNA_11": [
+     "P",
+     "m",
+     "v",
+     "V"
+    ],
+    "SNA_12": [
+     "P",
+     "m",
+     "v",
+     "V"
+    ],
+    "SNA_13": [
+     "P",
+     "m",
+     "v",
+     "V"
+    ],
+    "SNA_14": [
+     "P",
+     "m",
+     "v",
+     "V"
+    ],
+    "SNA_15": [
+     "P",
+     "m",
+     "v",
+     "V"
+    ],
+    "SNA_16": [
+     "P",
+     "m",
+     "v",
+     "V"
+    ],
+    "SNA_17": [
+     "P",
+     "m",
+     "v",
+     "V"
+    ],
+    "SNA_18": [
+     "P",
+     "m",
+     "v",
+     "V"
+    ],
+    "SNA_19": [
+     "P",
+     "m",
+     "v",
+     "V"
+    ]
+   }
+  },
+  {
+   "name": "K5_record_vs_no_record_SNAKE40",
+   "pass": true,
+   "required": true,
+   "equal_after_200": true,
+   "equal_after_full_task": null,
+   "note": "full task without records compared only for LR; Snake: both runs equal the saved t02 (made without records)"
+  },
+  {
+   "name": "K5_replay_bit_equal_SNAKE40",
+   "pass": true,
+   "required": true,
+   "n_slots": 40,
+   "n_all_equal": 40,
+   "n_P_equal": 40,
+   "max_rel_norm_diff_P": 0.0,
+   "record_steps": [
+    0,
+    1,
+    2,
+    5,
+    10,
+    20,
+    50,
+    75,
+    100,
+    150,
+    200,
+    750,
+    7500,
+    15000,
+    30000
+   ],
+   "record_steps_ok": true,
+   "wall_s": 553.9513909816742,
+   "hashes": {
+    "labels_sha256": "bd372fd290a76db11ca62032a9257f420a86c3f32e833f1299a582135dd1a79d",
+    "orders_sha256": "e3d970d3eb969019e8b1287d3b74073a4bba3193358c72cf6ddbaa776ab2b5ac",
+    "steps": 30000,
+    "floor_dm": 5.551115123125783e-17
+   },
+   "floor_dm": 5.551115123125783e-17,
+   "failed_fields": {}
+  }
+ ],
+ "parts": [
+  "checks_f64_LR.json",
+  "checks_f64_R.json",
+  "checks_f64_SNA.json",
+  "checks_replay_LR.json",
+  "checks_replay_R.json",
+  "checks_replay_SNA10.json",
+  "checks_replay_SNAKE40.json"
+ ],
+ "all_pass": true,
+ "criterion_changes": [
+  {
+   "check": "K6_gd_steps_converge_to_G_full",
+   "first_version": "fixed routing, eta 2.5e-5: max_i |(-dm_i/eta) - G_i| / max_i |G_i| <= 1e-3 per layer",
+   "first_version_result": "SNA s10 t1 failed (c2 1.15e-3, f1 2.28e-3, f2 4.34e-3); LR and R passed",
+   "now": "Richardson limit within rtol 1e-3 of the layer scale and first-order convergence (error ratio 1.5-2.5)",
+   "why": "the raw error is the O(eta) curvature term (it halves exactly with eta: ratio 2.00); the Richardson limit agrees with G_full to 7.5e-6 / 1.0e-5 / 1.3e-5 (c2 / f1 / f2) in SNA s10 t1",
+   "approved_by_parent": "2026-10-20 (Fable, after the interim report)",
+   "raw_values": "per_layer in the K6 entries"
+  },
+  {
+   "check": "K4_ledger_controls (label-only permutation)",
+   "first_version": "kappa and A must change under a label-only permutation",
+   "first_version_result": "R s10 t3 failed: kappa unchanged to 1e-17",
+   "now": "kappa and A must change only when the f2 features vary over images",
+   "why": "R t3: f1 is dead (a3 = 0), a4 = relu(b4) is image-constant, F = (n_c - N/K) a^T depends on the class counts only; the spec says kappa and A 'may' change, S_exact and G must not",
+   "approved_by_parent": "2026-10-20 (Fable, after the interim report)",
+   "raw_values": "a4_varies_over_images, label_perm_changes in K4"
+  }
+ ],
+ "floors": {
+  "G": {
+   "c1": 5.684341886080802e-14,
+   "c2": 9.094947017729282e-13,
+   "f1": 3.637978807091713e-12,
+   "f2": 3.637978807091713e-12
+  },
+  "S": 4.3655745685100555e-09,
+  "ff": 1.4901161193847656e-07,
+  "D": 0.0,
+  "atol": {
+   "A": 7.275957614183426e-11,
+   "J": 7.275957614183426e-11,
+   "kappa": 2.211772431870429e-16,
+   "ff": 1.4901161193847656e-07,
+   "D": 0.0,
+   "m": 5.684341886080801e-13,
+   "Gown": 5.684341886080801e-13
+  }
+ }
+}
