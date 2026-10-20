@@ -33,6 +33,9 @@ C.ARMS.update({
     "GELU": dict(norm="ln", ln_bias=False, lin_bias=False, lr=1e-3, act="gelu"),
     # 下見（未登録、Issa 1020「下限に張り付いたからじゃないの？撤廃したら？」）: α の下限 0.005 だけ外す。上限 3 は残す
     "KKT1nolo": dict(norm="ln", ln_bias=False, lin_bias=False, lr=1e-3, act="kkt1", alpha_lo=0.0),
+    # 下見（未登録、Issa 1020 午後）: 共通の書き込みを止める 2 つの形
+    "KKT1b3": dict(norm="ln", ln_bias=True, lin_bias=True, lr=1e-3, act="kkt1"),              # 土台を B3（LN の β と線形層の bias あり）に
+    "KKT1c": dict(norm="ln", ln_bias=False, lin_bias=False, lr=1e-3, act="kkt1", center_offset=True),  # φ − 1/(2α): sin² の広い分布での平均を引く
 })
 
 
@@ -64,6 +67,7 @@ class MLPKune(nn.Module):
         s.act = a.get("act", "relu")
         s.snake = s.act in ("snake", "kkt1")
         s.alpha_lo = a.get("alpha_lo", SN_LO)
+        s.center_offset = a.get("center_offset", False)
         if s.snake:
             s.register_buffer("V", torch.ones(C.FF))
             s.register_buffer("v_rate", torch.tensor(SN_BETA))      # 0 で凍結（SNAfrz1）
@@ -76,7 +80,11 @@ class MLPKune(nn.Module):
             return F.relu(z)
         if s.act == "gelu":
             return F.gelu(z)
-        return snake_phi(z, s.alpha(), s.act)
+        a = s.alpha()
+        out = snake_phi(z, a, s.act)
+        if s.center_offset:
+            out = out - 0.5 * a.reciprocal()               # 定数の引き算なので φ′ と継ぎ目の連続性は変わらない
+        return out
 
     def dphi(s, z):
         if s.act == "relu":
