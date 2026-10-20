@@ -173,3 +173,11 @@ seed 0・1・2、50 課題（18 走）。予測と判定は seed 0〜2 の課題
 ## 10 やらないこと
 
 V13 本文の書き換え。GELU・ELU・leaky の腕。文字 GPT・CNN への拡張。幅を変える腕。扉 H や cap などの介入。
+
+## 11 実施記録（本走の前に追記）
+
+- engine `src/depth_silu_rlmnist_1020.py`、検査 `analysis/depth_silu_rlmnist_1020/checks_engine.py`・`checks_measure.py`、測定 `measure.py`。検査の記録は `results/depth_silu_rlmnist_1020/checks/`。
+- 検査は全部通った。S-repro1（SiLU・ReLU の seed 0、30 課題）と S-repro2（seed 0・1、4 時点の p・m・v）は完全一致。変異対照（eps 1e-7、初期値の逆順、交差の項を落とす、境 ≥ を > にする、中心化を外す）は全部検出された。S-ident の残差は上界の 0.3% 以下。
+- 開示 1: 検査のための 3 課題の試走（A4・A4C・R4・A1 の seed 0）で、課題 1〜3 のオンライン精度と課題末の精度が画面に出た（A4 0.680、A4C 0.826、R4 0.623、A1 0.727。いずれも課題 3）。本走の seed 0 の課題 1〜3 はこれと同じ値になる。予測（7 節）は試走の前に commit 済みで、変えていない。
+- 開示 2: `torch.optim.Adam` の step は CPU の走でも CUDA を初期化し、1 プロセスあたり GPU のメモリを 128 MiB とる。他のセッションが GPU を使っているので、本走は `CUDA_VISIBLE_DEVICES=""` で回す。CPU の演算は変わらない（本走の A1・R1 の seed 0・1 の課題 1〜30 を保存状態と再照合する。6 節）。
+- 走の並べ方: seed 0〜2 の 18 走を先に、seed 3〜9 の 42 走をあとに、同時 12 本まで（1 走 1 スレッド）。
