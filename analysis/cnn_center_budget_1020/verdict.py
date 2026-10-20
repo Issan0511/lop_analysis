@@ -202,10 +202,13 @@ def reuse(root: Path, data, prev_root: Path | None = None) -> dict:
                     missing += 1
                     continue
                 for c in cols:
-                    if q.get(c) != r[c]:
+                    # a column only the previous run has (Snake-only alpha_* of its other arms) is empty there
+                    qv = q.get(c)
+                    qv = "" if qv is None else qv
+                    if qv != r[c]:
                         mism += 1
                         try:
-                            dv = abs(float(q.get(c)) - float(r[c]))
+                            dv = abs(float(qv) - float(r[c]))
                         except (TypeError, ValueError):
                             dv = float("inf")
                         worst[c] = max(worst.get(c, 0.0), dv)

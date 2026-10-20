@@ -79,6 +79,8 @@ def make_prev(prev: Path, root: Path):
     for b in V.BUDGETS:
         for n in ("per_task", "probe_stats", "fresh_control"):
             rows = [r for r in V.read_csv(root / f"b{b}" / f"{n}.csv") if r["arm"] in ("R", "ELU")]
+            # the previous run also had Snake arms: their columns exist and are empty on R / ELU rows
+            rows = [{**r, "alpha_med": ""} for r in rows]
             write_csv(prev / f"b{b}" / f"{n}.csv", rows)
 
 
