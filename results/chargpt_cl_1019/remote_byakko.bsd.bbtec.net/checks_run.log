@@ -1,0 +1,14 @@
+[PASS] S-entropy {"worst_abs_diff": 0.0019005490354211396, "max_se": 0.0011278121628327214, "mutant_shifted_ctx_diff": 35.16939137023381, "rows": [{"alpha": 0.01, "seed": 0, "task": 1, "H": 0.7194636537691628, "ce": 0.7188301254634655, "diff": -0.0006335283056972951, "se": 0.0008786682422500617, "pi_iters": 263, "rowsum_err": 7.771561172376096e-16}, {"alpha": 0.01, "seed": 0, "task": 2, "H": 0.7218054000303311, "c
+[PASS] S-rule(generators) {"M_alpha0.01": {"rowsum_err": 7.771561172376096e-16, "r12": 0.0022602614291521825, "r23": -0.0007091440124823347, "band": 0.007632906743951289, "ok": true}, "M_alpha0.03": {"rowsum_err": 9.992007221626409e-16, "r12": -0.0030823783504690117, "r23": 7.477438768462542e-05, "band": 0.007632906743951289, "ok": true}, "M_alpha0.1": {"rowsum_err": 1.1102230246251565e-15, "r12": 0.0015308712769672734, "r
+[PASS] S-init(shared across arms) {"n_common": 19, "differing": [], "mutant_other_seed_identical": false}
+/home/kubo/project/Nakatsuka/lop_analysis_chargpt_cl_1019/src/chargpt_cl_1019_checks.py:179: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:822.)
+  rows.append(dict(box=box, arm=arm, loss64=float(loss), loss_eager=float(bl), loss_graph=float(bl2),
+[PASS] S-engine(graph = eager) {"rows": [{"box": "M", "arm": "C3", "loss64": 4.327798983784525, "loss_eager": 4.327799320220947, "loss_graph": 4.327799320220947, "grad_relerr_eager": 0.0006389997050848803, "grad_relerr_graph": 0.0006389997050848803, "ok": true, "mutant_other_batch_relerr": 0.6960767662824615}, {"box": "M", "arm": "B3", "loss64": 4.332721282196921, "loss_eager": 4.33272123336792, "loss_graph": 4.33272123336792, 
+[PASS] S-online(pre-update metric) {"rows": [{"box": "M", "recorded": 4.140491485595703, "eager_before": 4.140491485595703, "eager_after": 4.137181758880615, "recorded_acc": 4.140491485595703, "eager_acc_before": NaN, "ok": true}]}
+[PASS] S-decomp(mutant: drop beta term) {"full_err": 2.1482080336809872e-08, "mutant_err": 0.019139766693115234}
+[PASS] S-repro(M) {"files": ["eval_trace.csv", "fresh.csv", "fresh_online_t2.npz", "layer_stats.csv", "online.npz", "per_task.csv", "unit_stats.npz", "within_task.npz"], "differing": [], "wall_sec": 6.257732391357422}
+[PASS] S-inert(M) {"with_measure": "931dfdca909f6b1c", "without": "931dfdca909f6b1c", "mutant_short": "6f45564baa750b0c"}
+[PASS] S-rule+S-probe(arms,M) {"arms": ["C4", "B3", "N4"], "tasks_differ": true, "fresh_uses_same_batches": true}
+[PASS] S-decomp(M) {"max_err": {"repro_M_a": 1.11657547e-08, "arm_M_C4": 8.515324e-09, "arm_M_B3": 1.08257226e-07, "arm_M_N4": 2.20309121e-09}}
+ALL PASS

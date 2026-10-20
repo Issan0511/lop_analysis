@@ -1,0 +1,91 @@
+{
+ "run_id": "chargpt_cl_1019",
+ "host": "byakko.bsd.bbtec.net",
+ "numpy": "2.5.1",
+ "python": "3.12.7",
+ "box": "M",
+ "arm": "C3",
+ "arm_cfg": {
+  "norm": "ln",
+  "ln_bias": false,
+  "lin_bias": false,
+  "lr": 0.001
+ },
+ "seed": 0,
+ "tasks": 2,
+ "n_per_task": 399,
+ "alpha": 0.03,
+ "engine": "graph",
+ "git_hash": "b071749b5d56620ed3c46d89b5dd3aefc0b2fbe6",
+ "dirty_src": [],
+ "torch": "2.13.0+cu130",
+ "cuda": "13.0",
+ "device": "NVIDIA GeForce RTX 5070 Ti",
+ "init_sha": "9a464fb13590d2dd90340863615104d88014fcd0e6a7a3cbb5bc247b855adf21",
+ "final_sha": "6f45564baa750b0cafa8773614dbdbd2e6b318a011cfc493964c1de8ef5545f7",
+ "tasks_info": [
+  {
+   "task": 1,
+   "data_sha": "0417bb6e8aedab7a2ea7929326899a585e8d3f2c6f675729d7e01861b2afa17c",
+   "rule_sha": "37d03d19e7b573eee52ee9b1da25286899f48651d4dd40b718e9d484c149d34a",
+   "H": 1.4292837584369935,
+   "probe_sha": "b4eb637d6329e43fa25418697df3d4b17eca36f7b0828a68ac32416f3eeaee79",
+   "pi_iters": 125
+  },
+  {
+   "task": 2,
+   "data_sha": "1c437d559c590a8ca5940cdb821fc783f43bbb1110232bfbaea9a9b20d5f7263",
+   "rule_sha": "50d8cae64981d726abe683aab46baff4885fdb3afd07cd7d79cd6103f88ec067",
+   "H": 1.431203689593052,
+   "probe_sha": "82e4446e25b9cebbfa15ea302907754ae146b84562a9f33e2648500407941407",
+   "pi_iters": 129
+  }
+ ],
+ "data_W_sha256": null,
+ "W_window_starts": null,
+ "W_probe_idx": null,
+ "probe_uniform_sha": "c062be9edd092af30bf8b4fdd8226e87720989e5cb3148a819667ffeff7b0dfc",
+ "stream_seed_example": {
+  "init": 797122162718593779,
+  "rule_t1": 4002104911955682461,
+  "data_t1": 1021301493072637121
+ },
+ "within_tasks": [
+  1,
+  2,
+  10,
+  11,
+  25,
+  26,
+  49,
+  50
+ ],
+ "fresh_tasks": [],
+ "wall_sec": 3.0070996284484863,
+ "task_secs": [
+  1.3609707355499268,
+  1.2417938709259033
+ ],
+ "argv": [
+  "/home/kubo/project/Nakatsuka/lop_analysis_chargpt_cl_1019/src/chargpt_cl_1019.py",
+  "run",
+  "--box",
+  "M",
+  "--arm",
+  "C3",
+  "--seed",
+  "0",
+  "--tasks",
+  "2",
+  "--n_per_task",
+  "399",
+  "--out",
+  "results/chargpt_cl_1019/remote_byakko.bsd.bbtec.net/checks/runs/inert_M_short",
+  "--ckpt",
+  "0",
+  "--alpha",
+  "0.03",
+  "--fresh_tasks",
+  "--no_measure"
+ ]
+}
