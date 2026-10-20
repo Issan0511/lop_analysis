@@ -13,6 +13,7 @@
 V の更新は勾配が有効な forward（学習の 1 更新）だけで行い、測定（no_grad）では動かさない。
 """
 import math
+import os
 import sys
 from pathlib import Path
 
@@ -39,6 +40,14 @@ C.ARMS.update({
     # 下見（未登録、Issa 1020 夕方「両方回してください」）: KKT1b3 のどちらが効いたかを分ける
     "KKT1beta": dict(norm="ln", ln_bias=True, lin_bias=False, lr=1e-3, act="kkt1"),   # LN の β だけ
     "KKT1bias": dict(norm="ln", ln_bias=False, lin_bias=True, lr=1e-3, act="kkt1"),   # 線形層の bias だけ（注意の qkv・o と FFN の up・down）
+    # 下見（未登録、Issa 1020 夕方、Neokunekune 経由）: 幅の上限（cap）。土台は C3
+    #   cap: unit ごとの幅 s_i = √V_i（V は前活性のバッチ分散の EMA、β 0.01。kune 腕と同じ追跡）。上限 cap_i は課題 1 末の s_i。
+    #   課題 2 以降、各更新のあとで s_i > cap_i なら up の行 w_i を cap_i/s_i 倍に縮め、V_i も (cap_i/s_i)² 倍に直す
+    #   （同じ入力なら行の定数倍で分散はちょうど 2 乗倍になる。直さないと EMA が追いつくまで縮め続ける）。Adam の状態・down・γ には触らない。
+    "SiLU": dict(norm="ln", ln_bias=False, lin_bias=False, lr=1e-3, act="silu"),
+    "SiLUcap": dict(norm="ln", ln_bias=False, lin_bias=False, lr=1e-3, act="silu", cap=True),
+    "GELUcap": dict(norm="ln", ln_bias=False, lin_bias=False, lr=1e-3, act="gelu", cap=True),
+    "ReLUcap": dict(norm="ln", ln_bias=False, lin_bias=False, lr=1e-3, act="relu", cap=True),
 })
 
 
@@ -71,7 +80,12 @@ class MLPKune(nn.Module):
         s.snake = s.act in ("snake", "kkt1")
         s.alpha_lo = a.get("alpha_lo", SN_LO)
         s.center_offset = a.get("center_offset", False)
-        if s.snake:
+        s.capped = a.get("cap", False)
+        s.track_v = s.snake or s.capped
+        if s.capped:
+            s.register_buffer("cap", torch.full((C.FF,), float("inf")))
+            s.register_buffer("cap_on", torch.tensor(0.0))
+        if s.track_v:
             s.register_buffer("V", torch.ones(C.FF))
             s.register_buffer("v_rate", torch.tensor(SN_BETA))      # 0 で凍結（SNAfrz1）
 
@@ -83,6 +97,8 @@ class MLPKune(nn.Module):
             return F.relu(z)
         if s.act == "gelu":
             return F.gelu(z)
+        if s.act == "silu":
+            return F.silu(z)
         a = s.alpha()
         out = snake_phi(z, a, s.act)
         if s.center_offset:
@@ -95,6 +111,9 @@ class MLPKune(nn.Module):
         if s.act == "gelu":
             cdf = 0.5 * (1.0 + torch.erf(z / math.sqrt(2.0)))
             return cdf + z * torch.exp(-0.5 * z * z) / math.sqrt(2.0 * PI)
+        if s.act == "silu":
+            sg = torch.sigmoid(z)
+            return sg * (1.0 + z * (1.0 - sg))
         return snake_dphi(z, s.alpha(), s.act)
 
     def forward(s, y, cap=None):
@@ -102,7 +121,7 @@ class MLPKune(nn.Module):
         if cap is not None:
             cap.append(z)
         h = s.phi(z)
-        if s.snake and torch.is_grad_enabled():
+        if s.track_v and torch.is_grad_enabled():
             with torch.no_grad():
                 var = z.detach().reshape(-1, C.FF).var(0, unbiased=False)
                 s.V.mul_(1 - s.v_rate).add_(s.v_rate * var)
@@ -118,7 +137,7 @@ _orig_build = C.build_model
 @torch.no_grad()
 def build_model_calibrated(arm, box, seed, device):
     m = _orig_build(arm, box, seed, device)
-    mlps = [blk.mlp for blk in m.h if getattr(blk.mlp, "snake", False)]
+    mlps = [blk.mlp for blk in m.h if getattr(blk.mlp, "track_v", False)]
     if mlps and box == "M":
         probe = C.task_cpu_M(seed, 1, 1, 0.01)["probe"].to(device)
         cap = []
@@ -152,15 +171,65 @@ C.Engine._capture = _capture_keep_buffers
 _orig_run_task = C.run_task
 
 
-def run_task_freeze(model, eng, ctx, *, warmup_from, **kw):
+def run_task_freeze(model, eng, ctx, *, warmup_from, measure_cb=None, **kw):
     if C.ARMS[model.arm].get("freeze_after_task1") and warmup_from > 0:
         for blk in model.h:
             if getattr(blk.mlp, "snake", False):
                 blk.mlp.v_rate.fill_(0.0)
-    return _orig_run_task(model, eng, ctx, warmup_from=warmup_from, **kw)
+    if warmup_from > 0:                                       # 課題 2 の頭で cap を課題 1 末の s_i に固定（fresh の網は warmup_from = 0 なので cap しない）
+        for blk in model.h:
+            mlp = blk.mlp
+            if getattr(mlp, "capped", False) and float(mlp.cap_on) == 0.0:
+                mlp.cap.copy_(mlp.V.sqrt())
+                mlp.cap_on.fill_(1.0)
+    if _STATE.get("decomp") and measure_cb is not None:      # Δμ の分解用: 課題 1〜10・40〜50 の更新 100 の時点の重み
+        t = warmup_from // ctx.n + 1
+        if t in DECOMP_TASKS:
+            inner = measure_cb
+
+            def measure_cb(u):
+                if u == 100:
+                    torch.save(model.state_dict(), _STATE["out"] / "ckpts" / f"u100_task{t}.pt")
+                inner(u)
+    return _orig_run_task(model, eng, ctx, warmup_from=warmup_from, measure_cb=measure_cb, **kw)
 
 
 C.run_task = run_task_freeze
+
+# ---------------------------------------------------------------- cap: 各更新（Adam の 1 歩）のあとで幅を上限に戻す。グラフの中に取り込む
+_orig_step_body = C.Engine._step_body
+
+
+def _step_body_cap(s):
+    out = _orig_step_body(s)
+    with torch.no_grad():
+        for blk in s.m.h:
+            mlp = blk.mlp
+            if getattr(mlp, "capped", False):
+                sd = mlp.V.sqrt()
+                f = torch.where((mlp.cap_on > 0) & (sd > mlp.cap), mlp.cap / sd, torch.ones_like(sd))
+                mlp.up.weight.mul_(f[:, None])
+                mlp.V.mul_(f * f)
+    return out
+
+
+C.Engine._step_body = _step_body_cap
+
+# ---------------------------------------------------------------- Δμ の分解用の checkpoint（環境変数 CHARGPT_DECOMP_CKPT=1 のときだけ）
+DECOMP_TASKS = set(range(1, 11)) | set(range(40, 51))
+_STATE = {}
+_orig_run = C.run
+
+
+def run_wrap(args):
+    _STATE["out"] = Path(args.out)
+    if os.environ.get("CHARGPT_DECOMP_CKPT") == "1":
+        _STATE["decomp"] = True
+        C.CKPT_TASKS = tuple(sorted(set(C.CKPT_TASKS) | set(range(1, 11)) | set(range(39, 51))))   # 課題末 = 次の課題の更新 0
+    return _orig_run(args)
+
+
+C.run = run_wrap
 
 
 # ---------------------------------------------------------------- 測定（本走の量に φ′ と α の量を足す）
@@ -203,6 +272,12 @@ def measure_kune(model, x):
                    units_phi1_lt01=float((dpu < 0.1).double().mean()),
                    resp_lt005=float((resp < 0.05).double().mean()), resp_005_03=float(((resp >= 0.05) & (resp < 0.3)).double().mean()),
                    resp_03_07=float(((resp >= 0.3) & (resp <= 0.7)).double().mean()), resp_gt07=float((resp > 0.7).double().mean()))
+        agg.update(mu_med=float(mu.median()), sd_med=float(sd.median()))       # 絶対の深さ（z の単位）
+        if getattr(mlp, "capped", False):
+            sv = mlp.V.double().sqrt()
+            cp = mlp.cap.double()
+            agg.update(cap_on=float(mlp.cap_on), cap_frac=float((sv >= cp * (1 - 1e-4)).double().mean()) if float(mlp.cap_on) > 0 else 0.0,
+                       s_track_med=float(sv.median()), cap_med=float(cp.median()) if float(mlp.cap_on) > 0 else float("nan"))
         if getattr(mlp, "snake", False):
             a = mlp.alpha().double()
             Wd = mlp.V.double().sqrt()
