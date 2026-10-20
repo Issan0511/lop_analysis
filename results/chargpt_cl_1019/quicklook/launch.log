@@ -20,3 +20,13 @@
 2026-10-20 19:02:33 fetched SiLUcap from 56864513 (56692884 bytes)
 2026-10-20 19:07:44 fetched ReLUcap from 56864503 (56942555 bytes)
 2026-10-20 19:40:59 done SiLU continuation rc=0
+2026-10-20 20:51:26 start SiLUcap continuation tasks 51-100 from task50 ckpt+Adam (local, sharing GPU with kappa_reload_cnn_1020; Issa: cap silu 100まで; resume check task 26 bitwise OK)
+2026-10-20 21:17:49 start M2 C3 seed1000 (2 blocks, 100 tasks, decomp ckpts; addendum 6, Issa via Neokunekune)
+2026-10-20 21:17:49 start M2 SiLU seed1000 (2 blocks, 100 tasks, decomp ckpts; addendum 6, Issa via Neokunekune)
+2026-10-20 22:08:00 done M2 C3 seed1000 rc=0
+2026-10-20 22:08:00 done M2 SiLU seed1000 rc=0
+2026-10-20 22:08:04 stopped local M2 C3/SiLU (2 blocks) after ~2 tasks (Issa: move to Vast); partial output moved to scratchpad
+2026-10-20 22:08:30 correction: the stopped local M2 runs had reached task 35 (not ~2); their logs and partial outputs are in the session scratchpad and serve as a bitwise check for the Vast reruns (tasks 1-35)
+2026-10-20 22:13:04 done SiLUcap continuation rc=0
+2026-10-20 22:24:50 start M2 SiLU seed1000 locally (2 blocks, 100 tasks, decomp ckpts; Issa: one on the local GPU, C3-2 on Vast)
+2026-10-20 22:31:43 start M2 C3 seed1000 on Vast 56895398 (France RTX 5060 Ti; streams OK, 4- and 2-block smoke bitwise equal to white-san)
