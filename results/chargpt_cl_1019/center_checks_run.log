@@ -1,0 +1,19 @@
+/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019_center_checks.py:54: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:822.)
+  pd = float(max((p - q).abs().max() for p, q in zip(me.parameters(), mg.parameters())))
+[PASS] S-engine-c(graph = eager) {"rows": [{"arm": "C3H", "step1_grad_diff": 0.0, "step1_buf_diff": 0.0, "step3_param_diff": 0.0002817586064338684, "step3_buf_diff": 2.6851892471313477e-05, "ref_C3_step3_param_diff": 0.00027126818895339966, "ok": true}, {"arm": "B3H", "step1_grad_diff": 0.0, "step1_buf_diff": 0.0, "step3_param_diff
+[PASS] S-ema(m equals bias-corrected EMA of batch means) {"max_relerr": 5.8407997967333257e-08, "mutant_no_correction_min": 0.9000000065422437}
+[PASS] S-causal(no future leak in training-mode forward) {"before_j": 0.0, "at_or_after_j": 1.2434911727905273, "mutant_batchmean_before_j": 0.004705667495727539}
+[PASS] S-repro-c(C3H) {"differing": []}
+[PASS] S-inert-c(C3H) {"with_measure": "144f1e17f405c451", "without": "144f1e17f405c451"}
+[PASS] S-decomp-c+S-adam(C3H) {"decomp_maxerr": 1.63965702e-08, "max_lag_rel": 0.433566, "adam_files": ["task1_adam.pt"], "adam_steps": [300.0]}
+[PASS] S-repro-c(B3H) {"differing": []}
+[PASS] S-inert-c(B3H) {"with_measure": "c8e0c55a2e7fae13", "without": "c8e0c55a2e7fae13"}
+[PASS] S-decomp-c+S-adam(B3H) {"decomp_maxerr": 3.95311055e-08, "max_lag_rel": 0.467915216, "adam_files": ["task1_adam.pt"], "adam_steps": [300.0]}
+[PASS] S-repro-c(B3HB) {"differing": []}
+[PASS] S-inert-c(B3HB) {"with_measure": "1c5f3045eed7977c", "without": "1c5f3045eed7977c"}
+[PASS] S-decomp-c+S-adam(B3HB) {"decomp_maxerr": 1.60702099e-08, "max_lag_rel": 0.43598716, "adam_files": ["task1_adam.pt"], "adam_steps": [300.0]}
+[PASS] S-decomp-c(mutant: drop centering term) {"mutant_err": 1.9611599147319794}
+[PASS] S-base-unchanged(C3 through the centering module) {"final_equal": true, "per_task_equal": true}
+ALL PASS
+exit 0

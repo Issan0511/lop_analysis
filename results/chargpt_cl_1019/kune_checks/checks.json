@@ -1,0 +1,158 @@
+{
+ "git_hash": "c99a5871e3b755fc61b806069a49c9eb9527d08d",
+ "dirty_src": [],
+ "wall_sec": 111.16252636909485,
+ "all_pass": true,
+ "results": [
+  {
+   "name": "S-act(phi' = autograd, KKT1 continuous, matches MLP SnakeFamily)",
+   "ok": true,
+   "snake": {
+    "dphi_vs_autograd": 2.384185791015625e-07
+   },
+   "kkt1": {
+    "dphi_vs_autograd": 2.384185791015625e-07
+   },
+   "jump_at_3.14": 4.5299530029296875e-06,
+   "jump_at_-6.28": 9.059906005859375e-06,
+   "gelu_dphi": 1.1920928955078125e-07,
+   "vs_mlp_reference": 0.0,
+   "mutant_cos": 1.4142132997512817
+  },
+  {
+   "name": "S-engine-k(graph = eager)",
+   "ok": true,
+   "rows": [
+    {
+     "arm": "KKT1",
+     "step1_grad_diff": 0.0,
+     "step1_V_diff": 0.0,
+     "step3_param_diff": 1.2889504432678223e-06,
+     "ref_C3": 0.00027126818895339966,
+     "ok": true
+    },
+    {
+     "arm": "SNA",
+     "step1_grad_diff": 0.0,
+     "step1_V_diff": 0.0,
+     "step3_param_diff": 1.1781230568885803e-06,
+     "ref_C3": 0.00027126818895339966,
+     "ok": true
+    },
+    {
+     "arm": "SNAfrz1",
+     "step1_grad_diff": 0.0,
+     "step1_V_diff": 0.0,
+     "step3_param_diff": 1.1781230568885803e-06,
+     "ref_C3": 0.00027126818895339966,
+     "ok": true
+    },
+    {
+     "arm": "GELU",
+     "step1_grad_diff": 0.0,
+     "step1_V_diff": 0.0,
+     "step3_param_diff": 1.9073486328125e-06,
+     "ref_C3": 0.00027126818895339966,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "name": "S-alpha(calibrated V, EMA of batch variance, alpha rule)",
+   "ok": true,
+   "calib_relerr": 0.0,
+   "ema_max_relerr": 1.882444853024214e-07,
+   "alpha_rule": true,
+   "mutant_beta01_relerr": 0.12941078765069633
+  },
+  {
+   "name": "S-repro-k(KKT1)",
+   "ok": true,
+   "differing": []
+  },
+  {
+   "name": "S-inert-k(KKT1)",
+   "ok": true,
+   "with_measure": "c65f49c658e243c8",
+   "without": "c65f49c658e243c8"
+  },
+  {
+   "name": "S-decomp-k+S-adam(KKT1)",
+   "ok": true,
+   "decomp_maxerr": 8.70789929e-09,
+   "adam_files": [
+    "task1_adam.pt"
+   ]
+  },
+  {
+   "name": "S-repro-k(SNA)",
+   "ok": true,
+   "differing": []
+  },
+  {
+   "name": "S-inert-k(SNA)",
+   "ok": true,
+   "with_measure": "b8ae7869fddefcf4",
+   "without": "b8ae7869fddefcf4"
+  },
+  {
+   "name": "S-decomp-k+S-adam(SNA)",
+   "ok": true,
+   "decomp_maxerr": 8.08440692e-09,
+   "adam_files": [
+    "task1_adam.pt"
+   ]
+  },
+  {
+   "name": "S-repro-k(SNAfrz1)",
+   "ok": true,
+   "differing": []
+  },
+  {
+   "name": "S-inert-k(SNAfrz1)",
+   "ok": true,
+   "with_measure": "6b1594f55fe24fda",
+   "without": "6b1594f55fe24fda"
+  },
+  {
+   "name": "S-decomp-k+S-adam(SNAfrz1)",
+   "ok": true,
+   "decomp_maxerr": 6.86678003e-09,
+   "adam_files": [
+    "task1_adam.pt"
+   ]
+  },
+  {
+   "name": "S-repro-k(GELU)",
+   "ok": true,
+   "differing": []
+  },
+  {
+   "name": "S-inert-k(GELU)",
+   "ok": true,
+   "with_measure": "9f4a2f9ee82d087f",
+   "without": "9f4a2f9ee82d087f"
+  },
+  {
+   "name": "S-decomp-k+S-adam(GELU)",
+   "ok": true,
+   "decomp_maxerr": 1.12170366e-08,
+   "adam_files": [
+    "task1_adam.pt"
+   ]
+  },
+  {
+   "name": "S-freeze(SNAfrz1 fixes alpha from task 2; equals SNA in task 1)",
+   "ok": true,
+   "frozen_constant": true,
+   "sna_moves": true,
+   "task1_identical": true
+  },
+  {
+   "name": "S-base-unchanged(C3 through the kunekune module)",
+   "ok": true,
+   "final_equal": true,
+   "per_task_equal": true
+  }
+ ]
+}

@@ -1,0 +1,22 @@
+[PASS] S-act(phi' = autograd, KKT1 continuous, matches MLP SnakeFamily) {"snake": {"dphi_vs_autograd": 2.384185791015625e-07}, "kkt1": {"dphi_vs_autograd": 2.384185791015625e-07}, "jump_at_3.14": 4.5299530029296875e-06, "jump_at_-6.28": 9.059906005859375e-06, "gelu_dphi": 1.1920928955078125e-07, "vs_mlp_reference": 0.0, "mutant_cos": 1.4142132997512817}
+/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019_kune_checks.py:102: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:822.)
+  pd = float(max((p - q).abs().max() for p, q in zip(me.parameters(), mg.parameters())))
+[PASS] S-engine-k(graph = eager) {"rows": [{"arm": "KKT1", "step1_grad_diff": 0.0, "step1_V_diff": 0.0, "step3_param_diff": 1.2889504432678223e-06, "ref_C3": 0.00027126818895339966, "ok": true}, {"arm": "SNA", "step1_grad_diff": 0.0, "step1_V_diff": 0.0, "step3_param_diff": 1.1781230568885803e-06, "ref_C3": 0.00027126818895339966, 
+[PASS] S-alpha(calibrated V, EMA of batch variance, alpha rule) {"calib_relerr": 0.0, "ema_max_relerr": 1.882444853024214e-07, "alpha_rule": true, "mutant_beta01_relerr": 0.12941078765069633}
+[PASS] S-repro-k(KKT1) {"differing": []}
+[PASS] S-inert-k(KKT1) {"with_measure": "c65f49c658e243c8", "without": "c65f49c658e243c8"}
+[PASS] S-decomp-k+S-adam(KKT1) {"decomp_maxerr": 8.70789929e-09, "adam_files": ["task1_adam.pt"]}
+[PASS] S-repro-k(SNA) {"differing": []}
+[PASS] S-inert-k(SNA) {"with_measure": "b8ae7869fddefcf4", "without": "b8ae7869fddefcf4"}
+[PASS] S-decomp-k+S-adam(SNA) {"decomp_maxerr": 8.08440692e-09, "adam_files": ["task1_adam.pt"]}
+[PASS] S-repro-k(SNAfrz1) {"differing": []}
+[PASS] S-inert-k(SNAfrz1) {"with_measure": "6b1594f55fe24fda", "without": "6b1594f55fe24fda"}
+[PASS] S-decomp-k+S-adam(SNAfrz1) {"decomp_maxerr": 6.86678003e-09, "adam_files": ["task1_adam.pt"]}
+[PASS] S-repro-k(GELU) {"differing": []}
+[PASS] S-inert-k(GELU) {"with_measure": "9f4a2f9ee82d087f", "without": "9f4a2f9ee82d087f"}
+[PASS] S-decomp-k+S-adam(GELU) {"decomp_maxerr": 1.12170366e-08, "adam_files": ["task1_adam.pt"]}
+[PASS] S-freeze(SNAfrz1 fixes alpha from task 2; equals SNA in task 1) {"frozen_constant": true, "sna_moves": true, "task1_identical": true}
+[PASS] S-base-unchanged(C3 through the kunekune module) {"final_equal": true, "per_task_equal": true}
+ALL PASS
+exit 0

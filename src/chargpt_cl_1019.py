@@ -569,6 +569,7 @@ def run(args):
     box, arm, seed, n_tasks, n = args.box, args.arm, args.seed, args.tasks, args.n_per_task
     graph = args.engine == "graph"
     t_start = time.time()
+    gh, dirty = git_info()            # 走ったコードの版は開始時に読む（走っている間の commit で HEAD が進むため）
     W = WindowsW(seed, dev) if box == "W" else None
     probe_u = uniform_probe_M(seed, dev) if box == "M" else None
 
@@ -702,11 +703,11 @@ def run(args):
     np.savez_compressed(out / "unit_stats.npz", **U)
     np.savez_compressed(out / "within_task.npz", **WT)
     np.savez_compressed(out / "online.npz", **online)
-    gh, dirty = git_info()
+    gh_end, _ = git_info()
     import socket
     prov = dict(run_id=RUN_ID, host=socket.gethostname(), numpy=np.__version__, python=sys.version.split()[0],
                 box=box, arm=arm, arm_cfg=ARMS[arm], seed=seed, tasks=n_tasks, n_per_task=n,
-                alpha=args.alpha, engine=args.engine, git_hash=gh, dirty_src=dirty,
+                alpha=args.alpha, engine=args.engine, git_hash=gh, dirty_src=dirty, git_hash_at_end=gh_end,
                 torch=torch.__version__, cuda=torch.version.cuda,
                 device=torch.cuda.get_device_name(dev) if dev.type == "cuda" else "cpu",
                 init_sha=init_sha, final_sha=state_sha(model), tasks_info=provenance_tasks,
