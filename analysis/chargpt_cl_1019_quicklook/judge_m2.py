@@ -47,7 +47,9 @@ def main():
     ap.add_argument("--decomp", default=str(ROOT / "results/chargpt_cl_1019/quicklook/decomp_dmu_M2"))
     ap.add_argument("--out", default=str(ROOT / "results/chargpt_cl_1019/quicklook/judge_m2"))
     ap.add_argument("--arms", nargs="+", default=["C3", "SiLU"])
-    a = ap.parse_args(); root, out = Path(a.root), Path(a.out); out.mkdir(parents=True, exist_ok=True)
+    ap.add_argument("--seed", type=int, default=1000)
+    a = ap.parse_args()
+    global SEED; SEED = a.seed; root, out = Path(a.root), Path(a.out); out.mkdir(parents=True, exist_ok=True)
     nl = C.L; top = nl - 1; res = {"n_layer": nl, "thresholds": dict(delta=DELTA, push=PUSH_TH, negfrac=NEGFRAC_TH, kappa=KAPPA_TH, c_min=1 / nl + KAPPA_TH * (1 - 1 / nl), upshare=UPSHARE_TH)}
     lines = [f"# 追補 6 の判定（n_layer = {nl}、seed {SEED}、下見・未登録）", ""]
     for arm in a.arms:

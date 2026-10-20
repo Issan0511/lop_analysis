@@ -23,15 +23,18 @@ C = K.C
 SEED, ALPHA, LR, EPS, B2 = 1000, 0.01, 1e-3, 1e-8, 0.999
 
 
+DEV = torch.device("cpu")
+
+
 def build(arm, sd):
-    m = C.build_model(arm, "M", SEED, "cpu"); m.load_state_dict(sd); m = m.double(); m.eval()
+    m = C.build_model(arm, "M", SEED, "cpu"); m.load_state_dict(sd); m = m.double().to(DEV); m.eval()
     for p in m.parameters(): p.requires_grad_(True)
     return m
 
 
 def probe_of(kind, task, nseq):
     x = C.task_cpu_M(SEED, task, 10, ALPHA)["probe"] if kind == "chain" else C.uniform_probe_M(SEED, "cpu")
-    return x[:nseq]
+    return x[:nseq].to(DEV)
 
 
 def loss_of(m, X, cap=None):
@@ -58,7 +61,7 @@ def y_at(m, X, l):
 def jvp_y(m, X, l, theta, dirs, rel=1e-7):
     """y_ℓ の方向微分（中心差分、float64）。dirs は theta と同じ形のテンソルの並び。"""
     tn = torch.sqrt(sum((p * p).sum() for p in theta)); dn = torch.sqrt(sum((d * d).sum() for d in dirs))
-    if float(dn) == 0: return torch.zeros(X.numel(), C.D, dtype=torch.float64)
+    if float(dn) == 0: return torch.zeros(X.numel(), C.D, dtype=torch.float64, device=DEV)
     h = float(rel * tn / dn); orig = [p.detach().clone() for p in theta]
     for p, d in zip(theta, dirs): p.add_(h * d)
     yp = y_at(m, X, l)
@@ -68,11 +71,22 @@ def jvp_y(m, X, l, theta, dirs, rel=1e-7):
     return (yp - ym) / (2 * h)
 
 
+def jvp_exact(y, theta, dirs):
+    """y の厳密な方向微分（二重逆伝播）。J v = ∂/∂u [ (∂(u·y)/∂θ)·v ]。ReLU の折れ目をまたぐ差分の誤差が無い。"""
+    u = torch.zeros_like(y, requires_grad=True)
+    g = torch.autograd.grad((u * y).sum(), theta, create_graph=True, allow_unused=True)
+    tot = sum((gi * di).sum() for gi, di in zip(g, dirs) if gi is not None)
+    return torch.autograd.grad(tot, u, retain_graph=True)[0].detach()
+
+
+JVP_MODE = "fd"
+
+
 def adam_D(m, adam_sd):
     D = {}
     for i, p in enumerate(m.parameters()):
         st = adam_sd["state"][i]; v = st["exp_avg_sq"].double(); step = float(st["step"])
-        D[id(p)] = 1.0 / (torch.sqrt(v / (1 - B2 ** step)) + EPS)
+        D[id(p)] = (1.0 / (torch.sqrt(v / (1 - B2 ** step)) + EPS)).to(DEV)
     return D
 
 
@@ -98,13 +112,13 @@ def analyze(arm, sd, adam_sd, task, kind="chain", nseq=64, layers=None, flip=Fal
         chk = dict(GW_vs_autograd=float((GW - gfull[id(blk.mlp.up.weight)]).abs().max() / gfull[id(blk.mlp.up.weight)].abs().max()))
         metrics = ["A"] + (["D"] if Dm is not None else [])
         gth = [gfull[id(p)] if gfull[id(p)] is not None else torch.zeros_like(p) for p in theta]
-        Ac = {mt: torch.zeros(C.FF, C.D, dtype=torch.float64) for mt in metrics}
+        Ac = {mt: torch.zeros(C.FF, C.D, dtype=torch.float64, device=DEV) for mt in metrics}
         for k in (range(0) if light else range(C.D)):         # ȳ のヤコビアンの行ごと（light では ② と ③ を分けず合計だけ）
             rk = torch.autograd.grad(ybar[k], theta, retain_graph=True, allow_unused=True)
             rk = [r if r is not None else torch.zeros_like(p) for r, p in zip(rk, theta)]
             for mt in metrics:
                 dirs = rk if mt == "A" else [Dm[id(p)] * r for p, r in zip(theta, rk)]
-                dY = jvp_y(mfd, X, l, thfd, dirs)
+                dY = jvp_y(mfd, X, l, thfd, dirs) if JVP_MODE == "fd" else jvp_exact(y, theta, dirs)
                 Ac[mt][:, k] = (e * (dY @ W.T)).sum(0)
         # 逆伝播で g^{FFNℓ} と ⟨∇m_j, g^{FFNℓ}⟩（中心差分の検査用）
         gffn = torch.autograd.grad((e * (y @ W.T)).sum(), theta, retain_graph=True, allow_unused=True)
@@ -113,8 +127,9 @@ def analyze(arm, sd, adam_sd, task, kind="chain", nseq=64, layers=None, flip=Fal
         for mt in metrics:
             Cm = Ac[mt] @ W.T                                    # C_ij（行 i = 信号の持ち主、列 j = 位置を動かされる unit）
             wg = (lambda gs: gs) if mt == "A" else (lambda gs: [Dm[id(p)] * g for p, g in zip(theta, gs)])
-            uT = jvp_y(mfd, X, l, thfd, wg(gth)).mean(0); T = -(W @ uT)                       # −⟨v_j, g_θ⟩
-            uF = jvp_y(mfd, X, l, thfd, wg(gffn)).mean(0); SF = W @ uF                         # ⟨v_j, g^{FFN}⟩（逆伝播側）
+            jv = (lambda dd: jvp_y(mfd, X, l, thfd, dd)) if JVP_MODE == "fd" else (lambda dd: jvp_exact(y, theta, dd))
+            uT = jv(wg(gth)).mean(0); T = -(W @ uT)                       # −⟨v_j, g_θ⟩
+            uF = jv(wg(gffn)).mean(0); SF = W @ uF                         # ⟨v_j, g^{FFN}⟩（逆伝播側）
             own = -(e * Kn[:, None]).sum(0) if mt == "A" else -((Dm[id(blk.mlp.up.weight)] * GW) @ yb)
             selfu = -torch.diagonal(Cm); oth_a = -(Cm.sum(0) - torch.diagonal(Cm)); oth_b = T - selfu - oth_a
             # ③ のうち LN2_ℓ の γ の分（解析的）: v_j[γ]_d = (D_γ)·W_jd x̄_d、g^{(j)}[γ]_d = W_jd Σ_n e_jn x̂_nd
@@ -164,11 +179,11 @@ def closure_check(arm, sd, adam_sd, task, res, kind="chain", nseq=64, layers=Non
             for l in (layers or range(len(m0.h))):
                 y0, y1 = y_at(m0, X, l).mean(0), y_at(m1, X, l).mean(0)
                 dm = (m1.h[l].mlp.up.weight.detach() @ y1) - (m0.h[l].mlp.up.weight.detach() @ y0)
-                r = res["layers"][str(l)][mt]; sd_ = torch.tensor(res["layers"][str(l)]["sigma"], dtype=torch.float64)
+                r = res["layers"][str(l)][mt]; sd_ = torch.tensor(res["layers"][str(l)]["sigma"], dtype=torch.float64, device=DEV)
                 scale = (1.0 if mt == "A" else LR) / (sd_ + 1e-30)
-                pred = eta * torch.tensor([a + b + c + d for a, b, c, d in zip(r["own"], r["self_up"], r["others_same"], r["others_path"])], dtype=torch.float64) / scale
+                pred = eta * torch.tensor([a + b + c + d for a, b, c, d in zip(r["own"], r["self_up"], r["others_same"], r["others_path"])], dtype=torch.float64, device=DEV) / scale
                 out[f"{mt}_eta{eta:g}_L{l}"] = float((dm - pred).norm() / dm.norm())
-                mut = eta * torch.tensor([a + b + c for a, b, c in zip(r["own"], r["self_up"], r["others_same"])], dtype=torch.float64) / scale   # 変異: ③b を落とす
+                mut = eta * torch.tensor([a + b + c for a, b, c in zip(r["own"], r["self_up"], r["others_same"])], dtype=torch.float64, device=DEV) / scale   # 変異: ③b を落とす
                 out[f"MUT_no_path_{mt}_eta{eta:g}_L{l}"] = float((dm - mut).norm() / dm.norm())
     return out
 
@@ -180,7 +195,10 @@ def main():
     ap.add_argument("--kind", default="chain"); ap.add_argument("--nseq", type=int, default=64); ap.add_argument("--layers", type=int, nargs="*", default=None)
     ap.add_argument("--threads", type=int, default=4); ap.add_argument("--out", required=True); ap.add_argument("--check", action="store_true")
     ap.add_argument("--light", action="store_true", help="① と ②+③ の合計だけ（一様 probe の比較用）")
+    ap.add_argument("--device", default="cpu", help="cuda なら float64 のまま GPU で計算する")
+    ap.add_argument("--jvp", default="fd", choices=["fd", "exact"], help="方向微分: fd = 中心差分、exact = 二重逆伝播（ReLU の折れ目でも厳密）")
     a = ap.parse_args(); torch.set_num_threads(a.threads); torch.set_default_dtype(torch.float32)
+    global DEV, JVP_MODE; DEV = torch.device(a.device); JVP_MODE = a.jvp
     sd = torch.load(a.state, map_location="cpu"); adam = torch.load(a.adam, map_location="cpu") if a.adam else None
     res = analyze(a.arm, sd, adam, a.task, a.kind, a.nseq, a.layers, light=a.light)
     if a.check:

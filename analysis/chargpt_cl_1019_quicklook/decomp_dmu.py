@@ -104,7 +104,9 @@ def main():
     ap.add_argument("--threads", type=int, default=8)
     ap.add_argument("--root", default=str(Q), help="腕のディレクトリの親（2 ブロックは quicklook/M2）")
     ap.add_argument("--tasks", default="1-10,40-50", help="例: 1-10,40-50,90-100")
+    ap.add_argument("--seed", type=int, default=1000)
     a = ap.parse_args()
+    global SEED; SEED = a.seed
     root = Path(a.root); tasks = parse_tasks(a.tasks)
     torch.set_num_threads(a.threads)
     out = Path(a.out)
