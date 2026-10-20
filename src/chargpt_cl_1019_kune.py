@@ -194,6 +194,7 @@ def run_task_freeze(model, eng, ctx, *, warmup_from, measure_cb=None, **kw):
             def measure_cb(u):
                 if u == 100:
                     torch.save(model.state_dict(), _STATE["out"] / "ckpts" / f"u100_task{t}.pt")
+                    torch.save(eng.opt.state_dict(), _STATE["out"] / "ckpts" / f"u100_task{t}_adam.pt")   # 追補 7: 更新 100 の Adam の状態も
                 inner(u)
     return _orig_run_task(model, eng, ctx, warmup_from=warmup_from, measure_cb=measure_cb, **kw)
 
