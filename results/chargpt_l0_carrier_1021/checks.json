@@ -1,0 +1,222 @@
+{
+  "status": "complete",
+  "source_head": "d182c3edd46401bd84f07f0ad574342604f68ebc",
+  "requested_source_head": "a970f12c",
+  "source_diff_since_requested": "",
+  "source_sha256": {
+    "src/chargpt_cl_1019.py": "35f86e071cf354ce8ce8c9776e3d24bd91160a233727e78ff92ac732b7fe853c",
+    "src/chargpt_cl_1019_kune.py": "cacbe6001171735b119b60783023b9e1695b2f8a85baaa7172f0640c973854e8",
+    "analysis/chargpt_cl_1019_quicklook/decomp_dmu.py": "f2571922702d4d16f7cbf744a8db51bd82426fa579f8bfd14ca0492821afcadb",
+    "analysis/chargpt_cl_1019_quicklook/judge_m2.py": "ece2cf1e4f0f4fd3985cd65c840781140211e63bbc235da3481e50100d3c8495",
+    "analysis/chargpt_cl_1019_quicklook/carrier_source.py": "48f7f0c2d2de2f75a252661796ac7d2296c54956262dc5acc911ee3a5d3ccec8"
+  },
+  "spec_sha256": "8ff220142b36e9332b6ed3a9b19e7b5a83e6c22e20ae6835ae1055471f4b99bb",
+  "python": "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+  "torch": "2.13.0+cu130",
+  "numpy": "2.5.1",
+  "device": "cpu",
+  "threads": 8,
+  "definitions": {
+    "up_share": "neg(up)/(neg(own)+neg(up)+neg(cross))",
+    "legacy_up_share": "neg(up+cross)/(neg(own)+neg(up+cross))",
+    "cap": "sqrt(V), not row norm or probe sigma",
+    "precision": "float32 model forward; float64 means, std(ddof=1), decomposition",
+    "carrier": "tokenwise centered sources / total residual LN denominator, gamma, token mean, projection"
+  },
+  "inventory": {
+    "pass_": true,
+    "runs": 20,
+    "checkpoints_per_run": 68
+  },
+  "seed1000": {
+    "pass_": true,
+    "upstream_share": 0.9581002056171248,
+    "concentration": 0.9370097961236683,
+    "identity_max": 2.1316282072803006e-14,
+    "imported_window_max_difference": 8.881784197001252e-16,
+    "tasks": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "denominator": "all units, upstream includes cross"
+  },
+  "identity_preflight": {
+    "pass_": true,
+    "max_abs": 2.1316282072803006e-14,
+    "tolerance": 1e-10
+  },
+  "cap_seed0": {
+    "pass_": true,
+    "max_tracked_s_ratio_by_layer": [
+      1.0000001175907003,
+      1.000000120079307
+    ],
+    "cap_anchor_max_error": 0.0,
+    "checkpoints": 66,
+    "relative_tolerance": 5e-07
+  },
+  "mutations": {
+    "pass_": true,
+    "zero_dW_max_error": 1.942890293094024e-15,
+    "probe_swap_identity_max_error": 1.5959455978986625e-15,
+    "probe_swap_data_change_max": 0.207483763376884,
+    "scope": "swap the data-only probe; keep the analysis probe fixed. Replacing the analysis probe can change every decomposition term."
+  },
+  "carrier_preflight": {
+    "pass_": true,
+    "closure_relative": 6.045289207515364e-09,
+    "projection_sum": 0.99999999710838
+  },
+  "preflight_seconds": 2.67528902401682,
+  "completed_runs": [
+    {
+      "arm": "C3",
+      "seed": 0
+    },
+    {
+      "arm": "C3",
+      "seed": 1
+    },
+    {
+      "arm": "C3",
+      "seed": 2
+    },
+    {
+      "arm": "C3",
+      "seed": 3
+    },
+    {
+      "arm": "C3",
+      "seed": 4
+    },
+    {
+      "arm": "C3",
+      "seed": 5
+    },
+    {
+      "arm": "C3",
+      "seed": 6
+    },
+    {
+      "arm": "C3",
+      "seed": 7
+    },
+    {
+      "arm": "C3",
+      "seed": 8
+    },
+    {
+      "arm": "C3",
+      "seed": 9
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 0
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 1
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 2
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 3
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 4
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 5
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 6
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 7
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 8
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 9
+    }
+  ],
+  "full_identity_max": 1.7408297026122455e-13,
+  "full_normalized_identity_max": 3.197442310920451e-14,
+  "full_carrier_closure_max": 2.6485432097985437e-08,
+  "runtime_seconds": 445.51160496499506,
+  "table_rows": {
+    "decomp": 2640,
+    "scale": 3880,
+    "data_shift": 1400,
+    "carrier_source": 640
+  },
+  "analysis_sha256": "b5eb8f6367a828c5149d22836a92b1d42b99ca7ebbdf14d4cd25ee5cf2bcd59e",
+  "spec_unchanged": true,
+  "output_validation": {
+    "pass_": true,
+    "rows": {
+      "decomp": 2640,
+      "scale": 3880,
+      "data_shift": 1400,
+      "carrier_source": 640
+    },
+    "unique_keys": true,
+    "aggregate_identity_max": 2.7755575615628914e-15,
+    "npz_files": 20,
+    "npz_bytes": 26939270,
+    "npz_mean_max_rounding_error": 2.8366626381171045e-08,
+    "source_and_spec_hashes_unchanged": true
+  },
+  "report_sha256": "cbde50d066081a2b7cb251e06449498b3af70863b43b6da15bf1dc5dd6115706",
+  "output_sha256": {
+    "table_carrier_seed.csv": "a711648f0114848082bc8f63e1c3091792ef60cf0a2679a5c820cd23b3d1e75f",
+    "table_carrier_source.csv": "e9a913c506e291faceef2f15f36ce14887779971af07086b93031d4a633db4a2",
+    "table_data_shift.csv": "99001e290a7aa4a36bfe168938f01d2acb9060f891fdbb8ab7ce64928ffa2e4a",
+    "table_decomp.csv": "fcfaeb3279147d26554eec8d6e1d9cff278d5ef411b09b75817ecba2563eda5c",
+    "table_decomp_seed.csv": "1a33f9dcb45e5b43dfb412ccb5a07b613091c6b52ccb692bd3a2e2776b518fb2",
+    "table_rotation_seed.csv": "45d31bbe183d871b5e57f8941e7056e7527ca2ca608547a9ba8682d4c1143176",
+    "table_scale.csv": "831ac32ade74a1d2880313aca69fd5cb3311459d51cb00c80b863ab875cf0983",
+    "table_scale_seed.csv": "59460fbd26ecb2b0b97129d12dc71d35d31ddb93ecbac938774cb5615f6a429b",
+    "table_scores.csv": "42762da756f466eb80a84c3103e6ba417f8d72559b2e7dc74e3cd817d6e1fe94",
+    "table_seed_metrics.csv": "a1ea2f1c3a4cdbe5ced8d186d130d913b5544fcb306bd19673d62fd3896e3edd",
+    "units/C3_seed0.npz": "d98018497e3af189de42bd74ef6a457c1caccacc23116a012fe74d72da6238b8",
+    "units/C3_seed1.npz": "7bc3d603eb53f7abf81cf795c04bcd5bf8b0975791baf3b4ee430d6ebcfcaab6",
+    "units/C3_seed2.npz": "56463ce89d2e305cb49b1907c6e7f4dcb046e3ff53f00586eb5179d59a6693c0",
+    "units/C3_seed3.npz": "617d3c9f89859530532f910af0fea59502fe47175979c0c9b361973b1fea11bd",
+    "units/C3_seed4.npz": "e957fc74aebe37509d0f205696cf15253443d3bf41e316820971565ab4561040",
+    "units/C3_seed5.npz": "9c1a16d10386dc778b1b3e8208fa85696afc2ab3b5d11efa762a41fa8ad08d27",
+    "units/C3_seed6.npz": "2bfa3e5a883709b34c40bee7de3e35e2ea4acbdffcf4a9e35c2e80014accc1e8",
+    "units/C3_seed7.npz": "c578c91dc287643133b36c3b966d733323d6403b90af6eeb7352df12ac1258a2",
+    "units/C3_seed8.npz": "2a15f742879dc9747642d1ea387310f191dc2bc5b0719284ab18d11c1db4012d",
+    "units/C3_seed9.npz": "638f8572aa171b3eb2807a6ebc1175486cd16e82308e0e6d62df960d385a6664",
+    "units/ReLUcap_seed0.npz": "3b23e8cde204a150921ec2e7d1d1f0656404d0f8663e161ddeff328da6813a67",
+    "units/ReLUcap_seed1.npz": "b756e13433e292e15170f534ce96b40d75bb2ac136d7adebf1f9f331a084dd5b",
+    "units/ReLUcap_seed2.npz": "6c5d64382e79d6c66e345e1512d7a7184011c499314635df40c5e87873baa62f",
+    "units/ReLUcap_seed3.npz": "12f56b5244bd823d6b5b672e2169a4fdfe9c636d9f46f534004b6830ca1b2d68",
+    "units/ReLUcap_seed4.npz": "615aae090f272c030778d6f130183326b7dad5b4ad0f0b0c0f65931d906aed56",
+    "units/ReLUcap_seed5.npz": "131407c1e051e216746e295568f2d67d460d17812574669f2f01cb96ee584c76",
+    "units/ReLUcap_seed6.npz": "1ad6f225df8047ef87cd8edcf6299a43a4657ef194fa81b194c7e126ee5763be",
+    "units/ReLUcap_seed7.npz": "7998313b7b71807e84a9a74c86daa7986fb704b50b2b70ca6ac327f584de5400",
+    "units/ReLUcap_seed8.npz": "a981e1ad2545f480cbd0034e5c2cb0f6a2a05d1ca859aa63a287fa6f90347b9e",
+    "units/ReLUcap_seed9.npz": "6f68e776d7fb6ab9bbc035f2357854ae514e7859e55e600ba6b4a30a58a5cc46",
+    "summary.md": "f0f0097bdaae913bfe448de7121a13b9f0aa5f497e29f288c6415aae9b94fa02"
+  },
+  "pa5_aggregation": "ambiguous"
+}
