@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from result_report import resolve_input
 
 ROOT=Path(__file__).resolve().parents[2]
 HERE=Path(__file__).resolve().parent
@@ -48,7 +49,7 @@ ys={}
 right.axvspan(0,3,color="#a7b5dc",alpha=.20,lw=0)
 right.axvspan(27,30,color="#e8c889",alpha=.22,lw=0)
 for a in arms:
-    c=np.load(RESULTS/a/"batch_curves.npz")
+    c=np.load(resolve_input(RESULTS/a/"batch_curves.npz"))
     assert c["accuracy"].shape==(10,30000)
     ys[a]=c["accuracy"].reshape(10,40,750).mean(axis=2,dtype=np.float64).mean(axis=0)*100
     right.plot(xs,ys[a],styles[a],color=colors[a],lw=2,label=a.replace("_"," "))

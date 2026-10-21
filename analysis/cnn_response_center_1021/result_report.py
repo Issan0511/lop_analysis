@@ -23,12 +23,26 @@ METRICS=("first3000","all","last3000")
 LABELS={"first3000":"更新 1–3000","all":"全 30000 更新","last3000":"最後 3000 更新"}
 
 
+def resolve_input(path):
+    """Recover archived raw arrays by the recorded SHA256, without copying them."""
+    if path.exists():
+        return path
+    manifest=ROOT/"results/cnn_response_center_1021/backup_manifest.json"
+    rel=str(path.relative_to(ROOT))
+    entries=json.loads(manifest.read_text())["files"]
+    entry=next(x for x in entries if x["source_relative"]==rel)
+    archived=Path(entry["backup"])
+    assert archived.stat().st_size==entry["bytes"]
+    assert hashlib.sha256(archived.read_bytes()).hexdigest()==entry["sha256"]
+    return archived
+
+
 def read_csv(path):
     with path.open() as f:return list(csv.DictReader(f))
 
 
 def digest(path):
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return hashlib.sha256(resolve_input(path).read_bytes()).hexdigest()
 
 
 def canonical(obj):
@@ -70,7 +84,7 @@ def run(results,stem):
         assert prov["identity"]==done["identity"] and done["summary_sha256"]==digest(p/"summary.csv") and anchor["pass"]
         assert prov["identity"]["steps"]==30000 and prov["identity"]["data"]["seeds"]==SEEDS
         provs[arm]=prov
-        c=np.load(p/"batch_curves.npz")
+        c=np.load(resolve_input(p/"batch_curves.npz"))
         assert np.array_equal(c["seeds"],seeds) and c["accuracy"].shape==(10,30000) and c["ce"].shape==(10,30000)
         curves[arm]={"accuracy":c["accuracy"],"ce":c["ce"]}
         for metric,sl in (("first3000",slice(0,3000)),("all",slice(None)),("last3000",slice(-3000,None))):
