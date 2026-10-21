@@ -1,0 +1,315 @@
+{
+  "run_id": "cnn_width_cap_1021",
+  "role": "numerical_reproduction_before_intervention",
+  "task": 2,
+  "steps": 32,
+  "source_sha256": "e10954e4ca90ff829926afed6b6dc472a0c04bd34d513f021b2e9c7a3dce0acb",
+  "saved_steps_sha256": "c13a618b1e96e3750ec76a494bafd41b3c2a509961a98b915995f66cee97783a",
+  "spec_sha256": "3546637953c007dcd5b62b34071eb6d2845729e216680f345b993a6b2deb5da4",
+  "git": {
+    "git_hash": "6b6334fa5bd7c1d6b360bb12a603dcae88373217",
+    "branch": "codex/cnn_width_cap_1021",
+    "dirty_src_analysis_specs": [],
+    "time": "2026-10-21 12:44:10 +0900"
+  },
+  "env": {
+    "python": "3.12.3",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "torch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "cudnn": 92000,
+    "numpy": "2.5.1",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "torch_threads": 20,
+    "cuda_matmul_fp32_precision": "ieee",
+    "cudnn_conv_fp32_precision": "ieee",
+    "cudnn_enabled": true,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "deterministic_algorithms": true,
+    "deterministic_warn_only": false,
+    "cublas_workspace_config": ":4096:8",
+    "amp": false,
+    "dtype": "float32",
+    "override_stale_capture_stream": true
+  },
+  "full40_vs_saved": {
+    "ce": {
+      "bit_equal": true,
+      "max_abs_error": 0.0
+    },
+    "hit": {
+      "bit_equal": true,
+      "max_abs_error": 0.0
+    }
+  },
+  "selected20_vs_saved": {
+    "ce": {
+      "bit_equal": false,
+      "max_abs_error": 0.2281113713979721
+    },
+    "hit": {
+      "bit_equal": false,
+      "max_abs_error": 0.0625
+    }
+  },
+  "natural_sham20_vs_saved": {
+    "ce": {
+      "bit_equal": false,
+      "max_abs_error": 0.2281113713979721
+    },
+    "hit": {
+      "bit_equal": false,
+      "max_abs_error": 0.0625
+    }
+  },
+  "natural20_vs_sham20_bit_equal": {
+    "ce": true,
+    "hit": true
+  },
+  "source_slots": [
+    [
+      "R_lr0.0003",
+      2000
+    ],
+    [
+      "R_lr0.0003",
+      2001
+    ],
+    [
+      "R_lr0.0003",
+      2002
+    ],
+    [
+      "R_lr0.0003",
+      2003
+    ],
+    [
+      "R_lr0.0003",
+      2004
+    ],
+    [
+      "R_lr0.0003",
+      2005
+    ],
+    [
+      "R_lr0.0003",
+      2006
+    ],
+    [
+      "R_lr0.0003",
+      2007
+    ],
+    [
+      "R_lr0.0003",
+      2008
+    ],
+    [
+      "R_lr0.0003",
+      2009
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2000
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2001
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2002
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2003
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2004
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2005
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2006
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2007
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2008
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2009
+    ],
+    [
+      "KKT1_lr0.0003",
+      2000
+    ],
+    [
+      "KKT1_lr0.0003",
+      2001
+    ],
+    [
+      "KKT1_lr0.0003",
+      2002
+    ],
+    [
+      "KKT1_lr0.0003",
+      2003
+    ],
+    [
+      "KKT1_lr0.0003",
+      2004
+    ],
+    [
+      "KKT1_lr0.0003",
+      2005
+    ],
+    [
+      "KKT1_lr0.0003",
+      2006
+    ],
+    [
+      "KKT1_lr0.0003",
+      2007
+    ],
+    [
+      "KKT1_lr0.0003",
+      2008
+    ],
+    [
+      "KKT1_lr0.0003",
+      2009
+    ],
+    [
+      "SNAfrz1_lr0.0003",
+      2000
+    ],
+    [
+      "SNAfrz1_lr0.0003",
+      2001
+    ],
+    [
+      "SNAfrz1_lr0.0003",
+      2002
+    ],
+    [
+      "SNAfrz1_lr0.0003",
+      2003
+    ],
+    [
+      "SNAfrz1_lr0.0003",
+      2004
+    ],
+    [
+      "SNAfrz1_lr0.0003",
+      2005
+    ],
+    [
+      "SNAfrz1_lr0.0003",
+      2006
+    ],
+    [
+      "SNAfrz1_lr0.0003",
+      2007
+    ],
+    [
+      "SNAfrz1_lr0.0003",
+      2008
+    ],
+    [
+      "SNAfrz1_lr0.0003",
+      2009
+    ]
+  ],
+  "selected_slots": [
+    [
+      "R_lr0.0003",
+      2000
+    ],
+    [
+      "R_lr0.0003",
+      2001
+    ],
+    [
+      "R_lr0.0003",
+      2002
+    ],
+    [
+      "R_lr0.0003",
+      2003
+    ],
+    [
+      "R_lr0.0003",
+      2004
+    ],
+    [
+      "R_lr0.0003",
+      2005
+    ],
+    [
+      "R_lr0.0003",
+      2006
+    ],
+    [
+      "R_lr0.0003",
+      2007
+    ],
+    [
+      "R_lr0.0003",
+      2008
+    ],
+    [
+      "R_lr0.0003",
+      2009
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2000
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2001
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2002
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2003
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2004
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2005
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2006
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2007
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2008
+    ],
+    [
+      "ELU_a3.6_lr0.0003",
+      2009
+    ]
+  ]
+}
