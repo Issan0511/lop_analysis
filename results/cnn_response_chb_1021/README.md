@@ -10,7 +10,7 @@
 - [図表の読み方](report/supplement/READING_GUIDE.md)
 - [凍結した登録spec](../../specs/spec_cnn_response_chb_1021.md)
 - [実行記録](execution_record.json)
-- 生データの退避先は完了時の backup_manifest.json にSHA256/bytes付きで記録する。
+- 生データ875ファイル・3,883,672,054 bytesを [backup_manifest.json](backup_manifest.json) にSHA256/bytes付きで退避済み。退避先からの独立再生成も終了コード0で、report.json全体が完全一致した。
 
 実装の再現はcommit338a9443を参照する。後から追加した図表・退避コードとCEの表示追加は学習を変更していない。退避後の独立監査は、リポジトリルートから次で再生成できる（NumPyとGitが必要）：
 
