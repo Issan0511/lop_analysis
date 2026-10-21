@@ -160,7 +160,7 @@ def initial_gradients(engine):
 
 @torch.no_grad()
 def independent_projection(P, xb, act):
-    """Separate sequential implementation; direct ReLU difference is safe here."""
+    """Separate sequential natural-B reference."""
     R, B = xb.shape[:2]
     x = xb.transpose(0, 1).reshape(B, R * 3, 32, 32)
     widths, activities = [], []

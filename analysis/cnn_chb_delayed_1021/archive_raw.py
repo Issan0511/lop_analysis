@@ -143,7 +143,12 @@ def completion_guard(prior):
     result_root = f"results/{RUN}"
     report = read_saved(result_root + "/report/report.json", prior)
     need(report.get("experiment") == RUN and report.get("status") == "COMPLETE_AUDITED", "Independent report is not COMPLETE_AUDITED")
-    need(report.get("primary_matches_registered") is True and all(report.get("audit", {}).values()) and bool(report.get("audit")), "Report audit checks missing/failed")
+    audit = report.get("audit", {})
+    required = ("primary_matches_registered", "paired_streams_equal", "all_curves_complete",
+                "immutable_code_hashes_match", "all_source_qualification_passed")
+    need(all(audit.get(key) is True for key in required), "Report audit checks missing/failed")
+    need(0 <= audit.get("projection_max_relative_excess", float("inf")) <= 2e-7,
+         "Projection audit exceeds registered float32 rounding tolerance")
     need(read_saved(result_root + "/checks/preflight.json", prior).get("all_pass") is True, "GPU preflight not PASS")
     for arm in ARMS:
         done = read_saved(f"{result_root}/{arm}/done.json", prior)

@@ -1,6 +1,6 @@
 """CPU-only independent regressions for natural delayed B.
 
-Run: python -m unittest discover -s tests -p test_cnn_response_chb_1021.py -v
+Run: python -m unittest discover -s tests -p test_cnn_chb_delayed_1021.py -v
 No CIFAR files, archived checkpoints, CUDA contexts, or intervention data are read.
 """
 from __future__ import annotations
@@ -64,7 +64,7 @@ def fake_data(n=1200):
 
 @torch.no_grad()
 def independent_projection(P, xb, act):
-    """Separate sequential implementation; direct ReLU difference is safe here."""
+    """Separate sequential natural-B reference."""
     R, B = xb.shape[:2]
     x = xb.transpose(0, 1).reshape(B, R * 3, 32, 32)
     widths, activities = [], []
