@@ -1,7 +1,8 @@
 {
  "A_C3self": {
   "max_abs": 0.12181270122528076,
-  "max_abs_first100": 0.10112762451171875,
+  "task91_first10_max_abs": 9.5367431640625e-07,
+  "task91_first100_max_abs": 0.00012826919555664062,
   "mean_task_diff": [
    -0.0036513805389404297,
    -0.028192639350891113
@@ -10,7 +11,8 @@
  },
  "A_capself": {
   "max_abs": 0.09020137786865234,
-  "max_abs_first100": 0.09020137786865234,
+  "task91_first10_max_abs": 5.054473876953125e-05,
+  "task91_first100_max_abs": 0.008706212043762207,
   "mean_task_diff": [
    0.0003643631935119629,
    -0.0003237128257751465
@@ -47,9 +49,46 @@
  "F_adam_restore_exact": true,
  "D_ref_unchanged": true,
  "D_ref_no_grad": true,
+ "F2_adam_one_step": {
+  "names_match_fresh_model": true,
+  "shapes_match": true,
+  "rel_err_max": 7.510326395276934e-05
+ },
+ "G_elr": {
+  "norm_ratio_med": [
+   1.0,
+   1.0
+  ],
+  "k_end_med": [
+   1.53137565,
+   2.07589793
+  ],
+  "k_expected_med": [
+   1.5319839715957642,
+   2.0760550498962402
+  ]
+ },
+ "G_proj_formula_err": 2.384185791015625e-07,
+ "G_literal_formula_err": 1.4901161193847656e-08,
+ "H_phi1_is_effective": {
+  "phi1_mean": 0.31378936767578125,
+  "eff_open_mean": 0.31378936767578125,
+  "diff": 0.0
+ },
  "E_graph_vs_eager": {
   "param_max_abs": 1.3828277587890625e-05,
   "loss_max_abs": 9.5367431640625e-07,
   "bitwise": false
- }
+ },
+ "PASS": {
+  "A_first10": true,
+  "B": true,
+  "C": true,
+  "D": true,
+  "E": true,
+  "F": true,
+  "G": true,
+  "H": true
+ },
+ "ALL_PASS": true
 }

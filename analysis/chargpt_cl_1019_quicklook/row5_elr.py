@@ -70,13 +70,15 @@ def main():
             if a.mode == "elr":
                 k.copy_(ktab[t - 2] + (ktab[t - 1] - ktab[t - 2]) * ((u + 1) / n))        # 課題 t−1 末 → 課題 t 末を更新ごとに線形補間
             x, y = ctx.batch(u); eng.step(x, y, bl, ba, u)
+            if a.mode == "literal" and (u + 1) % 100 == 0 and not (torch.isfinite(bl[u]) and torch.isfinite(W).all()):
+                bl[u + 1:] = float("nan"); break                                # 非有限になった 100 更新の区切りで止める
         loss = bl.cpu().numpy(); online[ti] = loss
         for pn, xp in dict(chain=ctx.probe, uniform=probe_u).items():
             for li, r in enumerate(C.measure(model, xp)): layer_rows.append(dict(task=t, probe=pn, layer=li, **r["agg"]))
         with torch.no_grad():
             got = {}; hk = mlp0.register_forward_hook(lambda m, i, o: got.__setitem__("f0", o.detach())); model.body(ctx.probe); hk.remove()
             cosv = (F.normalize(W, dim=1) * F.normalize(Wprev, dim=1)).sum(1)
-        fin = bool(np.isfinite(loss).all())
+        fin = bool(np.isfinite(loss).all()) and bool(torch.isfinite(W).all())
         row = dict(task=t, H=ctx.H, **C.summarize_online("M", loss, loss, ctx.H), **(three_phase(loss, ctx.H) if fin else {}),
                    w0_norm_med=float(W.norm(dim=1).median()), w0_norm_over_n1_med=float((W.norm(dim=1) / n1).median()), rot0_med=float((1 - cosv).median()),
                    ffn0_out_rms=float(got["f0"].double().pow(2).mean().sqrt()), k_med=float(k.median()), finite=fin)

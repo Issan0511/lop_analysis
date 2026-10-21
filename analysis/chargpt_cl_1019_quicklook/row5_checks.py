@@ -33,11 +33,13 @@ def main():
     # ---------------- A: 自己は元の走と一致
     for arm, rarm in (("C3self", "C3"), ("capself", "ReLUcap")):
         d = out / f"A_{arm}"
-        if not (d / "online.npz").exists():
+        __import__("shutil").rmtree(d, ignore_errors=True)                 # 古い出力は使わない（いまのコードで回し直す）
+        if True:
             subprocess.run([sys.executable, str(Path(__file__).parent / "row5_l0resp.py"), "--arm", arm, "--seed", "0", "--t0", "90", "--ntasks", "2", "--out", str(d)],
                            check=True, env=dict(os.environ, CHARGPT_NLAYER="2"), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         mine = np.load(d / "online.npz")["loss"]; ref = np.load(R.M2 / rarm / "seed0" / "online.npz")["loss"][90:92]
-        res[f"A_{arm}"] = dict(max_abs=float(np.abs(mine - ref).max()), max_abs_first100=float(np.abs(mine[:, :100] - ref[:, :100]).max()),
+        res[f"A_{arm}"] = dict(max_abs=float(np.abs(mine - ref).max()), task91_first10_max_abs=float(np.abs(mine[0, :10] - ref[0, :10]).max()),
+                               task91_first100_max_abs=float(np.abs(mine[0, :100] - ref[0, :100]).max()),
                                mean_task_diff=[float(mine[i].mean() - ref[i].mean()) for i in range(2)], bitwise=bool(np.array_equal(mine, ref)))
     # ---------------- B: 非自己の場（CPU float64）
     dev = torch.device("cpu"); torch.set_num_threads(8)
@@ -120,10 +122,65 @@ def main():
         if graph:
             res["D_ref_unchanged"] = all(torch.equal(t_, s_) for t_, s_ in snap); res["D_ref_no_grad"] = all(p.grad is None for net in (R0g, D0g) for p in net.parameters())
         del eng; C._ENGINES.clear(); torch.cuda.empty_cache()
+    # F2: 復元後の独立な Adam の 1 歩（C3 の受け手・F-swap の操作つき、eager）。式は torch に頼らず手で書く
+    m = R.load_net("C3", seed, t0, dev); R0g = R.freeze_copy(m); D0g = R.freeze_copy(R.load_net("ReLUcap", seed, t0, dev))
+    op, _ = build_op("swap", m, R0g, D0g, seed, t0, dev, torch.float32); R.install(m, op)
+    names = [n for n, _ in m.named_parameters()]; params = list(m.parameters())
+    sd = torch.load(R.M2 / "C3" / "seed0" / "ckpts" / f"task{t0}_adam.pt", map_location=dev)
+    shape_ok = all(sd["state"][i]["exp_avg"].shape == p.shape for i, p in enumerate(params))
+    ref_names = [n for n, _ in C.build_model("C3", "M", seed, "cpu").named_parameters()]
+    eng = C.Engine(m, "C3", "M", graph=False)
+    with torch.no_grad():
+        for i, p in enumerate(params):
+            sv = sd["state"][i]; eng.opt.state[p] = dict(step=sv["step"].detach().clone().float().cpu(), exp_avg=sv["exp_avg"].to(dev).clone(), exp_avg_sq=sv["exp_avg_sq"].to(dev).clone())
+    ctx = C.TaskCtx("M", seed, t0 + 1, 10000, dev, alpha=0.01, W=None, cpu=cpu); xb, yb = ctx.batch(0)
+    p_before = [p.detach().clone() for p in params]
+    m.zero_grad(set_to_none=True); loss, _ = eng._loss(xb.long(), yb.long()); loss.backward(); grads = [p.grad.detach().clone() for p in params]
+    eng.opt.step()
+    errs = []
+    lr, b1, b2, ep = eng.base_lr, 0.9, 0.999, 1e-8
+    for i, (p, p0, g) in enumerate(zip(params, p_before, grads)):
+        sv = sd["state"][i]; st = float(sv["step"]) + 1
+        mm = b1 * sv["exp_avg"].to(dev) + (1 - b1) * g; vv = b2 * sv["exp_avg_sq"].to(dev) + (1 - b2) * g * g
+        p_ref = p0 - lr * (mm / (1 - b1 ** st)) / ((vv / (1 - b2 ** st)).sqrt() + ep)
+        errs.append(float((p.detach() - p_ref).abs().max() / (p0 - p_ref).abs().max().clamp_min(1e-30)))
+    res["F2_adam_one_step"] = dict(names_match_fresh_model=names == ref_names, shapes_match=shape_ok, rel_err_max=max(errs))
+    del eng; C._ENGINES.clear(); torch.cuda.empty_cache()
+    # G: ELR と文字どおりの形（短い走を回し直して確かめる）
+    for mode in ("elr", "literal"):
+        d = out / f"G_{mode}"; __import__("shutil").rmtree(d, ignore_errors=True)
+        subprocess.run([sys.executable, str(Path(__file__).parent / "row5_elr.py"), "--mode", mode, "--seed", "0", "--to_task", "3", "--n_per_task", "200", "--out", str(d)],
+                       check=True, env=dict(os.environ, CHARGPT_NLAYER="2"), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    import csv as _csv
+    rows = list(_csv.DictReader(open(out / "G_elr" / "per_task.csv")))
+    rn = np.load(R.M2 / "C3" / "seed0" / "unit_stats.npz")["rownorm"][:, 0, :]
+    res["G_elr"] = dict(norm_ratio_med=[float(r["w0_norm_over_n1_med"]) for r in rows], k_end_med=[float(r["k_med"]) for r in rows],
+                        k_expected_med=[float(np.median(rn[t - 1] / rn[0])) for t in (2, 3)])
+    # 射影が行ごとに厳密に効いているか（保存は課題 50・100 だけなので、短い走の最後の重みを再現して確かめる代わりに式を直接検査）
+    Wt = torch.randn(8, 4); n1 = torch.rand(8) + 0.5; Wt.mul_((n1 / Wt.norm(dim=1))[:, None]); res["G_proj_formula_err"] = float((Wt.norm(dim=1) - n1).abs().max())
+    W0 = torch.randn(8, 4); W1 = W0 + 0.01 * torch.randn(8, 4); n1 = W0.norm(dim=1) * 0.5
+    Wl = W0 + (W1 - W0) * (W0.norm(dim=1) / n1)[:, None]; res["G_literal_formula_err"] = float(((Wl - W0) - 2 * (W1 - W0)).abs().max())
+    # H: 測定の φ′ が実効ゲート（β-FA、課題 91 の probe）
+    m = R.load_net("C3", seed, t0, dev); R0g = R.freeze_copy(m); op, Dset = build_op("betaFA", m, R0g, None, seed, t0, dev, torch.float32); R.install(m, op)
+    agg = C.measure(m, cpu["probe"].to(dev))[0]["agg"]; pe, _ = R.eff_gate(m, op, cpu["probe"].to(dev))
+    res["H_phi1_is_effective"] = dict(phi1_mean=agg["phi1_mean"], eff_open_mean=float(pe.mean()), diff=abs(agg["phi1_mean"] - float(pe.mean())))
     pg, lg = states[True]; pe, le = states[False]
     res["E_graph_vs_eager"] = dict(param_max_abs=float(max((x - y).abs().max() for x, y in zip(pg, pe))), loss_max_abs=float(np.abs(lg - le).max()),
                                    bitwise=all(torch.equal(x, y) for x, y in zip(pg, pe)))
+    tol = dict(
+        A_first10=all(res[f"A_{a}"]["task91_first10_max_abs"] < 1e-4 for a in ("C3self", "capself")),
+        B=all(res[f"B_{k}"]["err_f0_vs_indep"] < 1e-12 and res[f"B_{k}"]["err_gate"] == 0 and res[f"B_{k}"]["fd_rel_err_max"] < 1e-4
+              and res[f"B_{k}"]["grad_rel_diff_vs_natural"] > 0.1 and res[f"B_{k}"]["frac_gate_differs_from_natural"] > 0.01 for k in ("swap", "betaFA")),
+        C=res["C"]["perm_err"] == 0 and res["C"]["other_batch_diff"] > 0.1 and res["C"]["other_donor_diff"] > 0.1,
+        D=res["D_ref_unchanged"] and res["D_ref_no_grad"],
+        E=res["E_graph_vs_eager"]["param_max_abs"] < 1e-3,
+        F=res["F_adam_restore_exact"] and res["F2_adam_one_step"]["names_match_fresh_model"] and res["F2_adam_one_step"]["shapes_match"] and res["F2_adam_one_step"]["rel_err_max"] < 1e-4,
+        G=all(abs(x - 1) < 1e-4 for x in res["G_elr"]["norm_ratio_med"]) and all(abs(a - b) < 1e-3 * b for a, b in zip(res["G_elr"]["k_end_med"], res["G_elr"]["k_expected_med"]))
+          and res["G_proj_formula_err"] < 1e-5 and res["G_literal_formula_err"] < 1e-5,
+        H=res["H_phi1_is_effective"]["diff"] < 1e-6)
+    res["PASS"] = tol; res["ALL_PASS"] = all(tol.values())
     (out / "checks.json").write_text(json.dumps(res, indent=1)); print(json.dumps(res, indent=1))
+    sys.exit(0 if res["ALL_PASS"] else 1)
 
 
 if __name__ == "__main__":

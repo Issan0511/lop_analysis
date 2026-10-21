@@ -69,6 +69,7 @@ def install(model, op):
     if op.kind == "betaF":
         beta = op.beta
         mlp0.phi = lambda z, beta=beta: F.relu(z + beta)
+        mlp0.dphi = lambda z, beta=beta: ((z + beta) > 0).to(z.dtype)        # 測定の φ′ も実効ゲートに
         return
     orig_body = model.body
 
@@ -81,6 +82,7 @@ def install(model, op):
         r0, base = mlp0._r0, mlp0._base
         return F.relu(r0) + (F.relu(base + (z - r0)) - F.relu(base))
     mlp0.phi = phi
+    mlp0.dphi = lambda z, mlp0=mlp0: ((mlp0._base.reshape(z.shape) + (z - mlp0._r0.reshape(z.shape))) > 0).to(z.dtype)    # 測定の φ′ も実効ゲート（body が場を置いた直後に呼ばれる）
 
 
 @torch.no_grad()
@@ -140,7 +142,8 @@ def main():
     c = None
     if a.arm == "Fswapscale":
         d0c = pre0(D0, xc).reshape(-1, C.FF).double(); sd_d = d0c.std(0); c = sd_r / sd_d.clamp_min(1e-30)
-        bad = (sd_d < 1e-3) | (c > 1000); c[bad] = c[~bad].median(); info.update(c_bad=int(bad.sum()), c_min=float(c.min()), c_med=float(c.median()), c_max=float(c.max()),
+        bad = (sd_d < 1e-3) | (c > 1000); cmed = c.median()                 # 9.B: その seed の c の中央値（全 unit）
+        c[bad] = cmed if torch.isfinite(cmed) and cmed <= 1000 else torch.ones((), dtype=c.dtype, device=c.device); info.update(c_bad=int(bad.sum()), c_min=float(c.min()), c_med=float(c.median()), c_max=float(c.max()),
                                                                            width_match_err_med=float(((c * sd_d) / sd_r - 1).abs().median()))
         c = c.float()
     kind = {"C3self": "self", "capself": "self", "betaFA": "betaFA", "Fswap": "swap", "Frev": "swap", "Fswapscale": "swapscale", "betaF": "betaF"}[a.arm]

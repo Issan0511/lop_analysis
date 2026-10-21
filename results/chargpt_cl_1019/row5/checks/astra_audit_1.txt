@@ -1,0 +1,72 @@
+**結論：学習の中心式は仕様と整合していますが、現状の検査結果を「事前登録の実装検査に合格」として本走へ進めることは勧めません。** 復元後の独立な Adam 一歩検査が不足し、介入後の応答ログには実際に誤記録があります。
+
+監査対象は HEAD `a0cb24f3`。ファイルは変更していません。指定 Python・CPU で較正、checkpoint、各腕の動作を確認しました。CUDA graph は再実行せず、コードと保存済み結果を照合しました。
+
+**(a) 腕の式・較正：通常経路は一致。安全規則には不一致があります。**
+
+`self`、`betaFA`、`Fswap`、`Frev`、`Fswapscale` の `base` の選択と、共通式
+\[
+\tilde a=\phi(r_0)+[\phi(\mathrm{base}+(z-r_0))-\phi(\mathrm{base})]
+\]
+は正しいです。補償後に再度 ReLU を掛けていません。`betaF` も直接 `relu(z+beta)` です。受け手・供与者の向きも仕様どおりです。根拠：[row5_l0resp.py:19](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:19)、[同:57](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:57)、[同:66](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:66)。
+
+較正・検証は指定された独立ストリーム、各64×128位置です。`p=mean(z>0)`、`D=p<0.005`、`p*=0.3321`、線形分位点、D外と分散ゼロでβ=0も一致します。全10 seed・t₀=50/90のCPU確認では、分散ゼロ・倍率の安全規則該当はともに0個。t₀=90の seed 4・8 は実際にDが空でした。根拠：[同:44](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:44)、[同:134](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:134)。
+
+ただし安全規則は、仕様の「そのseedのcの中央値」に対し、実装は **異常unitを除いた `c[~bad].median()`** です。また、全unit異常時の代替値や、受け手の幅ゼロによるc=0の処理がありません。幅一致誤差も、unit別の符号付き誤差ではなく絶対値の中央値だけです。今回のcheckpointでは発動しませんが、厳密一致ではありません。根拠：[仕様:781](/home/issan/Projects/claude/wt/chargpt_cl_1019/specs/spec_chargpt_cl_1019.md:781)、[実装:142](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:142)。
+
+**(b) 参照網・graph・復元・cap：実装上の不整合は見つかりませんでした。**
+
+参照はパッチ前のdeep copyで、全パラメータを勾配無効化しています。通常のPythonオブジェクトとクロージャから参照するため、submoduleにもoptimizerにも入りません。`pre0` は各参照自身の埋め込み・注意・残差・LN・W_upを `no_grad` で計算し、MLPKuneのV更新経路も通りません。固定項は勾配を運びません。CPUでは全7腕でパラメータ列不変、参照の状態不変・勾配なしを確認しました。根拠：[row5_l0resp.py:29](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:29)、[同:75](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:75)。
+
+参照計算はパッチされた`body`内なので、graph captureに含まれ、replayでは新しい入力に対して実行されます。評価時も毎回再計算します。capture後は受け手の重みとVを戻し、既存のAdamテンソルへ状態をコピーするため、graphが保持するアドレスを壊しません。60 checkpointで状態ID・形状・stepを確認しました。先行ツールと同じ復元方式です。根拠：[Engine:368](/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019.py:368)、[V復元:162](/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019_kune.py:162)、[Adam復元:157](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:157)。
+
+`capself`・`Frev`はReLUcapを受け手として維持し、両層でV更新とAdam後のcapが続きます。対象checkpointの両層とも`cap_on=1`でした。根拠：[MLPKune:123](/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019_kune.py:123)、[run_task:178](/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019_kune.py:178)、[cap処理:208](/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019_kune.py:208)。
+
+**(c) update-0：比較対象と入力は正しいです。**
+
+操作網とパッチ前のR0を同じ検証系列で比較しています。L0出力差、logits、損失、L1ゲート、最終LN分母の取得も整合します。`dh_rms_over_res`の分母は自然網の**最終LN直前の残差RMS**です。CPUのseed 0・検証4系列では、補償付き6腕のlogits差とδhは0、β-Fは非ゼロでした。根拠：[row5_l0resp.py:96](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:96)。
+
+**(d) ELR・literal：更新式と添字は一致します。**
+
+射影は `_prev(s)` のAdam処理後で、capture前にフックが登録されるためgraph内です。L0だけを射影し、Adamモーメントは変えません。`ktab[t−2]→ktab[t−1]`、係数`(u+1)/n`は、課題t−1末から課題t末への補間です。kは同じテンソルへコピーされ、学習対象ではありません。課題1末は10,000更新後なので、300更新のlr warmupを再開せず1e−3を使うことも正しいです。根拠：[row5_elr.py:20](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_elr.py:20)、[同:44](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_elr.py:44)、[同:68](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_elr.py:68)。
+
+literalも更新前のWを保存し、
+`W_old + (W_adam − W_old) × ‖W_old‖/‖W_1‖`
+を実行しています。ただし非有限判定は10,000更新と測定を終えた後であり、非有限になった更新では止まりません。判定対象も損失だけです。根拠：[同:56](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_elr.py:56)、[同:69](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_elr.py:69)、[同:89](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_elr.py:89)。
+
+**(e) 検査には有効な部分と、合格根拠にできない部分があります。**
+
+- Bは今回、空虚なゼロ勾配検査ではありません。CPUで選択された各腕20unitすべてに非ゼロの勾配を確認しました。保存結果の独立式・ゲート・有限差分の誤差も小さいです。ただし対象はswapとβ-FAだけです。[row5_checks.py:49](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_checks.py:49)、[checks.json:20](/home/issan/Projects/claude/wt/chargpt_cl_1019/results/chargpt_cl_1019/row5/checks/checks.json:20)。
+- Fは、位置iの状態をコピーし、**同じ位置iのコピー元と比較**しています。誤った対応付けでも通り得ます。復元後の独立なAdam一歩比較ではありません。[row5_checks.py:105](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_checks.py:105)。
+- A〜Fは誤差やfalseをJSONへ書くだけで、許容値による不合格終了がありません。ELR/literalの検査も含まれていません。[同:124](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_checks.py:124)。
+- selfの長期乖離だけを復元バグとは認定しません。保存配列ではC3selfの最初10更新の最大差は約9.54e−7、課題92の平均損失差は約−1.88%でした。`max_abs_first100`は**課題92の冒頭も含む**ので、分岐直後100更新の指標ではありません。graph/eagerのパラメータ差1.38e−5も、異なるAdam実行経路との比較です。ただし、登録された「課題91〜92が丸め誤差内」という条件を満たしたとは書けません。[同:39](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_checks.py:39)、[checks.json:50](/home/issan/Projects/claude/wt/chargpt_cl_1019/results/chargpt_cl_1019/row5/checks/checks.json:50)。
+
+**応答ログの不整合は実測で再現しました。** `phi`を交換しても`dphi`は元の`1[z>0]`のままです。seed 0・検証4系列のβ-FAでは実効開口率0.31596に対し、`C.measure`の`phi1_mean`は0.04834。Fswapでは0.20533に対し0.04834でした。ELRでも必要な微分`k·1[kz>0]`からkが抜けます。`per_task.csv`の専用`eff_open_*`は別計算なので、この問題とは区別できます。根拠：[dphi:112](/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019_kune.py:112)、[測定:274](/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019_kune.py:274)、[専用計測:173](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:173)。
+
+**(f) 確証的判定は未実装です。**
+
+対象コードは課題別指標の保存までです。4比較のexact符号検定・Holm・bootstrapとラベル付与、ELRの3相判定、C3 checkpointによる回転・RMS参照比較はありません。ELR側の回転と出力RMS自体は記録されていますが、これだけでは「操作成立」を確認できません。[row5_l0resp.py:192](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:192)、[row5_elr.py:76](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_elr.py:76)。
+
+判定時には次を守る必要があります。
+
+- 主族は指定の4比較のみ、各seedの課題91〜100平均E1000を使う。対照は再走したself腕。β-F・副期間・ELRを混ぜない。
+- Dが空のseedも残す。**ゼロ差を符号検定でどう扱うかは明示する。** 通常のゼロ差除外なら有効nが変わるので、仕様の「最初のHolm段階には10/10必要」は非ゼロ差10個の場合に限られます。[仕様:736](/home/issan/Projects/claude/wt/chargpt_cl_1019/specs/spec_chargpt_cl_1019.md:736)、[同:744](/home/issan/Projects/claude/wt/chargpt_cl_1019/specs/spec_chargpt_cl_1019.md:744)。
+- ELRは、同じseed内で3相すべて改善したseedが8/10以上という規則です。各相で別々に8seed改善ではありません。回転10倍・RMS±20%の成立確認を伴わない非救済から、機構を否定する結論は出せません。[仕様:790](/home/issan/Projects/claude/wt/chargpt_cl_1019/specs/spec_chargpt_cl_1019.md:790)。
+
+全所見を重大度順にまとめます。
+
+| 重大度 | 所見・影響 | 根拠 file:line |
+|---|---|---|
+| **blocking** | 登録された実装検査の合格を立証できない。Fはコピー一致であり独立一歩検査ではない。合否閾値・失敗終了・ELR検査がない。 | [row5_checks.py:105](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_checks.py:105)、[同:124](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_checks.py:124) |
+| **should-fix** | L0の`phi1_*`等が介入後の応答を表さない。操作成立・持続の解釈を誤らせる。 | [chargpt_cl_1019_kune.py:112](/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019_kune.py:112)、[同:274](/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019_kune.py:274) |
+| **should-fix** | Fswapscaleの安全時中央値が仕様と違う。幅一致誤差の保存も不十分。現在の対象データでは未発動。 | [row5_l0resp.py:142](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:142) |
+| **should-fix** | selfの登録条件と観測結果が一致しない。長期一致を合格扱いせず、短期検査と長期乖離を分けて記録する必要がある。 | [仕様:758](/home/issan/Projects/claude/wt/chargpt_cl_1019/specs/spec_chargpt_cl_1019.md:758)、[row5_checks.py:39](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_checks.py:39) |
+| **should-fix** | Aの既存出力をソース照合なしで再利用する。保存provenanceの`1374f243`にはrow5コードが存在せず、`dirty_src`もanalysisを対象にしない。結果と実装版の結び付きが不足。 | [row5_checks.py:36](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_checks.py:36)、[provenance.json:33](/home/issan/Projects/claude/wt/chargpt_cl_1019/results/chargpt_cl_1019/row5/checks/A_C3self/provenance.json:33)、[chargpt_cl_1019.py:492](/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019.py:492) |
+| **should-fix** | 4比較とELRの判定器、ELRのC3参照による操作成立確認が未実装。判定公表前に必要。 | [row5_l0resp.py:192](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:192)、[row5_elr.py:76](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_elr.py:76) |
+| **should-fix** | literalの非有限停止が課題末まで遅れる。重み・状態の非有限も直接検査しない。 | [row5_elr.py:69](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_elr.py:69)、[同:89](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_elr.py:89) |
+| **note** | 各腕の通常の置換式、D・β較正、独立RNG、固定項の勾配遮断は整合。 | [row5_l0resp.py:57](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:57)、[同:134](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:134) |
+| **note** | 参照の独立性、入力ごとの再計算、capture後の復元、受け手の両層cap継続は整合。 | [row5_l0resp.py:29](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:29)、[chargpt_cl_1019_kune.py:208](/home/issan/Projects/claude/wt/chargpt_cl_1019/src/chargpt_cl_1019_kune.py:208) |
+| **note** | update-0の同一入力比較、ELRの射影位置・補間・warmup、literal更新倍率は整合。 | [row5_l0resp.py:96](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_l0resp.py:96)、[row5_elr.py:44](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_elr.py:44) |
+| **note** | 今回のB有限差分は非ゼロ勾配を検査している。selfの長期乖離・graph/eager差だけから実装バグとは断定できない。 | [row5_checks.py:73](/home/issan/Projects/claude/wt/chargpt_cl_1019/analysis/chargpt_cl_1019_quicklook/row5_checks.py:73)、[checks.json:20](/home/issan/Projects/claude/wt/chargpt_cl_1019/results/chargpt_cl_1019/row5/checks/checks.json:20) |
+
+**このまま本走へ進む判断は保留です。** 少なくとも独立な復元後一歩検査とELRの更新検査を追加し、応答ログ・検査の合否条件・実装版の記録を直してから進めるべきです。中心の学習式そのものを作り直す必要は、今回の監査では認めません。
