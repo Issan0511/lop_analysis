@@ -33,6 +33,8 @@ def resolve_input(path):
     if path.exists():
         return path
     manifest = ROOT / "results/cnn_width_cap_1021/backup_manifest.json"
+    if not manifest.exists():
+        raise FileNotFoundError(f"missing output and no archive manifest: {path}")
     relative = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else None
     entries = json.loads(manifest.read_text())["files"]
     entry = next(x for x in entries if x["source"] == str(path) or
