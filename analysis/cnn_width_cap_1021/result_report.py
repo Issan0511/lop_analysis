@@ -67,6 +67,22 @@ def require(condition, message):
         raise ValueError(message)
 
 
+def registered_file_digest(value, path, allow_mapping=False):
+    """Normalize recorded archive identity without accepting a different filename.
+
+    The dataset loader records {archive_basename: sha256}; source/calibration
+    checkpoints record a plain digest. Neither representation changes the file
+    being verified, and a multi-file or mismatched-name mapping is rejected.
+    """
+    if isinstance(value, dict):
+        require(allow_mapping and set(value) == {Path(path).name},
+                f"unexpected archive hash mapping for {path}")
+        value = value[Path(path).name]
+    require(isinstance(value, str) and len(value) == 64 and
+            all(c in "0123456789abcdef" for c in value), f"invalid SHA256 for {path}")
+    return value
+
+
 def finite_number(value):
     x = float(value)
     return x if math.isfinite(x) else None
@@ -138,7 +154,8 @@ def load_and_audit(base, primary_path):
     source_hashes_verified = {}
     for name in ("source", "calibration", "data"):
         path = Path(natural_meta[f"{name}_path"])
-        expected = natural_meta[f"{name}_sha256"]
+        expected = registered_file_digest(natural_meta[f"{name}_sha256"], path,
+                                          allow_mapping=name == "data")
         require(digest(path) == expected, f"{name} file hash differs")
         source_hashes_verified[name] = {"path": str(path), "sha256": expected}
     calibration = read_json(Path(natural_meta["calibration_path"]).with_suffix(".json"))

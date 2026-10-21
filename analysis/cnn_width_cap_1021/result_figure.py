@@ -20,8 +20,8 @@ def main():
     colors=['#285fa3','#267b63'];labels=['ReLU','ELU (alpha=3.6)']
     plt.rcParams.update({'font.family':'DejaVu Sans','font.size':10,'axes.spines.top':False,
                          'axes.spines.right':False,'pdf.fonttype':42})
-    fig,axs=plt.subplots(2,2,figsize=(11.8,8.2))
-    fig.subplots_adjust(left=.08,right=.98,bottom=.11,top=.86,hspace=.36,wspace=.28)
+    fig,axs=plt.subplots(2,2,figsize=(11.8,8.8))
+    fig.subplots_adjust(left=.08,right=.98,bottom=.11,top=.86,hspace=.42,wspace=.28)
     fig.suptitle('CIFAR-100 5+1 CNN: width cap and relearning',x=.08,y=.975,ha='left',fontsize=18,fontweight='bold')
     fig.text(.08,.925,'10 paired seeds per activation · 7,800 updates/task · all four hidden sites capped',color='#626975')
     ax=axs[0,0];ax.axhline(0,color='#777',lw=1)
@@ -30,8 +30,9 @@ def main():
         d=np.array([x['difference'] for x in q['pairs']])*100;all_d.extend(d)
         ax.scatter(i+np.linspace(-.13,.13,10),d,color=colors[i],s=30,alpha=.75)
         ax.scatter(i+.23,d.mean(),marker='D',color=colors[i],s=65)
-        ax.text(i,-.19,f"{q['positive']}/{10} positive; Holm p={q['p_holm']:.4g}\n{q['verdict']}",
+        ax.text(i,.97,f"{q['positive']}/{10} positive; Holm p={q['p_holm']:.4g}\n{q['verdict']}",
                 ha='center',va='top',transform=ax.get_xaxis_transform(),fontsize=9,color=colors[i])
+    ax.set_ylim(min(all_d)-8,max(all_d)+27)
     ax.set_xticks([0,1],labels);ax.set_xlim(-.4,1.5)
     ax.set_ylabel('Cap minus natural (percentage points)')
     ax.set_title('A  Registered primary: late hard, first 780 updates',loc='left',fontsize=11,fontweight='bold')
