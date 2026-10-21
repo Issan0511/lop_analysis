@@ -1,0 +1,72 @@
+{
+  "experiment": "cnn_response_chb_1021",
+  "session_id": "01a15cb1-652a-7ee1-aa0c-f10194255fc8",
+  "original_thread": "01a14da9-6ed1-7d12-9eb3-ed79510a9c72",
+  "registered_release": "338a9443aef14060fa95f4efbf37f619fb5f5f79",
+  "preflight": {
+    "exit_code": 0,
+    "log": "results/cnn_response_chb_1021/preflight_gpu.log",
+    "seconds": 217.80783033370972,
+    "all_pass": true
+  },
+  "main": {
+    "status": "COMPLETE",
+    "exec_session": 93240,
+    "log": "results/cnn_response_chb_1021/main_gpu.log",
+    "exit_code": 0,
+    "confirmed_utc": "2026-10-21T05:51:43Z"
+  },
+  "cap_completion_report": {
+    "path": "/tmp/cnn_cap_completion_report_1021.md",
+    "delivery": "codex queue",
+    "queued_message_id": "01a15ce5-29d5-7091-acd9-b8f78cd84854",
+    "queue_exit_code": 0
+  },
+  "updated_utc": "2026-10-21T05:22:56Z",
+  "registered_summary": {
+    "command": [
+      "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+      "src/cnn_response_chb_1021.py",
+      "summarize",
+      "--out",
+      "/home/issan/Projects/claude/wt/cnn_response_chb_1021/results/cnn_response_chb_1021"
+    ],
+    "exit_code": 0,
+    "log": "/home/issan/Projects/claude/wt/cnn_response_chb_1021/results/cnn_response_chb_1021/registered_summary.log"
+  },
+  "independent_report": {
+    "command": [
+      "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+      "analysis/cnn_response_chb_1021/result_report.py"
+    ],
+    "exit_code": 0,
+    "log": "/home/issan/Projects/claude/wt/cnn_response_chb_1021/results/cnn_response_chb_1021/independent_report.log"
+  },
+  "report_presentation_update": {
+    "reason": "Expose all registered CE windows beside accuracy and record audit script SHA; no statistical changes",
+    "exit_code": 0,
+    "original_report_sha256": "4341bd4c8029a8f651d59f65cb28d769f23753735adb32094011d52d31f56d67",
+    "all_original_report_fields_unchanged": true
+  },
+  "supplementary_figures": {
+    "exit_code": 0,
+    "png_count": 9,
+    "pdf_count": 9,
+    "all_png_visually_reviewed": true,
+    "manifest_hashes_verified": true,
+    "initial_gate_mean_residuals": {
+      "raw_receiver": 0.0,
+      "effective_donor": 0.0
+    },
+    "first_attempt_exit_code": 1,
+    "first_attempt_log": "results/cnn_response_chb_1021/supplementary_figures_first_attempt.log",
+    "repair": "Match native float32 source mean(axis=1,dtype=float64), avoid pre-cast reduction; exact comparisons retained",
+    "training_rerun": false
+  },
+  "independent_scientific_review": {
+    "primary_all_late_recomputed": true,
+    "accuracy_CE_divergence_retained": true,
+    "reverse_seed10_exception_retained": true,
+    "effective_gate_recovery_retained": true
+  }
+}

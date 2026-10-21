@@ -191,6 +191,7 @@ def run(results, out):
              else 'BIDIRECTIONAL' if supported == 2 else 'ONE_DIRECTION' if supported == 1 else 'NONE')
     require(label == verdict['primary'], 'Independent verdict differs')
     report = {'experiment': RUN, 'status': 'COMPLETE_AUDITED', 'primary': label,
+              'audit_script_sha256': sha(Path(__file__)),
               'primary_matches_registered': True, 'effects': effects, 'means': means,
               'per_seed_summary': summaries, 'diagnostics_seed_means': diagnostics, 'failures': failures,
               'failure_count': sum(map(len, failures.values())), 'run_commit': commits[ARMS[0]],
@@ -217,6 +218,9 @@ def run(results, out):
              '## 副窓：主判定を置き換えない記述統計', '',
              table(['腕', *WINDOWS], [[a, *[f'{100*means[a][k]:.5f}' for k in WINDOWS]] for a in ARMS]), '',
              '各値は更新前online accuracy（%）。1001–3000はAdam初期過渡への感度記述。全体・末尾の不利益も保持する。', '',
+             '### 交差エントロピー（CE）も全seedを保持する', '',
+             table(['腕', *WINDOWS], [[a, *[f'{means[a]["ce_"+k]:.6f}' for k in WINDOWS]] for a in ARMS]), '',
+             '更新前の平均CE。accuracyの主判定は、CEや全指標の改善を意味しない。巨大だが有限な損失も除外・上限処理せず、同じ固定窓で併記する。', '',
              '## 実際に使われた応答と限界', '',
              '次は各層の実効native平均微分（convは受け手の実際のpool winner上、FCは全unit平均）のseed平均。', '']
     for layer in ('c1', 'c2', 'f1', 'f2'):
