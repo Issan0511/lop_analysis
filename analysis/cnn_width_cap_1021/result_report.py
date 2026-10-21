@@ -32,10 +32,20 @@ def resolve_input(path):
     path = Path(path)
     if path.exists():
         return path
+    relative = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else None
+    if relative is None:
+        # Provenance keeps the immutable original worktree path. Tracked run
+        # metadata may now live in a different checkout after worktree cleanup.
+        parts = path.parts
+        for i in range(len(parts) - 1):
+            if parts[i:i+2] == ("results", "cnn_width_cap_1021"):
+                relative = str(Path(*parts[i:]))
+                break
+    if relative is not None and (ROOT / relative).exists():
+        return ROOT / relative
     manifest = ROOT / "results/cnn_width_cap_1021/backup_manifest.json"
     if not manifest.exists():
         raise FileNotFoundError(f"missing output and no archive manifest: {path}")
-    relative = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else None
     entries = json.loads(manifest.read_text())["files"]
     entry = next(x for x in entries if x["source"] == str(path) or
                  (relative is not None and x["source_relative"] == relative))
