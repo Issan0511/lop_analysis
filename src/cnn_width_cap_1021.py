@@ -194,6 +194,30 @@ class CapEngine(B.BudgetEngine):
         return (*super()._state_tensors(), *self.s_ref, *self.cap_V,
                 *(x for vals in self.cap_stats.values() for x in vals))
 
+    def capture(self):
+        """Warm up and capture on the same stream, then restore every state.
+
+        PyTorch 2.13 rejects stale AccumulateGrad stream references when the
+        warm-up and capture streams differ. This changes scheduling only; the
+        eager/graph identity check verifies the numerical update separately.
+        """
+        keep = [q.detach().clone() for q in self._state_tensors()]
+        keep_act = self.act.state()
+        side = torch.cuda.Stream()
+        side.wait_stream(torch.cuda.current_stream())
+        with torch.cuda.stream(side):
+            for _ in range(3):
+                self.step()
+        self.cg = torch.cuda.CUDAGraph()
+        with torch.cuda.graph(self.cg, stream=side):
+            self.step()
+        torch.cuda.current_stream().wait_stream(side)
+        with torch.no_grad():
+            for q, saved in zip(self._state_tensors(), keep):
+                q.copy_(saved)
+        self.act.load_state(keep_act)
+        torch.cuda.synchronize()
+
     @torch.no_grad()
     def begin_task(self, batches):
         if tuple(batches.shape) != tuple(self.idx.shape):

@@ -183,7 +183,7 @@ def check_graph():
     a.capture()
     assert same(before, a._state_tensors())
     assert all(same(act[k], a.act.state()[k]) for k in act)
-    b = eng(data, True, graph=True)
+    b = eng(data, True, graph=False)
     b.load_full_state(a.full_state())
     a.advance(2)
     b.advance(2)
