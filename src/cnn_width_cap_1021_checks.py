@@ -258,11 +258,12 @@ def main():
         print(f"PASS {name}", flush=True)
     if args.cuda:
         with C.resource_locks("cuda", args.out or "/tmp/cnn_width_cap_1021_checks.json"):
-            C.NK.setup("cuda")
+            C.setup("cuda")
             check_natural_and_restart("cuda")
             check_graph()
         done += ["cuda_natural_and_restart", "cuda_capture_rewind"]
-    result = {"status": "PASS", "synthetic_only": True, "checks": done, "torch": torch.__version__}
+    result = {"status": "PASS", "synthetic_only": True, "checks": done, "torch": torch.__version__,
+              "override_stale_capture_stream": C.CAPTURE_STREAM_OVERRIDE}
     if args.out:
         p = Path(args.out)
         p.parent.mkdir(parents=True, exist_ok=True)

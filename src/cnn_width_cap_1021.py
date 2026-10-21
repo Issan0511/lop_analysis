@@ -36,6 +36,22 @@ BUDGET = 7800
 CAP_BETA = .01
 STATS = ("count", "applied", "ratio_sum", "ratio_min", "batch_pre_s_sum",
          "batch_post_s_sum", "pre_exceed", "post_exceed", "post_ratio_max", "ema_exceed")
+CAPTURE_STREAM_OVERRIDE = False
+
+
+def setup(device_str):
+    """Enable PyTorch's documented stale-stream compatibility in this process."""
+    global CAPTURE_STREAM_OVERRIDE
+    device = NK.setup(device_str)
+    setter = getattr(torch.autograd.graph, "set_override_stale_capture_stream", None)
+    CAPTURE_STREAM_OVERRIDE = device.type == "cuda" and setter is not None
+    if setter is not None:
+        setter(CAPTURE_STREAM_OVERRIDE)
+    return device
+
+
+def env_info(device):
+    return {**NK.env_info(device), "override_stale_capture_stream": CAPTURE_STREAM_OVERRIDE}
 
 
 def sha_file(path):
@@ -380,7 +396,7 @@ def calibrate(args):
     out = Path(args.out)
     if out.exists() or out.with_suffix(".json").exists():
         raise SystemExit(f"calibration already exists: {out}")
-    device = NK.setup(args.device)
+    device = setup(args.device)
     data = NK.Data(device, cifar=B.C51.Cifar100(Path(args.data)))
     initial = torch.load(args.source_b00, map_location="cpu", weights_only=False)
     target = torch.load(args.source_b01, map_location="cpu", weights_only=False)
@@ -415,7 +431,7 @@ def calibrate(args):
               "data_sha256": data.sha256, "probe_sha256": prep["probe_sha256"],
               "batch_sha256_task1": {str(s): prep["batch_sha256"][s][0] for s in SEEDS},
               "slots": slots, "beta": CAP_BETA, "initialization": "first_post_adam_batch_variance",
-              "spec_sha256": sha_file(SPEC), "git": NK.git_state(), "env": NK.env_info(device),
+              "spec_sha256": sha_file(SPEC), "git": NK.git_state(), "env": env_info(device),
               "sources_sha256": NK.source_hashes(),
               "seconds": time.time() - t0}
     NK.write_json(out.with_suffix(".json"), report)
@@ -433,7 +449,7 @@ def run(args):
         raise SystemExit("commit src/analysis/specs before a registered run")
     if "DRAFT" in SPEC.read_text().split("## 1.")[0]:
         raise SystemExit("spec is DRAFT")
-    device = NK.setup(args.device)
+    device = setup(args.device)
     data = NK.Data(device, cifar=B.C51.Cifar100(Path(args.data)))
     slots = main_slots(tuple(int(s) for s in args.seeds.split(",")))
     source, selected, indices = load_source(Path(args.source), slots)
@@ -465,7 +481,7 @@ def run(args):
             "data_path": str(Path(args.data).resolve()), "data_sha256": data.sha256,
             "batch_sha256": {str(s): v for s, v in prep["batch_sha256"].items()},
             "probe_sha256": prep["probe_sha256"], "spec_sha256": sha_file(SPEC), "graph": eng.graph,
-            "sources_sha256": NK.source_hashes(), "initial_runtime_precision": NK.env_info(device)}
+            "sources_sha256": NK.source_hashes(), "initial_runtime_precision": env_info(device)}
     statepath = out / "state.pt"
     book = {"rows": [], "probe": [], "train": [], "cap": [], "timing": [], "gits": [git]}
     active_task, task_started = 2, False
@@ -574,7 +590,7 @@ def reproduce(args):
     import gc
     if NK.git_state()["dirty_src_analysis_specs"] or "DRAFT" in SPEC.read_text().split("## 1.")[0]:
         raise SystemExit("commit a frozen spec and source before real-data reproduction")
-    device = NK.setup(args.device)
+    device = setup(args.device)
     data = NK.Data(device, cifar=B.C51.Cifar100(Path(args.data)))
     source = torch.load(args.source, map_location="cpu", weights_only=False)
     if source.get("boundary") != args.task - 1 or source["meta"]["budget"] != BUDGET:
@@ -617,7 +633,7 @@ def reproduce(args):
     report = {"run_id": EXPERIMENT, "role": "numerical_reproduction_before_intervention",
               "task": args.task, "steps": args.steps, "source_sha256": sha_file(args.source),
               "saved_steps_sha256": sha_file(args.saved_steps), "spec_sha256": sha_file(SPEC),
-              "git": NK.git_state(), "env": NK.env_info(device), "full40_vs_saved": full_comp,
+              "git": NK.git_state(), "env": env_info(device), "full40_vs_saved": full_comp,
               "selected20_vs_saved": selected_comp, "natural_sham20_vs_saved": sham_comp,
               "natural20_vs_sham20_bit_equal": exact_sham,
               "source_slots": source_slots, "selected_slots": selected_slots}
