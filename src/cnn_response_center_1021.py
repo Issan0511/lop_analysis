@@ -579,7 +579,7 @@ def run_arm(data, arm, out, steps=30000, graph=True, stop_file=None):
 
 
 def sign_test(diffs):
-    pos, neg = sum(x > 0 for x in diffs), sum(x < 0 for x in diffs)
+    pos, neg = sum(bool(x > 0) for x in diffs), sum(bool(x < 0) for x in diffs)
     n = pos + neg
     p = min(1., 2*sum(math.comb(n,k) for k in range(min(pos,neg)+1))/2**n) if n else 1.
     return {"n_positive": pos, "n_negative": neg, "n_tie": len(diffs)-n, "p_two_sided": p}
