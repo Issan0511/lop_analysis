@@ -179,6 +179,21 @@ def forward(P, xb, act, field=None, xd=None):
 
 def read_source(root, arm, seeds):
     path = Path(root) / "state.pt"
+    source_experiment = {"LR":"cnn_drive_verify_1009", "LRc":"cnn_center_1010"}[arm]
+    source_rel = Path("results") / source_experiment / arm
+    metadata_root = ROOT / source_rel
+    manifest_path = ROOT / "results" / source_experiment / "backup_manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    entries = {v["source"]:v for v in manifest["files"]}
+    def verify_archived_file(actual, relative):
+        entry=entries.get(str(relative))
+        if entry is None:
+            raise RuntimeError(f"No archive manifest entry for source: {relative}")
+        digest=sha_file(actual)
+        if digest!=entry["sha256"] or actual.stat().st_size!=entry["bytes"]:
+            raise RuntimeError(f"Archived state/checkpoint differs from registered manifest: {actual}")
+        return digest
+    full_digest=verify_archived_file(path,source_rel/"state.pt")
     st = torch.load(path, map_location="cpu", weights_only=False)
     if st["t"] != 30 or st["meta"]["epochs"] != 400 or st["meta"]["lr"] != .001:
         raise RuntimeError(f"Unexpected source protocol: {path}")
@@ -193,18 +208,27 @@ def read_source(root, arm, seeds):
     ckpt_hashes = {}
     for j, s in enumerate(seeds):
         cp = Path(root) / "ckpt" / f"{arm}_seed{s}_t30.pt"
+        cp_digest=verify_archived_file(cp,source_rel/"ckpt"/cp.name)
         one = torch.load(cp, map_location="cpu", weights_only=False)
         assert one["seed"] == s and one["arm"] == arm and one["tc"] == selected["tc"]
         for k in ("P", "m", "v"):
             assert all(tensor_equal(a[j], b) for a, b in zip(selected[k], one[k])), (cp, k)
         for k in one["act"]:
             assert all(tensor_equal(a[j], b) for a, b in zip(selected["act"][k], one["act"][k])), (cp, k)
-        ckpt_hashes[str(cp)] = sha_file(cp)
+        ckpt_hashes[str(cp)] = cp_digest
     assert selected["tc"] == 30 * 30000
-    archived_runtime = json.loads((Path(root)/"provenance.json").read_text()) if (Path(root)/"provenance.json").exists() else None
-    return selected, {"full_path": str(path), "full_sha256": sha_file(path), "checkpoints": ckpt_hashes,
+    provenance_path=metadata_root/"provenance.json"
+    table_path=metadata_root/"per_task.csv"
+    archived_runtime=json.loads(provenance_path.read_text())
+    if [tuple(x) for x in archived_runtime["slots"]]!=slots or archived_runtime["epochs"]!=400 or archived_runtime["n_tasks"]!=30 or archived_runtime["lr"]!=.001:
+        raise RuntimeError(f"Registered source metadata disagrees with saved state: {provenance_path}")
+    return selected, {"full_path": str(path), "full_sha256": full_digest, "checkpoints": ckpt_hashes,
                       "saved_provenance": st.get("gits", []), "source_slots": [list(s) for s in slots],
                       "archived_runtime": archived_runtime,
+                      "provenance_path":str(provenance_path), "provenance_sha256":sha_file(provenance_path),
+                      "reference_table_path":str(table_path), "reference_table_sha256":sha_file(table_path),
+                      "archive_manifest_path":str(manifest_path), "archive_manifest_sha256":sha_file(manifest_path),
+                      "archive_link_verified":True,
                       "selected_state_sha256": tree_hash(selected)}
 
 
@@ -223,7 +247,7 @@ class Data:
         for arm, root in (("LR", lr_root), ("LRc", lrc_root)):
             self.sources[arm], self.source_meta[arm] = read_source(root, arm, seeds)
             archived = self.source_meta[arm]["archived_runtime"]
-            if archived is None or archived.get("data_sha256") != self.cifar.sha256:
+            if archived.get("data_sha256") != self.cifar.sha256:
                 raise RuntimeError(f"CIFAR archive does not match saved source provenance: {arm}")
         for k in ("g_lab", "g_batch"):
             for s in seeds:

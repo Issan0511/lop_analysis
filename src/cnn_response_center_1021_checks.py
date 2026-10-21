@@ -215,7 +215,7 @@ def real(data,out,graph=True,release_info=None):
             ys.append(y)
         B.Y.copy_(torch.stack(ys))
         ev=M.E.evaluate(B.P,B.X,B.Y,B.act,chunk=20)
-        tablepath=Path(data.source_meta[receiver]["full_path"]).parent/"per_task.csv"
+        tablepath=Path(data.source_meta[receiver]["reference_table_path"])
         cols=("memo_acc","fit_ce","zbar_c1","zsd_c1","mob_c1","mob_pool_c1")
         with tablepath.open() as f:
             reference={int(r["seed"]):r for r in csv.DictReader(f) if int(r["task"])==30}
