@@ -71,3 +71,12 @@ run: `kappa_cnn5p1_1022` / branch: `claude/kappa_cnn5p1_1022` / worktree: `wt/ka
 - 本 spec は実装の前に commit・push する。結果を見たあとで本文を書き換えず、変更は追補で記録する。
 - 出力: `results/kappa_cnn5p1_1022/`（rows.csv・checks.json・tables.md・verdict.json・summary.md）、unit 単位の生配列は `results/kappa_cnn5p1_1022/raw/`（git 外、終わったら `obsidian-research-data/kappa_cnn5p1_1022/` へ退避して `backup_manifest.json` を commit）。
 - 終わったら `~/Projects/claude/CLAUDE.md` §4 の片付け（退避・main へ push・worktree 削除）。vault の結果ノートは `測定/実ラベル5p1CNNで装填を測る_κの再整列_結果_1022.md`、現在地に 1 行。
+
+## 追補 1（検査の統計量の修正。登録: この commit。780 予算の検査を通したあと、本計算（rows.csv）の前）
+
+§4 の検査を 780 予算で走らせて、次の 4 点を直した。主量（§3）と予測（§5）は変えていない。
+
+1. **C1 の許容**: 保存済み `per_task.csv` の `train_acc` は有効数字 10 桁で書かれているので、「厳密に一致」を「差 ≤ 1e−9」に替えた（実測の差は 1e−16、40 slot 中 21〜28 は厳密に一致）。`dmean_med_f2` の一致は 5e−10。順伝播は訓練時と同じ状態・同じ画像集合を再現している。
+2. **C2 の logit**: 恒等式 A = Σ[(ℓ_y − ℓ̄) − b^c_y] の ℓ を、訓練の順伝播の float32 の logit ではなく、float64 の特徴と head から計算し直した logit にする（float32 の logit では相対誤差 1e−8 で恒等式が「破れた」ように見える。float32 の logit との相対差 5〜7e−7 は記録する）。補題の L_K・J・D も float64 の logit から出す。精度（acc）だけは訓練の順伝播の logit で出し C1 に使う。恒等式の相対誤差は 2e−16。
+3. **C4(ii) の統計量**: ラベルを画像の間で置換すると ‖F‖² が潰れるので κ は 0 に近づかない（κ_perm/κ の中央値 1.6〜2.3）。κ は尺度の非不変量だから当然で、対照は尺度不変の cos² で採点する: cos²_perm の中央値 ≤ 10/(K·H) = 0.02（実測 0.003〜0.008、本物の cos² は後述）。|Q_perm|/|Q| = √(cos²_perm/cos²) は記録だけ（0.13〜0.17）。
+4. **C4(iii) は空虚**: F の行和が 0 なので、head にクラスで一定の行を足しても A = ⟨v^c, F⟩ は変わらず、恒等式は破れない（§3 の文は誤り）。代わりに中心化しない head のノルムで作った cos²（‖W‖² を分母に使う版）を記録する。主量の cos² は中心化した v^c で出す。
