@@ -1,0 +1,4030 @@
+{
+  "source_root": "/home/kubo/project/Nakatsuka/lop_analysis_chargpt_cl_1019",
+  "source_head": "033679e0f1a3d313e1e3110e22c8f1cac3c36628",
+  "required_source_head": "033679e0",
+  "copied_from": {
+    "analysis/chargpt_load_fold_1021/load/measure.py": "cd225d27b47a614e018ec3d8c6ecf301e68f91e2",
+    "analysis/chargpt_load_fold_1021/load/reanalyze_p07.py": "2cb251ac1b11978717e949a80abf673893ed1617"
+  },
+  "device": "cpu",
+  "dtype": "float64",
+  "threads": 8,
+  "torch": "2.13.0+cu130",
+  "numpy": "2.5.1",
+  "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:27:36) [GCC 11.2.0]",
+  "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+  "input_code_sha256": {
+    "/home/kubo/project/Nakatsuka/lop_seed10/specs/spec_chargpt_seed10_1022.md": "72b9e065df166c42c18e48632d3d10b98c24201f5b684ff67e5e4c0a20098885",
+    "/home/kubo/project/Nakatsuka/lop_seed10/specs/chargpt_seed10_1022_runbook.md": "4da1fe344ea29f34f147ea6e9d8b02103c25d1154ef0859fb722c3d087c626b4",
+    "/home/kubo/project/Nakatsuka/lop_analysis_chargpt_cl_1019/src/chargpt_cl_1019.py": "35f86e071cf354ce8ce8c9776e3d24bd91160a233727e78ff92ac732b7fe853c",
+    "/home/kubo/project/Nakatsuka/lop_analysis_chargpt_cl_1019/src/chargpt_cl_1019_kune.py": "cacbe6001171735b119b60783023b9e1695b2f8a85baaa7172f0640c973854e8"
+  },
+  "probe": {
+    "sequences": 64,
+    "tokens_per_sequence": 128,
+    "eval_sequences": 256,
+    "chain_alpha": 0.01
+  },
+  "null": {
+    "permutations": 1000,
+    "seed": 1021000
+  },
+  "states": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    25,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100
+  ],
+  "arms": [
+    "C3",
+    "ReLUcap"
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "completed_units": [
+    {
+      "arm": "C3",
+      "seed": 0,
+      "n_states": 36,
+      "elapsed_seconds": 33.01315355300903,
+      "finished": "2026-10-22T22:45:51+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 1.5547661781311035
+        },
+        {
+          "task": 1,
+          "seconds": 0.9996988773345947
+        },
+        {
+          "task": 2,
+          "seconds": 0.8510453701019287
+        },
+        {
+          "task": 3,
+          "seconds": 0.7047951221466064
+        },
+        {
+          "task": 4,
+          "seconds": 0.6958804130554199
+        },
+        {
+          "task": 5,
+          "seconds": 0.6858913898468018
+        },
+        {
+          "task": 6,
+          "seconds": 0.7535276412963867
+        },
+        {
+          "task": 7,
+          "seconds": 0.7165207862854004
+        },
+        {
+          "task": 8,
+          "seconds": 0.7236227989196777
+        },
+        {
+          "task": 9,
+          "seconds": 0.9428927898406982
+        },
+        {
+          "task": 10,
+          "seconds": 1.0307180881500244
+        },
+        {
+          "task": 25,
+          "seconds": 0.7835421562194824
+        },
+        {
+          "task": 39,
+          "seconds": 1.6481611728668213
+        },
+        {
+          "task": 40,
+          "seconds": 0.7847931385040283
+        },
+        {
+          "task": 41,
+          "seconds": 0.7336108684539795
+        },
+        {
+          "task": 42,
+          "seconds": 0.863605260848999
+        },
+        {
+          "task": 43,
+          "seconds": 0.7426807880401611
+        },
+        {
+          "task": 44,
+          "seconds": 0.7163610458374023
+        },
+        {
+          "task": 45,
+          "seconds": 0.75872802734375
+        },
+        {
+          "task": 46,
+          "seconds": 0.7267277240753174
+        },
+        {
+          "task": 47,
+          "seconds": 0.7510197162628174
+        },
+        {
+          "task": 48,
+          "seconds": 3.7275683879852295
+        },
+        {
+          "task": 49,
+          "seconds": 0.7704296112060547
+        },
+        {
+          "task": 50,
+          "seconds": 0.7093050479888916
+        },
+        {
+          "task": 89,
+          "seconds": 1.1129283905029297
+        },
+        {
+          "task": 90,
+          "seconds": 0.7443456649780273
+        },
+        {
+          "task": 91,
+          "seconds": 0.7467784881591797
+        },
+        {
+          "task": 92,
+          "seconds": 0.7721529006958008
+        },
+        {
+          "task": 93,
+          "seconds": 0.7573752403259277
+        },
+        {
+          "task": 94,
+          "seconds": 0.7624621391296387
+        },
+        {
+          "task": 95,
+          "seconds": 0.8556725978851318
+        },
+        {
+          "task": 96,
+          "seconds": 0.7367763519287109
+        },
+        {
+          "task": 97,
+          "seconds": 0.7571320533752441
+        },
+        {
+          "task": 98,
+          "seconds": 0.8336982727050781
+        },
+        {
+          "task": 99,
+          "seconds": 0.7467901706695557
+        },
+        {
+          "task": 100,
+          "seconds": 0.7834751605987549
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/init.pt": "4394b267537c3dd6895b2ac1567e9d3edb190b3cfbf2af648270c6d4c45fd226",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task1.pt": "fb1984ce09f28f13e2cd7a55b67ca529e0ed85bdf19b81a265c8f40237b0d525",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task2.pt": "f61b25a39d9f8b5e734b8a46c93177fd97b10eaa5136c75152a3524c7e199c84",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task3.pt": "31c90f9fe6dda14b1235f110c0ad09d7b7c01ad620df3e888b650dd82ea32e86",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task4.pt": "6b3f54d55aef9fdf5fdab6a760962a388892cac670da61e39eae48ce48c18028",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task5.pt": "8208eaf09f732f223965f02c6ce73ff67f1c9d33141c15fc92b70e382e9f25c6",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task6.pt": "fb02a207efe5b623fdbec9c28701cb5ee16603aa35673c0c2d395494fee86c3b",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task7.pt": "d4f70c965846bef1034a2e1edf4a43f2fae4a8c61ad04f71748ec92b4859b783",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task8.pt": "5ce1f993552a48c90a44d726ead0bf58e81b72149c6dc70f19bfa29af1e88187",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task9.pt": "0a0b02a5383dff768a3ac71c1673282f85343806cce25c22972500ca76094622",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task10.pt": "f45298386c0aa70463d2f653b292560c2207176801477ec67ed915c5f25d376f",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task25.pt": "6c9581c480f6ee0ad95465b2bc0fb03df4f350e552e76629f146a0d100304708",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task39.pt": "bab8999aa34e261edd863ec21cd4eec765e1fb1205cdb0936b2f425ca6060451",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task40.pt": "a4a86a04fc73b2e0b5961b853c9287f00af46e207540f15f965139243479cae8",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task41.pt": "be6cb2f2145e4b6149609f6e718468ff92b3a3a404fad7630909a393126859b7",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task42.pt": "81f50a0601e906f73363d90141b918fd36652489de3b164ca5dd093999f8b7ff",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task43.pt": "ad4cea28b98496c188a7c9f85645e00e5a168e11cc315563e0c58ee373a936e0",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task44.pt": "f2ab7cf938349b10f7adf8847bdcab1c018343a7401e55809927001c157fd448",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task45.pt": "c11f88372ddb3fc0b26c25e0bffc9bb564163edf34f3d904b7ea54062b0b33a3",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task46.pt": "128f441d9303d4cb1b0904d44d2a7585e1f96ce8ce5d34f135cde71b1b92a381",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task47.pt": "485fe75cbec57d6132a5f379c9ddb971c36c342307bbbed59e6974fdc654868e",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task48.pt": "4f8c3978b7ab94d07eab98a800f22d4f73f8f776b644c4502223e3dae57b76b3",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task49.pt": "4acf8d9ffa50961a3ba3d527b1617d98973000bc3c116b1aa38e3db944fba0cc",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task50.pt": "1ec8eb9b616a99cb8ec361480cf9a3cbe6a329176e856c8b9f0decc88b6fcdf5",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task89.pt": "914e7a6c5aff239db894204ea348a66a3e2d1219e57ee236b47d6762b58a578a",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task90.pt": "27e75e8811e7654ec50fab300b0ab688808333167ce59daff74348eae41d8856",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task91.pt": "c59b3015ad45322233b9dba9afe4d9ed4979a0f4ddc5225214671c0e6adfedda",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task92.pt": "4ce4aa3a6b69002e1cc22003c2a4c9972efdbe9afc50312c29e6c428ef14ea8a",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task93.pt": "0b58b033b3c119b47b3217061e8d540a781b41f0119852bc7eb136a8eb2da239",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task94.pt": "22486b4fb906bb90ceb456d5c7fda7033d408dc89f4d5ef49cc5e2f0e680f35f",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task95.pt": "45ac3b0c28eb18828e8704cabe2c767f7f2dbd07b059639c20bb1a9bb783ef0f",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task96.pt": "eb7196df174366600dd833c42948a88ed5009bae4c0546c90f639fe05943d25c",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task97.pt": "d537ae106376d0f712a95bfdf5120bf7f07042388d74dd6fd903bd9f2313f851",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task98.pt": "0f7e366477beebd17d9756efc3c91925c9f296454fe5e55e9587ef07aad8a1e4",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task99.pt": "4f183b06d60bcb3e9853b2a7f7421d2cde56f46b1d2d05fc6f11eb691d2ad91d",
+        "results/chargpt_cl_1019/M2/C3/seed0/ckpts/task100.pt": "7f2a0e2152c9ac4cb6442bd19f30f41cf03ab02d832b2f5fde70ac5e97cb9053"
+      },
+      "outputs": {
+        "parts/C3_seed0_head.csv": "ba4d82a5b471d9e8a3ee46d44ca53b2ca793720b96fc296a6d097f25431d2770",
+        "parts/C3_seed0_states.csv": "abeb1f313396f79f6cdf5d913d198e6de95f0a440ad0e9b90f869d6dc89b9a96",
+        "raw/units_C3_seed0.raw.npz": "65a01d3ccff62e34fb12030cb0387ecabfabc6c4d05cd7b1a526d0e2581e9d7f"
+      }
+    },
+    {
+      "arm": "C3",
+      "seed": 1,
+      "n_states": 36,
+      "elapsed_seconds": 37.826581716537476,
+      "finished": "2026-10-22T22:46:29+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.7560460567474365
+        },
+        {
+          "task": 1,
+          "seconds": 0.7392537593841553
+        },
+        {
+          "task": 2,
+          "seconds": 4.117534160614014
+        },
+        {
+          "task": 3,
+          "seconds": 0.7740950584411621
+        },
+        {
+          "task": 4,
+          "seconds": 0.692833423614502
+        },
+        {
+          "task": 5,
+          "seconds": 0.8216533660888672
+        },
+        {
+          "task": 6,
+          "seconds": 2.2899858951568604
+        },
+        {
+          "task": 7,
+          "seconds": 0.7532799243927002
+        },
+        {
+          "task": 8,
+          "seconds": 0.8024160861968994
+        },
+        {
+          "task": 9,
+          "seconds": 0.7003085613250732
+        },
+        {
+          "task": 10,
+          "seconds": 0.7722930908203125
+        },
+        {
+          "task": 25,
+          "seconds": 0.784977912902832
+        },
+        {
+          "task": 39,
+          "seconds": 0.7976877689361572
+        },
+        {
+          "task": 40,
+          "seconds": 0.7805013656616211
+        },
+        {
+          "task": 41,
+          "seconds": 0.9386637210845947
+        },
+        {
+          "task": 42,
+          "seconds": 1.0030920505523682
+        },
+        {
+          "task": 43,
+          "seconds": 0.7847442626953125
+        },
+        {
+          "task": 44,
+          "seconds": 0.7717797756195068
+        },
+        {
+          "task": 45,
+          "seconds": 0.7481613159179688
+        },
+        {
+          "task": 46,
+          "seconds": 0.7614037990570068
+        },
+        {
+          "task": 47,
+          "seconds": 0.7738127708435059
+        },
+        {
+          "task": 48,
+          "seconds": 0.7798054218292236
+        },
+        {
+          "task": 49,
+          "seconds": 0.7864067554473877
+        },
+        {
+          "task": 50,
+          "seconds": 0.7880010604858398
+        },
+        {
+          "task": 89,
+          "seconds": 0.7980048656463623
+        },
+        {
+          "task": 90,
+          "seconds": 0.7958235740661621
+        },
+        {
+          "task": 91,
+          "seconds": 0.7472047805786133
+        },
+        {
+          "task": 92,
+          "seconds": 0.7716546058654785
+        },
+        {
+          "task": 93,
+          "seconds": 0.7881488800048828
+        },
+        {
+          "task": 94,
+          "seconds": 0.7313191890716553
+        },
+        {
+          "task": 95,
+          "seconds": 0.7776923179626465
+        },
+        {
+          "task": 96,
+          "seconds": 0.7418735027313232
+        },
+        {
+          "task": 97,
+          "seconds": 1.2575657367706299
+        },
+        {
+          "task": 98,
+          "seconds": 0.7817282676696777
+        },
+        {
+          "task": 99,
+          "seconds": 5.082118988037109
+        },
+        {
+          "task": 100,
+          "seconds": 0.8074512481689453
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/init.pt": "503bc80069058d78ffd34ea55a534f99fbd335ebe2aebc69afa326428721f989",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task1.pt": "a4ce5eff56795dda3b767516485197f2c2d612a2a08eb851cbb1486348e30077",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task2.pt": "89ce0d6b72427b966055243c7620716dbf9ef60821251a3be7cc32c6b4c6c964",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task3.pt": "4d805a3122bbb7925e22450f1b5012593750bd557878ac90369ac683a9bffe8c",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task4.pt": "50117f3851e9dba02d89a164e3feda8953635c7b723bc4ffcdc4026436777063",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task5.pt": "17f8b90b709afef413b3ea673e141d86b45915510f0895cc7917c7b26b811053",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task6.pt": "14ebebb32da41b2b5a7c18403c9e316ab9626c16d6e6caf853d6a1b99cd4e1ce",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task7.pt": "0b5a02473f880b5d17c05b9c6275461101f1f5e42dc22fc8404e8652d43371c6",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task8.pt": "7ef7a7bb692e41069bd8b6cecc69f61daff419b4cb6b5a7565a4547c876a2177",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task9.pt": "ba9c53aaed1ce3ef572e873a75d603512c706124673a7b77abeb6b6562f27ea4",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task10.pt": "ff83c5cc8e16472567b7d6c0efef181f41d033ff6a1029ee330086c488ec9e5a",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task25.pt": "5e45dc038ef6849372b7073b3c89462ec8b0aa008a0595a32bf8bc7473f869ea",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task39.pt": "853cd91c744d8bf64546d39d9ace112cbcbaf3efbb06a4840dbde5964c692ad5",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task40.pt": "c9aa2f1aa9ea7de381d8dbaf053dad88701fee630dcd3812229a66fbe55ef65c",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task41.pt": "fdc2e16b47db3947139a8fe600dd30678fe4ed5620497bf48306508c95f17f23",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task42.pt": "82dc07cbeba478032c7758c367fc6c0fc6eebcf6d2e151ba2e21ab0168e3d3ce",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task43.pt": "24d03037ef1c7ed921a81567b9b4f8221a5c0267b680f8311892feb26805a302",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task44.pt": "bb1fa359f3783817cc010a4e6bbf874c3992e6320a7ae3c13ea12bcf56cdd5db",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task45.pt": "4b02fe23a467a59582467934d194ce99dce1cc1b06669e35f9422f6f595e6a03",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task46.pt": "743ce9bf33bb1e7f233eead7a2351aec8855b379b6af9f67a873064207ac18dd",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task47.pt": "62d79f70f7083c543ffc7c2c49df29fe0f2ba751643c253719c9eb95799d9481",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task48.pt": "7ea0ceded81ec29ef164fc6bf9333ac91453b35fda65a1e84eb3b5e157448da6",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task49.pt": "459b80586396f3264e721d8f097d174d3f73725947b0fa7966588a7a626af93a",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task50.pt": "d9c600a7fc3376644c22706ecf2e4caa91ebd635f0d687b8ee3ea6923be015e3",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task89.pt": "fbd095a75394d726dba11bb29ec1e844d30fc1d15383fda0b2e6bab4b155acb6",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task90.pt": "f9e942d3928f8485b86bc136067aee385cd051f62b741954adfdf05e9c3932b2",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task91.pt": "3b6e13a60427b470c23c441cd050ebe508b19228ae7d68dec9da6eeeaa12534d",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task92.pt": "50ac9ec924f3e6e0d7ab19270c4372913f67c176f3e72d38115052e557b1f4e9",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task93.pt": "9a0d0316b734e405af021d2bd20f911023b3f678cf0e8e53d04a068bbb7c98e2",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task94.pt": "3c5fbad18444dcee6401a25dbab6b81e561987394c50683d37c18f7bbb874012",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task95.pt": "487b59308f1f93ec10b4441f742e7ac63baad971df63e979cfc6a7e2c4239985",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task96.pt": "420d4ad895565ab92837c79037a2f612d55aa4e933822305bd769c629f3a49a8",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task97.pt": "e2d290effccb2bffddf8f76da731296d2d29338c5c45367e51d6c4497cfca078",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task98.pt": "c36a8e25a24e5ab7df5294159ee24746b9f34b9acf7d7404762f293c86e6da97",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task99.pt": "a28f4edbd1fa5e9066fdd27539b652ea70065ad170794704006c90a73b07ecb6",
+        "results/chargpt_cl_1019/M2/C3/seed1/ckpts/task100.pt": "537d82e2f0743c42e494c63139c805832f027639dd62d4915b4a58237bc41dc8"
+      },
+      "outputs": {
+        "parts/C3_seed1_head.csv": "a071719943c2bf08c707ce6a878f1ab7c9c87bcb800aab47ed237f5409181a6e",
+        "parts/C3_seed1_states.csv": "6a967caddf1d5cf63ffab26f987f7895f76428ca45b10e0efcda62ff81b1eacf",
+        "raw/units_C3_seed1.raw.npz": "2daf58e101dd320957b73a1184673baa7a4dfb445964f49f06c4769c63b18ca0"
+      }
+    },
+    {
+      "arm": "C3",
+      "seed": 2,
+      "n_states": 36,
+      "elapsed_seconds": 46.892021894454956,
+      "finished": "2026-10-22T22:47:16+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.7833287715911865
+        },
+        {
+          "task": 1,
+          "seconds": 0.772068977355957
+        },
+        {
+          "task": 2,
+          "seconds": 0.8703970909118652
+        },
+        {
+          "task": 3,
+          "seconds": 0.8962059020996094
+        },
+        {
+          "task": 4,
+          "seconds": 0.7866337299346924
+        },
+        {
+          "task": 5,
+          "seconds": 0.7827014923095703
+        },
+        {
+          "task": 6,
+          "seconds": 1.1468899250030518
+        },
+        {
+          "task": 7,
+          "seconds": 0.7888467311859131
+        },
+        {
+          "task": 8,
+          "seconds": 1.0287449359893799
+        },
+        {
+          "task": 9,
+          "seconds": 0.8192980289459229
+        },
+        {
+          "task": 10,
+          "seconds": 0.799485445022583
+        },
+        {
+          "task": 25,
+          "seconds": 0.8543798923492432
+        },
+        {
+          "task": 39,
+          "seconds": 0.7559199333190918
+        },
+        {
+          "task": 40,
+          "seconds": 0.7354371547698975
+        },
+        {
+          "task": 41,
+          "seconds": 0.7653555870056152
+        },
+        {
+          "task": 42,
+          "seconds": 0.7638611793518066
+        },
+        {
+          "task": 43,
+          "seconds": 0.7557253837585449
+        },
+        {
+          "task": 44,
+          "seconds": 17.683923721313477
+        },
+        {
+          "task": 45,
+          "seconds": 0.8253636360168457
+        },
+        {
+          "task": 46,
+          "seconds": 0.7762718200683594
+        },
+        {
+          "task": 47,
+          "seconds": 0.8238704204559326
+        },
+        {
+          "task": 48,
+          "seconds": 0.8172833919525146
+        },
+        {
+          "task": 49,
+          "seconds": 0.8632001876831055
+        },
+        {
+          "task": 50,
+          "seconds": 0.8713951110839844
+        },
+        {
+          "task": 89,
+          "seconds": 1.0074715614318848
+        },
+        {
+          "task": 90,
+          "seconds": 0.9005007743835449
+        },
+        {
+          "task": 91,
+          "seconds": 0.7943048477172852
+        },
+        {
+          "task": 92,
+          "seconds": 0.8056681156158447
+        },
+        {
+          "task": 93,
+          "seconds": 0.8952677249908447
+        },
+        {
+          "task": 94,
+          "seconds": 0.8070602416992188
+        },
+        {
+          "task": 95,
+          "seconds": 0.7977771759033203
+        },
+        {
+          "task": 96,
+          "seconds": 0.7490482330322266
+        },
+        {
+          "task": 97,
+          "seconds": 0.758530855178833
+        },
+        {
+          "task": 98,
+          "seconds": 0.736940860748291
+        },
+        {
+          "task": 99,
+          "seconds": 1.0613296031951904
+        },
+        {
+          "task": 100,
+          "seconds": 0.7839188575744629
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/init.pt": "c3df54526df4df5ff2e0f43137d2344a706522fcc3b39ae2bdb7554198c45ecc",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task1.pt": "025a40b997d656e627a066183aa332b26ca9711b05e6676b6cbc909bea1332f6",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task2.pt": "0ba8d53d082660c49db607db6a469c9410c79828ffc73cdf1aa33278cc53b966",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task3.pt": "80ef63e29d2b20b45b4831ad94003a801ef8c4d75e729f106af01d8b10595011",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task4.pt": "51332157a625a67fcc5861fbfe576f0be6c25818c74273edb82bb124d36d03ab",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task5.pt": "eb224047af3a56d65ed06e7a14dd023c3abc4f17768e236c00f159ae81ff576e",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task6.pt": "d307c61725da468d31ddd2edc0b0b1b657ee07c656f40953bb8342625d0be9c9",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task7.pt": "0276b35f3c07e796e2a07b22fdb8a36c44754d4edd2b1d4062fa2a3a75230d0c",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task8.pt": "e5167426a87010b68ffbc33db174fb6b4b27c67fb2464d1db6c97578003a6690",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task9.pt": "aec661cbbb47bf1d36f8a52b16ed4923c8d4fcf5e655e443fed6acd601be4609",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task10.pt": "9e667e53dc063d78594eb3f1129c95dfd92686d915eacb8191c1acfc3f319214",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task25.pt": "0212dad9efc17024a4f8f81a27aa70dbc5d8d8a941b23d7246ea656ef5c611a4",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task39.pt": "858d4efec4afd316b1fbc158f8a8f5b1fb944f996279d4e9b15ed97d6dce9aa5",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task40.pt": "e128250dc46419adb815b145991fdcbe4f7ccde313e2820ab56fd865035fff85",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task41.pt": "6bfbb1d397924ba4628927087aaa992f8dc19a5ac373a4ba9afe73e6e77e38ea",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task42.pt": "0ae7e92d03e057ae5bd7c0347de71f2cdbc04819a62776b690adaac59b632c2a",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task43.pt": "37b88736fc4face4a90b51d79a0119734742ac186b90a86acae0a2b41b6a49fc",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task44.pt": "98f95cb5d376d3e88edc8c9a351e41455c70b3987cbf960b7d81651c64008779",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task45.pt": "73098ec3d9346b09560e02f7ce24b7128790857d5dfcca965fb0a7fad5269872",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task46.pt": "b9d69543cc49c0de3567e9df759b8873afffaf83d7255a8c3cc7839f42787e4f",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task47.pt": "aa3282369adbf82d8ccb282d710e3f68826140f73fd1c1f433d217ae0a005d31",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task48.pt": "fdfb1224291132016342fdc7d70268e7b89887ab74a3ae7b3e0441e01699bfa2",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task49.pt": "1d1e9690a043e63d7043101eff00ee17fb705e2e3e5e90c5dc27275a767bc1ea",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task50.pt": "0e45ca9707cae1da1a757b9bb414005ff9b3327761ded3b15ef3b6f66de4406d",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task89.pt": "06af3d650b9d2c22fe5cbe1486104bff074fa1631482cc7c52b321d73c98cf95",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task90.pt": "e0cf3e19508cd6bcd7cde84141a53dee54ad31a2ea6a66b7a2e5be8bb4176a41",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task91.pt": "01d0c3077cf958378659b6726faeaa3fad4c63e26433e9e0e13858244be683c7",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task92.pt": "a580571aabc9b16eb163e18d230a67417da5f16d4f5c3e35e9421da395e2971f",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task93.pt": "76a137712b07c247958c0c3a7b509f0ab389a53feaa4598b02bab58f8c655138",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task94.pt": "378661cc0d648efc760ab773ab9c6977f3a24d3feb3e99bd42ce7ec421318886",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task95.pt": "b048df3ffd11e0a72604af61c719c0ecbfc6f4832c5e456c33e6d2598bea6ef6",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task96.pt": "20651c9f1732b836f013134cf1f3291561aa9394a4eccce57a66bd8ebbe65062",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task97.pt": "0bfd1066146911a8f9902a0d3431cb75d87254deaa03229d2329461da2d28848",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task98.pt": "5b8a5bf296f88b44a9fa8389958a47cecba2923940f85897835f48bfbec1332f",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task99.pt": "d1a50672a34f4f86a9092964371189c115bbae8609881d9be818f698f96d8bc8",
+        "results/chargpt_cl_1019/M2/C3/seed2/ckpts/task100.pt": "571ca6e73aa35b93aafa0d1d9a162bec830ec819f8359bf8b7da5d2e9699fa1a"
+      },
+      "outputs": {
+        "parts/C3_seed2_head.csv": "dc96603f232c45c318455a160d34cb52fdf2b50ea997e29221dedd415306211f",
+        "parts/C3_seed2_states.csv": "c9b343911ec79ba13af80491c592d8079b94066736fce3e6da69abd4987c3ab7",
+        "raw/units_C3_seed2.raw.npz": "aba14bd5506dac49d1f21facc21c6196bde636766c3f598fe00f64cef8bb032a"
+      }
+    },
+    {
+      "arm": "C3",
+      "seed": 3,
+      "n_states": 36,
+      "elapsed_seconds": 32.77259635925293,
+      "finished": "2026-10-22T22:47:49+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.8273365497589111
+        },
+        {
+          "task": 1,
+          "seconds": 0.8797597885131836
+        },
+        {
+          "task": 2,
+          "seconds": 0.8727610111236572
+        },
+        {
+          "task": 3,
+          "seconds": 0.8857309818267822
+        },
+        {
+          "task": 4,
+          "seconds": 0.8208155632019043
+        },
+        {
+          "task": 5,
+          "seconds": 0.7970616817474365
+        },
+        {
+          "task": 6,
+          "seconds": 0.8290746212005615
+        },
+        {
+          "task": 7,
+          "seconds": 0.8149251937866211
+        },
+        {
+          "task": 8,
+          "seconds": 0.7382183074951172
+        },
+        {
+          "task": 9,
+          "seconds": 0.7300245761871338
+        },
+        {
+          "task": 10,
+          "seconds": 0.7981579303741455
+        },
+        {
+          "task": 25,
+          "seconds": 1.6719095706939697
+        },
+        {
+          "task": 39,
+          "seconds": 1.005620002746582
+        },
+        {
+          "task": 40,
+          "seconds": 0.716045618057251
+        },
+        {
+          "task": 41,
+          "seconds": 0.8168120384216309
+        },
+        {
+          "task": 42,
+          "seconds": 0.7972855567932129
+        },
+        {
+          "task": 43,
+          "seconds": 0.7930469512939453
+        },
+        {
+          "task": 44,
+          "seconds": 0.8075172901153564
+        },
+        {
+          "task": 45,
+          "seconds": 0.738703727722168
+        },
+        {
+          "task": 46,
+          "seconds": 0.7728109359741211
+        },
+        {
+          "task": 47,
+          "seconds": 0.7718260288238525
+        },
+        {
+          "task": 48,
+          "seconds": 0.7774434089660645
+        },
+        {
+          "task": 49,
+          "seconds": 0.7795200347900391
+        },
+        {
+          "task": 50,
+          "seconds": 0.7732903957366943
+        },
+        {
+          "task": 89,
+          "seconds": 0.7758188247680664
+        },
+        {
+          "task": 90,
+          "seconds": 0.8427975177764893
+        },
+        {
+          "task": 91,
+          "seconds": 0.7785649299621582
+        },
+        {
+          "task": 92,
+          "seconds": 0.7679271697998047
+        },
+        {
+          "task": 93,
+          "seconds": 3.7151060104370117
+        },
+        {
+          "task": 94,
+          "seconds": 0.7800514698028564
+        },
+        {
+          "task": 95,
+          "seconds": 0.8251752853393555
+        },
+        {
+          "task": 96,
+          "seconds": 0.8329041004180908
+        },
+        {
+          "task": 97,
+          "seconds": 0.7943234443664551
+        },
+        {
+          "task": 98,
+          "seconds": 0.7869820594787598
+        },
+        {
+          "task": 99,
+          "seconds": 0.7928564548492432
+        },
+        {
+          "task": 100,
+          "seconds": 0.8364653587341309
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/init.pt": "3f65e6889224edbfb5a2be4c7c586a1065421f398c72d74f5615415771f3609b",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task1.pt": "91c2d34b4a64997aa5c78a4c14632db189928060ea0c5c837c7aefab882d2a70",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task2.pt": "9b2a085e24b9282dce83ea73aafde3bc45e09425d51883dd3742f0ba8ba62f14",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task3.pt": "1f853e180b1415b1298d70bb0fac02adfc3d08c9ccf3745b9eb372f5746c93af",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task4.pt": "3c925ce697e2af806467a5bc7546c1ffe74b461e813fb7be1f48f49e91c6adfb",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task5.pt": "5e4ad93105e06851b08f0392ef536b5d0ebb22d94d99c178cfebd6cba201eb5f",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task6.pt": "bad0a41d5444c95cba6f1dd1ca42f177abfa153e916d23e51ad7151170fe6f7e",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task7.pt": "2926186ad9f43068002a000ec052bddf839a16c1bee85530da5eb63d83fa58cd",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task8.pt": "aa5db201e14fb27344394189f8e1aca43737c41c894c0e96220a7515d03701ae",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task9.pt": "f9e362b873849b041cdc49133cd71c119ee4c3e018eae550fac2933995cf6bbd",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task10.pt": "ffec989b283efb51e8b0bee02a846d353187f279c7b72332ce298a09f7af45ab",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task25.pt": "f1002232684d170e61a25d7cd13dc3b8608b1c8950b237b91da67c01fd149a5b",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task39.pt": "0803f0a8c680494e904cd75f88141a60b4d16c1387795d920489dd4b04469084",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task40.pt": "e3df2359b6438d56e52272cd75e0aef1cab145ca3a88140acacf4beb7ce1406c",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task41.pt": "f48a91efd3227a2c104de0044cc45255d5e50a28ced5afac566da1450404a6d1",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task42.pt": "ff65251ac8518cf96803a7fa68ac855f3408212ffc1c4e305b8b36d59f9ae8e7",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task43.pt": "01977fd241594a8375fdf15e108c3afff853c2fa9b9f53c4b26df4c62c7d2a3d",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task44.pt": "71c677a409eefa08065b6efed0f5812c9a711dc1c7b958701f0273ab253bedad",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task45.pt": "f34c9166d269c19ae095733768fad717bdceb9f1251951c7d64378de191600c6",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task46.pt": "54f1a2c119ff207afcf1ac696f01aeb232ddadd2e057c2c2132c4922753ccee9",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task47.pt": "a43cfd40e8237b8504996a26d627ff35a89b6c370974af6b4e6a99b770326903",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task48.pt": "de26dcd54966112c5e122f7bfe271e535ccf45afa2d12ed86841f1fe65a1e787",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task49.pt": "25b05bf325264dffb2c32c87f050fa5adcd78b48688989abd3642fb39d6668cf",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task50.pt": "4196797c42de874a984872da0c59bc78ac7a53a23943be81083cdd6438f89d4a",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task89.pt": "d9ef3ac4aaa953ebee8fbfe2dc478bf894ecc3d6658dca1e6f2381c8c01bf3a8",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task90.pt": "e965e66b8378984996edfc97dab1cfba4c383be02ca0d2a74dec8896d5280b0b",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task91.pt": "d0c39a0b244e2689d566b241ef4bedd4eddef12fd808fb1cf4d175b3394573da",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task92.pt": "bab1148ad4e96eb205d4438b8b733114632739516470a1fbc5ee14b79c6b463d",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task93.pt": "e65bab5397f47162f27f43aac961807ad8c6e98e3f6eb82e522f59a74696271c",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task94.pt": "1648ce7065dd2b645301b594255ec403d1a5cd063c10971ec26b235209124247",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task95.pt": "d63a32671326e0715ea74b99159fd2419fde4bdc15f41d1d8265a6c27971e1ec",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task96.pt": "b5ce7884d5b04e89314ae4461b7ef2a6c4aebe00e6b70523081f2acfccc52066",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task97.pt": "c05cf2d8f45bd5c1a1a0bf3ea6f8a6935c625396e732aa9092063b04df913295",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task98.pt": "09ea5adc9ca365b194dafd0e4e4baecd5fa56de8c9a0533971991ce1bce93104",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task99.pt": "c1a7766a972e24bfc3a59f7a5b0d7ea982db4734fa39a9f45005488779326d8f",
+        "results/chargpt_cl_1019/M2/C3/seed3/ckpts/task100.pt": "43e0f8efbee5f0a2e704d19aff9ccbba5b00101356abc1b1860abe613aad3583"
+      },
+      "outputs": {
+        "parts/C3_seed3_head.csv": "d8e671411b5fa3303a9c92fc9ccb4c01baf348af944d82f36eeb24daf92687b2",
+        "parts/C3_seed3_states.csv": "632a6b004cc693af0eef273e80389ced8bfedab40af05b595d41367e30be88aa",
+        "raw/units_C3_seed3.raw.npz": "cf778c60b62b0a5cedfb0852e7970d0b922649fe51730a9e750e258bc2cdfeb9"
+      }
+    },
+    {
+      "arm": "C3",
+      "seed": 4,
+      "n_states": 36,
+      "elapsed_seconds": 32.13122892379761,
+      "finished": "2026-10-22T22:48:21+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.8010797500610352
+        },
+        {
+          "task": 1,
+          "seconds": 0.8861856460571289
+        },
+        {
+          "task": 2,
+          "seconds": 0.885568380355835
+        },
+        {
+          "task": 3,
+          "seconds": 0.7925195693969727
+        },
+        {
+          "task": 4,
+          "seconds": 0.7864024639129639
+        },
+        {
+          "task": 5,
+          "seconds": 0.7898814678192139
+        },
+        {
+          "task": 6,
+          "seconds": 0.7934496402740479
+        },
+        {
+          "task": 7,
+          "seconds": 0.8285057544708252
+        },
+        {
+          "task": 8,
+          "seconds": 0.8421757221221924
+        },
+        {
+          "task": 9,
+          "seconds": 0.7712883949279785
+        },
+        {
+          "task": 10,
+          "seconds": 0.7639298439025879
+        },
+        {
+          "task": 25,
+          "seconds": 0.8265395164489746
+        },
+        {
+          "task": 39,
+          "seconds": 1.215277910232544
+        },
+        {
+          "task": 40,
+          "seconds": 0.8417294025421143
+        },
+        {
+          "task": 41,
+          "seconds": 0.8938806056976318
+        },
+        {
+          "task": 42,
+          "seconds": 0.8116528987884521
+        },
+        {
+          "task": 43,
+          "seconds": 0.816713809967041
+        },
+        {
+          "task": 44,
+          "seconds": 0.8216540813446045
+        },
+        {
+          "task": 45,
+          "seconds": 0.90846848487854
+        },
+        {
+          "task": 46,
+          "seconds": 0.8717083930969238
+        },
+        {
+          "task": 47,
+          "seconds": 0.8395822048187256
+        },
+        {
+          "task": 48,
+          "seconds": 2.0543100833892822
+        },
+        {
+          "task": 49,
+          "seconds": 0.8331718444824219
+        },
+        {
+          "task": 50,
+          "seconds": 0.7800860404968262
+        },
+        {
+          "task": 89,
+          "seconds": 0.8523094654083252
+        },
+        {
+          "task": 90,
+          "seconds": 0.8376188278198242
+        },
+        {
+          "task": 91,
+          "seconds": 0.8252773284912109
+        },
+        {
+          "task": 92,
+          "seconds": 0.8575217723846436
+        },
+        {
+          "task": 93,
+          "seconds": 0.887972354888916
+        },
+        {
+          "task": 94,
+          "seconds": 0.9735691547393799
+        },
+        {
+          "task": 95,
+          "seconds": 0.8664488792419434
+        },
+        {
+          "task": 96,
+          "seconds": 0.9304711818695068
+        },
+        {
+          "task": 97,
+          "seconds": 0.8898251056671143
+        },
+        {
+          "task": 98,
+          "seconds": 0.9197144508361816
+        },
+        {
+          "task": 99,
+          "seconds": 0.874617338180542
+        },
+        {
+          "task": 100,
+          "seconds": 0.9326000213623047
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/init.pt": "30eea46bb488a85f9665ae8abe8da77f7b79b21b9a8d43cc9d0e683c23069808",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task1.pt": "ea8d94155886d6c30a2616ca094561c5be6ec59f55f570a9b7181fd1be7893c8",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task2.pt": "e74d95d1e7263007bafe4db6d1d06ddd18912114bef8ddef69486e871b3d435f",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task3.pt": "a84ddca91d8e8b51587aaee869a3b87a6291ea6b9f54b99c1495605ffd6376e0",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task4.pt": "6c04900183465d47be86223e12deb94e6a933e88c4b4071c9f8d9092d27fbf5d",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task5.pt": "e33736dacb63db3a2bb1b1256221c8a9af679e9578c350af353b5d4bb5cbd2b6",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task6.pt": "139f6ac9be2d6b17f395e9766d8005e46e8dc439ea58777384301fdd7953d568",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task7.pt": "bdfad94f08f66e809f3f45d4562bc9b88fc2082ef71321ae9ae7e462099f22a5",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task8.pt": "575f4b21bfe3583d526b290f91a666e4ac1a9eae87ed1f5dfc8db3aa8b6ba435",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task9.pt": "d13f41fc9dd583ef503d361109c86c8c0d19c9d2817889d9db5696e6f242a969",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task10.pt": "48d9e0bc135f5dccf918682f718a6fe57dd5e5567c153fa7d95645776b613357",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task25.pt": "5bf4663b90e57599bce8d0014021b346a17850299057fdfe4f56d5faecf9e5b5",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task39.pt": "3f112ef84c038c12a2a63ae6951a4fcf596cda65a478093fa34f63344fa38aa2",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task40.pt": "5790bc53c3473cd3d9e6680ab81e1c6a2e1f832fafa655411b91999727c4b6ac",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task41.pt": "297aa57379dae0651e10ee8be4d8d1ca25fcf87d0a556155859ab9c43b8f0f2d",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task42.pt": "96d4bcf69249bcf344912dad446252397d015b4f5b63f128f194805db81563ff",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task43.pt": "3e9940e93b5902a9c775dc623293d76c59d6bebb25c2634ef1167280813bb9c3",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task44.pt": "9131388969b2894690195ee242edac96fde0a31a0f586e65a46ca7396faeb3ff",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task45.pt": "8d5795c3660eaedd022c806674bb845c0894adab77a5cc8ec83fdf0b8f1afec1",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task46.pt": "30ae6e73ed2dfcc7d0dc8b828d88e0502cdc51b1030a8e15f51b739ded240856",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task47.pt": "78f625fc93137320690f88484876f47a5c3e64ab73d13f02cf0a6ba70cf6753c",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task48.pt": "cd99bfa46a4bf37728963b5d3d156fcd652d92da300d456e108512c52c5580be",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task49.pt": "6ae051cf5be440192bbfc6eed60473b9c72d326990d3f587c31228d7d812d164",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task50.pt": "7a0e93797fc459531d8282bfb40bb1c369a62d4a37a3cbb94246610b23cec1db",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task89.pt": "1226bcc425f542d2a008280c821b8442a6bd5d8366c5805eddc5eee54bd98479",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task90.pt": "d7bbac8259c62302df10f8cfaf4658dbef226d49840fed313b85479e861c6a34",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task91.pt": "d9b5531799edd4872302e3377492b041e1e21aaaf226103417a9b597e0e78d65",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task92.pt": "3b2fce46c803f5f39d6ae35fa4ac7c9817869ead611f5a902b3d5324db823a3e",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task93.pt": "030c927c6785790750e8b995138a014ccd1a7a68a687a0fc6de15e7c9e2c809c",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task94.pt": "bb581f1b539f37da4c34d5051ffc82c208f0f015c27b5204db8ffa67163be19d",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task95.pt": "39c8c7ee16f7d2690c7c67bf9190ffb09b2b31713f8d19f7b3bae975a24f87e4",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task96.pt": "8f4dc563411148fc1bfd2d03d442b64ada8fbb3caca81132dd7eca61f3e5f4b6",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task97.pt": "01574dc750e0f00c8fcb1e1e2033d605c420facdcc1a267ffe067bea97adbff0",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task98.pt": "f9700c50d1403c8e4068f47d2c4123c8febf98be4cdaaae1ba95bbbfdbdd39ef",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task99.pt": "9917437949e42428a2b5aa108a8ca9d852225d52bce0e9affaacf6afd0460530",
+        "results/chargpt_cl_1019/M2/C3/seed4/ckpts/task100.pt": "4a50b9b12c483a0557601622323275c9bff589006ba4866c17f6ff3651c079e7"
+      },
+      "outputs": {
+        "parts/C3_seed4_head.csv": "24009b5c48f540ff63a47a9dd96018fa38b9c17964aecc664ec392ded9dc4f67",
+        "parts/C3_seed4_states.csv": "3e68f43cff6454c490a22004f709ac9debd433f2b7d0ab32e402cd1b6582325d",
+        "raw/units_C3_seed4.raw.npz": "a7b70dc3022020b649a63fc70d12e28eb73ff0d4e753866ac502b25c2e3c40d4"
+      }
+    },
+    {
+      "arm": "C3",
+      "seed": 5,
+      "n_states": 36,
+      "elapsed_seconds": 33.50198435783386,
+      "finished": "2026-10-22T22:48:55+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.8037369251251221
+        },
+        {
+          "task": 1,
+          "seconds": 0.7735960483551025
+        },
+        {
+          "task": 2,
+          "seconds": 0.8032534122467041
+        },
+        {
+          "task": 3,
+          "seconds": 0.8255250453948975
+        },
+        {
+          "task": 4,
+          "seconds": 0.8087723255157471
+        },
+        {
+          "task": 5,
+          "seconds": 0.7754831314086914
+        },
+        {
+          "task": 6,
+          "seconds": 0.9145522117614746
+        },
+        {
+          "task": 7,
+          "seconds": 0.8442556858062744
+        },
+        {
+          "task": 8,
+          "seconds": 1.075554609298706
+        },
+        {
+          "task": 9,
+          "seconds": 0.8307337760925293
+        },
+        {
+          "task": 10,
+          "seconds": 0.8486521244049072
+        },
+        {
+          "task": 25,
+          "seconds": 0.8715758323669434
+        },
+        {
+          "task": 39,
+          "seconds": 0.8907878398895264
+        },
+        {
+          "task": 40,
+          "seconds": 0.8334479331970215
+        },
+        {
+          "task": 41,
+          "seconds": 0.9026961326599121
+        },
+        {
+          "task": 42,
+          "seconds": 0.8781003952026367
+        },
+        {
+          "task": 43,
+          "seconds": 0.9016625881195068
+        },
+        {
+          "task": 44,
+          "seconds": 0.8506491184234619
+        },
+        {
+          "task": 45,
+          "seconds": 0.9041051864624023
+        },
+        {
+          "task": 46,
+          "seconds": 1.233741044998169
+        },
+        {
+          "task": 47,
+          "seconds": 1.2816503047943115
+        },
+        {
+          "task": 48,
+          "seconds": 1.023911476135254
+        },
+        {
+          "task": 49,
+          "seconds": 0.9095101356506348
+        },
+        {
+          "task": 50,
+          "seconds": 0.9220633506774902
+        },
+        {
+          "task": 89,
+          "seconds": 1.3660306930541992
+        },
+        {
+          "task": 90,
+          "seconds": 1.0675077438354492
+        },
+        {
+          "task": 91,
+          "seconds": 0.7959332466125488
+        },
+        {
+          "task": 92,
+          "seconds": 0.73122239112854
+        },
+        {
+          "task": 93,
+          "seconds": 0.8452153205871582
+        },
+        {
+          "task": 94,
+          "seconds": 0.8217949867248535
+        },
+        {
+          "task": 95,
+          "seconds": 1.6284759044647217
+        },
+        {
+          "task": 96,
+          "seconds": 0.8715903759002686
+        },
+        {
+          "task": 97,
+          "seconds": 1.248772382736206
+        },
+        {
+          "task": 98,
+          "seconds": 0.8882770538330078
+        },
+        {
+          "task": 99,
+          "seconds": 0.7433032989501953
+        },
+        {
+          "task": 100,
+          "seconds": 0.7559421062469482
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/init.pt": "2aeed583077abe181692a673a91c64d83cc25a2e2ee6c7dc82e3cef93269e354",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task1.pt": "79d28d4c40334287057c6342b1b138fedc5967fe3deb0da8a220b2eea71bcf9d",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task2.pt": "55189668e91764f8d16ed1b47335adf2014e908c933ff33d40d23a9869279155",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task3.pt": "d9eed23397e987cfcf4fb25bca14bca0e35ab1f5f65f65dae0d3bc71150188e7",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task4.pt": "94a3c24366a6451e0573562c3a28ea56a72e373273e160a3fbdfbcbcc1447721",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task5.pt": "37e2a42b4ef5590c6c92a6b2536ff81be576c34b25f5903450fef0f548e5d46e",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task6.pt": "d12890d41fce4a437610dbec962deec69f9d979b24d4c2ec5a0efab7cfe27005",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task7.pt": "c8953124e6a1ade74262b7b8e96cfe0b258d705b5417ea5a6c1576b3a33af3f8",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task8.pt": "3b2a7f88b84e502a9e56d089f6e1a993cf32ef78f35f14da2d504946d6b3660d",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task9.pt": "87c9d2c6e750fe22d4006fee43ab0a3ce59be8ea863b4061a947e90d69594a3d",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task10.pt": "ebd552092bf354511c8f085067d790358a58fecf3e2cfef31fe54b4a6ee96641",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task25.pt": "bee7a5f0ef1ddc4675feacce7a38a74a47709793d364d29f8bafca419d9579a5",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task39.pt": "ece16f2a2e4fa8b8adc67eb7877f93b99f7539e7e2f4039f860078ae904c90d7",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task40.pt": "be6bfb5a73343820452a11f56c10e1934193d881d211acb7c33876b80b6a1b51",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task41.pt": "91c054e7c6736e020098b13b9ceb3f21d9bba5370701e5460b9bbaebf763e3d9",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task42.pt": "9222f8c4a90c61743138daa28bf303a548ad9d007aaec9fd3ab3b799831dec10",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task43.pt": "0702aae86fb626f398dd5bf12df05d39c8d5c59a66ae33707bdad6bc2a791750",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task44.pt": "4416c11ac3440d547f884537b0610fcc315f6a43adfa50a351cf8f92872afa6a",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task45.pt": "16a660f12887e7e88507e5d667953b45136d68892295f2cf448b7d4f98bc9b61",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task46.pt": "906e3cdadd3569f74457235e979b2353d3e43a09c00d3f767e7e3b5e6e8ec79b",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task47.pt": "f60bbe1184a35178e83adb4587496115ddd1b8e29e5c1c74f49d2f66d0aeaa0b",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task48.pt": "eaf9f33b6828ec403f02cbe9f76db097ad3cd8f535a205e31358b9215b67a5d8",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task49.pt": "ab6754e6de4003a12c1752e63f2eeeb49b81306fb7af452d4b97da674bc92d62",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task50.pt": "b8e9d7901318bcb1b78b642dea2a47e36b4a3caa9e633db78cbc16a3004270cf",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task89.pt": "78045d3094b66259725b05b1002e09351dd31fd7b4031085388b97a206877fdf",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task90.pt": "7ec00223a2710589ff73eb8159ae2e29e8585cc0242ffc2ea91537c02fef2e44",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task91.pt": "cb117c23a86b468d8ed8cbc4148a5b25fc3458fcda258b31e76b5e57e2d7db6d",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task92.pt": "a6004932f78422866d6c1728c3e648387c7a9e4e69a4f4f04b067d83fb7f344a",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task93.pt": "33b12025b557737f27f5ca2f4019b79dd7594b6311f7d6563c2d1c64036ee66b",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task94.pt": "4f1bf27773c1483ae4184e6b736674238c68902f9dbd4485c7ea524eb89e123d",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task95.pt": "1b4ecb6bdb1931adaa0f2cebfbb09798753c598334e270b19e2d2fd6c0eb5ec2",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task96.pt": "38154047cc9c264a364e87916676ff2a7355e66fb5a6bc328b8b890739f9919b",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task97.pt": "19be89ab173b8401da3a7224201b66b7109d3451709f04bfd0bc193889043a52",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task98.pt": "fdf0e64777f9b05ba680b70686219fd0615380210a5065235e3b9691930e9e2c",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task99.pt": "686d9e1b679bf12d8c05039c63b54c2e01b96633d85ff64ba2e4e725de528578",
+        "results/chargpt_cl_1019/M2/C3/seed5/ckpts/task100.pt": "7a66ac0739f78d167a00cc5e9ac802c0c757089ca5a557fd1f1f43f4fe89b135"
+      },
+      "outputs": {
+        "parts/C3_seed5_head.csv": "de699ee3c8631b0094c5bded577a52a0c1acafa5cdb532c12e8a41c971f73ad3",
+        "parts/C3_seed5_states.csv": "690cb5bb3c7b0f1a316aeb26a62f697e2c8c7e07ea9ecbc49aaac34c282cea44",
+        "raw/units_C3_seed5.raw.npz": "b75ce50ac9468ba37ef2a8d67c428f05af09f94aa0c531eb58347cb0ced69fae"
+      }
+    },
+    {
+      "arm": "C3",
+      "seed": 6,
+      "n_states": 36,
+      "elapsed_seconds": 32.18930625915527,
+      "finished": "2026-10-22T22:49:27+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.9537789821624756
+        },
+        {
+          "task": 1,
+          "seconds": 0.8997724056243896
+        },
+        {
+          "task": 2,
+          "seconds": 0.873100996017456
+        },
+        {
+          "task": 3,
+          "seconds": 0.8814465999603271
+        },
+        {
+          "task": 4,
+          "seconds": 0.8733906745910645
+        },
+        {
+          "task": 5,
+          "seconds": 0.9028339385986328
+        },
+        {
+          "task": 6,
+          "seconds": 0.8820550441741943
+        },
+        {
+          "task": 7,
+          "seconds": 0.9156703948974609
+        },
+        {
+          "task": 8,
+          "seconds": 0.9254212379455566
+        },
+        {
+          "task": 9,
+          "seconds": 0.8766250610351562
+        },
+        {
+          "task": 10,
+          "seconds": 0.9179031848907471
+        },
+        {
+          "task": 25,
+          "seconds": 0.9125733375549316
+        },
+        {
+          "task": 39,
+          "seconds": 0.8110370635986328
+        },
+        {
+          "task": 40,
+          "seconds": 0.8893542289733887
+        },
+        {
+          "task": 41,
+          "seconds": 0.8452858924865723
+        },
+        {
+          "task": 42,
+          "seconds": 0.8532946109771729
+        },
+        {
+          "task": 43,
+          "seconds": 0.8579411506652832
+        },
+        {
+          "task": 44,
+          "seconds": 0.9131066799163818
+        },
+        {
+          "task": 45,
+          "seconds": 0.9252851009368896
+        },
+        {
+          "task": 46,
+          "seconds": 0.8851048946380615
+        },
+        {
+          "task": 47,
+          "seconds": 0.8276951313018799
+        },
+        {
+          "task": 48,
+          "seconds": 0.8510479927062988
+        },
+        {
+          "task": 49,
+          "seconds": 0.857163667678833
+        },
+        {
+          "task": 50,
+          "seconds": 1.0117137432098389
+        },
+        {
+          "task": 89,
+          "seconds": 0.8992166519165039
+        },
+        {
+          "task": 90,
+          "seconds": 0.8400130271911621
+        },
+        {
+          "task": 91,
+          "seconds": 1.0186474323272705
+        },
+        {
+          "task": 92,
+          "seconds": 0.8555822372436523
+        },
+        {
+          "task": 93,
+          "seconds": 0.8768119812011719
+        },
+        {
+          "task": 94,
+          "seconds": 1.096433162689209
+        },
+        {
+          "task": 95,
+          "seconds": 0.9207208156585693
+        },
+        {
+          "task": 96,
+          "seconds": 0.8792767524719238
+        },
+        {
+          "task": 97,
+          "seconds": 0.875694751739502
+        },
+        {
+          "task": 98,
+          "seconds": 0.8745112419128418
+        },
+        {
+          "task": 99,
+          "seconds": 0.8400142192840576
+        },
+        {
+          "task": 100,
+          "seconds": 0.8383064270019531
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/init.pt": "e897dfe8b93e475faf16b7f736350d27e7b4a22074a4d85a65c2c5b44c9a9628",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task1.pt": "9b528ad7b91da04cc2f776ef4595d3030edb78a954b3b023ec93fc1ad1359688",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task2.pt": "7c9568470a49d65bed5076ae9c73028bfad88f9462516fee3fe815a687d193c4",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task3.pt": "625008876abb7d13be8674892f1c5e158a052eb09d1e1078fe4d3bfef377fe9e",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task4.pt": "6ccbe966cb99cf700a0d9fdd5ed30a96c385c270e7cff15c788c1234ebb99513",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task5.pt": "682b93a4a0d332ce5f4abe0bd842f7783c80114702a26cad9e7c67d3e4a04e9e",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task6.pt": "519bc56236ccc4969d0bc092ef03356800c7ef7a466cd1670f5606d59c1c9f34",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task7.pt": "5bf9c8eaaf8333256fe4abd8c2be02fda310bd6a15b60f5e6e8d27b48cddb4a1",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task8.pt": "8ad728363294717d81f3556c0cc46ef529dbdeb37162b5eef64e32b8f7d74276",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task9.pt": "eec685a59ff5259c974daad36b7ce958c3b0253951f8622a7196b33b1f4c64d6",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task10.pt": "a98ce7209ad6d648e7b57ef972fd317f614b1404c28876761a8e7801d9be5fb5",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task25.pt": "1256a43ca24fb481c1f2943eef8c8a31de0f2d748880466ba633c3a877695fd0",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task39.pt": "fb9988ac9d2250ecaec080b08026646055d9d708fe54e16f79ed077b5945f78a",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task40.pt": "80e4eb590d48a2fc77e4b6c19c93c2d075a8431ed54631e53e3912841e33a538",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task41.pt": "e7ec04fe504416c12ce98bfe4d685281f78d868a31fbaf40d04e861c085785f6",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task42.pt": "d0e621fcc9dcd12e5dee8b19687ee325114b22576f6bea94c85d7e9aab1a56fc",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task43.pt": "33b11ba88e4e31f94ade2facf11e784b7e0565c7ed3a0006e5109020b098e14f",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task44.pt": "73d9b4f4f3909d0a895349593b259678d5af99a88e243921440ba5cd45cedea1",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task45.pt": "651a4b02aaf5fd15a4cab70b452ec56a4573a0358d713f8afd0190fdaf751c30",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task46.pt": "4318b5d205787c1724909dfad7e75f73a428e2f8f4185dfb03d3dc8dbdcc8501",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task47.pt": "52499a1082ac389bedbc787d268857659e35bb030b232628120ddcb16b2eb051",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task48.pt": "9c78572e34cca18fd66b5435a90a3174cd43c2785f91d91e175f4aec6e31591b",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task49.pt": "6d5edbbde0f7512c17acf1a20b928dbec20b493d1c8e4ec0f14f3f9ff4c384e7",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task50.pt": "a612fbf83d291b82f9a26420c430b41e3ecc80d32eb9e32231088e9dfbfc3600",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task89.pt": "8d883ac2d6a39fa7e0f67acec4ce62c6cfe0ba8d6b47a81eb37e3d9800e36c63",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task90.pt": "8a24941c4bff369835e717e58f020e7c6159bcefdf3163353825f152486cddf3",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task91.pt": "2f2dc8b3d902fba1539dd5d5bd597a04904547ced47a70c0a6d300f43bfe520d",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task92.pt": "54d565efcd0f3afe3f038b16116bf6ed5a0aba10b7bd65c5ce590ddcf4d8122d",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task93.pt": "f62a0857f17f0726b36044672ff496f991819022716c826bbe6a1027c1f43d2b",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task94.pt": "ebc08a1bf9c9b41a4874cb55c9b86d0a28a38e177e8ab7f99ddd2e00e71ba911",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task95.pt": "9d64bd74f07702bf6a98f2dd3c5a8d27b8fab6071580ecc16cc273a1cfb436b5",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task96.pt": "f91075a2b310e5df4939b529358d510fbd304b33e7045e233725fb6a2b52b0a5",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task97.pt": "1c3df19f59a55668d7e7774962ad3e29e59a61559ee1bc9378a7b91c39971c33",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task98.pt": "7a5f352cb38ad8d7f9c699a387456cdd01d4e02644f072cecc02d7a29211b15c",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task99.pt": "d3f7d932e221c2442bf1bd22e807edeaf643275b169ab845f8b29a033fbe8989",
+        "results/chargpt_cl_1019/M2/C3/seed6/ckpts/task100.pt": "52cc3ad0d8bdef024d9d7cd901da78845a76740f0be0b9cf819fa79dc57068e5"
+      },
+      "outputs": {
+        "parts/C3_seed6_head.csv": "db01a523445bc6781d1af7e132423f215a93bbaab48a93ce47b301919ffdc133",
+        "parts/C3_seed6_states.csv": "d98535ab44ffed426f65e44b9075cc5c90268a33bddadb293f7dfca2cb1f65a3",
+        "raw/units_C3_seed6.raw.npz": "0e2b9e877d3a45a76ad8fc1c306ad1b2300fcf2151fdbf29206b9d7f6fb2ebd7"
+      }
+    },
+    {
+      "arm": "C3",
+      "seed": 7,
+      "n_states": 36,
+      "elapsed_seconds": 28.213868856430054,
+      "finished": "2026-10-22T22:49:55+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.7995245456695557
+        },
+        {
+          "task": 1,
+          "seconds": 0.8521826267242432
+        },
+        {
+          "task": 2,
+          "seconds": 0.7808372974395752
+        },
+        {
+          "task": 3,
+          "seconds": 0.8933382034301758
+        },
+        {
+          "task": 4,
+          "seconds": 0.7958455085754395
+        },
+        {
+          "task": 5,
+          "seconds": 0.6818726062774658
+        },
+        {
+          "task": 6,
+          "seconds": 0.7112119197845459
+        },
+        {
+          "task": 7,
+          "seconds": 0.6901040077209473
+        },
+        {
+          "task": 8,
+          "seconds": 0.712531566619873
+        },
+        {
+          "task": 9,
+          "seconds": 0.7190685272216797
+        },
+        {
+          "task": 10,
+          "seconds": 0.7466771602630615
+        },
+        {
+          "task": 25,
+          "seconds": 0.7385516166687012
+        },
+        {
+          "task": 39,
+          "seconds": 0.7790617942810059
+        },
+        {
+          "task": 40,
+          "seconds": 0.7399780750274658
+        },
+        {
+          "task": 41,
+          "seconds": 0.7772345542907715
+        },
+        {
+          "task": 42,
+          "seconds": 0.763047456741333
+        },
+        {
+          "task": 43,
+          "seconds": 0.7749040126800537
+        },
+        {
+          "task": 44,
+          "seconds": 0.7111637592315674
+        },
+        {
+          "task": 45,
+          "seconds": 0.7354779243469238
+        },
+        {
+          "task": 46,
+          "seconds": 0.7817137241363525
+        },
+        {
+          "task": 47,
+          "seconds": 0.7442681789398193
+        },
+        {
+          "task": 48,
+          "seconds": 0.7611186504364014
+        },
+        {
+          "task": 49,
+          "seconds": 0.7907881736755371
+        },
+        {
+          "task": 50,
+          "seconds": 0.7230522632598877
+        },
+        {
+          "task": 89,
+          "seconds": 0.8010156154632568
+        },
+        {
+          "task": 90,
+          "seconds": 0.7580211162567139
+        },
+        {
+          "task": 91,
+          "seconds": 0.7450251579284668
+        },
+        {
+          "task": 92,
+          "seconds": 0.7480230331420898
+        },
+        {
+          "task": 93,
+          "seconds": 0.7824540138244629
+        },
+        {
+          "task": 94,
+          "seconds": 0.8061823844909668
+        },
+        {
+          "task": 95,
+          "seconds": 0.8187596797943115
+        },
+        {
+          "task": 96,
+          "seconds": 0.8436806201934814
+        },
+        {
+          "task": 97,
+          "seconds": 0.8423211574554443
+        },
+        {
+          "task": 98,
+          "seconds": 0.8723976612091064
+        },
+        {
+          "task": 99,
+          "seconds": 0.8471944332122803
+        },
+        {
+          "task": 100,
+          "seconds": 1.117156744003296
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/init.pt": "febf4f867990a1017fbb67a9a1518017cd0ff0977d7a4088ea1adb2411485ffb",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task1.pt": "af2cb8297de837b8147b12243be70b6cd0aec912fa1daf7f0b05090347bb832e",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task2.pt": "1a8aa9ca49508094d4134c68df8bceff2e3659151b8d9dabf56f2f7cab19a211",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task3.pt": "2780d676b316608f9821c5166fb0ca3b7492aa0bc3648d95f5f6e17b9c524e02",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task4.pt": "3b298e9b8e444c73694c74ba59248e1bf19446e595afd158c19de60e7b75a6a3",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task5.pt": "c4c82fd00d300a6c72154a481223e900d3bf8b172c618f222c64e4dee68bfcf2",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task6.pt": "1db7a568ad1bc3c2e9abee7ebadf1ea2ae3ac14f31745b4201285165400a6925",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task7.pt": "9e4ff7d75002755a70e696e88564920244656bf32e096a8423ebe8a0f0d49eb0",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task8.pt": "76b166e455161ab94c5db658994c031e1b69c95a3ee810b0ac6a98d088604095",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task9.pt": "da63fb5c584cca9ae2306356e9df4d970dd8239cbde9d479893495dfe201e0bb",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task10.pt": "36069cf504bb98574e54b1fad5eef5c9ff3fd5cb098363c8c7c2061227c425a2",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task25.pt": "92601d53fe2a1eccfdbb888e05083b573f17da3e64b2c14848233f7f9bf385bd",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task39.pt": "3f1b94b92b07e80b3512e7a361af1c9b632e88ddae66a628dd451a43c5d02099",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task40.pt": "b0749379022344ebc208b9afae74e519f6842e5c3e935ec126fcb327bc73fe9c",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task41.pt": "4749d43bc829eaf37d5a8dfa3497142cc11bed24684c9ad29644de99c7be65d2",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task42.pt": "092f14af9cb21fee56a2123bab42c8e6a02d1652b90f7b858d7232e6025dc563",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task43.pt": "533e8e707b7317270c8892e5aa66474013deea47c2ed6af7abcf338465559147",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task44.pt": "c933632d5ed29d2e5111f52fd96b58439169ec5030e8ac8972229fb83b5af4f3",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task45.pt": "e1fef45fdeefe3778075cefd813946bc36f4e075d5f6c791e55534c9a493225a",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task46.pt": "8b67bce626a5f2c954002ca6163c20d942030cc3659b9924f480c39897277942",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task47.pt": "4f046ac0a9521fc5d99800b683561bb68a7fcf60e3b7a2f3be36f125c3c022d6",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task48.pt": "aa453b46c740ccadd10182d9cc62334b9ab97ef5f8051cf5e9ca0044ad293de3",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task49.pt": "ccec57b2f0585aa8da9fae47d102775117426fadf25d7c727616b7aa0cfd5868",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task50.pt": "5b61ace2cbc78cbe6522b2c96427db2d4364bf602f61a1814882e054d246d59a",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task89.pt": "4d6c93133a14f63e98b7296fc47b41a2299e87ebcfcb39f1c0108154a39a8dda",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task90.pt": "b5d58fa2beda6bc893ddfbc48b24c40e4a9e8122b1425d6948c26f1b2bb2fa85",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task91.pt": "e699af093d3f495d189de0ef16ab845ab4d59073d6076af216d65c5f920d3182",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task92.pt": "96f65731a8f1b4118885468b56ab3ebfce95c66b6dd0690aec487007abc0090b",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task93.pt": "594770ea82656f031ee65b2a8c801138b9e8111141711ec8aa56c3c2f14260a3",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task94.pt": "b34d68a39cafb30055a4b89f2dcf32d88116e4c8740e6d4397d9eef5e6245b72",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task95.pt": "185c87ca23cc624648e32cb5600ad1aa4232952a28eea8a758ba45ff5c6ebd99",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task96.pt": "c0eae93498b93050d1a39d36b5b937f8572089e927893d081c3f69ac7c24b240",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task97.pt": "f993233fd8532a858bf065c093b15621ff4303e45c7ad6932243e7987725914e",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task98.pt": "2c1d35dcb707d9007cfe822c53f2ac2fc9cab987ab940edb7484c7c79d5aa077",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task99.pt": "3b618291fcb1aa6eb420cc9c7248f1d00e4e1a826ebe568970d1cb030e5f6666",
+        "results/chargpt_cl_1019/M2/C3/seed7/ckpts/task100.pt": "8b1487203a0179e19962d944083fad0978c6f7e261431e424c5a9ae1102a0252"
+      },
+      "outputs": {
+        "parts/C3_seed7_head.csv": "604ed534e55fa9e1a9343e8de33cb9af259754b92264851a6f34aee796174b1a",
+        "parts/C3_seed7_states.csv": "9dbce9a17cd6eff8610c9758750ed5558d58aa1c3aee5f60d7a5e4f4438bc0e4",
+        "raw/units_C3_seed7.raw.npz": "c55bc71e89a09fcab3283c48e819a772dfcbae0602af6a6d8a0a6bab47e7a4f6"
+      }
+    },
+    {
+      "arm": "C3",
+      "seed": 8,
+      "n_states": 36,
+      "elapsed_seconds": 37.12006115913391,
+      "finished": "2026-10-22T22:50:32+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.9086709022521973
+        },
+        {
+          "task": 1,
+          "seconds": 0.8460860252380371
+        },
+        {
+          "task": 2,
+          "seconds": 0.8240962028503418
+        },
+        {
+          "task": 3,
+          "seconds": 1.0830035209655762
+        },
+        {
+          "task": 4,
+          "seconds": 0.9214839935302734
+        },
+        {
+          "task": 5,
+          "seconds": 0.8965153694152832
+        },
+        {
+          "task": 6,
+          "seconds": 0.8297321796417236
+        },
+        {
+          "task": 7,
+          "seconds": 0.8477017879486084
+        },
+        {
+          "task": 8,
+          "seconds": 0.853367805480957
+        },
+        {
+          "task": 9,
+          "seconds": 0.8684337139129639
+        },
+        {
+          "task": 10,
+          "seconds": 0.8601858615875244
+        },
+        {
+          "task": 25,
+          "seconds": 0.8517067432403564
+        },
+        {
+          "task": 39,
+          "seconds": 0.8195304870605469
+        },
+        {
+          "task": 40,
+          "seconds": 0.7785649299621582
+        },
+        {
+          "task": 41,
+          "seconds": 0.816687822341919
+        },
+        {
+          "task": 42,
+          "seconds": 0.8752536773681641
+        },
+        {
+          "task": 43,
+          "seconds": 0.7701494693756104
+        },
+        {
+          "task": 44,
+          "seconds": 0.7960538864135742
+        },
+        {
+          "task": 45,
+          "seconds": 0.8011331558227539
+        },
+        {
+          "task": 46,
+          "seconds": 0.8068699836730957
+        },
+        {
+          "task": 47,
+          "seconds": 0.9954254627227783
+        },
+        {
+          "task": 48,
+          "seconds": 0.8126063346862793
+        },
+        {
+          "task": 49,
+          "seconds": 0.8044683933258057
+        },
+        {
+          "task": 50,
+          "seconds": 0.7984952926635742
+        },
+        {
+          "task": 89,
+          "seconds": 0.8968796730041504
+        },
+        {
+          "task": 90,
+          "seconds": 0.8957183361053467
+        },
+        {
+          "task": 91,
+          "seconds": 0.9081912040710449
+        },
+        {
+          "task": 92,
+          "seconds": 0.8117983341217041
+        },
+        {
+          "task": 93,
+          "seconds": 0.8493785858154297
+        },
+        {
+          "task": 94,
+          "seconds": 0.8233034610748291
+        },
+        {
+          "task": 95,
+          "seconds": 0.8130195140838623
+        },
+        {
+          "task": 96,
+          "seconds": 0.7757854461669922
+        },
+        {
+          "task": 97,
+          "seconds": 7.441871643066406
+        },
+        {
+          "task": 98,
+          "seconds": 0.8319516181945801
+        },
+        {
+          "task": 99,
+          "seconds": 0.8123171329498291
+        },
+        {
+          "task": 100,
+          "seconds": 0.7673194408416748
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/init.pt": "e1fd32b68133e6acfd0c806e8cdb50afe9265f9034c32ca13957b49907310bca",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task1.pt": "9cdecfff0bdd6eb86568a72a3e56c67303029e374aa20c6f078e35666e52267a",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task2.pt": "1ab71bbe883c2677615edc4b86d16a87e2d9783b47d6c3e64557572aa516c17e",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task3.pt": "391a2564e6c1fa8fcee533e1608a3de63d6bdce25da5f33663f963231b8f48ee",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task4.pt": "548037a0a73c959b3fc3d7e710b609d208676b93645d6500310ef9d731befe2c",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task5.pt": "85f037f4f0743f87d70bdbe11d7929be06828d1dbbacaab2f49ba399a24eb293",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task6.pt": "4f4fc125d6adfeea267832c8a8b964e7ccf8727b9a4fa1da030077437d4e05c4",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task7.pt": "cf905ef80fa7d1dd722951b8ba002c6b14d53da142ca97303eb49fb723d91e73",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task8.pt": "c23a73a47c3f849d066e3fe5c59d93d55ac5c7b22e480679f97d3f30edaf7fc6",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task9.pt": "aafb4b15df263f546ffee96cc552736d4a8482a9ec7850dbb3d59ee717b7d043",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task10.pt": "f69625700a07d6110801af99bb06db6ad6bd2aada3ae7e7637701ce880496b11",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task25.pt": "acf0c036f74a7b1f1200f5afff680d80cdd1cee63e50d031fe774269a8d32705",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task39.pt": "4cb7b097ffae2e1929d2067584b2f80839291fe7e188c62225f159c74a59c503",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task40.pt": "6d63812311b493b531e95a5128c2a4b07729aae68be1a0611b1262c701fa6294",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task41.pt": "8b5f14e39a42696b84d9446412bdebff2d2c92ccc49896e313e3c4cd51b8a45b",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task42.pt": "9161ee57b5172df4b06bd4d37b87b912457d1c2a64a9bcfa7aa56c814c7b0215",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task43.pt": "5e569ab894bd914ce9587f3eab5dcfbf0fde8c3b5b50bb41ca00fdef3ef1bb90",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task44.pt": "d5e2db2005cc666209df6ab7f077988fca9dc3183f4153df0bb43ce750ba13a6",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task45.pt": "d07f36a9bd441ff0c001cb4c17a739a0e209859390fc64b3d28bc3620df9511d",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task46.pt": "18e8955c637abb9bfeba80392673393f4d6770f2d7870b6fa13dc865726d54e1",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task47.pt": "b873545b37899dae8e6aa9869e4dc55430af739a22445898cb778dc2bec6f81f",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task48.pt": "e0bcd414f831d82434c9b7afcef2b892cf0fa95271b4dd1af3c49e9067d8e68d",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task49.pt": "b1f8aa45394534f6d395d1e5cca6bad3dc2b3088226bd6bf3e10111b7d133948",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task50.pt": "5f698793c01c53d362f8f5efad5002ddfa171462e4a702e60857d7f8f9840ac4",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task89.pt": "9b3f19f58bbba51024bde85cb530c6452aaa0531791753614fcd71623c5dbbf0",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task90.pt": "f7bd541045670a06ec4c4d83302c9554b757665deb8f566188dd956885260248",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task91.pt": "5309c036227cf50e57c249d7d5900bb137308f88a1cb32ad4d66d5b7be892c3c",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task92.pt": "c70bb18a6960692f27415fe0020fa71db634a9b95d1f219aa33a5ca1064120e8",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task93.pt": "1f7c0b87c42eb2ff577be640330dfb699b74e3502d320cd8f9add720a3e525d2",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task94.pt": "4da96a6e8e9f80199398ed3ff854a195e7302b92773d979f039005497218f199",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task95.pt": "74d02d437fd953616acfad8afbcf80d6aeb917306f7b609e3ceb4b2802f1c9f3",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task96.pt": "66aca4d6efe0a7896315b24175ec6e286e8547d6c10c8531eb86d809eead02ca",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task97.pt": "06252a6c92fd14e074910e8ee92ec6986c74da87bd87d5aa792186178716f453",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task98.pt": "4ea37a8fd128edad5865d290c61160aae91851d64884617bd3a054d5f7e5cb9f",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task99.pt": "1cb5ec02079d55f003004f90885ca0b860137fea43b46b475c2472b409b01e82",
+        "results/chargpt_cl_1019/M2/C3/seed8/ckpts/task100.pt": "5c18ec239d554508b6ff6d53e74f5920872d59c6e1413f811b700fef7836ce3b"
+      },
+      "outputs": {
+        "parts/C3_seed8_head.csv": "90e9208d8e7eff0eea0a1945a67cecb0b166984e04e350b93fcea6e1b172085e",
+        "parts/C3_seed8_states.csv": "cba7c16f6be582e116e7f55194c6c57b5aabe6222ef683d49ef39424695e77e2",
+        "raw/units_C3_seed8.raw.npz": "6b39fa478fd7c11d509b62e5bed6dde555f1f3499d59f0e85cd365b521445d21"
+      }
+    },
+    {
+      "arm": "C3",
+      "seed": 9,
+      "n_states": 36,
+      "elapsed_seconds": 47.06046938896179,
+      "finished": "2026-10-22T22:51:19+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.7921590805053711
+        },
+        {
+          "task": 1,
+          "seconds": 0.8067805767059326
+        },
+        {
+          "task": 2,
+          "seconds": 0.8149199485778809
+        },
+        {
+          "task": 3,
+          "seconds": 0.7769472599029541
+        },
+        {
+          "task": 4,
+          "seconds": 0.7778403759002686
+        },
+        {
+          "task": 5,
+          "seconds": 0.8577885627746582
+        },
+        {
+          "task": 6,
+          "seconds": 0.8069939613342285
+        },
+        {
+          "task": 7,
+          "seconds": 0.8577029705047607
+        },
+        {
+          "task": 8,
+          "seconds": 0.8013975620269775
+        },
+        {
+          "task": 9,
+          "seconds": 0.801109790802002
+        },
+        {
+          "task": 10,
+          "seconds": 0.8140499591827393
+        },
+        {
+          "task": 25,
+          "seconds": 0.816575288772583
+        },
+        {
+          "task": 39,
+          "seconds": 0.8315789699554443
+        },
+        {
+          "task": 40,
+          "seconds": 0.806513786315918
+        },
+        {
+          "task": 41,
+          "seconds": 0.7969970703125
+        },
+        {
+          "task": 42,
+          "seconds": 17.70018696784973
+        },
+        {
+          "task": 43,
+          "seconds": 0.8028051853179932
+        },
+        {
+          "task": 44,
+          "seconds": 0.9013807773590088
+        },
+        {
+          "task": 45,
+          "seconds": 0.8792300224304199
+        },
+        {
+          "task": 46,
+          "seconds": 0.8145625591278076
+        },
+        {
+          "task": 47,
+          "seconds": 0.7826633453369141
+        },
+        {
+          "task": 48,
+          "seconds": 0.8307335376739502
+        },
+        {
+          "task": 49,
+          "seconds": 0.9458277225494385
+        },
+        {
+          "task": 50,
+          "seconds": 0.8782835006713867
+        },
+        {
+          "task": 89,
+          "seconds": 0.8570992946624756
+        },
+        {
+          "task": 90,
+          "seconds": 0.8276922702789307
+        },
+        {
+          "task": 91,
+          "seconds": 0.8461310863494873
+        },
+        {
+          "task": 92,
+          "seconds": 0.8354461193084717
+        },
+        {
+          "task": 93,
+          "seconds": 0.8083906173706055
+        },
+        {
+          "task": 94,
+          "seconds": 0.8793554306030273
+        },
+        {
+          "task": 95,
+          "seconds": 0.8522591590881348
+        },
+        {
+          "task": 96,
+          "seconds": 0.8998551368713379
+        },
+        {
+          "task": 97,
+          "seconds": 0.8680825233459473
+        },
+        {
+          "task": 98,
+          "seconds": 0.8554966449737549
+        },
+        {
+          "task": 99,
+          "seconds": 0.8894131183624268
+        },
+        {
+          "task": 100,
+          "seconds": 0.9180154800415039
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/init.pt": "1469255a0bb07a917ccf5ba351920f79165dfbf7cfa6014762c00b54d855948c",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task1.pt": "3b9ac4a7c996618a5680fd7dc81dc8279f017700938ec4e672dc9655e89b2731",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task2.pt": "98a36724c906beea77b44a40f5e5bdd87ee6acfdba6bbea3dd43bef25db48870",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task3.pt": "03deca1eeadd20017e615e3febc156d7721f3c46d1ad8f87f5566ae000344f4a",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task4.pt": "09d7c317fab450a349d9ccac146920253e26e1449565b446a861439a22879e5c",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task5.pt": "d86dc40f915e8a5b5cdc67922a3864a0452bdfbd4f8eb4b080ee855979da21f0",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task6.pt": "a5dcc06e4cf3e2ff425d7e9670185a0d2d6eeb6e22de4fffb98e95c14d2a088e",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task7.pt": "62db28b5ed454ccb7648c5a009aed3bbfa22208f250120448ec9851de4700ef0",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task8.pt": "2de376ce6a74defaf3dcd8459161b8abf2573e526ced7ab2f007dbbba37b9b0d",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task9.pt": "dbef4a154a795f0bdbd0a1740e46bcaad751bab58dde43886d263bf11b0ac4c7",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task10.pt": "55a7b46eb0ada51d7f459fed11c8cdae0a3800c78af92e7c02d473204b7c09b0",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task25.pt": "a6afa11ff41b93282b21bb966edf520b2f34e5c33aac057663859db4b3153db6",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task39.pt": "e35a643768010a0fcdeb95f940088635554e3088265b3704e6c6a9b8f78e2d6a",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task40.pt": "e46543c0fe86f70a44839e7c78eedc63bd8de8776908b77d5b0798388ba5e72f",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task41.pt": "5e1cb6eb3b41034fabf513bdbed1fedf4e082eea3e1c62093a7869f59ffdb325",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task42.pt": "faa825c7576e630cccfe702633d9997597831d189159dc9dde7c60bf4fe0a098",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task43.pt": "00f99232a5e248043ea0f9efcf71807c7dc610800fdc80b1bfb504b1c68e68fe",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task44.pt": "c8862444504a3f5ab9eebb5c3169c7107472438245dc537bd4aa723a213f24c6",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task45.pt": "86941c09ee4e47dbcb346e944c40ec9464f552fda431f8f64fbd7362592e41e4",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task46.pt": "6699cb0c9c045a3f5e6feb44bceb4c93f60689bc9ce21f4bab6bd15cc51bc370",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task47.pt": "51767917667df4dce3549b9d49b103393b8776db48a11d2f8ee1b8fb44d91eb9",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task48.pt": "d07bc97f9f7d441703254390e4154c40586e0b8ab8096bd70e8b3f485c937975",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task49.pt": "8c41bc02eae74fe37d2a7f790465c82f5f1ff98eb096aedcd3dfcc92f5b551cd",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task50.pt": "35218b7a5027fdc273d2a55fae1dd9b434f7d894b88775717f00f11b13cf3094",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task89.pt": "11622eb41a8e5305c5bcf77af687b3c49672a880a79b2e5be34f75ca2efe1244",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task90.pt": "6c83f162ede296ae45e008297efa57f4e94f095025ccf26e2803e03e6d88f0d2",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task91.pt": "f3fbd3a058712c20775637099e78913ca4256b962bc62ea35509ec407311536e",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task92.pt": "d79fc1885414b6deed0e20eb59e7fc7015311663369381942c599dc5da36963d",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task93.pt": "3d49f77b28307e96146d5a1ab9953f58976b479867ec1198d066d8ef2b759ef8",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task94.pt": "fab73fb0536ead0d764add607d4a7b78c3e9b660e28d9937f4fa3f2ef8f73668",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task95.pt": "876ebaefc108b96c37ce40214678ae9d47473824ae0db15fd17d87f1cb01fd74",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task96.pt": "04e83df6f96723eefd735ca0178deaba97add65877baa9020006cbdeb5c0bef1",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task97.pt": "6132793a15a4d670c5977166dfa7bf5646809bcea8a5e266dd00a19f9c5ceda9",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task98.pt": "2f5c19df33c43e8d6050c9e6ec31aae0dd2f0322e2f9f0f9c42399ca6dff7dcd",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task99.pt": "be36beb6e9e8642785d53a9adb2c059b820851abf71e8d19a9f9c56913495f3a",
+        "results/chargpt_cl_1019/M2/C3/seed9/ckpts/task100.pt": "90917970f3c3b73783472cc9450db6f6f9c2a3bad6bad44334eee17f6fae3963"
+      },
+      "outputs": {
+        "parts/C3_seed9_head.csv": "a8235bb9e484745c72c9f3a70757ff49bb6d1f9d7873e70ce87f74f2646afedc",
+        "parts/C3_seed9_states.csv": "6eeb6ad00864fa7f6c073781dc8c26b3b6096b0ba5450097917d64b713d96939",
+        "raw/units_C3_seed9.raw.npz": "787b4ef86a854a27495227375648ef6de050bd7a0e24acbe2d7fbf57a2907eb4"
+      }
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 0,
+      "n_states": 36,
+      "elapsed_seconds": 27.712028980255127,
+      "finished": "2026-10-22T22:51:47+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.7529153823852539
+        },
+        {
+          "task": 1,
+          "seconds": 0.7593677043914795
+        },
+        {
+          "task": 2,
+          "seconds": 0.7908663749694824
+        },
+        {
+          "task": 3,
+          "seconds": 0.7946560382843018
+        },
+        {
+          "task": 4,
+          "seconds": 0.7846469879150391
+        },
+        {
+          "task": 5,
+          "seconds": 0.7155055999755859
+        },
+        {
+          "task": 6,
+          "seconds": 0.7806112766265869
+        },
+        {
+          "task": 7,
+          "seconds": 0.7535574436187744
+        },
+        {
+          "task": 8,
+          "seconds": 0.7966160774230957
+        },
+        {
+          "task": 9,
+          "seconds": 0.7731924057006836
+        },
+        {
+          "task": 10,
+          "seconds": 0.8154318332672119
+        },
+        {
+          "task": 25,
+          "seconds": 0.7621340751647949
+        },
+        {
+          "task": 39,
+          "seconds": 0.7397205829620361
+        },
+        {
+          "task": 40,
+          "seconds": 0.7336030006408691
+        },
+        {
+          "task": 41,
+          "seconds": 0.7325489521026611
+        },
+        {
+          "task": 42,
+          "seconds": 0.762275218963623
+        },
+        {
+          "task": 43,
+          "seconds": 0.8851370811462402
+        },
+        {
+          "task": 44,
+          "seconds": 0.8197295665740967
+        },
+        {
+          "task": 45,
+          "seconds": 0.7884252071380615
+        },
+        {
+          "task": 46,
+          "seconds": 0.7492756843566895
+        },
+        {
+          "task": 47,
+          "seconds": 0.7321710586547852
+        },
+        {
+          "task": 48,
+          "seconds": 0.6948938369750977
+        },
+        {
+          "task": 49,
+          "seconds": 0.744105339050293
+        },
+        {
+          "task": 50,
+          "seconds": 0.7644200325012207
+        },
+        {
+          "task": 89,
+          "seconds": 0.7627849578857422
+        },
+        {
+          "task": 90,
+          "seconds": 0.7497262954711914
+        },
+        {
+          "task": 91,
+          "seconds": 0.750971794128418
+        },
+        {
+          "task": 92,
+          "seconds": 0.7880563735961914
+        },
+        {
+          "task": 93,
+          "seconds": 0.7572283744812012
+        },
+        {
+          "task": 94,
+          "seconds": 0.7839069366455078
+        },
+        {
+          "task": 95,
+          "seconds": 0.8341588973999023
+        },
+        {
+          "task": 96,
+          "seconds": 0.7653074264526367
+        },
+        {
+          "task": 97,
+          "seconds": 0.753727912902832
+        },
+        {
+          "task": 98,
+          "seconds": 0.7663204669952393
+        },
+        {
+          "task": 99,
+          "seconds": 0.7829549312591553
+        },
+        {
+          "task": 100,
+          "seconds": 0.7647531032562256
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/init.pt": "4a2ac182e55deb67ed84c9e8829457af0c796790536ba84fab4a7d71746e7531",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task1.pt": "5298c3d85bfe7abef41077fcbacdc9b5dc1e501afa54ea46b8a02aed45ee8c8a",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task2.pt": "79a08629b7161806c0cfa62338d1f9c05f7daa729f38b7cc731cf502a7d177ac",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task3.pt": "87f128a85205f837b68dba9e619004394eb8937bd8a66eec77a4070456cc9878",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task4.pt": "7493265c0ae45e67968353626beff2e5a44c0c253df5fe2df8c4b904e6f3084f",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task5.pt": "95f9e58055e6f1423e006ac391c47a0624ae2567e510fe770e10664c0c8bcc08",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task6.pt": "049c5e4735e1cff794fa04bb858a2d221c79ab0280ee68540344eb322de12e57",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task7.pt": "2c8c9288a296be2d4afb9ee7c145786095195d4d8bdcd5c577298a8d0ac50051",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task8.pt": "3f40eaf9539187b2a9247897d030c0385346e18afb674c30c4e96d77f9668162",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task9.pt": "7b61cfdd0314cdc64d747935a79eb0383d0cadc76635c8b6290733b30726b1ae",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task10.pt": "3e1fdc4e2e001522755139feafef108a515784c34ec207e75c3a9c113f2b80ff",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task25.pt": "c03294076c1688806536c73b7c02142a650db1286e67eb79fbdd5a2541f24e60",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task39.pt": "681d083040d4e1571c98557593bc685a13e0be0fb9bf7f893487cd532c03846e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task40.pt": "cce45c5002cab71a3d0b5d8e437bc1d8fa8fee5991141098d9909f541a4a1822",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task41.pt": "29cdab7b50b8ffa9b9d3b9bc3c492f5a43a10cd05c5ea9dbc6272099e38fad57",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task42.pt": "924f1d8f79a892f8ca50d7009e284d9aa4a76e2b810cd98534b2cfaa51ebb7e2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task43.pt": "29dde8f9ecaff8b3b12c4c564eed354c7e58db9143744d6f708f8645beead4e1",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task44.pt": "cca0497c73dd626e2d1841e6a48b98f2a9d1e53401504cab955adf4f159ec9a3",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task45.pt": "49b427fdf49e9ad7fb9bc3e020b43e1c49fa5aa37e163b4e30832b4c46e0e2c3",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task46.pt": "5b1824aaafdc2b721869a4dbb45d823955e7c1652922362061d5d3d291c043ca",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task47.pt": "d7ff56c30c57d74f79719cb6a9f6b7c5e6ab1c9be8ff05d545a766c93cf3658e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task48.pt": "85ed0cb2fe3f81f2818ff8e984b1c6e20117bbb44b41e9d04bd3c1337cdc9f65",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task49.pt": "dd73623262edffb2564b543d9be60f0bd6894b2bc7c95e240d2953bba0cb94bd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task50.pt": "7284bd4a3f1b212eae83f5d5868a43643e4b1ed7e390de715e8b717ec416a835",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task89.pt": "98b7567ac7f5000f512e9ede55e57fd7a6ca3affd5849322801a1ad6954e95c8",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task90.pt": "6cb10d26b5960145bc522b1feb438c8aa40d41fae40a67e14000c33380e09337",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task91.pt": "3c92bcc670684e406601fd0fd539b68c8faa1a46505ba0fb50dc33eb16f52943",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task92.pt": "a694a9b5d7ac827ee677ae2612fcb7ed1e6a305900c6ce77f245e5b4b5a37bc1",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task93.pt": "e16f83e9170eda7eca0eb40d3185f86221b850ae7bbc16308d0c4093f1b8bdcf",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task94.pt": "5326c6f73c5c139801cf398bff986bc7ef7b5fc093d3261f0d07f99dfc8e1e4c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task95.pt": "f75f72041655672e9b285a382c6d2cf5ecd6c2b2326b89168f666be358e984c1",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task96.pt": "ee59fd14ac0561add6dfb094b139fd094696bd4391d99d2d8c518470add3ebe9",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task97.pt": "bd8cee3e341d9c75e14f4cc046c36a8119c63aea5ea1ab89f28bc2de2f828f54",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task98.pt": "4186d1277e1951d4b08ecf1ea097ab1ae676a2cddc343d92f399d3b25cae19cd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task99.pt": "068ef5531d7eedc75c574cc9afeee81c717e85b51574971c73eb447f8ca18e35",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed0/ckpts/task100.pt": "cf2c1eae3e3e923c44d645b5097aa5e21f81d0575972770a011e649af2a29439"
+      },
+      "outputs": {
+        "parts/ReLUcap_seed0_head.csv": "c379c0785a8223cc16ffd4a248e50039514ff60da1fc3242c0d1961c5409c0c4",
+        "parts/ReLUcap_seed0_states.csv": "f55a2ac4d17d8487a57487aabb0001e20be60b74166d5f57c03869f491a9cb05",
+        "raw/units_ReLUcap_seed0.raw.npz": "0bdae4169a45d59034dbf1975eaf6a58ea6b86ca457230bd3a0380121d0e661d"
+      }
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 1,
+      "n_states": 36,
+      "elapsed_seconds": 26.554632663726807,
+      "finished": "2026-10-22T22:52:14+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.7533111572265625
+        },
+        {
+          "task": 1,
+          "seconds": 0.7775979042053223
+        },
+        {
+          "task": 2,
+          "seconds": 0.8304660320281982
+        },
+        {
+          "task": 3,
+          "seconds": 0.8443963527679443
+        },
+        {
+          "task": 4,
+          "seconds": 0.7601583003997803
+        },
+        {
+          "task": 5,
+          "seconds": 0.7848958969116211
+        },
+        {
+          "task": 6,
+          "seconds": 0.7785229682922363
+        },
+        {
+          "task": 7,
+          "seconds": 0.6892781257629395
+        },
+        {
+          "task": 8,
+          "seconds": 0.7099230289459229
+        },
+        {
+          "task": 9,
+          "seconds": 0.7206709384918213
+        },
+        {
+          "task": 10,
+          "seconds": 0.6708526611328125
+        },
+        {
+          "task": 25,
+          "seconds": 0.6929337978363037
+        },
+        {
+          "task": 39,
+          "seconds": 0.6903181076049805
+        },
+        {
+          "task": 40,
+          "seconds": 0.6941952705383301
+        },
+        {
+          "task": 41,
+          "seconds": 0.6773195266723633
+        },
+        {
+          "task": 42,
+          "seconds": 0.7034850120544434
+        },
+        {
+          "task": 43,
+          "seconds": 0.6816494464874268
+        },
+        {
+          "task": 44,
+          "seconds": 0.7093443870544434
+        },
+        {
+          "task": 45,
+          "seconds": 0.7108864784240723
+        },
+        {
+          "task": 46,
+          "seconds": 0.7315356731414795
+        },
+        {
+          "task": 47,
+          "seconds": 0.7103598117828369
+        },
+        {
+          "task": 48,
+          "seconds": 0.7382042407989502
+        },
+        {
+          "task": 49,
+          "seconds": 0.736048698425293
+        },
+        {
+          "task": 50,
+          "seconds": 0.7183756828308105
+        },
+        {
+          "task": 89,
+          "seconds": 0.7072603702545166
+        },
+        {
+          "task": 90,
+          "seconds": 0.7824578285217285
+        },
+        {
+          "task": 91,
+          "seconds": 0.8082244396209717
+        },
+        {
+          "task": 92,
+          "seconds": 0.7937333583831787
+        },
+        {
+          "task": 93,
+          "seconds": 0.7483847141265869
+        },
+        {
+          "task": 94,
+          "seconds": 0.7286350727081299
+        },
+        {
+          "task": 95,
+          "seconds": 0.7479104995727539
+        },
+        {
+          "task": 96,
+          "seconds": 0.7465808391571045
+        },
+        {
+          "task": 97,
+          "seconds": 0.7375309467315674
+        },
+        {
+          "task": 98,
+          "seconds": 0.7458796501159668
+        },
+        {
+          "task": 99,
+          "seconds": 0.7248482704162598
+        },
+        {
+          "task": 100,
+          "seconds": 0.7420647144317627
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/init.pt": "bc44f0a766ebc4d0c113df451d998cfc636af79337027eb3124858493f497e63",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task1.pt": "cd42883a9a63df8d33574a7da498f921dc0ffe51ab61aac82be614f5b7679638",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task2.pt": "e90352860e4903439652aab750ec1bd6f66fe52ad95c418587fac8de50cff786",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task3.pt": "838dc1e35112bc78a13c6bd6f03f33d6cedb5d32bd8fd3beafe6195b87cd6ddd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task4.pt": "c2524719f3989e04f64fb3e51056e3f442f9c303f6540139771e28e0fd0db735",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task5.pt": "75ad06468f91a415ed27045daf21f491cae188e2794d15c4c8d5dd008b45288c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task6.pt": "535dbf91262db55067451923294d82d38c073d728ed2deb463fbf42d3f20348c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task7.pt": "2cab303fd3b2be417422deb83f8ddf74b5809e4a11c7bbab950b50ed716a0a9e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task8.pt": "731aba2b2c4b4daafe84b2e97f646b5a6d746bd1bf7e4544ff855b379392d1f2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task9.pt": "e40759ee6636ecaee08c01848c835aa3097530400dc3c22fcc882f8d6e322a0a",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task10.pt": "13e29f82764ddbec4e8e1ad50ab0f92c29957dc13c0951ff71dcf67ab77bc33d",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task25.pt": "b806813f447f72cceed733ff0b793fc7dbf54f34cd1975ee98c708605fb0d010",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task39.pt": "ebf19a8bf846638814de004b11b72f47b5a0904edb9c20f3c20e4a616028d049",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task40.pt": "45b0fb39b83425d950218a232fe0bb84c475c8b1ed9006d22790f81b2486f1c2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task41.pt": "cca11f42e6a6568c5eb64f5969a67d3f75555715f5a49d680dbc5ba6edaaf7f9",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task42.pt": "a72a6c5921f916e0cc644ac6324bfeb035d997765a85114e1cf3355a37b9b0f1",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task43.pt": "e0bddf55290df07f9070c507e5a16cdba7e1555e40d760e4160d20f80feb1757",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task44.pt": "2d239d18d50654d66154dfd7afebde1099b87b9d6358127010df9fa0343718b0",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task45.pt": "b14cf43444b64ad8386fd3e50ed737d70fc4d64a5e9434c6c9bedc28e26d4dcc",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task46.pt": "dbc9d880abc2bbd448d78487c6b3c779868645839c1d73a0717d25b3b9d45e9c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task47.pt": "54bb62e581bd99a781972cdbd92edb8a4bb161a6dbbfd541556b19e99cc42319",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task48.pt": "cba8c75385c48cac164a737ca6ce624854897b44c8920f03370cfc867cd82456",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task49.pt": "cf8b393f6d3db4c3bb016d9be1ffb2c6c0ffc55879fe76bca9fcb5ecaf04fe45",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task50.pt": "334b459e2c5ad313ebcd5f3b19c121563103f726345acd50f09db6f20d60f994",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task89.pt": "eb42ba5462af87ea549ce23ce45977cbd06c3272b2508821fbec98fe7a4ff295",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task90.pt": "e8a8f03d8cdf75a35838aadbcfd44fd94deb06c91d723e7e2fe4d68b58ff9e70",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task91.pt": "edea49512c3801468f7982f564f9981f715cc4ccd0c9caebb84092fc17cf857e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task92.pt": "f59474b3fa1cebcce6b76dedcbbadb9c34646ff0df108586d97371f301f7feae",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task93.pt": "78debc208e432f55850c0d25020d99c4b6de206f847080088e5510769b583f08",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task94.pt": "dc442670622f82bba00b6b9a2f1602afa0a025613d00bf16ff5d2390f81059c9",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task95.pt": "53e2f67b6602e7324e73fa32028c645af76977d44fe667516e5853ee51473353",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task96.pt": "7290460650f791000c1bfe62dcb50058a0dcc14eee8092ec389ed064a28b5e31",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task97.pt": "0dcb31a49d6946ea606d43817b15ba355337b93d2cbcda113cd88f261257f4c1",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task98.pt": "8f9fef5a67bc5352653a859c82c084faf7568ddb01d6fb3d01adf1a09e105c83",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task99.pt": "5841b937bdc523e2b9d1e55c42db9c66b092df3f856404835b32c7ad36bc3991",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed1/ckpts/task100.pt": "3237bb83d79fccfbd580d14639f08d4fb178790bc051af7ac0f018f1c78e63c0"
+      },
+      "outputs": {
+        "parts/ReLUcap_seed1_head.csv": "c0d2bfa8d2fab3af0ef5980ac1dd8df871d9bf016cc7f1801576c07c3929dde2",
+        "parts/ReLUcap_seed1_states.csv": "529f8653ddc574944115c076dda4ce81d12993435612d9fd62c37dff229237b1",
+        "raw/units_ReLUcap_seed1.raw.npz": "71fe6d69c4923be7d03fd1720a21dd2efa4ad006819cdc072824b04ce491b4b2"
+      }
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 2,
+      "n_states": 36,
+      "elapsed_seconds": 28.94614601135254,
+      "finished": "2026-10-22T22:52:43+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.81150221824646
+        },
+        {
+          "task": 1,
+          "seconds": 0.8360748291015625
+        },
+        {
+          "task": 2,
+          "seconds": 0.9018211364746094
+        },
+        {
+          "task": 3,
+          "seconds": 0.8420162200927734
+        },
+        {
+          "task": 4,
+          "seconds": 0.8583202362060547
+        },
+        {
+          "task": 5,
+          "seconds": 0.7506983280181885
+        },
+        {
+          "task": 6,
+          "seconds": 0.8242166042327881
+        },
+        {
+          "task": 7,
+          "seconds": 0.7995688915252686
+        },
+        {
+          "task": 8,
+          "seconds": 0.7457160949707031
+        },
+        {
+          "task": 9,
+          "seconds": 0.7837197780609131
+        },
+        {
+          "task": 10,
+          "seconds": 0.7595453262329102
+        },
+        {
+          "task": 25,
+          "seconds": 0.8064823150634766
+        },
+        {
+          "task": 39,
+          "seconds": 0.7793571949005127
+        },
+        {
+          "task": 40,
+          "seconds": 0.753584623336792
+        },
+        {
+          "task": 41,
+          "seconds": 0.7681553363800049
+        },
+        {
+          "task": 42,
+          "seconds": 0.7602596282958984
+        },
+        {
+          "task": 43,
+          "seconds": 0.7881722450256348
+        },
+        {
+          "task": 44,
+          "seconds": 0.7602963447570801
+        },
+        {
+          "task": 45,
+          "seconds": 0.8036525249481201
+        },
+        {
+          "task": 46,
+          "seconds": 0.8050894737243652
+        },
+        {
+          "task": 47,
+          "seconds": 0.8255214691162109
+        },
+        {
+          "task": 48,
+          "seconds": 0.8333168029785156
+        },
+        {
+          "task": 49,
+          "seconds": 0.7837216854095459
+        },
+        {
+          "task": 50,
+          "seconds": 0.7896480560302734
+        },
+        {
+          "task": 89,
+          "seconds": 0.8059656620025635
+        },
+        {
+          "task": 90,
+          "seconds": 0.795053243637085
+        },
+        {
+          "task": 91,
+          "seconds": 0.830211877822876
+        },
+        {
+          "task": 92,
+          "seconds": 0.8046011924743652
+        },
+        {
+          "task": 93,
+          "seconds": 0.7987453937530518
+        },
+        {
+          "task": 94,
+          "seconds": 0.8178319931030273
+        },
+        {
+          "task": 95,
+          "seconds": 0.8760685920715332
+        },
+        {
+          "task": 96,
+          "seconds": 0.8366649150848389
+        },
+        {
+          "task": 97,
+          "seconds": 0.8090770244598389
+        },
+        {
+          "task": 98,
+          "seconds": 0.7727940082550049
+        },
+        {
+          "task": 99,
+          "seconds": 0.7970004081726074
+        },
+        {
+          "task": 100,
+          "seconds": 0.8044750690460205
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/init.pt": "e2a70aed524ef12e2d4d9eda4314ab1b37ea8db54db11dc404fb1061e317f480",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task1.pt": "60f24d8cba0052e02d6e39034015cfcb1b9eef661e3e5fc115b51c478992a4e4",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task2.pt": "bf9d8ddeec62221ce05f421f008f08ea1dcfb5079224d70abe9d31715da4e9d9",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task3.pt": "a93954ed9928e8528bbdc4a197fe55da7a86e927f1fb3fae8447539979fab352",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task4.pt": "f1a91696843843f4c390df2e1f1980ab258bea74de162006038a7c00e0712c7e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task5.pt": "3c60149fcd42ba37d26287f1e0f76f0e073ef427841c5d0657111ab6beb4b248",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task6.pt": "b4748447bcfbd6ff1b490e2e303c0803b5fca530c05d776f5242cf4580e8ad77",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task7.pt": "90e2b24ad59823e3f01da35e85a792d4fa01b7b866d9e17b914d77b2b1e1e848",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task8.pt": "8f5d2f7b3ddd432b0bebb930d0324f50c235c63656798df06e28a3917bc4f9e0",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task9.pt": "17d351c3ccb8013352ab4378b62f5b7086330c7d6edf22e32ba9d439b3bb397c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task10.pt": "c5f343c12b5bd28602bc200d0b7c5876b6d303533be8b4cd79c875dc2d46f7f6",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task25.pt": "8271025dbd8a958b0b67954e0d8287fbfc049fc0a60abd17380ed6af707fe8a7",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task39.pt": "8619b25e55f243e2faef51f392589a529dd90b204d468c3ae9a2d43839349373",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task40.pt": "cfdbd665e2dd5575d0f8ccb30be341231412f13d4dbf831787f99a6cd18a8f1c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task41.pt": "8499ca3af0823f715c86b7d277ebabdaabcddfa72aa97bb5386b6c844890f6ea",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task42.pt": "8c19ed533c050315be48882f9e5124ab69529cca7999713ee14a7d576d99f3b6",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task43.pt": "d39906637e77fad9a7d50179f91d6d3fa7f301e4449e5fa4c7b0827bb55ce367",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task44.pt": "bc27f4e3e3506d8431aa71a6c4f361ce4788ed3e05cfbf5a5ba80bdd88407f9e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task45.pt": "b4cf6f05872d4fb231e7b6f5958bb6d4c218fa68ba1c6d03810874c27c191618",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task46.pt": "9283b7e62ac440819ccde70a6f02b152688b98d0a7e6341f8cfa50b84bd9c603",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task47.pt": "884cf322933fc0c89fe42ee925f3bf7be51f307d05cec5e317c8417e734a2fe8",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task48.pt": "080d578c447e6bc859f3ef94ecdc0bbf86847197f172566411de42d31510dcdd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task49.pt": "5ef58ce0d4bb7b1bc9ecf66415fc76bd37b93b3f0582467c665566273eb5237c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task50.pt": "5d451af68b957b40a45aa13ebc2fae6cec20b6b2bf79399b9d7a6e4f45d7bd90",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task89.pt": "be228c49b2fb4c056db1e50bc56e0e4f5818980611d3a0b66b4e48b57011141c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task90.pt": "29682f5200b278644ec9f96f1140da002072fba01f340ac8327ca866b49dc241",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task91.pt": "10bc1e913491a1edab9f88402f7845d655c5855ee85eca90c95cf3d955ad609b",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task92.pt": "22ad0521fbf9fe6892ac18e8a44c2c2a9afe8e7d3848e6ada3893cf6a7187e85",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task93.pt": "83f74883ecd0a338eb8e400dfcd2cc10565d8ebb70a7e4fdf3b654129387ff1f",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task94.pt": "7d2e538dc573e74b6fb097131640a6eebb4028e08bcb689574b6ace2cc034e04",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task95.pt": "47d7dbe2f05744f174ce829283b2102150f9a4c1ce952ea588584bab9b315e12",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task96.pt": "a56914bfb24fea3bec1e3aeec8ea48ba10fc867b7e474569a124525e20fc6424",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task97.pt": "ae5fe5b85f0d293372f43ef8c3b2e5555e863be3e7ace02a31d4a3d2f0285ec7",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task98.pt": "d8e0d3d0e71da62766556cd4a786ce6cda783c31bc67ee058924b2034a18b6b2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task99.pt": "17f473b77c6f1f519666b0845194c32553f0ca81ee9cba9e4733aca60a86c514",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed2/ckpts/task100.pt": "1efa68237d59e53c0c5a191d0d486ba1f6111645ea12a8c2847abd1f5140d50b"
+      },
+      "outputs": {
+        "parts/ReLUcap_seed2_head.csv": "bc9384acb5c23e7786021a68580f1a5f7e10c1bcc5854a5cee208a1a76e22f17",
+        "parts/ReLUcap_seed2_states.csv": "521a7fc3b24da716b6f1262482eaebef0964c4206cad672685191d191ee3dd84",
+        "raw/units_ReLUcap_seed2.raw.npz": "2d162394c8ee0dd382aedfa61fa94fda3e79e6244c98fae1355ee5526c06c9ac"
+      }
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 3,
+      "n_states": 36,
+      "elapsed_seconds": 28.159268379211426,
+      "finished": "2026-10-22T22:53:11+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.7723324298858643
+        },
+        {
+          "task": 1,
+          "seconds": 0.8167338371276855
+        },
+        {
+          "task": 2,
+          "seconds": 0.7819192409515381
+        },
+        {
+          "task": 3,
+          "seconds": 0.8028361797332764
+        },
+        {
+          "task": 4,
+          "seconds": 0.7986965179443359
+        },
+        {
+          "task": 5,
+          "seconds": 0.7314038276672363
+        },
+        {
+          "task": 6,
+          "seconds": 0.7485141754150391
+        },
+        {
+          "task": 7,
+          "seconds": 0.7263457775115967
+        },
+        {
+          "task": 8,
+          "seconds": 0.7244038581848145
+        },
+        {
+          "task": 9,
+          "seconds": 0.8565926551818848
+        },
+        {
+          "task": 10,
+          "seconds": 0.8589572906494141
+        },
+        {
+          "task": 25,
+          "seconds": 0.8234596252441406
+        },
+        {
+          "task": 39,
+          "seconds": 0.7691051959991455
+        },
+        {
+          "task": 40,
+          "seconds": 0.7711582183837891
+        },
+        {
+          "task": 41,
+          "seconds": 0.7547638416290283
+        },
+        {
+          "task": 42,
+          "seconds": 0.7301383018493652
+        },
+        {
+          "task": 43,
+          "seconds": 0.7160854339599609
+        },
+        {
+          "task": 44,
+          "seconds": 0.7225730419158936
+        },
+        {
+          "task": 45,
+          "seconds": 0.7121615409851074
+        },
+        {
+          "task": 46,
+          "seconds": 0.7201375961303711
+        },
+        {
+          "task": 47,
+          "seconds": 0.7406265735626221
+        },
+        {
+          "task": 48,
+          "seconds": 0.7419557571411133
+        },
+        {
+          "task": 49,
+          "seconds": 0.7687015533447266
+        },
+        {
+          "task": 50,
+          "seconds": 0.7842738628387451
+        },
+        {
+          "task": 89,
+          "seconds": 0.8152494430541992
+        },
+        {
+          "task": 90,
+          "seconds": 0.8517334461212158
+        },
+        {
+          "task": 91,
+          "seconds": 0.8518602848052979
+        },
+        {
+          "task": 92,
+          "seconds": 0.851597785949707
+        },
+        {
+          "task": 93,
+          "seconds": 0.8109471797943115
+        },
+        {
+          "task": 94,
+          "seconds": 0.7580854892730713
+        },
+        {
+          "task": 95,
+          "seconds": 0.7893016338348389
+        },
+        {
+          "task": 96,
+          "seconds": 0.8486776351928711
+        },
+        {
+          "task": 97,
+          "seconds": 0.8169047832489014
+        },
+        {
+          "task": 98,
+          "seconds": 0.827296257019043
+        },
+        {
+          "task": 99,
+          "seconds": 0.7643115520477295
+        },
+        {
+          "task": 100,
+          "seconds": 0.7731375694274902
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/init.pt": "c7f8e034d7962165865c5f41c8141b1e1c6c859c863b5efacf537d7b43c1a9b1",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task1.pt": "48f9c3076484ee7a5edc0e7ea19759e0ebf38f54c255eb9b270f838f332f2577",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task2.pt": "3abd3a83cfd658494674f8cb57e5f9033710ecaef681263fc0ad42747290f022",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task3.pt": "e04a5fdf88efd4c6e68d7f2476258f9830be4c6e9da315aa74e4ed82f96affc2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task4.pt": "3cbe918df6f354aab86d10d145e46e145fa821826e6671daad64873c7d8f5234",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task5.pt": "00b8d2c68058724919261620504a85aa427b8b7ba3629b21d30327fd276e0b2a",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task6.pt": "f61ed89f7ca35bc3a3285ff450ff5eccd6f84b19d2a175390a450113326c3542",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task7.pt": "bcdd5bf2e5182b884f3990564e66f85a303e39e61638e6b1de9ae9edae686c47",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task8.pt": "b7337b10c319132eb6e42691f46eb43a0a87105b7b4ae992cb90664a72748e98",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task9.pt": "475c7aad6707b2737198f701b7c2b1eba624057b5aef71e063db18cf637dfa11",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task10.pt": "153a4a1b77e6b9d05d4ac5a0a42b0a9ffd5c474cdeb9ae9522db08db56fb7c7f",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task25.pt": "edf95985e8dee532bdc67a789e336f26ebed43eb4a18033e13adc418a2bf1d1b",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task39.pt": "a806791fb4cbe675cb5dc54892366c642302907ecea543d562697ca774cfd06a",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task40.pt": "b30c4f90e13d9af4baa6d8c19b6bc9e5130aef69685f551d7ba85bf4bb7bb180",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task41.pt": "9ff7f8e52e54e800cc0342990fc32ef24f013cc986a7d14d51b63d81b2ed0f56",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task42.pt": "54f23895432d30eb5e77043b283da878fd116d976aae98a1cddafd04f02be6f8",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task43.pt": "af5567c964410b7988428ce69118225ca1fd357dc1e8d664f0b7814f88b6bef6",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task44.pt": "11c4d0dcdfbdf4e52cf7fb3a2484654ec63e2cab3883c8f19e6c009f444d55dd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task45.pt": "6a47b1233a7c3833943d3ac8f38ea5682e704b7a97f5055a9e45a3f0278e6a2f",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task46.pt": "60f7d909e38816fe41850d49dc63598581c130c9fa1af73b720a73f6cdc2db55",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task47.pt": "da9f67567b3240661d3bf18d9cd247409e9d2f1d4d3a5c736c57ea251f9669a2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task48.pt": "866189eddd173ea08eaa297cf89298c1898ab5bd618ad8f0d763f60119633c41",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task49.pt": "ff92c9133be98aa385cd3badb465e47bca14db1db0286bf14d677a346108e8cc",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task50.pt": "36cafa3fcc1e3e62c80a21582a60eab11523bb1750434b9727182c9704cff5dd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task89.pt": "92fe50e997abf0bf451fad395e7d32791569b7fc098e5221d24bddf4f8497345",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task90.pt": "bc3e54dce73ae0cd70af85adc120f27b03ae75140dfe24964550447b99f01bf5",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task91.pt": "c9dfcb4287780f915c629d820ac534c88dc59eb96976db9afa100358bb40ea68",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task92.pt": "ef23765fa4fd0bcdae01e101b5bb8fdb16f031d023807cfae8a780292366fdbd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task93.pt": "63459c908191dfa686d4d882cc93ade10a90494394dfd82a7ec87b566cfd2d46",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task94.pt": "8765052d4e85f52bb2443506aa802342a0de8612c52ac93d324927cbe170d48a",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task95.pt": "fa36560420fef6b92eb18735739bdaf4d15056b454b0af0c61e5fe36e4ee06f0",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task96.pt": "ed45830f15f1476dc1669bf6126fa5877cac7927d0e42c498d44efb8f1fabc2a",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task97.pt": "57c53cb5a9c13f6b0159644a1a9911ba701e5566c073237eb702dae8227d216f",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task98.pt": "56a98daa17b4a15bd0f876d27ac862891138812e42441b1f410580418265a6d2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task99.pt": "87fbaf41b4e5f27b8ff872da4de73472826210426b4e1c5c9924aa51dc1440e0",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed3/ckpts/task100.pt": "0c3492d0cedac7dcec644ed5b42c0562d11d8a603020354f4fff567f49e82b8b"
+      },
+      "outputs": {
+        "parts/ReLUcap_seed3_head.csv": "293d81bb2dad4e2df3e55b15d00689cc00f8f98625a2310b6ed417a58ec80d16",
+        "parts/ReLUcap_seed3_states.csv": "2ccd1ed30ff7d8f7a805a69dc602e38725c2f1bff321d92fc47d11cbff07f465",
+        "raw/units_ReLUcap_seed3.raw.npz": "cc6744b1b531f9847d56e139f98b920a7963d838adbc68df369cb7ced1a1c936"
+      }
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 4,
+      "n_states": 36,
+      "elapsed_seconds": 30.250279903411865,
+      "finished": "2026-10-22T22:53:41+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.8112390041351318
+        },
+        {
+          "task": 1,
+          "seconds": 0.8192362785339355
+        },
+        {
+          "task": 2,
+          "seconds": 0.8476786613464355
+        },
+        {
+          "task": 3,
+          "seconds": 0.87803053855896
+        },
+        {
+          "task": 4,
+          "seconds": 0.8786020278930664
+        },
+        {
+          "task": 5,
+          "seconds": 0.8226118087768555
+        },
+        {
+          "task": 6,
+          "seconds": 0.8489835262298584
+        },
+        {
+          "task": 7,
+          "seconds": 0.8230888843536377
+        },
+        {
+          "task": 8,
+          "seconds": 0.8443448543548584
+        },
+        {
+          "task": 9,
+          "seconds": 0.8051285743713379
+        },
+        {
+          "task": 10,
+          "seconds": 0.7792694568634033
+        },
+        {
+          "task": 25,
+          "seconds": 0.79227614402771
+        },
+        {
+          "task": 39,
+          "seconds": 0.8143532276153564
+        },
+        {
+          "task": 40,
+          "seconds": 0.7966349124908447
+        },
+        {
+          "task": 41,
+          "seconds": 0.8060553073883057
+        },
+        {
+          "task": 42,
+          "seconds": 0.7668917179107666
+        },
+        {
+          "task": 43,
+          "seconds": 0.8512692451477051
+        },
+        {
+          "task": 44,
+          "seconds": 0.919036865234375
+        },
+        {
+          "task": 45,
+          "seconds": 0.832251787185669
+        },
+        {
+          "task": 46,
+          "seconds": 0.9099812507629395
+        },
+        {
+          "task": 47,
+          "seconds": 0.8156044483184814
+        },
+        {
+          "task": 48,
+          "seconds": 0.7697305679321289
+        },
+        {
+          "task": 49,
+          "seconds": 0.8142850399017334
+        },
+        {
+          "task": 50,
+          "seconds": 0.8312757015228271
+        },
+        {
+          "task": 89,
+          "seconds": 0.8351612091064453
+        },
+        {
+          "task": 90,
+          "seconds": 0.8243794441223145
+        },
+        {
+          "task": 91,
+          "seconds": 0.8613114356994629
+        },
+        {
+          "task": 92,
+          "seconds": 0.8519220352172852
+        },
+        {
+          "task": 93,
+          "seconds": 0.8710856437683105
+        },
+        {
+          "task": 94,
+          "seconds": 0.8529360294342041
+        },
+        {
+          "task": 95,
+          "seconds": 0.8828637599945068
+        },
+        {
+          "task": 96,
+          "seconds": 0.9363961219787598
+        },
+        {
+          "task": 97,
+          "seconds": 0.8399980068206787
+        },
+        {
+          "task": 98,
+          "seconds": 0.8490729331970215
+        },
+        {
+          "task": 99,
+          "seconds": 0.8474006652832031
+        },
+        {
+          "task": 100,
+          "seconds": 0.8922786712646484
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/init.pt": "51f87a129e2dbe923e3dfb8c6a58c598d961ae3abb946a1190fd9844f27a9551",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task1.pt": "389d6f7ea0dfce262a2adbe8abd00837ec25e59a4945b92174ebc27bda421647",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task2.pt": "f9d651effbad386da6e76acc8623086f1b57513d7901dbd087f5d5534bd24ee1",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task3.pt": "96162195de5b0fc6b36a01e393e750915c4e0d623a45304385fdd87237608c4d",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task4.pt": "d58accf8c49699cbd3f927b6a4155a36e7eaecb867221a47d032f65ed6432024",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task5.pt": "9c8de0beaed883e4949c85d1d57ebbbf6f5f71f183736495d1db2edda64f201b",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task6.pt": "04c305a2411989d35d4ebdf4e10b1a9ac7b2f240f5eb022d42d9666a72af7ea6",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task7.pt": "c2506e8f500e6a3234cbbda28e283b6f9fd13f975fc2168ecf683756eb648a3d",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task8.pt": "d0c8cf9d7d4a6db143084aa57a872efefa023b045e18547188d89e39cae2e9bd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task9.pt": "5c242244c356fcd37b3d4741544d5aace0f6829903b409d289a779dbb07385f7",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task10.pt": "27755cad291981de37c7c53747427f6ff430dbea2df25a839b6d9e81f7b991cc",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task25.pt": "2e6d21f954cdabe331a9d729911528a777fd2b3f29705d75b0d725f5408c1928",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task39.pt": "643e9d69a36a718c571af3dda52e05721e6e2b59cf347576073a4a033ea20af4",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task40.pt": "e8ec2e14e3b4f36426a4b0a2130b22f220c9df1d52204bbba44c74418bef34bf",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task41.pt": "d689d428d3b3e45cbdbe10aeb59cc68bed28da09af92002be3704de04edf079c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task42.pt": "904cdbbaf1977836145dab529f52b28f034dd456aaafb77917ee2c82638654f5",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task43.pt": "4b6aa9c853406348f9804d1a483032084da017e7cb3f835b73914b9fb53a7a16",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task44.pt": "6469d1671e155dc9ee8ef48ce3043d4bf5d1db4d549f84142497007c3a6f6bac",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task45.pt": "88afc79730f9be828123beec2073312e82df8aff59397308df09e0471b8fdbc9",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task46.pt": "e9d90319a874ff469c5dc09a9e9b9f2fe32a0cd03c67ad7fb225bca79cb71798",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task47.pt": "febdad68ae68125cba028a49e94d911c56f770c141f540d0c9436a5644008930",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task48.pt": "836d6bdd9385de0672b8880ffb68aac2930110fb28cc4f6ca014e9d990a1d38d",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task49.pt": "76dedc331de73cff4547454ff8249ba8395d3c614621b112a936d3507afd67ed",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task50.pt": "690c369dc8d89adae2e87a46e63047c842c64f8bff469d05c99e81ca64813b61",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task89.pt": "7ef0bbb84258d005a611dce9666e02b46c905a0758ad9d3f189767f7b7d2d332",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task90.pt": "8fabad30409d237e3603dd9539628d532a1b44e7ff0e02d1c7c170dc7ea06c2b",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task91.pt": "c5ef1767e5a6d1f4dce3a23fb16f5ecdc657dd4ad3e47b40889c95013106027c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task92.pt": "858529190ceb8878cb021782a69d7146b506afeb7ecc0187d0c1b401377dd2a2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task93.pt": "f9d61c35016f0dab5b4660f05b34c2295bcbe7cdb0c3298db87a87c17b6d0cfc",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task94.pt": "adccae6ddbbe999881f8387274fe38268e49359b54cb00233492be6a165ced7e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task95.pt": "7c64ea2cfad98a3a535564935968ac193eb230f2fa454f1dc7d449ff552c7c9d",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task96.pt": "8bd321c1ec337d8dfb71d68f3be12752d2bf5a3d3ab8b8059c421d7840c828e9",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task97.pt": "7c232f7b020ca677b7ffcc550d472f1d5cbf5ab1bba0cd582793a4f4c0a53110",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task98.pt": "4bfaf506c17190ff96438110861e6c0a8e69f05a35202abccab83a28ea9f87cb",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task99.pt": "33e2e0a6c9113888d413c1664acd65d24fa3d1858da80b2931e4070d7a3a139a",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed4/ckpts/task100.pt": "19d1c05ac33cbd912753c8593c57f6ac3ee07db5763b868f2a1831f99dac89eb"
+      },
+      "outputs": {
+        "parts/ReLUcap_seed4_head.csv": "318a8be6a8371c13ed034efbb1736208199e674f90a08436ff455e919118d196",
+        "parts/ReLUcap_seed4_states.csv": "b79e4dbc9b6789e1aa006307031595cb3ef0efe3bef6022d39511963147e9706",
+        "raw/units_ReLUcap_seed4.raw.npz": "5cd19cc286ba2132564995a825ebbba9124ef16c15799b85e3052d8eeb2b5ec8"
+      }
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 5,
+      "n_states": 36,
+      "elapsed_seconds": 29.26685070991516,
+      "finished": "2026-10-22T22:54:11+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.8532652854919434
+        },
+        {
+          "task": 1,
+          "seconds": 0.851365327835083
+        },
+        {
+          "task": 2,
+          "seconds": 0.760556697845459
+        },
+        {
+          "task": 3,
+          "seconds": 0.8655543327331543
+        },
+        {
+          "task": 4,
+          "seconds": 0.8893635272979736
+        },
+        {
+          "task": 5,
+          "seconds": 0.7939097881317139
+        },
+        {
+          "task": 6,
+          "seconds": 0.781378984451294
+        },
+        {
+          "task": 7,
+          "seconds": 0.8052706718444824
+        },
+        {
+          "task": 8,
+          "seconds": 0.8202018737792969
+        },
+        {
+          "task": 9,
+          "seconds": 0.7918047904968262
+        },
+        {
+          "task": 10,
+          "seconds": 0.7987995147705078
+        },
+        {
+          "task": 25,
+          "seconds": 0.774430513381958
+        },
+        {
+          "task": 39,
+          "seconds": 0.8424606323242188
+        },
+        {
+          "task": 40,
+          "seconds": 0.8507833480834961
+        },
+        {
+          "task": 41,
+          "seconds": 0.8319442272186279
+        },
+        {
+          "task": 42,
+          "seconds": 0.8123464584350586
+        },
+        {
+          "task": 43,
+          "seconds": 0.7940256595611572
+        },
+        {
+          "task": 44,
+          "seconds": 0.8315212726593018
+        },
+        {
+          "task": 45,
+          "seconds": 0.7453324794769287
+        },
+        {
+          "task": 46,
+          "seconds": 0.7663025856018066
+        },
+        {
+          "task": 47,
+          "seconds": 0.7793221473693848
+        },
+        {
+          "task": 48,
+          "seconds": 0.806743860244751
+        },
+        {
+          "task": 49,
+          "seconds": 0.8525161743164062
+        },
+        {
+          "task": 50,
+          "seconds": 0.8580656051635742
+        },
+        {
+          "task": 89,
+          "seconds": 0.8014333248138428
+        },
+        {
+          "task": 90,
+          "seconds": 0.8113586902618408
+        },
+        {
+          "task": 91,
+          "seconds": 0.8089039325714111
+        },
+        {
+          "task": 92,
+          "seconds": 0.8581385612487793
+        },
+        {
+          "task": 93,
+          "seconds": 0.8100895881652832
+        },
+        {
+          "task": 94,
+          "seconds": 0.8092200756072998
+        },
+        {
+          "task": 95,
+          "seconds": 0.829434871673584
+        },
+        {
+          "task": 96,
+          "seconds": 0.7681546211242676
+        },
+        {
+          "task": 97,
+          "seconds": 0.790830135345459
+        },
+        {
+          "task": 98,
+          "seconds": 0.7949428558349609
+        },
+        {
+          "task": 99,
+          "seconds": 0.7706277370452881
+        },
+        {
+          "task": 100,
+          "seconds": 0.8301525115966797
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/init.pt": "d65ada108281e136c52bcd588911b18269bc3d5c95cd1b0141a321a8592a3b82",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task1.pt": "a852e732c4b3be223ba426f39f34ef05b3160f8011650ed2a8412a61f1b4edd2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task2.pt": "fb43311d6b6e5719082eeda2f2f227f3925c01018e797894c456ef028c2ce8f4",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task3.pt": "515eee5b0bf07b2e153f054bbb2907b5d473c50467e648c4710450fcbb484720",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task4.pt": "bc5f4c8ac31906b5f22ff61e18b0365e5fbde4224e71c38537c4e619ecf29e14",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task5.pt": "ad6568e261739598bb5858f080a798ce3e63abde329a8aa8e225a7eb7630909b",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task6.pt": "8f2e3d5a6cf6fe765e3860c17260c29acc69d4f0a1e3b1f9a2d791257493440a",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task7.pt": "23c3c411ec348f3d2253ceb6b9bf857183952d4df8f675e3b0e4643d10d33a04",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task8.pt": "03074a6135a4cf41ecdc9682a75cff3dccd12e67484de53758aff4a28435684e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task9.pt": "999bb563879c6e490dec4b67959935758d85dbadcd251e104ef89f25450ae6fa",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task10.pt": "efb6e5035814976c9b24419e2f873dc185e53497f53b8b6f33aef4f44050ab75",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task25.pt": "1644c22c563c40332fb7b85a3655b2c8078bca7b76cc70a4ef1af006a2082a34",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task39.pt": "2efb9423846029ea63ce8eb325807667c92a64dd936368689eb11e0a630930a5",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task40.pt": "2840a1b8a88a4a35ac849f7052799525373d4d3865766114c607b42afda71efd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task41.pt": "a995aad9212d7ce08dec9b01d9aa9e1ccdbf7ec06e78666d9f81bbf7560d0274",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task42.pt": "107b00823fef6c683dd8621efd325f2060790b565ee51c10e1063e848c0c00be",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task43.pt": "7b86fa9f2e215a38af02e90d493a593cb01b97820816ccc639e139be9a42738b",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task44.pt": "ff51546a16929f0b5b62624582e82bba86fdde525889446f4ae784ec4121b7d7",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task45.pt": "afd743ae487dbb084786de94dd0edbdaa2a699f3cd97c38e89ba57e8b4f81b38",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task46.pt": "925d601694d597d0b82850d17e09361f19f49bd4777a6e823754b8d7a061fb1d",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task47.pt": "1b1a1c5723fd8c3b5ddf570d855c85d9b96d39a44c4a34bddaa30dccd1cc6ea9",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task48.pt": "51de3e7d9703d68722e42c714fedb9068f536787c5eb46532d43bfe94cc57546",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task49.pt": "d125dd5a0d67b9095b7f53e9b8b8984c749016ad146880464331ac3334f33cf7",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task50.pt": "4aa0a0daad560ad573f751aadf7ba372b6608e79747620ed290809df1600dc88",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task89.pt": "2bfe1b33a33b49ef58a9ea3d258a6a125a3d1d6b2cd478378cf33383773e51b2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task90.pt": "ae691679dc3e75b5ecf323e30a3a723ea2bc4eaaa191e698b9bc328fa50b655f",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task91.pt": "a4932654ca2da1998af98821023b0a98e197489c632f02eaa5cb1e22a9832a96",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task92.pt": "03f90430678785f9f782f92b4e4a703581d88faca0ee8f871159be6b8ad2b40d",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task93.pt": "02b98f3c7c20e97aead6fd2173efa6212e7a9f79cf932989dd4fd822c29a658b",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task94.pt": "e7c1983b7efb38b333c8693cfc9e58ffa9569d1619b365102f4ca648d197ccad",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task95.pt": "d154a7f2f36ad63255ab095246cc213f920c420dfc2851fa8a9fcbad51cadc2f",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task96.pt": "251b8132a784e903058408d600f0482ec5232e59c45eed4cd5b67faf7991d694",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task97.pt": "afadcf4eac09a6bc08f25e0511c6cc9ecd7107882c3b155849a9820eb2325bde",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task98.pt": "42614cc0e4380590635fe3d0e659905720248ac93b4275fe64721e936bc7f6cd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task99.pt": "c253eecf6278e4c21a097ddc4a1226a3de9d229b919b2844b8dcc07e1f728457",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed5/ckpts/task100.pt": "504d25e59f90d61e712a27ebcb3c5b276d0177d901889934c073d125ff39368c"
+      },
+      "outputs": {
+        "parts/ReLUcap_seed5_head.csv": "24bd412a2d2c4fcca150618bc95d4cf4318ed85b2ea84837c9063588cdf3cb88",
+        "parts/ReLUcap_seed5_states.csv": "2aa8bac346eb7bacc1129443a6bb90936fbe528d6c07c4253ab02b4991d12df5",
+        "raw/units_ReLUcap_seed5.raw.npz": "ff5357855e828eaff2f9a22da0e0ebbcf19c5ea0e51a209befdf2918af122d17"
+      }
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 6,
+      "n_states": 36,
+      "elapsed_seconds": 28.202369928359985,
+      "finished": "2026-10-22T22:54:39+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.8251888751983643
+        },
+        {
+          "task": 1,
+          "seconds": 0.877697229385376
+        },
+        {
+          "task": 2,
+          "seconds": 0.9040627479553223
+        },
+        {
+          "task": 3,
+          "seconds": 0.8791098594665527
+        },
+        {
+          "task": 4,
+          "seconds": 0.8609724044799805
+        },
+        {
+          "task": 5,
+          "seconds": 0.8553884029388428
+        },
+        {
+          "task": 6,
+          "seconds": 0.7902834415435791
+        },
+        {
+          "task": 7,
+          "seconds": 0.8532886505126953
+        },
+        {
+          "task": 8,
+          "seconds": 0.8413400650024414
+        },
+        {
+          "task": 9,
+          "seconds": 0.7704856395721436
+        },
+        {
+          "task": 10,
+          "seconds": 0.7179253101348877
+        },
+        {
+          "task": 25,
+          "seconds": 0.7570469379425049
+        },
+        {
+          "task": 39,
+          "seconds": 0.7794945240020752
+        },
+        {
+          "task": 40,
+          "seconds": 0.7518973350524902
+        },
+        {
+          "task": 41,
+          "seconds": 0.7155575752258301
+        },
+        {
+          "task": 42,
+          "seconds": 0.6987185478210449
+        },
+        {
+          "task": 43,
+          "seconds": 0.6717793941497803
+        },
+        {
+          "task": 44,
+          "seconds": 0.7542872428894043
+        },
+        {
+          "task": 45,
+          "seconds": 0.8729279041290283
+        },
+        {
+          "task": 46,
+          "seconds": 0.7758610248565674
+        },
+        {
+          "task": 47,
+          "seconds": 0.7634692192077637
+        },
+        {
+          "task": 48,
+          "seconds": 0.7663304805755615
+        },
+        {
+          "task": 49,
+          "seconds": 0.7630312442779541
+        },
+        {
+          "task": 50,
+          "seconds": 0.7367570400238037
+        },
+        {
+          "task": 89,
+          "seconds": 0.7304143905639648
+        },
+        {
+          "task": 90,
+          "seconds": 0.809927225112915
+        },
+        {
+          "task": 91,
+          "seconds": 0.7449932098388672
+        },
+        {
+          "task": 92,
+          "seconds": 0.7818470001220703
+        },
+        {
+          "task": 93,
+          "seconds": 0.7956080436706543
+        },
+        {
+          "task": 94,
+          "seconds": 0.8460636138916016
+        },
+        {
+          "task": 95,
+          "seconds": 0.7606191635131836
+        },
+        {
+          "task": 96,
+          "seconds": 0.7199790477752686
+        },
+        {
+          "task": 97,
+          "seconds": 0.740631103515625
+        },
+        {
+          "task": 98,
+          "seconds": 0.771979808807373
+        },
+        {
+          "task": 99,
+          "seconds": 0.7161695957183838
+        },
+        {
+          "task": 100,
+          "seconds": 0.7737820148468018
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/init.pt": "d382b6f58a12d8dc361934c737497b7ec29fab100112818daf4514ce0d0a47c8",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task1.pt": "1557c9adffea71d1048f6ecabe18b67b13744553b0b5880e0b4cee32bd00a655",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task2.pt": "4089564f469307596d5fc7377ca620b31f7faee684ab9bbc2953f28c926707f2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task3.pt": "efe574e479b4cb96c32806055bd4be5e1a1a48fffe2318804f4c8fc78a0e3ccf",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task4.pt": "1171a8c2de32ac00640d21a03a1e41240a80ec1646cfbb18b264bb4508754617",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task5.pt": "24737d7d3c10200aefb78f194dc6bcc0dd90fd821d44e7468f27fae652f09d86",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task6.pt": "adfb491dcd2934f293145e8e48a4feb7a6d7997b6e9c728a763308a1e19998e8",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task7.pt": "daa8085bc0163e5bb69608b85793debae5f6c234a6422e6e92c029b7f4823752",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task8.pt": "1024c63d716f0a495217819c00a28a43398ec195fd15fa59b7145d54a102566e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task9.pt": "299f4b997dde9626c8a65fc4279293a330000f8d837d27338c89a1dd0053eeb8",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task10.pt": "9a4215b84ee7b77584f3d2251ce44a364270aaecb7c23a80f3a20f24f06fccd0",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task25.pt": "6b2090b4d10ebcd1f925e10a95da16a41bb46922116abb1a8a74feac35b27b02",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task39.pt": "b5d9b34cf7dad896bf6afb111ccf4c616aef4ed301b2a6a07f7eeffa566c939a",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task40.pt": "f1bb4147b45607fcdefefffd68d4638adc959650dbe821054e262bfd5f034105",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task41.pt": "a159a2dc0f9856ced008891e6ebdb8aff34dadb1b2ddf0c442cb5a959893e097",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task42.pt": "4e0612fbdbfe2acb9117d098326bfdd55cb3478d34ff402ddd3f4eb4aba8238e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task43.pt": "33d7f610b0437e62f5b9846dddd79beb81ab3de97b8f5267141e1438d4b9f0e6",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task44.pt": "0512a283ea2699904f15482c0ac62ee8195c124749130fe6d008b134b8444bd6",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task45.pt": "d6a9e41e604d1212c3633b84ac54781c28adef2b3b1431c189e3970317ea3d09",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task46.pt": "e573fbfe638fecd29ab6fe71b934d7e0196ceb4bdbd04507bdea58cf4386ff6c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task47.pt": "d3c65983df4dec1b9d36eba0bee7572b7d06e9f496c72bf8ff202ce6b7271eb8",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task48.pt": "3e15efd778c076f72043b458694ac66a5e10bfd913403fb6c0aec1dbc48c2b60",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task49.pt": "9889ba0bfa5cd1839d0bdb0caafbb69960afd9880eab33545269ad28bd061eb6",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task50.pt": "8a48d29e640d0a0040731695ec6537c7e9939a7ee05cd9b4d57d82586f293acc",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task89.pt": "32c02c33917c3cd0a162c83aa8ef0a34530b4610b78988d6440113c98306a907",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task90.pt": "1ff2c92a9ec8766817f40657e5dc794a0e3733c58736e567c139457b9a4b80fe",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task91.pt": "19d10d358993c817761766df4c55a02fadf95ed37b0a92716eed083a6db7a1f9",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task92.pt": "e58dc69dc3571f354c590ee3cacbeed8adc5e9efd2ff28c4308b01a683510edb",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task93.pt": "9127d4c53fbdcde7ece5250a66b02a3f28a79e3694e16e05def17815721d9513",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task94.pt": "62f3175ede2922b7b55d3cce7997f2cd2609717351b449f71567be65b9c12286",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task95.pt": "e690184a33776ae3a7d2ef63f99d360a2d523ec1818ebf60f3668b0c502cd1dd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task96.pt": "a3e9cc0697b15c1ef7c5b135ddf55ab3b07e553de0323adec759485f341e5e53",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task97.pt": "24364949b81ba694f05247a65001083a076163783c32ecf59c6877c947def7fe",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task98.pt": "ae88fe3b017e617ad0b5e98458f41b3075cbafd386b4a7a23f676c3552f838bc",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task99.pt": "f6555f483b6b5f1fcf81f92bcceed45de09a7befdef6ba69d502547e54d55b4b",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed6/ckpts/task100.pt": "85a620f6e9f31c231a637bc3e9361ad9d111aef3cd8d9d1b7cd492f1ee4258e2"
+      },
+      "outputs": {
+        "parts/ReLUcap_seed6_head.csv": "8e27067da9c570b97e67ab4e8417abb4ed30a3864b3000e278b1c2f7956e4ca5",
+        "parts/ReLUcap_seed6_states.csv": "3297b1bd5134a3cded37ce9708feaec58e38eb7dcec7dc2ed9ee2f254998f4b7",
+        "raw/units_ReLUcap_seed6.raw.npz": "2f1a54a00334fb056d23761d90c7e66fa0e40e1869febc592574dc7157cce08e"
+      }
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 7,
+      "n_states": 36,
+      "elapsed_seconds": 29.88945484161377,
+      "finished": "2026-10-22T22:55:09+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.7999269962310791
+        },
+        {
+          "task": 1,
+          "seconds": 0.8880829811096191
+        },
+        {
+          "task": 2,
+          "seconds": 0.8888778686523438
+        },
+        {
+          "task": 3,
+          "seconds": 0.8245642185211182
+        },
+        {
+          "task": 4,
+          "seconds": 0.8331811428070068
+        },
+        {
+          "task": 5,
+          "seconds": 0.8283340930938721
+        },
+        {
+          "task": 6,
+          "seconds": 0.8078770637512207
+        },
+        {
+          "task": 7,
+          "seconds": 0.8078129291534424
+        },
+        {
+          "task": 8,
+          "seconds": 0.8011417388916016
+        },
+        {
+          "task": 9,
+          "seconds": 0.8292031288146973
+        },
+        {
+          "task": 10,
+          "seconds": 0.8852896690368652
+        },
+        {
+          "task": 25,
+          "seconds": 0.8709232807159424
+        },
+        {
+          "task": 39,
+          "seconds": 0.7744729518890381
+        },
+        {
+          "task": 40,
+          "seconds": 0.807239294052124
+        },
+        {
+          "task": 41,
+          "seconds": 0.9189894199371338
+        },
+        {
+          "task": 42,
+          "seconds": 0.843975305557251
+        },
+        {
+          "task": 43,
+          "seconds": 0.7785284519195557
+        },
+        {
+          "task": 44,
+          "seconds": 0.8473565578460693
+        },
+        {
+          "task": 45,
+          "seconds": 0.7866411209106445
+        },
+        {
+          "task": 46,
+          "seconds": 0.8228235244750977
+        },
+        {
+          "task": 47,
+          "seconds": 0.8198287487030029
+        },
+        {
+          "task": 48,
+          "seconds": 0.7834591865539551
+        },
+        {
+          "task": 49,
+          "seconds": 0.8152315616607666
+        },
+        {
+          "task": 50,
+          "seconds": 0.864346981048584
+        },
+        {
+          "task": 89,
+          "seconds": 0.9483191967010498
+        },
+        {
+          "task": 90,
+          "seconds": 0.8334918022155762
+        },
+        {
+          "task": 91,
+          "seconds": 0.7839846611022949
+        },
+        {
+          "task": 92,
+          "seconds": 0.7797627449035645
+        },
+        {
+          "task": 93,
+          "seconds": 0.7928552627563477
+        },
+        {
+          "task": 94,
+          "seconds": 0.8394815921783447
+        },
+        {
+          "task": 95,
+          "seconds": 0.75260329246521
+        },
+        {
+          "task": 96,
+          "seconds": 0.8163342475891113
+        },
+        {
+          "task": 97,
+          "seconds": 0.8159620761871338
+        },
+        {
+          "task": 98,
+          "seconds": 0.8475515842437744
+        },
+        {
+          "task": 99,
+          "seconds": 0.896106481552124
+        },
+        {
+          "task": 100,
+          "seconds": 0.8281939029693604
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/init.pt": "68d4e8b95a24616522d126d3f58f1875ac32849e4edcfea89dfc57f16c7a2a0e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task1.pt": "14895ed290bb2a131a73507762358e27bdb5556cd2e6a2e0c8cdfb7c34403761",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task2.pt": "ba93b99acfad3370bb6dca237b9192d119df4eb5f7f951922e7d25c96080adbd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task3.pt": "433f241c388bcb2bfa7a6c70b6ccdaf9ecad1cfb294dc6960434f755f6e2befa",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task4.pt": "1c1e64353217c0e76507716885f0d7f148afee3ec1cefeaf6f7e20b5c21c7bc5",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task5.pt": "50e14e8036e9fe61d044d16fb3ca2b201e75ec2798f12176beca978462393661",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task6.pt": "4ce2b1e88001dd192bf1711683f0bab0d52d7186c0543cf48002eb63d12771b1",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task7.pt": "93bdf81e19e70eedfbdfe302dfb59589f6f49a7556fb678f1d4537ad16ece3bf",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task8.pt": "e1a55b34ab17974cbb11f1d179b79e62eff5e9f4b358f014c28bfde7e78d5eee",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task9.pt": "a9ea764faeeab162373fd597db0c9ca2a70b077cedbe5bfe0481c5f4bdd7e790",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task10.pt": "77c6c2ed29dffbdfb4ff329710fde02f2f69ccc8af9b97f29bf60d2d4e7c5ae9",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task25.pt": "9f51f3839cbd2311d435ed6570ceba8a670e332a49818c5d1eca44ebb3c608fe",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task39.pt": "a50da0791ddd87b0592361ed7056d63e34f62687dd8dcc06a5e5c97c2a51a084",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task40.pt": "9cab440d07bdd56ddfdd25c4133759d19c74c42abbddbbd3c6c4c49feba28e33",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task41.pt": "179ab9578f7ebd6c4282be9a071206cc6bd90e76534be57e0406ad4714650fd4",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task42.pt": "37b7592398299c90c6252a8c38d7dde3c4b11d1290750e83b82f63ad31632d53",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task43.pt": "85021f08f8be8611de6b34c7dfdc9f2ed36f4989582677e7745ee3bd105fc4b0",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task44.pt": "79dbca724f19cc9498c35ccc588a80b54d7dbbe30bd16164a97489d6e8879765",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task45.pt": "0dc636e4b52bf78c8d0a8713c1f326c656b0ffc4315a49b883191109498a61f2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task46.pt": "06239bf5162274a43c170a9742d9976d62a2c500e473294a90787d6b79c58dd5",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task47.pt": "9251acc7a705c3d9da5565d312e048c51b016e512896a4325765ed8e25bb17de",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task48.pt": "07ac99970540bae5f2739f6c82a96949ee22bb808a06c9b7831d1b441729201f",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task49.pt": "a11da6529f8ba6aa47e74bd9c6290e5b3f96d3f80b14f56d57ee84d9ea4e4a93",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task50.pt": "fb44f5b4ddae5e7ef2e13af57472e0e19c2fb7f4a296c043fb5effc9e8aefd59",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task89.pt": "2d5bcb163607d40ded192589c6ca74ad5fa061d4a62baf0b8d23b82e4da63826",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task90.pt": "64bb90265f5cf83d779de41f7c1925610e89bdc9e02142f2ea0e83ab32a8b6df",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task91.pt": "880f8773e93bf4656500f85f8f013b69549edf9d8902bb52ce9d36a49636e7f9",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task92.pt": "6541076790d7959474904f8cb3ccaf22407c369ee414bde0d7582145ce1586fd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task93.pt": "ae8bf498460bf058b75a3da9c2e0152c4a9a3ff34f100a4c249346192a9fe609",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task94.pt": "15486b916615f56807eeb649da17af80c2d7ffbf0e343a4294836c5fcdf80e34",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task95.pt": "0b7222440bb153001093f080ea978d20f28912465506c18746ff01013834bca8",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task96.pt": "3583c62bcb6efd3dd9ad9373af7287c270624f1086b11d70a1bf723b94f6a3df",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task97.pt": "2815247b95107a8dbb9e5b8a696d399145721cb4b9486b3c27bf2de516f21af8",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task98.pt": "147dfa4f5356f75d801b948ba34f12ab3570753c6e4431e3fdcb265b834d8d72",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task99.pt": "26a5161e04b59df01a8a81f670da724d673afcdc58e1ebc31ce9d4989a2b4801",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed7/ckpts/task100.pt": "58017ef7b0002fa108c74466681588bc1f5f3868c223844d46e8ab3f5208d773"
+      },
+      "outputs": {
+        "parts/ReLUcap_seed7_head.csv": "f54f004f62a3f01ba3b582c871daa55a7ff04c5dca978a441aef93a9eb206fbf",
+        "parts/ReLUcap_seed7_states.csv": "6413d442564e913dee104afdea5356b366282399c58723949fa099b2bf28a38f",
+        "raw/units_ReLUcap_seed7.raw.npz": "e643c4629d85d4f2621c6f2a6edd9428dfae9cabcff5de60d3481c41078f14a4"
+      }
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 8,
+      "n_states": 36,
+      "elapsed_seconds": 28.763928174972534,
+      "finished": "2026-10-22T22:55:38+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.8822653293609619
+        },
+        {
+          "task": 1,
+          "seconds": 0.838780403137207
+        },
+        {
+          "task": 2,
+          "seconds": 0.8527147769927979
+        },
+        {
+          "task": 3,
+          "seconds": 0.8681492805480957
+        },
+        {
+          "task": 4,
+          "seconds": 0.8878612518310547
+        },
+        {
+          "task": 5,
+          "seconds": 0.8835480213165283
+        },
+        {
+          "task": 6,
+          "seconds": 0.7771143913269043
+        },
+        {
+          "task": 7,
+          "seconds": 0.7860500812530518
+        },
+        {
+          "task": 8,
+          "seconds": 0.796607494354248
+        },
+        {
+          "task": 9,
+          "seconds": 0.8208272457122803
+        },
+        {
+          "task": 10,
+          "seconds": 0.8041338920593262
+        },
+        {
+          "task": 25,
+          "seconds": 0.7904081344604492
+        },
+        {
+          "task": 39,
+          "seconds": 0.8142707347869873
+        },
+        {
+          "task": 40,
+          "seconds": 0.7456114292144775
+        },
+        {
+          "task": 41,
+          "seconds": 0.7399437427520752
+        },
+        {
+          "task": 42,
+          "seconds": 0.7552192211151123
+        },
+        {
+          "task": 43,
+          "seconds": 0.8055086135864258
+        },
+        {
+          "task": 44,
+          "seconds": 0.8419787883758545
+        },
+        {
+          "task": 45,
+          "seconds": 0.8793838024139404
+        },
+        {
+          "task": 46,
+          "seconds": 0.7730288505554199
+        },
+        {
+          "task": 47,
+          "seconds": 0.7766933441162109
+        },
+        {
+          "task": 48,
+          "seconds": 0.7899930477142334
+        },
+        {
+          "task": 49,
+          "seconds": 0.7266623973846436
+        },
+        {
+          "task": 50,
+          "seconds": 0.7275102138519287
+        },
+        {
+          "task": 89,
+          "seconds": 0.774299144744873
+        },
+        {
+          "task": 90,
+          "seconds": 0.7918972969055176
+        },
+        {
+          "task": 91,
+          "seconds": 0.7509753704071045
+        },
+        {
+          "task": 92,
+          "seconds": 0.7587664127349854
+        },
+        {
+          "task": 93,
+          "seconds": 0.7644097805023193
+        },
+        {
+          "task": 94,
+          "seconds": 0.7635858058929443
+        },
+        {
+          "task": 95,
+          "seconds": 0.7705738544464111
+        },
+        {
+          "task": 96,
+          "seconds": 0.768413782119751
+        },
+        {
+          "task": 97,
+          "seconds": 0.802053689956665
+        },
+        {
+          "task": 98,
+          "seconds": 0.8301265239715576
+        },
+        {
+          "task": 99,
+          "seconds": 0.7997126579284668
+        },
+        {
+          "task": 100,
+          "seconds": 0.7982571125030518
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/init.pt": "56aba4b7653058a1ff2a932c6baeb09922348fcfc9f08839e39a4e396f4290b0",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task1.pt": "5b295013a309f3b1b12dea810e305b4c4ea7e25cad2687b136d169705665c793",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task2.pt": "dfeb26bc9f2501157e5ff30b706a8f7f9b1aaeb90fe59d55c6fc397fec7eedca",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task3.pt": "6e991151509ad42ef4c94a1fbaf2b40bdf98bb48847894b2ba42b626d658ae7a",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task4.pt": "ea28b7a04449c6d55f655e0e225479c0e1fad1853a55129b4a4248f25ff74d47",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task5.pt": "bddcd5bb950fffcaad30b07492e30582aee525d7e8de010c0110dd776356ba4e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task6.pt": "a06deca97fccfdf700d03d59c233394d756893984e3f99dc7b32ab65f76e580e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task7.pt": "b95a7fdcc4d60e9823a0247097e137130f081b61eca915c79647546061a3e5e3",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task8.pt": "33822abf4ebb1762f5e905f81a7caef4c636e0cacbf2575a02d7b1675ee6b928",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task9.pt": "57c5402e779bb8a795ddc442ed7ee9401067ced852a74ac51139bb7e13697480",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task10.pt": "0d5d0e58b21b4072c1eedc41b35d99ce0b99661b8d0a3e482ba1fd95197878cc",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task25.pt": "12362ee6db10d2c27a359d871bf159d4220cc0522b62a10fcd0e0c286f3d057b",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task39.pt": "e92973189ed39599ca7b1fb1f5107df0ec622057b63a41f3795e1233e23947fa",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task40.pt": "16a4a4927d89b602cf5ae1ef2b6f92195e5d4d3fd28ab0c1289f905bff6aa7a6",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task41.pt": "e015c10c8c09743e63a3f5c584a9d9fb14a8d515074a9ac641032b86eaa5aa9d",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task42.pt": "ee125605be39f15f8ac77b153cc2e882fc8d0314c9438ac1b024be7fade6b109",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task43.pt": "04db50fdfd4e2f7b4fe97690a9195d16780e5ad5e49531d1dd5f5de0153b14ca",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task44.pt": "28016283755d717571f0e4940f54284f1b728562dbcda29c887096e0dce6c6d6",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task45.pt": "c909b91eeb35ea3d34fb3662efe25b74f0d6c56c24617f5a05648f043d86e0a0",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task46.pt": "f9e475d3726d1ad9afe6a6663dfd88bf2ed854be7a5ea91bb95ec5735b920fdd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task47.pt": "e668db67ae477259770bfb3b5767287705e761d1c5e9bcc3bfdfda0c513347f9",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task48.pt": "c408f4673a7719c335f63b66890d1c9f4dc44f0b5203c156d32b8f3877a5efda",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task49.pt": "e9b7b349e68366530e2dbd4e66f525aeac72500cbd5f608e167d1a3613ab2da8",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task50.pt": "f7d64de821549e3d67ad460df98b7ad03f6aabbc0614dbf69533ac48854cc7e7",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task89.pt": "081c4761715f0b410a9933944458945a62393a07bf45333b87ed00f505ef0236",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task90.pt": "3b68e4b522fa7e1c1860aa4e4cd05c31d48dec068ec03278a17ded4cc8708886",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task91.pt": "9876805709141c39e92b36e635bb964f64da9d423f706b20d5210fca3dae4bd4",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task92.pt": "546856c78565e83fec6f4fde57c1d789476d5e71a87d35049d4ccc825e9bde6c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task93.pt": "cd3b1d80f0eef0be8b9b5378acaf886c1bdfb2bae2c0239b407f1862485cc573",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task94.pt": "d1d2c296a78202f4a55cff12df338b7fea4f1ff5aaf1939c3ea881037de72a76",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task95.pt": "fd4765a86b0c5fc5a0f5c9aaf9812afb6958076dfda23439dd51d3c8167017c2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task96.pt": "9d366c404424293f2e5eb52b185b244c03a2b7b91d6062285766891ff93f20c6",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task97.pt": "e33480000386e20031fdc659657766b28e6ca3912654302ac49b27c1343901a0",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task98.pt": "efe2af69b3388de3cc698d28f3c8ead149b9a39f9fd6f8ad57fe7b8011d4a8db",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task99.pt": "3554e97c541cbb9f0ce9cc7316c4df02069b4713693cbffe56bca5152b2d62ee",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed8/ckpts/task100.pt": "8b00f79cc50fa36ea4bab3bfc4187b478a7f25ea3bb731b84b0318a71f8c1981"
+      },
+      "outputs": {
+        "parts/ReLUcap_seed8_head.csv": "b7d6884a43bf7e176e7d06e784c812064070ec65f2607e7172d1f09ec7f262a4",
+        "parts/ReLUcap_seed8_states.csv": "e504749fffd2be3e50659e2dc55ba834040c77d8cdf552fa527922b94dab4ce2",
+        "raw/units_ReLUcap_seed8.raw.npz": "cb5be57ed89a094bb3c9290094205fb2d629c00a9820c2d7e0deb018546da52b"
+      }
+    },
+    {
+      "arm": "ReLUcap",
+      "seed": 9,
+      "n_states": 36,
+      "elapsed_seconds": 28.4583637714386,
+      "finished": "2026-10-22T22:56:06+09:00",
+      "per_state_seconds": [
+        {
+          "task": 0,
+          "seconds": 0.8519227504730225
+        },
+        {
+          "task": 1,
+          "seconds": 0.8306729793548584
+        },
+        {
+          "task": 2,
+          "seconds": 0.8344159126281738
+        },
+        {
+          "task": 3,
+          "seconds": 0.7816128730773926
+        },
+        {
+          "task": 4,
+          "seconds": 0.7807703018188477
+        },
+        {
+          "task": 5,
+          "seconds": 0.859752893447876
+        },
+        {
+          "task": 6,
+          "seconds": 0.8825149536132812
+        },
+        {
+          "task": 7,
+          "seconds": 0.8365902900695801
+        },
+        {
+          "task": 8,
+          "seconds": 0.7550613880157471
+        },
+        {
+          "task": 9,
+          "seconds": 0.7571854591369629
+        },
+        {
+          "task": 10,
+          "seconds": 0.7537035942077637
+        },
+        {
+          "task": 25,
+          "seconds": 0.7932674884796143
+        },
+        {
+          "task": 39,
+          "seconds": 0.7150008678436279
+        },
+        {
+          "task": 40,
+          "seconds": 0.723783016204834
+        },
+        {
+          "task": 41,
+          "seconds": 0.7526278495788574
+        },
+        {
+          "task": 42,
+          "seconds": 0.7854361534118652
+        },
+        {
+          "task": 43,
+          "seconds": 0.7956390380859375
+        },
+        {
+          "task": 44,
+          "seconds": 0.7628161907196045
+        },
+        {
+          "task": 45,
+          "seconds": 0.770862340927124
+        },
+        {
+          "task": 46,
+          "seconds": 0.7852339744567871
+        },
+        {
+          "task": 47,
+          "seconds": 0.764420747756958
+        },
+        {
+          "task": 48,
+          "seconds": 0.8114979267120361
+        },
+        {
+          "task": 49,
+          "seconds": 0.8314793109893799
+        },
+        {
+          "task": 50,
+          "seconds": 0.8100249767303467
+        },
+        {
+          "task": 89,
+          "seconds": 0.8012239933013916
+        },
+        {
+          "task": 90,
+          "seconds": 0.7735393047332764
+        },
+        {
+          "task": 91,
+          "seconds": 0.7744274139404297
+        },
+        {
+          "task": 92,
+          "seconds": 0.7669398784637451
+        },
+        {
+          "task": 93,
+          "seconds": 0.7790083885192871
+        },
+        {
+          "task": 94,
+          "seconds": 0.7697954177856445
+        },
+        {
+          "task": 95,
+          "seconds": 0.780221700668335
+        },
+        {
+          "task": 96,
+          "seconds": 0.7966959476470947
+        },
+        {
+          "task": 97,
+          "seconds": 0.7888619899749756
+        },
+        {
+          "task": 98,
+          "seconds": 0.7916631698608398
+        },
+        {
+          "task": 99,
+          "seconds": 0.7888462543487549
+        },
+        {
+          "task": 100,
+          "seconds": 0.7939472198486328
+        }
+      ],
+      "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+      "inputs": {
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/init.pt": "70e4790b706a172ae7af86c2ebbbda6462534aa33c03d15be50edf62d795eb99",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task1.pt": "d397ca5b0601903b71b4c968933a08f58ca99221f714b30a7b5bf5e138f90359",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task2.pt": "becb05da2fdfe8cbceb7e4afda1f6e78d8c0a370dc09cb59af53a65998f0994f",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task3.pt": "85a82eb5c86c74a34b3daa85a53eca0f0a10e3e26ef978dbf5be16ed8a6662f2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task4.pt": "fbcd246ec62a1b9e390b6b10dfbd970938b964be69cfcd5bff3ce3a1387188f7",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task5.pt": "0e9b1981c9fe04426753269fd7559c402527883b569e1aaaf8f0cc218b0b7659",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task6.pt": "346753ed7628fc8ab75da7a645ee292604f304777858d94ea58b8ea5b9d4523c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task7.pt": "967bc0110ebe9aa5647e35d78c7cb50321b680be952f6da2d40ebe22df29e661",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task8.pt": "32c770e65bbdce8b1b77a84cefb609a24c79d3030bbda6e61a1c22e8d7921df4",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task9.pt": "93654988ba5ceff1b16dd6b1ec085479ec07821ede68836224993dd692797120",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task10.pt": "8771472c555bdb9154f9b19c328b2ae866aa7e32afb148e9d9eca1804c39bd87",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task25.pt": "a448305e9540e2d0fbfd78b080d2c1f26e639e16e6171e5cd24fbf594d8f583c",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task39.pt": "f36e2139186825cb19ec34c0d3f254a9a191f7973031841abc7fe7cd4bd0b4fd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task40.pt": "8bef69d329115303647ce0de40cdab9922811b68d15993789b287c49d0703aa4",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task41.pt": "360ba56a7d212c5493055a8968c7ee6ff07f623a6fc5167a80ad5493f3d8775e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task42.pt": "f1d0d833b7286da2ff25a24855400ff956eeb302559aa2e2a6c8ef348580dd59",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task43.pt": "68204bb01b68f790f687bebaa34111f3b868ca9a7b28f4cb41992b0b7ab9a8b0",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task44.pt": "35a63b54f876de7f525b4ce85f1cb11f62f245c39e4df0690c912c49ccc79a09",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task45.pt": "610fa677e04c7586604c872d505f22d2c9b5d164f7679c61fe4a48a34d66b0db",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task46.pt": "4741bc83d746861118130e7f1d7482f4f168612ed16e04c6589c3f57333d785f",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task47.pt": "af47e70566b0c09d577d7ac55978713b6109e167eb16181d712c71cfbadc03e5",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task48.pt": "37f648e47e77a21e3231a185107dfbb4a5525de06a9b0a4120a797b3f55f6981",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task49.pt": "3c7d51599e58d21e9ff73869719075e7e6055da1d0b23e4a664b5da560d8eebf",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task50.pt": "ac57b27225bd91b819ff975deeb00c33aff6f23c7a1906dd0b36679f2d460da4",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task89.pt": "a06e2d095ab1885fbd8801a69cafe629a685789579d13767ea9d37b7d7e299a1",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task90.pt": "c326565ae8e8ed3e2176f4be97da233087559b17c36a2d7f3f62e3b2fd772b61",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task91.pt": "f8f87e6beb7dcd9e397e3996f2a0b6eb116725bda893522aae884d06fe881e1e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task92.pt": "665a79a88b49c49393b859f6111dd6d6d87528b5711f17ee75d2bfcdf5cd6f0e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task93.pt": "25c1e6dfed9367d9ef0b50b569278b4d6de4d7bb062c6d95f6fbdf9bd00a6e8e",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task94.pt": "a30697aae51f9ca40a9479987684b22e4d5f2e8d948b9eabcf0288a95948b4cd",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task95.pt": "4807594a0dedc7aa26565b4dfc00b32f1c049e560082f158e3aec5892bbe26ee",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task96.pt": "63f59e5120d23aa5cca3ead37e8b14efd889fccd5bac387d6d6c2f87e6a9e8fa",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task97.pt": "8402be74960a4b5d9bf42471178270e806cf936258244f7dca1fa4d4088fe6d2",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task98.pt": "83b4bfc7a1287fc3d00815e43c90dfb8ed5db8faee55fb3fd12d90e8685a2814",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task99.pt": "d1f297a0f4e12d7f03e3fb13dfc26c41f5e06b1ed49357b9b03a0c6921105a56",
+        "results/chargpt_cl_1019/M2/ReLUcap/seed9/ckpts/task100.pt": "48681ede1faa696d825e9c596ef8dcf2302dbacd2eabd23c538b970c5d770e8c"
+      },
+      "outputs": {
+        "parts/ReLUcap_seed9_head.csv": "86654a53a7eca639fe695f1f5b581062b10d8267cd16f280dfbd7c981af013dc",
+        "parts/ReLUcap_seed9_states.csv": "62bbe14c8bc22de055b5c4928f97f8c13dceb2c4970f90b5b757e51f6348d85e",
+        "raw/units_ReLUcap_seed9.raw.npz": "f6f368b519af123526ad00b5f29e7b0eb4440aacb51c37e4dd19963930df6b6c"
+      }
+    }
+  ],
+  "n_completed_units": 20,
+  "checks_A_sha256": "5647bba4d78d4998a89379d3d68a6ddea53643733840ae919763418fb31869e1"
+}
