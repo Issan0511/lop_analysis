@@ -32,16 +32,18 @@ $PY -c "import sys,torch,numpy;print(sys.version.split()[0],torch.__version__,nu
 
 ## 2. 束を受け取って照合する
 
-- URL は Issa がプロンプトに貼る。中身・各ファイルの sha256・束の sha256 は `$S10/results/chargpt_seed10_1022/transfer/bundle_manifest.json`。
-- ギガファイル便は**ファイルごとに cookie jar を分ける**。先にページ（`https://<n>.gigafile.nu/<id>`）を同じ jar で開いてから、同じ jar と Referer で `https://<n>.gigafile.nu/download.php?file=<id>`（鍵があれば `&dlkey=<key>`）を取る。jar を使い回すと 570 byte の HTML が返る。
+- URL は Issa がプロンプトに貼る（ギガファイル便、保存は 100 日）。中身・各ファイルの sha256・束の sha256 は `$S10/results/chargpt_seed10_1022/transfer/bundle_manifest.json`。
+- ギガファイル便の正式なドメインは `gigafile.jp`（`gigafile.nu` は止まっている）。取るのは white-san で送るのに使ったのと同じ `gigafile` パッケージ（3.3.1、`gigafile.nu` の URL も `.jp` に直す）が簡単。
 
 ```bash
 mkdir -p $S10/_incoming && cd $S10/_incoming          # _incoming は commit しない
-curl -s -c jar.txt -o /dev/null "<ページの URL>"
-curl -L -b jar.txt -e "<ページの URL>" -o chargpt_seed10_1022_bundle.tar "<download.php の URL>"
+uv venv -q gfvenv --python 3.12 && uv pip install -q --python gfvenv/bin/python "gigafile==3.3.1"   # uv が無ければ python -m venv と pip で
+gfvenv/bin/gfile download "<URL>" -o chargpt_seed10_1022_bundle.tar
 sha256sum chargpt_seed10_1022_bundle.tar              # manifest の tar_sha256 と一致すること
 tar -xf chargpt_seed10_1022_bundle.tar -C $CG         # 中のパスは results/chargpt_cl_1019/... なので $CG の直下に展開する
 ```
+
+`gfile` で取れないときは curl で取る。ファイルごとに cookie jar を分け、先にページ（`https://<n>.gigafile.jp/<id>`）を開いてから、同じ jar と Referer で `https://<n>.gigafile.jp/download.php?file=<id>` を取る。jar を使い回すと 570 byte の HTML が返る。
 
 展開後、manifest の全ファイルについて、`$CG/<path>` の bytes と sha256 が manifest と一致することを確かめる（1 つでも違えば止めて報告する）。束の中身:
 
