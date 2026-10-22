@@ -230,3 +230,17 @@ A と B は保存状態の計算なので、この worktree で chargpt_cl_1019 
 - spec: この file（ブランチ `claude/chargpt_seed10_1022`）。
 - 結果: `results/chargpt_seed10_1022/{load,rho,revival,silu4}/`。生データは `~/Projects/obsidian-research-data/chargpt_seed10_1022/`（manifest つき）。
 - 予測の採点と結果ノートは、走のあとで vault の `可塑性喪失/測定/` に置く。
+
+## 追補 1（2026-10-22、走る前・Claude（Opus 5.5））：先生のマシン（byakko）で回す
+
+Issa「先生のマシンでやらせる気でいます」。実行場所と、機種が変わることに伴う規則を走る前に決める。
+
+- **実行場所**: byakko（RTX 5070 Ti 16 GB、RAM 186 GiB、python 3.12.7・torch 2.13.0+cu130・numpy 2.5.1。4 ブロック本走を回した台）。§9 の「C・D は文字 GPT のセッションに頼む」は取り消す。A〜C（D は Issa が明示したときだけ）を、byakko の Claude Code が手順書 `specs/chargpt_seed10_1022_runbook.md` に沿って実装し、回す。
+- **入力**: 2 ブロック 10 seed の checkpoint は git に入っていないので、white-san で束（tar）にして渡す。中身と sha256 は `results/chargpt_seed10_1022/transfer/bundle_manifest.json`。
+- **C の対照**: 元の 10 seed は white-san と Vast の RTX 5060 Ti で回した。GPU の機種が違うので、byakko での再生はビット一致しない見込み（4 ブロック本走でも white-san と byakko はビット一致しなかった）。そこで、対照は byakko で回した control の再生にする。元の記録との差（課題ごとの online の差の最大、課題末の L1 の死の差）を記録する。ビット一致したら、その旨も記録する。
+- **C1 の窓と資格**: S_k と E_k は §5 の表のまま。R'_k = 再生した control で、課題 S_k + 1〜E_k のうち L1 の死が初めて 0.5 以下になる課題。R'_k が無い seed は対象外にして数を報告する。判定窓は [R'_k, E_k]。
+- **C1 の規則**（対象の seed の数を n とする）: n ≥ 6 のとき、塞いで生き返らない seed が n − 1 以上なら `FEEDBACK_NEEDED`、2 以下なら `FEEDBACK_NOT_NEEDED`、それ以外は `MIXED`。n < 6 なら `INSUFFICIENT`。n = 9 なら §5 の規則と同じになる。
+- **C2 の資格と規則**: 再生した control の課題 26 末の L1 の死が 0.9 以上の seed だけを数える（数を n とする）。n ≥ 6 のとき、gamma03f の課題 26 末の L1 の死が 0.5 以下の seed が n − 2 以上なら `READOUT_SHRINK_REVIVES`、2 以下なら `NO_REVIVAL`、それ以外は `MIXED`。n < 6 なら `INSUFFICIENT`。n = 10 なら §5 の規則と同じになる。
+- **A・B の照合の許容**: どちらも保存状態の float64 の計算なので、機種による差は丸めの範囲とみなす。§7 の seed 1000 の照合は、連続量が相対 1e−8 以内、割合（符号の数え上げ）が生きた unit 1 個ぶん（1/n_live）以内。超えたら本走せずに報告する。
+- **D**: Issa が明示したときだけ回す。回すときの保存の課題は §6 のまま。
+- 判定・閾値・腕・開始点・予測は、この追補のほかは変えない。走らせた後で変える必要が出たら、変えずに報告する。
