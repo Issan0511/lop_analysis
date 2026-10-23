@@ -20,6 +20,11 @@ def ratio(a, b):
     return float(np.linalg.norm(a)/max(np.linalg.norm(b), 1e-300))
 
 
+def cosine(a, b):
+    den = float(np.linalg.norm(a)*np.linalg.norm(b))
+    return None if den == 0 else float(a@b/den)
+
+
 def fmt(v, digits=3):
     return 'NA' if v is None else f'{v:.{digits}f}'
 
@@ -57,6 +62,9 @@ def main():
                                task_departure_relative=ratio(p['task_departure'][mask], p['ctx_mean'][mask]),
                                fit_relative=ratio(p['fit_gap'][mask], p['ls_task'][mask]),
                                null_relative=ratio(p['null'][mask], truth[mask]),
+                               ce_sq_cos=cosine(p['ce'][mask], p['sq_full'][mask]),
+                               actual_sq_cos=cosine(truth[mask], p['sq_full'][mask]),
+                               direct_relative=0. if early else ratio(p['direct'][mask], truth[mask]),
                                fit_ce_cancellation=ratio((p['fit_gap']+p['ce'])[mask], p['fit_gap'][mask])+0.)
                     if early:
                         for name in ['Zhat', 'Zhat_first', 'Zhat_last']:
@@ -171,11 +179,11 @@ def main():
                 flips = sum(e is not None and l is not None and e < 0 < l for e, l in zip(ev, lv))
                 text.append(f'|{arm} {metric}|{component}|{span(ev)}|{span(lv)}|{flips}/10|')
     text += ['', '## SiLU、全パラメータ経路、1 seedの記録', '',
-             '|腕|課題|層|metric|r中央値|P2 BA|個別LS BA|実head二乗 BA|fit距離|CE比|null/実測|', '|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|']
+             '|腕|課題|層|metric|r中央値|P2 BA|個別LS BA|実head二乗 BA|fit距離|CE比|cos(CE,二乗)|cos(合計,二乗)|direct/実測|', '|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|']
     for r in states:
         if r['arm'] not in ['SiLU', 'SiLUcap']:
             continue
-        text.append(f"|{r['arm']}|{r['task']}|L{r['layer']}|{r['metric']}|"+'|'.join(fmt(r[k]) for k in ['r_median', 'P2_ba', 'ls_task_ba', 'sq_full_ba', 'fit_error', 'ce_relative', 'null_relative'])+'|')
+        text.append(f"|{r['arm']}|{r['task']}|L{r['layer']}|{r['metric']}|"+'|'.join(fmt(r[k]) for k in ['r_median', 'P2_ba', 'ls_task_ba', 'sq_full_ba', 'fit_error', 'ce_relative', 'ce_sq_cos', 'actual_sq_cos', 'direct_relative'])+'|')
     gate = json.loads((OUT/'gate.json').read_text())
     checkvalues = [v for m in json.loads((OUT/'checks.json').read_text()) for v in m['checks'].values()]
     refvalues = [v for m in gate['states'] for v in m['reference']['checks'].values()]
