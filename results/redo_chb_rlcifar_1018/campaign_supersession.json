@@ -1,0 +1,52 @@
+{
+  "recorded_at": "2026-10-18T02:44:48.313502+09:00",
+  "user_redesign_instruction": "2026-10-18T02:36:16+09:00",
+  "prior_registered_trial": {
+    "run_id": "redo_position_2x2_1018",
+    "worktree": "/home/issan/Projects/claude/wt/redo_position_2x2_1018",
+    "result_commit": "abd5220ba3670c13afacb31cfe9974edfdf3f9cb",
+    "status_at_redesign": {
+      "status": "COMPLETE",
+      "label": "MIXED",
+      "finished_utc": "2026-10-17T17:10:28.353822+00:00"
+    },
+    "original_forecast": "POSITION_CARRIES",
+    "forecast_support": "NOT_CONFIRMED",
+    "role": "PRIOR_REGISTERED_TRIAL_RETAINED; no longer primary run1",
+    "rerun": false,
+    "preserve_spec_and_all_results": true
+  },
+  "replacement": {
+    "run_id": "redo_chb_rlcifar_1018",
+    "worktree": "/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018",
+    "spec_commit": "de8a437fef35f7942023fc581e81f4e6cbbad5bd",
+    "status": "IMPLEMENTED_CPU_REVIEWED_BLOCKED_CUDA",
+    "prediction": [
+      "CHB_POLICY_CARRIES",
+      "REDO_SHORTFALL"
+    ],
+    "new_outcomes_observed": false,
+    "spec_clarification_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+    "source_commit": "5e44f9a9bc7143e4ba567da81c5aea0754e45188",
+    "cpu_groups": 8,
+    "negative_cases": 35,
+    "independent_source_reviews": 2,
+    "gpu_release_pass": false,
+    "production_started": false
+  },
+  "coordination": {
+    "existing_host_controller_modified": false,
+    "existing_host_state_modified": false,
+    "old_completed_manifest_modified": false,
+    "old_STOP_file_created": false,
+    "existing_host_queue_excludes_old_run1": true,
+    "new_run_not_in_hardcoded_host_controller": true,
+    "execution_requires": "Independent review and full CPU/CUDA gates; new separate queue obeying shared GPU lock after existing jobs."
+  },
+  "interpretation": {
+    "CHB_is_package": true,
+    "pure_drift_mediation_identified": false,
+    "F51_residual_identified_as_rank": false,
+    "redesign_after_old_MIXED_and_known_CHB_results": true
+  }
+}

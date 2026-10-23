@@ -1,0 +1,18 @@
+{
+  "actual_extra_B_rejected": {
+    "all_pass": false,
+    "S-composition": {
+      "error": "AssertionError('actual composition differs from native CHB then inherited recycler')",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/analysis/redo_chb_rlcifar_1018/checks.py\", line 156, in record\n    details=body()\n            ^^^^^^\n  File \"/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/analysis/redo_chb_rlcifar_1018/checks.py\", line 275, in composition_check\n    assert C.digest([post['P'],post['m'],post['v']])==C.digest([reference,rm,rv]), 'actual composition differs from native CHB then inherited recycler'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: actual composition differs from native CHB then inherited recycler\n",
+      "pass": false
+    }
+  },
+  "actual_reason2_to_1_rejected": {
+    "all_pass": false,
+    "S-generation": {
+      "error": "AssertionError('event-associated recycled-generation death mislabeled as between-events')",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/analysis/redo_chb_rlcifar_1018/checks.py\", line 156, in record\n    details=body()\n            ^^^^^^\n  File \"/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/analysis/redo_chb_rlcifar_1018/checks.py\", line 392, in generation_check\n    assert d2.first_death[0][0,1]==12 and d2.reason[0][0,1]==2, 'event-associated recycled-generation death mislabeled as between-events'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: event-associated recycled-generation death mislabeled as between-events\n",
+      "pass": false
+    }
+  }
+}

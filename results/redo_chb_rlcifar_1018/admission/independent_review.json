@@ -1,0 +1,188 @@
+{
+  "run_id": "redo_chb_rlcifar_1018",
+  "scope": "CPU_SOURCE_REVIEW",
+  "approved": true,
+  "reviewer": "/root/run6_cnn",
+  "reviewed_utc": "2026-10-17T17:59:33.659999+00:00",
+  "source_sha256": {
+    "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/redo_chb_rlcifar_1018/checks.py": "050458e5d10a19412913f02b4cc5ccd84d01fe3065255347f280dcf8d4bea04e",
+    "analysis/redo_chb_rlcifar_1018/common.py": "0acddc4514819778040726832adf157cbbf115b15775a52e2e6569ba9d2c415e",
+    "analysis/redo_chb_rlcifar_1018/diagnostics.py": "5693bfd7d3d44c8b012092f83ba4b46fe928830367eefb2182474d097c88d0ef",
+    "analysis/redo_chb_rlcifar_1018/gpu_checks.py": "a5e753acf21d4601c03d865e3b7e2080dee59be974e497a777d97a68a96fd587",
+    "analysis/redo_chb_rlcifar_1018/launch.py": "66caa85a624f4e7791dc7432fbb2aeb0fe35d942a9dab375ed464ac679e80f66",
+    "analysis/redo_chb_rlcifar_1018/report.py": "b3731032482119efe9a4cf75ed4e45387c1a97773175f57dd2a53e95d9e7770f",
+    "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0",
+    "specs/spec_redo_chb_rlcifar_1018.md": "9d2422a358e31cf66e93aadbf57b94336a8c9b1b1f1905f05e5326370ccfdbe4",
+    "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/baselines_cifar5p1_1008.py": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/redo_chb_rlcifar_1018.py": "e78fa9592c501086bdbc46e140000a10a1f41ca525de599e1b481a1e8526f435",
+    "src/relu_doors_0919.py": "2478c8339decaee3aacb90ac7aa87f8cff6b49d2da30833c6e3dbea0dfa82da4",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+  },
+  "registration": {
+    "run_id": "redo_chb_rlcifar_1018",
+    "base_commit": "094489c30bcdf196946179ba07ed0e8cadd3a53f",
+    "prereg_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+    "initial_prereg_commit": "de8a437fef35f7942023fc581e81f4e6cbbad5bd",
+    "spec_sha256": "9d2422a358e31cf66e93aadbf57b94336a8c9b1b1f1905f05e5326370ccfdbe4",
+    "common_spec_sha256": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "protocol": {
+      "run_id": "redo_chb_rlcifar_1018",
+      "arms": [
+        "none",
+        "redo",
+        "CHB",
+        "both"
+      ],
+      "seeds": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "conds": [
+        "raw"
+      ],
+      "R": 10,
+      "n_tasks": 200,
+      "epochs": 400,
+      "steps_per_epoch": 75,
+      "steps_per_task": 30000,
+      "total_updates": 6000000,
+      "batch": 16,
+      "n_images": 1200,
+      "dims": [
+        3072,
+        100,
+        100,
+        10
+      ],
+      "device": "cuda",
+      "dtype": "float32",
+      "lr": 0.001,
+      "lam": 0.1713,
+      "beta": 0.01,
+      "adam_betas": [
+        0.9,
+        0.999
+      ],
+      "adam_eps": 1e-08,
+      "threads": 2,
+      "tf32_matmul": false,
+      "tf32_cudnn": false,
+      "deterministic": true,
+      "redo_tau": 0.1,
+      "redo_period": 1560,
+      "redo_probe_batches": 4,
+      "redo_probe_images": 64,
+      "redo_events_per_arm": 3846,
+      "redo_stream": "b5_redo_reinit",
+      "redo_order": "native Adam then B then EMA then one-shot recycle outside graph",
+      "retain": [
+        "bias moments",
+        "Adam global time",
+        "hidden EMA"
+      ],
+      "score": "actual delivered features after H",
+      "late_window": [
+        181,
+        200
+      ],
+      "early_window": [
+        31,
+        50
+      ]
+    },
+    "prediction": {
+      "primary": "CHB_POLICY_CARRIES",
+      "redo_shortfall": true,
+      "numeric_probability": null,
+      "attribution": "Issa 2026-10-18 02:36:16 JST revision formalized by Codex",
+      "known_reference": "old CHB/none results informed design; these are not new predictive successes"
+    }
+  },
+  "head_at_review": "582bdf394dfe43231c39bf5f1658e142947ec143",
+  "source_map_unchanged_during_review": true,
+  "evidence": {
+    "pristine_cpu_suite": {
+      "command": [
+        "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+        "-m",
+        "analysis.redo_chb_rlcifar_1018.checks",
+        "--out",
+        "/tmp/issa_new_run1_independent_cpu_checks_final_1018.json"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/issa_new_run1_pristine_cpu_suite_final_1018.log",
+      "log_sha256": "8da304830185b168dc06f6f60021df1f231ac64b965e99c861320a6ed919b733"
+    },
+    "independent_native_resume_engine": {
+      "command": [
+        "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+        "/tmp/independent_new_rc_engine_check.py"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/issa_new_run1_independent_native_resume_engine_final_1018.log",
+      "log_sha256": "6ef70549050e6fb3731b8d1217c59ea2489b53d6868bff8a383085864dfffe51"
+    },
+    "actual_source_mutants": {
+      "command": [
+        "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+        "/tmp/independent_new_rc_source_mutants.py"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/issa_new_run1_actual_source_mutants_final_1018.log",
+      "log_sha256": "b80e6ce964f06ceeb88330fd318640282b726043513c324f423160a4ecbecc13"
+    }
+  },
+  "pristine_cpu_checks": {
+    "path": "/tmp/issa_new_run1_independent_cpu_checks_final_1018.json",
+    "sha256": "ef8fcc4e59e893fca6517f1b54e991494b01e7b37c929cc2ac3d47645060dd89",
+    "groups": 8,
+    "all_pass": true
+  },
+  "actual_source_mutants": {
+    "path": "/tmp/issa_new_run1_independent_source_mutants_1018.json",
+    "sha256": "c3fb803e67eed7dccf5cb45bad01a5098ba76d1a2c0ff456c453b13e74e53f6a",
+    "both_expected_failures_observed": true
+  },
+  "reviewed_scope": [
+    "native anchored adapter and update ordering",
+    "ReDo old64 probe/two-layer masks/incoming-before-outgoing recycler/reinit streams",
+    "byte-exact native alias/no-checkpoint and continuous-resume core+extension fixtures",
+    "pre-deserialization independent checkpoint envelope/source/data binding",
+    "strict/native generation/death/censoring diagnostic semantics",
+    "actual source-mutation sensitivity for extra-B and reason2",
+    "all510lines real-data CUDA release checker source at frozen closure"
+  ],
+  "fixed_findings": [
+    "original generation0 unselected event death now recorded",
+    "independent checkpoint SHA verified before deserialization",
+    "checkpoint envelope save kept inside checkpoint branch",
+    "package initializer included in source closure",
+    "extra-B and gen1 reason2 source mutants now fail required groups"
+  ],
+  "pending": [
+    "genuine CUDA R10 release tests",
+    "full registered200task production arms"
+  ],
+  "cuda_release_approved": false,
+  "production_results_reviewed": false,
+  "actual_after_audit_extra_B_mutant": {
+    "path": "/tmp/issa_new_run1_independent_lateB_mutant_final_1018.json",
+    "sha256": "6f6d2149ea23194e57dec67b40097df5c8ebfb1010585df8ba644091f973595f",
+    "expected_failure_observed": true
+  }
+}

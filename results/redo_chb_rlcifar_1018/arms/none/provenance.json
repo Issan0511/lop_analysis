@@ -1,0 +1,373 @@
+{
+  "run_id": "redo_chb_rlcifar_1018",
+  "git_hash": "c552641ef5de10442564defb5f96fbf74ecba1d1",
+  "dirty_src_analysis": [],
+  "git_states": [
+    {
+      "git_hash": "c552641ef5de10442564defb5f96fbf74ecba1d1",
+      "dirty_src_analysis": []
+    }
+  ],
+  "resumed_at_task": [],
+  "arm": "none",
+  "conds": [
+    "raw"
+  ],
+  "seeds": [
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "slots": [
+    {
+      "seed": 10,
+      "cond": "raw"
+    },
+    {
+      "seed": 11,
+      "cond": "raw"
+    },
+    {
+      "seed": 12,
+      "cond": "raw"
+    },
+    {
+      "seed": 13,
+      "cond": "raw"
+    },
+    {
+      "seed": 14,
+      "cond": "raw"
+    },
+    {
+      "seed": 15,
+      "cond": "raw"
+    },
+    {
+      "seed": 16,
+      "cond": "raw"
+    },
+    {
+      "seed": 17,
+      "cond": "raw"
+    },
+    {
+      "seed": 18,
+      "cond": "raw"
+    },
+    {
+      "seed": 19,
+      "cond": "raw"
+    }
+  ],
+  "R": 10,
+  "lr": 0.001,
+  "n_tasks": 200,
+  "epochs_per_task": 400,
+  "batch": 16,
+  "steps_per_task": 30000,
+  "n_images": 1200,
+  "train_n": 50000,
+  "dims": [
+    3072,
+    100,
+    100,
+    10
+  ],
+  "n_classes": 10,
+  "doors": {
+    "c": false,
+    "h": false,
+    "b": "none"
+  },
+  "door_lam": 0.1713,
+  "door_beta": 0.01,
+  "intervention": "none",
+  "optimizer": "adam",
+  "weight_decay": 0.0,
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "subset_sha256": {
+    "10": "af1568fff8ffe707b984abc0bdc8c1d71aa3ca13d4df9306f422c76222b1d1e3",
+    "11": "da0e8755c6e9ae266d5a316daad6f9cf009e42c19a3a05a1526e26a1c8913d46",
+    "12": "05f394d4a9eda899a1f1b83a6a0156ecaf76bdfcc387af3a59569bbd9ac88f48",
+    "13": "32e2f66d3e3deb275f64dbc9d68308cf630bf85a2e0dacaac8bf7475a9136a37",
+    "14": "d3d77ed6979b510cdffa59c062b02a4ea0c192ea621fdef0a434f2b0149c4d19",
+    "15": "c31e87753b7280d83accde88d0ddfea76f3c649783e7e78ba9c42217e53804ef",
+    "16": "e4bc031806429ff3116e84d268c31c2de30555e7cef5f7465a79f4534b3c5b77",
+    "17": "7b689b3a3c21c578e29e6127d6a4ae20c180266b7f0a52952aa0bd7311852ef5",
+    "18": "85353f834023f7b2d3ef09b2c739f5b777dcbc3ac9ebadf60612f4f824b7a803",
+    "19": "6db060f53060b05937d4891a8cd1ac9ce04f09f0c4c931b91dd5df8adfb9491d"
+  },
+  "std": {
+    "mean": [
+      0.4914,
+      0.4822,
+      0.4465
+    ],
+    "std": [
+      0.247,
+      0.2435,
+      0.2616
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "rng_roles": [
+    "rlc_subset",
+    "rlc_labels",
+    "rlc_batch",
+    "init"
+  ],
+  "rsl_noise_seed": null,
+  "hist": {
+    "lo": -512.0,
+    "hi": 256.0,
+    "bins": 7680,
+    "dtype": "int32",
+    "theta": null,
+    "path": "hist/<arm>_<cond>_seed<seed>.npz"
+  },
+  "engine": "stacked baddbmm, autograd, elementwise Adam (spec \u00a72.2), one step captured as a CUDA graph",
+  "snapshots": "snap/<arm>_<cond>_seed<seed>/t<task>.npz: W1,b1,W2,b2,W3,b3 float32 (+m1,m2 for door H) at init (t00) and every task's end, plus z1,z2 (1200x100, float16, images in subset order) at every task's end; exact float32 z via replay()",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 0.78977157274882,
+  "wall_clock_s": 4855.053137540817,
+  "divergences": [],
+  "check_hooks": {
+    "perturb": null,
+    "nan_slot": null,
+    "snapshots": true
+  },
+  "prereg_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+  "launch_provenance": {
+    "run_id": "redo_chb_rlcifar_1018",
+    "prereg_commit": "09d175aa9a86dd8d70c2c8542991b245f754c7bb",
+    "git_hash": "c552641ef5de10442564defb5f96fbf74ecba1d1",
+    "dirty_src_analysis": [],
+    "started_at": "2026-10-18T03:05:01.010268+00:00",
+    "git_status": [
+      " M results/redo_chb_rlcifar_1018/preflight.json",
+      " M results/redo_chb_rlcifar_1018/status.json",
+      "?? results/redo_chb_rlcifar_1018/admission.json",
+      "?? results/redo_chb_rlcifar_1018/admission/cpu_checks.json",
+      "?? results/redo_chb_rlcifar_1018/admission/gpu_release.json",
+      "?? results/redo_chb_rlcifar_1018/admission/independent_review.json",
+      "?? results/redo_chb_rlcifar_1018/arms/none/identity.json",
+      "?? results/redo_chb_rlcifar_1018/arms/none/status.json",
+      "?? results/redo_chb_rlcifar_1018/common_spec.md",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_eager/checkpoint_digest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_eager/ckpt.pt",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_eager/continuity.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_eager/diagnostic_manifest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_eager/diagnostic_units/t001.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_eager/diagnostic_units/t002.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_eager/diagnostics.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_eager/per_task.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_eager/provenance.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_graph/checkpoint_digest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_graph/ckpt.pt",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_graph/continuity.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_graph/diagnostic_manifest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_graph/diagnostic_units/t001.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_graph/diagnostic_units/t002.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_graph/diagnostics.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_graph/per_task.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_adapted_graph/provenance.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_native_graph/ckpt.pt",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_native_graph/per_task.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/CHB_native_graph/provenance.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_eager/checkpoint_digest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_eager/ckpt.pt",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_eager/continuity.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_eager/diagnostic_manifest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_eager/diagnostic_units/t001.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_eager/diagnostic_units/t002.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_eager/diagnostics.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_eager/event_units/e00001_k0001560.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_eager/event_units/e00002_k0003120.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_eager/per_task.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_eager/provenance.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_eager/redo_events.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_eager/reinit_rng.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_graph/checkpoint_digest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_graph/ckpt.pt",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_graph/continuity.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_graph/diagnostic_manifest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_graph/diagnostic_units/t001.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_graph/diagnostic_units/t002.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_graph/diagnostics.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_graph/event_units/e00001_k0001560.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_graph/event_units/e00002_k0003120.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_graph/per_task.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_graph/provenance.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_graph/redo_events.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_graph/reinit_rng.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_resume/checkpoint_digest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_resume/ckpt.pt",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_resume/continuity.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_resume/diagnostic_manifest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_resume/diagnostic_units/t001.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_resume/diagnostic_units/t002.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_resume/diagnostics.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_resume/event_units/e00001_k0001560.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_resume/event_units/e00002_k0003120.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_resume/per_task.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_resume/provenance.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_resume/redo_events.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/both_resume/reinit_rng.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/event_and_stream_checks.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/fixture_protocols.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_eager/checkpoint_digest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_eager/ckpt.pt",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_eager/continuity.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_eager/diagnostic_manifest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_eager/diagnostic_units/t001.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_eager/diagnostic_units/t002.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_eager/diagnostics.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_eager/per_task.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_eager/provenance.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_graph/checkpoint_digest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_graph/ckpt.pt",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_graph/continuity.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_graph/diagnostic_manifest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_graph/diagnostic_units/t001.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_graph/diagnostic_units/t002.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_graph/diagnostics.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_graph/per_task.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_adapted_graph/provenance.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_native_graph/ckpt.pt",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_native_graph/per_task.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/none_native_graph/provenance.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/real_data_identity.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/checkpoint_digest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/ckpt.pt",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/continuity.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/diagnostic_manifest.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/diagnostic_units/t001.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/diagnostics.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/event_units/e00001_k0001560.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/event_units/e00002_k0003120.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/event_units/e00003_k0004680.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/event_units/e00004_k0006240.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/event_units/e00005_k0007800.npz",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/per_task.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/provenance.json",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/redo_events.csv",
+      "?? results/redo_chb_rlcifar_1018/gpu_release_artifacts/redo_boundary_graph/reinit_rng.json",
+      "?? results/redo_chb_rlcifar_1018/host_continuation/controller.lock",
+      "?? results/redo_chb_rlcifar_1018/host_continuation/gpu_checks.log",
+      "?? results/redo_chb_rlcifar_1018/host_continuation/launch_plan.json",
+      "?? results/redo_chb_rlcifar_1018/host_continuation/state.json",
+      "?? results/redo_chb_rlcifar_1018/host_continuation/training.log",
+      "?? results/redo_chb_rlcifar_1018/provenance.json",
+      "?? results/redo_chb_rlcifar_1018/spec.md"
+    ],
+    "argv": [
+      "/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/analysis/redo_chb_rlcifar_1018/launch.py",
+      "run",
+      "--arm",
+      "all"
+    ],
+    "arm": "none",
+    "seeds": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "conds": [
+      "raw"
+    ],
+    "tasks": 200,
+    "epochs": 400,
+    "lr": 0.001,
+    "beta": 0.01,
+    "lam": 0.1713,
+    "doors": {
+      "c": false,
+      "h": false,
+      "b": "none"
+    },
+    "device": "cuda",
+    "torch": "2.13.0+cu130",
+    "threads": 2,
+    "dtype": "float32",
+    "cuda_graph_requested": true,
+    "cublas_workspace": ":4096:8",
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "data_sha256": {
+      "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+    },
+    "subset_sha256": {
+      "10": "af1568fff8ffe707b984abc0bdc8c1d71aa3ca13d4df9306f422c76222b1d1e3",
+      "11": "da0e8755c6e9ae266d5a316daad6f9cf009e42c19a3a05a1526e26a1c8913d46",
+      "12": "05f394d4a9eda899a1f1b83a6a0156ecaf76bdfcc387af3a59569bbd9ac88f48",
+      "13": "32e2f66d3e3deb275f64dbc9d68308cf630bf85a2e0dacaac8bf7475a9136a37",
+      "14": "d3d77ed6979b510cdffa59c062b02a4ea0c192ea621fdef0a434f2b0149c4d19",
+      "15": "c31e87753b7280d83accde88d0ddfea76f3c649783e7e78ba9c42217e53804ef",
+      "16": "e4bc031806429ff3116e84d268c31c2de30555e7cef5f7465a79f4534b3c5b77",
+      "17": "7b689b3a3c21c578e29e6127d6a4ae20c180266b7f0a52952aa0bd7311852ef5",
+      "18": "85353f834023f7b2d3ef09b2c739f5b777dcbc3ac9ebadf60612f4f824b7a803",
+      "19": "6db060f53060b05937d4891a8cd1ac9ce04f09f0c4c931b91dd5df8adfb9491d"
+    },
+    "slots": [
+      {
+        "seed": 10,
+        "cond": "raw"
+      },
+      {
+        "seed": 11,
+        "cond": "raw"
+      },
+      {
+        "seed": 12,
+        "cond": "raw"
+      },
+      {
+        "seed": 13,
+        "cond": "raw"
+      },
+      {
+        "seed": 14,
+        "cond": "raw"
+      },
+      {
+        "seed": 15,
+        "cond": "raw"
+      },
+      {
+        "seed": 16,
+        "cond": "raw"
+      },
+      {
+        "seed": 17,
+        "cond": "raw"
+      },
+      {
+        "seed": 18,
+        "cond": "raw"
+      },
+      {
+        "seed": 19,
+        "cond": "raw"
+      }
+    ],
+    "R": 10
+  }
+}

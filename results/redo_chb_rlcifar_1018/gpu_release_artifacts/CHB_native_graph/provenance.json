@@ -1,0 +1,151 @@
+{
+  "run_id": "relu_doors_0919",
+  "git_hash": "b672bd88a4de8e6e0888beec4db3e67217cbc33d",
+  "dirty_src_analysis": [],
+  "git_states": [
+    {
+      "git_hash": "b672bd88a4de8e6e0888beec4db3e67217cbc33d",
+      "dirty_src_analysis": []
+    }
+  ],
+  "resumed_at_task": [],
+  "arm": "CHB",
+  "conds": [
+    "raw"
+  ],
+  "seeds": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109
+  ],
+  "slots": [
+    {
+      "seed": 100,
+      "cond": "raw"
+    },
+    {
+      "seed": 101,
+      "cond": "raw"
+    },
+    {
+      "seed": 102,
+      "cond": "raw"
+    },
+    {
+      "seed": 103,
+      "cond": "raw"
+    },
+    {
+      "seed": 104,
+      "cond": "raw"
+    },
+    {
+      "seed": 105,
+      "cond": "raw"
+    },
+    {
+      "seed": 106,
+      "cond": "raw"
+    },
+    {
+      "seed": 107,
+      "cond": "raw"
+    },
+    {
+      "seed": 108,
+      "cond": "raw"
+    },
+    {
+      "seed": 109,
+      "cond": "raw"
+    }
+  ],
+  "R": 10,
+  "lr": 0.001,
+  "n_tasks": 2,
+  "epochs_per_task": 1,
+  "batch": 16,
+  "steps_per_task": 75,
+  "n_images": 1200,
+  "train_n": 50000,
+  "dims": [
+    3072,
+    100,
+    100,
+    10
+  ],
+  "n_classes": 10,
+  "doors": {
+    "c": true,
+    "h": true,
+    "b": "wd"
+  },
+  "door_lam": 0.1713,
+  "door_beta": 0.01,
+  "intervention": "none",
+  "optimizer": "adam",
+  "weight_decay": 0.0,
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "subset_sha256": {
+    "100": "0261ffb74ba3c3cbaac7a1a42e2ea6f61ec5952d15c63b66e2a9eaeafe95ac6f",
+    "101": "210746a06e5eb15e01804c7acbcec934413f29edb8b80210bb5c5da37ad302ba",
+    "102": "06262f0284414e14eaeec48e000685fe6fca60a7cb4a47705ad086591e1366ba",
+    "103": "ecbd9d0bb06c37c4dd03c37921ec38bd109938e75adc4d7940d0b3c5a1109c0f",
+    "104": "bb3cb4b55f235b89c9bdc6bde5780146734d9e3b8ffdaf4bf0876943b6c597cb",
+    "105": "257de26d5a8a4546d50880bc84de7f0ffd2040d87b2da7745f84a27da9f6d2bb",
+    "106": "f66aad68795b2fe5fa6ab3a6a81eee585db82c24a9ba8798086062a4da8eecba",
+    "107": "91af071c1e02b81be64d4ba7c220d982bff8a9978689584879c7bedd60fa75b7",
+    "108": "291cea1530764f4d9bfa7deba4acf6320032b9c87f1996a71f3035c1d8ea98a0",
+    "109": "9c552d0452cdf54c50f676650d9409b66844651ccc6bb6fe9303db834f7862a7"
+  },
+  "std": {
+    "mean": [
+      0.4914,
+      0.4822,
+      0.4465
+    ],
+    "std": [
+      0.247,
+      0.2435,
+      0.2616
+    ],
+    "planes": "R,G,B x 1024"
+  },
+  "rng_roles": [
+    "rlc_subset",
+    "rlc_labels",
+    "rlc_batch",
+    "init"
+  ],
+  "rsl_noise_seed": null,
+  "hist": {
+    "lo": -512.0,
+    "hi": 256.0,
+    "bins": 7680,
+    "dtype": "int32",
+    "theta": null,
+    "path": "hist/<arm>_<cond>_seed<seed>.npz"
+  },
+  "engine": "stacked baddbmm, autograd, elementwise Adam (spec \u00a72.2), one step captured as a CUDA graph",
+  "snapshots": "snap/<arm>_<cond>_seed<seed>/t<task>.npz: W1,b1,W2,b2,W3,b3 float32 (+m1,m2 for door H) at init (t00) and every task's end, plus z1,z2 (1200x100, float16, images in subset order) at every task's end; exact float32 z via replay()",
+  "device": "cuda",
+  "torch": "2.13.0+cu130",
+  "cublas_workspace": ":4096:8",
+  "step_ms_last_task": 0.7874743143717448,
+  "wall_clock_s": 0.48633575439453125,
+  "divergences": [],
+  "check_hooks": {
+    "perturb": null,
+    "nan_slot": null,
+    "snapshots": false
+  }
+}

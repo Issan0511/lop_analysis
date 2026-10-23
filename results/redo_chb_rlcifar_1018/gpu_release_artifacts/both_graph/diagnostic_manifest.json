@@ -1,0 +1,24 @@
+{
+  "files": {
+    "event_units/e00001_k0001560.npz": "3277132c516373081585076375a175a78ef604ead23170ae7c6d2838fca5f603",
+    "diagnostic_units/t001.npz": "b03719fd5049d72a388f34c39f169dac2e6bcce25ee3a23dde9a82ac4356c300",
+    "event_units/e00002_k0003120.npz": "a2c9adc1b78dac56e173490d36b5ced53bdc1dc199911be25957a2bc2f37348e",
+    "diagnostic_units/t002.npz": "969d55e16ba2c45ed2fe25fbf94d91aebd9241f1d3520bead7f5f89995a672ef"
+  },
+  "completed_tasks": [
+    1,
+    2
+  ],
+  "s_correction": 1,
+  "native_derivative_variance_correction": 0,
+  "reduction_dtype": "float64 from native float32 forward",
+  "population": "fixed complete1200 images/seed; synthetic checks declare smaller shapes",
+  "death_definition": "primary strict max(z)>0 alive; native clamp autograd status separate",
+  "reason_codes": {
+    "0": "no observed re-death",
+    "1": "between-events observed death; causal drift not inferred",
+    "2": "event-associated observed death of unselected generation"
+  },
+  "censoring": "Replaced-while-alive generation is censored, not a re-death. New generations are evaluated after full two-layer recycler.",
+  "zero_width": "Raw r signed infinities/NaN in NPZ, explicit counts and named finite-only summaries in CSV"
+}
