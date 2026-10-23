@@ -57,7 +57,8 @@ def main():
                                 route='own_up' if early else 'all_parameters')
                     row = dict(**base, **meta['stats'], n_responsive=int(mask.sum()), n_comparison=int(common.sum()),
                                actual_mean=float(truth.mean()), actual_sink=float((truth[mask] > 0).mean()),
-                               r_median=median(arrays[f'L{layer}_r'][mask]),
+                               r_median=median(arrays[f'L{layer}_r']),
+                               r_responsive_median=median(arrays[f'L{layer}_r'][mask]),
                                ce_relative=ratio(p['ce'][mask], p['sq_full'][mask]),
                                task_departure_relative=ratio(p['task_departure'][mask], p['ctx_mean'][mask]),
                                fit_relative=ratio(p['fit_gap'][mask], p['ls_task'][mask]),
@@ -179,7 +180,7 @@ def main():
                 flips = sum(e is not None and l is not None and e < 0 < l for e, l in zip(ev, lv))
                 text.append(f'|{arm} {metric}|{component}|{span(ev)}|{span(lv)}|{flips}/10|')
     text += ['', '## SiLU、全パラメータ経路、1 seedの記録', '',
-             '|腕|課題|層|metric|r中央値|P2 BA|個別LS BA|実head二乗 BA|fit距離|CE比|cos(CE,二乗)|cos(合計,二乗)|direct/実測|', '|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|']
+             '|腕|課題|層|metric|r中央値(全unit)|P2 BA|個別LS BA|実head二乗 BA|fit距離|CE比|cos(CE,二乗)|cos(合計,二乗)|direct/実測|', '|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|']
     for r in states:
         if r['arm'] not in ['SiLU', 'SiLUcap']:
             continue
