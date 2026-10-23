@@ -82,9 +82,13 @@ def main():
                     states.append(row)
                     for name in ['iid_mean', 'ctx_mean', 'ls_task', 'sq_range', 'sq_full', 'actual']+R.PARTS[1:]+([] if early else ['direct', 'actual_full']):
                         value = p[name][mask]
+                        phase = p['P2'][mask]
+                        denom = float(np.linalg.norm(value)*np.linalg.norm(phase))
                         components.append(dict(**base, component=name, l2=float(np.linalg.norm(value)),
                                                relative_actual=ratio(value, truth[mask]), median=median(value),
-                                               mean=float(np.mean(value)), positive_fraction=float((value > 0).mean())))
+                                               mean=float(np.mean(value)), positive_fraction=float((value > 0).mean()),
+                                               cosine_to_P2=None if denom == 0 else float(value@phase/denom),
+                                               rho_to_P2=R.Q.rho(value, phase)))
     csvwrite(OUT/'states.csv', states)
     csvwrite(OUT/'components.csv', components)
     csvwrite(OUT/'comparisons.csv', comparisons)
@@ -162,7 +166,16 @@ def main():
     gate = json.loads((OUT/'gate.json').read_text())
     checkvalues = [v for m in json.loads((OUT/'checks.json').read_text()) for v in m['checks'].values()]
     refvalues = [v for m in gate['states'] for v in m['reference']['checks'].values()]
-    text += ['', '## 検算と限界', '', f'前回5状態の配列再現：最大相対誤差{max(refvalues):.3g}。184状態の恒等式・勾配・r射影：最大相対誤差{max(checkvalues):.3g}。', '',
+    text += ['', '## 固定12unitの上界とZの独立検査', '',
+             '|課題|unit|正確なZ|64本推定Z|最小固有値|最大固有値|fit実値|fit上界|CE実値|CE上界|',
+             '|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|']
+    for m in gate['states']:
+        if not m['exact_A']:
+            continue
+        for unit, row in m['exact_A'].items():
+            text.append(f"|{m['task']}|{unit}|"+'|'.join(fmt(row[k], 4) for k in ['Z', 'Zhat', 'eig_min', 'eig_max', 'fit', 'fit_bound', 'ce', 'ce_bound'])+'|')
+    text += ['', '上界が実値に比べて大きい場合、上界式の成立だけでは誤差が相2の向きを覆せないと保証できない。Z推定の個別unitでのずれも上表で残す。', '',
+             '## 検算と限界', '', f'前回5状態の配列再現：最大相対誤差{max(refvalues):.3g}。184状態の恒等式・勾配・r射影：最大相対誤差{max(checkvalues):.3g}。', '',
              'Zhatは固定64 Gaussian方向からの推定。固定12unitのAをJVPから直接作り、trace・全Gaussian二次形式・fit分解を独立検算した。正確なZと上界はgate.json。Gaussian模型の確率上界を実Markov課題の保証に読み替えない。', '',
              'Y=65(Q−U)は固定した一様点二次模型。fit距離はCE最適headへの距離ではない。βはDirichlet生成則から固定し、実測の係数fitは無し。文脈平均は学習済み特徴とprobeを固定した模型で、ラベルとの独立性を実環境で実証したものではない。', '',
              'C3の比較はL0自身のup行の経路。SiLUは全パラメータ経路で直接共有headの項を含む。両者を同じ経路の比較と呼ばない。切替は新ラベルの独立一様平均で、次の課題入力を再生したものではない。実際の長期更新・沈降の原因割合ではない。', '',
