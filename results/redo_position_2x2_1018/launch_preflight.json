@@ -1,0 +1,87 @@
+{
+  "run_id": "redo_position_2x2_1018",
+  "status": "ADMITTED",
+  "all_pass": true,
+  "blockers": [],
+  "checked_utc": "2026-10-17T17:09:52.592016+00:00",
+  "registration_commit": "fd2e6682",
+  "git_hash": "585b80fb633b6e67eb8795a7ca35aa77c67515e2",
+  "source_sha256": {
+    "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
+    "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
+    "analysis/redo_position_2x2_1018/checks.py": "34705e8ea8f7c04328251deaf2010eaa9530a8d5b7cff03fffa8fb0c1b9f7779",
+    "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0",
+    "specs/spec_redo_position_2x2_1018.md": "97cd76a2289dd4815f7cc81b632738a3027711737e70bdd83086da84f630660f",
+    "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/baselines_cifar5p1_1008.py": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/cifar_interventions_0920.py": "d079b5185249114d035afcce69d9636ef1db2807e642c3fd879cb2168907f37f",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/redo_position_2x2_1018.py": "76bba031c9fed8f1a1d7740d7a6fd5c54a8ad25a2259dab88f91b52155353cc1",
+    "src/resp_cifar5p1_1007.py": "c8d6bedb04d0895f1fea97d2c4a14a11dcfb1eaa5fd64565f8b9668b9b5c729c",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+  },
+  "environment": {
+    "python": "3.12.3 (main, Apr 15 2024, 18:25:56) [Clang 17.0.6 ]",
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.1",
+    "cuda_build": "13.0",
+    "cuda_available": true,
+    "nvidia_devices": [
+      "/dev/nvidia-modeset",
+      "/dev/nvidia-uvm",
+      "/dev/nvidia-uvm-tools",
+      "/dev/nvidia0",
+      "/dev/nvidiactl"
+    ],
+    "nvidia_smi_returncode": 0,
+    "nvidia_smi_output": "Sun Oct 18 02:09:52 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 580.178.04             Driver Version: 580.178.04     CUDA Version: 13.0     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 5060 Ti     Off |   00000000:01:00.0  On |                  N/A |\n|  0%   41C    P3             14W /  180W |    1493MiB /  16311MiB |      3%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            7543    C+G   ...c/gnome-remote-desktop-daemon        130MiB |\n|    0   N/A  N/A            7587      G   /usr/bin/gnome-shell                    222MiB |\n|    0   N/A  N/A            8123      G   /usr/bin/Xwayland                         6MiB |\n|    0   N/A  N/A           15733    C+G   /usr/bin/nautilus                        92MiB |\n|    0   N/A  N/A           17382    C+G   ...rack-uuid=3190708988185955192         91MiB |\n|    0   N/A  N/A           20685    C+G   ...rack-uuid=3190708988185955192         99MiB |\n|    0   N/A  N/A          321730    C+G   ...88185955192 --disable-logging        125MiB |\n|    0   N/A  N/A          639398      G   /opt/YouTube Music/youtube-music         49MiB |\n|    0   N/A  N/A          748476      G   ...rack-uuid=3190708988185955192        182MiB |\n|    0   N/A  N/A          890678    C+G   /usr/bin/ptyxis                          46MiB |\n|    0   N/A  N/A         3477114      G   ...nap-store/1447/bin/snap-store         58MiB |\n+-----------------------------------------------------------------------------------------+",
+    "tf32": false,
+    "matmul_precision": "highest",
+    "deterministic": false,
+    "threads": 20,
+    "cublas": ":4096:8"
+  },
+  "audit_path": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json",
+  "audit_sha256": "b8aeac0f0ec176411c423beb5ad52c0048050564b4de64db0608e8724ffa4543",
+  "checks_path": "/home/issan/Projects/claude/wt/redo_position_2x2_1018/results/_checks_redo_position_2x2_1018/checks.json",
+  "checks_sha256": "21e8395eaf68a89950a8f78c839e52425ad0f60f66e900c87327f8d5ec2eed82",
+  "protocol": {
+    "device": "cuda",
+    "dtype": "float32",
+    "R": 10,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "prefix_tasks": 29,
+    "branch_task": 28,
+    "steps_per_task": 780,
+    "arms": [
+      "none",
+      "redo",
+      "shift",
+      "both"
+    ],
+    "prediction": "POSITION_CARRIES"
+  },
+  "production_started": false,
+  "argv": [
+    "/home/issan/Projects/claude/wt/redo_position_2x2_1018/src/redo_position_2x2_1018.py",
+    "run",
+    "--integration-audit",
+    "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"
+  ]
+}
