@@ -1,0 +1,91 @@
+{
+  "status": "PASS",
+  "independent": "stdlib CSV endpoint/CI recomputation plus direct NPZ/state invariants",
+  "workers": [
+    {
+      "activation": "ELU1",
+      "seed": 0,
+      "wall_seconds": 606.3290926850168,
+      "anchor_count": 120,
+      "anchor_maxabs": 0.0
+    },
+    {
+      "activation": "ELU1",
+      "seed": 1,
+      "wall_seconds": 605.4034698629985,
+      "anchor_count": 120,
+      "anchor_maxabs": 0.0
+    },
+    {
+      "activation": "ELU1",
+      "seed": 2,
+      "wall_seconds": 589.1782397569623,
+      "anchor_count": 120,
+      "anchor_maxabs": 0.0
+    },
+    {
+      "activation": "LR",
+      "seed": 0,
+      "wall_seconds": 571.9043373850873,
+      "anchor_count": 120,
+      "anchor_maxabs": 0.0
+    },
+    {
+      "activation": "LR",
+      "seed": 1,
+      "wall_seconds": 608.828706799075,
+      "anchor_count": 120,
+      "anchor_maxabs": 0.0
+    },
+    {
+      "activation": "LR",
+      "seed": 2,
+      "wall_seconds": 562.9152779260185,
+      "anchor_count": 120,
+      "anchor_maxabs": 0.0
+    }
+  ],
+  "raw_rows": 18120,
+  "unit_record_invariant_max": {
+    "norm": 2.489652339843218e-08,
+    "mean": 9.39624362317204e-07,
+    "rowmean": 6.0617311448130096e-09
+  },
+  "H_recomputation": [
+    {
+      "depth": "d1",
+      "seed_values": [
+        -0.654296875,
+        -0.2490234375,
+        -0.52978515625
+      ],
+      "mean": -0.4777018229166667,
+      "ci": [
+        -0.9933991492503644,
+        0.03799550341703112
+      ],
+      "maxdiff": 1.1102230246251565e-16
+    },
+    {
+      "depth": "d4",
+      "seed_values": [
+        0.8740234375,
+        0.8740234375,
+        0.41259765625
+      ],
+      "mean": 0.72021484375,
+      "ci": [
+        0.05842987795410148,
+        1.3819998095458985
+      ],
+      "maxdiff": 0.0
+    }
+  ],
+  "CI_maxdiff": 1.1102230246251565e-16,
+  "code_spec_hash_consistency": true,
+  "limitations": [
+    "Only 3 independent seeds",
+    "Within-activation common checkpoint; activation baselines differ",
+    "Controlled mean depth and frozen rowmeans; width can still change saturation"
+  ]
+}
