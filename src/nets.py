@@ -340,6 +340,20 @@ class VecMLPL:
     ACTIVATIONS = ACTIVATIONS + tuple(SMOOTH_LEAKY)
     WEIRD_SLOPE_ACTIVATIONS = WEIRD_SLOPE_ACTIVATIONS + tuple(SMOOTH_LEAKY)
 
+    # Explicit phase/offset variants for zero_attraction_learning_0913.
+    SNAKE_PHASE_0913 = {
+        "snake_normal_m05_0913": ("normal", -0.5),
+        "snake_normal_p05_0913": ("normal", 0.5),
+        "snake_peak_m05_0913": ("peak", -0.5),
+        "snake_peak_0_0913": ("peak", 0.0),
+        "snake_peak_p05_0913": ("peak", 0.5),
+        "snake_valley_m05_0913": ("valley", -0.5),
+        "snake_valley_0_0913": ("valley", 0.0),
+        "snake_valley_p05_0913": ("valley", 0.5),
+    }
+    ACTIVATIONS = ACTIVATIONS + tuple(SNAKE_PHASE_0913)
+    WEIRD_FREQ_ACTIVATIONS = WEIRD_FREQ_ACTIVATIONS + tuple(SNAKE_PHASE_0913)
+
     def __init__(self, R, hidden, d, gen, device, act="relu", act_alpha=1.0,
                  act_grad_form="alpha_exp", wd_b=0.0):
         self.act_grad_form = "alpha_exp"
@@ -503,6 +517,15 @@ class VecMLPL:
                       else self.COMB1_LEAK["comb1_leaky"] * (pre + lobe))
             return torch.where(pre > 0, pre,
                                torch.where(pre > -lobe, leaf, beyond))
+        if self.act in self.SNAKE_PHASE_0913:
+            phase, offset = self.SNAKE_PHASE_0913[self.act]
+            a = self.act_alpha
+            if phase == "normal":
+                value = pre + torch.sin(a * pre) ** 2 / a
+            else:
+                sign = 1.0 if phase == "peak" else -1.0
+                value = pre + sign * torch.sin(2.0 * a * pre) / (2.0 * a)
+            return value if offset == 0.0 else value + offset
         if self.act == "snake":
             # ゲートを持たない周期活性化 [Ziyin et al. 2020]。**正側も恒等ではない**。
             # 単調（phi' = 1 + sin 2az >= 0）で、負側の可動度の平均は 1。
@@ -673,6 +696,12 @@ class VecMLPL:
                       else torch.full_like(pre, self.COMB1_LEAK["comb1_leaky"]))
             return torch.where(pre > 0, torch.ones_like(pre),
                                torch.where(pre > -lobe, leaf, beyond))
+        if self.act in self.SNAKE_PHASE_0913:
+            phase, _ = self.SNAKE_PHASE_0913[self.act]
+            if phase == "normal":
+                return 1.0 + torch.sin(2.0 * self.act_alpha * pre)
+            sign = 1.0 if phase == "peak" else -1.0
+            return 1.0 + sign * torch.cos(2.0 * self.act_alpha * pre)
         if self.act == "snake":
             return 1.0 + torch.sin(2.0 * self.act_alpha * pre)
         if self.act == "snake1":
@@ -752,6 +781,13 @@ class VecMLPL:
         if self.act == "tanh_b":
             t = torch.tanh(pre)
             return -2.0 * t * (1.0 - t ** 2)
+        if self.act in self.SNAKE_PHASE_0913:
+            phase, _ = self.SNAKE_PHASE_0913[self.act]
+            a = self.act_alpha
+            if phase == "normal":
+                return 2.0 * a * torch.cos(2.0 * a * pre)
+            sign = 1.0 if phase == "peak" else -1.0
+            return -sign * 2.0 * a * torch.sin(2.0 * a * pre)
         if self.act == "snake":
             # φ'' = 2α cos 2αz [snake_flip_0906 §3]。零点（φ'=0）は φ''=0 の変曲点。
             return 2.0 * self.act_alpha * torch.cos(2.0 * self.act_alpha * pre)
