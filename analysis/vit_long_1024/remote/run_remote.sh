@@ -13,6 +13,8 @@ VENV="${VENV:-$WORK/venv}"
 PY="${VIT_LONG_PY:-$VENV/bin/python}"
 export VIT_LONG_RAW="${VIT_LONG_RAW:-$HOME/Projects/obsidian-research-data/vit_long_1024}"
 export VIT_LONG_PY="$PY" CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONUNBUFFERED=1
+# S-disk floor: 25 GiB on white-san; the rented 80 GB disk holds about 44 GB of outputs, so use 5 GiB there.
+export VIT_LONG_FREE_FLOOR_GIB="${VIT_LONG_FREE_FLOOR_GIB:-5}"
 mkdir -p "$VIT_LONG_RAW"
 cd "$REPO"
 echo "== processes and GPU before starting"

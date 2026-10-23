@@ -108,22 +108,23 @@ def save_bytes(n_params):
 
 def remaining_save_bytes(args, tasks_left, n_params):
     size = save_bytes(n_params)
-    if args.arm == 'fresh':
-        return 2 * size['weights'] * len(tasks_left)
+    if C.is_fresh(args.arm):
+        return size['weights'] * len(tasks_left) * (2 if C.MID_FRESH else 1)
     if args.save_mode == 'none':
         return 0
     if args.save_mode == 'minimal':
         return size['weights'] * len(tasks_left) + size['checkpoint']
     total = sum(size['weights'] for t in tasks_left if t in C.END_TASKS)
-    total += sum(size['adam'] + size['weights'] for t in tasks_left if t in C.ADAM_TASKS)
+    total += sum(size['adam'] for t in tasks_left if t in C.ADAM_TASKS)
+    total += sum(size['weights'] for t in tasks_left if t in C.MID_TASKS)
     return total + 2 * size['checkpoint']           # the resume file and its temporary copy
 
 
 def validate(args):
     if args.steps % C.EVAL_EVERY or args.steps < C.EVAL_EVERY:
         raise ValueError('steps must be a positive multiple of 25')
-    if args.arm == 'fresh' and not args.fresh_task:
-        raise ValueError('--arm fresh needs --fresh-task')
+    if C.is_fresh(args.arm) and not args.fresh_task:
+        raise ValueError('a fresh arm needs --fresh-task')
     if args.smoke:
         return
     prod = C.production()
@@ -139,23 +140,23 @@ def validate(args):
     if args.seed not in prod['seeds'] or actual != expected:
         raise ValueError(f'production needs a seed in {prod["seeds"]} and {expected} (production.json); '
                          f'got seed {args.seed}, {actual}. Use --smoke for anything else.')
-    if args.arm in C.ARMS and args.tasks != prod['tasks']:
+    if args.arm not in prod['arms'] + prod['fresh_arms']:
+        raise ValueError(f'production arms are {prod["arms"]} and {prod["fresh_arms"]}')
+    if not C.is_fresh(args.arm) and args.tasks != prod['tasks']:
         raise ValueError(f'production continual runs have {prod["tasks"]} tasks')
-    if args.arm == 'fresh' and args.fresh_task not in prod['fresh_tasks']:
+    if C.is_fresh(args.arm) and args.fresh_task not in prod['fresh_tasks']:
         raise ValueError(f'production fresh tasks are {prod["fresh_tasks"]}')
-    if args.arm not in C.ARMS + ('fresh',):
-        raise ValueError(f'unknown arm {args.arm}')
 
 
 def config_of(args):
-    return dict(arm=args.arm, seed=args.seed, tasks=args.tasks if args.arm != 'fresh' else 1,
-                fresh_task=args.fresh_task if args.arm == 'fresh' else None, steps=args.steps,
-                batch=C.BATCH, lr=C.LR, act=C.ACT, model=C.CONFIG, engine=args.engine,
+    return dict(arm=args.arm, seed=args.seed, tasks=args.tasks if not C.is_fresh(args.arm) else 1,
+                fresh_task=args.fresh_task if C.is_fresh(args.arm) else None, steps=args.steps,
+                batch=C.BATCH, lr=C.LR, act=C.ACT, ln=args.arm in C.LN_ARMS, engine=args.engine,
                 data_kind=args.data_kind, recorders=not args.no_recorders, save_mode=args.save_mode,
                 n_labels=args.n_labels, images_per_class=args.images_per_class, augment=args.augment,
-                dropout=args.dropout, model_config=C.model_config(args.dropout),
+                dropout=args.dropout, model_config=C.model_config(args.dropout, args.arm in C.LN_ARMS),
                 eval_every=C.EVAL_EVERY, end_tasks=list(C.END_TASKS), adam_tasks=list(C.ADAM_TASKS),
-                mid_tasks=list(C.MID_TASKS), mid_step=C.MID_STEP, inject_nan=args.inject_nan,
+                mid_tasks=list(C.MID_TASKS), mid_fresh=C.MID_FRESH, mid_step=C.MID_STEP, inject_nan=args.inject_nan,
                 no_warmup=args.no_warmup, smoke=args.smoke)
 
 
@@ -181,13 +182,14 @@ def run(args):
         raise RuntimeError('Commit source and checks before production:\n' + dirty)
     device = args.device
     recorders = not args.no_recorders
-    tasks = [args.fresh_task] if args.arm == 'fresh' else list(range(1, args.tasks + 1))
+    fresh = C.is_fresh(args.arm)
+    tasks = [args.fresh_task] if fresh else list(range(1, args.tasks + 1))
     inject = tuple(int(v) for v in args.inject_nan.split(':')) if args.inject_nan else None
     cfg = config_of(args)
     hashes = C.source_hashes()
     source = C.image_source(args.data_kind)
     model, optimizer = None, None
-    model = C.build_model(args.seed, device, args.dropout)
+    model = C.build_model(args.seed, device, args.dropout, args.arm in C.LN_ARMS)
     optimizer = C.build_optimizer(model)
     n_params = sum(p.numel() for p in model.parameters())
     forward = train_forward(model, 'compile') if args.engine == 'compile' else model
@@ -198,7 +200,7 @@ def run(args):
     rows, layer_rows, manifest = [], [], []
     intask = {}
     done = 0
-    if checkpoint.exists() and args.arm != 'fresh':
+    if checkpoint.exists() and not fresh:
         state = torch.load(checkpoint, map_location=device, weights_only=False)
         if state['config'] != cfg or state['source_hashes'] != hashes:
             raise ValueError('Checkpoint config/source mismatch; refuse mixed experiment')
@@ -226,7 +228,7 @@ def run(args):
             loss_rows={t: C.loss_classes(args.arm, args.seed, t, args.n_labels, args.images_per_class)
                        for t in tasks},
             probe=C.probe_names(source, args.seed), n_params=n_params, started=time.time()))
-        if args.arm != 'fresh':
+        if not fresh:
             path = out / 'ckpt/model_t00.pt'
             atomic_save(path, model.state_dict())
             manifest.append(_record(path, out))
@@ -237,12 +239,12 @@ def run(args):
     task = done
     step = 0
     try:
-        for task in tasks[done:] if args.arm != 'fresh' else tasks:
+        for task in tasks[done:] if not fresh else tasks:
             if stop_requested(out):
                 atomic_json(out / 'status.json', dict(status='paused', reason='STOP', completed=rows[-1]['task'] if rows else 0))
                 return
             free = args.free_bytes_override or shutil.disk_usage(out).free
-            need = C.FREE_FLOOR + remaining_save_bytes(args, [t for t in tasks if t >= task], n_params)
+            need = C.free_floor() + remaining_save_bytes(args, [t for t in tasks if t >= task], n_params)
             if free < need:
                 atomic_json(out / 'status.json', dict(status='paused', reason='disk', free=free, need=need,
                                                       completed=rows[-1]['task'] if rows else 0))
@@ -255,7 +257,7 @@ def run(args):
             for key, value in record.items():
                 intask.setdefault(key, []).append(value)
             step = 0
-            if args.arm != 'fresh':
+            if not fresh:
                 atomic_save(checkpoint, dict(config=cfg, source_hashes=hashes, task=task, model=model.state_dict(),
                                              optimizer=optimizer.state_dict(), rng=get_rng(), rows=rows,
                                              layer_rows=layer_rows, intask=intask, manifest=manifest))
@@ -311,7 +313,8 @@ def train_task(args, model, optimizer, forward, source, probe, task, first_task,
     correct = torch.zeros(args.steps, dtype=torch.int64, device=device)
     losses = torch.zeros(args.steps, dtype=torch.float64, device=device)
     sizes = np.zeros(args.steps, dtype=np.int64)
-    save_mid = args.save_mode == 'full' and (args.arm == 'fresh' or task in C.MID_TASKS)
+    save_mid = args.save_mode == 'full' and ((C.is_fresh(args.arm) and C.MID_FRESH) or
+                                             (not C.is_fresh(args.arm) and task in C.MID_TASKS))
     mid_seconds = 0.
     loader = train_loader(data, args.seed, task, args.steps, args.workers)
     train_start = time.monotonic()
@@ -406,13 +409,13 @@ def train_task(args, model, optimizer, forward, source, probe, task, first_task,
                     'head_norm_start', 'head_norm_end', 'up_norm_med_start', 'up_norm_med_end', 'probe_dead005',
                     'probe_dead0', 'probe_neg_mass', 'readout_neg_mass', 'readout_dead', 'reached90'):
             row[key] = math.nan
-    keep_end = args.save_mode != 'none' and (args.arm == 'fresh' or args.save_mode == 'minimal'
+    keep_end = args.save_mode != 'none' and (C.is_fresh(args.arm) or args.save_mode == 'minimal'
                                               or task in C.END_TASKS)
     if keep_end:
         path = out / f'ckpt/model_t{task:02d}.pt'
         atomic_save(path, model.state_dict())
         manifest.append(_record(path, out))
-    if args.save_mode == 'full' and args.arm != 'fresh' and task in C.ADAM_TASKS:
+    if args.save_mode == 'full' and not C.is_fresh(args.arm) and task in C.ADAM_TASKS:
         path = out / f'ckpt/adam_t{task:02d}.pt'
         atomic_save(path, dict(task=task, optimizer=optimizer.state_dict(), rng=get_rng()))
         manifest.append(_record(path, out))
@@ -457,7 +460,7 @@ def _driver():
 
 def parser():
     p = argparse.ArgumentParser()
-    p.add_argument('--arm', required=True, choices=('R0', 'S', 'fresh'))
+    p.add_argument('--arm', required=True, choices=C.ARMS + C.FRESH_ARMS)
     p.add_argument('--seed', type=int, required=True)
     p.add_argument('--tasks', type=int, default=C.TASKS)
     p.add_argument('--steps', type=int, default=C.STEPS)

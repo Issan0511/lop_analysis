@@ -33,21 +33,42 @@ DATA_ROOT = Path(os.environ.get('VIT_LONG_DATA', str(DATA)))
 RESULTS = REPO / 'results/vit_long_1024'
 
 CONFIG = cell_config(4.0, 'none')        # the factorial N cell: 13 norms -> Identity, FFN 1536
+CONFIG_LN = cell_config(4.0, 'layer')    # the randlabel cell: 13 affine LayerNorms (the original ViT)
 ACT = 'R'                                # ReLU in the six FFNs
 TASKS, STEPS, SEEDS = 60, 500, (0, 1, 2, 3, 4)
-ARMS = ('R0', 'S')                       # R0 resets the head every task, S shares classes_1
+# 2 x 2 (Issa 1024): head reset (R0) or shared (S), without LN or with LN (suffix L).
+ARMS = ('R0', 'S', 'R0L', 'SL')
+FRESH_ARMS = ('fresh', 'freshL')         # one fresh net per seed and LN condition, R0's protocol
+SHARED_ARMS = ('S', 'SL')
+LN_ARMS = ('R0L', 'SL', 'freshL')
+PAIRS = (('R0', 'S'), ('R0L', 'SL'))
+FRESH_FOR = {'R0': 'fresh', 'S': 'fresh', 'R0L': 'freshL', 'SL': 'freshL'}
 FRESH_TASKS = (25, 50, 60)
 BATCH, LR = 128, 1e-4
 EVAL_EVERY = 25
 UNREACHED = STEPS + EVAL_EVERY           # T90 of a task that never reaches .9 (spec §1)
-# Saves (spec §6.4, reduced for transfer on 1024): task-end weights, Adam state, update-100 weights.
-END_TASKS = tuple(range(1, 11)) + (15, 20, 25, 30, 35, 40) + tuple(range(41, 61))
-ADAM_TASKS = tuple(range(1, 11)) + (20, 30, 40, 50, 60)
-MID_TASKS = ADAM_TASKS
+PRODUCTION_FILE = Path(__file__).resolve().parent / 'production.json'
+
+
+def production():
+    return json.loads(PRODUCTION_FILE.read_text())
+
+
+# Saves (spec §6.4): task-end weights, Adam state (+RNG), update-100 weights, from production.json
+# (reduced on 1024 for transfer and for the rented machine's 80 GB disk).
+_SAVES = production()
+END_TASKS = tuple(_SAVES['end_tasks'])
+ADAM_TASKS = tuple(_SAVES['adam_tasks'])
+MID_TASKS = tuple(_SAVES['mid_tasks'])
+MID_FRESH = bool(_SAVES['mid_fresh'])
+
+
+def free_floor():
+    """S-disk floor: 25 GiB as in the battle; VIT_LONG_FREE_FLOOR_GIB lowers it on a small rented disk."""
+    return int(float(os.environ.get('VIT_LONG_FREE_FLOOR_GIB', '25')) * 1024**3)
 MID_STEP = 100
 PROBE_IMAGES = 64
 READOUT_IMAGES = 16
-FREE_FLOOR = 25 * 1024**3                # battle's floor, plus the run's remaining saves (S-disk)
 DEPTH = CONFIG['depth']
 WIDTH = int(CONFIG['embed_dim'] * CONFIG['mlp_ratio'])
 
@@ -58,17 +79,12 @@ WIDTH = int(CONFIG['embed_dim'] * CONFIG['mlp_ratio'])
 # factorial/randlabel task stream (S-plan, S-stream). Production uses production.json
 # (Issa 1024: 10 labels x 25 images per class), passed explicitly by the launcher.
 N_LABELS, PER_CLASS = CLASSES, IMAGES_PER_CLASS
-PRODUCTION_FILE = Path(__file__).resolve().parent / 'production.json'
-
-
-def production():
-    return json.loads(PRODUCTION_FILE.read_text())
 
 
 def production_layout():
     p = production()
-    return dict(n_labels=p['n_labels'], images_per_class=p['images_per_class'], steps=p['steps'], tasks=p['tasks'],
-                augment=p['augment'], dropout=p['dropout'])
+    return dict(arms=p['arms'], n_labels=p['n_labels'], images_per_class=p['images_per_class'], steps=p['steps'],
+                tasks=p['tasks'], augment=p['augment'], dropout=p['dropout'])
 
 
 def cycle_classes(seed, cycle, n_labels=N_LABELS):
@@ -90,9 +106,13 @@ def task_plan(seed, task, n_labels=N_LABELS, per_class=PER_CLASS):
                 classes=list(cycle_classes(seed, cycle, n_labels)[position]), first=first, count=per_class)
 
 
+def is_fresh(arm):
+    return arm in FRESH_ARMS
+
+
 def loss_classes(arm, seed, task, n_labels=N_LABELS, per_class=PER_CLASS):
-    """The head rows used by the loss and accuracy (spec §1, §4.3): S keeps task 1's rows."""
-    if arm == 'S':
+    """The head rows used by the loss and accuracy (spec §1, §4.3): S and SL keep task 1's rows."""
+    if arm in SHARED_ARMS:
         return task_plan(seed, 1, n_labels, per_class)['classes']
     return task_plan(seed, task, n_labels, per_class)['classes']           # R0 and fresh
 
@@ -106,8 +126,8 @@ def task_labels(n, seed, task, n_labels=N_LABELS):
 
 
 def zero_head_at(arm, task, first_task):
-    """R0 and fresh zero all 200 head rows at every task start; S only at task 1."""
-    return arm != 'S' or task == first_task == 1
+    """R0, R0L and fresh zero all 200 head rows at every task start; S and SL only at task 1."""
+    return arm not in SHARED_ARMS or task == first_task == 1
 
 
 # --------------------------------------------------------------------------- images
@@ -219,15 +239,17 @@ def readout_indices(n):
 DROPOUT = CONFIG['dropout_p']           # 0.1, also the attention dropout (attn_drop_rate)
 
 
-def model_config(dropout=DROPOUT):
-    """The N cell's config; --dropout overrides both dropout_p and attn_drop_rate (no RNG at build)."""
-    if dropout == CONFIG['dropout_p'] == CONFIG['attn_drop_rate']:
-        return CONFIG
-    return dict(CONFIG, dropout_p=dropout, attn_drop_rate=dropout)
+def model_config(dropout=DROPOUT, ln=False):
+    """The N cell's config (ln=True: the randlabel cell's, affine LayerNorm); --dropout overrides
+    both dropout_p and attn_drop_rate (no RNG at build, so initial weights do not change)."""
+    base = CONFIG_LN if ln else CONFIG
+    if dropout == base['dropout_p'] == base['attn_drop_rate']:
+        return base
+    return dict(base, dropout_p=dropout, attn_drop_rate=dropout)
 
 
-def build_model(seed, device, dropout=DROPOUT):
-    return make_model(ACT, seed, device, model_config(dropout))
+def build_model(seed, device, dropout=DROPOUT, ln=False):
+    return make_model(ACT, seed, device, model_config(dropout, ln))
 
 
 def build_optimizer(model):

@@ -208,7 +208,7 @@ def check_runs(root, reference):
     # Production layout: S-arm1 and S-speed.
     r0_dir, s_dir = root / 'R0_production', root / 'S_production'
     r0p = run_job(r0_dir, 'R0', 0, '--tasks', 3, *PROD_ARGS)
-    s = run_job(s_dir, 'S', 0, '--tasks', 2, *PROD_ARGS)
+    s = run_job(s_dir, 'S', 0, '--tasks', 3, '--save-mode', 'minimal', *PROD_ARGS)
     a, b = intask(r0_dir), intask(s_dir)
     keys = ('online_correct', 'online_loss', 'batch_size', 'mem_correct', 'mem_loss', 'up_norm_med')
     task1 = all(np.array_equal(a[k][0], b[k][0]) for k in keys)
@@ -221,6 +221,33 @@ def check_runs(root, reference):
                          mem_acc_end=dict(R0=[float(r['mem_acc_end']) for r in r0p], S=[float(r['mem_acc_end']) for r in s]),
                          T90=dict(R0=[int(float(r['T90'])) for r in r0p], S=[int(float(r['T90'])) for r in s]))
     res['S_speed'] = speed(r0p, PROD['steps'])
+    # LN arms in the production layout: task-1 identity of R0L and SL, and the LN speed.
+    r0l_dir, sl_dir = root / 'R0L_production', root / 'SL_production'
+    r0l = run_job(r0l_dir, 'R0L', 0, '--tasks', 3, *PROD_ARGS)
+    sl = run_job(sl_dir, 'SL', 0, '--tasks', 3, '--save-mode', 'minimal', *PROD_ARGS)
+    a, b = intask(r0l_dir), intask(sl_dir)
+    task1_ln = all(np.array_equal(a[k][0], b[k][0]) for k in keys)
+    w1_ln = model_sha(r0l_dir, 1) == model_sha(sl_dir, 1)
+    res['S_arm1_LN'] = dict(pass_=task1_ln and w1_ln and not np.array_equal(a['online_loss'][1], b['online_loss'][1])
+                            and float(sl[1]['head_norm_start']) > 0, task1_records_equal=task1_ln, task1_weights_equal=w1_ln,
+                            online=dict(R0L=[float(r['online_acc']) for r in r0l], SL=[float(r['online_acc']) for r in sl]),
+                            mem_acc_end=dict(R0L=[float(r['mem_acc_end']) for r in r0l], SL=[float(r['mem_acc_end']) for r in sl]),
+                            T90=dict(R0L=[int(float(r['T90'])) for r in r0l], SL=[int(float(r['T90'])) for r in sl]))
+    res['S_speed_LN'] = speed(r0l, PROD['steps'])
+    # Spikes and breakdowns (spec §7.5) in the first three production tasks of every arm (record).
+    spikes = {}
+    for name, out_dir in (('R0', r0_dir), ('S', s_dir), ('R0L', r0l_dir), ('SL', sl_dir)):
+        record = intask(out_dir)
+        per_task = J.spikes_of(record, PROD['n_labels'], PROD['steps'])
+        variant = J.spikes_of(record, PROD['n_labels'], PROD['steps'], reach_percent=80)
+        table = J.read_csv(out_dir / 'per_task.csv')
+        spikes[name] = [dict(r, spike_reach80=v['spike'], breakdown_reach80=v['breakdown'],
+                             peak_mem=float(record['mem_correct'][i].max()) / (PROD['n_labels'] * PROD['images_per_class']),
+                             max_online_loss=float(record['online_loss'][i].max()),
+                             mem_acc_end=float(t['mem_acc_end']), T90=int(float(t['T90'])), online=float(t['online_acc']))
+                        for i, (r, v, t) in enumerate(zip(per_task, variant, table))]
+    res['S_spikes'] = dict(pass_=True, per_task=spikes, note='record only; spike = a 25-update block after T90 with '
+                           'mean online loss above ln K; breakdown = spike and end memorisation below .5')
     # Default layout (the N cell's): S-smoke against .481/.712/.806, and eager against compile.
     d_dir, eager_dir = root / 'R0_default', root / 'R0_default_eager'
     r0 = run_job(d_dir, 'R0', 0, '--tasks', 3, '--steps', 500)
@@ -245,9 +272,9 @@ def speed(rows, steps):
     per_task = {k: float(np.mean([float(r[k]) for r in later])) for k in ('train_seconds', 'record_seconds', 'other_seconds', 'seconds')}
     task1 = float(rows[0]['seconds'])
     prod = C.production()
-    runs = len(prod['seeds']) * len(C.ARMS)
+    runs = len(prod['seeds']) * len(prod['arms'])
     run_hours = (prod['tasks'] * per_task['seconds'] + task1 - per_task['seconds']) / 3600
-    fresh_hours = len(prod['seeds']) * len(prod['fresh_tasks']) * task1 / 3600
+    fresh_hours = len(prod['seeds']) * len(prod['fresh_arms']) * len(prod['fresh_tasks']) * task1 / 3600
     return dict(pass_=True, ms_per_update_training=1000 * per_task['train_seconds'] / steps,
                 ms_per_update_with_records=1000 * (per_task['train_seconds'] + per_task['record_seconds']) / steps,
                 ms_per_update_all=1000 * per_task['seconds'] / steps, seconds_per_task=per_task,
@@ -296,8 +323,9 @@ def main():
         brief = {k: (v.get('pass_') if isinstance(v, dict) else v) for k, v in value.items()} if name in ('runs', 'S_stream') else \
             {k: v for k, v in value.items() if k != 'image_hashes'}
         print(json.dumps({name: brief, 'seconds': round(time.time() - began, 1)}, default=str)[:3000], flush=True)
-    required = ('S_data', 'S_stream', 'S_arm1')
-    results['passes'] = {k: results[k]['pass_'] for k in required + ('S_smoke', 'S_speed') if k in results}
+    required = ('S_data', 'S_stream', 'S_arm1', 'S_arm1_LN')
+    results['passes'] = {k: results[k]['pass_'] for k in required + ('S_smoke', 'S_speed', 'S_speed_LN', 'S_spikes')
+                         if k in results}
     results['all_pass'] = all(results.get(k, {}).get('pass_') for k in required)
     results['source_hashes_at_validation'] = C.source_hashes()
     results['finished'] = time.time()

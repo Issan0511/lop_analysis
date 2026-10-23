@@ -1,11 +1,79 @@
 {
-  "note": "Production settings of vit_long_1024 (spec §4.3). Issa 1024: 10 label values, 10 classes x 25 images per task; no augmentation and dropout 0 (Issa: not needed for random labels). steps (U) is set from the fresh-network calibration (calibrate.py) before the re-registration; changing this file changes the source hashes, so the checks must be run again.",
+  "note": "Production settings of vit_long_1024 (spec \u00a74.3, re-registration of 2026-10-24). Issa 1024: 2 x 2 arms (R0, S without LN; R0L, SL with affine LayerNorm), 10 label values, 10 classes x 25 images per task, no augmentation, dropout 0, U = 500 (fresh-network calibration: median early T90 250). Saves reduced for the rented 80 GB disk (spec \u00a76.4). Changing this file changes the source hashes, so the checks must be run again.",
+  "arms": [
+    "R0",
+    "S",
+    "R0L",
+    "SL"
+  ],
+  "fresh_arms": [
+    "fresh",
+    "freshL"
+  ],
   "n_labels": 10,
   "images_per_class": 25,
   "tasks": 60,
   "steps": 500,
   "augment": "off",
   "dropout": 0.0,
-  "seeds": [0, 1, 2, 3, 4],
-  "fresh_tasks": [25, 50, 60]
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "fresh_tasks": [
+    25,
+    50,
+    60
+  ],
+  "end_tasks": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    20,
+    30,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+  ],
+  "adam_tasks": [
+    1,
+    10,
+    30,
+    60
+  ],
+  "mid_tasks": [
+    1,
+    10,
+    30,
+    60
+  ],
+  "mid_fresh": false
 }

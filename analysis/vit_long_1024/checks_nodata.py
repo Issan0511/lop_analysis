@@ -154,10 +154,26 @@ def check_model(device):
         out[f'{arm}_zero_grad_outside_loss_rows'] = bool((grad[outside] == 0).all()) and bool(
             (model.layers['out'].bias.grad[outside] == 0).all())
         out[f'{arm}_nonzero_grad_on_loss_rows'] = bool(grad[rows_t].abs().sum() > 0)
+    # LN arms (R0L, SL): the randlabel cell's affine LayerNorms, same initial shared weights.
+    ln = C.build_model(0, device, PROD['dropout'], ln=True)
+    plain = C.build_model(0, device, PROD['dropout'], ln=False)
+    lns = [m for name, m in ln.named_modules() if name.endswith(('norm1', 'norm2')) or name == 'layers.norm']
+    out['ln_config_is_randlabel_cell'] = C.model_config(C.DROPOUT, True) == cell_config(4.0, 'layer')
+    out['ln_affine_layernorms'] = len(lns) == 13 and all(isinstance(m, nn.LayerNorm) and m.elementwise_affine for m in lns)
+    out['ln_n_params'] = sum(p.numel() for p in ln.parameters())
+    a, b = plain.state_dict(), ln.state_dict()
+    out['ln_shared_initial_weights_equal'] = all(torch.equal(a[k], b[k]) for k in a if isinstance(a[k], torch.Tensor))
+    out['production_dropout_applied'] = all(m.p == PROD['dropout'] for m in ln.modules() if isinstance(m, nn.Dropout))
+    ln.eval()
+    with torch.no_grad():
+        out['ln_trace_logits_bit_equal'] = bool(torch.equal(ln(x), C.trace(ln, x)[0]))
     out['pass_'] = (out['config_is_factorial_N'] and out['all_norms_identity'] and out['n_params'] == 10814024
                     and out['relu_acts'] and out['trace_logits_bit_equal']
                     and all(out[f'{a}_{k}'] for a in ('R0', 'S')
-                            for k in ('finite_backward', 'zero_grad_outside_loss_rows', 'nonzero_grad_on_loss_rows')))
+                            for k in ('finite_backward', 'zero_grad_outside_loss_rows', 'nonzero_grad_on_loss_rows'))
+                    and out['ln_config_is_randlabel_cell'] and out['ln_affine_layernorms']
+                    and out['ln_n_params'] == 10824008 and out['ln_shared_initial_weights_equal']
+                    and out['production_dropout_applied'] and out['ln_trace_logits_bit_equal'])
     return out
 
 
@@ -320,6 +336,30 @@ def check_runs(root):
     return res
 
 
+def check_ln_runs(root):
+    """The LN arms: head protocol, task-1 identity of R0L and SL, and SL's exact resume (T = 2, U = 300)."""
+    full = {arm: root / f'{arm}_full' for arm in ('R0L', 'SL')}
+    for arm in full:
+        run_job(full[arm], arm, 0, '--tasks', 2, '--steps', 300)
+    r0, s = rows(full['R0L']), rows(full['SL'])
+    a, b = intask(full['R0L']), intask(full['SL'])
+    task1 = all(np.array_equal(a[k][0], b[k][0]) for k in ('online_correct', 'online_loss', 'mem_correct', 'up_norm_med'))
+    w1 = C.state_sha256(weights(full['R0L'], 1)) == C.state_sha256(weights(full['SL'], 1))
+    head = (float(r0[1]['head_full_norm_start']) == 0. and float(s[1]['head_full_norm_start']) > 0
+            and [int(r['head_zeroed']) for r in r0] == [1, 1] and [int(r['head_zeroed']) for r in s] == [1, 0])
+    ln_keys = any('norm1.weight' in k for k in weights(full['SL'], 2))
+    cut = root / 'SL_resumed'
+    run_job(cut, 'SL', 0, '--tasks', 2, '--steps', 300, '--stop-after-task', 1)
+    run_job(cut, 'SL', 0, '--tasks', 2, '--steps', 300)
+    x = torch.load(full['SL'] / 'checkpoint.pt', map_location='cpu', weights_only=False)
+    y = torch.load(cut / 'checkpoint.pt', map_location='cpu', weights_only=False)
+    resume = all(tree_equal(x[k], y[k]) for k in ('model', 'optimizer', 'rng', 'layer_rows')) and \
+        strip_seconds(x['rows']) == strip_seconds(y['rows'])
+    return dict(pass_=task1 and w1 and head and ln_keys and resume, task1_records_equal=task1, task1_weights_equal=w1,
+                head_protocol=head, layernorm_in_state=ln_keys, SL_resume_bit_equal=resume,
+                online=dict(R0L=[float(r['online_acc']) for r in r0], SL=[float(r['online_acc']) for r in s]))
+
+
 def check_diverge(root):
     lroot = root / 'launcher_root'
     common = ['--smoke', '--data-kind', 'synthetic', '--tasks', '2', '--steps', '50', '--save-mode', 'minimal',
@@ -388,8 +428,28 @@ def check_judge():
                     mixed=('MIXED',), slow=('NO_LOSS',), not_learned=('NOT_JUDGEABLE',),
                     insufficient=('INSUFFICIENT', 'INSUFFICIENT', 'INSUFFICIENT'))
     onset_run = synthetic_run('R0', 0, .3, [100], [525], .0)
+    lab = lambda x: dict(label=x)
+    jln = dict(break_=J.jln(lab('NO_LOSS'), lab('LOSS')), hold=J.jln(lab('NO_LOSS'), lab('NO_LOSS')),
+               none=J.jln(lab('LOSS'), lab('LOSS')), mixed=J.jln(lab('LOSS'), lab('NO_LOSS')),
+               insufficient=J.jln(lab('INSUFFICIENT'), lab('LOSS')))
+    jln_ok = jln == dict(break_='PHASE1_BREAKS_SHIELD', hold='SHIELD_HOLDS', none='NO_SHIELD', mixed='MIXED',
+                         insufficient='INSUFFICIENT')
+    # A task that reaches .9 at u = 200 and then has a block of loss 3.0 > ln 10 is a spike; it is a
+    # breakdown if it ends below .5. A task that never reaches .9 has no spike by definition.
+    mem = np.zeros((3, 21), dtype=np.int64)
+    mem[0, 8:] = 240                                   # reaches at u = 200, stays
+    mem[1, 8:] = 240
+    mem[1, 20] = 50                                    # ends at .2
+    mem[2, :] = 100                                    # never reaches
+    loss = np.full((3, 500), .1)
+    loss[:, 300:325] = 3.0
+    record = dict(tasks=np.array([1, 2, 3]), mem_correct=mem, online_loss=loss,
+                  batch_size=np.tile(np.array([128, 122] * 250), (3, 1)))
+    sp = J.spikes_of(record, 10, 500)
+    spikes_ok = [(r['spike'], r['breakdown']) for r in sp] == [(True, False), (True, True), (False, False)]
     # online .8 for tasks 1-40 and .3 from 41: the 5-task mean first drops below .5 at task 44.
-    return dict(pass_=cases == expected and J.onset(onset_run) == 44, cases=cases, onset_example=J.onset(onset_run))
+    return dict(pass_=cases == expected and J.onset(onset_run) == 44 and jln_ok and spikes_ok, cases=cases,
+                onset_example=J.onset(onset_run), jln=jln, spikes_example=sp)
 
 
 def main():
@@ -402,10 +462,12 @@ def main():
     root.mkdir(parents=True, exist_ok=True)
     results = dict(started=time.time(), root=str(root), host=socket.gethostname(), torch=torch.__version__,
                    gpu=torch.cuda.get_device_name(), python=platform.python_version(), production=PROD,
-                   note='synthetic runs use the production layout with T = 2-3 and U = 300 (U = 50 for S-diverge)')
+                   note='synthetic runs use the production layout with T = 2-3 and U = 300 (U = 50 for S-diverge); '
+                        'R0/S without LN for the full set, R0L/SL with LN for S_ln')
     for name, fn in (('S_code', check_code), ('S_model', lambda: check_model(device)), ('S_plan', check_plan),
                      ('S_rng', lambda: check_rng(device)), ('S_judge', check_judge),
-                     ('runs', lambda: check_runs(root)), ('S_diverge', lambda: check_diverge(root)),
+                     ('runs', lambda: check_runs(root)), ('S_ln', lambda: check_ln_runs(root)),
+                     ('S_diverge', lambda: check_diverge(root)),
                      ('S_disk', lambda: check_disk(root))):
         began = time.time()
         try:
@@ -421,7 +483,7 @@ def main():
                           'seconds': round(time.time() - began, 1)}, default=str)[:2000], flush=True)
     passes = {k: v['pass_'] for k, v in results.items() if isinstance(v, dict) and 'pass_' in v}
     results['passes'] = passes
-    results['all_pass'] = all(passes.values()) and len(passes) >= 11
+    results['all_pass'] = all(passes.values()) and len(passes) >= 13
     results['source_hashes_at_validation'] = C.source_hashes()
     results['finished'] = time.time()
     path = C.RESULTS / 'checks/checks_nodata.json'

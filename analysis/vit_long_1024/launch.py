@@ -21,30 +21,31 @@ from . import common as C
 
 
 def production_jobs():
-    # Seed outermost: R0, S and the seed's fresh tasks stay paired if the queue stops.
+    # Seed outermost: the four arms and the seed's fresh tasks stay paired if the queue stops.
     prod = C.production()
     common = ['--n-labels', str(prod['n_labels']), '--images-per-class', str(prod['images_per_class']),
               '--steps', str(prod['steps']), '--augment', prod['augment'], '--dropout', str(prod['dropout'])]
     for seed in prod['seeds']:
-        yield dict(arm='R0', seed=seed, args=common + ['--tasks', str(prod['tasks'])])
-        yield dict(arm='S', seed=seed, args=common + ['--tasks', str(prod['tasks'])])
-        for task in prod['fresh_tasks']:
-            yield dict(arm='fresh', seed=seed, fresh_task=task, args=common)
+        for arm in prod['arms']:                               # R0, S, R0L, SL
+            yield dict(arm=arm, seed=seed, args=common + ['--tasks', str(prod['tasks'])])
+        for arm in prod['fresh_arms']:                         # fresh (no LN), freshL (LN)
+            for task in prod['fresh_tasks']:
+                yield dict(arm=arm, seed=seed, fresh_task=task, args=common)
 
 
 def job_dir(root, job):
     base = root / 'runs' / job['arm'] / f"seed{job['seed']}"
-    return base / f"task{job['fresh_task']:02d}" if job['arm'] == 'fresh' else base
+    return base / f"task{job['fresh_task']:02d}" if C.is_fresh(job['arm']) else base
 
 
 def job_name(job):
-    return f"{job['arm']} seed{job['seed']}" + (f" task{job['fresh_task']}" if job['arm'] == 'fresh' else '')
+    return f"{job['arm']} seed{job['seed']}" + (f" task{job['fresh_task']}" if C.is_fresh(job['arm']) else '')
 
 
 def job_command(python, job, out):
     command = [python, '-m', 'analysis.vit_long_1024.run', '--arm', job['arm'], '--seed', str(job['seed']),
                '--out', str(out)]
-    if job['arm'] == 'fresh':
+    if C.is_fresh(job['arm']):
         command += ['--fresh-task', str(job['fresh_task'])]
     return command + list(job.get('args', []))
 
