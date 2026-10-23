@@ -1,0 +1,11 @@
+{
+  "note": "Production settings of vit_long_1024 (spec §4.3). Issa 1024: 10 label values, 10 classes x 25 images per task; no augmentation and dropout 0 (Issa: not needed for random labels). steps (U) is set from the fresh-network calibration (calibrate.py) before the re-registration; changing this file changes the source hashes, so the checks must be run again.",
+  "n_labels": 10,
+  "images_per_class": 25,
+  "tasks": 60,
+  "steps": 500,
+  "augment": "off",
+  "dropout": 0.0,
+  "seeds": [0, 1, 2, 3, 4],
+  "fresh_tasks": [25, 50, 60]
+}

@@ -54,10 +54,21 @@ WIDTH = int(CONFIG['embed_dim'] * CONFIG['mlp_ratio'])
 
 # --------------------------------------------------------------------------- task plan (§4.2)
 
-# The registered layout is 5 labels x 50 images per class (spec §4). Both can be changed by
-# argument (--n-labels, --images-per-class) for a possible re-registration; the default
-# path below is the registered one and is bit-identical to it (S-plan, S-stream, S-arm1).
+# The default layout is the N cell's: 5 labels x 50 images per class, bit-identical to the
+# factorial/randlabel task stream (S-plan, S-stream). Production uses production.json
+# (Issa 1024: 10 labels x 25 images per class), passed explicitly by the launcher.
 N_LABELS, PER_CLASS = CLASSES, IMAGES_PER_CLASS
+PRODUCTION_FILE = Path(__file__).resolve().parent / 'production.json'
+
+
+def production():
+    return json.loads(PRODUCTION_FILE.read_text())
+
+
+def production_layout():
+    p = production()
+    return dict(n_labels=p['n_labels'], images_per_class=p['images_per_class'], steps=p['steps'], tasks=p['tasks'],
+                augment=p['augment'], dropout=p['dropout'])
 
 
 def cycle_classes(seed, cycle, n_labels=N_LABELS):
@@ -151,20 +162,24 @@ def image_source(kind):
 
 
 class TaskData(Dataset):
-    """Same item protocol as the battle's TaskImages: (index, augment seed) -> (image, label)."""
+    """Same item protocol as the battle's TaskImages: (index, augment seed) -> (image, label).
 
-    def __init__(self, images, labels, paths):
-        self.images, self.labels, self.paths = images, labels, paths
+    augment=False feeds training the evaluation transform (no pad/crop/flip/jitter); the batch
+    order is unchanged because it comes from the sampler, not from here.
+    """
+
+    def __init__(self, images, labels, paths, augment=True):
+        self.images, self.labels, self.paths, self.augment = images, labels, paths, augment
 
     def __len__(self):
         return len(self.labels)
 
     def __getitem__(self, item):
         idx, aug_seed = item if isinstance(item, tuple) else (item, None)
-        return transform(self.images[idx], aug_seed), self.labels[idx]
+        return transform(self.images[idx], aug_seed if self.augment else None), self.labels[idx]
 
 
-def task_dataset(source, seed, task, n_labels=N_LABELS, per_class=PER_CLASS):
+def task_dataset(source, seed, task, n_labels=N_LABELS, per_class=PER_CLASS, augment=True):
     """Task t's images (per_class per class, path order) and its iid uniform labels."""
     plan = task_plan(seed, task, n_labels, per_class)
     images, paths = [], []
@@ -173,7 +188,7 @@ def task_dataset(source, seed, task, n_labels=N_LABELS, per_class=PER_CLASS):
         images.append(array)
         paths.extend(names)
     images = np.concatenate(images)
-    return TaskData(images, task_labels(len(images), seed, task, n_labels), paths), plan
+    return TaskData(images, task_labels(len(images), seed, task, n_labels), paths, augment), plan
 
 
 def first_epoch_sizes(n):
@@ -201,8 +216,18 @@ def readout_indices(n):
 
 # --------------------------------------------------------------------------- model
 
-def build_model(seed, device):
-    return make_model(ACT, seed, device, CONFIG)
+DROPOUT = CONFIG['dropout_p']           # 0.1, also the attention dropout (attn_drop_rate)
+
+
+def model_config(dropout=DROPOUT):
+    """The N cell's config; --dropout overrides both dropout_p and attn_drop_rate (no RNG at build)."""
+    if dropout == CONFIG['dropout_p'] == CONFIG['attn_drop_rate']:
+        return CONFIG
+    return dict(CONFIG, dropout_p=dropout, attn_drop_rate=dropout)
+
+
+def build_model(seed, device, dropout=DROPOUT):
+    return make_model(ACT, seed, device, model_config(dropout))
 
 
 def build_optimizer(model):
@@ -309,7 +334,7 @@ def factorial_readout(model, x16):
 # --------------------------------------------------------------------------- provenance
 
 def source_files():
-    paths = sorted((REPO / 'analysis/vit_long_1024').glob('*.py'))
+    paths = sorted((REPO / 'analysis/vit_long_1024').glob('*.py')) + [PRODUCTION_FILE]
     paths += sorted((REPO / 'analysis/joudaki_vit_battle_0919').rglob('*.py'))
     paths += [REPO / 'analysis/randlabel_control_joudaki_vit_0919.py',
               REPO / 'analysis/factorial_joudaki_vit_0919.py',

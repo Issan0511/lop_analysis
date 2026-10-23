@@ -1,0 +1,21 @@
+# systemd user service for the vit_long_1024 launcher on white-san (spec §10.3).
+# Prepared only: copy to ~/.config/systemd/user/, then `systemctl --user daemon-reload` and
+# `systemctl --user start vit-long-1024.service`. Do not enable it (it must not start at boot).
+# Pause at a task boundary with `touch ~/Projects/obsidian-research-data/vit_long_1024/STOP`.
+[Unit]
+Description=vit_long_1024 launcher (one GPU job at a time; specs/spec_vit_long_1024.md)
+
+[Service]
+Type=simple
+WorkingDirectory=/home/issan/Projects/claude/wt/vit_long_1024
+Environment=CUBLAS_WORKSPACE_CONFIG=:4096:8
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/issan/Projects/claude/proj_004_drift/.venv/bin/python -m analysis.vit_long_1024.launch
+StandardOutput=append:/home/issan/Projects/obsidian-research-data/vit_long_1024/launcher.log
+StandardError=inherit
+Restart=no
+KillMode=control-group
+TimeoutStopSec=60
+
+[Install]
+WantedBy=default.target

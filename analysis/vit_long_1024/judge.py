@@ -126,17 +126,19 @@ def j1(runs, arm):
         if not (complete(run, EARLY) and complete(run, LATE)):
             seeds[seed] = dict(usable=False)
             continue
+        steps = int(float(run['tasks'][EARLY[0]]['steps']))
+        unreached = steps + C.EVAL_EVERY                   # 525 for U = 500 (spec §1)
         early = [t90(run, t) for t in EARLY]
         late = [t90(run, t) for t in LATE]
         E, L = float(np.median(early)), float(np.median(late))
-        N = int(sum(v >= C.UNREACHED for v in late))
-        reached_early = int(sum(v <= C.STEPS for v in early))
-        seeds[seed] = dict(usable=True, E=E, L=L, N_unreached_late=N, ratio=L / E,
+        N = int(sum(v >= unreached for v in late))
+        reached_early = int(sum(v <= steps for v in early))
+        seeds[seed] = dict(usable=True, steps=steps, unreached_value=unreached, E=E, L=L, N_unreached_late=N, ratio=L / E,
                            established=reached_early >= 6, reached_early=reached_early,
                            loss=bool(L >= 2 * E and N >= 11),
                            decades=[dict(tasks=f'{a}-{a + 9}',
                                          median=float(np.median([t90(run, t) for t in range(a, a + 10)])),
-                                         unreached=int(sum(t90(run, t) >= C.UNREACHED for t in range(a, a + 10))))
+                                         unreached=int(sum(t90(run, t) >= unreached for t in range(a, a + 10))))
                                     for a in range(1, C.TASKS, 10) if complete(run, range(a, a + 10))])
     usable = [v for v in seeds.values() if v['usable']]
     if len(usable) < 4:
@@ -235,7 +237,7 @@ def markdown(result):
     for arm in C.ARMS:
         r = result['J1'][arm]
         lines += ['', f"## J1 {arm}: `{r['label']}`（使える seed {r['usable']}、条件を満たす seed {r['loss_seeds']}、"
-                      f"学習の成立 {r['established_seeds']}）。未到達は 525 として扱う", '',
+                      f"学習の成立 {r['established_seeds']}）。未到達は U + 25（U = 500 なら 525）として扱う", '',
                   '| seed | E（課題 2〜11 の T90 中央値） | L（課題 41〜60） | 後期の未到達 | L/E | 条件 |', '| --- | --- | --- | --- | --- | --- |']
         for seed, v in r['seeds'].items():
             if v['usable']:

@@ -126,18 +126,23 @@ def validate(args):
         raise ValueError('--arm fresh needs --fresh-task')
     if args.smoke:
         return
-    expected = dict(steps=C.STEPS, engine='compile', data_kind='real', recorders=True, save_mode='full',
-                    inject_nan='', no_warmup=False, free_bytes_override=0)
-    actual = dict(steps=args.steps, engine=args.engine, data_kind=args.data_kind,
-                  recorders=not args.no_recorders, save_mode=args.save_mode, inject_nan=args.inject_nan,
-                  no_warmup=args.no_warmup, free_bytes_override=args.free_bytes_override)
-    if args.seed not in C.SEEDS or actual != expected:
-        raise ValueError(f'production needs seed 0-4 and {expected}; got seed {args.seed}, {actual}. '
-                         'Use --smoke for anything else.')
-    if args.arm in C.ARMS and args.tasks != C.TASKS:
-        raise ValueError('production continual runs have 60 tasks')
-    if args.arm == 'fresh' and args.fresh_task not in C.FRESH_TASKS:
-        raise ValueError('production fresh tasks are 25, 50, 60')
+    prod = C.production()
+    expected = dict(steps=prod['steps'], n_labels=prod['n_labels'], images_per_class=prod['images_per_class'],
+                    augment=prod['augment'], dropout=prod['dropout'],
+                    engine='compile', data_kind='real', recorders=True, save_mode='full', inject_nan='',
+                    no_warmup=False, free_bytes_override=0)
+    actual = dict(steps=args.steps, n_labels=args.n_labels, images_per_class=args.images_per_class,
+                  augment=args.augment, dropout=args.dropout,
+                  engine=args.engine, data_kind=args.data_kind, recorders=not args.no_recorders,
+                  save_mode=args.save_mode, inject_nan=args.inject_nan, no_warmup=args.no_warmup,
+                  free_bytes_override=args.free_bytes_override)
+    if args.seed not in prod['seeds'] or actual != expected:
+        raise ValueError(f'production needs a seed in {prod["seeds"]} and {expected} (production.json); '
+                         f'got seed {args.seed}, {actual}. Use --smoke for anything else.')
+    if args.arm in C.ARMS and args.tasks != prod['tasks']:
+        raise ValueError(f'production continual runs have {prod["tasks"]} tasks')
+    if args.arm == 'fresh' and args.fresh_task not in prod['fresh_tasks']:
+        raise ValueError(f'production fresh tasks are {prod["fresh_tasks"]}')
     if args.arm not in C.ARMS + ('fresh',):
         raise ValueError(f'unknown arm {args.arm}')
 
@@ -147,7 +152,8 @@ def config_of(args):
                 fresh_task=args.fresh_task if args.arm == 'fresh' else None, steps=args.steps,
                 batch=C.BATCH, lr=C.LR, act=C.ACT, model=C.CONFIG, engine=args.engine,
                 data_kind=args.data_kind, recorders=not args.no_recorders, save_mode=args.save_mode,
-                n_labels=args.n_labels, images_per_class=args.images_per_class,
+                n_labels=args.n_labels, images_per_class=args.images_per_class, augment=args.augment,
+                dropout=args.dropout, model_config=C.model_config(args.dropout),
                 eval_every=C.EVAL_EVERY, end_tasks=list(C.END_TASKS), adam_tasks=list(C.ADAM_TASKS),
                 mid_tasks=list(C.MID_TASKS), mid_step=C.MID_STEP, inject_nan=args.inject_nan,
                 no_warmup=args.no_warmup, smoke=args.smoke)
@@ -181,7 +187,7 @@ def run(args):
     hashes = C.source_hashes()
     source = C.image_source(args.data_kind)
     model, optimizer = None, None
-    model = C.build_model(args.seed, device)
+    model = C.build_model(args.seed, device, args.dropout)
     optimizer = C.build_optimizer(model)
     n_params = sum(p.numel() for p in model.parameters())
     forward = train_forward(model, 'compile') if args.engine == 'compile' else model
@@ -278,7 +284,8 @@ def train_task(args, model, optimizer, forward, source, probe, task, first_task,
     device = args.device
     recorders = not args.no_recorders
     begin = time.monotonic()
-    data, plan = C.task_dataset(source, args.seed, task, args.n_labels, args.images_per_class)
+    data, plan = C.task_dataset(source, args.seed, task, args.n_labels, args.images_per_class,
+                                augment=args.augment == 'on')
     rows_list = C.loss_classes(args.arm, args.seed, task, args.n_labels, args.images_per_class)
     rows_t = torch.tensor(rows_list, device=device)
     zeroed = C.zero_head_at(args.arm, task, first_task)
@@ -467,6 +474,9 @@ def parser():
     p.add_argument('--save-mode', choices=('full', 'minimal', 'none'), default='full')
     p.add_argument('--n-labels', type=int, default=C.N_LABELS, help='label values per task (registered: 5)')
     p.add_argument('--images-per-class', type=int, default=C.PER_CLASS, help='registered: 50')
+    p.add_argument('--augment', choices=('on', 'off'), default='on',
+                   help="off: training sees the evaluation transform (no augmentation); batch order unchanged")
+    p.add_argument('--dropout', type=float, default=C.DROPOUT, help='dropout_p and attn_drop_rate (default 0.1)')
     p.add_argument('--inject-nan', default='', help='TASK:STEP, smoke runs only (S-diverge)')
     p.add_argument('--no-warmup', action='store_true', help='smoke only: resume without the compile replay')
     p.add_argument('--free-bytes-override', type=int, default=0, help='smoke only: S-disk')

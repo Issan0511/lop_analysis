@@ -22,11 +22,14 @@ from . import common as C
 
 def production_jobs():
     # Seed outermost: R0, S and the seed's fresh tasks stay paired if the queue stops.
-    for seed in C.SEEDS:
-        yield dict(arm='R0', seed=seed)
-        yield dict(arm='S', seed=seed)
-        for task in C.FRESH_TASKS:
-            yield dict(arm='fresh', seed=seed, fresh_task=task)
+    prod = C.production()
+    common = ['--n-labels', str(prod['n_labels']), '--images-per-class', str(prod['images_per_class']),
+              '--steps', str(prod['steps']), '--augment', prod['augment'], '--dropout', str(prod['dropout'])]
+    for seed in prod['seeds']:
+        yield dict(arm='R0', seed=seed, args=common + ['--tasks', str(prod['tasks'])])
+        yield dict(arm='S', seed=seed, args=common + ['--tasks', str(prod['tasks'])])
+        for task in prod['fresh_tasks']:
+            yield dict(arm='fresh', seed=seed, fresh_task=task, args=common)
 
 
 def job_dir(root, job):
@@ -38,13 +41,11 @@ def job_name(job):
     return f"{job['arm']} seed{job['seed']}" + (f" task{job['fresh_task']}" if job['arm'] == 'fresh' else '')
 
 
-def job_command(python, job, out, layout=None):
+def job_command(python, job, out):
     command = [python, '-m', 'analysis.vit_long_1024.run', '--arm', job['arm'], '--seed', str(job['seed']),
                '--out', str(out)]
     if job['arm'] == 'fresh':
         command += ['--fresh-task', str(job['fresh_task'])]
-    if layout is not None:
-        command += ['--n-labels', str(layout['n_labels']), '--images-per-class', str(layout['images_per_class'])]
     return command + list(job.get('args', []))
 
 
@@ -76,7 +77,7 @@ def gpu_python_users(record):
     return users
 
 
-def preflight(layout):
+def preflight():
     hashes = C.source_hashes()
     for name in ('checks_nodata.json', 'checks_data.json'):
         path = C.RESULTS / 'checks' / name
@@ -85,23 +86,20 @@ def preflight(layout):
             raise RuntimeError(f'Required preflight missing or failed: {path}')
         if record.get('source_hashes_at_validation') != hashes:
             raise RuntimeError(f'Source changed after validation: {path}')
-        if record.get('layout') != layout:
-            raise RuntimeError(f'Checks were run for layout {record.get("layout")}, not {layout}: {path}')
+        if record.get('production') != C.production_layout():
+            raise RuntimeError(f'Checks were run for {record.get("production")}, not {C.production_layout()}: {path}')
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--plan', help='JSON list of jobs; checks only (skips preflight and report)')
     parser.add_argument('--retry-sleep', type=float, default=30.)
-    parser.add_argument('--n-labels', type=int, default=C.N_LABELS, help='registered: 5')
-    parser.add_argument('--images-per-class', type=int, default=C.PER_CLASS, help='registered: 50')
     args = parser.parse_args(argv)
-    layout = dict(n_labels=args.n_labels, images_per_class=args.images_per_class)
     root = C.RAW
     root.mkdir(parents=True, exist_ok=True)
     test = args.plan is not None
     if not test:
-        preflight(layout)
+        preflight()
     env = environment_record()
     atomic_json(root / f'env_{int(env["time"])}.json', env)
     users = gpu_python_users(env)
@@ -124,7 +122,7 @@ def main(argv=None):
         out.mkdir(parents=True, exist_ok=True)
         if (out / 'done.json').exists():
             continue
-        command = job_command(python, job, out, None if test else layout)
+        command = job_command(python, job, out)
         for attempt in range(3):
             atomic_json(root / 'status.json', dict(status='running', job=job_name(job), index=index, jobs=len(jobs),
                                                    attempt=attempt, out=str(out), updated=time.time()))

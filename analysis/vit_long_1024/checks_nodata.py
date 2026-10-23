@@ -49,9 +49,15 @@ def tree_equal(a, b):
     return a == b
 
 
+PROD = C.production_layout()
+LAYOUT_ARGS = ['--n-labels', str(PROD['n_labels']), '--images-per-class', str(PROD['images_per_class']),
+               '--augment', PROD['augment'], '--dropout', str(PROD['dropout'])]
+
+
 def run_job(out, arm, seed, *extra, check=True):
+    """A short synthetic run in the production layout (labels, images per class), small T and U."""
     command = [PY, '-m', 'analysis.vit_long_1024.run', '--arm', arm, '--seed', str(seed), '--smoke',
-               '--data-kind', 'synthetic', '--out', str(out), *map(str, extra)]
+               '--data-kind', 'synthetic', '--out', str(out), *LAYOUT_ARGS, *map(str, extra)]
     out.mkdir(parents=True, exist_ok=True)
     with (out / 'console.log').open('a') as log:
         log.write(' '.join(command) + '\n')
@@ -134,14 +140,15 @@ def check_model(device):
     out['trace_blocks'] = len(blocks)
     model.train()
     for arm, task in (('R0', 2), ('S', 2)):
-        rows_t = torch.tensor(C.loss_classes(arm, 0, task), device=device)
+        rows_t = torch.tensor(C.loss_classes(arm, 0, task, PROD['n_labels'], PROD['images_per_class']), device=device)
         model.zero_grad(set_to_none=True)
-        y = torch.randint(0, 5, (8,), generator=torch.Generator().manual_seed(6)).to(device)
+        y = torch.randint(0, PROD['n_labels'], (8,), generator=torch.Generator().manual_seed(6)).to(device)
         loss = F.cross_entropy(model(x).index_select(1, rows_t), y)
         loss.backward()
         grad = model.layers['out'].weight.grad
         outside = torch.ones(200, dtype=torch.bool, device=device)
         outside[rows_t] = False
+        out[f'{arm}_loss_rows'] = len(rows_t)
         out[f'{arm}_finite_backward'] = bool(torch.isfinite(loss)) and all(
             p.grad is not None and bool(torch.isfinite(p.grad).all()) for p in model.parameters())
         out[f'{arm}_zero_grad_outside_loss_rows'] = bool((grad[outside] == 0).all()) and bool(
@@ -176,18 +183,29 @@ def check_plan():
             ok &= int(labels.min()) >= 0 and int(labels.max()) <= 4
         ok &= not torch.equal(C.task_labels(250, seed, 1), C.task_labels(250, seed, 2))
     out['registered_layout_ok'] = bool(ok)
-    # The alternative layout (10 labels) only has to be a valid plan; it is not registered.
+    # The production layout (Issa 1024: 10 labels x 25 images): 20 tasks per pass over the 200
+    # classes, each pass with the next 25 images of every class; task 61 (J5's last probe) included.
+    K, m = PROD['n_labels'], PROD['images_per_class']
     alt = True
+    per_cycle = 200 // K
     for seed in C.SEEDS:
         seen = set()
-        for task in range(1, 61):
-            plan = C.task_plan(seed, task, 10, 25)
+        for cycle in range(3):
+            groups = C.cycle_classes(seed, cycle, K)
+            alt &= len(groups) == per_cycle and sorted(sum(groups, [])) == list(range(200))
+        for task in range(1, 62):
+            plan = C.task_plan(seed, task, K, m)
             pairs = {(c, j) for c in plan['classes'] for j in range(plan['first'], plan['first'] + plan['count'])}
-            alt &= len(plan['classes']) == 10 and not (pairs & seen)
+            alt &= len(plan['classes']) == K and plan['first'] == m * ((task - 1) // per_cycle) and not (pairs & seen)
+            alt &= len(pairs) == K * m
             seen |= pairs
-        alt &= C.loss_classes('S', seed, 37, 10, 25) == C.task_plan(seed, 1, 10, 25)['classes']
-        alt &= int(C.task_labels(250, seed, 3, 10).max()) == 9
-    out['ten_label_layout_valid'] = bool(alt)
+            alt &= C.loss_classes('S', seed, task, K, m) == C.task_plan(seed, 1, K, m)['classes']
+            alt &= C.loss_classes('R0', seed, task, K, m) == plan['classes']
+            labels = C.task_labels(K * m, seed, task, K)
+            alt &= torch.equal(labels, C.task_labels(K * m, seed, task, K)) and int(labels.min()) >= 0
+            alt &= int(labels.max()) <= K - 1
+    out['production'] = PROD
+    out['production_layout_ok'] = bool(alt)
     out['pass_'] = bool(ok and alt)
     return out
 
@@ -196,9 +214,9 @@ def check_rng(device):
     source = C.SyntheticImages()
     model = C.build_model(0, device)
     model.train()
-    data, _ = C.task_dataset(source, 0, 1)
+    data, _ = C.task_dataset(source, 0, 1, PROD['n_labels'], PROD['images_per_class'])
     x = C.eval_tensor(data.images, device)
-    rows_t = torch.tensor(C.loss_classes('R0', 0, 1), device=device)
+    rows_t = torch.tensor(C.loss_classes('R0', 0, 1, PROD['n_labels'], PROD['images_per_class']), device=device)
     probe = C.eval_tensor(source.val(C.probe_names(source, 0)), device)
     before = get_rng()
     recorder = Recorder(model, x, data.labels.to(device), rows_t, 3, device)
@@ -220,7 +238,7 @@ def check_runs(root):
     for arm in C.ARMS:
         run_job(full[arm], arm, 0, '--tasks', 3, '--steps', 300)
     r0, s = rows(full['R0']), rows(full['S'])
-    plan = [C.task_plan(0, t)['classes'] for t in (1, 2, 3)]
+    plan = [C.task_plan(0, t, PROD['n_labels'], PROD['images_per_class'])['classes'] for t in (1, 2, 3)]
     # S-head
     s_model = weights(full['S'], 3)
     outside = torch.ones(200, dtype=torch.bool)
@@ -232,7 +250,7 @@ def check_runs(root):
         S_loss_rows_nonzero_at_task2_3_u0=all(float(r['head_norm_start']) > 0 for r in s[1:]),
         R0_loss_rows_are_classes_t=[json.loads(r['loss_rows']) for r in r0] == plan,
         S_loss_rows_are_classes_1=all(json.loads(r['loss_rows']) == plan[0] for r in s),
-        S_other_195_rows_zero_at_task3_end=bool((s_model['layers.out.weight'][outside] == 0).all())
+        S_other_rows_zero_at_task3_end=bool((s_model['layers.out.weight'][outside] == 0).all())
         and bool((s_model['layers.out.bias'][outside] == 0).all()),
         R0_zeroed_flags=[int(r['head_zeroed']) for r in r0], S_zeroed_flags=[int(r['head_zeroed']) for r in s])
     head['pass_'] = all(v for k, v in head.items() if k not in ('R0_zeroed_flags', 'S_zeroed_flags')) and \
@@ -281,10 +299,13 @@ def check_runs(root):
     nowarm = root / 'R0_resumed_nowarmup'
     run_job(nowarm, 'R0', 0, '--tasks', 3, '--steps', 300, '--stop-after-task', 2, '--no-warmup')
     run_job(nowarm, 'R0', 0, '--tasks', 3, '--steps', 300, '--no-warmup')
-    differs = not np.array_equal(intask(full['R0'])['online_loss'][2], intask(nowarm)['online_loss'][2]) or \
-        C.state_sha256(weights(full['R0'], 3)) != C.state_sha256(weights(nowarm, 3))
+    x = torch.load(full['R0'] / 'checkpoint.pt', map_location='cpu', weights_only=False)
+    y = torch.load(nowarm / 'checkpoint.pt', map_location='cpu', weights_only=False)
+    nowarm_record = dict(online_equal=bool(np.array_equal(intask(full['R0'])['online_loss'][2], intask(nowarm)['online_loss'][2])),
+                         weights_equal=tree_equal(x['model'], y['model']),
+                         adam_state_equal=tree_equal(x['optimizer'], y['optimizer']))
     res['S_resume'] = dict(pass_=all(all(v.values()) for v in resume.values()), **resume,
-                           record_without_compile_replay_differs=differs)
+                           record_resume_without_compile_replay=nowarm_record)
     # S-fresh1
     fresh = root / 'fresh_task1'
     run_job(fresh, 'fresh', 0, '--fresh-task', 1, '--steps', 300)
@@ -301,7 +322,8 @@ def check_runs(root):
 
 def check_diverge(root):
     lroot = root / 'launcher_root'
-    common = ['--smoke', '--data-kind', 'synthetic', '--tasks', '2', '--steps', '50', '--save-mode', 'minimal']
+    common = ['--smoke', '--data-kind', 'synthetic', '--tasks', '2', '--steps', '50', '--save-mode', 'minimal',
+              *LAYOUT_ARGS]
     plan = [dict(arm='R0', seed=0, args=common + ['--inject-nan', '2:7']), dict(arm='S', seed=0, args=common)]
     env = dict(os.environ, VIT_LONG_RAW=str(lroot))
     code = subprocess.run([PY, '-m', 'analysis.vit_long_1024.launch', '--plan', json.dumps(plan), '--retry-sleep', '1'],
@@ -332,7 +354,7 @@ def synthetic_run(arm, seed, online_late, t90_early, t90_late, dead):
     tasks = {}
     for t in range(1, 61):
         late = t >= 41
-        tasks[t] = dict(online_acc=online_late if late else .8, online_acc_first100=online_late if late else .6,
+        tasks[t] = dict(steps=500, online_acc=online_late if late else .8, online_acc_first100=online_late if late else .6,
                         T90=t90_late[(t - 41) % len(t90_late)] if late else t90_early[(t - 1) % len(t90_early)])
     end = {t: [dict(dead005=dead, dead0=dead / 2, readout_dead=dead) for _ in range(6)] for t in (40, 60)}
     return dict(tasks=tasks, end=end, done={})
@@ -379,8 +401,8 @@ def main():
     root = Path(args.root) if args.root else C.RAW / 'checks' / f'nodata_{int(time.time())}'
     root.mkdir(parents=True, exist_ok=True)
     results = dict(started=time.time(), root=str(root), host=socket.gethostname(), torch=torch.__version__,
-                   gpu=torch.cuda.get_device_name(), python=platform.python_version(),
-                   layout=dict(n_labels=C.N_LABELS, images_per_class=C.PER_CLASS))
+                   gpu=torch.cuda.get_device_name(), python=platform.python_version(), production=PROD,
+                   note='synthetic runs use the production layout with T = 2-3 and U = 300 (U = 50 for S-diverge)')
     for name, fn in (('S_code', check_code), ('S_model', lambda: check_model(device)), ('S_plan', check_plan),
                      ('S_rng', lambda: check_rng(device)), ('S_judge', check_judge),
                      ('runs', lambda: check_runs(root)), ('S_diverge', lambda: check_diverge(root)),
