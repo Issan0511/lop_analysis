@@ -103,7 +103,7 @@ randlabel spec §2.1 の枚数の較正（seed 0 の課題 1、LN あり）:
 ### 2.5 環境の今（2026-10-24 に確認）
 
 - GPU は RTX 5060 Ti 16 GB で、使用 1,336 MiB・利用率 0% だった。driver は 580.178.04 で、0919 の測定（580.173.02）から変わった。
-- python のプロセスは 16 本あった。どれも operatingsis のサーバなどで、学習の走は無かった。
+- python のプロセスは、コマンド行で数えて 16 本（`pgrep -fc python`。自分の shell を含む）、名前で数えて 5 本（`pgrep -c python`）あった。どれも operatingsis のサーバなどで、GPU を使う python は無かった（`nvidia-smi --query-compute-apps` に出たのはデスクトップのアプリだけ）。
 - torch は 2.13.0+cu130 で 0919 と同じ。研究用の .venv は uv の CPython 3.12.3 を使う（OS の python は 1004 に 3.14 になった）。
 - ディスク / の空きは 409 GiB（915 GiB 中）だった。
 - `~/Projects/obsidian-research-data/datasets/tiny-imagenet-200/` は 1023 の片付けで中身が消え、空のフォルダの骨組みだけが残る（ファイル 0 個、5.5 MB）。zip（248,100,043 byte）も消えた。片付けの一時置き場（`_to_delete_1023/`）も既に無い。再取得の手順は §10.2。
@@ -513,7 +513,7 @@ J5 は走った後に、保存した課題末の状態だけで計算する。�
 
 落ちたら本走を始めずに報告する。ただし S-smoke と S-smoke-b は記録だけで、一致しなくても止めない（依頼のとおり）。
 
-- **S-env**（走る前に毎回）: `pgrep -fa python` で python のプロセスを数えて一覧を残し、`nvidia-smi` で GPU の使用量・利用率・driver を残す。ほかの走は止めない。GPU を使う学習が既にあれば、始めずに報告する。2026-10-24 の値は §2.5 にある。
+- **S-env**（走る前に毎回）: `pgrep -fa python` で python のプロセスを数えて一覧を残し、`nvidia-smi` と `nvidia-smi --query-compute-apps` で GPU の使用量・利用率・driver・GPU を使うプロセスを残す。ほかの走は止めない。GPU を使う学習が既にあれば、始めずに報告する。2026-10-24 の値は §2.5 にある。
 - **S-data**: zip の大きさが 248,100,043 byte、sha256 が `6198c8ae015e2b3e007c7841da39ec069199b9aa3bfa943a462022fe5e43c821`（`results/joudaki_vit_battle_0919/dataset.json`）と一致する。展開したものが、訓練 100,000 枚（200 クラス × 500 枚）、検証 10,000 枚と `val_annotations.txt` 10,000 行、`wnids.txt` 200 行を持つ。ファイルごとの manifest（相対 path・byte・sha256）を作り、生データの置き場に置き、その sha256 を `results/vit_long_1024/checks/dataset.json` に残す。
 - **S-code**: `analysis/joudaki_vit_battle_0919/` の全ファイルと `src/rlcifar_mlp_battle_0918.py` の sha256 が、battle の `source_hashes` と一致する。このフォルダには何も足さない（足すと battle の再開の検査が壊れる）。新しいコードは `analysis/vit_long_1024/` に置く。
 - **S-stream**:
