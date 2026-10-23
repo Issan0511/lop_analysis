@@ -1,0 +1,269 @@
+{
+  "started": 1792795788.1035244,
+  "root": "/home/issan/Projects/obsidian-research-data/vit_long_1024/checks/nodata_1792795788",
+  "host": "white-san",
+  "torch": "2.13.0+cu130",
+  "gpu": "NVIDIA GeForce RTX 5060 Ti",
+  "python": "3.12.3",
+  "production": {
+    "n_labels": 10,
+    "images_per_class": 25,
+    "steps": 500,
+    "tasks": 60,
+    "augment": "off",
+    "dropout": 0.0
+  },
+  "note": "synthetic runs use the production layout with T = 2-3 and U = 300 (U = 50 for S-diverge)",
+  "S_code": {
+    "pass_": true,
+    "files": 17,
+    "changed": [
+      "src/rlcifar_mlp_battle_0918.py"
+    ],
+    "added_py_files": [],
+    "battle_dir_unchanged": true,
+    "used_definitions": [
+      "Act",
+      "ReLU",
+      "make_act",
+      "ARM_ORDER"
+    ],
+    "used_definitions_equal_validated": true,
+    "note": "src/rlcifar_mlp_battle_0918.py changed after 0919 (0923 engines); the definitions the ViT uses are textually identical to the validated version"
+  },
+  "S_model": {
+    "config_is_factorial_N": true,
+    "identity_norms": 13,
+    "all_norms_identity": true,
+    "n_params": 10814024,
+    "relu_acts": true,
+    "trace_logits_bit_equal": true,
+    "trace_blocks": 6,
+    "R0_loss_rows": 10,
+    "R0_finite_backward": true,
+    "R0_zero_grad_outside_loss_rows": true,
+    "R0_nonzero_grad_on_loss_rows": true,
+    "S_loss_rows": 10,
+    "S_finite_backward": true,
+    "S_zero_grad_outside_loss_rows": true,
+    "S_nonzero_grad_on_loss_rows": true,
+    "pass_": true
+  },
+  "S_plan": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "tasks": "1-61",
+    "registered_layout_ok": true,
+    "production": {
+      "n_labels": 10,
+      "images_per_class": 25,
+      "steps": 500,
+      "tasks": 60,
+      "augment": "off",
+      "dropout": 0.0
+    },
+    "production_layout_ok": true,
+    "pass_": true
+  },
+  "S_rng": {
+    "pass_": true,
+    "still_training": true
+  },
+  "S_judge": {
+    "pass_": true,
+    "cases": {
+      "worse": [
+        "SHARED_WORSE",
+        "NO_LOSS",
+        "LOSS",
+        "NO_DEATH",
+        "DEATH"
+      ],
+      "better": [
+        "SHARED_BETTER"
+      ],
+      "mixed": [
+        "MIXED"
+      ],
+      "slow": [
+        "NO_LOSS"
+      ],
+      "not_learned": [
+        "NOT_JUDGEABLE"
+      ],
+      "insufficient": [
+        "INSUFFICIENT",
+        "INSUFFICIENT",
+        "INSUFFICIENT"
+      ]
+    },
+    "onset_example": 44
+  },
+  "S_head": {
+    "R0_head_zero_at_every_task_start": true,
+    "S_head_zero_at_task1": true,
+    "S_head_nonzero_at_task2_3": true,
+    "S_loss_rows_nonzero_at_task2_3_u0": true,
+    "R0_loss_rows_are_classes_t": true,
+    "S_loss_rows_are_classes_1": true,
+    "S_other_rows_zero_at_task3_end": true,
+    "R0_zeroed_flags": [
+      1,
+      1,
+      1
+    ],
+    "S_zeroed_flags": [
+      1,
+      0,
+      0
+    ],
+    "pass_": true
+  },
+  "S_arm1_synthetic": {
+    "pass_": true,
+    "task1_records_equal": true,
+    "task1_weights_equal": true,
+    "task2_differs": true,
+    "task1_online": 0.74328,
+    "task2_online_R0": 0.59648,
+    "task2_online_S": 0.16130666666666665
+  },
+  "S_recorder": {
+    "pass_": true,
+    "R0": {
+      "online_per_update_equal": true,
+      "task2_weights_equal": true
+    },
+    "S": {
+      "online_per_update_equal": true,
+      "task2_weights_equal": true
+    }
+  },
+  "S_resume": {
+    "pass_": true,
+    "R0": {
+      "config": true,
+      "model": true,
+      "optimizer": true,
+      "rng": true,
+      "task": true,
+      "layer_rows": true,
+      "rows_except_seconds": true,
+      "intask": true,
+      "saved_files": true,
+      "stopped_after_task2": true
+    },
+    "S": {
+      "config": true,
+      "model": true,
+      "optimizer": true,
+      "rng": true,
+      "task": true,
+      "layer_rows": true,
+      "rows_except_seconds": true,
+      "intask": true,
+      "saved_files": true,
+      "stopped_after_task2": true
+    },
+    "record_resume_without_compile_replay": {
+      "online_equal": true,
+      "weights_equal": true,
+      "adam_state_equal": true
+    }
+  },
+  "S_fresh1": {
+    "pass_": true,
+    "records_equal": true,
+    "weights_equal": true
+  },
+  "file_bytes": {
+    "model_t01.pt": 43281325,
+    "adam_t01.pt": 86564895,
+    "mid_t01.pt": 43281205,
+    "checkpoint.pt": 129901707
+  },
+  "S_diverge": {
+    "launcher_exit": 0,
+    "done_first": {
+      "status": "diverged",
+      "task": 2,
+      "step": 7,
+      "reason": "nonfinite training loss",
+      "completed": 1,
+      "time": 1792796205.2236142
+    },
+    "done_second": {
+      "status": "complete",
+      "tasks": 2,
+      "last_task": 2,
+      "time": 1792796216.4760988
+    },
+    "first_rows": 1,
+    "first_task1_weights": true,
+    "partial_steps": 7,
+    "pass_": true
+  },
+  "S_disk": {
+    "pass_": true,
+    "status": {
+      "status": "paused",
+      "reason": "disk",
+      "free": 1,
+      "need": 27449130944,
+      "completed": 0
+    }
+  },
+  "passes": {
+    "S_code": true,
+    "S_model": true,
+    "S_plan": true,
+    "S_rng": true,
+    "S_judge": true,
+    "S_head": true,
+    "S_arm1_synthetic": true,
+    "S_recorder": true,
+    "S_resume": true,
+    "S_fresh1": true,
+    "S_diverge": true,
+    "S_disk": true
+  },
+  "all_pass": true,
+  "source_hashes_at_validation": {
+    "analysis/vit_long_1024/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/vit_long_1024/calibrate.py": "d5d6f4b0810b150aef893c2872ab866717ed305c66622209cd0b163f6e83dc89",
+    "analysis/vit_long_1024/checks_data.py": "edc0d54b3df48fa245c1c7a26966dae0d84ddb3f64aab44d86e3dee8ea35fd32",
+    "analysis/vit_long_1024/checks_nodata.py": "8d4191bec7325c89976a1f4704d4b4a406b7be541f21a698ed763407133a57c2",
+    "analysis/vit_long_1024/collect.py": "ec18baa8b08824a35d1940fe8d1e7196bb93eea6c728ceb24d441bb33c844586",
+    "analysis/vit_long_1024/common.py": "4a24ee14cc050ad7d527b1882ecf59ace7038f37c64f82c07685fac3ea1a5e2d",
+    "analysis/vit_long_1024/judge.py": "8cf91e6e2ccc907291a5e3581c0c995447c3af2a00a61bf06f268b69e7928912",
+    "analysis/vit_long_1024/launch.py": "58c616a3635e3b7a20f6cfd2dbb5bc869b1b1510cd101f07a36c60dd196b6612",
+    "analysis/vit_long_1024/run.py": "9bd4966ffc5e209ad18c854f6d969b96e930544c5065dc81705a7d9352856de3",
+    "analysis/vit_long_1024/production.json": "c2a5415605e54f6e710a40dcfd451f852dbe6721d6f88275982202f3037ee017",
+    "analysis/joudaki_vit_battle_0919/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/joudaki_vit_battle_0919/benchmark.py": "2352cec0fb03a5c81b72136c42884c9426f721926acdf96c18aa38b8516d8a74",
+    "analysis/joudaki_vit_battle_0919/check_report.py": "5047f9fee0856c3e37f82f0074966b3abc7364d3db8f7f08e0e5d877d58d6d16",
+    "analysis/joudaki_vit_battle_0919/check_speed.py": "2a2af8dc61bfd57ff918b59481033537b52dadfc33696e2f56be801e0b9ed719",
+    "analysis/joudaki_vit_battle_0919/checks.py": "eb0c01e51c11dc204280f8aeb7466625681ca957825810de6cab78902fd1ecef",
+    "analysis/joudaki_vit_battle_0919/data.py": "fafcc4e8493219f2aaecd9f4643d349b0650655ae9e246f4c3f8878192fd4b1b",
+    "analysis/joudaki_vit_battle_0919/launch.py": "7af4b3944505b0a641f285cbe2619f3b3c73bfa13de7b059ba95845118b47a6d",
+    "analysis/joudaki_vit_battle_0919/model.py": "da59693f97169da83d693398ddfa9a925b7f8da4b633232abcd946f3b30acdce",
+    "analysis/joudaki_vit_battle_0919/report.py": "fb631612720d0cd84e146bded894705b0c0907c5f132d85bf78e345f8b2569bf",
+    "analysis/joudaki_vit_battle_0919/run.py": "12f4fe45fe0619ba245e00de1e33423e786cac44c9a56d519aaf09e30ea539ee",
+    "analysis/joudaki_vit_battle_0919/upstream/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/joudaki_vit_battle_0919/upstream/layers.py": "c136bbf6a3a20d5ff33fb09444ca6f97aaf347d01fd603829857a0bfb0a2177c",
+    "analysis/joudaki_vit_battle_0919/upstream/reference/src/utils/masked_loss.py": "d752f0ddb2aefe193b09ae944d0609c601ff2f86cba8037e90f8f23134fb07e2",
+    "analysis/joudaki_vit_battle_0919/upstream/vit.py": "ae0df6fe09287dc8605874a65f858b48ffecdaf70ef2e9c1171a70ca9a316267",
+    "analysis/randlabel_control_joudaki_vit_0919.py": "28a1a54a84e88e59b08e2eaba5bbe722ed2edaa685605a2cfc3cdac47f282b51",
+    "analysis/factorial_joudaki_vit_0919.py": "e55963e8fedf6d5d5915f5458ed30e962f7854faa35217d2bf3816d289719088",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
+  },
+  "finished": 1792796220.0534914
+}
