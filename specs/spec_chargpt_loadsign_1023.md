@@ -68,3 +68,31 @@ analysis/chargpt_loadsign_1023/ に code、results/chargpt_loadsign_1023/ に st
 unit 配列は obsidian-research-data/chargpt_loadsign_1023/ に退避して manifest を commit。
 vault は既存の 可塑性喪失/測定/ に結果ノートを MCP で作り、親の後期分解ノートへリンクする。
 完了後 CLAUDE.md §4 に従って main へ merge/push、worktree と自分のブランチを片付ける。
+
+## 7. 初回結果を見た後の追補（第二段階の測定前に登録）
+
+第一段階では C3 の direct s が早期 0.986–0.996 から後期 0.493–0.749 へ低下し、単独診断の回復基準はすべて 0/10。従って最終 LN の分散微分だけを原因としない。ReLUcap は direct にすると後期 0.998–1.000（10/10 回復）。この結果を見てからの追加であると明記し、元の判定を変更しない。
+
+direct の信号を同じ保存状態の「自 unit」「他 FFN unit」「残差入力」の寄与に厳密分解する。
+これは upstream parameter update の寄与ではなく、固定 forward activation が出力誤差を作る寄与の分解。
+
+softmax の centered logit f に対して alpha=logmeanexp(f), d_i=(p_i-1/V)/(f_i-alpha)>0 とし（0/0 の極限は 1/V）、
+
+    H = diag(d) - d d^T / sum(d)
+    p-u = H f
+
+が成り立つ。H は半正定値。P は特徴次元の中心化、Gamma=diag(final LN gamma)。
+QL = vL Gamma P U、QF = vc Gamma P U。残差 logit numerator は vc Gamma P r。
+実際の誤差に対する direct 成分の自 unit 項は
+
+    S_self_i = mean K gate_i a_i [QL_i^T H QF_i] / sigma²。
+
+残差項は mean K gate_i [QL_i^T H (vc Gamma P r)]/sigma²。
+他 unit 項は direct-self-residual とし、独立に全 FFN 出力を通した direct_ffn も計算して一致を確認。
+load-only error でも同様に計算する（QF=QL、H も load logit から）。この場合 K を abs(K) にした self は非負であり、内部検算になる。
+
+全700状態で各項の正の割合、絶対値中央値、相対大きさ self/(|self|+|other|+|residual|)、self が正で合計が非正になる割合を出す。
+実誤差側 self の符号が早期→後期で崩れるか、他 unit または残差からの負の信号が増えるか、両者かを記録する。
+load-only 側の direct の符号が崩れるなら、その原因はこの分解で cross 項（他 unit/残差）に局在する。ただし実誤差側へそのまま一般化しない。
+前段 direct との恒等一致 <=1e-10、softmax 恒等式 <=1e-10、absK の load-only self >= -1e-12*最大絶対値を要求。
+gate は seed0 両腕の task1,9,50,100、次に全700状態。第二段の解釈は探索的と明記する。
