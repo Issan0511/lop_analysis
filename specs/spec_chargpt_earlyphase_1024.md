@@ -51,3 +51,7 @@ H1の特徴をHとした模型と、FFN出力を特徴とした素の自己形�
 ## 6. 保存
 
 code: analysis/chargpt_earlyphase_1024/。results: results/chargpt_earlyphase_1024/（states.csv、comparisons.csv、windows.csv、judge.json、summary.md、図、gate.json、provenance.json）。生unit配列・ログはgit外に置き、CLAUDE.md §4に従いobsidian-research-dataへ退避しmanifestをcommitする。結果ノートは既存の相2結果ノートへ追補。origin/mainへ統合・push後、今回のworktreeとbranchを削除する。
+
+## 7. 本走前の数値検査の追記
+
+課題9末のgateでReLUcap L1の半logdet有限差分が刻み1e−4で相対差1.71e−4となり停止した（C3の既存配列照合は合格）。許容差は変えず、全gate腕・層で刻み1e−4/1e−5/1e−6を記録し、最後の刻みで相対差≤1e−4を要求する。全刻みでrank不変も確認する。相判定と主要比較式は変更しない。失敗ログを保存する。
