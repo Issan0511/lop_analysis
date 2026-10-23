@@ -167,7 +167,7 @@ def main():
                 bas.append(median([r['without_'+part+'_ba'] for r in ss]))
             text.append(f'|{part}|{window}|{span(norms)}|{span(signs)}|{span(bas)}|')
     text += ['', '## 補足：個別課題の差は平均と同じ向きか（登録判定外の内積集計）', '',
-             '各状態で512unitの押しを並べたベクトル同士のcosを取り、seed内の窓中央値を集計する。読み出しベクトル同士のcosではなく、unitごとの符号一致率でもない。方向の記録を深める事後集計で、J1〜J4は変更しない。', '',
+             '各状態の生きたunit（最大512）の押しを並べたベクトル同士のcosを取り、seed内の窓中央値を集計する。読み出しベクトル同士のcosではなく、unitごとの符号一致率でもない。方向の記録を深める事後集計で、J1〜J4は変更しない。', '',
              '|腕・metric|項|課題1〜4 cos seed範囲|課題6〜9 cos seed範囲|負→正のseed数|', '|---|---|---:|---:|---:|']
     for arm in ['C3', 'ReLUcap']:
         for metric in R.METRICS:
