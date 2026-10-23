@@ -1,0 +1,59 @@
+{
+ "run_id": "lc_elu_lr_0917",
+ "started": "2026-09-17T18:57:45",
+ "git_hash": "1a356a8c43738421e55b30b03b7381d45b0635c0",
+ "git_dirty": [
+  "?? analysis/lc_elu_lr_0917/",
+  "?? specs/spec_lc_elu_lr_0917.md",
+  "?? src/lc_elu_lr_0917.py"
+ ],
+ "torch": "2.13.0+cu130",
+ "checks": {
+  "S7": {
+   "real": {
+    "status": true,
+    "threads": true,
+    "git": true,
+    "labels": true,
+    "arm": true,
+    "spec": true,
+    "lifetime_none": true,
+    "pass": true,
+    "dirty_at_start": [
+     "?? analysis/lc_elu_lr_0917/",
+     "?? specs/spec_lc_elu_lr_0917.md",
+     "?? src/lc_elu_lr_0917.py"
+    ]
+   },
+   "mutations": {
+    "threads + 1": {
+     "detected": true
+    }
+   },
+   "cli": {
+    "ok": true,
+    "stderr": ""
+   },
+   "pass": true,
+   "seconds": 3.7
+  },
+  "S-cost": {
+   "returncode": 0,
+   "sec_per_task": 14.71519684791565,
+   "wall_s": 16.523976802825928,
+   "peak_rss_gib": 0.7748374938964844,
+   "mem_available_gib_now": 10.816669464111328,
+   "slots": 6,
+   "estimate_min": {
+    "E_lr1e3_min": 31.88292650381724,
+    "E_lr1e4_150_min": 47.82438975572586,
+    "anchor_min": 24.525328079859417
+   },
+   "total_cpu_h": 17.37210738990042,
+   "pass": true,
+   "seconds": 16.5
+  }
+ },
+ "all_pass": false,
+ "finished": "2026-09-17T18:58:05"
+}
