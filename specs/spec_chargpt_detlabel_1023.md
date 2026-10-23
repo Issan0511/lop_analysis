@@ -235,15 +235,152 @@ A2 の箱の遷移表（α = 0.01、seed 0〜9 × 課題 1〜100 = 1,000 写像�
 
 ## 6. 測る量
 
-（執筆中）
+### 6.1 学習コードがそのまま出す記録（A2 と同じ）
+
+`per_task.csv`・`layer_stats.csv`・`unit_stats.npz`（課題末の unit ごとの μ・σ・q・死・up 行ノルム）・`online.npz`（更新ごとの損失）・`within_task.npz`（課題 1・2・10・11・25・26・49・50 の 500 更新ごと）・`fresh_online_t{10,25,50,100}.npz`・`fresh.csv`・`eval_trace.csv`・`provenance.json`。
+
+### 6.2 checkpoint（chargpt_seed10_1022 の束と同じ）
+
+- **課題末 1〜10・25・39〜50・89〜100 の checkpoint を保存する（chargpt_seed10_1022 の束と同じ）。** init も保存する。どれも Adam の状態つき（`task<t>.pt` と `task<t>_adam.pt`）。
+- 更新 100 の状態（課題 1〜10・40〜50・90〜100、Adam つき）も保存する。
+- どちらも `CHARGPT_DECOMP_CKPT=1` のとき今のコードがそのまま保存する（追補 7 と同じ）。
+- この保存が無いと、J6 も担い手の切除（chargpt_handover_1023 の形）も後からできない。
+- 大きさは A2 の seed 0 で 135 ファイル 312 MB（実測）。git には入れない（§10.1）。
+
+### 6.3 新しく足す記録（学習の軌道を変えない。§8 の S-recorder で確かめる）
+
+- **(r1) 課題の中の up 行の動き**（全課題、L0 と L1）: 更新 100・5,000・5,500・…・10,000 の up 重みを GPU の上で写し、行 i ごとに次を出す。保存は `within_motion.npz`（[課題, 層, unit, 量]、float32、1 seed 約 2 MB）。
+  - net5k = ‖w_i(10,000) − w_i(5,000)‖（J4 の主）
+  - path5k = 500 更新ごとの 10 区間の変位の和（道のり）
+  - net100 = ‖w_i(10,000) − w_i(100)‖（§2.2 と同じ窓。A2 は保存状態から出せる）
+  - rot5k = 1 − cos(w_i(5,000), w_i(10,000))、norm5k = ‖w_i(5,000)‖
+- **(r2) 生きた unit の印**: 更新 5,000 と 10,000 で、その課題の鎖 probe（64 × 128）に z > 0 のトークンがある unit。更新 5,000 は no_grad の forward 1 回で取る。
+- **(r3) 課題ごとの連鎖の記録**（CPU）: `pi_iters`、定常分布の反復の最後の 1 歩の L1 の変化 d、課題のデータで最頻でないラベルの割合、異なる文脈の数、写し取りで当たる目標の割合（最初の 16,000 系列）、P = 0 の遷移が引かれた数、eval 系列での真の連鎖の CE。保存は `chain_stats.csv`。
+- **(r4) 課題ごとの π**（float64、4,225 値、34 KB）。保存は `pi.npz`。事後の解析（J6・再生・fresh）で、遅い反復をせずに連鎖を作り直すため。照合は rule_sha と π の sha256。
+- **(r5) 課題末の logit の幅**（鎖 probe）: トークンごとの 1 位と 2 位の logit の差の中央値、最大確率の平均、最終 LN の γ のノルム、埋め込み（= head）の行ノルムの中央値。保存は `logit_stats.csv`。決定的な的で logit が伸び続ける道（§3 の起案者の見込み）を見る。
+
+### 6.4 A2 の再生（J4 の対照。新しい学習ではない）
+
+- A2 には課題の途中の重みが保存されていない。課題 t−1 末の checkpoint（重みと Adam）から課題 t を同じデータ列で 10,000 更新回し、(r1)(r2) を記録する。
+- 対象は T_J4 = 課題 2〜10・41〜50・91〜100（29 課題 × 10 seed = 290 課題）。どれも開始の checkpoint が保存済みである。
+- lr は 1e−3 一定（warmup_from = (t−1) × 10,000）。fresh は回さない。
+- 照合: 各課題の 10,000 更新のオンライン損失が A2 の `online.npz` とビットで一致し、終わりの状態が `task<t>.pt` とビットで一致すること。
+- 台は white-san の RTX 5060 Ti（A2 は white-san と、white-san とビット一致を確かめた Vast.ai の同じ機種で回した）。ビットで一致しなければ止めて報告する。機種が違うと、chargpt_seed10_1022 の C の再生では online の差が最大 10.8 まで開いた。
+
+### 6.5 J6 の解析（保存状態。学習なし、CPU float64）
+
+- コードは chargpt_loadsign_1023 のものを写して使う。第一段階 `analysis/chargpt_loadsign_1023/measure.py`（6aa4c490）、第二段階 `components.py`（3baa567f）、第三段階 `loading_sources.py`（af1eadff）、集計 `report.py`・`report_components.py`・`rotation_report.py`（099530e9）。写し先は `analysis/chargpt_detlabel_1023/j6/` で、写し元の path と blob を先頭に書く。分解は変えない。
+- 変える所は次の 4 つだけである。
+  1. checkpoint の読み元を、seed10 の束（tar）から `results/chargpt_detlabel_1023/M2/A4/seed<k>/ckpts/task<t>.pt` に替える。
+  2. 現課題の鎖 probe を腕の α で作る（`load10.data` の `ChainM(seed, t, 0.01)` を腕の α に）。π は (r4) の `pi.npz` から読み、2 状態で `ChainM` の π とビットで一致することを確かめる。
+  3. 前回の latepush の配列との照合（A4 には無い）を外す。autograd との照合と恒等式の検算は残す。
+  4. 腕を、模型の腕（C3）とデータの α の組で持つ。
+- 量・窓・生きた unit・probe・符号の数え方は loadsign のまま（§7.6）。
+- L0 は、同じ式で U・z・φ′・K を L0 のものに替えた量を記録する。これは残差の直通の分だけで、block 1 の注意と FFN1 を通る経路を含まない。判定には使わない。
+- 状態は A4 の課題末 1〜10・25・39〜50・89〜100（1 seed 35 状態）。A3 も同じ状態を記録として出す。
 
 ## 7. 判定（走る前に固定）
 
-（執筆中）
+### 7.0 集約の共通規則
 
-## 8. 検査（走る前に通す）
+- 量は seed ごとに 1 つの値にし（seed 内）、seed 間の中央値と範囲を出す。
+- 対は同じ seed の A2 である（初期値と乱数 stream の種が同じ）。対の差の符号で両側 exact 符号検定を出す（引き分けは除く。10 対で 9/10 なら p = 0.021、8/10 なら 0.109）。
+- 連続量の比は ρ = median_k X_k(A4) / median_k X_k(A2) とする。J2・J4 は ρ < 1/2 で SMALLER、ρ > 2 で LARGER、その間を SIMILAR とする。境の 1/2 は依頼の値で、A2 の seed 間の範囲（g で中央値の ±10%）から十分離れている。
+- seed ごとの事象（J1・J5・J6）は、条件を満たす seed の数で決める。
+- 判定に使える seed が 10 未満のとき（走が終わらない、検査に落ちた）は、その数を書き、「k/10」の境を k × n/10 の切り上げに読み替える。使える seed が 8 未満なら、そのラベルは `INSUFFICIENT` とする。
+- A3 にも同じ規則を当て、ラベルと数を記録に書く。S2 を回すなら、S2 と A2 の対に同じ規則を当てる。
 
-（執筆中）
+### 7.1 J1 喪失（主）
+
+seed ごとに次を出す。
+
+- **学習の成立**: 課題 1 末の eval 超過損失 ≤ 0.1（追補 6 の条件 1・段 0 の規則）。
+- **3 相**（`analysis/chargpt_cl_1019_quicklook/three_phase.py` の `phases()`）を課題ごとに出す。
+  - T015: 50 更新の後ろ向き移動平均が 0.15 以下に初めて届いた更新番号（届かなければ 10,000）。
+  - E1000: 更新 951〜1,050 の excess の平均。
+  - ELast: 更新 9,001〜10,000 の excess の平均。
+- **窓**: 早期 = 課題 2〜10 の平均、後期 = 課題 91〜100 の平均、本体(100) = 課題 100 の値、新品(100) = 課題 100 の fresh の値。
+- **相の喪失**: 後期 > 早期、かつ本体(100) > 新品(100)。
+- T015 が早期と後期で同じ端（50 か 10,000）にあるときは、その seed の T015 を「判定できない相」とする。E1000 と ELast は常に判定できる。
+- **seed の LOSS**: 学習が成立し、判定できる相（2 つ以上）がすべて喪失を示す。
+
+ラベル: LOSS の seed が 8/10 以上で `LOSS_PERSISTS`、2/10 以下で `LOSS_GONE`、それ以外は `MIXED`。参照（§2.1）は A2 で 10/10、ReLUcap-2 で 0/10。
+
+- 依頼文の「chargpt_cl の LOSS 判定」について: chargpt_cl には、3 相で 1 つの腕の喪失を決める規則が無い。追補 7 は腕どうしの対の比較で、追補 6 の条件 1 は online_all・fresh gap・頭 100 更新で決める。そこで追補 7 の 3 相に、追補 6 の条件 1 の 2 つの比べ方（早期との比較と新品との比較）を当てた。
+- **J1b（記録）**: 追補 6 の条件 1 そのもの（`judge_m2.py` の cond1、δ = 0.0252）。A2 は 10/10。
+- **遅れの量**（P1 の採点に使う）: ΔE_k = E1000(91〜100) − E1000(2〜10)。A4 と A2 の対の差の符号検定と、seed ごとの比 ΔE(A4)/ΔE(A2) の中央値を出す。
+- 記録: 10 課題ごとの E1000 の平均の推移（1〜10、11〜20、…、91〜100）、早期を課題 1〜10 にした ΔE、縮退した課題（§7.7）を除いた J1。
+
+### 7.2 J2 L0 の伸び
+
+- g_k = 課題 100 末の L0 の up 行ノルムの中央値 ÷ 課題 1 末の同じ量（`unit_stats.npz` の `rownorm`）。
+- ρ2 = median g(A4) / median g(A2)。A2 の median g は 15.1。
+- ラベル: ρ2 < 1/2（median g(A4) < 7.57）で `L0_GROWTH_SMALLER`、ρ2 > 2（> 30.3）で `L0_GROWTH_LARGER`、それ以外は `L0_GROWTH_SIMILAR`。
+- 併記: g(A4) < g(A2) の対の数と符号検定。
+- 記録: 課題 10・50 での比、L1 の g、生きた unit に限った g、課題末どうしの 1 − cos（課題末の checkpoint がある 1〜10・39〜50・89〜100。全行と生きた unit の両方）。
+
+### 7.3 J3 L0 の死
+
+- d_k = 課題 100 末の L0 の死の割合（固定の一様 probe で p < 0.005。`layer_stats.csv` の probe = uniform・u = 10,000・layer = 0 の `frac_p_lt005`）。
+- ラベル: median d(A4) < median d(A2) / 2 = 0.433 で `L0_DEATH_REDUCED`、それ以外は `L0_DEATH_PERSISTS`。
+- 併記: d(A4) < d(A2) の対の数と符号検定、d ≥ 0.5 の seed の数（A2 は 8/10）。A2 の seed 4・8 は 0.00 なので、その 2 対は引き分けか A4 が大きいかのどちらかになる。
+- 記録: 課題 91〜100 の平均、L0 の死が初めて 0.5 以上になる課題（A2 は 44〜98、seed 4・8 は無し）、鎖 probe での死、正側の片側化（p ≥ 0.99）。
+
+### 7.4 J4 課題の後半の重みの動き
+
+- 課題 t の L0 の up 行 i の後半の変位を Δ_{t,i} = net5k（§6.3）とする。
+- m_{k,t} = 課題 t の生きた unit（更新 5,000 と 10,000 の両方で生きている unit）の Δ の中央値。生きた unit が無い課題は欠測にする。
+- M_k = T_J4（課題 2〜10・41〜50・91〜100）の m_{k,t} の中央値。
+- ρ4 = median M(A4) / median M(A2)。
+- ラベル: ρ4 < 1/2 で `MOTION_SMALLER`、ρ4 > 2 で `MOTION_LARGER`、それ以外は `MOTION_SIMILAR`。P3 は ρ4 ≤ 1/3 で採点する。
+- 生きた unit に限る理由: 死んだ行は勾配が 0 なので動かない。全行の中央値は動きではなく死の割合を測ってしまう（§2.2 の後期の 0.55 対 1.66）。
+- 併記: 対の符号検定、窓ごと（早期・中期・後期）の ρ4。
+- 記録: 全行の中央値、L1 の同じ量、道のりと変位の比 net5k/path5k（1 に近いほど一定の向き、乱歩なら小さい）、相対の変位 net5k/norm5k、rot5k、net100。
+
+### 7.5 J5 L1 の早期の死と後期の戻り
+
+- L1 の死は、課題末の固定の一様 probe で p < 0.005 の unit の割合（`layer_stats.csv` の layer = 1）。
+- **J5a 早期の死**: 課題 10 末の L1 の死 ≥ 0.9 の seed が 8/10 以上で `L1_EARLY_DEATH`、2/10 以下で `NO_EARLY_DEATH`、それ以外は `MIXED`。参照は A2 で 10/10。
+- **J5b 後期の戻り**: J5a で早期に死んだ seed のうち、課題 11〜100 に L1 の死が 0.5 以下になる課題 R_k がある seed の割合。0.8 以上で `L1_REVIVES`、0.2 以下で `NO_REVIVAL`、それ以外は `MIXED`。早期に死んだ seed が 6 未満なら `INSUFFICIENT`。参照は A2 で 9/10（R_k は 37〜84、中央値 56）。
+- 記録: R_k の対の比較（生き返らない seed は 101 として符号検定）、課題 50・100 の L1 の死、chargpt_handover_1023 の P4 と同じ相関（課題末の L1 の生存の増分と L0 の位置の増分の Spearman）。
+
+### 7.6 J6 段①の装填の押しの内訳（L1、後期）
+
+- 対象: A4 の seed 0〜9 の、課題末 89〜100 の保存状態（1 seed 12 状態）。早期（課題末 1〜9）と中期（39〜50）も同じ量を出して記録にする。
+- 量: chargpt_loadsign_1023 の恒等分解（`specs/spec_chargpt_loadsign_1023.md` §2・§7。コードは第二段階 3baa567f、第三段階 af1eadff、追補 099530e9）をそのまま使い、新しい分解を作らない。
+  - L1 への切替の期待の押し S_i = mean_n K_n φ′(z_ni) [(D_n + R_n) · U_i]。勾配の probe は固定の一様 probe、誤差は一様な目標との差、読み出しは装填成分 vL = κF。S > 0 が沈める側。
+  - R_n は最終 LN の分散微分の項、D_n はそれ以外（direct）。S = S_direct + S_radial は unit ごとに厳密に成り立つ。
+  - direct を自己項・他 unit 項・固定残差項に分ける（第二段階、誤差は original）。
+  - 各項について、生きた unit（現課題の鎖 probe で z > 0 のトークンがある unit）のうち S > 0（沈める側）の割合を状態ごとに取る。列名は loadsign と同じ: `s_original_self`・`s_original_other`・`s_original_residual`・`s_original_direct_K`・`s_radial`・`s_original_exact_K`（= s_load）。
+  - seed 内で窓（後期 = 課題末 89〜100）の中央値を取り、seed 間の範囲で示す。
+- L0 も同じ量を記録する（§6.5 の直通の分）。判定には使わない。
+- 判定:
+  - **J6**: 後期の L1 の他 unit 項が沈める割合（`s_original_other` の seed 内窓中央値）≥ 0.75 が 7/10 seed 以上なら `OTHER_TERM_KEPT`、そうでなければ `OTHER_TERM_FLIPS`。
+  - **J6-LN（副判定）**: LN の分散微分を含めた合計 s_load（`s_original_exact_K` の seed 内窓中央値）が後期に ≤ 0.60 の seed が 7/10 以上なら `LN_HALVES`、そうでなければ `LN_NOT_HALVES`。
+- 参照（§2.3、α = 0.01）: C3-2 は J6 が 0/10 で `OTHER_TERM_FLIPS`、J6-LN が 10/10 で `LN_HALVES`。ReLUcap-2 は J6 が 10/10 で `OTHER_TERM_KEPT`、J6-LN が 10/10 で `LN_HALVES`。
+- 併記: 後期の `s_original_other` の A4 − A2 の対の差の符号検定。
+- 記録: 自己項・固定残差項・direct・`s_radial` の後期の値、早期・中期の値、n_alive、他 unit 項の絶対値の分担（`original_other_abs_share`）、第三段階の装填側の自 unit・他 unit 成分、A3 の同じ量、L0。
+
+### 7.7 記録だけ（判定に入れない）
+
+- A3 の J1〜J6 のラベルと数。
+- 縮退した課題（最初の 500 更新の異なる文脈が 100 以下）の数と、それを除いた J1・J4。
+- 連鎖の記録 (r3) と logit の幅 (r5) の課題ごとの推移。
+- 層ごとの位置 r（μ/σ）の中央値、切替の押し（追補 6 の s_{l,t}）、追補 6 の条件 2・3（`judge_m2.py`）。
+
+## 8. 検査（走る前に通す。落ちたら走らせずに報告する）
+
+- **S-code**: `src/chargpt_cl_1019.py`・`src/chargpt_cl_1019_kune.py` が blob cc524f85・272e7554 と同じ（main の `analysis/chargpt_latepush_1023/source/src/` の写しも同じ blob であることを確かめた）。`RUN_ID = "chargpt_cl_1019"` を変えない。stream の種がこの文字列から作られるので、変えると全データ列が変わる。
+- **S-stream**: 新しいコードで α = 0.01 にしたとき、seed 0〜9 の課題 1〜3 の rule_sha・data_sha・probe_sha が A2 の `provenance.json` と一致する。A4・A3 の init_sha が同じ seed の A2 と一致する。
+- **S-chain**（全課題。走りながら記録し、外れたら止める）:
+  - 遷移表の行の和の誤差 ≤ 1e−12、NaN なし。P = 0 の遷移が引かれた数が 0。
+  - 定常性の上界 B = 64 · d · log 65 ≤ δ/100 = 2.5e−4 nats。B は、系列の位置ごとの周辺分布が π からずれることで H の推定がずれる量の上界（127 位置の平均で j·d·log 65 を足した形）。§4.3 の d の最大 3.7e−7 なら B = 1.0e−4。
+- **S-entropy**（全課題）: eval 系列での真の連鎖の CE と H の差が、トークンごとの −log p の標準誤差の 4 倍以内。
+- **S-recorder**: white-san（RTX 5060 Ti）で、記録器を入れた新しいコードの α = 0.01・seed 0・課題 1〜2 の `online.npz` の 2 行と `task1.pt`・`task2.pt` が、A2 の seed 0 とビットで一致する。記録器を外した走ともビットで一致する。
+- **S-replay**: §6.4 の照合を各課題で行う。その seed の最初の課題が一致しなければ、その seed の再生を止める。
+- **S-pi**（π を先に計算する場合）: 3 つの（seed, 課題, α）で、先に計算した π が `ChainM` の π とビットで一致し、それを使った data_sha が使わない場合と一致する。
+- **S-J6**: loadsign の gate と同じく、seed 0 の課題末 1・9・50・100 の S を autograd と照合する（最大絶対誤差 / 最大信号 ≤ 1e−10）。direct = self + other + residual、exact = direct + radial、softmax の恒等式を各状態で ≤ 1e−10 で確かめる。写した解析コードを A2 の C3 seed 0 の課題末 1・9・50・100 に当て、loadsign の `states.csv`・`components_states.csv` の値を再現する（符号の割合は完全一致、連続量は相対 1e−10 以内）。
+- **S-soft**（S2 を回す場合）: 1 batch で、真の分布を目標にした損失を float64 の手計算と照合する（相対 1e−6 以内）。`online.npz` に残す損失が、サンプルした目標の CE を別に計算した値と一致する。
 
 ## 9. 言わないこと
 
