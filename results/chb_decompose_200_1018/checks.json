@@ -1,0 +1,158 @@
+{
+  "cpu_all_pass": true,
+  "all_pass": false,
+  "scope": "CPU synthetic implementation checks only; no evaluation-seed production result",
+  "pending": [
+    "CUDA production-shape graph/nochange checks",
+    "reference reuse qualification or CH/CHB rerun",
+    "registered production 200 tasks"
+  ],
+  "records": [
+    {
+      "check": "S-nochange_CH",
+      "pass_": true,
+      "tolerance": "bit/byte equality"
+    },
+    {
+      "check": "S-nochange_CHB",
+      "pass_": true,
+      "tolerance": "bit/byte equality"
+    },
+    {
+      "check": "S-freeze",
+      "pass_": true,
+      "tolerance": "bit equality; nonzero initial bias and unconstrained gradients"
+    },
+    {
+      "check": "S-freeze_mutations",
+      "pass_": true,
+      "detected": [
+        "restore-only bias with moments",
+        "output bias frozen"
+      ]
+    },
+    {
+      "check": "S-resume_CH_bfreeze",
+      "pass_": true,
+      "tolerance": "bit equality of P/m/v/EMA/RNG/clock/rows/diagnostics",
+      "detected": [
+        "EMA omission",
+        "label RNG restarted"
+      ]
+    },
+    {
+      "check": "S-resume_CH_wWD",
+      "pass_": true,
+      "tolerance": "bit equality of P/m/v/EMA/RNG/clock/rows/diagnostics",
+      "detected": [
+        "EMA omission",
+        "label RNG restarted"
+      ]
+    },
+    {
+      "check": "S-resume_CH_bWD",
+      "pass_": true,
+      "tolerance": "bit equality of P/m/v/EMA/RNG/clock/rows/diagnostics",
+      "detected": [
+        "EMA omission",
+        "label RNG restarted"
+      ]
+    },
+    {
+      "check": "S-nochange_mutations",
+      "pass_": true,
+      "detected": [
+        "tiny WD on CH",
+        "CHB b1 removed at initialization"
+      ]
+    },
+    {
+      "check": "S-real_Adam_candidates",
+      "pass_": true,
+      "tolerance": "bit equality of all tensors and moments, first update",
+      "detected": [
+        "coupled decay would change m/v",
+        "wrong tensor selection",
+        "wrong update order"
+      ]
+    },
+    {
+      "check": "S-wWD",
+      "pass_": true,
+      "tolerance": "exact float32 multiply, unaffected tensors bit equal",
+      "detected": [
+        "coupled_L2",
+        "W3_decay",
+        "b2_decay"
+      ]
+    },
+    {
+      "check": "S-bWD",
+      "pass_": true,
+      "tolerance": "exact float32 multiply, unaffected tensors bit equal",
+      "detected": [
+        "b1_zero",
+        "b2_only",
+        "moment_decay"
+      ]
+    },
+    {
+      "check": "S-center",
+      "pass_": true,
+      "detected": [
+        "task EMA reset",
+        "gradient through EMA"
+      ],
+      "tolerance": "4 elementary float32 ops, 2e-7 absolute at fixture scale <1"
+    },
+    {
+      "check": "S-native_derivative_zero_convention",
+      "pass_": true,
+      "detected": [
+        "legacy strict gate substituted for native clamp autograd"
+      ],
+      "tolerance": "exact zero/one"
+    },
+    {
+      "check": "S-stats_and_reference_keys",
+      "pass_": true,
+      "detected": [
+        "zero-containing interval treated as equality",
+        "NI boundary",
+        "wrong seed pairing",
+        "missing",
+        "duplicate",
+        "seed0-9 reference",
+        "wrong endpoint window",
+        "nonfinite"
+      ],
+      "tolerance": "float64; exact registered strict/inclusive boundary predicates"
+    },
+    {
+      "check": "S-failure_status_persistence",
+      "pass_": true,
+      "detected": [
+        "divergence discarded",
+        "missingness treated as null hypothesis result",
+        "failed check reported as hypothesis failure"
+      ],
+      "tolerance": "exact registered status and no performance imputation"
+    }
+  ],
+  "failures": [],
+  "source_sha256": {
+    "specs/spec_chb_decompose_200_1018.md": "865bae69dad34496f9978e24ace590b48cac99bdee58c7f861b70e29e710c301",
+    "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "src/chb_decompose_200_1018.py": "26dc9969d07e77d695453968d03115f0634dcd92f3f0d6c81e68b5dca40dc6c7",
+    "src/relu_doors_0919.py": "2478c8339decaee3aacb90ac7aa87f8cff6b49d2da30833c6e3dbea0dfa82da4",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "analysis/chb_decompose_200_1018/checks.py": "c135ff0b5f9a46c325cf091952e09e41c67fe29aa9e901d7c9fe68a39f4479ec",
+    "analysis/chb_decompose_200_1018/common.py": "a9942461bfc8959572762035bc1bec63dd72b328bb01167e250286754cc0f832",
+    "analysis/chb_decompose_200_1018/diagnostics.py": "93dce488b55612617573a19c09802c9dabd36a94620703903a0d32b9260649e7",
+    "analysis/chb_decompose_200_1018/launch.py": "31210a663ba400f90068f7a8839ac0277f818187a65fb4526ac6d3991df4e5c0",
+    "analysis/chb_decompose_200_1018/report.py": "0cd6972379c2dac594b2f6f7c11a4dda6e45bf0978cccc9937ae5ea7f1c6607c"
+  },
+  "at": "2026-10-17T17:11:16.150679+00:00"
+}
