@@ -53,3 +53,16 @@ analysis/chargpt_l0force_1023/、results/chargpt_l0force_1023/（states.csv,summ
 
 ## 9. 実装前の細部（測定前）
 upperはFFN1枝とattention1枝にも分けて記録する。h0=L0後、h1=h0+attention1、h2=h1+FFN1とし、g1=∂L/∂h1、g0=∂L/∂h0、g2=∂L/∂h2ならFFN1枝=g1-g2、attention1枝=g0-g1。attention枝はその先のFFNとの複合経路を含む。J1の上位項upperはこの和のままで変更しない。自己形の存在と、平均位置/相対位置を沈める符号を分けるため、selfのS_muとS_rを必ず両方出す。
+
+## 10. 全後段経路を含む自己項（第一段階を見た後、追加測定前）
+第一段階の100状態で、直通自己項は沈める側だが後期には大きな打消しと上位経路がある。このため直通だけで自己機構を否定せず、全後段を通る局所自己出力を追加で測る。元のJ1を差し替えない。
+対象は両腕10seed、課題末39/100（40状態）。uniformでaliveなunitからnumpy RNG seed=10230000+seed*1000+taskを用いて最大32unitを無作為抽出（両腕で母集団が違うのでunitの対応差とはしない）。選択は勾配を見ない。
+L0出力前のactivation行列aと、その後の全計算f(a)を考え、J=∂f/∂aを保存点で固定する。unit iの全token列だけを残したa^(i)について、f_i=J a^(i)をJVPで求める。前段残差は固定、後段注意の時間混合・FFN・最終LNは全て微分する。
+同じsecant Hで、unit i自身に戻る自己信号は [J^T H f_i]_{:,i}。これにReLU gateとL0入力を掛ける。局所線形化した出力源の全unit合計はJ a、残りはf-Jaとして、
+
+    full_switch = full_self + full_other0 + full_residual
+    full_fit = 上3項 - full_target
+
+を選択unitごとに厳密に閉じる。J^T H JはPSDだがtoken間交差があり、各tokenの自己信号やS_rの正値は保証しない。a_iとの内積の非負性を確認する。これは全経路の局所自己出力の帳簿で、有限のunit除去や軌道上の因果介入ではない。
+追加判定Q1: 各seedの選択unitで期待CEでrを沈めるunit≥8、その80%以上で自己項も沈める、その50%以上で自己項除去により非正、を8/10seed以上なら FULL_LOCAL_SELF_CARRIES。switchにも同じ判定を別に出す。SGD主、固定Adam分母記録。各状態別に示し、全期間の原因を同定したとはしない。
+独立検算: 明示Hで自己係数を照合、JVPは有限差分、同一unitに対する自己項はJVP同士の双線形積でVJPと独立照合。非線形source配分の定義依存を明記する。実行前に追補commit。
