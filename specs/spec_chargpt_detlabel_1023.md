@@ -1,6 +1,6 @@
 # chargpt_detlabel_1023 — 決定的に近いラベルで 2 ブロックの文字 GPT を回す（ラベル雑音は L0 の成長・死・喪失を駆動するか）
 
-状態: **登録前の草案。** 判定・閾値・腕は Issa の確認の前で、まだ動かしてよい。走らせるのは Issa の go の後で、走る前に「登録」の commit で固定する。
+状態: **登録（2026-10-23、§12。この commit の後は判定・閾値・予測の数を書き換えない）。** 腕・J4 の主・台の違いの扱いは §12 の Issa の決定（1023 夜）による。
 作成: 2026-10-23 / 起案: Claude（Opus 5.5、Fable の依頼）/ 問い: Issa（1023）。
 親 spec: `specs/spec_chargpt_cl_1019.md`（ブランチ `claude/chargpt_cl_1019`、HEAD 033679e0。追補 6 の 2 ブロックの箱、追補 7 の C3-2 の 10 seed と 3 相の定義）、`specs/spec_chargpt_seed10_1022.md`（判定と集約の書き方）、`specs/spec_chargpt_loadsign_1023.md`（J6 の恒等分解）。
 対照のデータ（読むだけ）: ブランチ `claude/chargpt_cl_1019` の `results/chargpt_cl_1019/M2/C3/seed{0..9}/`（git に入っている記録）と、worktree `wt/chargpt_cl_1019` の同じ場所の `ckpts/`（git に入っていない checkpoint。別のセッションの worktree なので書かない）。
@@ -139,7 +139,7 @@ Fable の理由（依頼文から）:
 | A4 | 1e−4 | 主 | 0〜9 | 100 課題（fresh 4 課題つき） | `results/chargpt_detlabel_1023/M2/A4/seed<k>/` |
 | A3 | 1e−3 | 記録 | 0〜9 | 同じ | `results/chargpt_detlabel_1023/M2/A3/seed<k>/` |
 | A2 | 0.01 | 対照 | 0〜9 | 無し（追補 7 の C3-2）。J4 のために 29 課題を保存状態から再生する（§6.4） | ブランチ `claude/chargpt_cl_1019` の `results/chargpt_cl_1019/M2/C3/seed<k>/` |
-| S2 | 0.01 | 候補（判断待ち、§4.5） | 0〜9 | 100 課題 | `results/chargpt_detlabel_1023/M2/S2/seed<k>/` |
+| S2 | 0.01 | 判定（§12。§7 の規則を S2 と A2 の対に当て、A4 と並べる） | 0〜9 | 100 課題 | `results/chargpt_detlabel_1023/M2/S2/seed<k>/` |
 
 - ラベルの名前に α の桁を使う（A4 = α 1e−4）。A2 は既存の C3-2 そのもので、走らせ直さない。
 - 判定は A4 と A2 の対で出す。A3 にも同じ規則を当てて記録にする。
@@ -445,3 +445,37 @@ seed ごとに次を出す。
 - `MIXED` のときは、相ごと・seed ごとの数をそのまま付録に書き、§6 の文は足さない。
 - J6 は §6 の段①の文に効く。`OTHER_TERM_KEPT` なら「後期の他 unit 項の反転は確率的なラベルの下で起きる」、`OTHER_TERM_FLIPS` なら「決定的に近いラベルでも反転するので、模型の側の変化（up 行の凍結や FFN1 の支配）が運ぶ」と書く。どちらも §9 の最後の項の範囲の言い方にとどめる。
 - J6-LN が A4 でも `LN_HALVES` なら、「LN の分散微分が後期の押しを半々にするのは、ラベルの決定性によらない」と書ける。
+
+## 12. 登録（2026-10-23、走る前・Claude（Opus 5.5、byakko）。Issa の決定は Kubo 先生経由の依頼文による）
+
+### 12.1 Issa の決定（1023 夜、§4.5・§7.4 の「判断待ち」への答え）
+
+1. **腕**: A4・A3・S2 の 3 つを回す。A4 は主、A3 は記録。S2 には §7 の判定（J1〜J6・J6-LN）を A4 と同じ規則で S2 と A2 の対に当て、A4 と並べて報告する。S2 の J6 は S2 の課題末 89〜100 の保存状態で出す（データの α は 0.01）。
+2. **J4 の主**: net5k（各課題の後半 5,000 更新の変位、§6.3 (r1)・§7.4）。A2 の値は §6.4 の再生（29 課題 × 10 seed = 290 課題）で出す。P3 も net5k の ρ4 で採点する。
+3. **A2 は回し直さない。** A4・A3・S2 の対の相手は、white-san（RTX 5060 Ti）で回した既存の A2（ブランチ `claude/chargpt_cl_1019` の `results/chargpt_cl_1019/M2/C3/seed<k>/`）である。
+4. **予測**: §3 の Issa の欄は、登録の時点で届いていないので**空欄のまま登録**する。予測の数は Fable 0.55・0.60・0.80・0.40・0.70、Opus 5.5 0.35・0.35・0.15 のままで、以後書き換えない。予測は A4 について採点する（S2 は採点しない）。
+
+### 12.2 台と版（white-san と違う）
+
+- 台: byakko（Kubo 先生のマシン）。GPU は NVIDIA GeForce RTX 5070 Ti 16 GB 1 枚（driver 580.178.04、CUDA 13.0）、CPU 32 コア、RAM 186 GiB。
+- 版: Python 3.12.7、torch 2.13.0+cu130（torch.version.cuda 13.0、cuDNN 92000）、numpy 2.5.1。A2（white-san）は RTX 5060 Ti、Python 3.12.3、torch・CUDA・numpy は同じ版。
+- GPU の機種が違うので、同じ seed・同じデータ列でも軌道は A2 とビット一致しない見込みである（chargpt_cl_1019 の 4 ブロック本走と chargpt_seed10_1022 の C・D の再生で、byakko は white-san とビット一致しなかった）。決定 3 のとおり、この違いは受け入れて進める。
+
+### 12.3 台が違うことによる検査の読み替え（§8。Issa の決定）
+
+- **S-stream**: そのまま（CPU の乱数で作る rule_sha・data_sha・probe_sha・init_sha は台によらない）。A2 と一致しなければ止める。
+- **S-code**: そのまま（blob cc524f85・272e7554 が一致しなければ止める。`RUN_ID` を変えない）。
+- **S-recorder**: 「A2 とビット一致」の代わりに、(a) byakko で記録器ありと記録器なしの走（α = 0.01・seed 0・課題 1〜2）の `online.npz` と `task1.pt`・`task2.pt` がビット一致すること、(b) 同じ走と A2 の seed 0 の `online.npz` の差（更新ごとの最大差・平均差）を記録すること。止める条件は (a) だけ。
+- **S-replay**: ビット一致しなくても止めずに 290 課題を回す。各課題で、A2 の `online.npz` との差と、終わりの状態と `task<t>.pt` の差（重みの相対差の最大）を記録する。この値は §9 に従い「元の軌道の値」と呼ばず、「この台での再生」と呼ぶ。
+- **記録として**、J4 の量 net100（更新 100 → 10,000）も A4・A3・S2・A2 の再生で出し、§7.4 の A2 の参照値（L0 で 1.66 [1.37, 1.78]、保存状態から出したもので台によらない）と並べる。主の判定は net5k のまま。
+- S-pi・S-soft・S-J6・S-chain・S-entropy は §8 のまま。
+
+### 12.4 置き場の読み替え
+
+- A2 の checkpoint は、chargpt_seed10_1022 で byakko に受け取った束（tar の sha256 5729ec02…、1,459 ファイル）を `claude/chargpt_cl_1019` の checkout の直下に展開したものを使う。2026-10-23 に manifest の sha256 で全件を照合し、不一致 0 だった。
+- 生データ（checkpoint と 20 MB を超えるファイル）は、§10.1 の `~/Projects/obsidian-research-data/` ではなく、byakko の作業ツリー `results/chargpt_detlabel_1023/` の下に置き（gitignore）、`results/chargpt_detlabel_1023/backup_manifest.json`（path・bytes・sha256）を commit する。受け渡しは Issa と決める。
+- 学習コードは §10.1 のとおり、`claude/chargpt_cl_1019`（033679e0）の blob cc524f85・272e7554 をこのブランチの `src/` にそのまま写す。
+
+### 12.5 変えないもの
+
+判定（§7）・閾値・窓・腕の α・予算・予測の数は、この節のほかは変えない。走った後で変える必要が出たら、変えずに報告する。
