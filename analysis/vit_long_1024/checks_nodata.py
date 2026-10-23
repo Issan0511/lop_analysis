@@ -338,7 +338,7 @@ def check_runs(root):
 
 def check_ln_runs(root):
     """The LN arms: head protocol, task-1 identity of R0L and SL, and SL's exact resume (T = 2, U = 300)."""
-    full = {arm: root / f'{arm}_full' for arm in ('R0L', 'SL')}
+    full = {arm: root / f'{arm}_ln' for arm in ('R0L', 'SL')}
     for arm in full:
         run_job(full[arm], arm, 0, '--tasks', 2, '--steps', 300)
     r0, s = rows(full['R0L']), rows(full['SL'])
@@ -348,7 +348,7 @@ def check_ln_runs(root):
     head = (float(r0[1]['head_full_norm_start']) == 0. and float(s[1]['head_full_norm_start']) > 0
             and [int(r['head_zeroed']) for r in r0] == [1, 1] and [int(r['head_zeroed']) for r in s] == [1, 0])
     ln_keys = any('norm1.weight' in k for k in weights(full['SL'], 2))
-    cut = root / 'SL_resumed'
+    cut = root / 'SL_ln_resumed'
     run_job(cut, 'SL', 0, '--tasks', 2, '--steps', 300, '--stop-after-task', 1)
     run_job(cut, 'SL', 0, '--tasks', 2, '--steps', 300)
     x = torch.load(full['SL'] / 'checkpoint.pt', map_location='cpu', weights_only=False)
