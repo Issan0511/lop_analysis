@@ -3,8 +3,12 @@
     python -m analysis.vit_long_1024.checks_data
         -> results/vit_long_1024/checks/checks_data.json (+ checks_data_<host>.json), dataset.json
 
-Runs on white-san and again on the rented GPU (remote/run_remote.sh). A record from another
-host, if present, is the reference for the cross-machine records (decoded images must match).
+Two layouts are checked. The default layout (5 labels x 50 images, augmentation, dropout 0.1)
+is the factorial N cell's: S-stream compares it bit for bit with randlabel's task stream and
+S-smoke records its online accuracy against the N cell's .481/.712/.806. The production layout
+(production.json) gets S-stream's loading checks, S-arm1 (R0 and S identical on task 1) and
+S-speed. Runs on white-san and again on the rented GPU (remote/run_remote.sh); a passing record
+from another host is the reference for the cross-machine records.
 """
 import argparse
 import hashlib
@@ -43,13 +47,6 @@ ARCHIVES = {   # spec §10.2; values given by the parent on 2026-10-24
 }
 OFFICIAL_ZIP_SHA256 = '6198c8ae015e2b3e007c7841da39ec069199b9aa3bfa943a462022fe5e43c821'
 N_CELL_ONLINE = (.481, .712, .806)        # factorial spec §5, seed 0 tasks 1-3 (another machine)
-
-
-LAYOUT = []
-
-
-def results_layout():
-    return LAYOUT[0] if LAYOUT else dict(n_labels=C.N_LABELS, images_per_class=C.PER_CLASS)
 
 
 def file_sha256(path):
@@ -132,7 +129,18 @@ def dataset_record(data):
         verified_on=socket.gethostname(), time=time.time())
 
 
-def check_stream(reference, layout):
+def check_stream(reference):
+    out, ok = {}, True
+    for name, layout in (('default', dict(n_labels=C.N_LABELS, images_per_class=C.PER_CLASS)),
+                         ('production', dict(n_labels=PROD['n_labels'], images_per_class=PROD['images_per_class']))):
+        part = check_stream_layout(layout, reference.get('S_stream', {}).get(name) if reference else None)
+        out[name] = part
+        ok &= part['pass_']
+    out['pass_'] = bool(ok)
+    return out
+
+
+def check_stream_layout(layout, reference_part):
     source = C.RealImages()
     n_labels, per_class = layout['n_labels'], layout['images_per_class']
     registered = (n_labels, per_class) == (C.N_LABELS, C.PER_CLASS)
@@ -164,19 +172,20 @@ def check_stream(reference, layout):
         ok &= names == C.probe_names(source, seed) and probe.shape == (64, 64, 64, 3)
         hashes[f'{seed}:probe'] = C.array_sha256(probe)
     out.update(pass_=bool(ok), problems=problems[:20], image_hashes=hashes)
-    if reference and reference.get('S_stream', {}).get('image_hashes') and reference.get('layout') == layout:
+    if reference_part and reference_part.get('image_hashes'):
         # Record only: every production run happens on one machine, so its own S-stream decides.
-        out['cross_machine_reference'] = reference.get('host')
-        out['cross_machine_equal'] = reference['S_stream']['image_hashes'] == hashes
+        out['cross_machine_equal'] = reference_part['image_hashes'] == hashes
     return out
 
 
-LAYOUT_ARGS = []
+PROD = C.production_layout()
+PROD_ARGS = ['--n-labels', str(PROD['n_labels']), '--images-per-class', str(PROD['images_per_class']),
+             '--augment', PROD['augment'], '--dropout', str(PROD['dropout']), '--steps', str(PROD['steps'])]
 
 
 def run_job(out, arm, seed, *extra):
     command = [PY, '-m', 'analysis.vit_long_1024.run', '--arm', arm, '--seed', str(seed), '--smoke',
-               '--data-kind', 'real', '--out', str(out), *LAYOUT_ARGS, *map(str, extra)]
+               '--data-kind', 'real', '--out', str(out), *map(str, extra)]
     out.mkdir(parents=True, exist_ok=True)
     with (out / 'console.log').open('a') as log:
         log.write(' '.join(command) + '\n')
@@ -196,9 +205,10 @@ def model_sha(out, task):
 
 def check_runs(root, reference):
     res = {}
-    r0_dir, s_dir, eager_dir = root / 'R0_smoke', root / 'S_smoke', root / 'R0_smoke_eager'
-    r0 = run_job(r0_dir, 'R0', 0, '--tasks', 3, '--steps', 500)
-    s = run_job(s_dir, 'S', 0, '--tasks', 2, '--steps', 500)
+    # Production layout: S-arm1 and S-speed.
+    r0_dir, s_dir = root / 'R0_production', root / 'S_production'
+    r0p = run_job(r0_dir, 'R0', 0, '--tasks', 3, *PROD_ARGS)
+    s = run_job(s_dir, 'S', 0, '--tasks', 2, *PROD_ARGS)
     a, b = intask(r0_dir), intask(s_dir)
     keys = ('online_correct', 'online_loss', 'batch_size', 'mem_correct', 'mem_loss', 'up_norm_med')
     task1 = all(np.array_equal(a[k][0], b[k][0]) for k in keys)
@@ -206,48 +216,53 @@ def check_runs(root, reference):
     task2 = not np.array_equal(a['online_loss'][1], b['online_loss'][1])
     s_head = float(s[1]['head_norm_start']) > 0 and float(s[1]['head_full_norm_start']) > 0
     res['S_arm1'] = dict(pass_=task1 and w1 and task2 and s_head, task1_records_equal=task1, task1_weights_equal=w1,
-                         task2_differs=task2, S_task2_head_nonzero_at_u0=s_head,
-                         online=dict(R0=[float(r['online_acc']) for r in r0], S=[float(r['online_acc']) for r in s]))
+                         task2_differs=task2, S_task2_head_nonzero_at_u0=s_head, production=PROD,
+                         online=dict(R0=[float(r['online_acc']) for r in r0p], S=[float(r['online_acc']) for r in s]),
+                         mem_acc_end=dict(R0=[float(r['mem_acc_end']) for r in r0p], S=[float(r['mem_acc_end']) for r in s]),
+                         T90=dict(R0=[int(float(r['T90'])) for r in r0p], S=[int(float(r['T90'])) for r in s]))
+    res['S_speed'] = speed(r0p, PROD['steps'])
+    # Default layout (the N cell's): S-smoke against .481/.712/.806, and eager against compile.
+    d_dir, eager_dir = root / 'R0_default', root / 'R0_default_eager'
+    r0 = run_job(d_dir, 'R0', 0, '--tasks', 3, '--steps', 500)
     eager = run_job(eager_dir, 'R0', 0, '--tasks', 3, '--steps', 500, '--engine', 'eager', '--save-mode', 'minimal')
     online = [float(r['online_acc']) for r in r0]
     smoke = dict(online=online, mem_acc_end=[float(r['mem_acc_end']) for r in r0], T90=[int(float(r['T90'])) for r in r0],
                  n_cell_online=list(N_CELL_ONLINE), minus_n_cell=[o - n for o, n in zip(online, N_CELL_ONLINE)],
                  eager_online=[float(r['online_acc']) for r in eager],
                  eager_minus_compile=[float(e['online_acc']) - o for e, o in zip(eager, online)],
-                 task1_weights_sha256=model_sha(r0_dir, 1), pass_=True,
+                 task1_weights_sha256=model_sha(d_dir, 1), pass_=True, layout='default (5 labels x 50, augment on, dropout 0.1)',
                  note='record only: the N cell ran on another machine, and eager differs from compile by rounding')
-    if reference and reference.get('S_smoke') and reference.get('layout') == results_layout():
+    if reference and reference.get('S_smoke'):
         smoke['cross_machine_reference'] = reference.get('host')
         smoke['cross_machine_online_equal'] = reference['S_smoke'].get('online') == online
         smoke['cross_machine_task1_weights_equal'] = reference['S_smoke'].get('task1_weights_sha256') == smoke['task1_weights_sha256']
     res['S_smoke'] = smoke
-    later = [r for r in r0 if int(r['task']) >= 2]
-    per_task = {k: float(np.mean([float(r[k]) for r in later])) for k in ('train_seconds', 'record_seconds', 'other_seconds', 'seconds')}
-    steps = C.STEPS
-    task1 = float(r0[0]['seconds'])
-    compile_extra = task1 - per_task['seconds']
-    run_hours = (C.TASKS * per_task['seconds'] + compile_extra) / 3600
-    fresh_hours = len(C.SEEDS) * len(C.FRESH_TASKS) * task1 / 3600
-    res['S_speed'] = dict(pass_=True, ms_per_update_training=1000 * per_task['train_seconds'] / steps,
-                          ms_per_update_with_records=1000 * (per_task['train_seconds'] + per_task['record_seconds']) / steps,
-                          ms_per_update_all=1000 * per_task['seconds'] / steps, seconds_per_task=per_task,
-                          task1_seconds_with_compile=task1, hours_per_continual_run=run_hours,
-                          hours_10_runs=10 * run_hours, hours_fresh=fresh_hours, hours_total=10 * run_hours + fresh_hours,
-                          gpu=torch.cuda.get_device_name(), host=socket.gethostname(),
-                          basis='tasks 2-3 of the R0 seed 0 smoke (U = 500); fresh tasks priced as task 1 with compile')
     return res
+
+
+def speed(rows, steps):
+    later = [r for r in rows if int(r['task']) >= 2]
+    per_task = {k: float(np.mean([float(r[k]) for r in later])) for k in ('train_seconds', 'record_seconds', 'other_seconds', 'seconds')}
+    task1 = float(rows[0]['seconds'])
+    prod = C.production()
+    runs = len(prod['seeds']) * len(C.ARMS)
+    run_hours = (prod['tasks'] * per_task['seconds'] + task1 - per_task['seconds']) / 3600
+    fresh_hours = len(prod['seeds']) * len(prod['fresh_tasks']) * task1 / 3600
+    return dict(pass_=True, ms_per_update_training=1000 * per_task['train_seconds'] / steps,
+                ms_per_update_with_records=1000 * (per_task['train_seconds'] + per_task['record_seconds']) / steps,
+                ms_per_update_all=1000 * per_task['seconds'] / steps, seconds_per_task=per_task,
+                task1_seconds_with_compile=task1, hours_per_continual_run=run_hours, runs=runs,
+                hours_continual_runs=runs * run_hours, hours_fresh=fresh_hours,
+                hours_total=runs * run_hours + fresh_hours, production=PROD,
+                gpu=torch.cuda.get_device_name(), host=socket.gethostname(),
+                basis='tasks 2-3 of the R0 seed 0 run in the production layout; fresh tasks priced as task 1 with compile')
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', default=None)
     parser.add_argument('--skip-stream', action='store_true', help='debug only; the record then cannot pass')
-    parser.add_argument('--n-labels', type=int, default=C.N_LABELS, help='registered: 5')
-    parser.add_argument('--images-per-class', type=int, default=C.PER_CLASS, help='registered: 50')
     args = parser.parse_args()
-    layout = dict(n_labels=args.n_labels, images_per_class=args.images_per_class)
-    LAYOUT[:] = [layout]
-    LAYOUT_ARGS[:] = ['--n-labels', str(args.n_labels), '--images-per-class', str(args.images_per_class)]
     C.set_determinism()
     host = socket.gethostname()
     checks_dir = C.RESULTS / 'checks'
@@ -261,10 +276,10 @@ def main():
     root.mkdir(parents=True, exist_ok=True)
     results = dict(started=time.time(), root=str(root), host=host, torch=torch.__version__, cuda=torch.version.cuda,
                    gpu=torch.cuda.get_device_name(), python=platform.python_version(),
-                   layout=layout, reference_host=reference.get('host') if reference else None)
+                   production=PROD, reference_host=reference.get('host') if reference else None)
     steps = [('S_data', check_data)]
     if not args.skip_stream:
-        steps.append(('S_stream', lambda: check_stream(reference, layout)))
+        steps.append(('S_stream', lambda: check_stream(reference)))
     steps.append(('runs', lambda: check_runs(root, reference)))
     for name, fn in steps:
         began = time.time()
@@ -278,7 +293,7 @@ def main():
             results[name] = value
         if name == 'S_data' and value.get('pass_'):
             atomic_json(checks_dir / 'dataset.json', dataset_record(value))
-        brief = {k: (v.get('pass_') if isinstance(v, dict) else v) for k, v in value.items()} if name == 'runs' else \
+        brief = {k: (v.get('pass_') if isinstance(v, dict) else v) for k, v in value.items()} if name in ('runs', 'S_stream') else \
             {k: v for k, v in value.items() if k != 'image_hashes'}
         print(json.dumps({name: brief, 'seconds': round(time.time() - began, 1)}, default=str)[:3000], flush=True)
     required = ('S_data', 'S_stream', 'S_arm1')
@@ -290,7 +305,8 @@ def main():
     atomic_json(checks_dir / 'checks_data.json', clean)
     atomic_json(checks_dir / f'checks_data_{host}.json', clean)
     print(json.dumps(dict(all_pass=results['all_pass'], passes=results['passes'],
-                          speed={k: results.get('S_speed', {}).get(k) for k in ('ms_per_update_training', 'ms_per_update_all', 'hours_total')})), flush=True)
+                          speed={k: results.get('S_speed', {}).get(k) for k in ('ms_per_update_training', 'ms_per_update_all',
+                                                                                  'hours_continual_runs', 'hours_total')})), flush=True)
 
 
 if __name__ == '__main__':
