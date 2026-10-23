@@ -78,3 +78,12 @@ code=analysis/chargpt_l0phase2_1023/、results=results/chargpt_l0phase2_1023/（
 G=F'F、D=F'C F、Sigma_v=G^+ D G^+ として、Q_C,i=Σ_j (u_i' f_j) Sigma_v,ji を計算（標準化列の尺度を戻す）。C=Iなら登録したQoutと一致しなければ停止。これは全unitの読み出し相関を含む。self項への追加ではない。
 
 記録: Q_ctx/Q_mixが沈める割合・中央値、Q_iidとの相関、実fit/switchとのseed別順位相関/符号精度、seed内39/100結合の登録J2と同じ数値基準への該当数（探索的記録のみ）。同一文脈の出現数も併記。特徴と文脈列自体は学習済み・旧課題由来で、旧ラベル独立な固定特徴の仮定は依然未検証。C_ctxを入れても実網の条件付き旧ラベルensembleを再現したとは言わない。
+
+## 9. 実head全方向をfitする相2の追補（計算前）
+
+§2Bの振幅modelには、現在の読み出し方向に限定する制約がある。最終headの全128入力方向を自由に共同fitするH2も直接測る。Aと同じ100状態・全64系列。Hは最終LN後・head前の特徴、G=H'H、C=Iまたは§8の文脈共有行列。class中心化head Vcは既存重み。
+
+- 理論の読み出し共分散: Sigma_iid=G^+、Sigma_ctx=G^+ H'C H G^+。全headに対する独立ラベルLS fitの期待から、隠れparameterへの押しは H Sigma をhead側の逆伝播信号として得る。各L0 up行のr/muへ射影（SGD、保存Adam分母）。これには全L0 unitと全非線形後段を含む。特定unitの寄与だけを残さない。
+- 実読み出しの共分散: Sigma_emp=Vc'Vc。H Sigma_empを戻したものは現在のlogit二乗ノルムを減らす**全勾配**である。新しい自己項ではない。理論Sigma→実Sigma→実際のCE切替(p−1/V)の順に、どこでunitの押しが変わるかを比較する。現課題fitとの比較も記録。
+- G固有値閾値1e-10（1e-8/1e-12感度）、rank、Sigma同士のFrobenius cosineを記録。擬似logdetの有限差分と全逆伝播、実logit二乗lossのautogradとの一致をseed0課題39で確認。モデルの更新・新しい学習はしない。
+- 注意: embeddingとheadは実網では共有される。今回L0 up行への微分ではembeddingを固定し、headだけを自由にfitする条件付き模型として扱う。CEを二乗損失へ勝手に同一視せず、実Sigmaの二乗出力押しと実CE押しの差を測る。旧ラベルを平均する間に学習済みHを固定する前提は未検証。主J1〜J3を変更せず探索的結果として別表にする。
