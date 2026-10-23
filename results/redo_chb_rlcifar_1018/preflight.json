@@ -1,12 +1,9 @@
 {
   "run_id": "redo_chb_rlcifar_1018",
-  "status": "BLOCKED_CUDA",
-  "all_pass": false,
-  "blockers": [
-    "BLOCKED_CUDA: torch.cuda.is_available() is False",
-    "PROOF_MISSING_STALE_OR_FAILED:gpu_release.json:proof did not pass"
-  ],
-  "checked_utc": "2026-10-17T18:00:52.477962+00:00",
+  "status": "ADMITTED",
+  "all_pass": true,
+  "blockers": [],
+  "checked_utc": "2026-10-18T03:04:55.601081+00:00",
   "registration": {
     "run_id": "redo_chb_rlcifar_1018",
     "base_commit": "094489c30bcdf196946179ba07ed0e8cadd3a53f",
@@ -194,12 +191,16 @@
     "torch": "2.13.0+cu130",
     "numpy": "2.5.1",
     "cuda_build": "13.0",
-    "cuda_available": false,
+    "cuda_available": true,
     "nvidia_devices": [
-      "/dev/nvidia-caps"
+      "/dev/nvidia-modeset",
+      "/dev/nvidia-uvm",
+      "/dev/nvidia-uvm-tools",
+      "/dev/nvidia0",
+      "/dev/nvidiactl"
     ],
-    "nvidia_smi_returncode": 9,
-    "nvidia_smi_output": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.",
+    "nvidia_smi_returncode": 0,
+    "nvidia_smi_output": "Sun Oct 18 12:04:55 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 580.178.04             Driver Version: 580.178.04     CUDA Version: 13.0     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 5060 Ti     Off |   00000000:01:00.0  On |                  N/A |\n|  0%   40C    P8              8W /  180W |    1389MiB /  16311MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            7543    C+G   ...c/gnome-remote-desktop-daemon        130MiB |\n|    0   N/A  N/A            7587      G   /usr/bin/gnome-shell                    218MiB |\n|    0   N/A  N/A            8123      G   /usr/bin/Xwayland                         6MiB |\n|    0   N/A  N/A           15733    C+G   /usr/bin/nautilus                        92MiB |\n|    0   N/A  N/A           17382    C+G   ...rack-uuid=3190708988185955192         94MiB |\n|    0   N/A  N/A           20685    C+G   ...rack-uuid=3190708988185955192        100MiB |\n|    0   N/A  N/A          321730    C+G   ...88185955192 --disable-logging         59MiB |\n|    0   N/A  N/A          639398      G   /opt/YouTube Music/youtube-music         49MiB |\n|    0   N/A  N/A          748476      G   ...rack-uuid=3190708988185955192        150MiB |\n|    0   N/A  N/A          890678    C+G   /usr/bin/ptyxis                          46MiB |\n|    0   N/A  N/A         3477114      G   ...nap-store/1447/bin/snap-store         58MiB |\n+-----------------------------------------------------------------------------------------+",
     "tf32_matmul": false,
     "tf32_cudnn": true,
     "deterministic": false,
@@ -216,9 +217,10 @@
   "proof_root": "/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/results/redo_chb_rlcifar_1018",
   "proof_sha256": {
     "cpu_checks.json": "11f6b08f9a766f5d865310cf772981a66b003c9f33e02bd121c60093f45ae002",
-    "independent_review.json": "8fde274684b25027d02469f0a2b5b973833a81cc7c5d74f8b9f57cd31db8329e"
+    "independent_review.json": "8fde274684b25027d02469f0a2b5b973833a81cc7c5d74f8b9f57cd31db8329e",
+    "gpu_release.json": "a0bb08d4ead2b6dfb833b060dc6d12922928e994b42ed5d3d038a758e8191654"
   },
-  "git_hash": "5e44f9a9bc7143e4ba567da81c5aea0754e45188",
+  "git_hash": "c552641ef5de10442564defb5f96fbf74ecba1d1",
   "argv": [
     "/home/issan/Projects/claude/wt/redo_chb_rlcifar_1018/analysis/redo_chb_rlcifar_1018/launch.py",
     "run",
