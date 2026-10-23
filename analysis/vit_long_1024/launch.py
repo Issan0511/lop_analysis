@@ -22,10 +22,14 @@ from . import common as C
 
 def production_jobs():
     # Seed outermost: the four arms and the seed's fresh tasks stay paired if the queue stops.
+    # VIT_LONG_SEEDS (e.g. "0,1,2") keeps only those seeds, to split the queue across rented GPUs
+    # with each seed's four arms and fresh tasks on one machine (spec §12); unset = all seeds.
     prod = C.production()
+    only = os.environ.get('VIT_LONG_SEEDS', '').strip()
+    keep = {int(x) for x in only.split(',')} if only else None
     common = ['--n-labels', str(prod['n_labels']), '--images-per-class', str(prod['images_per_class']),
               '--steps', str(prod['steps']), '--augment', prod['augment'], '--dropout', str(prod['dropout'])]
-    for seed in prod['seeds']:
+    for seed in [x for x in prod['seeds'] if keep is None or x in keep]:
         for arm in prod['arms']:                               # R0, S, R0L, SL
             yield dict(arm=arm, seed=seed, args=common + ['--tasks', str(prod['tasks'])])
         for arm in prod['fresh_arms']:                         # fresh (no LN), freshL (LN)

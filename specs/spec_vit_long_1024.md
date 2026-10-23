@@ -820,3 +820,4 @@ touch ~/Projects/obsidian-research-data/vit_long_1024/STOP
 16. **限界**（1024）: 較正 3 の 6 課題のうち 2 つは T90 = 300 だった。継続の網の早期の T90 の中央値が 262.5 を超える seed では、J1 の「後期が早期の 2 倍以上」は、上限 525 のために満たせない。主の判定 J0 はこの影響を受けない。JLN は J1 を使うので、この限界を受ける。
 17. **検査のコードの誤りを直した**（1024、再登録の後）: データ不要の検査の S-ln が、check_runs と同じフォルダ名（R0L_full・SL_full・SL_resumed）を使い、先に T = 3 で回った走を「already terminal」として読んで、head の扱いの比較が長さ違いで落ちていた。フォルダ名を R0L_ln・SL_ln・SL_ln_resumed に替えた（`checks_nodata.py` の 1 か所）。学習のコード（run.py・common.py・production.json）と判定は変えていない。
 18. **検査の結果**（2×2 の版）: 下に足す。
+19. **2 台に分けて回す**（1024、Issa の承認）: 実時間を縮めるため、Vast.ai の RTX 5060 Ti を 2 台借り、ベトナムの機械で seed 0〜2、イリノイの機械で seed 3・4 を回す。launcher に環境変数 `VIT_LONG_SEEDS`（seed を絞る。既定は全 seed）を足しただけで、学習のコード・判定・production.json は変えない。各 seed の 4 腕と fresh は同じ機械で回るので、J0 の対の比較は機械をまたがない。台ごとに軌道はビットで一致しないので、腕の間の比較は seed の中で行う。判定は white-san で両方の結果をまとめてから出す。
