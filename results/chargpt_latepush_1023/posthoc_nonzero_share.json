@@ -1,0 +1,23 @@
+{
+  "status": "POST_HOC",
+  "trigger": "1476 alive unit-state entries have zero in both component pushes; 425 state/layer shares are undefined",
+  "rule": "Exclude only alive units with |S_load|+|S_res|=0 from share, keeping all original s metrics and judges unchanged",
+  "counts": {
+    "C3": {
+      "1": {
+        "share_decreases_nonzero": 10
+      },
+      "0": {
+        "share_decreases_nonzero": 10
+      }
+    },
+    "ReLUcap": {
+      "1": {
+        "share_decreases_nonzero": 1
+      },
+      "0": {
+        "share_decreases_nonzero": 10
+      }
+    }
+  }
+}

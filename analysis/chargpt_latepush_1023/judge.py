@@ -35,12 +35,13 @@ def finite_median(rows, col):
 
 def write_csv(path, rows):
     with path.open('w', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+        w = csv.DictWriter(f, fieldnames=list(rows[0]), lineterminator='\n'); w.writeheader(); w.writerows(rows)
 
 
 def table(headers, rows):
-    return '\n'.join(['| ' + ' | '.join(headers) + ' |', '| ' + ' | '.join(['---']*len(headers)) + ' |'] +
-                     ['| ' + ' | '.join(str(c) for c in r) + ' |' for r in rows])
+    esc = lambda c: str(c).replace('|', '\\|')
+    return '\n'.join(['| ' + ' | '.join(esc(c) for c in headers) + ' |', '| ' + ' | '.join(['---']*len(headers)) + ' |'] +
+                     ['| ' + ' | '.join(esc(c) for c in r) + ' |' for r in rows])
 
 
 def main():
@@ -85,6 +86,7 @@ def main():
                                     share_decreases=e['share_load'] is not None and l['share_load'] is not None and l['share_load'] < e['share_load'],
                                     tracks=rho is not None and rho > .5))
             counts = {k: sum(r[k] for r in records) for k in ['loading', 'residual', 'share_decreases', 'tracks']}
+            counts['share_evaluable'] = sum(r['early_share_load'] is not None and r['late_share_load'] is not None for r in records)
             res, shr = counts['residual'] >= 8, counts['share_decreases'] >= 8
             judged[arm][str(layer)] = dict(
                 J1='LOADING_SINKS_LATE' if counts['loading'] >= 8 else 'NOT_LOADING',
@@ -105,18 +107,21 @@ def main():
     for arm in judged:
         for layer, j in judged[arm].items():
             c = j['counts']
-            jrows.append([arm, f'L{layer}', j['J1'], c['loading'], j['J2'], c['residual'], c['share_decreases'], j['J3'], c['tracks']])
-    jtext = table(['arm','layer','J1','n J1','J2','n residual','n share↓','J3','n J3'], jrows)
+            jrows.append([arm, f'L{layer}', j['J1'], c['loading'], j['J2'], c['residual'], c['share_decreases'], c['share_evaluable'], j['J3'], c['tracks']])
+    jtext = table(['arm','layer','J1','n J1','J2','n residual','n share↓','n share evaluable','J3','n J3'], jrows)
     (OUT/'judge.md').write_text('# 判定（登録 spec §4・§8）\n\n'+jtext+
         '\n\n主判定は C3 L1。各条件は10 seed 中8以上。L0・ReLUcap は記録。J3 は課題末35点、init 込み36点は補助。\n')
 
     def span(arm, layer, win, metric, digits=4):
         vals = [w[metric] for w in windows if w['arm']==arm and w['layer']==layer and w['window']==win]
-        if any(x is None for x in vals): return '欠測あり'
-        return f'{min(vals):.{digits}f}–{max(vals):.{digits}f}'
+        finite = [x for x in vals if x is not None]
+        if not finite: return '欠測（0/10）'
+        value = f'{min(finite):.{digits}f}–{max(finite):.{digits}f}'
+        return value if len(finite)==10 else value+f'（{len(finite)}/10のみ）'
 
     lines = ['# 後期の押しを装填成分と残りに分ける（chargpt_latepush_1023）',
              '', '保存状態のみ。新しい学習・API ワーカー・サブエージェントなし。', '', jtext,
+             '', f"主 C3 L1: 装填成分の後期 s_load ≥0.75 は {judged['C3']['1']['counts']['loading']}/10。『後期も装填の押しは沈める側にそろう』という登録予測は支持されない。κ>0 と unit ごとの押しの向きは別の量。",
              '', '## 窓ごとの10 seed の範囲', '',
              '各 seed で窓内の状態中央値を取り、その10 seed 間の最小–最大。share_load は各状態の生きた unit の絶対値分担の中央値。', '']
     wrows = []
@@ -153,6 +158,7 @@ def main():
     lines += ['', '## 検査・出所・限界', '',
               f"- 1 seed 一致確認: seed 0、両腕、init＋課題末35点、両層（{check['layer_rows']}行）。PASS。最大誤差 {json.dumps(check['worst'],ensure_ascii=False)}。",
               f'- 全状態 sanity: {json.dumps(sanity,ensure_ascii=False)}。',
+              '- share_load は両成分の押しが0の生存 unit で0/0になり、その状態と窓中央値を欠測にする（登録どおり）。C3 L1 の早期→後期の有効な seed ペアは0/10。J2 の share低下0/10は「低下しない」と同義ではない。事後のゼロ除外補助値は別節に記録。',
               '- F・κ・cos²・probe・alive・押しの定義は analysis/chargpt_seed10_1022/load10.py。F は固定 probe の実現ラベルで計算。',
               '- softmax 誤差は元の状態に固定し、body への逆伝播の読み出しだけを分ける。Adam の分母は元解析と同じく不使用。',
               '- 35課題末×10 seed×2腕=700状態。init20状態も保存、両層で states.csv は1440行。',
@@ -160,6 +166,16 @@ def main():
               '- v⊥ は現課題の F に直交する残差。この解析だけでは旧課題由来と同定できない。因果寄与率・100更新の分担ではない。',
               '- 事前 spec §8 は点数、固定softmax、元 src の git blob 復元などを実装前に確定。判定・予測・窓の事後変更なし。',
               '- 参照: states.csv、windows.csv、correlations.csv、judge.json、reproduction_check.json、provenance.json。']
+    full_check = json.loads((OUT/'full_reproduction_check.json').read_text()) if (OUT/'full_reproduction_check.json').exists() else None
+    if full_check:
+        lines += [f"- 事後の全10 seed照合: 全{full_check['layer_rows']}層行で元CSVを再現。最大誤差 {json.dumps(full_check['worst'],ensure_ascii=False)}。出典 full_reproduction_check.json。"]
+    lines += ['', '## 登録予測の採点', '',
+              table(['項目','Fableの事前確率','結果'],[
+                  ['J1', '.65', judged['C3']['1']['J1']],
+                  ['J2', '.60', judged['C3']['1']['J2']+'（shareは欠測で判定条件不成立）'],
+                  ['J3', '.55', judged['C3']['1']['J3']],
+                  ['L0 early s_load < .5', '.70', str(sum(w['s_load'] is not None and w['s_load'] < .5 for w in windows if w['arm']=='C3' and w['layer']==0 and w['window']=='early'))+'/10']]),
+              '', 'Issa の予測欄は空欄のまま。']
     (OUT/'summary.md').write_text('\n'.join(lines)+'\n')
     print(jtext)
 
