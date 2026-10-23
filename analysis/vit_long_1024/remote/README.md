@@ -23,7 +23,9 @@ bash /root/vit_long_1024/lop_analysis/analysis/vit_long_1024/remote/run_remote.s
 
 - 置き場の既定は white-san と同じ相対の形で、`/root/Projects/obsidian-research-data/`（データは `datasets/tiny-imagenet-200/`、出力は `vit_long_1024/`）。`VIT_LONG_DATA`・`VIT_LONG_RAW`・`VIT_LONG_PY` で変えられる。
 - `setup_remote.sh` は、uv で python 3.12.3 の venv を作り、`requirements.txt`（white-san の .venv の版をそのまま）を入れる。torch は https://download.pytorch.org/whl/cu130 から取る。Tiny ImageNet は入れ子の重複 `tiny-imagenet-200/tiny-imagenet-200/` を除いて外側の 1 組だけを展開し、件数と一覧で照合する。
-- `run_remote.sh` は、データの要る検査（S-data・S-stream・S-arm1・S-smoke・S-speed、約 10 分）を流し、通ったら launcher を setsid と nohup で背景に起動する。S-speed の 1 更新の ms と、10 走と fresh の見込みの時間を表示する。
+- `run_remote.sh` は、データの要らない検査（この機械で通った記録が今のソースと production.json に合わなければ、約 10 分）とデータの要る検査（S-data・S-stream・S-arm1・S-smoke・S-speed、約 12 分）を流し、通ったら launcher を setsid と nohup で背景に起動する。S-speed の 1 更新の ms と、10 走と fresh の見込みの時間を表示する。
+- 本走の設定（ラベルの値の数、クラスごとの枚数、U、拡張、dropout）は `analysis/vit_long_1024/production.json` にある。直したら commit して pack し直す（ソースの hash が変わるので、検査は借りた機械で回し直しになる）。
+- 借りる機械のディスクは 100 GB 以上にする（出力 38 GB、データと archive 1 GB、venv 約 6 GB、検査の出力約 3 GB、S-disk の下限 25 GiB）。
 - 機械が途中で止まったら、`run_remote.sh` をもう一度流す。続きの課題の境から回る（課題ごとに再開用の checkpoint を書く）。
 - 見る: `cat /root/Projects/obsidian-research-data/vit_long_1024/status.json`。止める: `touch /root/Projects/obsidian-research-data/vit_long_1024/STOP`（課題の境で止まる）。
 - 全部終わると、`vit_long_1024/DONE` と `vit_long_1024/summary/judge.md`（J0・J1・J3 と予測の採点）が書かれる。
