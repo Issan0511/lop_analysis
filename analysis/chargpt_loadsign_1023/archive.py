@@ -19,21 +19,24 @@ def sha(path):
 
 def main():
     rows=[]
-    for source in sorted((OUT/'raw').glob('*.npz')):
+    sources=sorted((OUT/'raw').glob('*.npz'))+sorted((OUT/'raw_components').glob('*.npz'))
+    for source in sources:
         backup=DEST/source.relative_to(ROOT)
-        expected=json.loads((OUT/'parts'/source.with_suffix('.json').name).read_text())['raw_sha256']
+        parts='parts' if source.parent.name=='raw' else 'parts_components'
+        expected=json.loads((OUT/parts/source.with_suffix('.json').name).read_text())['raw_sha256']
         assert sha(source)==expected
         backup.parent.mkdir(parents=True,exist_ok=True)
         if backup.exists(): assert sha(backup)==expected
         else: shutil.copy2(source,backup)
         assert sha(backup)==expected
         rows.append(dict(source=str(source.relative_to(ROOT)),backup=str(backup),bytes=source.stat().st_size,sha256=expected))
-    assert len(rows)==20
+    assert len(rows)==40
     (OUT/'backup_manifest.json').write_text(json.dumps(dict(files=rows,
         checkpoints='Read directly from the existing seed10 tar bundle; no extracted checkpoint copies were created.',
         source_bundle='/home/issan/Projects/obsidian-research-data/chargpt_seed10_1022/transfer/chargpt_seed10_1022_bundle.tar'),indent=2)+'\n')
     for row in rows:(ROOT/row['source']).unlink()
     (OUT/'raw').rmdir()
+    (OUT/'raw_components').rmdir()
     print(f'Archived and verified {len(rows)} arrays, {sum(r["bytes"] for r in rows)} bytes')
 
 
