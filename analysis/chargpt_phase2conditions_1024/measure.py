@@ -35,7 +35,8 @@ def ratio(a, b):
 
 
 def check(checks, key, a, b):
-    value = rel(a, b)
+    aa, bb = arr(a), arr(b)
+    value = float(np.max(np.abs(aa-bb)))/max(float(np.max(np.abs(aa))), float(np.max(np.abs(bb))), 1e-300)
     checks[key] = float(value)
     assert value <= 1e-8, (key, value)
 
