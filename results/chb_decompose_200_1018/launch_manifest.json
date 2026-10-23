@@ -1,0 +1,106 @@
+{
+  "config": {
+    "run_id": "chb_decompose_200_1018",
+    "seeds": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "arms": [
+      "CH",
+      "CHB",
+      "CH_bfreeze",
+      "CH_wWD",
+      "CH_bWD"
+    ],
+    "tasks": 200,
+    "epochs": 400,
+    "steps_per_task": 30000,
+    "dims": [
+      3072,
+      100,
+      100,
+      10
+    ],
+    "batch": 16,
+    "R": 10,
+    "conds": [
+      "raw"
+    ],
+    "device": "cuda",
+    "lr": 0.001,
+    "lam": 0.1713,
+    "beta": 0.01,
+    "dtype": "float32",
+    "tf32": false,
+    "threads": 2,
+    "graph": true,
+    "window": [
+      181,
+      200
+    ],
+    "early_window": [
+      31,
+      50
+    ],
+    "m": 7,
+    "epsilon_eq": 0.005
+  },
+  "registration": {
+    "commit": "5c741be80fe5bfe812dd6cc32d1fba0cd6948e48",
+    "spec_sha256": "865bae69dad34496f9978e24ace590b48cac99bdee58c7f861b70e29e710c301",
+    "common_spec_sha256": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "prediction": "BIAS_STOP_SUFFICES",
+    "prediction_basis": "common spec §8; Issa execution instruction"
+  },
+  "git_hash": "8f82fc9fff3e3d521d4253792ed8a58228b5a835",
+  "source_sha256": {
+    "specs/spec_chb_decompose_200_1018.md": "865bae69dad34496f9978e24ace590b48cac99bdee58c7f861b70e29e710c301",
+    "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "src/chb_decompose_200_1018.py": "26dc9969d07e77d695453968d03115f0634dcd92f3f0d6c81e68b5dca40dc6c7",
+    "src/relu_doors_0919.py": "2478c8339decaee3aacb90ac7aa87f8cff6b49d2da30833c6e3dbea0dfa82da4",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "analysis/chb_decompose_200_1018/checks.py": "c135ff0b5f9a46c325cf091952e09e41c67fe29aa9e901d7c9fe68a39f4479ec",
+    "analysis/chb_decompose_200_1018/common.py": "a9942461bfc8959572762035bc1bec63dd72b328bb01167e250286754cc0f832",
+    "analysis/chb_decompose_200_1018/diagnostics.py": "93dce488b55612617573a19c09802c9dabd36a94620703903a0d32b9260649e7",
+    "analysis/chb_decompose_200_1018/launch.py": "31210a663ba400f90068f7a8839ac0277f818187a65fb4526ac6d3991df4e5c0",
+    "analysis/chb_decompose_200_1018/report.py": "0cd6972379c2dac594b2f6f7c11a4dda6e45bf0978cccc9937ae5ea7f1c6607c"
+  },
+  "checks_sha256": "5cf910a7118c76d06ee94e61eb6a7db9d449576a31b41f2cc7b68fe451a37195",
+  "data_dir": "/home/issan/Projects/claude/proj_004_drift/data/cifar10",
+  "data_sha256": {
+    "cifar-10-python.tar.gz": "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+  },
+  "reference_qualification": {
+    "status": "INELIGIBLE",
+    "natural_reproduction": false,
+    "reasons": [],
+    "arms": {
+      "CH": {
+        "csv_sha256": "d52224896792cfdbd5bb8fe33ca3d3f1733f7fef5bef01a82077fc04457784f6",
+        "provenance_sha256": "43c3cc78e29604a6b434994c7a7d9f43d1f86dc013344fc17972f148b6f12de8",
+        "torch": "2.13.0+cu130"
+      },
+      "CHB": {
+        "csv_sha256": "0a52ed5b834d7e6cc101f873fbb8ead2be3aadaa2a6d4c43b0d5109e275c17c6",
+        "provenance_sha256": "4209f957cf5e63b0e28c8e134dbd18c7afcf53684eaa3f40177c790758ba414e",
+        "torch": "2.13.0+cu130"
+      }
+    },
+    "manifest_sha256": "1a4a84ffa79f7ec582eeff7d8273376b302936aa63cd0ded5748c178d5f21cec",
+    "registration_commit": "e6d40977b69687eb49fb8d6d387b8c803c51fbf7",
+    "static_eligible": true,
+    "reuse_qualified": false,
+    "policy": "Do not mix unqualified historical means: rerun CH and CHB from task1 in this environment."
+  },
+  "adapted_run_sha256": "976a34ceba29e5a039c2bbe3d25df6cf1ef5d8d4a4095fd3159392264a3ddf62"
+}
