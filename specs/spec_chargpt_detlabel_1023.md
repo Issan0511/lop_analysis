@@ -28,7 +28,7 @@
 
 ### 2.1 対照 A2（α = 0.01 の C3-2）の参照値
 
-既存の記録（ブランチ `claude/chargpt_cl_1019` の `results/chargpt_cl_1019/M2/{C3,ReLUcap}/seed{0..9}/`）から、§7 の定義そのままで計算した。値は seed 間の中央値 [最小, 最大]。計算の script は `analysis/chargpt_detlabel_1023/prereg/` に置く（§10.1）。
+既存の記録（ブランチ `claude/chargpt_cl_1019` の `results/chargpt_cl_1019/M2/{C3,ReLUcap}/seed{0..9}/`）から、§7 の定義そのままで計算した。値は seed 間の中央値 [最小, 最大]。script は `analysis/chargpt_detlabel_1023/prereg/a2_table.py`、出力は `results/chargpt_detlabel_1023/prereg/a2_table.{json,txt}`。
 
 | 量 | A2（C3-2） | ReLUcap-2（参考） |
 | --- | --- | --- |
@@ -55,7 +55,7 @@
 
 ### 2.2 A2 の課題の中の重みの動き（保存 checkpoint から。学習なし）
 
-課題 t の更新 100 の状態と課題末の状態（どちらも追補 7 で保存済み）から、L0・L1 の up 行の変位 ‖w_i(10,000) − w_i(100)‖ を出した。課題の後半 5,000 更新の変位（J4 の主）は保存が無いので、§6.3 の再生で出す。
+課題 t の更新 100 の状態と課題末の状態（どちらも追補 7 で保存済み）から、L0・L1 の up 行の変位 ‖w_i(10,000) − w_i(100)‖ を出した（`prereg/a2_motion.py`・`a2_motion_alive.py`）。課題の後半 5,000 更新の変位（J4 の主）は保存が無いので、§6.3 の再生で出す。
 
 | 量（seed 内で窓の中央値、seed 間の中央値 [範囲]） | 課題 2〜10 | 課題 41〜50 | 課題 91〜100 |
 | --- | --- | --- | --- |
@@ -146,7 +146,7 @@ Fable の理由（依頼文から）:
 
 ### 4.3 連鎖の性質の見積もり（短い計算。学習なし）
 
-学習コード（ブランチ `claude/chargpt_cl_1019` の `src/chargpt_cl_1019.py`、blob cc524f85）の `ChainM` と `task_data_M` を、学習と同じ乱数の stream で呼んだ。遷移表は `np_gen(seed, "rule", task)`、系列は `cpu_gen(seed, "data", task)` の最初の 2 塊（500 更新 = 16,000 系列）である。対象は seed 0〜9 × 課題 1〜3 の 30 連鎖で、値は連鎖の間の中央値 [最小, 最大]。script は `analysis/chargpt_detlabel_1023/prereg/chain_stats.py`。
+学習コード（ブランチ `claude/chargpt_cl_1019` の `src/chargpt_cl_1019.py`、blob cc524f85）の `ChainM` と `task_data_M` を、学習と同じ乱数の stream で呼んだ。遷移表は `np_gen(seed, "rule", task)`、系列は `cpu_gen(seed, "data", task)` の最初の 2 塊（500 更新 = 16,000 系列）である。対象は seed 0〜9 × 課題 1〜3 の 30 連鎖で、値は連鎖の間の中央値 [最小, 最大]。script は `analysis/chargpt_detlabel_1023/prereg/chain_stats.py`、出力は `results/chargpt_detlabel_1023/prereg/chain_table.md`・`chain_stats_all.json`。
 
 | 量 | α = 0.01（A2） | α = 1e−3（A3） | α = 1e−4（A4） |
 | --- | --- | --- | --- |
@@ -202,7 +202,7 @@ Fable の理由（依頼文から）:
 
 各文脈で最頻の記号だけを出す連鎖は、65² 状態の上の写像 (a, b) → (b, f(a, b)) になる。乱写像の軌道は短い閉路に落ち、課題の中身がほとんど無くなる。
 
-A2 の箱の遷移表（α = 0.01、seed 0〜9 × 課題 1〜100 = 1,000 写像）の最頻の写像で数えた（`analysis/chargpt_detlabel_1023/prereg/argmax_all.py`）。
+A2 の箱の遷移表（α = 0.01、seed 0〜9 × 課題 1〜100 = 1,000 写像）の最頻の写像で数えた（`analysis/chargpt_detlabel_1023/prereg/argmax_all.py`、出力は `results/chargpt_detlabel_1023/prereg/argmax_all.{json,txt}`）。
 
 | 量（1,000 写像） | 平均 | 10 / 25 / 50 / 75 / 90% | 一様な乱写像の理論（N = 4,225） |
 | --- | --- | --- | --- |
@@ -401,7 +401,7 @@ seed ごとに次を出す。
 - ブランチ `claude/chargpt_detlabel_1023`（worktree `wt/chargpt_detlabel_1023`、origin/main から切った）。push と main への取り込みは親の確認の後。
 - 学習コード: `src/chargpt_cl_1019.py`・`src/chargpt_cl_1019_kune.py` に、ブランチ `claude/chargpt_cl_1019`（033679e0）の blob をそのまま写す。書き換えない。
 - 足すコード: `src/chargpt_detlabel_1023.py`。kune.py を import して部品を差し替える薄い wrapper（kune.py と同じ作り）で、中身は (r1)〜(r5) の記録器、π の読み込み、S2 の損失。
-- 登録前の計算: `analysis/chargpt_detlabel_1023/prereg/`（§2・§4.3・§5 の表の script と出力）。
+- 登録前の計算: script は `analysis/chargpt_detlabel_1023/prereg/`、出力は `results/chargpt_detlabel_1023/prereg/`（§2・§4.3・§5 の表。コマンドは `run_prereg.sh`）。
 - J6 の解析: `analysis/chargpt_detlabel_1023/j6/`。
 - 結果: `results/chargpt_detlabel_1023/`（`M2/A4`・`M2/A3`・`M2/S2`・`replay_A2`・`j6`・`judge.md`・`judge.json`）。1 ファイル 20 MB を超えるものと checkpoint は git に入れない。
 - 生データの退避先: `~/Projects/obsidian-research-data/chargpt_detlabel_1023/`。`results/chargpt_detlabel_1023/backup_manifest.json`（source・backup・bytes・sha256）を commit する（CLAUDE.md §4）。
