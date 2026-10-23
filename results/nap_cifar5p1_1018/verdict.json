@@ -1,23 +1,259 @@
 {
-  "run_id": "nap_cifar5p1_1018",
-  "status": "BLOCKED_CUDA",
-  "production_performance_obtained": false,
-  "blockers": [
-    "BLOCKED_CUDA",
-    "G0_ALL_PASS",
-    "G0_HOST_REPRODUCTION_PASS",
-    "G0_MUTATION_CHECKS_PASS",
-    "CHECKS_NOT_PRODUCTION_READY"
+  "status": "COMPLETE",
+  "primary": {
+    "KKT1": {
+      "label": "COMPARATOR_WINS",
+      "paired_mean": -0.27880448686599996,
+      "paired_median": -0.28034855847,
+      "differences_by_seed": {
+        "0": -0.30886217731999993,
+        "1": -0.25136218165999996,
+        "2": -0.2833733972,
+        "3": -0.27732371974000003,
+        "4": -0.2750881371800001,
+        "5": -0.29649839757999996,
+        "6": -0.25875001153999994,
+        "7": -0.28764422351999996,
+        "8": -0.2609775629599999,
+        "9": -0.28816505995999997
+      },
+      "median_interval": [
+        -0.29649839757999996,
+        -0.25875001153999994
+      ],
+      "median_interval_coverage": 0.978515625,
+      "holm_p": 0.00390625,
+      "p": 0.001953125,
+      "n_nonzero": 10,
+      "positive": 0,
+      "negative": 10,
+      "ties": 0
+    },
+    "SNA": {
+      "label": "COMPARATOR_WINS",
+      "paired_mean": -0.279694711236,
+      "paired_median": -0.27854567385,
+      "differences_by_seed": {
+        "0": -0.31346954913999997,
+        "1": -0.2625400663,
+        "2": -0.28205128184000006,
+        "3": -0.27504006585999996,
+        "4": -0.27379006028,
+        "5": -0.29306891041999994,
+        "6": -0.25917469103999996,
+        "7": -0.28423076197999986,
+        "8": -0.26959935783999994,
+        "9": -0.28398236765999996
+      },
+      "median_interval": [
+        -0.29306891041999994,
+        -0.2625400663
+      ],
+      "median_interval_coverage": 0.978515625,
+      "holm_p": 0.00390625,
+      "p": 0.001953125,
+      "n_nonzero": 10,
+      "positive": 0,
+      "negative": 10,
+      "ties": 0
+    }
+  },
+  "nap_window": {
+    "0": 0.33441506624,
+    "1": 0.41973557474000006,
+    "2": 0.36984775664,
+    "3": 0.36880608798000003,
+    "4": 0.37339743974,
+    "5": 0.38537660240000005,
+    "6": 0.42302082178000006,
+    "7": 0.38783654572000004,
+    "8": 0.40133814216,
+    "9": 0.3870192349
+  },
+  "R_difference_report_only": {
+    "0": -0.08905448506000002,
+    "1": -0.05664263037999989,
+    "2": -0.054951922839999945,
+    "3": -0.05316506586000003,
+    "4": -0.08927082950000004,
+    "5": -0.012548077079999942,
+    "6": 0.00016024486000010274,
+    "7": -0.028413454279999917,
+    "8": -0.033092947579999976,
+    "9": -0.09830127789999998
+  },
+  "comparator_qualifications": {
+    "R": {
+      "arm": "R",
+      "all_pass": true,
+      "eligible": true,
+      "errors": [],
+      "path": "/home/issan/Projects/claude/wt/nap_cifar5p1_1018/results/nap_cifar5p1_1018/current_runtime_comparators/R",
+      "per_task_sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5",
+      "provenance_sha256": "f120e9f8f0bf82dc665dd6d6171d043efc7589adcd1c584460da076965561bc1",
+      "original_git_hash": "d0f6d1f5b46faee0d4ad27df9fbf942e4f388d1b",
+      "data_sha256": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "verified_data_sha256": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "committed_artifacts": {
+        "per_task.csv": {
+          "path": "results/nap_cifar5p1_1018/current_runtime_comparators/R/per_task.csv",
+          "commit": "a00f342b30dba07d9aba5b087ac847b5c9dd9838",
+          "sha256": "3b7ca75d71a5e816718cce0e346e3115b0eee72bacc376df3ed1f33c1f90d7f5"
+        },
+        "provenance.json": {
+          "path": "results/nap_cifar5p1_1018/current_runtime_comparators/R/provenance.json",
+          "commit": "a00f342b30dba07d9aba5b087ac847b5c9dd9838",
+          "sha256": "f120e9f8f0bf82dc665dd6d6171d043efc7589adcd1c584460da076965561bc1"
+        }
+      },
+      "current_source_sha256": {
+        "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+        "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+      },
+      "historical_source_sha256": {
+        "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+        "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+      },
+      "integration_audit_sha256": "b8aeac0f0ec176411c423beb5ad52c0048050564b4de64db0608e8724ffa4543",
+      "qualified_at": "2026-10-17T17:25:00Z",
+      "seed_window": {
+        "0": 0.4234695513,
+        "1": 0.47637820511999995,
+        "2": 0.42479967947999997,
+        "3": 0.42197115384000006,
+        "4": 0.46266826924000004,
+        "5": 0.39792467948,
+        "6": 0.42286057691999995,
+        "7": 0.41624999999999995,
+        "8": 0.43443108974,
+        "9": 0.4853205128
+      }
+    },
+    "SNA": {
+      "arm": "SNA",
+      "all_pass": true,
+      "eligible": true,
+      "errors": [],
+      "path": "/home/issan/Projects/claude/wt/nap_cifar5p1_1018/results/nap_cifar5p1_1018/current_runtime_comparators/SNA",
+      "per_task_sha256": "b185069abaacd1cc5b1449cc6490a0cf97f2da5458a22b322ec1c6df48231177",
+      "provenance_sha256": "3e0597a8698d40c574544460d4a69cf9af4beafa9e00f223517d25c800c91dfd",
+      "original_git_hash": "a00f342b30dba07d9aba5b087ac847b5c9dd9838",
+      "data_sha256": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "verified_data_sha256": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "committed_artifacts": {
+        "per_task.csv": {
+          "path": "results/nap_cifar5p1_1018/current_runtime_comparators/SNA/per_task.csv",
+          "commit": "e407afff038efda20c99d226f1062b5f486321e5",
+          "sha256": "b185069abaacd1cc5b1449cc6490a0cf97f2da5458a22b322ec1c6df48231177"
+        },
+        "provenance.json": {
+          "path": "results/nap_cifar5p1_1018/current_runtime_comparators/SNA/provenance.json",
+          "commit": "e407afff038efda20c99d226f1062b5f486321e5",
+          "sha256": "3e0597a8698d40c574544460d4a69cf9af4beafa9e00f223517d25c800c91dfd"
+        }
+      },
+      "current_source_sha256": {
+        "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+        "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+      },
+      "historical_source_sha256": {
+        "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+        "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+      },
+      "integration_audit_sha256": "b8aeac0f0ec176411c423beb5ad52c0048050564b4de64db0608e8724ffa4543",
+      "qualified_at": "2026-10-17T17:27:02Z",
+      "seed_window": {
+        "0": 0.64788461538,
+        "1": 0.68227564104,
+        "2": 0.6518990384800001,
+        "3": 0.64384615384,
+        "4": 0.64718750002,
+        "5": 0.67844551282,
+        "6": 0.68219551282,
+        "7": 0.6720673076999999,
+        "8": 0.6709375,
+        "9": 0.67100160256
+      }
+    },
+    "KKT1": {
+      "arm": "KKT1",
+      "all_pass": true,
+      "eligible": true,
+      "errors": [],
+      "path": "/home/issan/Projects/claude/wt/nap_cifar5p1_1018/results/nap_cifar5p1_1018/current_runtime_comparators/KKT1",
+      "per_task_sha256": "4e24fe7f4f4a003e4d138f77dbe5e68c63fda5ed40db5b901400e84c1b9e9b3f",
+      "provenance_sha256": "a0d3367145df8418a433e8c4032cb27bd927a58f34b12f0f7aa9b7d2d1c545fe",
+      "original_git_hash": "e407afff038efda20c99d226f1062b5f486321e5",
+      "data_sha256": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "verified_data_sha256": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "committed_artifacts": {
+        "per_task.csv": {
+          "path": "results/nap_cifar5p1_1018/current_runtime_comparators/KKT1/per_task.csv",
+          "commit": "094489c30bcdf196946179ba07ed0e8cadd3a53f",
+          "sha256": "4e24fe7f4f4a003e4d138f77dbe5e68c63fda5ed40db5b901400e84c1b9e9b3f"
+        },
+        "provenance.json": {
+          "path": "results/nap_cifar5p1_1018/current_runtime_comparators/KKT1/provenance.json",
+          "commit": "094489c30bcdf196946179ba07ed0e8cadd3a53f",
+          "sha256": "a0d3367145df8418a433e8c4032cb27bd927a58f34b12f0f7aa9b7d2d1c545fe"
+        }
+      },
+      "current_source_sha256": {
+        "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+        "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+      },
+      "historical_source_sha256": {
+        "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+        "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+        "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+        "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+      },
+      "integration_audit_sha256": "b8aeac0f0ec176411c423beb5ad52c0048050564b4de64db0608e8724ffa4543",
+      "qualified_at": "2026-10-17T17:33:57Z",
+      "seed_window": {
+        "0": 0.6432772435599999,
+        "1": 0.6710977564,
+        "2": 0.65322115384,
+        "3": 0.6461298077200001,
+        "4": 0.6484855769200001,
+        "5": 0.68187499998,
+        "6": 0.68177083332,
+        "7": 0.67548076924,
+        "8": 0.6623157051199999,
+        "9": 0.67518429486
+      }
+    }
+  },
+  "prediction": "SNA/KKT1 OPEN_COMPARISON",
+  "window": [
+    21,
+    23,
+    25,
+    27,
+    29
   ],
-  "cpu_synthetic_all_pass": true,
-  "primary_comparisons": {
-    "NaP-KKT1": "NOT_RUN_OPEN_COMPARISON",
-    "NaP-SNA": "NOT_RUN_OPEN_COMPARISON"
-  },
-  "prediction": {
-    "vs_R": "IMPROVES_DIRECTION",
-    "vs_SNA": "OPEN_COMPARISON",
-    "vs_KKT1": "OPEN_COMPARISON"
-  },
-  "preflight_sha256": "ccbe1e7cfc48bf4a88a4211b8f954588c43e587da45f4af90248692701ecfaac"
+  "family": "2 two-sided exact sign tests; Holm alpha=.05",
+  "simultaneous_median_coverage_lower_bound": 0.95703125
 }

@@ -1,0 +1,69 @@
+{
+  "run_id": "nap_cifar5p1_1018",
+  "phase": "eval",
+  "status": "READY",
+  "blockers": [],
+  "cuda_available": true,
+  "torch": "2.13.0+cu130",
+  "cuda_build": "13.0",
+  "candidate": {
+    "name": "NaP",
+    "candidates": 1,
+    "linear_bias": false,
+    "output_bias": false,
+    "ln_affine": true,
+    "ln_eps": 1e-05,
+    "ln_axis": "per image, hidden=100",
+    "projection": "per-seed Frobenius sphere on W1/W2/W3 at t0",
+    "affine_projection": "joint gamma/beta sphere sqrt(100)",
+    "lr": 0.0001,
+    "dims": [
+      3072,
+      100,
+      100,
+      100
+    ],
+    "cond": "std",
+    "steps": 780,
+    "tasks": 30,
+    "batch": 32,
+    "R": 10
+  },
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "git_hash": "d0f6d1f5b46faee0d4ad27df9fbf942e4f388d1b",
+  "spec_sha256": "5c08b0420af02a32dd691f5eedc7eacfcb9f0a9a0beb817688be3b40e21cadff",
+  "common_spec_sha256": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+  "source_sha256": {
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/nap_cifar5p1_1018.py": "2c335d5301ebbda3fb2d674ef1f1af73b29aacacf235f30adf5df49b6a5b9acc",
+    "analysis/nap_cifar5p1_1018/checks.py": "5a33528b8548314d34f65197f808684f958a27677616084d03e2bf5d83fa9d99",
+    "analysis/nap_cifar5p1_1018/verdict.py": "018bb449f5404e57e7aa6a0911ee2269bb647e44ff04bf8bfddaca1a4dea5f50"
+  },
+  "integration_audit": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json",
+  "integration_audit_sha256": "b8aeac0f0ec176411c423beb5ad52c0048050564b4de64db0608e8724ffa4543",
+  "checks_sha256": "43a50251be2bbc1c8fb6b33e8cd0abe271fc91b92d53c473aefe7bc704dfb55c",
+  "data_sha256": {
+    "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+  },
+  "attempted_at": "2026-10-17T17:18:42Z",
+  "prediction": {
+    "vs_R": "IMPROVES_DIRECTION",
+    "vs_SNA": "OPEN_COMPARISON",
+    "vs_KKT1": "OPEN_COMPARISON"
+  }
+}
