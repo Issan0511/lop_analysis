@@ -45,3 +45,24 @@ clipping is introduced by this diagnostic.
 
 Results are descriptive over 10 saved seeds. A local diagnostic intervention
 cannot establish the historical learning process that created the state.
+
+Two exploratory follow-ups are distinct:
+
+- `components.py`: freezes an exact positive-semidefinite softmax secant matrix
+  and splits the prediction into self output, other outputs, and fixed residual.
+  This attribution is exact but is not a unique attribution of a nonlinear map.
+- `loading_sources.py`: instead splits the construction of F into FFN units and
+  the fixed residual, using F=B T^T+F_r and the Gram matrix G=T^T T.
+  The diagonal loading source is not identical to the lemma's self form.
+
+The lemma additionally averages old labels with features, derivatives, K and
+kappa fixed, removes the old-label-correlated readout remainder, and takes the
+confident-correct limit. A positive globally projected kappa alone does not
+establish these conditions. Input-index off-diagonal terms in that proof must
+not be identified with unit-index cross terms in these diagnostics.
+
+Follow-up gates use `gate`, then full runs use `run`. The corresponding reports
+are `report_components.py`, `combine.py`, and `report_loading.py`. The third
+stage reads the verified first-stage raw arrays from the archive named in
+backup_manifest.json. Retain that archive for reproduction. `plot.py` draws
+only the prediction-side decomposition, not the theoretical self form.

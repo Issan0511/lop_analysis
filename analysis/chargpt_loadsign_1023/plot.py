@@ -15,7 +15,7 @@ series=[('s_other0_residual0_radial0','Self output only','#1e8d68'),
         ('s_other0_residual1_radial0','+ Fixed residual input','#a08a37'),
         ('s_other1_residual1_radial0','+ Other unit outputs','#dc8a35'),
         ('s_other1_residual1_radial1','+ LN variance derivative (observed)','#3765a5')]
-fig,axes=plt.subplots(1,2,figsize=(11,4.8),sharey=True)
+fig,axes=plt.subplots(1,2,figsize=(11,5.4),sharey=True)
 for ax,arm in zip(axes,['C3','ReLUcap']):
     for j,(key,label,color) in enumerate(series):
         xs=np.arange(3)+(j-1.5)*.09
@@ -29,9 +29,9 @@ for ax,arm in zip(axes,['C3','ReLUcap']):
     ax.grid(axis='y',alpha=.15)
 axes[0].set_ylabel('Fraction of alive units with a sinking push')
 handles,labels=axes[0].get_legend_handles_labels()
-fig.legend(handles,labels,loc='lower center',bbox_to_anchor=(.5,-.005),ncol=2,frameon=False,fontsize=9)
-fig.suptitle('Fixed-state additive decomposition of the loading signal',fontsize=13)
-fig.text(.5,.02,'Dots: 10 seed-specific window medians. Bars: seed range. Exploratory decomposition; no training.',ha='center',fontsize=8,color='#555')
-fig.tight_layout(rect=[0,.12,1,.95])
+fig.legend(handles,labels,loc='lower center',bbox_to_anchor=(.5,.045),ncol=2,frameon=False,fontsize=9)
+fig.suptitle('Prediction-side decomposition of the loading signal',fontsize=13)
+fig.text(.5,.015,'Dots: 10 seed-specific window medians. Bars: seed range. Exploratory decomposition; no training.',ha='center',fontsize=8,color='#555')
+fig.tight_layout(rect=[0,.19,1,.95])
 fig.savefig(OUT/'signal_components.png',dpi=170,bbox_inches='tight')
 fig.savefig(OUT/'signal_components.svg',bbox_inches='tight')
