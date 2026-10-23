@@ -27,7 +27,7 @@ def main():
                     except ValueError:pass
         return rows
     full,scalar=cv(full),cv(scalar)
-    seedrows=[];motion=[];j={};sensitivity=[]
+    seedrows=[];motion=[];j={};sensitivity=[];averages=[]
     for arm in ['C3','ReLUcap']:
         for seed in range(10):
             both=[read('full',arm,seed,t) for t in [39,100]]
@@ -41,6 +41,12 @@ def main():
             seedrows.append(sr)
             for task in [39,100]:
                 a=read('full',arm,seed,task)
+                sa=read('scalar',arm,seed,task);mask=sa['alive'].astype(bool)
+                av=dict(arm=arm,seed=seed,task=task,n_alive=int(mask.sum()))
+                for e in ['fit','switch']:
+                    av['own_'+e+'_mean']=float(sa['SGD_'+e+'_r'][mask].mean())
+                    av['allparam_sample_'+e+'_mean']=float(a['allparam_'+e].mean())
+                averages.append(av)
                 for tol in [1e-8,1e-12]:
                     cr=Q.compare(a['q_1e-10'],a[f'q_{tol:g}'])
                     sensitivity.append(dict(arm=arm,seed=seed,task=task,tol=tol,n_main=int(np.isfinite(a['q_1e-10']).sum()),n_alternative=int(np.isfinite(a[f'q_{tol:g}']).sum()),**cr))
@@ -74,12 +80,14 @@ def main():
     for label,p in [('C3_J1',.65),('C3_J2_fit',.15),('C3_J2_switch',.35),('C3_joint_t100',.30)]+[(f'C3_J3_{k}_actual',.25) for k in ['39_to_100','head100','body100']]:
         y=int(j[label]['passed']);predictions.append(dict(test=label,probability=p,outcome=y,brier=(p-y)**2))
     Q.csvwrite(OUT/'seed_comparisons.csv',seedrows);Q.csvwrite(OUT/'motion.csv',motion);Q.csvwrite(OUT/'sensitivity.csv',sensitivity)
+    Q.csvwrite(OUT/'mean_forces.csv',averages)
     Q.dump(OUT/'judge.json',dict(judgments=j,predictions=predictions,mean_brier=np.mean([p['brier'] for p in predictions]),
          scope='Conditional least-squares geometry. No causal identification of actual GPT training.',training_steps=0))
     text=['# L0 の相殺後の押しを相2と照合した結果','',
       '保存状態のみ。C3/ReLUcap各10seed。特徴上100状態、後段の注意・FFN・LNを含む40状態。spec登録: 160259ae。',
       '', '## 主判定', '',table(['検査','C3 成立seed','判定'],[[k,str(j['C3_'+k]['count'])+'/10','○' if j['C3_'+k]['passed'] else '×'] for k in ['J1','J2_switch','J2_fit','J3_39_to_100_actual','J3_head100_actual','J3_body100_actual']]),'',
-      'J1は他unitを除いた局所線形モデルの期待値の符号。自己項正値だけとは異なるが、それだけでは実際の合計が沈む理由にならない。J2は実際の合計に対する順位相関>0.5かつbalanced accuracy>0.65を8/10seed。fitとswitchは別問題として判定した。', '', '## 後段を通した相殺後の予測（seed範囲）','']
+      'J1は他unitを除いた局所線形モデルの期待値の符号。自己項正値だけとは異なるが、それだけでは実際の合計が沈む理由にならない。J2は実際の合計に対する順位相関>0.5かつbalanced accuracy>0.65を8/10seed。fitとswitchは別問題として判定した。', '',
+      '**J2/J3は、この保存状態へ適用した近似が個々のunitの合計・変化まで予測するかという追加の経験的基準である。相2の定理は旧ラベル平均についての命題であり、単一課題のunit順位相関や現課題fit勾配の符号を保証しない。基準未達を相2そのものの反証と読まない。特徴を固定して旧ラベルだけ変えた実際の学習ensembleはこの保存状態には存在しない。**', '', '## 後段を通した相殺後の予測（seed範囲）','']
     rows=[]
     for arm in ['C3','ReLUcap']:
         for task in [39,100]:
@@ -90,6 +98,17 @@ def main():
       '## seed別：課題39/100末を結合したunit順位相関と符号精度','']
     text += [table(['腕','seed','ρ fit','BA fit','ρ switch','BA switch','ρ 全parameter fit','ρ 全parameter switch'],[[r['arm'],r['seed'],ft(r['fit_rho']),ft(r['fit_balanced_accuracy']),ft(r['switch_rho']),ft(r['switch_balanced_accuracy']),ft(r['allparam_fit_rho']),ft(r['allparam_switch_rho'])] for r in seedrows]),'',
       'own-WはL0の当該up行への合計勾配。全parameterは入力を変える上流parameterも含めたSGDのr全微分。Adam固定分母の特徴上の結果はstates.csv/motion.csvに別記。', '',
+      '## 合計の平均も確認（記録、判定外）','']
+    rows=[]
+    for arm in ['C3','ReLUcap']:
+        for task in [39,100]:
+            aa=[r for r in averages if r['arm']==arm and r['task']==task]
+            row=[arm,task]
+            for key in ['own_fit_mean','own_switch_mean','allparam_sample_fit_mean','allparam_sample_switch_mean']:
+                row.extend([f'{np.mean([r[key] for r in aa]):.4g}',str(sum(r[key]>0 for r in aa))+'/10'])
+            rows.append(row)
+    text += [table(['腕','課題末','own fit平均','正seed','own switch平均','正seed','全parameter fit平均','正seed','全parameter switch平均','正seed'],rows),'',
+      'ownは各seed全alive unitの平均をseed間で等重み平均。全parameterは事前抽出32unitの平均。正が沈める向き。ここでもseed間で特徴・課題が異なるので、同じ特徴を固定した旧ラベル平均そのものではない。正unitの割合だけで期待の正負を判断しないための記録である。', '',
       '## 特徴上の予測：何を除くと符号が変わるか','']
     rr=[]
     for arm in ['C3','ReLUcap']:
