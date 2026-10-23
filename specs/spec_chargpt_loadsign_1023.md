@@ -119,3 +119,78 @@ Issa「一致したら更新することがない」「実装はどうだった�
 同じ現課題probeで、旧ラベルのCE誤差p-yを使う押しもfull/loadで記録する。旧課題の正答率、真ラベル確率、最大確率、entropy、CE、生成過程の条件付きentropy Hも出す。
 後期s_loadが入力を揃えるだけで>=.75かつ元より>=.20となるseedが8/10以上なら入力分布変更で回復と記録。元の事前判定は変えない。旧課題CEの勾配と切替p-uの勾配を混同しない。
 gate8状態で新ラベル期待full/loadと旧ラベルCE fullをautogradに照合、相対誤差1e-10以内。CPU倍精度、保存状態のみ。結果はprobe_control_states/windows.csvへ、unit配列は作らずコードから再現する。
+
+## 10. 読み出しの整列・課題間回転とELR（第五段階、測定前登録）
+
+2026-10-23夕、Fableからの依頼。問いは「後期に他unitから戻る項が逆向きになるのは、回転の凍結で読み出し方向が現課題の装填に追従しなくなったためか」。既存判定は変えない。新規学習・optimizer・APIワーカー・サブエージェントなし。
+
+### 10.A 整列の量を型の合う形に定義する
+
+§8と同じ700状態、L1、aliveは現課題probeでz>0が一度でもあるunit。
+勾配probeは元の独立一様文字列、誤差は元のheadのp-u。H1監査のmatched-inputには変更しない。
+T_iは128次元、B_jは65クラスのベクトルなので、Σ_{j≠i}T_j B_j^Tは行列であり、そのままT_iとのcosや正負は定義できない。
+§8の他unitのdirect押しと符号を厳密に照合するため、クラス軸を既存の係数で縮約する：
+
+    E_i = mean_n[(K_n gate_ni / sigma_n) e_n]             (65次元)
+    R_i = Σ_{j≠i} T_j <B_j,E_i>                         (128次元)
+    alpha_i = cos(T_i,R_i)
+    S_other,direct,i = κ <T_i,R_i>。
+
+R_iには自己unitと固定残差F_rを入れない。κ>0なのでalphaの符号とS_other,directの符号が一致する。
+これは元の押しに対する整列の帳簿で、誤差・gate・K・sigmaを含む。headの幾何だけの独立指標とは呼ばない。
+ノルム0のcosは欠測、件数を保存。主のcos>0割合は全aliveを分母とし、欠測は正に数えない。有限cosのみの割合も記録。
+各状態のalive unitのcos中央値・q10/q25/q75/q90・cos>0割合を出す。
+早期1..9・中期39..50・後期89..100について、状態内の統計→seed内窓中央値→10 seedの範囲の順で集約。
+unit配列も保存するので分布を再集計可能にする。
+
+### 10.A.2 回転の定義と相関
+
+同一unit indexを対応させ、前課題末t-1と当課題末tで
+rotT=1-cos(T_i(t-1),T_i(t))、rotW=1-cos(Wup_i(t-1),Wup_i(t))を計算。
+T=Gamma P UなのでrotTには最終LN gammaの変化も入る。記録としてraw down列UのrotUも計算する。
+これは課題間の端点変位であり、課題中の回転の累積量ではない。小ささだけで学習中の凍結とは断定しない。
+1課題差の保存ペアのみ使う（2..10,40..50,90..100）。10→25、25→39、50→89は除く。
+主相関は各seedの後期90..100で、現時点aliveかつ有限なペアをunitごとに集め、3ペア以上あるunitのalpha中央値・rot中央値のSpearman。
+tiesは平均順位、定数列・3unit未満は欠測。n_units/n_unit_task_pairsを必ず報告。
+副記録: unitごとのalpha<0の頻度とrot中央値、各課題内Spearmanの窓中央値、unit×課題をpoolした相関。いずれも独立サンプルの検定・p値として扱わない。
+早期・中期も同じ集約で記録。前課題にもaliveのunitだけに限定した相関も感度分析として記録。
+
+符号の注意: 「整列が負/低いほど回転が小さい」はrho(alpha,rot)>0を予測する。
+依頼の「Spearmanが負」は、**不整列度m=-alpha**を用いたrho(m,rot)<0として採点し、rho(alpha,rot)も併記する。測定後に定義を反転しない。
+
+### 10.B ELRの保存状態
+
+測定前のファイル棚卸しで、既存worktree
+~/Projects/claude/wt/chargpt_cl_1019/results/chargpt_cl_1019/row5/elr/elr/
+のseed5..9にstate_task50.ptとstate_task100.ptを確認。seed0..4はこの場所でcheckpointが見つからなかった。
+元のworktree・checkpointは変更しない。resultsとobsidian-research-dataのmanifest・bundleの一覧も検査し、存在/欠落の範囲を記録する。
+後期主比較は手元で利用できるseed5..9の課題100末。課題50末は補助。C3/ReLUcapも同じseed・同じtaskの値に揃える。
+ELRはL0のphi=ReLU(k*z)で、kはstate_dictに保存されないlambdaの閉包。
+原コードrow5_elr.pyに従い、同じseedのC3 unit_stats.npzのfloat32行ノルム比から課題末kを復元する。
+L1は原形のまま。L0の行ノルムを新たに射影する操作や学習はしない。
+保存per_task.csvのk中央値・L0行ノルム、layer_stats.csvのL1 chain統計とforward復元を照合（数値rtol1e-4+atol1e-6、分率は1/512以内）。
+再現しなければBを止め、Aのみ完了して理由を記録する。5seedしかないことを10seedへ一般化しない。
+同じF分解でself/other/residualのdirect・exact、radial、合計s_loadを出す。n_aliveと大きさも併記する。
+モデル復元後のL1 s_loadは元のfixed_error_gradientsを用いたautogradと照合する。
+
+### 10.C 予測と採点（Fableの確率を保持）
+
+- P1: 早期C3/ReLUcapともcos>0が.95以上（0.7）。運用上、各腕でseed窓中央値が閾値を満たす数を報告し、両腕とも8/10以上なら支持。
+- P2: 後期C3のcos>0が.40..60（0.7）。該当8/10以上なら支持。
+- P3: 後期ReLUcapのcos>0が.90以上（0.7）。該当8/10以上なら支持。
+- P4: 後期C3で不整列度と回転のrho<0が8/10以上（0.5）。rotT主、rotW・rotUは別々に採点する。
+- P5: ELR後期L1の他unit項は沈める割合.8以上（0.5）。同じdirect他unit成分で利用可能なseedの該当数/分母を報告。10seedの判定は保留し、利用可能な状態に限る採点を明示する。
+
+P1〜P3の正負割合は§8の既測定s_other,directと恒等的に同じなので、独立な予測成功/再現とは数えない。
+新しく得るのはcosの大きさ・分布、課題間回転との結び付き、ELRでの分解。
+因果の断定はしない。「回転が小さいunitほど不整列」という共変動を測る検査。
+
+### 10.D 検証と置き場
+
+seed0両腕の35状態で、§8のraw_loadingと全成分の押し・aliveを照合。
+全700状態でもR_i内積と既存other,direct、成分和を相対誤差1e-10以内で確認し、符号は厳密一致を要求。
+R_iは行列積で作り、gateでは独立のj≠i明示和と数unitで照合する。回転・rank tiesも小型テンソルで検算。
+sourceは既存measure.py/load10.py、checkpointは既存tarからメモリへ。CPU float64、8 threads。開始前pgrep/nvidia-smi、他の走は止めない。
+code: analysis/chargpt_loadsign_1023/rotation_*.py。results/chargpt_loadsign_1023/rotation/ にstates/windows/correlations/ELR/summary/judge/gate/provenanceを置く。
+生unit配列を同じ実験名のobsidian-research-dataへ退避し、既存backup_manifestを保持して追補分のmanifestを別途commit。
+既存結果ノートへMCPで追記。mainへmerge/push後、自分のworktree/branchを削除する。

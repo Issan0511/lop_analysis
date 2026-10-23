@@ -117,3 +117,11 @@ Fと同じ現課題文字列に勾配probeを揃え、新ラベル期待p-uは�
 - vault結果ノート: 可塑性喪失/測定/文字GPTで継続学習_装填成分の押しが後期に半々になる経路_結果_1023.md。
 
 図: [signal_components.png](signal_components.png)。全数値: states.csv、components_states.csv、recombination_states.csv、各windows.csv。事前判定: judge.json。
+
+## 第五段階：読み出し整列・課題末間回転・保存ELR（spec§10）
+
+C3後期では、他unit装填との整列が低いunitほど読み出しTの回転が小さい（seed別Spearman 0.0193–0.7888、10/10正）。ただしReLUcapにも弱い同方向の相関があり、読み出しの回転自体は両腕で後期に小さくなる。回転の小ささだけで腕の整列差を説明することはできない。
+
+ELRはseed5–9の課題50/100末の保存状態を復元。課題100末の他unit direct項の沈める割合は0.3770–0.5762で、≥0.8予測は0/5。alive数9–512を併記し、10seedへの一般化は保留した。新規学習なし。
+
+詳しい読みは[第五段階の結論](rotation/conclusion.md)、全表は[summary](rotation/summary.md)、予測採点は[judge](rotation/judge.md)。元の判定は変更していない。生unit配列と借用ELR入力の複製は[追補manifest](rotation/backup_manifest.json)に保存。
