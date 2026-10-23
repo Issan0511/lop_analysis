@@ -1,0 +1,165 @@
+{
+ "run_id": "chargpt_cl_1019",
+ "host": "byakko.bsd.bbtec.net",
+ "numpy": "2.5.1",
+ "python": "3.12.7",
+ "box": "M",
+ "arm": "C3",
+ "arm_cfg": {
+  "norm": "ln",
+  "ln_bias": false,
+  "lin_bias": false,
+  "lr": 0.001
+ },
+ "seed": 2,
+ "tasks": 2,
+ "n_per_task": 10000,
+ "alpha": 0.01,
+ "engine": "graph",
+ "git_hash": "db44d16550acda50b5a9219327f99ff26048af5f",
+ "dirty_src": [
+  "?? src/chargpt_cl_1019.py",
+  "?? src/chargpt_cl_1019_kune.py",
+  "?? src/chargpt_detlabel_1023.py"
+ ],
+ "git_hash_at_end": "db44d16550acda50b5a9219327f99ff26048af5f",
+ "torch": "2.13.0+cu130",
+ "cuda": "13.0",
+ "device": "NVIDIA GeForce RTX 5070 Ti",
+ "init_sha": "d24ddebf7e14e50298a6a07c5863a2ff146ec403fec4befaca6d926b34d5bdcd",
+ "final_sha": "b085ab4348f2f15ddc4d4b29f00b3b7258fda8ca2cf44190afc914cb1ead5e99",
+ "tasks_info": [
+  {
+   "task": 1,
+   "data_sha": "0015142baf3aa7246a24e3615fca53e1d91b860f04c0c54bc3fae7c267b51aa8",
+   "rule_sha": "4f0b92338fc1c0cb0fa8cf871ceded37bacd3d47b96a627a8e72c8943ee7a6a3",
+   "H": 0.7263794183206621,
+   "probe_sha": "a83f5974ab9937738890841bce2489b9d5905cfd300d2c823bec4c928d11a402",
+   "pi_iters": 555
+  },
+  {
+   "task": 2,
+   "data_sha": "a157d19ac4e6c852b81a60f22d03ba6f07768870b123df74e1f2242555814ae5",
+   "rule_sha": "7496656b7af70ca2526559b29a63676753b43a866bd5b511f566c2b422d016da",
+   "H": 0.7179329525131071,
+   "probe_sha": "60a076257278dc523004925df727dae81b50eb7fc34f617e79cc920a45383123",
+   "pi_iters": 258
+  }
+ ],
+ "data_W_sha256": null,
+ "W_window_starts": null,
+ "W_probe_idx": null,
+ "probe_uniform_sha": "c40079961e8a15db0587fbbd0c2c2c2d30112a5379bb6f5ff4792c79431b7c49",
+ "stream_seed_example": {
+  "init": 7609058965232205710,
+  "rule_t1": 7494197037872579627,
+  "data_t1": 3911637534053736163
+ },
+ "within_tasks": [],
+ "fresh_tasks": [],
+ "wall_sec": 134.38847994804382,
+ "task_secs": [
+  65.23860311508179,
+  64.81282758712769
+ ],
+ "argv": [
+  "src/chargpt_detlabel_1023.py",
+  "run",
+  "--seed",
+  "2",
+  "--box",
+  "M",
+  "--arm",
+  "C3",
+  "--tasks",
+  "2",
+  "--n_per_task",
+  "10000",
+  "--alpha",
+  "0.01",
+  "--fresh_tasks",
+  "--within_tasks",
+  "--out",
+  "/home/kubo/project/Nakatsuka/lop_detlabel/results/chargpt_detlabel_1023/checks/W/timing4/seed2"
+ ],
+ "n_layer": 2,
+ "decomp_ckpt": true,
+ "ckpt_tasks": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  25,
+  39,
+  40,
+  41,
+  42,
+  43,
+  44,
+  45,
+  46,
+  47,
+  48,
+  49,
+  50,
+  89,
+  90,
+  91,
+  92,
+  93,
+  94,
+  95,
+  96,
+  97,
+  98,
+  99,
+  100
+ ],
+ "detlabel": {
+  "spec": "specs/spec_chargpt_detlabel_1023.md",
+  "target": "sample",
+  "recorder": true,
+  "online_aux_meaning": "same as loss (sample CE)",
+  "pi_dir": null,
+  "pi_files_loaded": 0,
+  "pi_source_counts": {
+   "file": 0,
+   "computed": 2,
+   "unknown": 0
+  },
+  "gpu_concurrency": 4,
+  "pi_mode": "in-run+gpu_parallel4",
+  "checks_mode": "stop",
+  "chain_fail_tasks": [],
+  "chain_B_max": 2.5080508812531798e-12,
+  "files": {
+   "chargpt_cl_1019.py": {
+    "sha256": "35f86e071cf354ce8ce8c9776e3d24bd91160a233727e78ff92ac732b7fe853c",
+    "git_blob": "cc524f85d5f2d9813a272abb6b9476b065f1c17b"
+   },
+   "chargpt_cl_1019_kune.py": {
+    "sha256": "cacbe6001171735b119b60783023b9e1695b2f8a85baaa7172f0640c973854e8",
+    "git_blob": "272e75548fef16d364c464327c8e44d034b9cbb2"
+   },
+   "chargpt_detlabel_1023.py": {
+    "sha256": "76447aa7bc6cf071f98126e6adc8a5a9498f0c5ce7c56db98202c1713a96fb10",
+    "git_blob": "fe5887b39de0ad13f4079758166a240b32a7e1be"
+   }
+  },
+  "wall_sec_wrapper": 135.20184206962585,
+  "motion_quantities": [
+   "net5k",
+   "path5k",
+   "net100",
+   "rot5k",
+   "norm5k"
+  ]
+ },
+ "detlabel_complete": true
+}
