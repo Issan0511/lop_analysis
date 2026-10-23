@@ -1,5 +1,11 @@
 # L0 self-output force
 
+Interpretation correction (2026-10-23): the source-removal criterion does not
+test whether the remainder vanishes in the old-label expectation required by
+the paper's H1. The local `J_i^T H J_i a_i` source is a different decomposition.
+The original claim of support for H1/a cause of L0 sinking is withdrawn; measured
+values and preregistered criterion outcomes are retained. See `conclusion.md`.
+
 Saved-state only, no optimizer, no parameter update. Preregistered in
 `specs/spec_chargpt_l0force_1023.md` (initial c7561318; full-path extension ba5c94b4).
 
