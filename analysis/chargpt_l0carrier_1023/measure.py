@@ -30,7 +30,8 @@ def sha(p):return M.sha(p)
 
 
 def check(delta,*scales):
-    absolute=float(delta.abs().max());relative=M.relmax(delta,*scales)
+    absolute=float(delta.abs().max())
+    relative=M.relmax(delta,*scales) if any(float(s.abs().max())>0 for s in scales) else None
     assert absolute<=1e-10,(absolute,relative)
     return absolute,relative
 
