@@ -1,0 +1,80 @@
+{
+  "status": "COMMANDS_COMPLETED",
+  "pid": 1065349,
+  "started_at": "2026-10-18T00:39:54.379803+00:00",
+  "audit_sha256": "b8aeac0f0ec176411c423beb5ad52c0048050564b4de64db0608e8724ffa4543",
+  "source_identity": {
+    "cnn_chprime_bias_1018": "352e6981640c162425ca05627b17996a760fe4e2\nf08804e36ad376329072a9ea8951087e00b80a3c\n91baa5220a2217b07bc052568718932db0fc8ce1\n"
+  },
+  "plan": {
+    "cnn_chprime_bias_1018": [
+      [
+        "CHf",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "src/cnn_chprime_bias_1018.py",
+            "run",
+            "--arm",
+            "CHf",
+            "--out",
+            "results/cnn_chprime_bias_1018/CHf"
+          ],
+          "lock": true
+        }
+      ],
+      [
+        "CHf_B",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "src/cnn_chprime_bias_1018.py",
+            "run",
+            "--arm",
+            "CHf_B",
+            "--out",
+            "results/cnn_chprime_bias_1018/CHf_B"
+          ],
+          "lock": true
+        }
+      ],
+      [
+        "verdict",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "analysis/cnn_chprime_bias_1018/verdict.py"
+          ],
+          "lock": false
+        }
+      ]
+    ]
+  },
+  "stages": [
+    {
+      "run": "cnn_chprime_bias_1018",
+      "name": "CHf",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-18T00:39:54.380144+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/cnn_chprime_bias_1018_CHf_1065349.log",
+      "finished_at": "2026-10-18T01:10:12.146082+00:00"
+    },
+    {
+      "run": "cnn_chprime_bias_1018",
+      "name": "CHf_B",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-18T01:10:12.146951+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/cnn_chprime_bias_1018_CHf_B_1065349.log",
+      "finished_at": "2026-10-18T02:20:01.371543+00:00"
+    },
+    {
+      "run": "cnn_chprime_bias_1018",
+      "name": "verdict",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-18T02:20:01.372674+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/cnn_chprime_bias_1018_verdict_1065349.log",
+      "finished_at": "2026-10-18T02:20:29.382505+00:00"
+    }
+  ],
+  "finished_at": "2026-10-18T02:20:29.382882+00:00"
+}

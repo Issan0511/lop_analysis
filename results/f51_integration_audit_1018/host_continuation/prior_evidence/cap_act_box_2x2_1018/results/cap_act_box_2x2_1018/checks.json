@@ -1,0 +1,124 @@
+{
+  "run_id": "cap_act_box_2x2_1018",
+  "started_utc": "2026-10-17T16:29:18Z",
+  "checks": {
+    "S-act": {
+      "status": "PASS",
+      "pass_": true
+    },
+    "S-capb": {
+      "status": "PASS",
+      "pass_": true
+    },
+    "S-cap": {
+      "status": "PASS",
+      "pass_": true
+    },
+    "S-capb-training": {
+      "status": "PASS",
+      "pass_": true
+    },
+    "S-reuse-host-F51": {
+      "status": "PASS",
+      "pass_": true
+    },
+    "S-reuse-host-RC": {
+      "status": "PASS",
+      "pass_": true
+    },
+    "S-lr": {
+      "status": "PASS",
+      "pass_": true
+    },
+    "S-verdict": {
+      "status": "PASS",
+      "pass_": true
+    },
+    "S-calibration-admission": {
+      "status": "PASS",
+      "pass_": true
+    },
+    "S-stream-pairing": {
+      "status": "PASS",
+      "pass_": true
+    },
+    "S-CUDA-graph-R10": {
+      "status": "BLOCKED_CUDA",
+      "pass_": false,
+      "reason": "No CUDA device: graph/R10 checks not executed"
+    }
+  },
+  "mutations": {
+    "M-act-ReLU-forward-remains": {
+      "detected": true,
+      "reason": "AssertionError('native forward')"
+    },
+    "M-act-diagnostic-only-ELU": {
+      "detected": true,
+      "reason": "AssertionError('diagnostic native derivative')"
+    },
+    "M-cap-inflate-small-rows": {
+      "detected": true,
+      "reason": "AssertionError('under rows byte invariant')"
+    },
+    "M-cap-concatenated-wb-norm": {
+      "detected": true,
+      "reason": "AssertionError('under rows byte invariant')"
+    },
+    "M-cap-forgot-bias-scale": {
+      "detected": true,
+      "reason": "AssertionError('same W-only coefficient on bias')"
+    },
+    "M-cap-initialization-radius": {
+      "detected": true,
+      "reason": "AssertionError('radius must equal actual own t1 endpoint')"
+    },
+    "M-cap-update-radius-every-task": {
+      "detected": true,
+      "reason": "AssertionError('radius must only be captured once')"
+    },
+    "M-lr-clip-q-at-one": {
+      "detected": true,
+      "reason": "AssertionError('no clipping >1')"
+    },
+    "M-lr-evaluation-seeds": {
+      "detected": true,
+      "reason": "KeyError((100, 1))"
+    },
+    "M-lr-hidden-cap": {
+      "detected": true,
+      "reason": "AssertionError('lr_only wrote cap')"
+    },
+    "M-verdict-nonsig-is-no-rescue": {
+      "detected": true,
+      "reason": "AssertionError('p non-significant is not NO_RESCUE')"
+    },
+    "M-verdict-easy-in-hard-window": {
+      "detected": true,
+      "reason": "AssertionError('hard window contamination')"
+    }
+  },
+  "cpu_checks_pass": true,
+  "all_pass": false,
+  "source_sha256": {
+    "analysis/cap_act_box_2x2_1018/checks.py": "ea6c0494b0904b1352eb3984234fd05ef42bca53c98f08581a8ba065bdfc8457",
+    "analysis/cap_act_box_2x2_1018/verdict.py": "1ab90bd898b048a150db13682fe87667d3a841b4c94b6994367705704ad585e4",
+    "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
+    "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
+    "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0",
+    "specs/spec_cap_act_box_2x2_1018.md": "182e7f338fa0d62c40c74d7d7c0c96b2729d12bec8f934b1694713339c869608",
+    "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "src/cap_act_box_2x2_1018.py": "ac8842918f5af928ee88767c5a1a4dc37cea7acb5d09ddfdad347dfff1086676",
+    "src/cap_cifar5p1_1007.py": "94d3afabfde60a4d7d5bf48b1abd50645f3bef92b9614210237f6e2a836580aa",
+    "src/cap_cifar_ee_0920.py": "a0c69a5b6c141a06c427f4a42db784962865ee87be4fc4ed3b1737dd0d4af715",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/cifar_interventions_0920.py": "d079b5185249114d035afcce69d9636ef1db2807e642c3fd879cb2168907f37f",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+  },
+  "tolerance_basis": "Byte equality on identical native arithmetic; row radius uses cap_cifar5p1_1007.monitor_ Higham gamma plus float32 ratio/product and underflow bound, never performance thresholds.",
+  "native_zero_convention": "Host clamp ReLU autograd derivative at zero=1; host analytic dphi at zero=0 retained only as historical diagnostic convention.",
+  "finished_utc": "2026-10-17T16:29:26Z"
+}

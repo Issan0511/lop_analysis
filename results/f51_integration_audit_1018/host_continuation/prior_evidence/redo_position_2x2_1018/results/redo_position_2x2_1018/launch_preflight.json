@@ -1,0 +1,88 @@
+{
+  "run_id": "redo_position_2x2_1018",
+  "status": "BLOCKED_CUDA",
+  "all_pass": false,
+  "blockers": [
+    "BLOCKED_CUDA: torch.cuda.is_available() is False",
+    "G0_ALL_PASS",
+    "G0_HOST_REPRODUCTION_PASS",
+    "G0_MUTATION_CHECKS_PASS"
+  ],
+  "checked_utc": "2026-10-17T16:29:12.095588+00:00",
+  "registration_commit": "fd2e6682",
+  "git_hash": "7a6c1e74639fec6483c57e673e182f0d8d521abb",
+  "source_sha256": {
+    "analysis/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "analysis/cifar_ledger_0920/ledger.py": "f6b95d9b0b44f24b23f55f428d4534b65b8076feeb1296c69e47930f80b2e79a",
+    "analysis/cifar_ledger_0920/replay.py": "ec372f7a48d51596f80ed87e641bd58bee7cda3d8671cc88806f065cc0fcd341",
+    "analysis/redo_position_2x2_1018/checks.py": "34705e8ea8f7c04328251deaf2010eaa9530a8d5b7cff03fffa8fb0c1b9f7779",
+    "analysis/resp_cifar_ee_0920/stats.py": "6e6a9745176c4be26135d40eada0b2677ff80e880bd1d4d759d55e79169222d0",
+    "specs/spec_redo_position_2x2_1018.md": "97cd76a2289dd4815f7cc81b632738a3027711737e70bdd83086da84f630660f",
+    "specs/spec_six_runs_common_1018.md": "4d7e004f5becb7f28b0cd7fd8909ab8466f62f293c86a56085cb0a1263a47c41",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/baselines_cifar5p1_1008.py": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/cifar_interventions_0920.py": "d079b5185249114d035afcce69d9636ef1db2807e642c3fd879cb2168907f37f",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/redo_position_2x2_1018.py": "76bba031c9fed8f1a1d7740d7a6fd5c54a8ad25a2259dab88f91b52155353cc1",
+    "src/resp_cifar5p1_1007.py": "c8d6bedb04d0895f1fea97d2c4a14a11dcfb1eaa5fd64565f8b9668b9b5c729c",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de"
+  },
+  "environment": {
+    "python": "3.12.3 (main, Apr 15 2024, 18:25:56) [Clang 17.0.6 ]",
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.1",
+    "cuda_build": "13.0",
+    "cuda_available": false,
+    "nvidia_devices": [
+      "/dev/nvidia-caps"
+    ],
+    "nvidia_smi_returncode": 9,
+    "nvidia_smi_output": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.",
+    "tf32": false,
+    "matmul_precision": "highest",
+    "deterministic": false,
+    "threads": 20,
+    "cublas": ":4096:8"
+  },
+  "audit_path": "/tmp/issa_six_specs_1018/integration_audit.json",
+  "audit_sha256": "f452ad2e4ee67c3c2730e8e7f6cc06cbf49414fa6f56f68aac6cf9d9c00236ed",
+  "checks_path": "/home/issan/Projects/claude/wt/redo_position_2x2_1018/results/_checks_redo_position_2x2_1018/checks.json",
+  "checks_sha256": "21e8395eaf68a89950a8f78c839e52425ad0f60f66e900c87327f8d5ec2eed82",
+  "protocol": {
+    "device": "cuda",
+    "dtype": "float32",
+    "R": 10,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "prefix_tasks": 29,
+    "branch_task": 28,
+    "steps_per_task": 780,
+    "arms": [
+      "none",
+      "redo",
+      "shift",
+      "both"
+    ],
+    "prediction": "POSITION_CARRIES"
+  },
+  "production_started": false,
+  "argv": [
+    "/home/issan/Projects/claude/wt/redo_position_2x2_1018/src/redo_position_2x2_1018.py",
+    "run",
+    "--integration-audit",
+    "/tmp/issa_six_specs_1018/integration_audit.json"
+  ]
+}

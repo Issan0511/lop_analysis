@@ -1,0 +1,182 @@
+{
+  "run_id": "nap_cifar5p1_1018",
+  "all_pass": false,
+  "cpu_synthetic_all_pass": true,
+  "production_ready": false,
+  "source_sha256": {
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/nap_cifar5p1_1018.py": "2c335d5301ebbda3fb2d674ef1f1af73b29aacacf235f30adf5df49b6a5b9acc",
+    "analysis/nap_cifar5p1_1018/checks.py": "5a33528b8548314d34f65197f808684f958a27677616084d03e2bf5d83fa9d99",
+    "analysis/nap_cifar5p1_1018/verdict.py": "018bb449f5404e57e7aa6a0911ee2269bb647e44ff04bf8bfddaca1a4dea5f50"
+  },
+  "fixture_only": true,
+  "torch": "2.13.0+cu130",
+  "device": "cpu",
+  "S-host": {
+    "measurements": {
+      "host_tensors_bit_equal": true,
+      "max_parameter_error": 0.0,
+      "online_bit_equal": true,
+      "seed_slots": [
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109
+      ],
+      "R": 10,
+      "steps": 9,
+      "init_W_stream_matches": true,
+      "host_cuda_reproduction": "NOT_RUN"
+    },
+    "mutation_detected": {
+      "CIFAR10_constants": true,
+      "five_outputs": true
+    },
+    "pass": true
+  },
+  "S-fresh": {
+    "measurements": {
+      "reset_initial_parameters": true,
+      "fresh_matches_new_state": true,
+      "same_batch_hash": "d1726be017b4c085002fd3df90837e03f7d037ba84a17cd74335624dd2cdaec8",
+      "diagnostics_isolated": true
+    },
+    "mutation_detected": {
+      "LN_carried": true,
+      "fresh_projection_disabled": true
+    },
+    "pass": true
+  },
+  "S-stats": {
+    "measurements": {
+      "exhaustive_count_cases": 66,
+      "max_exact_p_error": 0.0,
+      "holm": [
+        0.06,
+        0.06
+      ],
+      "interval_coverage": 0.978515625,
+      "shuffled_seed_join_correct": true,
+      "duplicate_rejected": true
+    },
+    "mutation_detected": {
+      "one_sided_p": true,
+      "Holm_omitted": true,
+      "seed_order_join": true
+    },
+    "pass": true
+  },
+  "S-admission": {
+    "measurements": {
+      "valid_synthetic_schema_accepted": true,
+      "production_audit_not_substituted": true
+    },
+    "mutation_detected": {
+      "all_pass_missing": true,
+      "main_ancestor_verified_missing": true,
+      "host_reproduction_pass_missing": true,
+      "mutation_checks_pass_missing": true,
+      "source_hash_missing": true,
+      "invalid_audited_commit": true,
+      "self_audit": true
+    },
+    "pass": true
+  },
+  "S-LN": {
+    "measurements": {
+      "max_forward_abs": 8.881784197001252e-16,
+      "atol": 2.7939677238464355e-09,
+      "reference": "per-seed F.linear + affine F.layer_norm",
+      "tolerance_derivation": "eps64*3072*4096",
+      "mutation_max_abs": {
+        "batch_axis": 1.272539866205802,
+        "post_relu_ln": 2.234717112945223,
+        "bias_retained": 0.9149815422416496
+      }
+    },
+    "mutation_detected": {
+      "batch_axis": true,
+      "post_relu_ln": true,
+      "bias_retained": true
+    },
+    "pass": true
+  },
+  "S-grad": {
+    "measurements": {
+      "max_gradient_abs": 1.2434497875801753e-14,
+      "atol": 2.7939677238464355e-09,
+      "native_relu_at_zero": 0.0,
+      "LN_chain_bypass_error": 0.6116841309115983
+    },
+    "mutation_detected": {
+      "LN_chain_bypassed": true
+    },
+    "pass": true
+  },
+  "S-Wproject": {
+    "measurements": {
+      "max_error": 1.4210854715202004e-14,
+      "atol": 2.7939677238464355e-09,
+      "movement": [
+        [
+          3.0161372224017455,
+          8.049989935292226,
+          3.02093709296048,
+          7.560717180080882,
+          7.560717180080882
+        ],
+        [
+          8.023347109530702,
+          3.0309946717113094,
+          7.957775283603405,
+          7.560717180080882,
+          7.560717180080882
+        ]
+      ],
+      "moment_unchanged": true,
+      "zero_projection_flagged": true
+    },
+    "mutation_detected": {
+      "rowwise": true,
+      "cap_only": true,
+      "t1_radius": true,
+      "omit_W3": true
+    },
+    "pass": true
+  },
+  "S-affine": {
+    "measurements": {
+      "max_error": 0.0,
+      "atol": 2.7939677238464355e-09,
+      "joint_norms": [
+        [
+          10.0,
+          10.0
+        ],
+        [
+          10.0,
+          10.0
+        ]
+      ]
+    },
+    "mutation_detected": {
+      "beta_zeroed": true,
+      "sequential_recompute": true
+    },
+    "pass": true
+  },
+  "S-CUDA-graph": {
+    "status": "NOT_RUN_BLOCKED_CUDA",
+    "pass": false
+  }
+}

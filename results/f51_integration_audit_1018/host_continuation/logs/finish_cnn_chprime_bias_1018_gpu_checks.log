@@ -1,0 +1,20 @@
+
+{"at": "2026-10-17T21:11:27.248618+00:00", "cwd": "/home/issan/Projects/claude/wt/cnn_chprime_bias_1018", "argv": ["flock", "/tmp/lop_analysis_gpu.lock", "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python", "analysis/cnn_chprime_bias_1018/gpu_checks.py"]}
+/home/issan/Projects/claude/wt/cnn_chprime_bias_1018/analysis/cnn_chprime_bias_1018/gpu_checks.py:67: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:822.)
+  roundoff[tag]=dict(max_abs=float(residual.max()),max_bound=float(bound.max()),pass_=bool((residual<=bound).all()),
+Traceback (most recent call last):
+  File "/home/issan/Projects/claude/wt/cnn_chprime_bias_1018/analysis/cnn_chprime_bias_1018/gpu_checks.py", line 84, in <module>
+    a=p.parse_args();r=check(a.out,a.review);print(r['status']);sys.exit(0 if r['all_pass'] else 2)
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/issan/Projects/claude/wt/cnn_chprime_bias_1018/analysis/cnn_chprime_bias_1018/gpu_checks.py", line 79, in check
+    M.json_write(out,result);return result
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/issan/Projects/claude/wt/cnn_chprime_bias_1018/src/cnn_chprime_bias_1018.py", line 51, in json_write
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    ^^^^^^^^^^
+  File "/home/issan/.local/share/uv/python/cpython-3.12.3-linux-x86_64-gnu/lib/python3.12/pathlib.py", line 1162, in __init__
+    super().__init__(*args)
+  File "/home/issan/.local/share/uv/python/cpython-3.12.3-linux-x86_64-gnu/lib/python3.12/pathlib.py", line 373, in __init__
+    raise TypeError(
+TypeError: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'tuple'

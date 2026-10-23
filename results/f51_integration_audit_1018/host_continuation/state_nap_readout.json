@@ -1,0 +1,56 @@
+{
+  "status": "COMMANDS_COMPLETED",
+  "pid": 915152,
+  "started_at": "2026-10-17T17:24:54.273125+00:00",
+  "audit_sha256": "b8aeac0f0ec176411c423beb5ad52c0048050564b4de64db0608e8724ffa4543",
+  "source_identity": {
+    "nap_cifar5p1_1018": "7fa706243255a112294013feb38977e04d95ad4b\n6dfabae07d262f809f268037e38569bf0a90cd69\ne94e43cbdc9254a78ee47c0fca7f2f0c096f7286\n"
+  },
+  "plan": {
+    "nap_cifar5p1_1018": [
+      [
+        "comparators",
+        {
+          "action": "comparators"
+        }
+      ],
+      [
+        "verdict",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "analysis.nap_cifar5p1_1018.verdict",
+            "verdict",
+            "--r-qualification",
+            "results/nap_cifar5p1_1018/reuse_R.json",
+            "--sna-qualification",
+            "results/nap_cifar5p1_1018/reuse_SNA.json",
+            "--kkt1-qualification",
+            "results/nap_cifar5p1_1018/reuse_KKT1.json"
+          ],
+          "lock": false
+        }
+      ]
+    ]
+  },
+  "stages": [
+    {
+      "run": "nap_cifar5p1_1018",
+      "name": "comparators",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:24:54.273393+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/nap_cifar5p1_1018_comparators_915152.log",
+      "finished_at": "2026-10-17T17:33:58.021002+00:00"
+    },
+    {
+      "run": "nap_cifar5p1_1018",
+      "name": "verdict",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:33:58.021426+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/nap_cifar5p1_1018_verdict_915152.log",
+      "finished_at": "2026-10-17T17:33:58.961414+00:00"
+    }
+  ],
+  "finished_at": "2026-10-17T17:33:58.961820+00:00"
+}
