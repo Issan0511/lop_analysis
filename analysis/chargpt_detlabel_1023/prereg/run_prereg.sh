@@ -11,6 +11,7 @@ bash extract_a2.sh $SCR/ref
 $PY -I a2_table.py $SCR/ref $R/a2_table.json | tee $R/a2_table.txt
 $PY -I a2_motion.py $R/a2_motion.json | tee $R/a2_motion.txt
 $PY -I a2_motion_alive.py $SCR/ref $R/a2_motion_alive.json | tee $R/a2_motion_alive.txt
+$PY -I a2_j4_fallback.py $R | tee $R/a2_j4_fallback.txt
 OMP_NUM_THREADS=1 $PY -I argmax_all.py $R/argmax_all.json | tee $R/argmax_all.txt
 for a in 0.01 0.001 0.0001; do for s in 0 1 2 3 4 5 6 7 8 9; do for t in 1 2 3; do echo "$a $s $t"; done; done; done |
   xargs -P 10 -L 1 bash -c 'OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 '"$PY"' -I chain_stats.py '"$SCR"'/out/full_a$0_s$1_t$2.json $0 $1 $2'
