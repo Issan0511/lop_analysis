@@ -35,3 +35,5 @@ fig.text(.5,.015,'Dots: 10 seed-specific window medians. Bars: seed range. Explo
 fig.tight_layout(rect=[0,.19,1,.95])
 fig.savefig(OUT/'signal_components.png',dpi=170,bbox_inches='tight')
 fig.savefig(OUT/'signal_components.svg',bbox_inches='tight')
+p=OUT/'signal_components.svg'
+p.write_text('\n'.join(line.rstrip() for line in p.read_text().splitlines())+'\n')
