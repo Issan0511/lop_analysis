@@ -35,29 +35,39 @@ def one(inp,arm,seed,task):
         norm=features.norm(dim=0).clamp_min(1e-300);fn=features/norm;gn=fn.T@fn;cross=resp.T@fn
         ctx=(xx[:,:-1]*C.V+xx[:,1:]).reshape(-1)
         unique,inv,counts=torch.unique(ctx,return_inverse=True,return_counts=True)
-        grouped=torch.zeros(len(unique),C.V,C.FF+1,dtype=A.DT)
-        grouped.index_add_(0,inv,fn.reshape(N,C.V,C.FF+1))
-        gf=grouped.reshape(-1,C.FF+1);dn=gf.T@gf
         valid=torch.from_numpy(old['valid_1e-10'])
-        qiid=covariance_score(gn,cross,gn,norm,ii,valid)
+        val,vec=torch.linalg.eigh(gn);keep=val>val[-1]*1e-10;vv=vec[:,keep]
+        gi=(vv/val[keep])@vv.T
+        condition=float(val[-1]/val[keep].min())
+        # Never form G+ G G+ or G+ D G+: the extra inverse multiplication
+        # amplifies cancellation. Factor the covariance through the dual basis.
+        qiid=torch.where(valid,(cross@gi[:,ii]).diagonal()/norm[ii],torch.nan)
+        if condition>1e6:
+            qq,rr=torch.linalg.qr(fn,mode='reduced');uu,ss,vh=torch.linalg.svd(rr,full_matrices=False)
+            kept=ss>ss[0]*1e-5;dual=((qq@uu[:,kept])/ss[kept])@vh[kept]
+            method='QR_SVD'
+        else:
+            dual=((fn@vv)/val[keep])@vv.T;method='eigen_dual'
+        grouped=torch.zeros(len(unique),C.V,C.FF+1,dtype=A.DT)
+        grouped.index_add_(0,inv,dual.reshape(N,C.V,C.FF+1))
+        gf=grouped.reshape(-1,C.FF+1);cov=gf.T@gf
         prior=torch.from_numpy(old['q_1e-10']);ok=torch.isfinite(qiid)&torch.isfinite(prior)
         err=F.rel(qiid[ok]-prior[ok],prior[ok]);assert err<1e-7,err
-        qctx=covariance_score(gn,cross,dn,norm,ii,valid);beta=1/(1+C.V*.01)
+        qctx=torch.where(valid,(cross@cov[:,ii]).diagonal()/norm[ii],torch.nan);beta=1/(1+C.V*.01)
         qmix=(1-beta)*qiid+beta*qctx
         # Independently factor the covariance as B B': sum label-basis forces.
-        if arm=='C3' and seed==0 and task==39:
-            val,vec=torch.linalg.eigh(gn);keep=val>val[-1]*1e-10;vv=vec[:,keep];gi=(vv/val[keep])@vv.T
-            coeff=gi@gf.T;independent=((cross@coeff)*coeff[ii]).sum(1)/norm[ii]
-            factor_err=F.rel(independent[ok]-qctx[ok],qctx[ok]);assert factor_err<1e-7,factor_err
-        else:factor_err=None
-    arrays=dict(ids=ids,q_iid=Q.arr(qiid),q_ctx=Q.arr(qctx),q_mix=Q.arr(qmix),context_counts=Q.arr(counts),context_gram=Q.arr(dn))
+        independent=((cross@gf.T)*gf[:,ii].T).sum(1)/norm[ii]
+        factor_err=F.rel(independent[ok]-qctx[ok],qctx[ok]);assert factor_err<1e-7,factor_err
+        dual_iid=(resp*dual[:,ii]).sum(0)/norm[ii]
+        dual_error=F.rel(dual_iid[ok]-qiid[ok],qiid[ok])
+    arrays=dict(ids=ids,q_iid=Q.arr(qiid),q_ctx=Q.arr(qctx),q_mix=Q.arr(qmix),context_counts=Q.arr(counts),coefficient_covariance=Q.arr(cov))
     np.savez_compressed(OUT/'raw'/f'context_{arm}_seed{seed}_t{task}.npz',**arrays)
     rows=[]
     for name,pred in [('iid',qiid),('ctx',qctx),('mix',qmix)]:
         good=torch.isfinite(pred)
         row=dict(arm=arm,seed=seed,task=task,covariance=name,n_valid=int(good.sum()),positive=float((pred[good]>0).double().mean()),q_median=Q.med(pred),
                  n_context=len(unique),n_positions=N,max_context_count=int(counts.max()),repeat_fraction=float((counts[inv]>1).double().mean()),
-                 iid_reference=err,factor_check=factor_err,rho_iid=Q.rho(pred,qiid))
+                 iid_reference=err,factor_check=factor_err,dual_iid_error=dual_error,condition=condition,method=method,rho_iid=Q.rho(pred,qiid))
         for e in ['fit','switch','canonical_fit','canonical_switch','allparam_fit','allparam_switch']:
             row.update({e+'_'+k:v for k,v in Q.compare(pred,old[e]).items()})
         rows.append(row)
