@@ -157,6 +157,19 @@ def main():
                 ss = [r for r in states if (r['arm'], r['seed'], r['layer'], r['metric']) == ('C3', seed, 0, 'SGD') and r['task'] in tasks]
                 bas.append(median([r['without_'+part+'_ba'] for r in ss]))
             text.append(f'|{part}|{window}|{span(norms)}|{span(signs)}|{span(bas)}|')
+    text += ['', '## 補足：個別課題の差は平均と同じ向きか（登録判定外の内積集計）', '',
+             '各状態で512unitの押しを並べたベクトル同士のcosを取り、seed内の窓中央値を集計する。読み出しベクトル同士のcosではなく、unitごとの符号一致率でもない。方向の記録を深める事後集計で、J1〜J4は変更しない。', '',
+             '|腕・metric|項|課題1〜4 cos seed範囲|課題6〜9 cos seed範囲|負→正のseed数|', '|---|---|---:|---:|---:|']
+    for arm in ['C3', 'ReLUcap']:
+        for metric in R.METRICS:
+            for component in ['task_departure', 'ls_task', 'fit_gap', 'ce']:
+                ev, lv = [], []
+                for seed in range(10):
+                    rr = [r for r in components if (r['arm'], r['seed'], r['layer'], r['metric'], r['component']) == (arm, seed, 0, metric, component)]
+                    ev.append(median([r['cosine_to_P2'] for r in rr if r['task'] <= 4]))
+                    lv.append(median([r['cosine_to_P2'] for r in rr if r['task'] >= 6]))
+                flips = sum(e is not None and l is not None and e < 0 < l for e, l in zip(ev, lv))
+                text.append(f'|{arm} {metric}|{component}|{span(ev)}|{span(lv)}|{flips}/10|')
     text += ['', '## SiLU、全パラメータ経路、1 seedの記録', '',
              '|腕|課題|層|metric|r中央値|P2 BA|個別LS BA|実head二乗 BA|fit距離|CE比|null/実測|', '|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|']
     for r in states:
@@ -178,7 +191,7 @@ def main():
              '## 検算と限界', '', f'前回5状態の配列再現：最大相対誤差{max(refvalues):.3g}。184状態の恒等式・勾配・r射影：最大相対誤差{max(checkvalues):.3g}。', '',
              'Zhatは固定64 Gaussian方向からの推定。固定12unitのAをJVPから直接作り、trace・全Gaussian二次形式・fit分解を独立検算した。正確なZと上界はgate.json。Gaussian模型の確率上界を実Markov課題の保証に読み替えない。', '',
              'Y=65(Q−U)は固定した一様点二次模型。fit距離はCE最適headへの距離ではない。βはDirichlet生成則から固定し、実測の係数fitは無し。文脈平均は学習済み特徴とprobeを固定した模型で、ラベルとの独立性を実環境で実証したものではない。', '',
-             'C3の比較はL0自身のup行の経路。SiLUは全パラメータ経路で直接共有headの項を含む。両者を同じ経路の比較と呼ばない。切替は新ラベルの独立一様平均で、次の課題入力を再生したものではない。実際の長期更新・沈降の原因割合ではない。', '',
+             'C3の比較はL0自身のup行の経路。SiLUは全パラメータ経路で直接共有headの項を含む。両者を同じ経路の比較と呼ばない。切替は新ラベルの独立一様平均で、次の課題入力を再生したものではない。実際の長期更新・沈降の原因割合ではない。絶対量が数値誤差のnull項の符号割合は意味を持たない。', '',
              '## 再現', '', 'spec登録3324927d。コード・結果：analysis/chargpt_phase2conditions_1024、results/chargpt_phase2conditions_1024。入力・実行commitはprovenance.json、raw/log退避先はbackup_manifest.json。']
     (OUT/'summary.md').write_text('\n'.join(text)+'\n')
     print(json.dumps(judge, ensure_ascii=False, indent=2))
