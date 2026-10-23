@@ -348,7 +348,7 @@ seed ごとに次を出す。
 ### 7.6 J6 段①の装填の押しの内訳（L1、後期）
 
 - 対象: A4 の seed 0〜9 の、課題末 89〜100 の保存状態（1 seed 12 状態）。早期（課題末 1〜9）と中期（39〜50）も同じ量を出して記録にする。
-- 量: chargpt_loadsign_1023 の恒等分解（`specs/spec_chargpt_loadsign_1023.md` §2・§7。コードは第二段階 3baa567f、第三段階 af1eadff、追補 099530e9）をそのまま使い、新しい分解を作らない。
+- 量: chargpt_loadsign_1023 の恒等分解（`specs/spec_chargpt_loadsign_1023.md` §2・§7。コードは第二段階 3baa567f、第三段階 af1eadff、追補 099530e9。s_load と分散微分の項は第一段階 6aa4c490 の measure.py が出し、第二段階はその値との一致を確かめてから分ける）をそのまま使い、新しい分解を作らない。
   - L1 への切替の期待の押し S_i = mean_n K_n φ′(z_ni) [(D_n + R_n) · U_i]。勾配の probe は固定の一様 probe、誤差は一様な目標との差、読み出しは装填成分 vL = κF。S > 0 が沈める側。
   - R_n は最終 LN の分散微分の項、D_n はそれ以外（direct）。S = S_direct + S_radial は unit ごとに厳密に成り立つ。
   - direct を自己項・他 unit 項・固定残差項に分ける（第二段階、誤差は original）。
