@@ -50,3 +50,6 @@ Issaの予測: 自己形が原因（確率指定なし）。実装者はJ1の採
 
 ## 8. 保存
 analysis/chargpt_l0force_1023/、results/chargpt_l0force_1023/（states.csv,summary.md,judge.json,gate.json,provenance.json）。unit配列はobsidian-research-dataに退避しmanifestをcommit。結果ノートを既存の可塑性喪失/測定/に作成。mainへpushし、このworktree/branchを片付ける。
+
+## 9. 実装前の細部（測定前）
+upperはFFN1枝とattention1枝にも分けて記録する。h0=L0後、h1=h0+attention1、h2=h1+FFN1とし、g1=∂L/∂h1、g0=∂L/∂h0、g2=∂L/∂h2ならFFN1枝=g1-g2、attention1枝=g0-g1。attention枝はその先のFFNとの複合経路を含む。J1の上位項upperはこの和のままで変更しない。自己形の存在と、平均位置/相対位置を沈める符号を分けるため、selfのS_muとS_rを必ず両方出す。
