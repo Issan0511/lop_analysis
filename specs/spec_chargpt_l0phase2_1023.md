@@ -64,3 +64,7 @@ J1○0.65。J2 switch○0.35、fit○0.15。J3は各区間○0.25。必要条件
 specを先にcommit。BUNDLE sha256、既存 raw sha256、source code hashを記録。独立な小行列LSとleave-one-out射影、rank退化、nonGaussian ReLU符号反例(1,2,-1,-1,-1)、JVP有限差分、実際の全勾配との内積一致、1seedの旧full値一致を検査してから全seedを走らせる。失敗なら修正の理由を記録して検査からやり直す。学習更新は0。
 
 code=analysis/chargpt_l0phase2_1023/、results=results/chargpt_l0phase2_1023/（states/units/comparisons/judge/provenance/summary）。大きな配列・ログはobsidian-research-dataへ退避しmanifestをcommit。結果note=可塑性喪失/測定/文字GPTで継続学習_L0の相殺後の押しを相2と照合する_結果_1023.md。時間相関を含むnoise feedback項は疎な保存点から実測できないので、この走では符号だけの再計算を原因確認としない。
+
+## 7. probe縮小の追加検査（主結果を見た後、追加計算の前）
+
+主計算40状態は完了。Qoutは識別可能unitで全て正だが、実fitの8系列/64系列の符号一致は最小0.5だった。近似probeの影響を確認するため、あらかじめ照合に使ったC3 seed0の課題39/100末で、全64系列のF'FとU'Fをchunkごとに足してQoutを出す。unit抽出と閾値はそのまま。8系列と64系列の符号・Spearman・識別数、64系列の実合計との関係を記録する。主判定J1〜J3を置き換えない。これはprobeの数値検査であり、原因を支持する別の判定を追加しない。
