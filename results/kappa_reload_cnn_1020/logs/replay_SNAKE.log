@@ -1,0 +1,24 @@
+skip ['SNA', 'SNAc3', 'CV06FC3', 'CV3FC06'] t1 (done)
+replay ['SNA', 'SNAc3', 'CV06FC3', 'CV3FC06'] t2 -> t3: 40 slots, 7s, floor_dm 1.11e-16
+replay ['SNA', 'SNAc3', 'CV06FC3', 'CV3FC06'] t3 -> t4: 40 slots, 6s, floor_dm 2.78e-17
+replay ['SNA', 'SNAc3', 'CV06FC3', 'CV3FC06'] t5 -> t6: 40 slots, 6s, floor_dm 5.55e-17
+replay ['SNA', 'SNAc3', 'CV06FC3', 'CV3FC06'] t10 -> t11: 40 slots, 6s, floor_dm 5.55e-17
+replay ['SNA', 'SNAc3', 'CV06FC3', 'CV3FC06'] t20 -> t21: 40 slots, 6s, floor_dm 2.22e-16
+Traceback (most recent call last):
+  File "/home/issan/Projects/claude/wt/kappa_reload_cnn_1020/src/kappa_reload_cnn_1020.py", line 1462, in <module>
+    main()
+  File "/home/issan/Projects/claude/wt/kappa_reload_cnn_1020/src/kappa_reload_cnn_1020.py", line 1457, in main
+    cmd_replay(arms, args.tasks, args.full, device, init=(args.mode == "init"))
+  File "/home/issan/Projects/claude/wt/kappa_reload_cnn_1020/src/kappa_reload_cnn_1020.py", line 1197, in cmd_replay
+    fdm = floor_dm_of(Bd)
+          ^^^^^^^^^^^^^^^
+  File "/home/issan/Projects/claude/wt/kappa_reload_cnn_1020/src/kappa_reload_cnn_1020.py", line 772, in floor_dm_of
+    a = bundle_stats(Bd, chunk=50)[0]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/issan/Projects/claude/proj_004_drift/.venv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/issan/Projects/claude/wt/kappa_reload_cnn_1020/src/kappa_reload_cnn_1020.py", line 610, in bundle_stats
+    s1[:, q] += zr.sum((0, 3)); s2[:, q] += (zr * zr).sum((0, 3)); pos[:, q] += (zr > 0).sum((0, 3))
+                                                                                ^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 250.00 MiB. GPU 0 has a total capacity of 15.47 GiB of which 10.42 GiB is free. Process 9251 has 130.31 MiB memory in use. Process 18417 has 51.34 MiB memory in use. Process 81912 has 46.47 MiB memory in use. Process 110771 has 105.03 MiB memory in use. Process 276293 has 86.47 MiB memory in use. Including non-PyTorch memory, this process has 4.00 GiB memory in use. 4.00 GiB allowed; Of the allocated memory 3.67 GiB is allocated by PyTorch, and 112.78 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)

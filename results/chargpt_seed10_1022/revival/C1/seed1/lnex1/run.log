@@ -1,0 +1,18 @@
+/home/kubo/project/Nakatsuka/lop_analysis_chargpt_cl_1019/.venv/lib/python3.12/site-packages/torch/autograd/graph.py:979: UserWarning: The AccumulateGrad node's stream does not match the stream of the node that produced the incoming gradient. This may incur unnecessary synchronization and break CUDA graph capture if the AccumulateGrad node's stream is the default stream. This mismatch is caused by an AccumulateGrad node created prior to the current iteration being kept alive. This can happen if the autograd graph is still being kept alive by tensors such as the loss, or if you are using DDP, which will stash a reference to the node. To resolve the mismatch, delete all references to the autograd graph or ensure that DDP initialization is performed under the same stream as subsequent forwards. If the mismatch is intentional, you can use torch.autograd.graph.set_warn_on_accumulate_grad_stream_mismatch(False) to suppress this warning. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/input_buffer.cpp:310.)
+  return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[lnex1 s1] task 44/59 online 0.3983 | 死 uniform L0 0.04 L1 0.97 chain L0 0.04 L1 0.97 | LN 入力 rms 26.1 FFN1 rms 12.6 v_eff1 0.991 γ_f 0.666 | 33s
+[lnex1 s1] task 45/59 online 0.4158 | 死 uniform L0 0.05 L1 0.97 chain L0 0.05 L1 0.97 | LN 入力 rms 27.4 FFN1 rms 14.0 v_eff1 0.992 γ_f 0.691 | 33s
+[lnex1 s1] task 46/59 online 0.4402 | 死 uniform L0 0.06 L1 0.97 chain L0 0.07 L1 0.98 | LN 入力 rms 28.0 FFN1 rms 14.7 v_eff1 0.993 γ_f 0.682 | 33s
+[lnex1 s1] task 47/59 online 0.4570 | 死 uniform L0 0.08 L1 0.96 chain L0 0.09 L1 0.96 | LN 入力 rms 29.2 FFN1 rms 16.1 v_eff1 1.008 γ_f 0.722 | 30s
+[lnex1 s1] task 48/59 online 0.4545 | 死 uniform L0 0.10 L1 0.95 chain L0 0.10 L1 0.96 | LN 入力 rms 30.1 FFN1 rms 15.8 v_eff1 0.999 γ_f 0.702 | 33s
+[lnex1 s1] task 49/59 online 0.4545 | 死 uniform L0 0.12 L1 0.96 chain L0 0.12 L1 0.97 | LN 入力 rms 31.3 FFN1 rms 16.9 v_eff1 0.985 γ_f 0.683 | 33s
+[lnex1 s1] task 50/59 online 0.4914 | 死 uniform L0 0.12 L1 0.96 chain L0 0.12 L1 0.97 | LN 入力 rms 31.9 FFN1 rms 19.4 v_eff1 1.001 γ_f 0.693 | 33s
+[lnex1 s1] task 51/59 online 0.4676 | 死 uniform L0 0.14 L1 0.95 chain L0 0.15 L1 0.95 | LN 入力 rms 32.6 FFN1 rms 20.3 v_eff1 1.001 γ_f 0.732 | 33s
+[lnex1 s1] task 52/59 online 0.5503 | 死 uniform L0 0.17 L1 0.97 chain L0 0.20 L1 0.96 | LN 入力 rms 33.1 FFN1 rms 20.3 v_eff1 1.017 γ_f 0.745 | 33s
+[lnex1 s1] task 53/59 online 0.5896 | 死 uniform L0 0.20 L1 0.96 chain L0 0.21 L1 0.97 | LN 入力 rms 33.0 FFN1 rms 21.1 v_eff1 1.045 γ_f 0.754 | 32s
+[lnex1 s1] task 54/59 online 0.6113 | 死 uniform L0 0.21 L1 0.96 chain L0 0.22 L1 0.97 | LN 入力 rms 34.1 FFN1 rms 23.3 v_eff1 1.027 γ_f 0.744 | 33s
+[lnex1 s1] task 55/59 online 0.6241 | 死 uniform L0 0.21 L1 0.98 chain L0 0.21 L1 0.98 | LN 入力 rms 36.7 FFN1 rms 26.1 v_eff1 0.985 γ_f 0.782 | 33s
+[lnex1 s1] task 56/59 online 0.6960 | 死 uniform L0 0.21 L1 0.97 chain L0 0.21 L1 0.97 | LN 入力 rms 37.4 FFN1 rms 27.4 v_eff1 0.994 γ_f 0.806 | 33s
+[lnex1 s1] task 57/59 online 0.7848 | 死 uniform L0 0.18 L1 0.97 chain L0 0.18 L1 0.98 | LN 入力 rms 39.0 FFN1 rms 30.1 v_eff1 0.962 γ_f 0.810 | 33s
+[lnex1 s1] task 58/59 online 0.7987 | 死 uniform L0 0.14 L1 0.98 chain L0 0.16 L1 0.99 | LN 入力 rms 41.8 FFN1 rms 32.9 v_eff1 0.940 γ_f 0.810 | 33s
+[lnex1 s1] task 59/59 online 0.8558 | 死 uniform L0 0.09 L1 0.98 chain L0 0.11 L1 0.98 | LN 入力 rms 45.9 FFN1 rms 33.7 v_eff1 0.887 γ_f 0.845 | 33s

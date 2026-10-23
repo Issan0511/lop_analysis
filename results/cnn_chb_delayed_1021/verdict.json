@@ -1,0 +1,71 @@
+{
+  "experiment": "cnn_chb_delayed_1021",
+  "tests": {
+    "accuracy": {
+      "n_positive": 7,
+      "n_negative": 3,
+      "n_tie": 0,
+      "p_two_sided": 0.34375,
+      "mean_benefit": 0.02931250000000001,
+      "ci95_seed_bootstrap": [
+        -0.011781249999999995,
+        0.06825359374999987
+      ],
+      "finite": true,
+      "benefit_signs": [
+        -1,
+        1,
+        1,
+        1,
+        -1,
+        1,
+        1,
+        -1,
+        1,
+        1
+      ],
+      "p_holm": 0.34375,
+      "verdict": "INCONCLUSIVE"
+    },
+    "ce": {
+      "n_positive": 0,
+      "n_negative": 10,
+      "n_tie": 0,
+      "p_two_sided": 0.001953125,
+      "mean_benefit": -6080.323755477373,
+      "ci95_seed_bootstrap": [
+        -10540.695078503119,
+        -2936.0025003557944
+      ],
+      "finite": true,
+      "benefit_signs": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "p_holm": 0.00390625,
+      "verdict": "WORSENS"
+    }
+  },
+  "seeds": [
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "family": "first3000 accuracy and CE; two-sided exact sign tests; Holm 2",
+  "scope": "late natural B addition; improvement over degraded CH, not full restoration or mediation"
+}

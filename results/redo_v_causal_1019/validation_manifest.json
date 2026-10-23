@@ -1,0 +1,512 @@
+{
+  "run_id": "redo_v_causal_1019",
+  "preregistration_commit": "616499de",
+  "runner_commit": "707638b0",
+  "analysis_prerun_commit": "7225a59f",
+  "independent_review": "runner and statistical analyzer reviewed read-only by separate explorer",
+  "primary_verdict": "registered_meaningful_suppression",
+  "route_registered_support": false,
+  "baseline_plain_check": {
+    "tensors": {
+      "P": true,
+      "m": true,
+      "v": true
+    },
+    "per_task": {
+      "rows": 30,
+      "max_task": 3,
+      "exact": true,
+      "n_different": 0,
+      "differences": []
+    }
+  },
+  "coordinate_synthetic_checks": [
+    {
+      "test": "gauge",
+      "c": 0.25,
+      "logit_max_error": 0.0,
+      "gradient_max_error": 0.0
+    },
+    {
+      "test": "gauge",
+      "c": 4.0,
+      "logit_max_error": 0.0,
+      "gradient_max_error": 0.0
+    },
+    {
+      "test": "centering",
+      "logit_max_error": 1.7763568394002505e-15,
+      "gradient_max_error": 4.440892098500626e-16
+    }
+  ],
+  "groups": [
+    {
+      "arm": "center_random",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "tasks": 3,
+      "git_hash": "7225a59ff11118938fd44e6ff60774104b03c08c",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "center_random",
+      "seeds": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "tasks": 3,
+      "git_hash": "7225a59ff11118938fd44e6ff60774104b03c08c",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "center",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "tasks": 3,
+      "git_hash": "7225a59ff11118938fd44e6ff60774104b03c08c",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "center",
+      "seeds": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "tasks": 3,
+      "git_hash": "7225a59ff11118938fd44e6ff60774104b03c08c",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "gauge025",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "tasks": 3,
+      "git_hash": "f6f31db5dc478db42e3f204afb9192b1adba72a3",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "gauge025",
+      "seeds": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "tasks": 3,
+      "git_hash": "f6f31db5dc478db42e3f204afb9192b1adba72a3",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "gauge4",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "tasks": 3,
+      "git_hash": "f6f31db5dc478db42e3f204afb9192b1adba72a3",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "gauge4",
+      "seeds": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "tasks": 3,
+      "git_hash": "f6f31db5dc478db42e3f204afb9192b1adba72a3",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "keep",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "tasks": 3,
+      "git_hash": "7225a59ff11118938fd44e6ff60774104b03c08c",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "keep",
+      "seeds": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "tasks": 3,
+      "git_hash": "7225a59ff11118938fd44e6ff60774104b03c08c",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "rand01",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "tasks": 3,
+      "git_hash": "7225a59ff11118938fd44e6ff60774104b03c08c",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "rand01",
+      "seeds": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "tasks": 3,
+      "git_hash": "7225a59ff11118938fd44e6ff60774104b03c08c",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "rand03",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "tasks": 3,
+      "git_hash": "7225a59ff11118938fd44e6ff60774104b03c08c",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "rand03",
+      "seeds": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "tasks": 3,
+      "git_hash": "7225a59ff11118938fd44e6ff60774104b03c08c",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "rand10",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "tasks": 3,
+      "git_hash": "7225a59ff11118938fd44e6ff60774104b03c08c",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "rand10",
+      "seeds": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "tasks": 3,
+      "git_hash": "7225a59ff11118938fd44e6ff60774104b03c08c",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "zero",
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "tasks": 3,
+      "git_hash": "707638b04729feb31b1e974a16df563091108843",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    },
+    {
+      "arm": "zero",
+      "seeds": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "tasks": 3,
+      "git_hash": "7225a59ff11118938fd44e6ff60774104b03c08c",
+      "engine_sha": "c66760ba7c55af952adc76a5432edf3a6b765b86887e0fea3732fab8ae693049",
+      "runner_sha": "e46c52297a3a648395b69e349188cc4d9619c2bb616b5c5525d15176b9fd8279",
+      "data_sha": {
+        "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      },
+      "tf32_matmul": false,
+      "tf32_cudnn": true,
+      "torch": "2.13.0+cu130",
+      "archive_prefix_exact": true
+    }
+  ]
+}

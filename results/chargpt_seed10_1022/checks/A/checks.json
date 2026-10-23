@@ -1,0 +1,1365 @@
+{
+  "all_pass": true,
+  "parts_run": [
+    "iii",
+    "ii",
+    "i"
+  ],
+  "n_checks": 35,
+  "n_pass": 35,
+  "elapsed_seconds": 55.44425964355469,
+  "checks": [
+    {
+      "check": "iii_C3_ReLUcap_init_task1_bitwise",
+      "pass_": true,
+      "n_pairs": 20,
+      "n_pairs_equal": 20,
+      "n_pairs_identical_state_dict": 0,
+      "criterion": "共通の全 tensor（重み・buffer）が bytes で同じ・C3 だけの key 無し・ReLUcap だけの key は cap の帳簿で cap_on=0・cap=inf・float64 の forward がビットで同じ。ReLUcap の state_dict には cap の帳簿の buffer が足されているので、file の sha と state_dict 全体は一致しない（n_pairs_identical_state_dict に記録）",
+      "pairs": [
+        {
+          "seed": 0,
+          "task": 0,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 0,
+          "task": 1,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 1,
+          "task": 0,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 1,
+          "task": 1,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 2,
+          "task": 0,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 2,
+          "task": 1,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 3,
+          "task": 0,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 3,
+          "task": 1,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 4,
+          "task": 0,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 4,
+          "task": 1,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 5,
+          "task": 0,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 5,
+          "task": 1,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 6,
+          "task": 0,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 6,
+          "task": 1,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 7,
+          "task": 0,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 7,
+          "task": 1,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 8,
+          "task": 0,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 8,
+          "task": 1,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 9,
+          "task": 0,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        },
+        {
+          "seed": 9,
+          "task": 1,
+          "n_common": 15,
+          "only_C3": [],
+          "only_ReLUcap": [
+            "h.0.mlp.V",
+            "h.0.mlp.cap",
+            "h.0.mlp.cap_on",
+            "h.0.mlp.v_rate",
+            "h.1.mlp.V",
+            "h.1.mlp.cap",
+            "h.1.mlp.cap_on",
+            "h.1.mlp.v_rate"
+          ],
+          "tensors_unequal": [],
+          "bytes_unequal": [],
+          "cap_inactive": true,
+          "forward_bitwise_equal": true,
+          "file_sha_equal": false
+        }
+      ]
+    },
+    {
+      "check": "tied_weight",
+      "pass_": true,
+      "arm": "M2/C3/seed1000/task1"
+    },
+    {
+      "check": "lemma_identity",
+      "pass_": true,
+      "arm": "M2/C3/seed1000/task1",
+      "relative_error": 4.2934594292048284e-16
+    },
+    {
+      "check": "position_closure",
+      "pass_": true,
+      "arm": "M2/C3/seed1000/task1",
+      "max_abs": 8.881784197001252e-16
+    },
+    {
+      "check": "negate_head",
+      "pass_": true,
+      "arm": "M2/C3/seed1000/task1",
+      "kappa": 0.0011918214913631375,
+      "mutant_kappa": -0.0011918214913631375,
+      "note": "head-only mutant intentionally untied; embedding unchanged"
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M2/C3/seed1000/task1",
+      "layer": 0,
+      "sign_flips": 199,
+      "uniform_sink": 0.0859375,
+      "one_class_sink": 0.384765625
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M2/C3/seed1000/task1",
+      "layer": 1,
+      "sign_flips": 260,
+      "uniform_sink": 0.755859375,
+      "one_class_sink": 0.521484375
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M2/C3/seed1000/task1",
+      "layer": 0,
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": -0.0035355093484999035,
+          "fd": -0.00353550877463249,
+          "relative_error": 1.6231534330463324e-07
+        },
+        {
+          "unit": 256,
+          "ad": -0.0032221801188215705,
+          "fd": -0.0032221798562659387,
+          "relative_error": 8.148384698178813e-08
+        },
+        {
+          "unit": 511,
+          "ad": -0.0029403471931977536,
+          "fd": -0.0029403475210187935,
+          "relative_error": 1.1149057636953046e-07
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M2/C3/seed1000/task1",
+      "layer": 0,
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": -0.13328432156350406,
+              "fd": -0.13328432155873537,
+              "relative_error": 3.5778292529696654e-11
+            },
+            {
+              "unit": 256,
+              "ad": -0.057397828136451105,
+              "fd": -0.05739782812930194,
+              "relative_error": 1.245545944505377e-10
+            },
+            {
+              "unit": 511,
+              "ad": -0.10967995453906884,
+              "fd": -0.10967995453872725,
+              "relative_error": 3.114405640821713e-12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M2/C3/seed1000/task1",
+      "layer": 1,
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": 0.003724582664307298,
+          "fd": 0.0037245833084398328,
+          "relative_error": 1.7294083157637652e-07
+        },
+        {
+          "unit": 254,
+          "ad": 0.019173475513226873,
+          "fd": 0.01917347525193236,
+          "relative_error": 1.3627916004241332e-08
+        },
+        {
+          "unit": 511,
+          "ad": -0.021542157905720897,
+          "fd": -0.021542157391252204,
+          "relative_error": 2.388194792707031e-08
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M2/C3/seed1000/task1",
+      "layer": 1,
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": 0.09578352509039095,
+              "fd": 0.09578352511141475,
+              "relative_error": 2.194927968302563e-10
+            },
+            {
+              "unit": 254,
+              "ad": -0.2333939039749107,
+              "fd": -0.23339390398113835,
+              "relative_error": 2.668303315779843e-11
+            },
+            {
+              "unit": 511,
+              "ad": 0.3881919806186669,
+              "fd": 0.38819198056039284,
+              "relative_error": 1.5011657932105614e-10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "recorded_eval_rounding",
+      "pass_": true,
+      "arm": "M2/C3/seed1000/task1",
+      "computed_float64": 0.0748008759486517,
+      "recorded": 0.074800868,
+      "abs_error": 7.948651695177666e-09,
+      "relative_error": 1.0626416387544681e-07,
+      "tolerance": 1.4965173600000002e-07,
+      "rtol": 2e-06,
+      "csv_rounding_bound": 5e-11,
+      "registered_rounding_pass": false,
+      "H_recomputed": 0.7034950662282683,
+      "H_recorded": 0.703495066,
+      "note": "写し元 checks.json の all_pass_criterion（float32-adjusted: 2e-6*|recorded| + .9g の丸め）と同じ基準"
+    },
+    {
+      "check": "tied_weight",
+      "pass_": true,
+      "arm": "M2/C3/seed0/task1"
+    },
+    {
+      "check": "lemma_identity",
+      "pass_": true,
+      "arm": "M2/C3/seed0/task1",
+      "relative_error": 0.0
+    },
+    {
+      "check": "position_closure",
+      "pass_": true,
+      "arm": "M2/C3/seed0/task1",
+      "max_abs": 8.881784197001252e-16
+    },
+    {
+      "check": "negate_head",
+      "pass_": true,
+      "arm": "M2/C3/seed0/task1",
+      "kappa": 0.0016329261241062282,
+      "mutant_kappa": -0.0016329261241062282,
+      "note": "head-only mutant intentionally untied; embedding unchanged"
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M2/C3/seed0/task1",
+      "layer": 0,
+      "sign_flips": 217,
+      "uniform_sink": 0.171875,
+      "one_class_sink": 0.427734375
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M2/C3/seed0/task1",
+      "layer": 1,
+      "sign_flips": 254,
+      "uniform_sink": 0.712890625,
+      "one_class_sink": 0.501953125
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M2/C3/seed0/task1",
+      "layer": 0,
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": -0.006800900248576113,
+          "fd": -0.006800900287373679,
+          "relative_error": 5.704769106302581e-09
+        },
+        {
+          "unit": 254,
+          "ad": -0.010708100062534788,
+          "fd": -0.010708100184331215,
+          "relative_error": 1.137423305851596e-08
+        },
+        {
+          "unit": 511,
+          "ad": -0.004593642021002819,
+          "fd": -0.004593641911299073,
+          "relative_error": 2.3881648748068723e-08
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M2/C3/seed0/task1",
+      "layer": 0,
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": -0.20574311295912065,
+              "fd": -0.20574311297011372,
+              "relative_error": 5.343103547262917e-11
+            },
+            {
+              "unit": 254,
+              "ad": -0.14664339196376125,
+              "fd": -0.1466433919754609,
+              "relative_error": 7.978294213052685e-11
+            },
+            {
+              "unit": 511,
+              "ad": -0.05179398374972886,
+              "fd": -0.05179398376853328,
+              "relative_error": 3.6306192202374416e-10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M2/C3/seed0/task1",
+      "layer": 1,
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": 0.05714101049702389,
+          "fd": 0.05714101103393432,
+          "relative_error": 9.396236015537034e-09
+        },
+        {
+          "unit": 256,
+          "ad": -0.021491694499910913,
+          "fd": -0.02149169464615852,
+          "relative_error": 6.804842995486269e-09
+        },
+        {
+          "unit": 511,
+          "ad": 0.021319351171401744,
+          "fd": 0.02131935161742149,
+          "relative_error": 2.0920886969099367e-08
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M2/C3/seed0/task1",
+      "layer": 1,
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": 0.27426609904533195,
+              "fd": 0.2742660990540102,
+              "relative_error": 3.1641826483551214e-11
+            },
+            {
+              "unit": 256,
+              "ad": 0.30255839204241775,
+              "fd": 0.30255839211790203,
+              "relative_error": 2.494866692028636e-10
+            },
+            {
+              "unit": 511,
+              "ad": 0.5871603231306118,
+              "fd": 0.5871603231955014,
+              "relative_error": 1.1051417410840316e-10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "recorded_eval_rounding",
+      "pass_": true,
+      "arm": "M2/C3/seed0/task1",
+      "computed_float64": 0.07798176223724074,
+      "recorded": 0.0779818223,
+      "abs_error": 6.006275926617732e-08,
+      "relative_error": 7.702148718083665e-07,
+      "tolerance": 1.560136446e-07,
+      "rtol": 2e-06,
+      "csv_rounding_bound": 5e-11,
+      "registered_rounding_pass": false,
+      "H_recomputed": 0.7194636537691628,
+      "H_recorded": 0.719463654,
+      "note": "写し元 checks.json の all_pass_criterion（float32-adjusted: 2e-6*|recorded| + .9g の丸め）と同じ基準"
+    },
+    {
+      "check": "tied_weight",
+      "pass_": true,
+      "arm": "M2/ReLUcap/seed0/task1"
+    },
+    {
+      "check": "lemma_identity",
+      "pass_": true,
+      "arm": "M2/ReLUcap/seed0/task1",
+      "relative_error": 0.0
+    },
+    {
+      "check": "position_closure",
+      "pass_": true,
+      "arm": "M2/ReLUcap/seed0/task1",
+      "max_abs": 8.881784197001252e-16
+    },
+    {
+      "check": "negate_head",
+      "pass_": true,
+      "arm": "M2/ReLUcap/seed0/task1",
+      "kappa": 0.0016329261241062282,
+      "mutant_kappa": -0.0016329261241062282,
+      "note": "head-only mutant intentionally untied; embedding unchanged"
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M2/ReLUcap/seed0/task1",
+      "layer": 0,
+      "sign_flips": 217,
+      "uniform_sink": 0.171875,
+      "one_class_sink": 0.427734375
+    },
+    {
+      "check": "one_class_mutant",
+      "pass_": true,
+      "arm": "M2/ReLUcap/seed0/task1",
+      "layer": 1,
+      "sign_flips": 254,
+      "uniform_sink": 0.712890625,
+      "one_class_sink": 0.501953125
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M2/ReLUcap/seed0/task1",
+      "layer": 0,
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": -0.006800900248576113,
+          "fd": -0.006800900287373679,
+          "relative_error": 5.704769106302581e-09
+        },
+        {
+          "unit": 254,
+          "ad": -0.010708100062534788,
+          "fd": -0.010708100184331215,
+          "relative_error": 1.137423305851596e-08
+        },
+        {
+          "unit": 511,
+          "ad": -0.004593642021002819,
+          "fd": -0.004593641911299073,
+          "relative_error": 2.3881648748068723e-08
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M2/ReLUcap/seed0/task1",
+      "layer": 0,
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": -0.20574311295912065,
+              "fd": -0.20574311297011372,
+              "relative_error": 5.343103547262917e-11
+            },
+            {
+              "unit": 254,
+              "ad": -0.14664339196376125,
+              "fd": -0.1466433919754609,
+              "relative_error": 7.978294213052685e-11
+            },
+            {
+              "unit": 511,
+              "ad": -0.05179398374972886,
+              "fd": -0.05179398376853328,
+              "relative_error": 3.6306192202374416e-10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "own_finite_difference",
+      "pass_": true,
+      "arm": "M2/ReLUcap/seed0/task1",
+      "layer": 1,
+      "epsilon": 1e-06,
+      "units": [
+        {
+          "unit": 0,
+          "ad": 0.05714101049702389,
+          "fd": 0.05714101103393432,
+          "relative_error": 9.396236015537034e-09
+        },
+        {
+          "unit": 256,
+          "ad": -0.021491694499910913,
+          "fd": -0.02149169464615852,
+          "relative_error": 6.804842995486269e-09
+        },
+        {
+          "unit": 511,
+          "ad": 0.021319351171401744,
+          "fd": 0.02131935161742149,
+          "relative_error": 2.0920886969099367e-08
+        }
+      ]
+    },
+    {
+      "check": "full_finite_difference",
+      "pass_": true,
+      "arm": "M2/ReLUcap/seed0/task1",
+      "layer": 1,
+      "trials": [
+        {
+          "epsilon": 1e-06,
+          "units": [
+            {
+              "unit": 0,
+              "ad": 0.27426609904533195,
+              "fd": 0.2742660990540102,
+              "relative_error": 3.1641826483551214e-11
+            },
+            {
+              "unit": 256,
+              "ad": 0.30255839204241775,
+              "fd": 0.30255839211790203,
+              "relative_error": 2.494866692028636e-10
+            },
+            {
+              "unit": 511,
+              "ad": 0.5871603231306118,
+              "fd": 0.5871603231955014,
+              "relative_error": 1.1051417410840316e-10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "check": "recorded_eval_rounding",
+      "pass_": true,
+      "arm": "M2/ReLUcap/seed0/task1",
+      "computed_float64": 0.07798176223724074,
+      "recorded": 0.0779818223,
+      "abs_error": 6.006275926617732e-08,
+      "relative_error": 7.702148718083665e-07,
+      "tolerance": 1.560136446e-07,
+      "rtol": 2e-06,
+      "csv_rounding_bound": 5e-11,
+      "registered_rounding_pass": false,
+      "H_recomputed": 0.7194636537691628,
+      "H_recorded": 0.719463654,
+      "note": "写し元 checks.json の all_pass_criterion（float32-adjusted: 2e-6*|recorded| + .9g の丸め）と同じ基準"
+    },
+    {
+      "check": "i_seed1000_reproduce",
+      "pass_": true,
+      "states": 36,
+      "n_fail": 0,
+      "fails": [],
+      "max_rel_head_continuous": [
+        1.113562702141154e-12,
+        "t95:null_q50"
+      ],
+      "max_rel_unit_continuous": [
+        4.3893861173227584e-14,
+        "t93:own_abs_median_alive"
+      ],
+      "max_fraction_diff_in_units_of_1_over_n": [
+        0.0,
+        null
+      ],
+      "tolerance": "continuous rel 1e-8; fractions 1/n (n = n_alive, or self_n/full_own_n for agreements); null_quantile 1/1000; counts exact; identity_rel and closure_max <= 1e-10",
+      "elapsed_seconds": 43.35827994346619
+    }
+  ],
+  "seed1000_detail": [
+    {
+      "t": 0,
+      "kappa": -4.1011215143816226e-06,
+      "own_sink": 0.474609375,
+      "ref_own_sink": 0.474609375,
+      "fixed_next_own_sink": 0.494140625,
+      "ref_fixed_next_own_sink": 0.494140625
+    },
+    {
+      "t": 1,
+      "kappa": 0.0011918214913631375,
+      "own_sink": 0.755859375,
+      "ref_own_sink": 0.755859375,
+      "fixed_next_own_sink": 0.603515625,
+      "ref_fixed_next_own_sink": 0.603515625
+    },
+    {
+      "t": 2,
+      "kappa": 0.002267733017827111,
+      "own_sink": 0.767578125,
+      "ref_own_sink": 0.767578125,
+      "fixed_next_own_sink": 0.611328125,
+      "ref_fixed_next_own_sink": 0.611328125
+    },
+    {
+      "t": 3,
+      "kappa": 0.002939153351952448,
+      "own_sink": 0.7109375,
+      "ref_own_sink": 0.7109375,
+      "fixed_next_own_sink": 0.626953125,
+      "ref_fixed_next_own_sink": 0.626953125
+    },
+    {
+      "t": 4,
+      "kappa": 0.00383840707855995,
+      "own_sink": 0.8656126482213439,
+      "ref_own_sink": 0.8656126482213439,
+      "fixed_next_own_sink": 0.7015810276679841,
+      "ref_fixed_next_own_sink": 0.7015810276679841
+    },
+    {
+      "t": 5,
+      "kappa": 0.00460109858717386,
+      "own_sink": 0.9045643153526971,
+      "ref_own_sink": 0.9045643153526971,
+      "fixed_next_own_sink": 0.7302904564315352,
+      "ref_fixed_next_own_sink": 0.7302904564315352
+    },
+    {
+      "t": 6,
+      "kappa": 0.005450359726433758,
+      "own_sink": 0.930715935334873,
+      "ref_own_sink": 0.930715935334873,
+      "fixed_next_own_sink": 0.7228637413394919,
+      "ref_fixed_next_own_sink": 0.7228637413394919
+    },
+    {
+      "t": 7,
+      "kappa": 0.006258991088724677,
+      "own_sink": 0.8852941176470588,
+      "ref_own_sink": 0.8852941176470588,
+      "fixed_next_own_sink": 0.7264705882352941,
+      "ref_fixed_next_own_sink": 0.7264705882352941
+    },
+    {
+      "t": 8,
+      "kappa": 0.006844054670879753,
+      "own_sink": 0.900355871886121,
+      "ref_own_sink": 0.900355871886121,
+      "fixed_next_own_sink": 0.7437722419928826,
+      "ref_fixed_next_own_sink": 0.7437722419928826
+    },
+    {
+      "t": 9,
+      "kappa": 0.007814177423948479,
+      "own_sink": 0.8720379146919431,
+      "ref_own_sink": 0.8720379146919431,
+      "fixed_next_own_sink": 0.6919431279620853,
+      "ref_fixed_next_own_sink": 0.6919431279620853
+    },
+    {
+      "t": 10,
+      "kappa": 0.008313474465808629,
+      "own_sink": 0.8682170542635659,
+      "ref_own_sink": 0.8682170542635659,
+      "fixed_next_own_sink": 0.7364341085271318,
+      "ref_fixed_next_own_sink": 0.7364341085271318
+    },
+    {
+      "t": 25,
+      "kappa": 0.014275384144553895,
+      "own_sink": 0.5119047619047619,
+      "ref_own_sink": 0.5119047619047619,
+      "fixed_next_own_sink": 0.5357142857142857,
+      "ref_fixed_next_own_sink": 0.5357142857142857
+    },
+    {
+      "t": 39,
+      "kappa": 0.014784476609147503,
+      "own_sink": 0.4748201438848921,
+      "ref_own_sink": 0.4748201438848921,
+      "fixed_next_own_sink": 0.381294964028777,
+      "ref_fixed_next_own_sink": 0.381294964028777
+    },
+    {
+      "t": 40,
+      "kappa": 0.013718636881991434,
+      "own_sink": 0.5853658536585366,
+      "ref_own_sink": 0.5853658536585366,
+      "fixed_next_own_sink": 0.4146341463414634,
+      "ref_fixed_next_own_sink": 0.4146341463414634
+    },
+    {
+      "t": 41,
+      "kappa": 0.013922942573830727,
+      "own_sink": 0.4752475247524752,
+      "ref_own_sink": 0.4752475247524752,
+      "fixed_next_own_sink": 0.38613861386138615,
+      "ref_fixed_next_own_sink": 0.38613861386138615
+    },
+    {
+      "t": 42,
+      "kappa": 0.013629249471841189,
+      "own_sink": 0.4782608695652174,
+      "ref_own_sink": 0.4782608695652174,
+      "fixed_next_own_sink": 0.5093167701863354,
+      "ref_fixed_next_own_sink": 0.5093167701863354
+    },
+    {
+      "t": 43,
+      "kappa": 0.013603642584316364,
+      "own_sink": 0.5088967971530249,
+      "ref_own_sink": 0.5088967971530249,
+      "fixed_next_own_sink": 0.5088967971530249,
+      "ref_fixed_next_own_sink": 0.5088967971530249
+    },
+    {
+      "t": 44,
+      "kappa": 0.014710223487854123,
+      "own_sink": 0.503448275862069,
+      "ref_own_sink": 0.503448275862069,
+      "fixed_next_own_sink": 0.5206896551724138,
+      "ref_fixed_next_own_sink": 0.5206896551724138
+    },
+    {
+      "t": 45,
+      "kappa": 0.015111413884080714,
+      "own_sink": 0.4889589905362776,
+      "ref_own_sink": 0.4889589905362776,
+      "fixed_next_own_sink": 0.5047318611987381,
+      "ref_fixed_next_own_sink": 0.5047318611987381
+    },
+    {
+      "t": 46,
+      "kappa": 0.014741692455219925,
+      "own_sink": 0.6037735849056604,
+      "ref_own_sink": 0.6037735849056604,
+      "fixed_next_own_sink": 0.4528301886792453,
+      "ref_fixed_next_own_sink": 0.4528301886792453
+    },
+    {
+      "t": 47,
+      "kappa": 0.015450321368838242,
+      "own_sink": 0.5235849056603774,
+      "ref_own_sink": 0.5235849056603774,
+      "fixed_next_own_sink": 0.5448113207547169,
+      "ref_fixed_next_own_sink": 0.5448113207547169
+    },
+    {
+      "t": 48,
+      "kappa": 0.01560377445470067,
+      "own_sink": 0.5756302521008403,
+      "ref_own_sink": 0.5756302521008403,
+      "fixed_next_own_sink": 0.5819327731092437,
+      "ref_fixed_next_own_sink": 0.5819327731092437
+    },
+    {
+      "t": 49,
+      "kappa": 0.014054913607425118,
+      "own_sink": 0.5598377281947262,
+      "ref_own_sink": 0.5598377281947262,
+      "fixed_next_own_sink": 0.5517241379310345,
+      "ref_fixed_next_own_sink": 0.5517241379310345
+    },
+    {
+      "t": 50,
+      "kappa": 0.01619859551380408,
+      "own_sink": 0.6043307086614174,
+      "ref_own_sink": 0.6043307086614174,
+      "fixed_next_own_sink": 0.5649606299212598,
+      "ref_fixed_next_own_sink": 0.5649606299212598
+    },
+    {
+      "t": 89,
+      "kappa": 0.02435483254050294,
+      "own_sink": 0.7107438016528925,
+      "ref_own_sink": 0.7107438016528925,
+      "fixed_next_own_sink": 0.5702479338842975,
+      "ref_fixed_next_own_sink": 0.5702479338842975
+    },
+    {
+      "t": 90,
+      "kappa": 0.009786600480729477,
+      "own_sink": 0.72,
+      "ref_own_sink": 0.72,
+      "fixed_next_own_sink": 0.56,
+      "ref_fixed_next_own_sink": 0.56
+    },
+    {
+      "t": 91,
+      "kappa": 0.021977591310508037,
+      "own_sink": 0.6706586826347305,
+      "ref_own_sink": 0.6706586826347305,
+      "fixed_next_own_sink": 0.5868263473053892,
+      "ref_fixed_next_own_sink": 0.5868263473053892
+    },
+    {
+      "t": 92,
+      "kappa": 0.023153923503455392,
+      "own_sink": 0.6902654867256637,
+      "ref_own_sink": 0.6902654867256637,
+      "fixed_next_own_sink": 0.6194690265486725,
+      "ref_fixed_next_own_sink": 0.6194690265486725
+    },
+    {
+      "t": 93,
+      "kappa": 0.02173497727918582,
+      "own_sink": 0.6403508771929824,
+      "ref_own_sink": 0.6403508771929824,
+      "fixed_next_own_sink": 0.5087719298245614,
+      "ref_fixed_next_own_sink": 0.5087719298245614
+    },
+    {
+      "t": 94,
+      "kappa": 0.023283474071955863,
+      "own_sink": 0.6964285714285714,
+      "ref_own_sink": 0.6964285714285714,
+      "fixed_next_own_sink": 0.6071428571428571,
+      "ref_fixed_next_own_sink": 0.6071428571428571
+    },
+    {
+      "t": 95,
+      "kappa": 0.021728998988051775,
+      "own_sink": 0.69,
+      "ref_own_sink": 0.69,
+      "fixed_next_own_sink": 0.63,
+      "ref_fixed_next_own_sink": 0.63
+    },
+    {
+      "t": 96,
+      "kappa": 0.021700341198263435,
+      "own_sink": 0.6666666666666666,
+      "ref_own_sink": 0.6666666666666666,
+      "fixed_next_own_sink": 0.42105263157894735,
+      "ref_fixed_next_own_sink": 0.42105263157894735
+    },
+    {
+      "t": 97,
+      "kappa": 0.018893629313095815,
+      "own_sink": 0.6692307692307692,
+      "ref_own_sink": 0.6692307692307692,
+      "fixed_next_own_sink": 0.4461538461538462,
+      "ref_fixed_next_own_sink": 0.4461538461538462
+    },
+    {
+      "t": 98,
+      "kappa": 0.022725501046280152,
+      "own_sink": 0.7203389830508474,
+      "ref_own_sink": 0.7203389830508474,
+      "fixed_next_own_sink": 0.5932203389830508,
+      "ref_fixed_next_own_sink": 0.5932203389830508
+    },
+    {
+      "t": 99,
+      "kappa": 0.021466941981311913,
+      "own_sink": 0.7033898305084746,
+      "ref_own_sink": 0.7033898305084746,
+      "fixed_next_own_sink": 0.5254237288135594,
+      "ref_fixed_next_own_sink": 0.5254237288135594
+    },
+    {
+      "t": 100,
+      "kappa": 0.021451399829482277,
+      "own_sink": 0.7333333333333333,
+      "ref_own_sink": 0.7333333333333333,
+      "fixed_next_own_sink": 0.49523809523809526,
+      "ref_fixed_next_own_sink": 0.49523809523809526
+    }
+  ],
+  "provenance": {
+    "source_root": "/home/kubo/project/Nakatsuka/lop_analysis_chargpt_cl_1019",
+    "source_head": "033679e0f1a3d313e1e3110e22c8f1cac3c36628",
+    "required_source_head": "033679e0",
+    "copied_from": {
+      "analysis/chargpt_load_fold_1021/load/measure.py": "cd225d27b47a614e018ec3d8c6ecf301e68f91e2",
+      "analysis/chargpt_load_fold_1021/load/reanalyze_p07.py": "2cb251ac1b11978717e949a80abf673893ed1617"
+    },
+    "device": "cpu",
+    "dtype": "float64",
+    "threads": 8,
+    "torch": "2.13.0+cu130",
+    "numpy": "2.5.1",
+    "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:27:36) [GCC 11.2.0]",
+    "script_sha256": "0205260f4df17cdc97e18f74753afcaaa8dc3abd9f8a540ddbe82a9faea34866",
+    "input_code_sha256": {
+      "/home/kubo/project/Nakatsuka/lop_seed10/specs/spec_chargpt_seed10_1022.md": "fce16c93b754c747aab620b9c1c01be8804eab41a88267aa370fa9317fc264fc",
+      "/home/kubo/project/Nakatsuka/lop_seed10/specs/chargpt_seed10_1022_runbook.md": "4da1fe344ea29f34f147ea6e9d8b02103c25d1154ef0859fb722c3d087c626b4",
+      "/home/kubo/project/Nakatsuka/lop_analysis_chargpt_cl_1019/src/chargpt_cl_1019.py": "35f86e071cf354ce8ce8c9776e3d24bd91160a233727e78ff92ac732b7fe853c",
+      "/home/kubo/project/Nakatsuka/lop_analysis_chargpt_cl_1019/src/chargpt_cl_1019_kune.py": "cacbe6001171735b119b60783023b9e1695b2f8a85baaa7172f0640c973854e8"
+    },
+    "probe": {
+      "sequences": 64,
+      "tokens_per_sequence": 128,
+      "eval_sequences": 256,
+      "chain_alpha": 0.01
+    },
+    "null": {
+      "permutations": 1000,
+      "seed": 1021000
+    },
+    "states": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      25,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100
+    ],
+    "arms": [
+      "C3",
+      "ReLUcap"
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ]
+  }
+}

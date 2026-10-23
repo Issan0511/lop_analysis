@@ -1,0 +1,372 @@
+{
+ "n": 73,
+ "n_fail": 0,
+ "judge_sha256": "193f8eb67209ad732bed670c59b417ed572976396f12dd0d19849b21301a0612",
+ "checks": [
+  {
+   "name": "sign_test 9/10 = 22/1024",
+   "pass_": true,
+   "detail": "0.021484375"
+  },
+  {
+   "name": "sign_test 8/9 = 20/512（spec:131 の 0.039）",
+   "pass_": true,
+   "detail": "0.0390625"
+  },
+  {
+   "name": "sign_test 対称・0 件は NaN",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "sign_test 5/10 = 1",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "A2 10,9→ALIGNS 8,2→MIXED 1,0→REVERSED",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "A3 8→COMPARABLE 7→not",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "B 8 ③a→OTHER 7→MIXED 8 自分→SELF",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "C1 n−1・2 以下・n<6（追補 1）",
+   "pass_": true,
+   "detail": "{(9, 9): 'FEEDBACK_NEEDED', (9, 8): 'FEEDBACK_NEEDED', (9, 7): 'MIXED', (9, 3): 'MIXED', (9, 2): 'FEEDBACK_NOT_NEEDED', (6, 5): 'FEEDBACK_NEEDED', (6, 4): 'MIXED', (6, 2): 'FEEDBACK_NOT_NEEDED', (5, 5): 'INSUFFICIENT', (0, 0): 'INSUFFICIENT'}"
+  },
+  {
+   "name": "C2 n−2・2 以下・n<6（追補 1）",
+   "pass_": true,
+   "detail": "{(10, 8): 'READOUT_SHRINK_REVIVES', (10, 7): 'MIXED', (10, 3): 'MIXED', (10, 2): 'NO_REVIVAL', (6, 4): 'READOUT_SHRINK_REVIVES', (6, 3): 'MIXED', (6, 2): 'NO_REVIVAL', (5, 5): 'INSUFFICIENT', (7, 5): 'READOUT_SHRINK_REVIVES', (7, 4): 'MIXED'}"
+  },
+  {
+   "name": "D1 8→REPL 7,3→MIXED 2→NO",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "D2 4/5=0.8→MOVES 3/4→not 0→対象なし",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "D3 8→LOSS 7→not",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "C1 R' = 死 ≤ 0.5 の最初（0.5 ちょうどを含む）",
+   "pass_": true,
+   "detail": "{'eligible': True, 'Rp': 15, 'no_revival': True, 'diff_window': 0.12, 'diff_judge_window': 0.20000000000000007, 'arm_min_in_judge_window': 0.95}"
+  },
+  {
+   "name": "C1 窓の最後の課題 E で 0.5 ちょうど → 生き返った",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "C1 R' より前の生き返りは判定窓の外",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "C1 control が生き返らない → 対象外",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "C1 課題の欠け → 未完扱い",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "D1 46〜50 の 5 課題 → 逃げる（t+4 = 50）",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "D1 47〜60 → 逃げない（続きが 51 で終わる）・始まり ≤ 50 の読みでは 47",
+   "pass_": true,
+   "detail": "{'escape': False, 't_esc': None, 't_esc_start_le50': 47}"
+  },
+  {
+   "name": "D1 4 課題だけ → 逃げない",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "D1 φ′ = 0.75 ちょうどは満たす",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "D1 r_med = 1 ちょうどは満たさない（> +1）",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "D2 基準 = 前の 5 課題の平均、基準 − 1 ちょうど → 移る",
+   "pass_": true,
+   "detail": "{'judgeable': True, 'base': 0.5, 'moved': True, 't_move': 80, 'n_pre': 5, 'min_after': -0.5}"
+  },
+  {
+   "name": "D2 基準 − 1 より上 → 移らない",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "D2 t_esc = 3 → 前の 2 課題で基準",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "D2 t_esc = 1 → 判定できない",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "D3 悪化・gap の差が δ ちょうど、頭が上 → 喪失",
+   "pass_": true,
+   "detail": "{'worse': 0.0252, 'gap_shift': 0.0252, 'head_early': 1.0, 'head_late': 1.01, 'ok_worse': True, 'ok_gap': True, 'ok_head': True, 'loss': True, 'near_delta': [], 'gap': {'10': 0.0, '100': 0.0252}}"
+  },
+  {
+   "name": "D3 頭 100 更新が等しい → 喪失でない（> を要る）",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "D3 悪化 0.0251（0.025 ≤ x < 0.0252）→ 満たさない・δ 近傍に記録",
+   "pass_": true,
+   "detail": "0.02510000000000001"
+  },
+  {
+   "name": "A r_mag = 0.1 ちょうど（≥ 0.1）・s_early 0.7 > s_init 0.5",
+   "pass_": true,
+   "detail": "0.09999999999999999"
+  },
+  {
+   "name": "A 帯 512 unit → ±0.0663",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "A s_early = s_init は + に数えない",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "e2e A2 9/10 → LOAD_ALIGNS",
+   "pass_": true,
+   "detail": "('LOAD_ALIGNS', 0.021484375)"
+  },
+  {
+   "name": "e2e A2 8/10 → MIXED",
+   "pass_": true,
+   "detail": "('MIXED', 0.109375)"
+  },
+  {
+   "name": "e2e A2 1/10 → LOAD_REVERSED",
+   "pass_": true,
+   "detail": "('LOAD_REVERSED', 0.021484375)"
+  },
+  {
+   "name": "e2e A2 9/10 の p = 0.0215",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "e2e A3 r_mag < 0.1 が 3 seed → 7/10 → not",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "e2e A ReLUcap の 1 単位の欠け → A1 未完・A2 は C3 だけで出る",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "e2e A C3 の欠け → A2・A3 未完",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "e2e B ③a 最大 8/10 → OTHER_UNITS_CARRY",
+   "pass_": true,
+   "detail": "(8, 2)"
+  },
+  {
+   "name": "e2e B ③a 最大 7/10 → MIXED",
+   "pass_": true,
+   "detail": "(7, 3)"
+  },
+  {
+   "name": "e2e B ③a 最大 2/10 → SELF_CARRIES",
+   "pass_": true,
+   "detail": "(2, 8)"
+  },
+  {
+   "name": "e2e B 浮く unit を割合に入れない（③a の割合 ≈ 0.5）",
+   "pass_": true,
+   "detail": "{'③a': 0.4998192938880388, '①+②': 0.1998234232857125, '③b': 0.30035728282624863}"
+  },
+  {
+   "name": "e2e B 検査落ちの 1 状態 → その seed を数えず 未完",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "e2e B 終盤の 1 状態の欠け → 判定（早期）は出る・終盤の塊は無い",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "e2e C1 生き返らない 8・対象外 0 → FEEDBACK_NEEDED",
+   "pass_": true,
+   "detail": "(9, 8, 'FEEDBACK_NEEDED', 0.00390625)"
+  },
+  {
+   "name": "e2e C1 生き返らない 7・対象外 0 → MIXED",
+   "pass_": true,
+   "detail": "(9, 7, 'MIXED', 0.00390625)"
+  },
+  {
+   "name": "e2e C1 生き返らない 2・対象外 0 → FEEDBACK_NOT_NEEDED",
+   "pass_": true,
+   "detail": "(9, 2, 'FEEDBACK_NOT_NEEDED', 0.00390625)"
+  },
+  {
+   "name": "e2e C1 生き返らない 6・対象外 2 → FEEDBACK_NEEDED",
+   "pass_": true,
+   "detail": "(7, 6, 'FEEDBACK_NEEDED', 0.015625)"
+  },
+  {
+   "name": "e2e C1 生き返らない 5・対象外 3 → FEEDBACK_NEEDED",
+   "pass_": true,
+   "detail": "(6, 5, 'FEEDBACK_NEEDED', 0.03125)"
+  },
+  {
+   "name": "e2e C1 生き返らない 4・対象外 3 → MIXED",
+   "pass_": true,
+   "detail": "(6, 4, 'MIXED', 0.03125)"
+  },
+  {
+   "name": "e2e C1 生き返らない 5・対象外 4 → INSUFFICIENT",
+   "pass_": true,
+   "detail": "(5, 5, 'INSUFFICIENT', 0.0625)"
+  },
+  {
+   "name": "e2e C1 8/9 の符号検定（全 seed で lnex1 − control > 0 → 9/9）p = 2/512",
+   "pass_": true,
+   "detail": "(9, 0, 0)"
+  },
+  {
+   "name": "e2e C1 nocommon 8/9 → 記録の予測の結果 True",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "e2e C1 lnex1 の 1 単位の欠け → 未完 1・ラベル 未完",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "e2e C2 生き返り seed 0..7・資格外 0 → READOUT_SHRINK_REVIVES",
+   "pass_": true,
+   "detail": "(10, 8, 'READOUT_SHRINK_REVIVES')"
+  },
+  {
+   "name": "e2e C2 生き返り seed 0..6・資格外 0 → MIXED",
+   "pass_": true,
+   "detail": "(10, 7, 'MIXED')"
+  },
+  {
+   "name": "e2e C2 生き返り seed 0..1・資格外 0 → NO_REVIVAL",
+   "pass_": true,
+   "detail": "(10, 2, 'NO_REVIVAL')"
+  },
+  {
+   "name": "e2e C2 生き返り seed 0..5・資格外 4 → READOUT_SHRINK_REVIVES",
+   "pass_": true,
+   "detail": "(6, 6, 'READOUT_SHRINK_REVIVES')"
+  },
+  {
+   "name": "e2e C2 生き返り seed 0..4・資格外 5 → INSUFFICIENT",
+   "pass_": true,
+   "detail": "(5, 5, 'INSUFFICIENT')"
+  },
+  {
+   "name": "e2e C2 再び死ぬ seed 7 → 記録の予測 True",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "e2e C2 control の欠け → 未完",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "e2e D 逃げ 8・喪失 8 → ('ESCAPE_REPLICATES', 'SINK_MOVES', 'LOSS_REPLICATES')",
+   "pass_": true,
+   "detail": "('ESCAPE_REPLICATES', 'SINK_MOVES', 'LOSS_REPLICATES', 8, 8)"
+  },
+  {
+   "name": "e2e D 逃げ 2・喪失 7 → ('NO_ESCAPE', 'SINK_MOVES', 'not LOSS_REPLICATES')",
+   "pass_": true,
+   "detail": "('NO_ESCAPE', 'SINK_MOVES', 'not LOSS_REPLICATES', 2, 7)"
+  },
+  {
+   "name": "e2e D 逃げ 0・喪失 0 → ('NO_ESCAPE', '対象なし', 'not LOSS_REPLICATES')",
+   "pass_": true,
+   "detail": "('NO_ESCAPE', '対象なし', 'not LOSS_REPLICATES', 0, 0)"
+  },
+  {
+   "name": "e2e D 1 seed の欠け → 未完",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "e2e 入力が全部無い → 壊れず 未完・未実施、予測は採点しない",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "実形式 B: 沈む unit の割合 = 写し元 rho_kappa_answers.carriers の share_dn",
+   "pass_": true,
+   "detail": "20 状態 × 層 × 計量、差の最大 0.0e+00"
+  },
+  {
+   "name": "実形式 B: b_block が動き、最大の項が決まる",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "実形式 C: revival10 の出力を読める（課題 25・26 の L1 の死）",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "実形式 C: to_task が窓と違う単位は未完（読まない）",
+   "pass_": true,
+   "detail": ""
+  },
+  {
+   "name": "実形式 D: seed 1000（4 ブロック SiLU）の一様 probe で D1 が動く",
+   "pass_": true,
+   "detail": "t_esc = 42（参考: spec §2 の「課題 11〜15 に正側へ」は μ/σ の 0 越えで、D1 の基準 > +1・φ′ ≥ 0.75 とは別）"
+  },
+  {
+   "name": "実形式 D: 4 ブロック 50 課題の走は d_unit で未完になる（100 課題でない）",
+   "pass_": true,
+   "detail": ""
+  }
+ ]
+}

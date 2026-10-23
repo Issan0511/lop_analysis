@@ -1,0 +1,119 @@
+{
+  "scope": "implementation checks only; no performance verdict",
+  "all_pass": true,
+  "checks": {
+    "S-fixed": {
+      "pass": true,
+      "per_arm": {
+        "SN06": {
+          "autograd_vs_formula_f64": 4.440892098500626e-16,
+          "phi_f32_over_bound": 0.24360982435826714,
+          "dphi_f32_over_bound": 0.14506979971962497,
+          "same_as_SnakeFamily_at_alpha": true,
+          "alpha_constant_after_2_tasks": true,
+          "alpha_constant_in_rows": true,
+          "ok": true
+        },
+        "SN3": {
+          "autograd_vs_formula_f64": 4.440892098500626e-16,
+          "phi_f32_over_bound": 0.3095627979602224,
+          "dphi_f32_over_bound": 0.18564463546752202,
+          "same_as_SnakeFamily_at_alpha": true,
+          "alpha_constant_after_2_tasks": true,
+          "alpha_constant_in_rows": true,
+          "ok": true
+        }
+      },
+      "mutants": {
+        "alpha_drifts_like_SNA": {
+          "detected": true
+        }
+      },
+      "seconds": 3.3
+    },
+    "S-frz": {
+      "pass": true,
+      "frozenSnake_without_freeze_is_SNA": true,
+      "task1_rows_equal_SNA": true,
+      "frozen_alpha_is_SNA_task1_alpha": true,
+      "alpha_kept_at_task3_start": true,
+      "SNA_alpha_moves_after_task1": true,
+      "alpha_stats_constant_in_rows": true,
+      "later_rows_differ_from_SNA": true,
+      "fresh_equals_SNA_fresh": true,
+      "mutants": {
+        "freeze_one_task_late": {
+          "detected": true
+        }
+      },
+      "seconds": 13.3
+    },
+    "S-graph": {
+      "pass": true,
+      "graph_equals_eager": {
+        "SN06": true,
+        "SN3": true,
+        "SNAfrz1": true
+      },
+      "mutants": {
+        "eager_lr_2^-20_larger": {
+          "detected": true
+        }
+      },
+      "seconds": 20.4
+    },
+    "S-nochange-early": {
+      "pass": true,
+      "R": {
+        "rows": 20,
+        "same_rows": true,
+        "columns_differing_outside_eff_rank": [],
+        "eff_rank": {
+          "eff_rank_l1": {
+            "max_rel_diff": 0.0,
+            "rows_differing": 0
+          },
+          "eff_rank_l2": {
+            "max_rel_diff": 3.636798462063182e-08,
+            "rows_differing": 5
+          }
+        },
+        "trajectory_identical": true,
+        "byte_identical": false
+      },
+      "SNA": {
+        "rows": 20,
+        "same_rows": true,
+        "columns_differing_outside_eff_rank": [],
+        "eff_rank": {
+          "eff_rank_l1": {
+            "max_rel_diff": 0.0,
+            "rows_differing": 0
+          },
+          "eff_rank_l2": {
+            "max_rel_diff": 0.0,
+            "rows_differing": 0
+          }
+        },
+        "trajectory_identical": true,
+        "byte_identical": true
+      },
+      "mutants": {
+        "R_lr_2^-20_larger": {
+          "detected": true
+        }
+      },
+      "seconds": 5.5
+    }
+  },
+  "git": {
+    "git_hash": "96f99645c56bbe3243fd55a094361d947e5f5da0",
+    "dirty_src_analysis": [],
+    "dirty_src_analysis_specs": []
+  },
+  "torch": "2.13.0+cu130",
+  "device": "cuda",
+  "torch_threads": 2,
+  "spec": "specs/spec_cifar5p1_mlp_snfix_1019.md",
+  "seconds": 44.8
+}

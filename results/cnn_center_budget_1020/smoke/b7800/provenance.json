@@ -1,0 +1,172 @@
+{
+  "run_id": "cnn_center_budget_1020",
+  "status": "COMPLETED",
+  "meta": {
+    "schema": 1,
+    "run_id": "cnn_center_budget_1020",
+    "slots": [
+      [
+        "ECB_a3.6_lr0.0003",
+        100
+      ]
+    ],
+    "budget": 7800,
+    "n_tasks": 3,
+    "batch": 32,
+    "graph": true,
+    "fresh_tasks": [
+      1
+    ],
+    "ckpt_boundaries": [
+      0,
+      1,
+      3
+    ],
+    "kappa": 0.2,
+    "beta_h": 0.01,
+    "lag_points": [
+      0,
+      1,
+      3,
+      10,
+      30,
+      100,
+      300,
+      780,
+      2340,
+      7800
+    ],
+    "spec_sha256": "ce62d38a34ba4b347264015bb126989fd0866fa4b78914ec5abe9f6a9de1d408",
+    "data_sha256": {
+      "cifar-100-python.tar.gz": "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+    },
+    "probe_sha256": "c23b495c859bb9977070b9675ba15307e2044289e7bdf082c6f71371d31f5c39",
+    "batch_sha256": {
+      "100": [
+        "a60a86432e0404295593771bb3adcdf18987b82936c0429a7c742a122f74cd86",
+        "51067f85041337bb2712ffd1400c24a9653f73d624a192ef635e1cda4a4212f3",
+        "71827c523414e357530b8905d0e34443af6b4800acfba4bbfdef928f0c40c471",
+        "ca572b32f3002c2c3231f6c02251d54a3ca68aefcfa2fb3a9170028ad496d782",
+        "454359f52b33be2940535ceebd054eec6fe428c6c64e7de3b2d98efe56149301",
+        "1d16b36b5194767ab39c6455a5b68e3de25c6ddfb5fb136a791dfc66b4f89e04",
+        "3783c3ba8b37f16128dc7e96e3d9ed4e7641d50a5e9167e58fd4ad85ecb2fdb3",
+        "2795210d6ff06e57e9a928decc1e2773dcb2ba6db68d2d5b13cc3ba42ca8e820",
+        "de82a8927d0c85ea4561de52a8340fa989410307df38f02436a1bebe8b1c9504",
+        "f14952624f002925c7c73d11b0e6dd43e05ace15d5d7e39f9faf67543de31587",
+        "854445934c962627f063142804ebb40054dc7d0f857f51cd4a21fda9ea5fe4c5",
+        "6a9d36169aaf130dec0d879db4c4abd038bef94e0dfa0e6e51d4a820b2460fdd",
+        "944b4049bf2ce424edcc043757fa663b7ea27da740d8d50a29de9bcc0c0f5c07",
+        "a0f379721810269ac6c693863f58f6214e939a1bfe62f24b049e1d999bd0ebc6",
+        "fdbc6d2df2c0b3564c8af152013015974082214b7f0e80c776ee5d84e78bf443",
+        "7d56c817d6823041558e15fe67e38fc6b3322bf83c7789e48705bb9548e29be5",
+        "64a267a08258297431b6091ca7d6fae9dd6b4d8d51b97705ad7afe071b5961ae",
+        "78d368acfb34119efd25e83cb7d5dabe6f34dbf9e7a42f1b40cfde8cf8693242",
+        "9dddd735fe60847fcf06d7524e3855c8d7fc7e1e0821e381d7ff5c46869b3be0",
+        "0f7fa63c1d47c43da64e4cc05cccee2ae792a03d4a9fb60c23bc06e5118d95cf",
+        "cf6642b13b0e2e5efcf09970a735a3807c69c87dd43bb3c8a057a72b3e08262c",
+        "7bfc5d6adf42a5448c346d801af241e2337be589ceb9b89f8ea9e49cd5127d12",
+        "b9cc04a338a94f83d7ed331e5b820e73d7d3e3057a3ffbd0ef5304aa935b2840",
+        "f2fe6b000069b9e5f9970762a5dcb62cd1811c3d9c2bd1ba3731b7f21602b0bb",
+        "b2354701dd20ec68c0f0da21d5be08f320b8e14e9c21eca0a1f1500361f928c0",
+        "fd5727756e716cb19f2fbb7b4ed0692ee906d3e68575d8a9b54d2a5cd059889d",
+        "2751915d7bf6f4ca2c16e25c062a7e165cf2e96ccd289558fd44bf75d74c664b",
+        "2ca45cd61f3e9cdd0247c6f4a799d08423b685a871c9aaa10f3e20b8bbb5dfca",
+        "58c23bf05ddaec8bf1cdb5f6d9679ff880aab5a87dbcd7f592101be29ba8290b",
+        "d1a7bedcd1e19ca5d246d9cc97e07c70ff183a5aab2c2f1128b20eb78b18c317"
+      ]
+    }
+  },
+  "env": {
+    "python": "3.12.3",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "torch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "cudnn": 92000,
+    "numpy": "2.5.1",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "torch_threads": 20,
+    "cuda_matmul_fp32_precision": "ieee",
+    "cudnn_conv_fp32_precision": "ieee",
+    "cudnn_enabled": true,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "deterministic_algorithms": true,
+    "deterministic_warn_only": false,
+    "cublas_workspace_config": ":4096:8",
+    "amp": false,
+    "dtype": "float32"
+  },
+  "spec": "specs/spec_cnn_center_budget_1020.md",
+  "spec_commit_registered": "74e7cc94",
+  "gits": [
+    {
+      "git_hash": "ae2c1450a2c2f4cd40420e805d0f8f21a9d07e91",
+      "branch": "claude/cnn_center_budget_1020",
+      "dirty_src_analysis_specs": [],
+      "time": "2026-10-20 09:00:02 +0900"
+    }
+  ],
+  "resumed": [],
+  "sources_sha256": {
+    "src/cnn_center_budget_1020.py": "b667ddaa1f36c58f8eec9801de6e4b93be8be39c2f7d4dee5ba02385d231491a",
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/cifar5p1_cnn_budget_1019.py": "26e3f3d6fe85d64ed8ed651750ac8f07a001334f95df0d55b1d63653ccb697ab",
+    "src/cifar5p1_mlp_0920.py": "500c9ccada6a48eae199021e3299fcfdd92780836957758c621a7378333c6194",
+    "src/neokunekune_cifar5p1_cnn_1018.py": "bf4d7980d7f144113c31dcd4bac051a1f534be8e4e5507cf857f18cb834bd092",
+    "src/neokunekune_methods_cifar5p1_cnn_1018.py": "a606ebc7ee261d7830a4adbbbb23713bff90e042de9322b420cb233e219d5c87",
+    "src/pmnist_0905.py": "53e2c10288ff91e39148e81f5756769e1a9a4ff88b375e31120f87745eab26ec",
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd",
+    "src/rlcifar_cnn_0908.py": "168f624eb1475dea1a9cad4ceb010a74f40adefcf1db3af8c5617198e991b00f",
+    "src/rlcifar_mlp_battle_0918.py": "03047c1c8be51d4afb253c9e5f0dc0d9dd2b1514be1a4b5e50834e8bade687de",
+    "src/sna_cnn_cause_1009.py": "a05cfaa3867052edc9083a457c99303c69b2b0ccc713eaadeb6203d7b7e14965"
+  },
+  "configs": {
+    "ECB_a3.6_lr0.0003": {
+      "name": "ECB_a3.6_lr0.0003",
+      "arm": "ELU",
+      "kind": "elu",
+      "base": "R",
+      "lr": 0.0003,
+      "shape": [
+        3.6
+      ],
+      "label": "ECB",
+      "center": true
+    }
+  },
+  "execution": "CUDA graph of one update (forward_c, Adam, V and H' EMA, B_width)",
+  "scientific_verdict": null,
+  "timing": [
+    {
+      "task": 1,
+      "train_s": 12.758958101272583,
+      "diag_s": 0.1863880157470703,
+      "total_s": 13.066141843795776
+    },
+    {
+      "task": 2,
+      "train_s": 12.60237741470337,
+      "diag_s": 0.11369442939758301,
+      "total_s": 12.753790378570557
+    },
+    {
+      "task": 3,
+      "train_s": 12.737005949020386,
+      "diag_s": 0.18578243255615234,
+      "total_s": 13.038962125778198
+    },
+    {
+      "task": "fresh_t1",
+      "total_s": 12.662537336349487
+    }
+  ],
+  "diverged": {},
+  "wall_clock_s_this_process": 51.87878918647766,
+  "cuda_max_mem_mb": 1758.0234375,
+  "updates": {
+    "continual": 23400,
+    "fresh": 7800
+  }
+}

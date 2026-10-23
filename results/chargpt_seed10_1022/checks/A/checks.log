@@ -1,0 +1,75 @@
+{"check": "iii_C3_ReLUcap_init_task1_bitwise", "pass_": true, "n_pairs": 20, "n_pairs_equal": 20, "n_pairs_identical_state_dict": 0, "criterion": "共通の全 tensor（重み・buffer）が bytes で同じ・C3 だけの key 無し・ReLUcap だけの key は cap の帳簿で cap_on=0・cap=inf・float64 の forward がビットで同じ。ReLUcap の state_dict には cap の帳簿の buffer が足されているので、file の sha と state_dict 全体は一致しない（n_pairs_identical_state_dict に記録）", "pairs": [{"seed
+{"check": "tied_weight", "pass_": true, "arm": "M2/C3/seed1000/task1"}
+{"check": "lemma_identity", "pass_": true, "arm": "M2/C3/seed1000/task1", "relative_error": 4.2934594292048284e-16}
+{"check": "position_closure", "pass_": true, "arm": "M2/C3/seed1000/task1", "max_abs": 8.881784197001252e-16}
+{"check": "negate_head", "pass_": true, "arm": "M2/C3/seed1000/task1", "kappa": 0.0011918214913631375, "mutant_kappa": -0.0011918214913631375, "note": "head-only mutant intentionally untied; embedding unchanged"}
+{"check": "one_class_mutant", "pass_": true, "arm": "M2/C3/seed1000/task1", "layer": 0, "sign_flips": 199, "uniform_sink": 0.0859375, "one_class_sink": 0.384765625}
+{"check": "one_class_mutant", "pass_": true, "arm": "M2/C3/seed1000/task1", "layer": 1, "sign_flips": 260, "uniform_sink": 0.755859375, "one_class_sink": 0.521484375}
+{"check": "own_finite_difference", "pass_": true, "arm": "M2/C3/seed1000/task1", "layer": 0, "epsilon": 1e-06, "units": [{"unit": 0, "ad": -0.0035355093484999035, "fd": -0.00353550877463249, "relative_error": 1.6231534330463324e-07}, {"unit": 256, "ad": -0.0032221801188215705, "fd": -0.0032221798562659387, "relative_error": 8.148384698178813e-08}, {"unit": 511, "ad": -0.0029403471931977536, "fd": 
+{"check": "full_finite_difference", "pass_": true, "arm": "M2/C3/seed1000/task1", "layer": 0, "trials": [{"epsilon": 1e-06, "units": [{"unit": 0, "ad": -0.13328432156350406, "fd": -0.13328432155873537, "relative_error": 3.5778292529696654e-11}, {"unit": 256, "ad": -0.057397828136451105, "fd": -0.05739782812930194, "relative_error": 1.245545944505377e-10}, {"unit": 511, "ad": -0.10967995453906884, 
+{"check": "own_finite_difference", "pass_": true, "arm": "M2/C3/seed1000/task1", "layer": 1, "epsilon": 1e-06, "units": [{"unit": 0, "ad": 0.003724582664307298, "fd": 0.0037245833084398328, "relative_error": 1.7294083157637652e-07}, {"unit": 254, "ad": 0.019173475513226873, "fd": 0.01917347525193236, "relative_error": 1.3627916004241332e-08}, {"unit": 511, "ad": -0.021542157905720897, "fd": -0.021
+{"check": "full_finite_difference", "pass_": true, "arm": "M2/C3/seed1000/task1", "layer": 1, "trials": [{"epsilon": 1e-06, "units": [{"unit": 0, "ad": 0.09578352509039095, "fd": 0.09578352511141475, "relative_error": 2.194927968302563e-10}, {"unit": 254, "ad": -0.2333939039749107, "fd": -0.23339390398113835, "relative_error": 2.668303315779843e-11}, {"unit": 511, "ad": 0.3881919806186669, "fd": 0
+{"check": "recorded_eval_rounding", "pass_": true, "arm": "M2/C3/seed1000/task1", "computed_float64": 0.0748008759486517, "recorded": 0.074800868, "abs_error": 7.948651695177666e-09, "relative_error": 1.0626416387544681e-07, "tolerance": 1.4965173600000002e-07, "rtol": 2e-06, "csv_rounding_bound": 5e-11, "registered_rounding_pass": false, "H_recomputed": 0.7034950662282683, "H_recorded": 0.7034950
+{"check": "tied_weight", "pass_": true, "arm": "M2/C3/seed0/task1"}
+{"check": "lemma_identity", "pass_": true, "arm": "M2/C3/seed0/task1", "relative_error": 0.0}
+{"check": "position_closure", "pass_": true, "arm": "M2/C3/seed0/task1", "max_abs": 8.881784197001252e-16}
+{"check": "negate_head", "pass_": true, "arm": "M2/C3/seed0/task1", "kappa": 0.0016329261241062282, "mutant_kappa": -0.0016329261241062282, "note": "head-only mutant intentionally untied; embedding unchanged"}
+{"check": "one_class_mutant", "pass_": true, "arm": "M2/C3/seed0/task1", "layer": 0, "sign_flips": 217, "uniform_sink": 0.171875, "one_class_sink": 0.427734375}
+{"check": "one_class_mutant", "pass_": true, "arm": "M2/C3/seed0/task1", "layer": 1, "sign_flips": 254, "uniform_sink": 0.712890625, "one_class_sink": 0.501953125}
+{"check": "own_finite_difference", "pass_": true, "arm": "M2/C3/seed0/task1", "layer": 0, "epsilon": 1e-06, "units": [{"unit": 0, "ad": -0.006800900248576113, "fd": -0.006800900287373679, "relative_error": 5.704769106302581e-09}, {"unit": 254, "ad": -0.010708100062534788, "fd": -0.010708100184331215, "relative_error": 1.137423305851596e-08}, {"unit": 511, "ad": -0.004593642021002819, "fd": -0.0045
+{"check": "full_finite_difference", "pass_": true, "arm": "M2/C3/seed0/task1", "layer": 0, "trials": [{"epsilon": 1e-06, "units": [{"unit": 0, "ad": -0.20574311295912065, "fd": -0.20574311297011372, "relative_error": 5.343103547262917e-11}, {"unit": 254, "ad": -0.14664339196376125, "fd": -0.1466433919754609, "relative_error": 7.978294213052685e-11}, {"unit": 511, "ad": -0.05179398374972886, "fd": 
+{"check": "own_finite_difference", "pass_": true, "arm": "M2/C3/seed0/task1", "layer": 1, "epsilon": 1e-06, "units": [{"unit": 0, "ad": 0.05714101049702389, "fd": 0.05714101103393432, "relative_error": 9.396236015537034e-09}, {"unit": 256, "ad": -0.021491694499910913, "fd": -0.02149169464615852, "relative_error": 6.804842995486269e-09}, {"unit": 511, "ad": 0.021319351171401744, "fd": 0.02131935161
+{"check": "full_finite_difference", "pass_": true, "arm": "M2/C3/seed0/task1", "layer": 1, "trials": [{"epsilon": 1e-06, "units": [{"unit": 0, "ad": 0.27426609904533195, "fd": 0.2742660990540102, "relative_error": 3.1641826483551214e-11}, {"unit": 256, "ad": 0.30255839204241775, "fd": 0.30255839211790203, "relative_error": 2.494866692028636e-10}, {"unit": 511, "ad": 0.5871603231306118, "fd": 0.587
+{"check": "recorded_eval_rounding", "pass_": true, "arm": "M2/C3/seed0/task1", "computed_float64": 0.07798176223724074, "recorded": 0.0779818223, "abs_error": 6.006275926617732e-08, "relative_error": 7.702148718083665e-07, "tolerance": 1.560136446e-07, "rtol": 2e-06, "csv_rounding_bound": 5e-11, "registered_rounding_pass": false, "H_recomputed": 0.7194636537691628, "H_recorded": 0.719463654, "note
+{"check": "tied_weight", "pass_": true, "arm": "M2/ReLUcap/seed0/task1"}
+{"check": "lemma_identity", "pass_": true, "arm": "M2/ReLUcap/seed0/task1", "relative_error": 0.0}
+{"check": "position_closure", "pass_": true, "arm": "M2/ReLUcap/seed0/task1", "max_abs": 8.881784197001252e-16}
+{"check": "negate_head", "pass_": true, "arm": "M2/ReLUcap/seed0/task1", "kappa": 0.0016329261241062282, "mutant_kappa": -0.0016329261241062282, "note": "head-only mutant intentionally untied; embedding unchanged"}
+{"check": "one_class_mutant", "pass_": true, "arm": "M2/ReLUcap/seed0/task1", "layer": 0, "sign_flips": 217, "uniform_sink": 0.171875, "one_class_sink": 0.427734375}
+{"check": "one_class_mutant", "pass_": true, "arm": "M2/ReLUcap/seed0/task1", "layer": 1, "sign_flips": 254, "uniform_sink": 0.712890625, "one_class_sink": 0.501953125}
+{"check": "own_finite_difference", "pass_": true, "arm": "M2/ReLUcap/seed0/task1", "layer": 0, "epsilon": 1e-06, "units": [{"unit": 0, "ad": -0.006800900248576113, "fd": -0.006800900287373679, "relative_error": 5.704769106302581e-09}, {"unit": 254, "ad": -0.010708100062534788, "fd": -0.010708100184331215, "relative_error": 1.137423305851596e-08}, {"unit": 511, "ad": -0.004593642021002819, "fd": -0
+{"check": "full_finite_difference", "pass_": true, "arm": "M2/ReLUcap/seed0/task1", "layer": 0, "trials": [{"epsilon": 1e-06, "units": [{"unit": 0, "ad": -0.20574311295912065, "fd": -0.20574311297011372, "relative_error": 5.343103547262917e-11}, {"unit": 254, "ad": -0.14664339196376125, "fd": -0.1466433919754609, "relative_error": 7.978294213052685e-11}, {"unit": 511, "ad": -0.05179398374972886, "
+{"check": "own_finite_difference", "pass_": true, "arm": "M2/ReLUcap/seed0/task1", "layer": 1, "epsilon": 1e-06, "units": [{"unit": 0, "ad": 0.05714101049702389, "fd": 0.05714101103393432, "relative_error": 9.396236015537034e-09}, {"unit": 256, "ad": -0.021491694499910913, "fd": -0.02149169464615852, "relative_error": 6.804842995486269e-09}, {"unit": 511, "ad": 0.021319351171401744, "fd": 0.021319
+{"check": "full_finite_difference", "pass_": true, "arm": "M2/ReLUcap/seed0/task1", "layer": 1, "trials": [{"epsilon": 1e-06, "units": [{"unit": 0, "ad": 0.27426609904533195, "fd": 0.2742660990540102, "relative_error": 3.1641826483551214e-11}, {"unit": 256, "ad": 0.30255839204241775, "fd": 0.30255839211790203, "relative_error": 2.494866692028636e-10}, {"unit": 511, "ad": 0.5871603231306118, "fd": 
+{"check": "recorded_eval_rounding", "pass_": true, "arm": "M2/ReLUcap/seed0/task1", "computed_float64": 0.07798176223724074, "recorded": 0.0779818223, "abs_error": 6.006275926617732e-08, "relative_error": 7.702148718083665e-07, "tolerance": 1.560136446e-07, "rtol": 2e-06, "csv_rounding_bound": 5e-11, "registered_rounding_pass": false, "H_recomputed": 0.7194636537691628, "H_recorded": 0.719463654, 
+(i) t0 done 1.1s
+(i) t1 done 2.3s
+(i) t2 done 3.4s
+(i) t3 done 4.8s
+(i) t4 done 5.9s
+(i) t5 done 7.1s
+(i) t6 done 8.2s
+(i) t7 done 9.5s
+(i) t8 done 10.6s
+(i) t9 done 11.8s
+(i) t10 done 12.9s
+(i) t25 done 14.0s
+(i) t39 done 15.4s
+(i) t40 done 16.6s
+(i) t41 done 17.7s
+(i) t42 done 18.9s
+(i) t43 done 20.0s
+(i) t44 done 21.4s
+(i) t45 done 22.6s
+(i) t46 done 23.6s
+(i) t47 done 24.7s
+(i) t48 done 26.5s
+(i) t49 done 27.6s
+(i) t50 done 28.7s
+(i) t89 done 30.0s
+(i) t90 done 31.1s
+(i) t91 done 32.3s
+(i) t92 done 33.6s
+(i) t93 done 34.8s
+(i) t94 done 36.0s
+(i) t95 done 37.6s
+(i) t96 done 38.9s
+(i) t97 done 40.0s
+(i) t98 done 41.1s
+(i) t99 done 42.3s
+(i) t100 done 43.4s
+{"check": "i_seed1000_reproduce", "pass_": true, "states": 36, "n_fail": 0, "fails": [], "max_rel_head_continuous": [1.113562702141154e-12, "t95:null_q50"], "max_rel_unit_continuous": [4.3893861173227584e-14, "t93:own_abs_median_alive"], "max_fraction_diff_in_units_of_1_over_n": [0.0, null], "tolerance": "continuous rel 1e-8; fractions 1/n (n = n_alive, or self_n/full_own_n for agreements); null_q
+
+real	0m57.018s
+user	6m22.125s
+sys	0m30.017s
