@@ -1,0 +1,17 @@
+
+{"at": "2026-10-17T17:26:31.543820+00:00", "cwd": "/home/issan/Projects/claude/wt/cap_act_box_2x2_1018", "argv": ["/home/issan/Projects/claude/proj_004_drift/.venv/bin/python", "-m", "src.cap_act_box_2x2_1018", "calibrate", "--integration-audit", "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"]}
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/issan/Projects/claude/wt/cap_act_box_2x2_1018/src/cap_act_box_2x2_1018.py", line 876, in <module>
+    if __name__=='__main__':raise SystemExit(main())
+                                             ^^^^^^
+  File "/home/issan/Projects/claude/wt/cap_act_box_2x2_1018/src/cap_act_box_2x2_1018.py", line 845, in main
+    with exclusive():
+  File "/home/issan/.local/share/uv/python/cpython-3.12.3-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/home/issan/Projects/claude/wt/cap_act_box_2x2_1018/src/cap_act_box_2x2_1018.py", line 57, in exclusive
+    assert desktop or chromium_gpu, f'GPU busy: {line} {words!r}'
+           ^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: GPU busy: 915840 [b'/home/issan/Projects/claude/proj_004_drift/.venv/bin/python', b'-m', b'src.resp_step_controls_1018', b'--box', b'RC', b'--phase', b'evaluate', b'--schedule', b'results/resp_step_controls_1018/RC/calibration/schedule.json', b'--out', b'results/resp_step_controls_1018/RC/evaluation', b'']

@@ -1,0 +1,26 @@
+{
+  "scope": "Host admission fixes; experiment conditions and numerical training operations unchanged",
+  "cap": {
+    "commit": "45a8154e",
+    "change": "known desktop graphics admitted, other jobs rejected, shared flock retained",
+    "verification": "mocked desktop admission and competing Python rejection; CUDA suite is rerun before calibration",
+    "current_head": "45a8154ea371fe30cdaf14388d306ba8817dc7af"
+  },
+  "response": {
+    "commit": "dc60a1bf",
+    "change": "CUDA parity fixture advances each engine label RNG once; actual engine unchanged",
+    "verification": "full CPU and CUDA checks pass",
+    "completed_RM": "original immutable source verification PASS; raw outputs and admission unchanged",
+    "current_head": "dc60a1bfa063da56b327d09bc61459be75f33136"
+  },
+  "chb": {
+    "commit": "8f82fc9f",
+    "change": "align external Python-job detection with existing host scheduler",
+    "verification": "self/desktop/other-Python cases and all 15 CPU groups; full CUDA checks passed before task1; checkpoint stop task4",
+    "current_head": "8f82fc9fff3e3d521d4253792ed8a58228b5a835"
+  },
+  "nap": {
+    "source_changed": false,
+    "verification": "second CUDA checks and preflight READY; initial UNCOMMITTED_IMPLEMENTATION condition not reproduced; no performance artifacts existed before retry"
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "status": "NEEDS_ATTENTION",
+  "pid": 915154,
+  "started_at": "2026-10-17T17:24:54.317807+00:00",
+  "audit_sha256": "b8aeac0f0ec176411c423beb5ad52c0048050564b4de64db0608e8724ffa4543",
+  "source_identity": {
+    "cap_act_box_2x2_1018": "6c659a4dcf845a11dc090e9af2ee1447e225d9bf\n173896e87a7d060484e18f1aa32df2b2fe46a78b\n18607bcc94471cc67e8507b5ec19e04913d0b766\n"
+  },
+  "plan": {
+    "cap_act_box_2x2_1018": [
+      [
+        "cuda_checks",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "analysis.cap_act_box_2x2_1018.checks"
+          ],
+          "lock": true
+        }
+      ],
+      [
+        "preflight",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.cap_act_box_2x2_1018",
+            "preflight",
+            "--integration-audit",
+            "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "calibrate",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.cap_act_box_2x2_1018",
+            "calibrate",
+            "--integration-audit",
+            "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "run",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.cap_act_box_2x2_1018",
+            "run",
+            "--integration-audit",
+            "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "analyze",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.cap_act_box_2x2_1018",
+            "analyze"
+          ],
+          "lock": false
+        }
+      ]
+    ]
+  },
+  "stages": [
+    {
+      "run": "cap_act_box_2x2_1018",
+      "name": "cuda_checks",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:24:54.318007+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/cap_act_box_2x2_1018_cuda_checks_915154.log",
+      "finished_at": "2026-10-17T17:26:30.349801+00:00"
+    },
+    {
+      "run": "cap_act_box_2x2_1018",
+      "name": "preflight",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:26:30.350113+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/cap_act_box_2x2_1018_preflight_915154.log",
+      "finished_at": "2026-10-17T17:26:31.532761+00:00"
+    },
+    {
+      "run": "cap_act_box_2x2_1018",
+      "name": "calibrate",
+      "status": "FAILED",
+      "started_at": "2026-10-17T17:26:31.533151+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/cap_act_box_2x2_1018_calibrate_915154.log",
+      "finished_at": "2026-10-17T17:33:24.766871+00:00",
+      "error": "CalledProcessError(1, ['/home/issan/Projects/claude/proj_004_drift/.venv/bin/python', '-m', 'src.cap_act_box_2x2_1018', 'calibrate', '--integration-audit', '/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json'], None, None)",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/issan/Projects/claude/wt/f51_integration_audit_1018/analysis/f51_integration_audit_1018/continue_gpu.py\", line 221, in main\n    else:command(wt,spec['argv'],log,spec.get('lock',False))\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/issan/Projects/claude/wt/f51_integration_audit_1018/analysis/f51_integration_audit_1018/continue_gpu.py\", line 51, in command\n    completed.check_returncode()\n  File \"/home/issan/.local/share/uv/python/cpython-3.12.3-linux-x86_64-gnu/lib/python3.12/subprocess.py\", line 502, in check_returncode\n    raise CalledProcessError(self.returncode, self.args, self.stdout,\nsubprocess.CalledProcessError: Command '['/home/issan/Projects/claude/proj_004_drift/.venv/bin/python', '-m', 'src.cap_act_box_2x2_1018', 'calibrate', '--integration-audit', '/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json']' returned non-zero exit status 1.\n"
+    }
+  ],
+  "finished_at": "2026-10-17T17:33:24.769038+00:00"
+}

@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-17T17:44:19.209540+00:00",
+  "run": "chb_decompose_200_1018",
+  "training_images_resident_on_gpu": true,
+  "shape": [
+    10,
+    1200,
+    3072
+  ],
+  "dtype": "float32",
+  "image_tensor_bytes": 147456000,
+  "seed_runs_batched": 10,
+  "cuda_graphs": true,
+  "remaining_host_to_device": "Labels once per task and batch permutation indices once per epoch; images gathered from GPU X inside graph",
+  "steps_per_task": 30000,
+  "tasks_per_arm": 200,
+  "arms": 5,
+  "observed_training_ms_per_step": 1.35,
+  "estimate_hours": 11.25,
+  "measurement_scope": "Existing CH production log tasks5-12, excludes task-boundary diagnostics; other arms unmeasured",
+  "gpu_snapshot": {
+    "at": "2026-10-18T02:42:10+09:00",
+    "utilization_percent": 99,
+    "memory_used_MiB": 3258,
+    "memory_total_MiB": 16311,
+    "limitation": "Single snapshot; does not establish a detailed bottleneck or maximum throughput"
+  },
+  "source_sha256": {
+    "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
+    "src/relu_doors_0919.py": "2478c8339decaee3aacb90ac7aa87f8cff6b49d2da30833c6e3dbea0dfa82da4",
+    "src/chb_decompose_200_1018.py": "26dc9969d07e77d695453968d03115f0634dcd92f3f0d6c81e68b5dca40dc6c7",
+    "analysis/chb_decompose_200_1018/diagnostics.py": "93dce488b55612617573a19c09802c9dabd36a94620703903a0d32b9260649e7"
+  },
+  "production_code_changed": false
+}

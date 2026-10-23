@@ -1,0 +1,13 @@
+
+{"at": "2026-10-17T17:10:59.200169+00:00", "cwd": "/home/issan/Projects/claude/wt/resp_step_controls_1018", "argv": ["flock", "-n", "/tmp/lop_analysis_gpu.lock", "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python", "analysis/resp_step_controls_1018/checks.py", "--cuda"]}
+Traceback (most recent call last):
+  File "/home/issan/Projects/claude/wt/resp_step_controls_1018/analysis/resp_step_controls_1018/checks.py", line 379, in <module>
+    if __name__=='__main__':raise SystemExit(main())
+                                             ^^^^^^
+  File "/home/issan/Projects/claude/wt/resp_step_controls_1018/analysis/resp_step_controls_1018/checks.py", line 370, in main
+    gpu=cuda_suite() if a.cuda else dict(pass_=False,status='BLOCKED_CUDA' if not torch.cuda.is_available() else 'NOT_YET_CHECKED')
+        ^^^^^^^^^^^^
+  File "/home/issan/Projects/claude/wt/resp_step_controls_1018/analysis/resp_step_controls_1018/checks.py", line 305, in cuda_suite
+    assert R.RC.tree_hash(core(native.state()))==R.RC.tree_hash(core(graph.state())), 'CUDA graph warmup rollback mismatch'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: CUDA graph warmup rollback mismatch

@@ -1,0 +1,17 @@
+
+{"at": "2026-10-17T17:10:57.469893+00:00", "cwd": "/home/issan/Projects/claude/wt/cap_act_box_2x2_1018", "argv": ["/home/issan/Projects/claude/proj_004_drift/.venv/bin/python", "-m", "src.cap_act_box_2x2_1018", "calibrate", "--integration-audit", "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"]}
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/issan/Projects/claude/wt/cap_act_box_2x2_1018/src/cap_act_box_2x2_1018.py", line 852, in <module>
+    if __name__=='__main__':raise SystemExit(main())
+                                             ^^^^^^
+  File "/home/issan/Projects/claude/wt/cap_act_box_2x2_1018/src/cap_act_box_2x2_1018.py", line 821, in main
+    with exclusive():
+  File "/home/issan/.local/share/uv/python/cpython-3.12.3-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/home/issan/Projects/claude/wt/cap_act_box_2x2_1018/analysis/cifar_ledger_0920/replay.py", line 120, in exclusive
+    assert '--type=gpu-process' in cmd or cmd.startswith('/usr/libexec/gnome-remote-desktop-daemon'),f'GPU busy: {pid} {cmd}'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: GPU busy: 15733 /usr/bin/nautilus --gapplication-service 

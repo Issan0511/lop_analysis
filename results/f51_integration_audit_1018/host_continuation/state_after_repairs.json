@@ -1,0 +1,487 @@
+{
+  "status": "STOPPED_AT_CHECKPOINT",
+  "pid": 909949,
+  "started_at": "2026-10-17T17:17:49.952384+00:00",
+  "audit_sha256": "b8aeac0f0ec176411c423beb5ad52c0048050564b4de64db0608e8724ffa4543",
+  "source_identity": {
+    "nap_cifar5p1_1018": "7fa706243255a112294013feb38977e04d95ad4b\n6dfabae07d262f809f268037e38569bf0a90cd69\ne94e43cbdc9254a78ee47c0fca7f2f0c096f7286\n",
+    "cap_act_box_2x2_1018": "1095a97c3f0141968345e7878ea2a03d4a01aad4\n173896e87a7d060484e18f1aa32df2b2fe46a78b\n18607bcc94471cc67e8507b5ec19e04913d0b766\n",
+    "resp_step_controls_1018": "9c81599bdec85c25495a26a96883ddc2bdd8fea0\n001f4e9bef127c5ea58591d005e867475c590b4a\nb3c6cb2144e173c4603cd19e5656596b688951ae\n",
+    "chb_decompose_200_1018": "3e7a6d5122cd6486f5952550e506669c1e165d88\n1a3799168314dd85ab1d51fb3a99d5dda18e0edc\n45d50905f753f41b3b905244cab58f886ca08115\n",
+    "cnn_chprime_bias_1018": "352e6981640c162425ca05627b17996a760fe4e2\n2f682f03df1b8c9342272b401b5067a3f1526f07\n91baa5220a2217b07bc052568718932db0fc8ce1\n"
+  },
+  "plan": {
+    "nap_cifar5p1_1018": [
+      [
+        "cuda_checks",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "analysis.nap_cifar5p1_1018.checks",
+            "--device",
+            "cuda"
+          ],
+          "lock": true
+        }
+      ],
+      [
+        "calibrate",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.nap_cifar5p1_1018",
+            "run",
+            "--phase",
+            "calib",
+            "--integration-audit",
+            "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "select",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.nap_cifar5p1_1018",
+            "select"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "freeze_calibration",
+        {
+          "action": "calibration"
+        }
+      ],
+      [
+        "evaluate",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.nap_cifar5p1_1018",
+            "run",
+            "--phase",
+            "eval",
+            "--integration-audit",
+            "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "comparators",
+        {
+          "action": "comparators"
+        }
+      ],
+      [
+        "verdict",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "analysis.nap_cifar5p1_1018.verdict",
+            "verdict",
+            "--r-qualification",
+            "results/nap_cifar5p1_1018/reuse_R.json",
+            "--sna-qualification",
+            "results/nap_cifar5p1_1018/reuse_SNA.json",
+            "--kkt1-qualification",
+            "results/nap_cifar5p1_1018/reuse_KKT1.json"
+          ],
+          "lock": false
+        }
+      ]
+    ],
+    "cap_act_box_2x2_1018": [
+      [
+        "cuda_checks",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "analysis.cap_act_box_2x2_1018.checks"
+          ],
+          "lock": true
+        }
+      ],
+      [
+        "preflight",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.cap_act_box_2x2_1018",
+            "preflight",
+            "--integration-audit",
+            "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "calibrate",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.cap_act_box_2x2_1018",
+            "calibrate",
+            "--integration-audit",
+            "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "run",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.cap_act_box_2x2_1018",
+            "run",
+            "--integration-audit",
+            "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "analyze",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.cap_act_box_2x2_1018",
+            "analyze"
+          ],
+          "lock": false
+        }
+      ]
+    ],
+    "resp_step_controls_1018": [
+      [
+        "cuda_checks",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "analysis/resp_step_controls_1018/checks.py",
+            "--cuda"
+          ],
+          "lock": true
+        }
+      ],
+      [
+        "RC_calibrate",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.resp_step_controls_1018",
+            "--box",
+            "RC",
+            "--phase",
+            "calibrate",
+            "--out",
+            "results/resp_step_controls_1018/RC/calibration"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "RC_evaluate",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.resp_step_controls_1018",
+            "--box",
+            "RC",
+            "--phase",
+            "evaluate",
+            "--schedule",
+            "results/resp_step_controls_1018/RC/calibration/schedule.json",
+            "--out",
+            "results/resp_step_controls_1018/RC/evaluation"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "F51_calibrate",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.resp_step_controls_1018",
+            "--box",
+            "F51",
+            "--phase",
+            "calibrate",
+            "--out",
+            "results/resp_step_controls_1018/F51/calibration",
+            "--integration-audit",
+            "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "F51_evaluate",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "src.resp_step_controls_1018",
+            "--box",
+            "F51",
+            "--phase",
+            "evaluate",
+            "--schedule",
+            "results/resp_step_controls_1018/F51/calibration/schedule.json",
+            "--out",
+            "results/resp_step_controls_1018/F51/evaluation",
+            "--integration-audit",
+            "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "verdict",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "/home/issan/Projects/claude/wt/f51_integration_audit_1018/analysis/f51_integration_audit_1018/combined_resp_verdict.py"
+          ],
+          "lock": false
+        }
+      ]
+    ],
+    "chb_decompose_200_1018": [
+      [
+        "resume",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "-m",
+            "analysis.chb_decompose_200_1018.launch",
+            "run",
+            "--resume"
+          ],
+          "lock": false
+        }
+      ]
+    ],
+    "cnn_chprime_bias_1018": [
+      [
+        "cpu_checks",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "analysis/cnn_chprime_bias_1018/checks.py"
+          ],
+          "lock": false
+        }
+      ],
+      [
+        "gpu_checks",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "analysis/cnn_chprime_bias_1018/gpu_checks.py"
+          ],
+          "lock": true
+        }
+      ],
+      [
+        "CHf",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "src/cnn_chprime_bias_1018.py",
+            "run",
+            "--arm",
+            "CHf",
+            "--out",
+            "results/cnn_chprime_bias_1018/CHf"
+          ],
+          "lock": true
+        }
+      ],
+      [
+        "CHf_B",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "src/cnn_chprime_bias_1018.py",
+            "run",
+            "--arm",
+            "CHf_B",
+            "--out",
+            "results/cnn_chprime_bias_1018/CHf_B"
+          ],
+          "lock": true
+        }
+      ],
+      [
+        "verdict",
+        {
+          "argv": [
+            "/home/issan/Projects/claude/proj_004_drift/.venv/bin/python",
+            "analysis/cnn_chprime_bias_1018/verdict.py"
+          ],
+          "lock": false
+        }
+      ]
+    ]
+  },
+  "stages": [
+    {
+      "run": "nap_cifar5p1_1018",
+      "name": "cuda_checks",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:17:49.952900+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/nap_cifar5p1_1018_cuda_checks_909949.log",
+      "finished_at": "2026-10-17T17:17:52.575598+00:00"
+    },
+    {
+      "run": "nap_cifar5p1_1018",
+      "name": "calibrate",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:17:52.576137+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/nap_cifar5p1_1018_calibrate_909949.log",
+      "finished_at": "2026-10-17T17:18:38.436406+00:00"
+    },
+    {
+      "run": "nap_cifar5p1_1018",
+      "name": "select",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:18:38.436803+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/nap_cifar5p1_1018_select_909949.log",
+      "finished_at": "2026-10-17T17:18:39.331980+00:00"
+    },
+    {
+      "run": "nap_cifar5p1_1018",
+      "name": "freeze_calibration",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:18:39.332547+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/nap_cifar5p1_1018_freeze_calibration_909949.log",
+      "finished_at": "2026-10-17T17:18:39.542921+00:00"
+    },
+    {
+      "run": "nap_cifar5p1_1018",
+      "name": "evaluate",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:18:39.543303+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/nap_cifar5p1_1018_evaluate_909949.log",
+      "finished_at": "2026-10-17T17:19:25.725802+00:00"
+    },
+    {
+      "run": "nap_cifar5p1_1018",
+      "name": "comparators",
+      "status": "FAILED",
+      "started_at": "2026-10-17T17:19:25.726278+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/nap_cifar5p1_1018_comparators_909949.log",
+      "finished_at": "2026-10-17T17:20:00.024952+00:00",
+      "error": "CalledProcessError(2, ['/home/issan/Projects/claude/proj_004_drift/.venv/bin/python', '-m', 'analysis.nap_cifar5p1_1018.verdict', 'qualify', '--arm', 'R', '--integration-audit', '/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json', '--directory', '/home/issan/Projects/claude/wt/nap_cifar5p1_1018/results/nap_cifar5p1_1018/current_runtime_comparators/R', '--out', '/home/issan/Projects/claude/wt/nap_cifar5p1_1018/results/nap_cifar5p1_1018/reuse_R.json'], None, None)",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/issan/Projects/claude/wt/f51_integration_audit_1018/analysis/f51_integration_audit_1018/continue_gpu.py\", line 201, in main\n    if spec.get('action')=='calibration':calibration(wt,log)\n                                           ^^^^^^^^^^^^^^^^^^\n  File \"/home/issan/Projects/claude/wt/f51_integration_audit_1018/analysis/f51_integration_audit_1018/continue_gpu.py\", line 93, in comparators\n    command(wt,[*base,'--directory',str(fresh),'--out',str(q)],log)\n  File \"/home/issan/Projects/claude/wt/f51_integration_audit_1018/analysis/f51_integration_audit_1018/continue_gpu.py\", line 51, in command\n    completed.check_returncode()\n  File \"/home/issan/.local/share/uv/python/cpython-3.12.3-linux-x86_64-gnu/lib/python3.12/subprocess.py\", line 502, in check_returncode\n    raise CalledProcessError(self.returncode, self.args, self.stdout,\nsubprocess.CalledProcessError: Command '['/home/issan/Projects/claude/proj_004_drift/.venv/bin/python', '-m', 'analysis.nap_cifar5p1_1018.verdict', 'qualify', '--arm', 'R', '--integration-audit', '/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json', '--directory', '/home/issan/Projects/claude/wt/nap_cifar5p1_1018/results/nap_cifar5p1_1018/current_runtime_comparators/R', '--out', '/home/issan/Projects/claude/wt/nap_cifar5p1_1018/results/nap_cifar5p1_1018/reuse_R.json']' returned non-zero exit status 2.\n"
+    },
+    {
+      "run": "cap_act_box_2x2_1018",
+      "name": "cuda_checks",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:20:00.027856+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/cap_act_box_2x2_1018_cuda_checks_909949.log",
+      "finished_at": "2026-10-17T17:20:19.811057+00:00"
+    },
+    {
+      "run": "cap_act_box_2x2_1018",
+      "name": "preflight",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:20:19.811649+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/cap_act_box_2x2_1018_preflight_909949.log",
+      "finished_at": "2026-10-17T17:20:20.927887+00:00"
+    },
+    {
+      "run": "cap_act_box_2x2_1018",
+      "name": "calibrate",
+      "status": "FAILED",
+      "started_at": "2026-10-17T17:20:20.928485+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/cap_act_box_2x2_1018_calibrate_909949.log",
+      "finished_at": "2026-10-17T17:20:22.661242+00:00",
+      "error": "CalledProcessError(1, ['/home/issan/Projects/claude/proj_004_drift/.venv/bin/python', '-m', 'src.cap_act_box_2x2_1018', 'calibrate', '--integration-audit', '/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json'], None, None)",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/issan/Projects/claude/wt/f51_integration_audit_1018/analysis/f51_integration_audit_1018/continue_gpu.py\", line 202, in main\n    elif spec.get('action')=='comparators':comparators(wt,log)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/issan/Projects/claude/wt/f51_integration_audit_1018/analysis/f51_integration_audit_1018/continue_gpu.py\", line 51, in command\n    completed.check_returncode()\n  File \"/home/issan/.local/share/uv/python/cpython-3.12.3-linux-x86_64-gnu/lib/python3.12/subprocess.py\", line 502, in check_returncode\n    raise CalledProcessError(self.returncode, self.args, self.stdout,\nsubprocess.CalledProcessError: Command '['/home/issan/Projects/claude/proj_004_drift/.venv/bin/python', '-m', 'src.cap_act_box_2x2_1018', 'calibrate', '--integration-audit', '/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json']' returned non-zero exit status 1.\n"
+    },
+    {
+      "run": "resp_step_controls_1018",
+      "name": "cuda_checks",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:20:22.661923+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/resp_step_controls_1018_cuda_checks_909949.log",
+      "finished_at": "2026-10-17T17:20:40.768294+00:00"
+    },
+    {
+      "run": "resp_step_controls_1018",
+      "name": "RC_calibrate",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:20:40.768929+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/resp_step_controls_1018_RC_calibrate_909949.log",
+      "finished_at": "2026-10-17T17:26:11.653948+00:00"
+    },
+    {
+      "run": "resp_step_controls_1018",
+      "name": "RC_evaluate",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:26:11.654655+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/resp_step_controls_1018_RC_evaluate_909949.log",
+      "finished_at": "2026-10-17T17:33:26.371483+00:00"
+    },
+    {
+      "run": "resp_step_controls_1018",
+      "name": "F51_calibrate",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:33:26.379063+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/resp_step_controls_1018_F51_calibrate_909949.log",
+      "finished_at": "2026-10-17T17:34:39.569482+00:00"
+    },
+    {
+      "run": "resp_step_controls_1018",
+      "name": "F51_evaluate",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:34:39.570159+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/resp_step_controls_1018_F51_evaluate_909949.log",
+      "finished_at": "2026-10-17T17:35:42.173413+00:00"
+    },
+    {
+      "run": "resp_step_controls_1018",
+      "name": "verdict",
+      "status": "COMMAND_SUCCEEDED",
+      "started_at": "2026-10-17T17:35:42.174480+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/resp_step_controls_1018_verdict_909949.log",
+      "finished_at": "2026-10-17T17:35:54.715040+00:00"
+    },
+    {
+      "run": "chb_decompose_200_1018",
+      "name": "resume",
+      "status": "STOPPED",
+      "started_at": "2026-10-17T17:35:54.716613+00:00",
+      "log": "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/host_continuation/logs/chb_decompose_200_1018_resume_909949.log",
+      "finished_at": "2026-10-17T17:47:30.285635+00:00",
+      "error": "CalledProcessError(75, ['/home/issan/Projects/claude/proj_004_drift/.venv/bin/python', '-m', 'analysis.chb_decompose_200_1018.launch', 'run', '--resume'], None, None)",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/issan/Projects/claude/wt/f51_integration_audit_1018/analysis/f51_integration_audit_1018/continue_gpu.py\", line 202, in main\n    identities={r:source_identity(BASE/'wt'/r) for r in args.runs}\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/issan/Projects/claude/wt/f51_integration_audit_1018/analysis/f51_integration_audit_1018/continue_gpu.py\", line 51, in command\n    log.flush()\n        ^^^^^^^^\n  File \"/home/issan/.local/share/uv/python/cpython-3.12.3-linux-x86_64-gnu/lib/python3.12/subprocess.py\", line 502, in check_returncode\n    raise CalledProcessError(self.returncode, self.args, self.stdout,\nsubprocess.CalledProcessError: Command '['/home/issan/Projects/claude/proj_004_drift/.venv/bin/python', '-m', 'analysis.chb_decompose_200_1018.launch', 'run', '--resume']' returned non-zero exit status 75.\n"
+    }
+  ],
+  "current": {
+    "run": "chb_decompose_200_1018",
+    "stage": "resume"
+  }
+}

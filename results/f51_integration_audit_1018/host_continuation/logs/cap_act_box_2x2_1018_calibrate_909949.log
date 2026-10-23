@@ -1,0 +1,17 @@
+
+{"at": "2026-10-17T17:20:20.939818+00:00", "cwd": "/home/issan/Projects/claude/wt/cap_act_box_2x2_1018", "argv": ["/home/issan/Projects/claude/proj_004_drift/.venv/bin/python", "-m", "src.cap_act_box_2x2_1018", "calibrate", "--integration-audit", "/home/issan/Projects/claude/wt/f51_integration_audit_1018/results/f51_integration_audit_1018/gpu_host_same_runtime/integration_audit.json"]}
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/issan/Projects/claude/wt/cap_act_box_2x2_1018/src/cap_act_box_2x2_1018.py", line 874, in <module>
+    if __name__=='__main__':raise SystemExit(main())
+                                             ^^^^^^
+  File "/home/issan/Projects/claude/wt/cap_act_box_2x2_1018/src/cap_act_box_2x2_1018.py", line 843, in main
+    with exclusive():
+  File "/home/issan/.local/share/uv/python/cpython-3.12.3-linux-x86_64-gnu/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/home/issan/Projects/claude/wt/cap_act_box_2x2_1018/src/cap_act_box_2x2_1018.py", line 55, in exclusive
+    assert desktop or chromium_gpu, f'GPU busy: {line} {words!r}'
+           ^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: GPU busy: 17382 [b'/opt/google/chrome/chrome --type=gpu-process --gpu-recent-crash-count=0 --ozone-platform=wayland --render-node-override=/dev/dri/renderD128 --crashpad-handler-pid=17340 --enable-crash-reporter=, --change-stack-guard-on-fork=enable --gpu-preferences=YAAAAAAAAAAgAQAEAAAAAAAAAAAAAGAASAAAAAAAAAABAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAMAAAAAQAAAAAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --shared-files --metrics-shmem-handle=4,i,11015038759687898237,4981052560229893940,262144 --field-trial-handle=3,i,3846355584510182377,7170129495738813229,262144 --variations-seed-version=20261003-030037.230000-production --pseudonymization-salt-handle=7,i,8316837749566439954,2645639490981487951,4 --trace-process-track-uuid=3190708988185955192', b'']
