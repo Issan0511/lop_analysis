@@ -103,6 +103,9 @@ def summary(states,windows,phases,result,seeds):
         for name in M.WINDOWS:
             rr=[r for r in windows if r['arm']==arm and r['probe']=='uniform' and r['window']==name]
             lines.append(f"| {arm} | {name} ({int(rr[0]['n_pairs'])}) | "+' | '.join(span(rr,f'cohort_{k}_med') for k in DISPLAY_TERMS)+' |')
+    for arm in M.A.ARMS:
+        rr=[r for r in windows if r['arm']==arm and r['probe']=='uniform' and r['window']=='cumulative39_100']
+        lines+=['',f"{arm}の39→100のW合計（伸び+回転をunitごとに加算）のコホート中央値範囲: {span(rr,'cohort_dr_w_med')}。"]
     lines+=['','dmu（絶対位置）の各項、全512unit、各対の値、対ごとの中央値を窓内で中央値にした補助統計はledger.csv/windows.csv。chainも同CSVに記録。','',
         '## 状態推移（uniform、固定コホート）','',
         '| arm | task | ‖m‖ | c中央値 | sigma_hat中央値 | ‖w‖中央値 | b/s中央値 | r中央値 | sd中央値 | 共分散PR |',
