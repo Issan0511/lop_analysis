@@ -94,9 +94,12 @@ def statistics(v, alive):
 
 def main():
     rows, comparisons, winners, checks = [], [], [], []
+    rawdir = OUT/'raw'
+    if not rawdir.exists():
+        rawdir = Path('/home/issan/Projects/obsidian-research-data/chargpt_phase2carrier_1024/results/chargpt_phase2carrier_1024/raw')
     for seed in range(10):
         for task in TASKS:
-            path = OUT/'raw'/f'C3_seed{seed}_task{task}.npz'
+            path = rawdir/f'C3_seed{seed}_task{task}.npz'
             assert path.exists(), path
             meta = json.loads(path.with_suffix('.json').read_text())
             assert hashlib.sha256(path.read_bytes()).hexdigest() == meta['raw_sha256']

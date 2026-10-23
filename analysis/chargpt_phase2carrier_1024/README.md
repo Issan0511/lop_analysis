@@ -11,3 +11,5 @@ Spec: `specs/spec_chargpt_phase2carrier_1024.md`（本測定前のcommit b71fa30
 位置は固定一様probeのr=mu/s。列`mean_term`はdmu/s、`width_term`は−mu*ds/s²。`mean`はS_rの全unit平均で、`mean_term`とは違う。各列はgradient方向gに沿う微分であり、更新−ηgはその逆向きなので、正のS_rが沈める側。Adam_fixedは保存二次モーメントの分母だけを固定し、momentumを含む実更新ではない。
 
 90状態が完了した後に`archive.py`で生配列を研究データ置き場へコピー・SHA256照合し、worktree内の複製を削除する。元checkpointのtarには書かない。
+
+退避後の`report.py`は、worktree内のrawが無ければ退避先の同じ相対パスを読み、SHA256を照合して再集計する。checkpointから勾配を再計算する必要はない。
