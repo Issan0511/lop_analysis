@@ -20,6 +20,7 @@ def main():
                 orig=a[pre+'original_exact_K']
                 err=np.max(np.abs(total-orig))/max(np.max(np.abs(orig)),np.max(np.abs(self_)),1e-300)
                 assert err<=1e-10
+                assert np.mean(total[alive]>0)==np.mean(orig[alive]>0)
                 row=dict(arm=arm,seed=seed,task=task,n_alive=int(alive.sum()),identity_error=float(err))
                 for o,r,l in itertools.product([0,1],repeat=3):
                     vec=self_+o*other+r*res+l*rad
