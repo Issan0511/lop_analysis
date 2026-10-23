@@ -28,7 +28,7 @@ load10.py の probe と vL=κF、および前回の固定 softmax 誤差の定�
 最後の LN の平均引きは D に含め、分散の微分による射影を R とする。eps を省略しない。
 S = S_direct + S_radial は unit ごとに厳密。S>0 が SGD の負勾配で沈める側。
 Adam の分母、実際の更新、上流の更新は入れない。
-ReLUcap の phi と phi' は原実装を使う（cap の飽和を尊重）。
+ReLUcap の phi と phi' は原実装を使う。原実装の cap は学習時の重み制約であり、forward の活性のクリップではない。今回の固定状態では両腕とも通常の ReLU とその微分になる。
 
 ## 3. 同じ状態での診断操作（学習しない）
 
