@@ -1,0 +1,55 @@
+{
+  "analysis_label": "RETROSPECTIVE/POSTHOC reanalysis; descriptive only",
+  "source_files": {
+    "units.npz": {
+      "path": "/home/issan/Projects/claude/elu_reserve_0913/results/elu_environment_0913/units.npz",
+      "sha256": "4876dce6b0ba76593479b616e4c2b5762ccea7e724cbbbf241f17833998295ba"
+    },
+    "provenance.json": {
+      "path": "/home/issan/Projects/claude/elu_reserve_0913/results/elu_environment_0913/provenance.json",
+      "sha256": "5bfdd69a0a98afd9fb0bffec1771234e23dcbb4afa1d3d91da4ef78b337d613e"
+    },
+    "rows.csv": {
+      "path": "/home/issan/Projects/claude/elu_reserve_0913/results/elu_environment_0913/rows.csv",
+      "sha256": "e9d784811b31accbb35aa87a1d6e9bb73640c80b53d36689bc28529efc07d61b"
+    }
+  },
+  "models": 24,
+  "expected_model_keys": 48,
+  "layers": [
+    1,
+    2
+  ],
+  "tasks": [
+    1,
+    50
+  ],
+  "units_per_layer": 100,
+  "unit_transition_rows": 240000,
+  "entry_event_rows": 6251,
+  "finite_arrays": true,
+  "array_shapes_valid": true,
+  "q_bounds_valid": true,
+  "stock_identity_balance_valid": true,
+  "indexing_valid": true,
+  "indexing_definition": "NPZ model axis matches provenance.models; unit_id is unchanged array column 0..99; task t uses lowgate_l{layer}_t{t}",
+  "initialization_convention": "N(0)=0 only; task-1 sinks are false-to-true entries",
+  "followup": "entry task <=45; endpoints t+1..t+5; later entries right-censored",
+  "direct_event_slice_audit": {
+    "valid": true,
+    "eligible_events_checked": 5524,
+    "right_censored_events_checked": 727,
+    "method": "For every emitted event, independently slice original q[model, layer][entry_task:entry_task+5, unit_id]; compare any q<.95 and any q<.5. Verify late-event labels are blank."
+  },
+  "leaky_lowgate_structurally_zero": true,
+  "no_pseudoreplication": "seed_summary retains one row per seed/env/act/iv/layer; episode summaries are descriptive",
+  "generated_files": [
+    "unit_transitions.csv",
+    "entry_events.csv",
+    "task_counts.csv",
+    "seed_summary.csv",
+    "summary.md",
+    "identity_heatmaps_elu_ref_seed0.png",
+    "sink_count_curves_mean3seed.png"
+  ]
+}

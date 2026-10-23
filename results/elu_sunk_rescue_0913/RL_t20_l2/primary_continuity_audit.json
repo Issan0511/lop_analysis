@@ -1,0 +1,144 @@
+{
+  "status": "PASS",
+  "scope": "RL T20 layer2, registered units.npz only",
+  "boundary_definition": "Compare each task t step6000 to task t+1 step0; RL inputs and parameters are unchanged at this boundary.",
+  "boundary_pairs": 48,
+  "array_checks": 288,
+  "bitwise_equal_all": true,
+  "maxabs_by_metric": {
+    "q": 0.0,
+    "zmean": 0.0,
+    "gate_mean": 0.0,
+    "Win_norm": 0.0,
+    "Win_cnorm": 0.0,
+    "Wout_norm": 0.0
+  },
+  "task21_to_task22": {
+    "C20": {
+      "seed0": {
+        "t21_u6000": {
+          "sink_count": 4,
+          "q_mean": 0.9297917485237122,
+          "zmean_mean": -75.29387664794922,
+          "gate_mean": 0.06234594061970711
+        },
+        "t22_u0": {
+          "sink_count": 4,
+          "q_mean": 0.9297917485237122,
+          "zmean_mean": -75.29387664794922,
+          "gate_mean": 0.06234594061970711
+        },
+        "t22_u75": {
+          "sink_count": 20,
+          "q_mean": 0.9783749580383301,
+          "zmean_mean": -110.0664291381836,
+          "gate_mean": 0.019264962524175644
+        }
+      },
+      "seed1": {
+        "t21_u6000": {
+          "sink_count": 11,
+          "q_mean": 0.9555834531784058,
+          "zmean_mean": -88.80318450927734,
+          "gate_mean": 0.03926504775881767
+        },
+        "t22_u0": {
+          "sink_count": 11,
+          "q_mean": 0.9555834531784058,
+          "zmean_mean": -88.80318450927734,
+          "gate_mean": 0.03926504775881767
+        },
+        "t22_u75": {
+          "sink_count": 20,
+          "q_mean": 0.9899166822433472,
+          "zmean_mean": -128.46826171875,
+          "gate_mean": 0.008564801886677742
+        }
+      },
+      "seed2": {
+        "t21_u6000": {
+          "sink_count": 8,
+          "q_mean": 0.934416651725769,
+          "zmean_mean": -80.71212768554688,
+          "gate_mean": 0.0589665062725544
+        },
+        "t22_u0": {
+          "sink_count": 8,
+          "q_mean": 0.934416651725769,
+          "zmean_mean": -80.71212768554688,
+          "gate_mean": 0.0589665062725544
+        },
+        "t22_u75": {
+          "sink_count": 20,
+          "q_mean": 0.9787500500679016,
+          "zmean_mean": -114.53336334228516,
+          "gate_mean": 0.01909031718969345
+        }
+      }
+    },
+    "D20": {
+      "seed0": {
+        "t21_u6000": {
+          "sink_count": 10,
+          "q_mean": 0.9442499876022339,
+          "zmean_mean": -81.50457763671875,
+          "gate_mean": 0.04891495034098625
+        },
+        "t22_u0": {
+          "sink_count": 10,
+          "q_mean": 0.9442499876022339,
+          "zmean_mean": -81.50457763671875,
+          "gate_mean": 0.04891495034098625
+        },
+        "t22_u75": {
+          "sink_count": 17,
+          "q_mean": 0.9687083959579468,
+          "zmean_mean": -94.70665740966797,
+          "gate_mean": 0.027056822553277016
+        }
+      },
+      "seed1": {
+        "t21_u6000": {
+          "sink_count": 9,
+          "q_mean": 0.950291633605957,
+          "zmean_mean": -82.61253356933594,
+          "gate_mean": 0.042776547372341156
+        },
+        "t22_u0": {
+          "sink_count": 9,
+          "q_mean": 0.950291633605957,
+          "zmean_mean": -82.61253356933594,
+          "gate_mean": 0.042776547372341156
+        },
+        "t22_u75": {
+          "sink_count": 20,
+          "q_mean": 0.9760001301765442,
+          "zmean_mean": -101.21775817871094,
+          "gate_mean": 0.020803360268473625
+        }
+      },
+      "seed2": {
+        "t21_u6000": {
+          "sink_count": 14,
+          "q_mean": 0.9661666750907898,
+          "zmean_mean": -97.98611450195312,
+          "gate_mean": 0.029288575053215027
+        },
+        "t22_u0": {
+          "sink_count": 14,
+          "q_mean": 0.9661666750907898,
+          "zmean_mean": -97.98611450195312,
+          "gate_mean": 0.029288575053215027
+        },
+        "t22_u75": {
+          "sink_count": 18,
+          "q_mean": 0.9770001173019409,
+          "zmean_mean": -107.73191833496094,
+          "gate_mean": 0.019589360803365707
+        }
+      }
+    }
+  },
+  "finding": "No boundary jump and no evidence of array aliasing. The visually steep rise occurs from task22 step0 to step75: 75 actual optimizer updates compressed on a 0..30000 x-axis. C20 selected incident and upstream parameters move; D20 selected incident parameters remain frozen but upstream layer1 changes its inputs.",
+  "storage_review": "Engine.evaluate creates fresh CPU tensors via val.cpu() and NumPy arrays via .numpy(); exact cross-boundary continuity independently rules out overwritten measurement values."
+}
