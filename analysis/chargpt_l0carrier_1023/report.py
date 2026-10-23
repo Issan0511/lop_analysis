@@ -92,7 +92,7 @@ def summary(states,windows,phases,result,seeds):
         f"| J2 C3 25→100 | "+'、'.join(f"{k} {v['n']}/10" for k,v in result['J2']['C3'].items())+' |',
         f"| J3 ReLUcap 39→100 | {result['J3']['label']}、{result['J3']['n']}/10 |",
         '| J4 seed4・8 | 下の同じ帳簿・状態比で他8seedと比較（記述のみ） |','',
-        '主は固定uniform probe。課題10末にuniformで一度でもz>0のunitを固定し、後で死んでも外さない。chain記録も同じコホート。',
+        '主は固定uniform probe。課題10末にuniformで一度でもz>0のunitを固定し、後で死んでも外さない。chain記録も同じコホート。今回のコホートは全arm/seedで512unitで、全unit集計と一致した。',
         '状態中央値は偶数個で中央2個平均。元CSVのsd/mu中央値（中央下側）はK1専用列。両腕ともup biasとLN betaが無く、b/sとΔbは常に0。','',
         '## 窓の帳簿（uniform、固定コホート）','',
         '各unitで窓内の項を加算→コホート中央値→10seed範囲。負が沈める向き。W項=伸び+回転（unit別に加算）。幅と交差も含めた和がunitごとのΔrになる。中央値の列同士を足してもΔr中央値には一般に一致しない。',
@@ -134,6 +134,13 @@ def summary(states,windows,phases,result,seeds):
         for phase in ['head','body']:
             rr=[r for r in phases if r['arm']==arm and r['phase']==phase]
             lines.append(f'| {arm} | {phase} | '+' | '.join(span(rr,f'cohort_{k}_med') for k in DISPLAY_TERMS)+' |')
+    lines+=['','| seed | C3 頭Δr | C3 胴Δr | ReLUcap 頭Δr | ReLUcap 胴Δr |',
+            '|---:|---:|---:|---:|---:|']
+    for seed in range(10):
+        vals=[next(r['cohort_dr_total_med'] for r in phases if r['arm']==arm and r['seed']==seed and r['phase']==phase)
+              for arm in M.A.ARMS for phase in ['head','body']]
+        lines.append(f'| {seed} | '+' | '.join(f'{v:.4f}' for v in vals)+' |')
+    lines+=['','後期90–100の頭はC3で9/10 seedが沈み、胴は9/10で浮く（逆向きはseed8）。ReLUcapは頭で10/10が浮き、胴で10/10が沈む。これは依頼時の既知情報である課題1–50の頭/胴と異なる窓。自分のWだけを通る切替の期待勾配と、上流も動いた100更新の実変位は別の量。']
     lines+=['','## K1と恒等式','',
         '| arm | seed | task | r（再現値/指定値） | sd（再現値/指定値） | dead（再現値/指定値） |',
         '|---|---:|---:|---:|---:|---:|']
@@ -146,7 +153,7 @@ def summary(states,windows,phases,result,seeds):
         f"- 純粋な行スケール変更の伸び・幅相殺誤差 {gate['scale_check']['stretch_width_cancel_abs']:.3e}。頭+胴のΔrも課題末差に一致。",
         f"- 保存モデル700状態、2probeで{pv['state_probe_rows']}行、追加u100 {pv['u100_states']}状態。CPU float64/8threads、optimizer作成なし、学習更新0。",'',
         '## 予測の採点','',
-        f"- J1: {result['J1']['label']}。元の割当確率 {result['J1']['prior_probability']:.2f}。最多予測INPUT_MEAN_MOVES(.40)の採否は上記ラベルによる。BIAS_SINKS(.30)はbias不在のため構造上不可、確率は再配分していない。",
+        f"- J1: {result['J1']['label']}。元の割当確率 {result['J1']['prior_probability']:.2f}。最多予測INPUT_MEAN_MOVES(.40)は外れ。W_TERM内では回転が9/10（元の割当.15）、伸びが1/10（.10）。BIAS_SINKS(.30)はbias不在のため構造上不可、確率は再配分していない。",
         '- J2: '+', '.join(f"{name}（元確率{prob:.2f}）{result['J2']['C3'][name]['n']}/10" for name,prob in [('INPUT_CONCENTRATES',.5),('ALIGNMENT_TURNS',.4),('SPREAD_SHRINKS',.1)])+'。',
         f"- J3: CAP_FLAT(.80)は{'支持' if result['J3']['label']=='CAP_FLAT' else '不支持'}、{result['J3']['n']}/10。",'',
         '## 解釈の限界・再現','',
