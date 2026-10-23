@@ -187,11 +187,18 @@ def main():
     for seed in range(10):
         for arm in A.ARMS:
             p=OUT/'parts'/f'{arm}_seed{seed}.csv';ar=OUT/'raw'/f'{arm}_seed{seed}.npz'
-            if p.exists():rows.extend(list(csv.DictReader(p.open())));continue
+            meta=p.with_suffix('.json')
+            if p.exists() and ar.exists() and meta.exists():
+                saved=json.loads(meta.read_text())
+                assert saved['code_sha256']==code_sha,'Restart in a clean result directory after code changes'
+                assert saved['csv_sha256']==M.sha(p) and saved['raw_sha256']==M.sha(ar)
+                inp.borrowed.update({r['path']:r for r in saved['borrowed']})
+                rows.extend(list(csv.DictReader(p.open())));continue
             local=[];raw={};ts=time.monotonic()
             for task,step in STATES:
                 r,arr=state(inp,arm,seed,task,step);local.extend(r);raw.update({f't{task}_u{step}_{k}':v for k,v in arr.items()})
             csvwrite(p,local);ar.parent.mkdir(exist_ok=True);np.savez_compressed(ar,**raw);rows.extend(local)
+            dump(meta,dict(code_sha256=code_sha,csv_sha256=M.sha(p),raw_sha256=M.sha(ar),borrowed=list(inp.borrowed.values())))
             print(arm,seed,round(time.monotonic()-ts,1),flush=True)
         A.CACHE.clear();A.UCACHE.clear()
     csvwrite(OUT/'states.csv',rows)
