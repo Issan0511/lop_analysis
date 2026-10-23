@@ -1,12 +1,18 @@
 {
-  "started": 1792796221.623156,
-  "root": "/home/issan/Projects/obsidian-research-data/vit_long_1024/checks/data_1792796221",
+  "started": 1792798488.8408852,
+  "root": "/home/issan/Projects/obsidian-research-data/vit_long_1024/checks/data_1792798488",
   "host": "white-san",
   "torch": "2.13.0+cu130",
   "cuda": "13.0",
   "gpu": "NVIDIA GeForce RTX 5060 Ti",
   "python": "3.12.3",
   "production": {
+    "arms": [
+      "R0",
+      "S",
+      "R0L",
+      "SL"
+    ],
     "n_labels": 10,
     "images_per_class": 25,
     "steps": 500,
@@ -729,6 +735,12 @@
     "task2_differs": true,
     "S_task2_head_nonzero_at_u0": true,
     "production": {
+      "arms": [
+        "R0",
+        "S",
+        "R0L",
+        "SL"
+      ],
       "n_labels": 10,
       "images_per_class": 25,
       "steps": 500,
@@ -744,7 +756,8 @@
       ],
       "S": [
         0.713792,
-        0.626576
+        0.626576,
+        0.849488
       ]
     },
     "mem_acc_end": {
@@ -754,6 +767,7 @@
         0.184
       ],
       "S": [
+        1.0,
         1.0,
         1.0
       ]
@@ -766,28 +780,35 @@
       ],
       "S": [
         250,
-        250
+        250,
+        150
       ]
     }
   },
   "S_speed": {
     "pass_": true,
-    "ms_per_update_training": 55.751000000000005,
-    "ms_per_update_with_records": 57.68000000000001,
-    "ms_per_update_all": 58.138000000000005,
+    "ms_per_update_training": 55.751999999999995,
+    "ms_per_update_with_records": 57.684999999999995,
+    "ms_per_update_all": 57.9,
     "seconds_per_task": {
-      "train_seconds": 27.875500000000002,
-      "record_seconds": 0.9644999999999999,
-      "other_seconds": 0.2285,
-      "seconds": 29.069000000000003
+      "train_seconds": 27.875999999999998,
+      "record_seconds": 0.9664999999999999,
+      "other_seconds": 0.107,
+      "seconds": 28.95
     },
-    "task1_seconds_with_compile": 30.889,
-    "hours_per_continual_run": 0.4849888888888889,
-    "runs": 10,
-    "hours_continual_runs": 4.84988888888889,
-    "hours_fresh": 0.12870416666666665,
-    "hours_total": 4.978593055555557,
+    "task1_seconds_with_compile": 30.883,
+    "hours_per_continual_run": 0.48303694444444445,
+    "runs": 20,
+    "hours_continual_runs": 9.66073888888889,
+    "hours_fresh": 0.25735833333333336,
+    "hours_total": 9.918097222222222,
     "production": {
+      "arms": [
+        "R0",
+        "S",
+        "R0L",
+        "SL"
+      ],
       "n_labels": 10,
       "images_per_class": 25,
       "steps": 500,
@@ -798,6 +819,240 @@
     "gpu": "NVIDIA GeForce RTX 5060 Ti",
     "host": "white-san",
     "basis": "tasks 2-3 of the R0 seed 0 run in the production layout; fresh tasks priced as task 1 with compile"
+  },
+  "S_arm1_LN": {
+    "pass_": true,
+    "task1_records_equal": true,
+    "task1_weights_equal": true,
+    "online": {
+      "R0L": [
+        0.945168,
+        0.958752,
+        0.967264
+      ],
+      "SL": [
+        0.945168,
+        0.799232,
+        0.790192
+      ]
+    },
+    "mem_acc_end": {
+      "R0L": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "SL": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "T90": {
+      "R0L": [
+        75,
+        50,
+        50
+      ],
+      "SL": [
+        75,
+        150,
+        150
+      ]
+    }
+  },
+  "S_speed_LN": {
+    "pass_": true,
+    "ms_per_update_training": 57.921,
+    "ms_per_update_with_records": 59.908,
+    "ms_per_update_all": 60.12,
+    "seconds_per_task": {
+      "train_seconds": 28.9605,
+      "record_seconds": 0.9935,
+      "other_seconds": 0.1065,
+      "seconds": 30.06
+    },
+    "task1_seconds_with_compile": 31.991,
+    "hours_per_continual_run": 0.5015363888888889,
+    "runs": 20,
+    "hours_continual_runs": 10.030727777777777,
+    "hours_fresh": 0.26659166666666667,
+    "hours_total": 10.297319444444444,
+    "production": {
+      "arms": [
+        "R0",
+        "S",
+        "R0L",
+        "SL"
+      ],
+      "n_labels": 10,
+      "images_per_class": 25,
+      "steps": 500,
+      "tasks": 60,
+      "augment": "off",
+      "dropout": 0.0
+    },
+    "gpu": "NVIDIA GeForce RTX 5060 Ti",
+    "host": "white-san",
+    "basis": "tasks 2-3 of the R0 seed 0 run in the production layout; fresh tasks priced as task 1 with compile"
+  },
+  "S_spikes": {
+    "pass_": true,
+    "per_task": {
+      "R0": [
+        {
+          "task": 1,
+          "spike": false,
+          "breakdown": false,
+          "spike_reach80": false,
+          "breakdown_reach80": false,
+          "peak_mem": 1.0,
+          "max_online_loss": 2.310943126678467,
+          "mem_acc_end": 1.0,
+          "T90": 250,
+          "online": 0.713792
+        },
+        {
+          "task": 2,
+          "spike": false,
+          "breakdown": false,
+          "spike_reach80": false,
+          "breakdown_reach80": false,
+          "peak_mem": 1.0,
+          "max_online_loss": 2.9119527339935303,
+          "mem_acc_end": 1.0,
+          "T90": 275,
+          "online": 0.743584
+        },
+        {
+          "task": 3,
+          "spike": false,
+          "breakdown": false,
+          "spike_reach80": true,
+          "breakdown_reach80": true,
+          "peak_mem": 0.892,
+          "max_online_loss": 19.03050994873047,
+          "mem_acc_end": 0.184,
+          "T90": 525,
+          "online": 0.34216
+        }
+      ],
+      "S": [
+        {
+          "task": 1,
+          "spike": false,
+          "breakdown": false,
+          "spike_reach80": false,
+          "breakdown_reach80": false,
+          "peak_mem": 1.0,
+          "max_online_loss": 2.310943126678467,
+          "mem_acc_end": 1.0,
+          "T90": 250,
+          "online": 0.713792
+        },
+        {
+          "task": 2,
+          "spike": true,
+          "breakdown": false,
+          "spike_reach80": true,
+          "breakdown_reach80": false,
+          "peak_mem": 1.0,
+          "max_online_loss": 15.037251472473145,
+          "mem_acc_end": 1.0,
+          "T90": 250,
+          "online": 0.626576
+        },
+        {
+          "task": 3,
+          "spike": false,
+          "breakdown": false,
+          "spike_reach80": false,
+          "breakdown_reach80": false,
+          "peak_mem": 1.0,
+          "max_online_loss": 9.671542167663574,
+          "mem_acc_end": 1.0,
+          "T90": 150,
+          "online": 0.849488
+        }
+      ],
+      "R0L": [
+        {
+          "task": 1,
+          "spike": false,
+          "breakdown": false,
+          "spike_reach80": false,
+          "breakdown_reach80": false,
+          "peak_mem": 1.0,
+          "max_online_loss": 2.3025851249694824,
+          "mem_acc_end": 1.0,
+          "T90": 75,
+          "online": 0.945168
+        },
+        {
+          "task": 2,
+          "spike": false,
+          "breakdown": false,
+          "spike_reach80": false,
+          "breakdown_reach80": false,
+          "peak_mem": 1.0,
+          "max_online_loss": 2.307107448577881,
+          "mem_acc_end": 1.0,
+          "T90": 50,
+          "online": 0.958752
+        },
+        {
+          "task": 3,
+          "spike": false,
+          "breakdown": false,
+          "spike_reach80": false,
+          "breakdown_reach80": false,
+          "peak_mem": 1.0,
+          "max_online_loss": 2.305126905441284,
+          "mem_acc_end": 1.0,
+          "T90": 50,
+          "online": 0.967264
+        }
+      ],
+      "SL": [
+        {
+          "task": 1,
+          "spike": false,
+          "breakdown": false,
+          "spike_reach80": false,
+          "breakdown_reach80": false,
+          "peak_mem": 1.0,
+          "max_online_loss": 2.3025851249694824,
+          "mem_acc_end": 1.0,
+          "T90": 75,
+          "online": 0.945168
+        },
+        {
+          "task": 2,
+          "spike": false,
+          "breakdown": false,
+          "spike_reach80": false,
+          "breakdown_reach80": false,
+          "peak_mem": 1.0,
+          "max_online_loss": 5.062934875488281,
+          "mem_acc_end": 1.0,
+          "T90": 150,
+          "online": 0.799232
+        },
+        {
+          "task": 3,
+          "spike": false,
+          "breakdown": false,
+          "spike_reach80": false,
+          "breakdown_reach80": false,
+          "peak_mem": 1.0,
+          "max_online_loss": 5.684127330780029,
+          "mem_acc_end": 1.0,
+          "T90": 150,
+          "online": 0.790192
+        }
+      ]
+    },
+    "note": "record only; spike = a 25-update block after T90 with mean online loss above ln K; breakdown = spike and end memorisation below .5"
   },
   "S_smoke": {
     "online": [
@@ -844,21 +1099,24 @@
     "S_data": true,
     "S_stream": true,
     "S_arm1": true,
+    "S_arm1_LN": true,
     "S_smoke": true,
-    "S_speed": true
+    "S_speed": true,
+    "S_speed_LN": true,
+    "S_spikes": true
   },
   "all_pass": true,
   "source_hashes_at_validation": {
     "analysis/vit_long_1024/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "analysis/vit_long_1024/calibrate.py": "d5d6f4b0810b150aef893c2872ab866717ed305c66622209cd0b163f6e83dc89",
-    "analysis/vit_long_1024/checks_data.py": "edc0d54b3df48fa245c1c7a26966dae0d84ddb3f64aab44d86e3dee8ea35fd32",
-    "analysis/vit_long_1024/checks_nodata.py": "8d4191bec7325c89976a1f4704d4b4a406b7be541f21a698ed763407133a57c2",
+    "analysis/vit_long_1024/calibrate.py": "aeb8166f6849f965f940eecaf0c099c3efde161c0e16dc989d41bee26d6dfb5d",
+    "analysis/vit_long_1024/checks_data.py": "a6a933efbdbf1405f511538694c9b49472db0a691b18aa389acab2bce739db32",
+    "analysis/vit_long_1024/checks_nodata.py": "cffeb7c104e96bc8114af989cf10788d1736fb41dac50bf43c8ca61b29582041",
     "analysis/vit_long_1024/collect.py": "ec18baa8b08824a35d1940fe8d1e7196bb93eea6c728ceb24d441bb33c844586",
-    "analysis/vit_long_1024/common.py": "4a24ee14cc050ad7d527b1882ecf59ace7038f37c64f82c07685fac3ea1a5e2d",
-    "analysis/vit_long_1024/judge.py": "8cf91e6e2ccc907291a5e3581c0c995447c3af2a00a61bf06f268b69e7928912",
-    "analysis/vit_long_1024/launch.py": "58c616a3635e3b7a20f6cfd2dbb5bc869b1b1510cd101f07a36c60dd196b6612",
-    "analysis/vit_long_1024/run.py": "9bd4966ffc5e209ad18c854f6d969b96e930544c5065dc81705a7d9352856de3",
-    "analysis/vit_long_1024/production.json": "c2a5415605e54f6e710a40dcfd451f852dbe6721d6f88275982202f3037ee017",
+    "analysis/vit_long_1024/common.py": "f8a5b7bc15ad80d5a8fc987be6444921a39986813987c34e742d0e4bc3d7fb85",
+    "analysis/vit_long_1024/judge.py": "5422f095db31a019945335c7daa244b06802f9ee25fcbe4e07988cedfdaddeaf",
+    "analysis/vit_long_1024/launch.py": "b4e7c2f5a0a6eee896142a7409300ba4e6dd6699cee27fac045f0c05adb82db6",
+    "analysis/vit_long_1024/run.py": "ecbc9b4d15fc8b5091a156c0554486211e0159cc687fdaf2d33e58ccc990cafd",
+    "analysis/vit_long_1024/production.json": "edb047dbd3e98f96c1bded63e9103cd0fa7a46fc554af06c927fed37bd6bbc35",
     "analysis/joudaki_vit_battle_0919/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "analysis/joudaki_vit_battle_0919/benchmark.py": "2352cec0fb03a5c81b72136c42884c9426f721926acdf96c18aa38b8516d8a74",
     "analysis/joudaki_vit_battle_0919/check_report.py": "5047f9fee0856c3e37f82f0074966b3abc7364d3db8f7f08e0e5d877d58d6d16",
@@ -880,5 +1138,5 @@
     "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
     "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
   },
-  "finished": 1792796660.3392296
+  "finished": 1792799139.6367526
 }

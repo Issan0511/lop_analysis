@@ -1,11 +1,17 @@
 {
-  "started": 1792795788.1035244,
-  "root": "/home/issan/Projects/obsidian-research-data/vit_long_1024/checks/nodata_1792795788",
+  "started": 1792797725.810923,
+  "root": "/home/issan/Projects/obsidian-research-data/vit_long_1024/checks/nodata_1792797725",
   "host": "white-san",
   "torch": "2.13.0+cu130",
   "gpu": "NVIDIA GeForce RTX 5060 Ti",
   "python": "3.12.3",
   "production": {
+    "arms": [
+      "R0",
+      "S",
+      "R0L",
+      "SL"
+    ],
     "n_labels": 10,
     "images_per_class": 25,
     "steps": 500,
@@ -13,7 +19,7 @@
     "augment": "off",
     "dropout": 0.0
   },
-  "note": "synthetic runs use the production layout with T = 2-3 and U = 300 (U = 50 for S-diverge)",
+  "note": "synthetic runs use the production layout with T = 2-3 and U = 300 (U = 50 for S-diverge); R0/S without LN for the full set, R0L/SL with LN for S_ln",
   "S_code": {
     "pass_": true,
     "files": 17,
@@ -47,6 +53,12 @@
     "S_finite_backward": true,
     "S_zero_grad_outside_loss_rows": true,
     "S_nonzero_grad_on_loss_rows": true,
+    "ln_config_is_randlabel_cell": true,
+    "ln_affine_layernorms": true,
+    "ln_n_params": 10824008,
+    "ln_shared_initial_weights_equal": true,
+    "production_dropout_applied": true,
+    "ln_trace_logits_bit_equal": true,
     "pass_": true
   },
   "S_plan": {
@@ -60,6 +72,12 @@
     "tasks": "1-61",
     "registered_layout_ok": true,
     "production": {
+      "arms": [
+        "R0",
+        "S",
+        "R0L",
+        "SL"
+      ],
       "n_labels": 10,
       "images_per_class": 25,
       "steps": 500,
@@ -102,7 +120,31 @@
         "INSUFFICIENT"
       ]
     },
-    "onset_example": 44
+    "onset_example": 44,
+    "jln": {
+      "break_": "PHASE1_BREAKS_SHIELD",
+      "hold": "SHIELD_HOLDS",
+      "none": "NO_SHIELD",
+      "mixed": "MIXED",
+      "insufficient": "INSUFFICIENT"
+    },
+    "spikes_example": [
+      {
+        "task": 1,
+        "spike": true,
+        "breakdown": false
+      },
+      {
+        "task": 2,
+        "spike": true,
+        "breakdown": true
+      },
+      {
+        "task": 3,
+        "spike": false,
+        "breakdown": false
+      }
+    ]
   },
   "S_head": {
     "R0_head_zero_at_every_task_start": true,
@@ -142,6 +184,14 @@
     "S": {
       "online_per_update_equal": true,
       "task2_weights_equal": true
+    },
+    "R0L": {
+      "online_per_update_equal": true,
+      "task2_weights_equal": true
+    },
+    "SL": {
+      "online_per_update_equal": true,
+      "task2_weights_equal": true
     }
   },
   "S_resume": {
@@ -170,6 +220,30 @@
       "saved_files": true,
       "stopped_after_task2": true
     },
+    "R0L": {
+      "config": true,
+      "model": true,
+      "optimizer": true,
+      "rng": true,
+      "task": true,
+      "layer_rows": true,
+      "rows_except_seconds": true,
+      "intask": true,
+      "saved_files": true,
+      "stopped_after_task2": true
+    },
+    "SL": {
+      "config": true,
+      "model": true,
+      "optimizer": true,
+      "rng": true,
+      "task": true,
+      "layer_rows": true,
+      "rows_except_seconds": true,
+      "intask": true,
+      "saved_files": true,
+      "stopped_after_task2": true
+    },
     "record_resume_without_compile_replay": {
       "online_equal": true,
       "weights_equal": true,
@@ -185,7 +259,27 @@
     "model_t01.pt": 43281325,
     "adam_t01.pt": 86564895,
     "mid_t01.pt": 43281205,
-    "checkpoint.pt": 129901707
+    "checkpoint.pt": 129901131
+  },
+  "S_ln": {
+    "pass_": false,
+    "task1_records_equal": true,
+    "task1_weights_equal": true,
+    "head_protocol": false,
+    "layernorm_in_state": true,
+    "SL_resume_bit_equal": true,
+    "online": {
+      "R0L": [
+        0.95632,
+        0.9325866666666667,
+        0.95272
+      ],
+      "SL": [
+        0.95632,
+        0.8021066666666666,
+        0.95968
+      ]
+    }
   },
   "S_diverge": {
     "launcher_exit": 0,
@@ -195,13 +289,13 @@
       "step": 7,
       "reason": "nonfinite training loss",
       "completed": 1,
-      "time": 1792796205.2236142
+      "time": 1792798472.4921823
     },
     "done_second": {
       "status": "complete",
       "tasks": 2,
       "last_task": 2,
-      "time": 1792796216.4760988
+      "time": 1792798483.6594884
     },
     "first_rows": 1,
     "first_task1_weights": true,
@@ -214,7 +308,7 @@
       "status": "paused",
       "reason": "disk",
       "free": 1,
-      "need": 27449130944,
+      "need": 27319362656,
       "completed": 0
     }
   },
@@ -229,21 +323,22 @@
     "S_recorder": true,
     "S_resume": true,
     "S_fresh1": true,
+    "S_ln": false,
     "S_diverge": true,
     "S_disk": true
   },
-  "all_pass": true,
+  "all_pass": false,
   "source_hashes_at_validation": {
     "analysis/vit_long_1024/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "analysis/vit_long_1024/calibrate.py": "d5d6f4b0810b150aef893c2872ab866717ed305c66622209cd0b163f6e83dc89",
-    "analysis/vit_long_1024/checks_data.py": "edc0d54b3df48fa245c1c7a26966dae0d84ddb3f64aab44d86e3dee8ea35fd32",
-    "analysis/vit_long_1024/checks_nodata.py": "8d4191bec7325c89976a1f4704d4b4a406b7be541f21a698ed763407133a57c2",
+    "analysis/vit_long_1024/calibrate.py": "aeb8166f6849f965f940eecaf0c099c3efde161c0e16dc989d41bee26d6dfb5d",
+    "analysis/vit_long_1024/checks_data.py": "a6a933efbdbf1405f511538694c9b49472db0a691b18aa389acab2bce739db32",
+    "analysis/vit_long_1024/checks_nodata.py": "cffeb7c104e96bc8114af989cf10788d1736fb41dac50bf43c8ca61b29582041",
     "analysis/vit_long_1024/collect.py": "ec18baa8b08824a35d1940fe8d1e7196bb93eea6c728ceb24d441bb33c844586",
-    "analysis/vit_long_1024/common.py": "4a24ee14cc050ad7d527b1882ecf59ace7038f37c64f82c07685fac3ea1a5e2d",
-    "analysis/vit_long_1024/judge.py": "8cf91e6e2ccc907291a5e3581c0c995447c3af2a00a61bf06f268b69e7928912",
-    "analysis/vit_long_1024/launch.py": "58c616a3635e3b7a20f6cfd2dbb5bc869b1b1510cd101f07a36c60dd196b6612",
-    "analysis/vit_long_1024/run.py": "9bd4966ffc5e209ad18c854f6d969b96e930544c5065dc81705a7d9352856de3",
-    "analysis/vit_long_1024/production.json": "c2a5415605e54f6e710a40dcfd451f852dbe6721d6f88275982202f3037ee017",
+    "analysis/vit_long_1024/common.py": "f8a5b7bc15ad80d5a8fc987be6444921a39986813987c34e742d0e4bc3d7fb85",
+    "analysis/vit_long_1024/judge.py": "5422f095db31a019945335c7daa244b06802f9ee25fcbe4e07988cedfdaddeaf",
+    "analysis/vit_long_1024/launch.py": "b4e7c2f5a0a6eee896142a7409300ba4e6dd6699cee27fac045f0c05adb82db6",
+    "analysis/vit_long_1024/run.py": "ecbc9b4d15fc8b5091a156c0554486211e0159cc687fdaf2d33e58ccc990cafd",
+    "analysis/vit_long_1024/production.json": "edb047dbd3e98f96c1bded63e9103cd0fa7a46fc554af06c927fed37bd6bbc35",
     "analysis/joudaki_vit_battle_0919/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "analysis/joudaki_vit_battle_0919/benchmark.py": "2352cec0fb03a5c81b72136c42884c9426f721926acdf96c18aa38b8516d8a74",
     "analysis/joudaki_vit_battle_0919/check_report.py": "5047f9fee0856c3e37f82f0074966b3abc7364d3db8f7f08e0e5d877d58d6d16",
@@ -265,5 +360,5 @@
     "src/pmnist_rlcifar_0907.py": "0272a6e2aba1a72c7d3101fd88d5e1f733dd61dea993d44119bfdeb728824f14",
     "src/pmnist_rlmnist_0906.py": "6f3624b59fd70ad0638da201eddcd5c1ca91d057df83c167352074380d7debdd"
   },
-  "finished": 1792796220.0534914
+  "finished": 1792798487.2548785
 }
