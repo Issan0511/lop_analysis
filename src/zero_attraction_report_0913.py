@@ -8,7 +8,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 torch.set_num_threads(1)
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/"results/zero_attraction_learning_0913"
-DATA=OUT
+DATA=Path("/home/issan/Projects/claude/zero_attraction_0913/results/zero_attraction_learning_0913")
 CFG=json.loads((ROOT/"configs/zero_attraction_learning_0913.yaml").read_text())
 def writecsv(name,rows):
  keys=list(dict.fromkeys(k for r in rows for k in r))
@@ -45,7 +45,8 @@ def main():
   names={a["name"] for a in CFG["arms"]}
   if not {"SN_peak_q0","SN_normal_q0"}<=names:
    print("Primary pair is not complete yet.");return
-  OUT=DATA/"partial_analysis";OUT.mkdir(exist_ok=True)
+  OUT=OUT/"partial_analysis";OUT.mkdir(exist_ok=True)
+ OUT.mkdir(parents=True,exist_ok=True)
  rows=[];groups=[];ledgers=[];sources=[];trajectories={};checks={};rawstats={}
  bits=np.array(list(itertools.product([-.5,.5],repeat=5)))
  def verify(k,a,b,atol=1e-6,rtol=1e-5):
@@ -134,29 +135,34 @@ def main():
  for a,b in pairs:
   if a not in trajectories or b not in trajectories:continue
   d=np.log(values(a))-np.log(values(b));lo,hi=ci(d)
+   if (a,b)==pairs[0]:lo,hi=interval
   comparisons.append({"arm":a,"reference":b,"log_growth_difference":float(d.mean()),"ci_low":lo,"ci_high":hi,"negative_seeds":int((d<0).sum()),"tier":"PRIMARY" if (a,b)==pairs[0] else "EXPLORATORY"})
  writecsv("comparisons.csv",comparisons);writecsv("seed_summary.csv",rows);writecsv("group_summary.csv",groups);writecsv("task_ledger.csv",ledgers)
  np.savez_compressed(OUT/"summary_trajectories.npz",**trajectories)
  (OUT/"analysis_verification.json").write_text(json.dumps({"status":"PASS","max_abs_errors":checks,"n_arms":len(CFG["arms"]),"n_logs":len(CFG["arms"])*10,"source_files":sources,"analysis_sha256":sha(Path(__file__))},indent=2))
  # Scientific trajectories: median and interquartile range across seed-level summaries.
- fig,axs=plt.subplots(2,3,figsize=(14,8),constrained_layout=True)
+ fig,axs=plt.subplots(3,3,figsize=(14,11),constrained_layout=True)
  sets=[(["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],1,"Snake phase: free-weight RMS"),
        (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],3,"Snake phase: mean preactivation"),
        (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],5,"Snake phase: readout RMS"),
        (["LR_a0p1_q0","LR_a0p3_q0","LR_a0p7_q0","LIN_q0"],1,"Leaky slope: free-weight RMS"),
        (["LR_a0p1_qm05","LR_a0p1_q0","LR_a0p1_qp05"],1,"Leaky a=.1 offsets: free-weight RMS"),
-       (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],6,"Snake phase: exact MSE")]
+       (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],6,"Snake phase: exact MSE"),
+        (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],8,"Fraction of means within root +/- 0.1"),
+        (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],4,"RMS distance of unit means to root"),
+        (["SN_normal_q0","SN_peak_q0","SN_valley_q0","LIN_q0"],2,"Full incoming-weight RMS")]
  for ax,(names,col,title) in zip(axs.flat,sets):
   for name in names:
    if name not in trajectories:continue
    x=trajectories[name][:,:,col];med=np.median(x,axis=0);lo,hi=np.quantile(x,[.25,.75],axis=0)
    label=name.replace("SN_","").replace("LR_","").replace("_q0","")
    ax.plot(np.arange(501),med,label=label,lw=1.5);ax.fill_between(np.arange(501),lo,hi,alpha=.12)
+  if col==6:ax.set_yscale("symlog",linthresh=1e-12)
   ax.set_title(title);ax.set_xlabel("Task endpoint");ax.legend(fontsize=8);ax.grid(alpha=.18)
  fig.suptitle("New learning: 10 seeds, ALL units, common SGD lr=.005; median and IQR")
  fig.savefig(OUT/"learning_trajectories.png",dpi=150);fig.savefig(OUT/"learning_trajectories.pdf");plt.close(fig)
  out=["# 零点復元と重み収縮：新しいSGD学習実験 0913","",
- f"登録主判定: **{label}**。集計完了{len(CFG['arms'])}条件・各10seed・500task・共通lr=.005。",f"peak/normalの幾何平均free成長比: {verdict['geometric_growth_ratio_peak_over_normal']:.6g}、log差CI={interval}。",f"peak集団の初期からの収縮: **{verdict['population_shrinkage']}**。","",
+ f"登録主判定: **{verdict['primary']}**。集計完了{len(CFG['arms'])}条件・各10seed・500task・共通lr=.005。",f"peak/normalの幾何平均free成長比: {verdict['geometric_growth_ratio_peak_over_normal']:.6g}、log差CI={interval}。",f"peak集団の初期からの収縮: **{verdict['population_shrinkage']}**。","",
  ("**途中集計: 完走した条件のみ。残りの条件は実行中。**" if args.available else "全条件の最終集計。"),
  "主比較以外は探索。free重みは入力末尾5bit、全WやMNIST中心化Wと区別。","",
  "## late task451–500、全unit、seed平均","",

@@ -1,12 +1,13 @@
 """Registered fixed-checkpoint local perturbations; scalar MSE loss E[delta^2]."""
 from pathlib import Path
-import argparse,csv,hashlib,itertools,json
+import argparse,ast,csv,hashlib,itertools,json
 import numpy as np
 import torch
 from src.nets import VecMLPL
 torch.set_num_threads(1)
 ROOT=Path(__file__).resolve().parents[1]
-DATA=ROOT/"results/zero_attraction_learning_0913"
+DATA=Path("/home/issan/Projects/claude/zero_attraction_0913/results/zero_attraction_learning_0913")
+RESULTS=ROOT/"results/zero_attraction_learning_0913"
 def arr(x):return x.detach().cpu().numpy()
 def writecsv(p,rows):
  keys=list(dict.fromkeys(k for row in rows for k in row))
@@ -127,15 +128,34 @@ def measure(path,check_only=False):
  check("width_displacement",zwide,z+.05*radius[None]*feature,checks)
  return records,checks
 def main():
- ap=argparse.ArgumentParser();ap.add_argument("--check-only",action="store_true");args=ap.parse_args()
- out=DATA/"mechanism";out.mkdir(exist_ok=True)
+ ap=argparse.ArgumentParser();ap.add_argument("--check-only",action="store_true");ap.add_argument("--available",action="store_true");args=ap.parse_args()
+ out=RESULTS/("mechanism_partial" if args.available else "mechanism");out.mkdir(parents=True,exist_ok=True)
  cfg=json.loads((ROOT/"configs/zero_attraction_learning_0913.yaml").read_text())
  allchecks={};seedrows=[]
+ previous=RESULTS/"mechanism_partial"
+ prevchecks=json.loads((previous/"verification.json").read_text()).get("checks",{}) if (previous/"verification.json").exists() and not args.available and not args.check_only else {}
+ if prevchecks:
+  prior=ast.parse((previous/"tested_probe_source.py").read_text());current=ast.parse(Path(__file__).read_text())
+  for name in ["arr","check","checkpoint","root","measure"]:
+   a=next(n for n in prior.body if isinstance(n,ast.FunctionDef) and n.name==name)
+   b=next(n for n in current.body if isinstance(n,ast.FunctionDef) and n.name==name)
+   assert ast.dump(a)==ast.dump(b),f"Cached probe function changed: {name}"
+ prevrows=list(csv.DictReader((previous/"seed_summary.csv").open())) if prevchecks else []
  for arm in cfg["arms"]:
+  if args.available and not (DATA/"arm_status"/f"{arm['name']}_done.json").exists():continue
   for step in [0,200000,1000000,5000000]:
    if args.check_only and (arm["name"]!="SN_peak_q0" or step!=0):continue
    p=DATA/"ckpts"/f"{arm['name']}_step{step}.pt"
-   rows,checks=measure(p)
+   key=f"{arm['name']}_{step}"
+   if key in prevchecks:
+    import shutil
+    src=previous/f"{arm['name']}_step{step}_units.csv"
+    shutil.copy2(src,out/src.name)
+    seedrows.extend({k:(v if k in ["arm","kind"] else (None if v=="" else float(v))) for k,v in row.items()} for row in prevrows if row["arm"]==arm["name"] and int(row["step"])==step)
+    allchecks[key]=prevchecks[key]
+    print("REUSE VERIFIED PROBE",arm["name"],step,flush=True)
+    continue
+   rows,checks=measure(p,check_only=args.check_only)
    if not args.check_only:
     writecsv(out/f"{arm['name']}_step{step}_units.csv",rows)
     for seed in range(10):
