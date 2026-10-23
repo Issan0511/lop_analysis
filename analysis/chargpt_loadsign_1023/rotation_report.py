@@ -47,7 +47,7 @@ def aggregate(states):
 
 
 def correlations():
-    rows=[]
+    rows=[]; audit=dict(states=0,units=0,finite_cos=0,undefined_cos_zero_push=0,alive_finite_cos=0,alive_undefined_cos_zero_push=0)
     for arm in R.A.ARMS:
         for seed in range(10):
             path=OUT/'raw'/f'{arm}_seed{seed}.npz'
@@ -57,6 +57,15 @@ def correlations():
                 record=next(r for r in manifest['files'] if r['backup']==str(path))
                 assert M.sha(path)==record['sha256']
             with np.load(path) as raw:
+                for task in R.A.TASKS:
+                    alpha=raw[f't{task}_cos']; other=raw[f't{task}_other_direct']; alive=raw[f't{task}_alive']
+                    finite=np.isfinite(alpha)
+                    assert np.array_equal(np.sign(alpha[finite]),np.sign(other[finite]))
+                    assert np.all(other[~finite]==0)
+                    assert np.array_equal(finite,(raw[f't{task}_T_norm']>0)&(raw[f't{task}_R_norm']>0))
+                    audit['states']+=1; audit['units']+=len(alpha); audit['finite_cos']+=int(finite.sum())
+                    audit['undefined_cos_zero_push']+=int((~finite).sum())
+                    audit['alive_finite_cos']+=int((finite&alive).sum()); audit['alive_undefined_cos_zero_push']+=int((~finite&alive).sum())
                 for name,tasks in WINDOWS.items():
                     tasks=[t for t in tasks if t-1 in R.A.TASKS]
                     alpha=np.stack([raw[f't{t}_cos'] for t in tasks])
@@ -81,6 +90,8 @@ def correlations():
                                 rho_pooled=R.rho(alpha[valid],rot[valid]),rotation_median=med(rm),
                                 n_negative_alignment_units=int((am<0).sum()),
                                 rotation_negative_alignment_median=med(rm[am<0]),rotation_nonnegative_alignment_median=med(rm[am>=0])))
+    audit['finite_signs_exact']=True; audit['undefined_cos_push_exactly_zero']=True
+    R.dump(OUT/'cos_sign_audit.json',audit)
     M.write_csv(OUT/'correlations.csv',[R.clean(r) for r in rows]); return rows
 
 
@@ -118,6 +129,7 @@ def judge(windows,corr,elr):
 def report(states,windows,corr,elr,result):
     gate=json.loads((OUT/'gate.json').read_text()); eg=json.loads((OUT/'elr_gate.json').read_text())
     pv=json.loads((OUT/'provenance.json').read_text())
+    audit=json.loads((OUT/'cos_sign_audit.json').read_text())
     lines=['# 読み出し整列・端点回転・保存ELRの検査（§10）','',
         '保存状態のみ、学習・optimizerなし。主probeは第三段階と同じ独立一様文字列。H1監査のmatched-inputとは異なる。',
         'T_i=ΓPU_i、E_i=mean[(K gate_i/σ)(p-u)]、R_i=Σ_{j≠i}T_j〈B_j,E_i〉、alpha_i=cos(T_i,R_i)。',
@@ -146,7 +158,15 @@ def report(states,windows,corr,elr,result):
             rr=[r for r in corr if r['arm']==arm and r['window']=='late' and r['direction']==direction]
             c=[r for r in rr if r['alive_rule']=='current']; b=[r for r in rr if r['alive_rule']=='both']
             lines.append(f"| {arm} | {direction} | {span(c,'rotation_median',7)} | {span(b,'rho_alignment_rotation')} | {span(c,'rho_negative_frequency_rotation')} | {span(c,'rho_state_median')} |")
-    lines+=['','全window、unit×task pool相関、負/非負整列unitの回転中央値もcorrelations.csvに記録。poolを独立標本の検定には使わない。','',
+    lines+=['','| arm | direction | 早期の回転中央値 | 後期の回転中央値 |',
+            '|---|---|---:|---:|']
+    for arm in R.A.ARMS:
+        for direction in ['T','W','U']:
+            rr=[r for r in corr if r['arm']==arm and r['direction']==direction and r['alive_rule']=='current']
+            early=[r for r in rr if r['window']=='early']; late=[r for r in rr if r['window']=='late']
+            lines.append(f"| {arm} | {direction} | {span(early,'rotation_median',6)} | {span(late,'rotation_median',6)} |")
+    lines+=['','この回転集約はunit内窓中央値→unit間中央値→seed範囲。読み出しT/Uの端点回転はReLUcapでも小さくなっており、その小ささだけではC3との整列差を説明できない。',
+        '全window、unit×task pool相関、負/非負整列unitの回転中央値もcorrelations.csvに記録。poolを独立標本の検定には使わない。','',
         '## ELR（L0のみ操作、L1無操作）','',
         '既存row5 ELRのseed5–9に課題50/100末の計10 checkpointを確認。seed0–4の保存状態および課題89–99末は手元で確認できない。',
         'L0 phi=ReLU(k*z)のkはstate_dict外。原コードどおり対照C3のfloat32行ノルム比から復元。k、行ノルム、L1 chain統計を保存CSVと照合。',
@@ -164,7 +184,8 @@ def report(states,windows,corr,elr,result):
     lines+=['','ELRの分解は利用可能な5seedだけ。aliveが少ない場合、割合は少数unitで大きく動く。ELRで項が保たれることと回転による媒介の証明は別。','',
         '## 検証・採点','',
         f"- seed0両腕70状態: 前段配列に一致。最大相対誤差 {gate['max_previous_error']:.3e}、明示j≠i和 {gate['max_explicit_error']:.3e}。",
-        f"- 全{len(states)}状態: alive・全unit成分符号一致、最大相対誤差 {pv['max_previous_error']:.3e}。cos符号とother direct符号は全unitで一致。",
+        f"- 全{len(states)}状態: alive・全unit成分符号一致、最大相対誤差 {pv['max_previous_error']:.3e}。",
+        f"- 有限cos {audit['finite_cos']}/{audit['units']} unit状態で正/零/負の符号がother directと完全一致。残り{audit['undefined_cos_zero_push']}はcos未定義で他unit押しが厳密に0。alive内のcos欠測は{audit['alive_undefined_cos_zero_push']}件。",
         f"- ELR復元 {len(eg['checks'])}状態通過。L1合計とautogradの最大相対誤差 {eg['max_autograd_error']:.3e}。",
         f"- 実行コードcommit: {pv['git_hash']}。spec登録commit: 1fd7e182。CPU float64/8threads。",
         '- 実行前python数2。nvidia-smiはドライバ接続不可。CPUのみ使用し他の走には触れていない。','']
