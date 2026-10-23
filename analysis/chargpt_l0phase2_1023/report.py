@@ -126,8 +126,8 @@ def main():
         for interval in ['39_to_100','head100','body100']:
             for target in ['actual','ownW']:
                 sel=[r for r in motion if r['arm']==arm and r['interval']==interval and r['probe']=='chain' and r['metric']=='r' and r['target']==target]
-                rr.append([arm,interval,target,rng([r['rho'] for r in sel]),str(sum(r['passed'] for r in sel))+'/10',rng([r['delta_r_median'] for r in sel])])
-    text += [table(['腕','区間','実変化/入力固定W変化','ρ(予測,-Δr)','ρ>0.5','Δr 中央値'],rr),'',
+                rr.append([arm,interval,target,rng([r['n'] for r in sel],0),rng([r['rho'] for r in sel]),str(sum(r['passed'] for r in sel))+'/10',rng([r['delta_r_median'] for r in sel])])
+    text += [table(['腕','区間','実変化/入力固定W変化','有効unit数','ρ(予測,-Δr)','ρ>0.5','Δr 中央値'],rr),'',
       '区間開始点の予測を、同じunitの終点変化と比較した。途中の力は保存されていないので積分の再現・因果寄与率にはしない。', '', '## probeと数値検査','']
     for e in ['fit','switch']:
         rr=[r for r in full if r['tol']==1e-10]
@@ -136,7 +136,38 @@ def main():
     text += [f'- 小行列leave-one-outとの相対差 {g["algebra"]["leave_one_out_relative"]:.3g}。重複列は識別不能として扱う検査に合格。非Gaussianのp<1/2反例でQ={g["algebra"]["nonGaussian_counterexample"]:.3g}。',
       f'- 全40状態の既存full値との相対差最大 {max(r[e+"_reference"] for r in full for e in ["fit","switch"]):.3g}。JVPと独立autogradの内積相対差最大 {max(r[e+"_bilinear"] for r in full for e in ["fit","switch"]):.3g}。',
       f'- Gram閾値1e-8/1e-12で共通識別unitの符号一致 {rng([r["agreement"] for r in sensitivity])}。識別数の変化はsensitivity.csv。', '',
-      '## 適用の限界', '',
+      '識別可能とは登録した数値rank閾値での判定であり、厳密な線形独立の主張ではない。特徴上のReLUcap後期には閾値によって有効unitが0になる状態もあり、値を0に埋めて判定していない。', '']
+    vp=OUT/'probe64_validation.csv'
+    if vp.exists():
+        vr=[r for r in cv(list(csv.DictReader(vp.open()))) if r['tol']==1e-10]
+        text += ['### 追加の64系列検査（C3 seed0）','',table(['課題末','識別数','8/64系列 Qのρ','Q符号一致','64系列Qとfitのρ','64系列Qとswitchのρ'],
+             [[int(r['task']),int(r['n_valid']),ft(r['probe_rho']),ft(r['probe_agreement']),ft(r['fit_rho']),ft(r['switch_rho'])] for r in vr]),'',
+             '全64系列でも、識別できたunitの予測は全て沈める向きだった。現課題合計との強い対応は復活しなかった。元のJ1〜J3は差し替えていない。','']
+    cp=OUT/'contextual_states.csv'
+    if cp.exists():
+        ctx=cv(list(csv.DictReader(cp.open())));rr=[];ctxseed=[]
+        for arm in ['C3','ReLUcap']:
+            for task in [39,100]:
+                for cov in ['ctx','mix']:
+                    sel=[r for r in ctx if r['arm']==arm and r['task']==task and r['covariance']==cov]
+                    rr.append([arm,task,cov,rng([r['positive'] for r in sel]),rng([r['fit_rho'] for r in sel]),rng([r['switch_rho'] for r in sel]),rng([r['repeat_fraction'] for r in sel])])
+            for seed in range(10):
+                raws=[np.load(OUT/'raw'/f'context_{arm}_seed{seed}_t{task}.npz') for task in [39,100]]
+                fulls=[read('full',arm,seed,t) for t in [39,100]]
+                for cov in ['ctx','mix']:
+                    pp=np.concatenate([r['q_'+cov] for r in raws]);r=dict(arm=arm,seed=seed,covariance=cov)
+                    for er in ['fit','switch']:
+                        co=Q.compare(pp,np.concatenate([x[er] for x in fulls]))
+                        r.update({er+'_'+k:v for k,v in co.items()})
+                        r[er+'_threshold']=co['rho'] is not None and co['rho']>.5 and co['balanced_accuracy'] is not None and co['balanced_accuracy']>.65
+                    ctxseed.append(r)
+        Q.csvwrite(OUT/'contextual_seed_comparisons.csv',ctxseed)
+        text += ['## 文脈を共有するラベル共分散の追補（探索的）','',
+             '同じ直前2tokenの位置が同じqを共有する共分散を入れ、全unitの読み出し相関を計算し直した。ctxはqの規則差、mixはサンプルラベルの独立noiseも含む。どちらも文脈の列と学習済み特徴を固定した反実仮想であり、旧系列を条件にした真の事後分布ではない。', '',
+             table(['腕','課題末','共分散','予測が沈める割合','ρ fit','ρ switch','同文脈が複数回の位置割合'],rr),'',
+             table(['腕','共分散','fitで元J2数値基準該当','switchで該当'],[[arm,cov,str(sum(r['fit_threshold'] for r in ctxseed if r['arm']==arm and r['covariance']==cov))+'/10',str(sum(r['switch_threshold'] for r in ctxseed if r['arm']==arm and r['covariance']==cov))+'/10'] for arm in ['C3','ReLUcap'] for cov in ['ctx','mix']]),'',
+             f'C=Iで元Qとの相対差最大 {max(r["iid_reference"] for r in ctx):.3g}。独立な共分散factor計算との相対差 {max(r["factor_check"] for r in ctx if r["factor_check"] is not None):.3g}。主判定は変更していない。','']
+    text += ['## 適用の限界', '',
       'Poutは全512unitの現在の出力接線と固定残差を取り除く。任意の128次元down方向を学習し直すモデルではなく、現在の出力方向の振幅を共同fitする局所二乗損失モデルの期待値である。CE、課題依存の特徴、Markovラベル、Adam履歴はこの等分散・独立ラベル平均の定理では扱われない。joint-fit必要条件の成否も別記した。', '',
       '時間相関する勾配noiseと読み出しの更新が作る駆動は、途中のbatch/残差相関が保存されていないため、この保存点からは実測していない。正のnoise成分の式だけを原因確認の代用にしない。', '',
       '## 登録予測の採点', '',table(['検査','事前P','成否','Brier'],[[p['test'],p['probability'],p['outcome'],f'{p["brier"]:.4f}'] for p in predictions]),'',

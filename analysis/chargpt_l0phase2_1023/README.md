@@ -55,3 +55,19 @@ ranks for ties and NumPy correlation. The first import attempt stopped before
 measurement, then the independent gate was run successfully. Roundoff handling
 was made explicit as registered (relative inner-product tolerance 1e-10), and
 the gate was rerun before the 10-seed run. Registered thresholds were unchanged.
+
+The post-result probes are `validate64.py` (C3 seed0, both registered endpoints),
+`contextual.py` (Markov-context covariance) and `headcov.py` (unrestricted final
+head, instead of scalar unit amplitudes). Their measurement definitions were
+committed in spec sections 7--9 before the respective measurements. These do
+not overwrite the primary judgments. In particular, unit-level strength/rank
+prediction is an additional empirical test, not a necessary condition of a
+theorem about the old-label expectation.
+
+The first contextual run stopped at C3 seed6 task100: explicitly multiplying
+`G+ G G+` lost relative precision (1.56e-4, condition number 3.12e8). The rerun
+factors the covariance through the dual basis, using QR/SVD above condition
+number 1e6; the registered rank tolerance is unchanged. The failing state's
+independent factor check then had relative error 4.19e-11, and its QR/SVD iid
+score differed from the original Gram score by 2.30e-10. The failed log is
+retained. This changes numerical evaluation, not the model or pass thresholds.
