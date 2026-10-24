@@ -21,6 +21,7 @@ bash /root/vit_long_1024/lop_analysis/analysis/vit_long_1024/remote/setup_remote
 bash /root/vit_long_1024/lop_analysis/analysis/vit_long_1024/remote/run_remote.sh     # データの要る検査の後、launcher を背景で起動
 ```
 
+- **追補 A（2 ブロック版）を回すときは、`export VIT_LONG_PRODUCTION=production_2blk.json` を置いてから `run_remote.sh` を流す。** 出力の置き場は `vit_long_1024_2blk/` になり、検査も 2 ブロックの設定で回る（記録は `results/vit_long_1024_2blk/checks/`）。
 - 置き場の既定は white-san と同じ相対の形で、`/root/Projects/obsidian-research-data/`（データは `datasets/tiny-imagenet-200/`、出力は `vit_long_1024/`）。`VIT_LONG_DATA`・`VIT_LONG_RAW`・`VIT_LONG_PY` で変えられる。
 - `setup_remote.sh` は、uv で python 3.12.3 の venv を作り、`requirements.txt`（white-san の .venv の版をそのまま）を入れる。torch は https://download.pytorch.org/whl/cu130 から取る。Tiny ImageNet は入れ子の重複 `tiny-imagenet-200/tiny-imagenet-200/` を除いて外側の 1 組だけを展開し、件数と一覧で照合する。
 - `run_remote.sh` は、データの要らない検査（この機械で通った記録が今のソースと production.json に合わなければ、約 10 分）とデータの要る検査（S-data・S-stream・S-arm1・S-smoke・S-speed、約 12 分）を流し、通ったら launcher を setsid と nohup で背景に起動する。S-speed の 1 更新の ms と、10 走と fresh の見込みの時間を表示する。
