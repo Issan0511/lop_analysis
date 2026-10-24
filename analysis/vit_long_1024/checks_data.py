@@ -180,7 +180,8 @@ def check_stream_layout(layout, reference_part):
 
 PROD = C.production_layout()
 PROD_ARGS = ['--n-labels', str(PROD['n_labels']), '--images-per-class', str(PROD['images_per_class']),
-             '--augment', PROD['augment'], '--dropout', str(PROD['dropout']), '--steps', str(PROD['steps'])]
+             '--augment', PROD['augment'], '--dropout', str(PROD['dropout']), '--steps', str(PROD['steps']),
+             '--depth', str(PROD['depth']), '--mlp-ratio', str(PROD['mlp_ratio'])]
 
 
 def run_job(out, arm, seed, *extra):

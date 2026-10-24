@@ -59,7 +59,7 @@ class Recorder:
         self.model, self.x, self.y, self.rows = model, x_eval, y_eval, rows
         self.correct = torch.zeros(points, dtype=torch.int64, device=device)
         self.loss = torch.zeros(points, dtype=torch.float64, device=device)
-        self.up = torch.zeros(points, C.DEPTH, dtype=torch.float64, device=device)
+        self.up = torch.zeros(points, model.depth, dtype=torch.float64, device=device)
         self.head = torch.zeros(points, len(rows), dtype=torch.float64, device=device)
         self.bias = torch.zeros(points, len(rows), dtype=torch.float64, device=device)
 
@@ -73,7 +73,7 @@ class Recorder:
             self.correct[k] += (logits.argmax(1) == y).sum()
             self.loss[k] += F.cross_entropy(logits, y, reduction='sum').double()
         model.train()
-        for i in range(C.DEPTH):
+        for i in range(model.depth):
             self.up[k, i] = torch.quantile(C.fc1(model, i).weight.double().norm(dim=1), .5)
         head = model.layers['out']
         self.head[k] = head.weight.index_select(0, self.rows).double().norm(dim=1)
@@ -129,11 +129,12 @@ def validate(args):
         return
     prod = C.production()
     expected = dict(steps=prod['steps'], n_labels=prod['n_labels'], images_per_class=prod['images_per_class'],
-                    augment=prod['augment'], dropout=prod['dropout'],
+                    augment=prod['augment'], dropout=prod['dropout'], depth=prod.get('depth', C.DEPTH),
+                    mlp_ratio=prod.get('mlp_ratio', C.MLP_RATIO),
                     engine='compile', data_kind='real', recorders=True, save_mode='full', inject_nan='',
                     no_warmup=False, free_bytes_override=0)
     actual = dict(steps=args.steps, n_labels=args.n_labels, images_per_class=args.images_per_class,
-                  augment=args.augment, dropout=args.dropout,
+                  augment=args.augment, dropout=args.dropout, depth=args.depth, mlp_ratio=args.mlp_ratio,
                   engine=args.engine, data_kind=args.data_kind, recorders=not args.no_recorders,
                   save_mode=args.save_mode, inject_nan=args.inject_nan, no_warmup=args.no_warmup,
                   free_bytes_override=args.free_bytes_override)
@@ -154,7 +155,8 @@ def config_of(args):
                 batch=C.BATCH, lr=C.LR, act=C.ACT, ln=args.arm in C.LN_ARMS, engine=args.engine,
                 data_kind=args.data_kind, recorders=not args.no_recorders, save_mode=args.save_mode,
                 n_labels=args.n_labels, images_per_class=args.images_per_class, augment=args.augment,
-                dropout=args.dropout, model_config=C.model_config(args.dropout, args.arm in C.LN_ARMS),
+                dropout=args.dropout, depth=args.depth, mlp_ratio=args.mlp_ratio,
+                model_config=C.model_config(args.dropout, args.arm in C.LN_ARMS, args.depth, args.mlp_ratio),
                 eval_every=C.EVAL_EVERY, end_tasks=list(C.END_TASKS), adam_tasks=list(C.ADAM_TASKS),
                 mid_tasks=list(C.MID_TASKS), mid_fresh=C.MID_FRESH, mid_step=C.MID_STEP, inject_nan=args.inject_nan,
                 no_warmup=args.no_warmup, smoke=args.smoke)
@@ -189,7 +191,7 @@ def run(args):
     hashes = C.source_hashes()
     source = C.image_source(args.data_kind)
     model, optimizer = None, None
-    model = C.build_model(args.seed, device, args.dropout, args.arm in C.LN_ARMS)
+    model = C.build_model(args.seed, device, args.dropout, args.arm in C.LN_ARMS, args.depth, args.mlp_ratio)
     optimizer = C.build_optimizer(model)
     n_params = sum(p.numel() for p in model.parameters())
     forward = train_forward(model, 'compile') if args.engine == 'compile' else model
@@ -480,6 +482,8 @@ def parser():
     p.add_argument('--augment', choices=('on', 'off'), default='on',
                    help="off: training sees the evaluation transform (no augmentation); batch order unchanged")
     p.add_argument('--dropout', type=float, default=C.DROPOUT, help='dropout_p and attn_drop_rate (default 0.1)')
+    p.add_argument('--depth', type=int, default=C.DEPTH, help='number of blocks (default 6; addendum A: 2)')
+    p.add_argument('--mlp-ratio', type=float, default=C.MLP_RATIO, help='FFN width / 384 (default 4; addendum A: 8)')
     p.add_argument('--inject-nan', default='', help='TASK:STEP, smoke runs only (S-diverge)')
     p.add_argument('--no-warmup', action='store_true', help='smoke only: resume without the compile replay')
     p.add_argument('--free-bytes-override', type=int, default=0, help='smoke only: S-disk')

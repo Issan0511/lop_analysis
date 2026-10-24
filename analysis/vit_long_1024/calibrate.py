@@ -29,11 +29,14 @@ def main():
     p.add_argument('--tasks', type=int, nargs='+', default=[1, 2, 3])
     p.add_argument('--data-kind', choices=('real', 'synthetic'), default='real')
     p.add_argument('--arm', choices=('fresh', 'freshL'), default='fresh', help='freshL: with affine LayerNorm')
+    p.add_argument('--depth', type=int, default=C.DEPTH, help='number of blocks (default 6)')
+    p.add_argument('--mlp-ratio', type=float, default=C.MLP_RATIO, help='FFN width / 384 (default 4)')
     p.add_argument('--augment', choices=('on', 'off'), default='on', help='off: no augmentation in training')
     p.add_argument('--dropout', type=float, default=C.DROPOUT, help='dropout_p and attn_drop_rate (default 0.1)')
     p.add_argument('--out', default=None)
     args = p.parse_args()
-    tag = f'{args.arm}_labels{args.n_labels}_per{args.images_per_class}_U{args.steps}_aug{args.augment}_drop{args.dropout:g}'
+    tag = (f'{args.arm}_labels{args.n_labels}_per{args.images_per_class}_U{args.steps}_aug{args.augment}'
+           f'_drop{args.dropout:g}_depth{args.depth}_mlp{args.mlp_ratio:g}')
     root = Path(args.out) if args.out else C.RAW / 'calibrate' / f'{tag}_{int(time.time())}'
     root.mkdir(parents=True, exist_ok=True)
     python = os.environ.get('VIT_LONG_PY', sys.executable)
@@ -45,6 +48,7 @@ def main():
                        '--seed', str(seed), '--smoke', '--steps', str(args.steps), '--save-mode', 'none',
                        '--n-labels', str(args.n_labels), '--images-per-class', str(args.images_per_class),
                        '--data-kind', args.data_kind, '--augment', args.augment, '--dropout', str(args.dropout),
+                       '--depth', str(args.depth), '--mlp-ratio', str(args.mlp_ratio),
                        '--out', str(out)]
             out.mkdir(parents=True, exist_ok=True)
             with (out / 'console.log').open('w') as log:
@@ -58,7 +62,8 @@ def main():
             print(json.dumps(rows[-1]), flush=True)
     unreached = args.steps + C.EVAL_EVERY
     summary = dict(layout=dict(n_labels=args.n_labels, images_per_class=args.images_per_class, steps=args.steps,
-                               augment=args.augment, dropout=args.dropout, arm=args.arm),
+                               augment=args.augment, dropout=args.dropout, arm=args.arm, depth=args.depth,
+                               mlp_ratio=args.mlp_ratio),
                    rows=rows, note=f'T = {unreached} means not reached within {args.steps} updates',
                    data_kind=args.data_kind, time=time.time())
     atomic_json(root / 'calibrate.json', summary)

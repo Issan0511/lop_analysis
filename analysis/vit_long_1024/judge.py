@@ -65,7 +65,9 @@ def load(root):
                     if r['state'] == 'end':
                         end.setdefault(int(r['task']), []).append(r)
             done = json.loads((run / 'done.json').read_text()) if (run / 'done.json').exists() else {}
-            runs[arm][seed] = dict(tasks=tasks, end=end, done=done)
+            prov = json.loads((run / 'provenance.json').read_text()) if (run / 'provenance.json').exists() else {}
+            depth = prov.get('config', {}).get('model_config', {}).get('depth', C.DEPTH)
+            runs[arm][seed] = dict(tasks=tasks, end=end, done=done, depth=depth)
     fresh = {arm: {} for arm in C.FRESH_ARMS}
     for arm in C.FRESH_ARMS:
         for seed in C.SEEDS:
@@ -184,11 +186,12 @@ def j3(runs, arm):
     seeds = {}
     for seed, run in runs[arm].items():
         rows = run['end'].get(C.TASKS)
-        if not rows or len(rows) != C.DEPTH:
+        depth = run.get('depth', C.DEPTH)
+        if not rows or len(rows) != depth:
             seeds[seed] = dict(usable=False)
             continue
         D = float(np.mean([num(r['dead005']) for r in rows]))
-        first = next((t for t in sorted(run['end']) if len(run['end'][t]) == C.DEPTH
+        first = next((t for t in sorted(run['end']) if len(run['end'][t]) == depth
                       and np.mean([num(r['dead005']) for r in run['end'][t]]) >= .2), None)
         at40 = run['end'].get(40)
         seeds[seed] = dict(usable=True, D=D, death=D >= .2,
@@ -350,7 +353,7 @@ def markdown(result):
     for arm in C.ARMS:
         r = result['J3'][arm]
         lines += ['', f"## J3 {arm}: `{r['label']}`（使える seed {r['usable']}、D ≥ 0.2 の seed {r['death_seeds']}）", '',
-                  '| seed | D（課題 60 末、p < 0.005、6 層平均） | 厳密な死 | 課題 40 末の D | 初めて 0.2 以上 |', '| --- | --- | --- | --- | --- |']
+                  '| seed | D（課題 60 末、p < 0.005、全ブロックの平均） | 厳密な死 | 課題 40 末の D | 初めて 0.2 以上 |', '| --- | --- | --- | --- | --- |']
         for seed, v in r['seeds'].items():
             if v['usable']:
                 lines.append(f"| {seed} | {v['D']:.4f} | {v['dead0_mean']:.4f} | "

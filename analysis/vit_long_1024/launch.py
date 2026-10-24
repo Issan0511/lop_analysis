@@ -4,6 +4,8 @@ task-boundary resume, `STOP` file, at most two retries per job, and the final su
     python -m analysis.vit_long_1024.launch            # production (refuses without passing checks)
 
 Paths follow VIT_LONG_RAW / VIT_LONG_DATA; child runs use VIT_LONG_PY or this interpreter.
+VIT_LONG_PRODUCTION selects the production file (default production.json; addendum A:
+production_2blk.json, which also names its own results and raw folders).
 `--plan` (a JSON list of jobs) is for the S-diverge check only and skips the preflight.
 """
 import argparse
@@ -28,7 +30,8 @@ def production_jobs():
     only = os.environ.get('VIT_LONG_SEEDS', '').strip()
     keep = {int(x) for x in only.split(',')} if only else None
     common = ['--n-labels', str(prod['n_labels']), '--images-per-class', str(prod['images_per_class']),
-              '--steps', str(prod['steps']), '--augment', prod['augment'], '--dropout', str(prod['dropout'])]
+              '--steps', str(prod['steps']), '--augment', prod['augment'], '--dropout', str(prod['dropout']),
+              '--depth', str(prod.get('depth', C.DEPTH)), '--mlp-ratio', str(prod.get('mlp_ratio', C.MLP_RATIO))]
     for seed in [x for x in prod['seeds'] if keep is None or x in keep]:
         for arm in prod['arms']:                               # R0, S, R0L, SL
             yield dict(arm=arm, seed=seed, args=common + ['--tasks', str(prod['tasks'])])

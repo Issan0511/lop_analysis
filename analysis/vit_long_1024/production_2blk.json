@@ -1,0 +1,84 @@
+{
+  "note": "Addendum A of vit_long_1024 (spec \u8ffd\u88dc A, Issa 1024 night): the same 2 x 2 run with 2 blocks (as the character GPT) and FFN width 3072 (mlp_ratio 8, twice the 6-block 1536). Everything else as production.json. Select with VIT_LONG_PRODUCTION=production_2blk.json; results and raw outputs go to their own folders. Changing this file changes the source hashes, so the checks must be run again.",
+  "tag": "2blk",
+  "results_dir": "results/vit_long_1024_2blk",
+  "raw_dir": "~/Projects/obsidian-research-data/vit_long_1024_2blk",
+  "arms": [
+    "R0",
+    "S",
+    "R0L",
+    "SL"
+  ],
+  "fresh_arms": [
+    "fresh",
+    "freshL"
+  ],
+  "n_labels": 10,
+  "images_per_class": 25,
+  "tasks": 60,
+  "steps": 500,
+  "augment": "off",
+  "dropout": 0.0,
+  "depth": 2,
+  "mlp_ratio": 8.0,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "fresh_tasks": [
+    25,
+    50,
+    60
+  ],
+  "end_tasks": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    20,
+    30,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+  ],
+  "adam_tasks": [
+    1,
+    10,
+    30,
+    60
+  ],
+  "mid_tasks": [
+    1,
+    10,
+    30,
+    60
+  ],
+  "mid_fresh": false
+}

@@ -27,10 +27,23 @@ from analysis.joudaki_vit_battle_0919.run import DATA, sha256
 from analysis.randlabel_control_joudaki_vit_0919 import CLASSES, IMAGES_PER_CLASS, random_labels
 
 REPO = Path(__file__).resolve().parents[2]
-# Paths can be moved for the rented GPU (spec §10.3); the defaults are white-san's.
-RAW = Path(os.environ.get('VIT_LONG_RAW', str(Path.home() / 'Projects/obsidian-research-data/vit_long_1024')))
+
+
+def _production_file():
+    """production.json (6 blocks, the main run) unless VIT_LONG_PRODUCTION names another file, e.g.
+    production_2blk.json for addendum A (spec 追補 A); a bare name is looked up next to this file."""
+    path = Path(os.environ.get('VIT_LONG_PRODUCTION', 'production.json'))
+    return path if path.is_absolute() else Path(__file__).resolve().parent / path
+
+
+PRODUCTION_FILE = _production_file()
+_PRODUCTION = json.loads(PRODUCTION_FILE.read_text())
+# Paths can be moved for the rented GPU (spec §10.3); the defaults are white-san's. A production
+# file may name its own results and raw folders so that addendum A does not overwrite the main run.
+RAW = Path(os.environ.get('VIT_LONG_RAW', str(Path(_PRODUCTION.get(
+    'raw_dir', '~/Projects/obsidian-research-data/vit_long_1024')).expanduser())))
 DATA_ROOT = Path(os.environ.get('VIT_LONG_DATA', str(DATA)))
-RESULTS = REPO / 'results/vit_long_1024'
+RESULTS = REPO / _PRODUCTION.get('results_dir', 'results/vit_long_1024')
 
 CONFIG = cell_config(4.0, 'none')        # the factorial N cell: 13 norms -> Identity, FFN 1536
 CONFIG_LN = cell_config(4.0, 'layer')    # the randlabel cell: 13 affine LayerNorms (the original ViT)
@@ -47,9 +60,6 @@ FRESH_TASKS = (25, 50, 60)
 BATCH, LR = 128, 1e-4
 EVAL_EVERY = 25
 UNREACHED = STEPS + EVAL_EVERY           # T90 of a task that never reaches .9 (spec §1)
-PRODUCTION_FILE = Path(__file__).resolve().parent / 'production.json'
-
-
 def production():
     return json.loads(PRODUCTION_FILE.read_text())
 
@@ -69,7 +79,8 @@ def free_floor():
 MID_STEP = 100
 PROBE_IMAGES = 64
 READOUT_IMAGES = 16
-DEPTH = CONFIG['depth']
+DEPTH = CONFIG['depth']                  # 6: the default (main run); addendum A uses 2 by argument
+MLP_RATIO = CONFIG['mlp_ratio']          # 4.0 (FFN 1536); addendum A uses 8.0 (FFN 3072)
 WIDTH = int(CONFIG['embed_dim'] * CONFIG['mlp_ratio'])
 
 
@@ -84,7 +95,8 @@ N_LABELS, PER_CLASS = CLASSES, IMAGES_PER_CLASS
 def production_layout():
     p = production()
     return dict(arms=p['arms'], n_labels=p['n_labels'], images_per_class=p['images_per_class'], steps=p['steps'],
-                tasks=p['tasks'], augment=p['augment'], dropout=p['dropout'])
+                tasks=p['tasks'], augment=p['augment'], dropout=p['dropout'], depth=p.get('depth', DEPTH),
+                mlp_ratio=p.get('mlp_ratio', MLP_RATIO))
 
 
 def cycle_classes(seed, cycle, n_labels=N_LABELS):
@@ -239,17 +251,27 @@ def readout_indices(n):
 DROPOUT = CONFIG['dropout_p']           # 0.1, also the attention dropout (attn_drop_rate)
 
 
-def model_config(dropout=DROPOUT, ln=False):
+def model_config(dropout=DROPOUT, ln=False, depth=DEPTH, mlp_ratio=MLP_RATIO):
     """The N cell's config (ln=True: the randlabel cell's, affine LayerNorm); --dropout overrides
-    both dropout_p and attn_drop_rate (no RNG at build, so initial weights do not change)."""
+    both dropout_p and attn_drop_rate (no RNG at build, so initial weights do not change);
+    --depth and --mlp-ratio change the number of blocks and the FFN width (addendum A)."""
     base = CONFIG_LN if ln else CONFIG
-    if dropout == base['dropout_p'] == base['attn_drop_rate']:
+    if dropout == base['dropout_p'] == base['attn_drop_rate'] and depth == base['depth'] \
+            and mlp_ratio == base['mlp_ratio']:
         return base
-    return dict(base, dropout_p=dropout, attn_drop_rate=dropout)
+    return dict(base, dropout_p=dropout, attn_drop_rate=dropout, depth=depth, mlp_ratio=mlp_ratio)
 
 
-def build_model(seed, device, dropout=DROPOUT, ln=False):
-    return make_model(ACT, seed, device, model_config(dropout, ln))
+def build_model(seed, device, dropout=DROPOUT, ln=False, depth=DEPTH, mlp_ratio=MLP_RATIO):
+    return make_model(ACT, seed, device, model_config(dropout, ln, depth, mlp_ratio))
+
+
+def n_params_expected(depth, mlp_ratio, ln, embed=384, patch=8, tokens=65, classes=200):
+    """Parameter count of the upstream ViT for a depth and FFN ratio (S-model)."""
+    width = int(embed * mlp_ratio)
+    block = (embed * 3 * embed + 3 * embed) + (embed * embed + embed) + (embed * width + width) + (width * embed + embed)
+    total = (3 * patch * patch * embed + embed) + embed + tokens * embed + depth * block + (embed * classes + classes)
+    return total + ((2 * depth + 1) * 2 * embed if ln else 0)
 
 
 def build_optimizer(model):

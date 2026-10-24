@@ -51,7 +51,8 @@ def tree_equal(a, b):
 
 PROD = C.production_layout()
 LAYOUT_ARGS = ['--n-labels', str(PROD['n_labels']), '--images-per-class', str(PROD['images_per_class']),
-               '--augment', PROD['augment'], '--dropout', str(PROD['dropout'])]
+               '--augment', PROD['augment'], '--dropout', str(PROD['dropout']),
+               '--depth', str(PROD['depth']), '--mlp-ratio', str(PROD['mlp_ratio'])]
 
 
 def run_job(out, arm, seed, *extra, check=True):
@@ -138,6 +139,16 @@ def check_model(device):
         traced, blocks = C.trace(model, x)
     out['trace_logits_bit_equal'] = bool(torch.equal(direct, traced))
     out['trace_blocks'] = len(blocks)
+    # The production model (depth and FFN width from the production file) for the loss-row checks.
+    model = C.build_model(0, device, PROD['dropout'], False, PROD['depth'], PROD['mlp_ratio'])
+    out['production_depth'] = model.depth
+    out['production_n_params'] = sum(p.numel() for p in model.parameters())
+    out['production_n_params_expected'] = C.n_params_expected(PROD['depth'], PROD['mlp_ratio'], False)
+    norms_p = [m for name, m in model.named_modules() if name.endswith(('norm1', 'norm2')) or name == 'layers.norm']
+    out['production_norms_identity'] = len(norms_p) == 2 * PROD['depth'] + 1 and all(isinstance(m, nn.Identity) for m in norms_p)
+    model.eval()
+    with torch.no_grad():
+        out['production_trace_logits_bit_equal'] = bool(torch.equal(model(x), C.trace(model, x)[0]))
     model.train()
     for arm, task in (('R0', 2), ('S', 2)):
         rows_t = torch.tensor(C.loss_classes(arm, 0, task, PROD['n_labels'], PROD['images_per_class']), device=device)
@@ -155,11 +166,12 @@ def check_model(device):
             (model.layers['out'].bias.grad[outside] == 0).all())
         out[f'{arm}_nonzero_grad_on_loss_rows'] = bool(grad[rows_t].abs().sum() > 0)
     # LN arms (R0L, SL): the randlabel cell's affine LayerNorms, same initial shared weights.
-    ln = C.build_model(0, device, PROD['dropout'], ln=True)
-    plain = C.build_model(0, device, PROD['dropout'], ln=False)
+    ln = C.build_model(0, device, PROD['dropout'], True, PROD['depth'], PROD['mlp_ratio'])
+    plain = C.build_model(0, device, PROD['dropout'], False, PROD['depth'], PROD['mlp_ratio'])
     lns = [m for name, m in ln.named_modules() if name.endswith(('norm1', 'norm2')) or name == 'layers.norm']
     out['ln_config_is_randlabel_cell'] = C.model_config(C.DROPOUT, True) == cell_config(4.0, 'layer')
-    out['ln_affine_layernorms'] = len(lns) == 13 and all(isinstance(m, nn.LayerNorm) and m.elementwise_affine for m in lns)
+    out['ln_affine_layernorms'] = len(lns) == 2 * PROD['depth'] + 1 and all(
+        isinstance(m, nn.LayerNorm) and m.elementwise_affine for m in lns)
     out['ln_n_params'] = sum(p.numel() for p in ln.parameters())
     a, b = plain.state_dict(), ln.state_dict()
     out['ln_shared_initial_weights_equal'] = all(torch.equal(a[k], b[k]) for k in a if isinstance(a[k], torch.Tensor))
@@ -172,7 +184,10 @@ def check_model(device):
                     and all(out[f'{a}_{k}'] for a in ('R0', 'S')
                             for k in ('finite_backward', 'zero_grad_outside_loss_rows', 'nonzero_grad_on_loss_rows'))
                     and out['ln_config_is_randlabel_cell'] and out['ln_affine_layernorms']
-                    and out['ln_n_params'] == 10824008 and out['ln_shared_initial_weights_equal']
+                    and out['ln_n_params'] == C.n_params_expected(PROD['depth'], PROD['mlp_ratio'], True)
+                    and out['production_n_params'] == out['production_n_params_expected']
+                    and out['production_norms_identity'] and out['production_trace_logits_bit_equal']
+                    and out['ln_shared_initial_weights_equal']
                     and out['production_dropout_applied'] and out['ln_trace_logits_bit_equal'])
     return out
 
