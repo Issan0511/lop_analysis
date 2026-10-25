@@ -4,6 +4,7 @@ An incomplete matrix exits before expensive raw-file checks. Passing this data
 audit is not a claim that scientific interpretation or Git integration is done.
 """
 import json
+from collections import OrderedDict
 from pathlib import Path
 import subprocess
 import time
@@ -131,6 +132,7 @@ def run():
         required |= {f'ckpt/t{task:02d}_s{step:03d}.pt' for task in range(1, 61) for step in T.snapshot_steps(task)}
         assert files == required, (seed, files ^ required)
         checkpoint = torch.load(root / 'checkpoint.pt', map_location='cpu', weights_only=False)
+        commits.add(checkpoint['git_hash'])
         assert checkpoint['task'] == 60 and checkpoint['step'] == 500
         assert checkpoint['source_hashes'] == T.own_hashes()
         assert checkpoint['original_source_hashes'] == original['source_hashes']
@@ -164,7 +166,17 @@ def run():
         assert (cfg['replicas'], cfg['steps'], cfg['batch'], cfg['lr'], cfg['points']) == (32, 50, 128, 1e-4, [0, 1, 5, 20, 50])
         raw = {'full.pt'} | {f'replica_{i:03d}.pt' for i in range(32)}
         assert {x for x in files if x.endswith('.pt')} == raw
-        initial = None
+        state = torch.load(checkpoint, map_location='cpu', weights_only=False)
+        commits.add(state['git_hash'])
+        if kind == 't5':
+            prefix = f"layers.block_{cfg['layer'] - 1}.layers.mlp.layers.fc1."
+            initial = T.digest_tree(dict(weight=state['model'][prefix + 'weight'], bias=state['model'][prefix + 'bias']))
+            frozen = T.digest_tree({k: v for k, v in state['model'].items() if not k.startswith(prefix)})
+            assert read(root / 'input.json')['frozen_digest'] == frozen
+        else:
+            # cpu_tree serializes state_dict as a plain dict; the runtime digest
+            # was computed from the model's OrderedDict, including its type.
+            initial = T.digest_tree(OrderedDict(state['model']))
         for replica in range(-1, 32):
             name = 'full.pt' if replica == -1 else f'replica_{replica:03d}.pt'
             record = torch.load(root / name, map_location='cpu', weights_only=False)
@@ -178,12 +190,18 @@ def run():
                 assert sorted(record['states']) == cfg['points']
                 digest = T.digest_tree(record['states'][0])
                 assert record['frozen_unchanged'] and record['prefix_bit_equal_after_updates']
+                assert all(torch.isfinite(v).all() for snapshot in record['states'].values() for v in snapshot.values())
             else:
                 digest = record['initial_digest']
                 assert record['non_fc1_changed']
-            initial = digest if initial is None else initial
+                assert record['model'].keys() == state['model'].keys()
+                changed = {k for k, v in record['model'].items()
+                           if '.fc1.' not in k and not torch.equal(v, state['model'][k])}
+                assert changed == set(record['non_fc1_changed'])
+                assert all(torch.isfinite(v).all() for v in record['model'].values())
             assert digest == initial
             del record
+        del state
         if kind == 't5':
             assert result['frozen_unchanged'] and result['prefix_bit_equal']
             assert [c['step'] for c in result['checks']] == cfg['points']
@@ -191,6 +209,7 @@ def run():
             backup = root / 'before_clamp_boundary_fix'
             if backup.exists():
                 manifest(backup, 'preservation_manifest.json')
+                commits.add(read(backup / 'provenance.json')['git_hash'])
         with np.load(root / 'measurements.npz') as data:
             assert all(np.isfinite(data[k]).all() for k in data.files)
         print(json.dumps(dict(verified_case=rel)), flush=True)
