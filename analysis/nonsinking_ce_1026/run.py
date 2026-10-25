@@ -297,7 +297,7 @@ def main():
     for cfg in cfgs:
         rows.extend(train(cfg, args.out))
         with (args.results / "verdict.csv").open("w") as f:
-            writer = csv.DictWriter(f, fieldnames=list(rows[0]))
+            writer = csv.DictWriter(f, fieldnames=list(rows[0]), lineterminator="\n")
             writer.writeheader()
             writer.writerows(rows)
     manifest = [dict(path=str(p), bytes=p.stat().st_size, sha256=hashlib.sha256(p.read_bytes()).hexdigest())
