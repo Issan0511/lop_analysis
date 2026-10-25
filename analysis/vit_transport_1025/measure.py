@@ -127,18 +127,34 @@ def carrier(m, opt, x, y, xn, xp, classes, seed, task, rawdir):
 
 @torch.no_grad()
 def frame(m, xp, checks):
-    out = [M.body(m, xx, True) for xx in xp.split(32)]
+    inputs={i:[] for i in range(6)}
+    hooks=[]
+    for i in range(6):
+        fc=m.layers[f'block_{i}'].layers['mlp'].layers['fc1']
+        hooks.append(fc.register_forward_pre_hook(lambda module,args,i=i: inputs[i].append(args[0].detach())))
+    try:
+        out = [M.body(m, xx, True) for xx in xp.split(32)]
+    finally:
+        for h in hooks: h.remove()
     frames = []
     for i in range(6):
-        u = torch.cat([a[1][i] for a in out]).double()
+        u = torch.cat(inputs[i])
         fc = m.layers[f'block_{i}'].layers['mlp'].layers['fc1']
-        w, b = fc.weight.detach().double().clone(), fc.bias.detach().double().clone()
-        z = u@w.T+b
-        error = float((z-torch.cat([a[2][i] for a in out])).abs().max())
+        w, b = fc.weight.detach().clone(), fc.bias.detach().clone()
+        original_z=torch.cat([a[2][i] for a in out]).double()
+        z = hybrid_z(u,w,b)
+        assert torch.equal(z,original_z)
+        error = float((u[:,0].double()@w.double().T+b.double()-original_z).abs().max())
         checks['affine_reconstruction_max_abs'] = max(checks.get('affine_reconstruction_max_abs',0),error)
         assert error<2e-5
-        frames.append(dict(u=u,w=w,b=b,z=z,mom=moments(z),actual_mom=moments(torch.cat([a[2][i] for a in out]).double())))
+        frames.append(dict(u=u,w=w,b=b,z=z,mom=moments(z),actual_mom=moments(original_z)))
     return frames
+
+
+def hybrid_z(u,w,b):
+    # Preserve the original float32 Linear and its full-token batch shape.
+    # CLS-only float64 re-evaluation changes r noticeably when SD is tiny.
+    return torch.cat([F.linear(xx,w,b)[:,0] for xx in u.split(32)]).double()
 
 
 def moments(z):
@@ -156,8 +172,8 @@ def split_step(before, after, checks):
     pieces=[]
     for a,b in zip(before,after):
         aa,bb = a['mom'],b['mom']
-        ba = moments(a['u']@b['w'].T+b['b'])
-        ab = moments(b['u']@a['w'].T+a['b'])
+        ba = moments(hybrid_z(a['u'],b['w'],b['b']))
+        ab = moments(hybrid_z(b['u'],a['w'],a['b']))
         own = .5*(edge(aa,ba)+edge(ab,bb))
         upstream = .5*(edge(aa,ab)+edge(ba,bb))
         vals = torch.cat([own,upstream])
