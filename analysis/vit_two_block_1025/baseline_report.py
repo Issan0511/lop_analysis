@@ -52,7 +52,9 @@ def run(through):
                         reopening.append(dict(seed=seed, task=task, population=pop, layer=layer,
                             closed_at20=count, reopened_by500=revived,
                             reopened_fraction=revived / count if count else None))
-                        for a, b in ((0, 20), (100, 150), (100, 500)):
+                        # 20->100 and 0->500 were added after seeing task-10
+                        # recovery; these are exploratory, not registered windows.
+                        for a, b in ((0, 20), (20, 100), (100, 150), (100, 500), (0, 500)):
                             pa, pb = f's{a}_{pop}_L{layer}_', f's{b}_{pop}_L{layer}_'
                             valid = data[pa + 'valid'] & data[pb + 'valid']
                             row = dict(seed=seed, task=task, population=pop, layer=layer,
@@ -60,6 +62,16 @@ def run(through):
                             for field in ('mu', 'sd', 'r'):
                                 delta = data[pb + field] - data[pa + field]
                                 row[f'delta_{field}'] = float(delta[valid].mean())
+                            ma, mb = data[pa + 'mu'], data[pb + 'mu']
+                            ia, ib = 1 / (data[pa + 'sd'] + 1e-12), 1 / (data[pb + 'sd'] + 1e-12)
+                            mean_term = (mb - ma) * (ia + ib) / 2
+                            width_term = (ma + mb) * (ib - ia) / 2
+                            error = np.abs((mean_term + width_term - (data[pb + 'r'] - data[pa + 'r']))[valid]).max()
+                            assert error < 1e-12, (seed, task, pop, layer, a, b, error)
+                            row.update(r_mean_term=float(mean_term[valid].mean()),
+                                       r_width_term=float(width_term[valid].mean()),
+                                       r_identity_max_error=float(error),
+                                       registered_window=(a, b) in ((0, 20), (100, 150), (100, 500)))
                             row['r_negative_fraction'] = float(((data[pb + 'r'] - data[pa + 'r'])[valid] < 0).mean())
                             row['sd_ratio_median'] = float(np.median((data[pb + 'sd'] / data[pa + 'sd'])[valid]))
                             changes.append(row)
@@ -105,7 +117,8 @@ def run(through):
         assert len(group) == 5
         lines.append(f'| {task} | {layer} | {start}→{end} | {group.delta_mu.median():.5g} | '
                      f'{group.delta_sd.median():.5g} | {group.delta_r.median():.5g} | {int((group.delta_r < 0).sum())}/5 |')
-    lines += ['', '0→20は切替直後、100→500は登録した通常学習の観測窓。起点のCE・精度は数表に残し、100更新を自動的に「適合後」とは呼ばない。', '',
+    lines += ['', '0→20は切替直後、100→500は登録した通常学習の観測窓。20→100と0→500は課題10の回復を見た後に追加した探索的な窓。起点のCE・精度は数表に残し、100更新を自動的に「適合後」とは呼ばない。', '',
+              'CSVのr_mean_termとr_width_termは端点の対称分解: Δr = Δμ×平均[1/(σ+ε)] + 平均[μ]×Δ[1/(σ+ε)]。ここで平均は二つの時点の平均。unitごとに実Δrとの加法性を検算した。有限変位の帳簿であり、μ・σを独立に操作した因果割合ではない。', '',
               '第2blockについて、20更新時に学習250画像で閉じていたunitが、500更新までに同じ画像のいずれかで再び開く本数:', '',
               '| 課題 | seed | 20更新で閉じた本数 | そのうち500更新までに再開口 |',
               '|---:|---:|---:|---:|']
