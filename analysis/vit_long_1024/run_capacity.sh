@@ -11,7 +11,8 @@ for n in 250 1000 2500; do
     out=$R/${state}_N$n
     echo "$(date '+%H:%M:%S') start $state N=$n"
     $PY -m analysis.vit_long_1024.capacity --state $state --n $n --out $out > $R/${state}_N$n.log 2>&1
-    echo "$(date '+%H:%M:%S') end $state N=$n exit $? $(tail -1 $R/${state}_N$n.log)"
+    rc=$?   # $(date) の前に受ける（1025 の本走では $? が date の終了コードになり、5 本の失敗が見えなかった）
+    echo "$(date '+%H:%M:%S') end $state N=$n rc=$rc $(tail -1 $R/${state}_N$n.log)"
   done
 done
 echo "$(date '+%H:%M:%S') ALL_DONE"
