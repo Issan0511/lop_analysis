@@ -7,6 +7,43 @@ from t5_launch import completed
 np = T.np
 
 
+def seed_groups(rows):
+    """Keep seed replication distinct from replicas sharing one saved state."""
+    keys = ('task', 'start', 'layer', 'mode', 'step')
+    groups = {}
+    for row in rows:
+        groups.setdefault(tuple(row[k] for k in keys), []).append(row)
+    results = []
+    for values, group in sorted(groups.items()):
+        seeds = [r['seed'] for r in group]
+        assert len(set(seeds)) == len(seeds), (values, seeds)
+        assert set(seeds) <= set(T.SEEDS)
+        row = dict(zip(keys, values))
+        row.update(seeds=len(seeds), complete_five_seeds=set(seeds) == set(T.SEEDS))
+        for field in ('mu', 'r'):
+            full, replicas, noise = [np.array([r[f'{field}_{suffix}'] for r in group])
+                                    for suffix in ('full_delta', 'replica_delta', 'noise_effect')]
+            assert np.max(np.abs(replicas - full - noise)) < 1e-12
+            row.update({f'{field}_full_mean': float(full.mean()),
+                f'{field}_replica_mean': float(replicas.mean()),
+                f'{field}_noise_mean': float(noise.mean()),
+                f'{field}_noise_between_seed_se': float(noise.std(ddof=1) / np.sqrt(len(noise))) if len(noise) > 1 else None,
+                f'{field}_noise_mc_se_of_mean': float(np.sqrt(sum(r[f'{field}_noise_effect_se']**2 for r in group)) / len(group)),
+                f'{field}_full_down_seeds': int((full < 0).sum()),
+                f'{field}_replica_down_seeds': int((replicas < 0).sum()),
+                f'{field}_noise_down_seeds': int((noise < 0).sum())})
+        arrays = {name: np.array([r[f'next_fixed_{name}'] for r in group]) for name in
+                  ('total', 'mean_field', 'gate_covariance', 'covariance_half0', 'covariance_half1')}
+        assert np.max(np.abs(arrays['total'] - arrays['mean_field'] - arrays['gate_covariance'])) < 1e-11
+        for name, array in arrays.items():
+            row[f'next_fixed_{name}_mean'] = float(array.mean())
+            row[f'next_fixed_{name}_down_seeds'] = int((array < 0).sum())
+        row['next_fixed_covariance_both_halves_down_seeds'] = int(
+            ((arrays['covariance_half0'] < 0) & (arrays['covariance_half1'] < 0)).sum())
+        results.append(row)
+    return results
+
+
 def summarize(path):
     assert completed(path)
     info = json.loads((path / 'complete.json').read_text())['config']
@@ -53,6 +90,12 @@ def main():
             writer = csv.DictWriter(stream, fieldnames=list(rows[0]), lineterminator='\n')
             writer.writeheader()
             writer.writerows(rows)
+    groups = seed_groups(rows)
+    with (out / 't5_seed_groups.csv').open('w', newline='') as stream:
+        if groups:
+            writer = csv.DictWriter(stream, fieldnames=list(groups[0]), lineterminator='\n')
+            writer.writeheader()
+            writer.writerows(groups)
     case_count = len({r['directory'] for r in rows})
     text = ['# T5複製実験の途中結果', '',
         f'完了した条件のみ: {case_count}/80。各条件32複製とfull-batch。未完了条件を0として集計しない。', '',
@@ -67,6 +110,20 @@ def main():
             text.append(f"| {r['seed']} | {r['task']} | {r['start']} | {r['layer']} | {r['mode']} | "
                 f"{r['mu_full_delta']:.7g} | {r['mu_replica_delta']:.7g} | {r['mu_noise_effect']:.3g} ± {r['mu_noise_effect_se']:.3g} | "
                 f"{r['next_fixed_gate_covariance']:.4g} | {r['next_fixed_total']:.4g} |")
+    text += ['', '## 全5seedの再現性と複製分割', '',
+        '次は同じ課題・起点・block・optimizerで全5seedが揃った50更新後だけ。共分散項はunit平均→seed平均。',
+        '分割欄は前半16複製・後半16複製の共分散項のunit平均が、両方とも下向きだったseed数。',
+        'これは符号の安定性の記述であり、有意差検定ではない。実Adam条件の共分散項も固定計量による診断である。', '',
+        '| 課題 | 起点 | block | optimizer | 次の共分散項平均 | 下向きseed | 両分割とも下向き | 次の全体平均 |',
+        '|---:|---:|---:|---|---:|---:|---:|---:|']
+    for r in groups:
+        if r['step'] == 50 and r['complete_five_seeds']:
+            text.append(f"| {r['task']} | {r['start']} | {r['layer']} | {r['mode']} | "
+                f"{r['next_fixed_gate_covariance_mean']:.6g} | {r['next_fixed_gate_covariance_down_seeds']}/5 | "
+                f"{r['next_fixed_covariance_both_halves_down_seeds']}/5 | {r['next_fixed_total_mean']:.6g} |")
+    text += ['', '有限変位についての5seed平均とseed間SEは[t5_seed_groups.csv](t5_seed_groups.csv)。',
+        'そのSEはseed別効果の標準偏差/√5であり、固定した1状態での複製間Monte Carlo SEとは区別する。',
+        '部分的なseed集合もCSVには残すが、complete_five_seeds=falseの群を5seedの結果に数えない。', '']
     text += ['', '全時点とrの変化は[t5_completed_cases.csv](t5_completed_cases.csv)。',
              '解析コード・初期checkpoint・生の複製・検算は各directoryのprovenance.json、manifest.json、complete.jsonから追跡できる。', '']
     (out / 't5_partial.md').write_text('\n'.join(text))
