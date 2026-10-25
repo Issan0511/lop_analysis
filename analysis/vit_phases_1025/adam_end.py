@@ -17,6 +17,7 @@ def main():
     p.add_argument('--archive-root', type=Path, required=True)
     p.add_argument('--raw-output', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--next-inputs', action='store_true', help='Shared head only: expected switch on actual next-task images')
     args = p.parse_args()
     sys.path.insert(0, str(args.source_root))
     from analysis.vit_long_1024 import common as C
@@ -33,7 +34,7 @@ def main():
         with tarfile.open(archive, 'r:') as tar:
             def read(arm, file):
                 return tar.extractfile(f'vit_long_1024/runs/{arm}/seed{seed}/{file}').read()
-            for arm in ('SL', 'R0L'):
+            for arm in (('SL',) if args.next_inputs else ('SL', 'R0L')):
                 prov = json.loads(read(arm, 'provenance.json'))
                 for name, digest in prov['source_hashes'].items():
                     assert M.sha((args.source_root / name).read_bytes()) == digest
@@ -59,17 +60,23 @@ def main():
                         assert state['exp_avg_sq'].shape == weight.shape
                         denominator[name] = ((state['exp_avg_sq'] / (1 - pg['betas'][1] ** float(state['step']))).sqrt() + pg['eps']).to('cuda')
                     del loaded, opt
-                    data, _ = C.task_dataset(source, seed, task, 10, 25, augment=False)
+                    data, _ = C.task_dataset(source, seed, task + int(args.next_inputs), 10, 25, augment=False)
                     x, y = C.eval_tensor(data.images, 'cuda'), data.labels.to('cuda')
                     classes = C.loss_classes(arm, seed, task, 10, 25)
                     with torch.no_grad():
                         w = m.layers['out'].weight[classes]
-                        vl, _, _ = M.loading(M.features(m, x), y, w - w.mean(0))
+                        if args.next_inputs:
+                            olddata, _ = C.task_dataset(source, seed, task, 10, 25, augment=False)
+                            oldx = C.eval_tensor(olddata.images, 'cuda')
+                            vl, _, _ = M.loading(M.features(m, oldx), olddata.labels.to('cuda'), w - w.mean(0))
+                            del oldx
+                        else:
+                            vl, _, _ = M.loading(M.features(m, x), y, w - w.mean(0))
                     raw = M.probe_fields(m, xprobe)
                     gs, info = M.gradients(m, x, y, classes, vl)
                     weighted = {signal: {name: value / denominator[name] for name, value in gg.items()} for signal, gg in gs.items()}
                     full, local, validation = M.project(m, xprobe, raw, weighted)
-                    ident = dict(arm=arm, seed=seed, task=task, stage='end', step=500, metric='Adam_fixed')
+                    ident = dict(arm=arm, seed=seed, task=task, stage='switch_next_inputs' if args.next_inputs else 'end', step=500, metric='Adam_fixed')
                     checks.append(dict(**ident, **validation))
                     arrays = {}
                     for i, r in enumerate(raw):
@@ -95,11 +102,12 @@ def main():
                     del gs, weighted, full, local, denominator, x, y
                 del m
                 torch.cuda.empty_cache()
-        M.csv_write(args.output / 'adam_pressures.csv', rows)
-        M.csv_write(args.output / 'adam_comparisons.csv', comparisons)
-        M.dump(args.output / 'adam_validation.json', checks)
-        M.dump(args.output / 'adam_provenance.json', provenance)
-    M.dump(args.output / 'adam_run.json', dict(status='complete', states=len(checks), seconds=time.monotonic() - begin))
+        prefix = 'adam_next' if args.next_inputs else 'adam'
+        M.csv_write(args.output / f'{prefix}_pressures.csv', rows)
+        M.csv_write(args.output / f'{prefix}_comparisons.csv', comparisons)
+        M.dump(args.output / f'{prefix}_validation.json', checks)
+        M.dump(args.output / f'{prefix}_provenance.json', provenance)
+    M.dump(args.output / f'{prefix}_run.json', dict(status='complete', states=len(checks), seconds=time.monotonic() - begin))
 
 
 if __name__ == '__main__':
