@@ -160,7 +160,8 @@ def run(seed, task, start, layer, output):
     folder.mkdir(parents=True, exist_ok=False)
     arrays.update(mu0=mu0.cpu().numpy(), sd0=sd0.cpu().numpy(), valid=valid.cpu().numpy())
     np.savez_compressed(folder / 'arrays.npz', **arrays)
-    T.write_rows(folder / 'rows.csv', rows)
+    columns = list(dict.fromkeys(k for row in rows for k in row))
+    T.write_rows(folder / 'rows.csv', [{k:row.get(k) for k in columns} for row in rows])
     T.atomic_json(folder / 'complete.json', dict(status='complete', **ident, checks=checks,
         checkpoint=str(checkpoint), checkpoint_sha256=T.sha256(checkpoint),
         frozen_unchanged=True, cache_forward_bit_equal=True,
