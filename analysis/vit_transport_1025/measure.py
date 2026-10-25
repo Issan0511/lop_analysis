@@ -137,7 +137,7 @@ def frame(m, xp, checks):
         error = float((z-torch.cat([a[2][i] for a in out])).abs().max())
         checks['affine_reconstruction_max_abs'] = max(checks.get('affine_reconstruction_max_abs',0),error)
         assert error<2e-5
-        frames.append(dict(u=u,w=w,b=b,z=z,mom=moments(z)))
+        frames.append(dict(u=u,w=w,b=b,z=z,mom=moments(z),actual_mom=moments(torch.cat([a[2][i] for a in out]).double())))
     return frames
 
 
@@ -237,7 +237,10 @@ def trajectories(m, base, opt, x, y, xp, classes, seed, task, rawdir, interventi
                     with np.load(DATA/'vit_mechanisms_1025/raw'/f'rollout_seed{seed}_t{task}.npz') as prior:
                         error=max(float(np.max(np.abs(current[i]['mom'][2].cpu().numpy()-prior[f'{label_arm}_step{step}_L{i+1}_r']))) for i in range(6))
                     checks[f'{label_arm}_step{step}_prior_r']=error
-                    assert error<2e-5
+                    if error>=2e-5:
+                        with np.load(DATA/'vit_mechanisms_1025/raw'/f'rollout_seed{seed}_t{task}.npz') as prior:
+                            actual_error=max(float(np.max(np.abs(current[i]['actual_mom'][2].cpu().numpy()-prior[f'{label_arm}_step{step}_L{i+1}_r']))) for i in range(6))
+                        raise AssertionError(dict(arm=label_arm,step=step,reconstructed_r_error=error,original_float32_r_error=actual_error))
             for k,w in m.named_parameters():
                 if k in frozen:
                     assert torch.equal(w.detach().cpu(),base[k]), k
