@@ -95,9 +95,11 @@ def run(through):
                         reopening.append(dict(seed=seed, task=task, population=pop, layer=layer,
                             closed_at20=count, reopened_by500=revived,
                             reopened_fraction=revived / count if count else None))
-                        # 20->100 and 0->500 were added after seeing task-10
-                        # recovery; these are exploratory, not registered windows.
-                        for a, b in ((0, 20), (20, 100), (100, 150), (100, 500), (0, 500)):
+                        # Exploratory windows: task-10 recovery motivated 20->100
+                        # and 0->500. Task-60 seed0 reversed between steps 1 and 5,
+                        # motivating the short intervals for every target/seed.
+                        for a, b in ((0, 1), (1, 5), (5, 20), (0, 20), (20, 100),
+                                     (100, 150), (100, 500), (0, 500)):
                             pa, pb = f's{a}_{pop}_L{layer}_', f's{b}_{pop}_L{layer}_'
                             valid = data[pa + 'valid'] & data[pb + 'valid']
                             row = dict(seed=seed, task=task, population=pop, layer=layer,
@@ -162,7 +164,7 @@ def run(through):
         assert len(group) == 5
         lines.append(f'| {task} | {layer} | {start}→{end} | {group.delta_mu.median():.5g} | '
                      f'{group.delta_sd.median():.5g} | {group.delta_r.median():.5g} | {int((group.delta_r < 0).sum())}/5 |')
-    lines += ['', '0→20は切替直後、100→500は登録した通常学習の観測窓。20→100と0→500は課題10の回復を見た後に追加した探索的な窓。起点のCE・精度は数表に残し、100更新を自動的に「適合後」とは呼ばない。', '',
+    lines += ['', '0→20は切替直後、100→500は登録した通常学習の観測窓。20→100と0→500は課題10の回復を見た後に追加した探索的な窓。0→1、1→5、5→20は課題60のseed0で最初の1歩と5歩後の向きが異なるのを見て追加し、全対象・全seedへ同じ区間を適用した。0→20全体を切替の瞬間的な作用と同一視しない。起点のCE・精度は数表に残し、100更新を自動的に「適合後」とは呼ばない。', '',
               'CSVのr_mean_termとr_width_termは端点の対称分解: Δr = Δμ×平均[1/(σ+ε)] + 平均[μ]×Δ[1/(σ+ε)]。ここで平均は二つの時点の平均。unitごとに実Δrとの加法性を検算した。有限変位の帳簿であり、μ・σを独立に操作した因果割合ではない。', '',
               '第2blockについて、20更新時に学習250画像で閉じていたunitが、500更新までに同じ画像のいずれかで再び開く本数:', '',
               '| 課題 | seed | 20更新で閉じた本数 | そのうち500更新までに再開口 |',
