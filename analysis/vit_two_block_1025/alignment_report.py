@@ -1,0 +1,82 @@
+"""Completed alignment probes: seed-level intervention effects and unit overlap."""
+import json
+import pandas as pd
+import common as T
+from alignment import hashes
+np = T.np
+
+
+def pair(a, b, valid):
+    ta = max(1e-12, 1e-6 * float(np.abs(a).max()))
+    tb = max(1e-12, 1e-6 * float(np.abs(b).max()))
+    keep = valid & (np.abs(a) > ta) & (np.abs(b) > tb)
+    a, b = a[keep], b[keep]
+    if not len(a):
+        return dict(n=0, excluded=int(len(valid)))
+    sa, sb = a < 0, b < 0
+    expected = sa.mean() * (1 - sb.mean()) + (1 - sa.mean()) * sb.mean()
+    return dict(n=len(a), excluded=int(len(valid) - len(a)), load_sink_fraction=float(sa.mean()),
+                fit_sink_fraction=float(sb.mean()), both_sink=float((sa & sb).mean()),
+                load_only=float((sa & ~sb).mean()), fit_only=float((~sa & sb).mean()),
+                both_float=float((~sa & ~sb).mean()), opposite_fraction=float((sa != sb).mean()),
+                independent_opposite=float(expected), excess_opposite=float((sa != sb).mean() - expected),
+                cosine=float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))),
+                spearman=float(pd.Series(a).rank().corr(pd.Series(b).rank())))
+
+
+def main():
+    effects, overlaps, channels = [], [], []
+    count = 0
+    for marker in sorted((T.ARCHIVE / 'alignment').glob('*/complete.json')):
+        root = marker.parent
+        result = json.loads(marker.read_text())
+        cfg = result['config']
+        assert result['status'] == 'complete' and cfg['source_hashes'] == hashes()
+        for item in json.loads((root / 'manifest.json').read_text()):
+            path = root / item['path']
+            assert path.stat().st_size == item['bytes'] and T.sha256(path) == item['sha256']
+        context = {k: cfg[k] for k in ('seed', 'task', 'start')}
+        position = pd.read_csv(root / 'positions.csv')
+        finite = pd.read_csv(root / 'finite.csv')
+        channels.extend(dict(**context, **r) for r in position.to_dict('records'))
+        with np.load(root / 'arrays.npz') as d:
+            for arm in ('old', 'next'):
+                for layer in (1, 2):
+                    pp = position[(position.dataset == arm) & (position.layer == layer) & (position.metric == 'Adam_fixed') & (position.route == 'full') & (position.moment == 'r')].set_index('signal')
+                    ff = finite[(finite.dataset == arm) & (finite.layer == layer) & (finite.moment == 'r')].set_index('variant')
+                    controls = [f'perm{i}' for i in range(4)]
+                    base, perm = float(pp.loc['switch', 'mean']), float(pp.loc[controls, 'mean'].mean())
+                    fbase, fperm = float(ff.loc['switch', 'mean']), float(ff.loc[controls, 'mean'].mean())
+                    effects.append(dict(**context, dataset=arm, layer=layer, base_fixed_r=base, perm_fixed_r=perm,
+                        fixed_difference=base - perm, registered_positive=base < 0 and base < perm,
+                        base_finite_r=fbase, perm_finite_r=fperm, finite_difference=fbase - fperm,
+                        finite_positive=fbase < 0 and fbase < fperm))
+                    valid = d[f'initial_L{layer}_valid']
+                    for metric in ('SGD', 'Adam_fixed'):
+                        for route in ('full', 'local'):
+                            a = d[f'{arm}_{metric}_{route}_load_r'][layer - 1]
+                            b = d[f'old_{metric}_{route}_fit_r'][layer - 1]
+                            overlaps.append(dict(**context, dataset=arm, layer=layer, metric=metric, route=route, **pair(a, b, valid)))
+        count += 1
+    output = T.ROOT / 'results/vit_two_block_1025'
+    output.mkdir(exist_ok=True)
+    for name, rows in [('alignment_effects', effects), ('alignment_overlap', overlaps), ('alignment_channels', channels)]:
+        pd.DataFrame(rows).to_csv(output / f'{name}.csv', index=False)
+    text = ['# 2blockの整列介入・途中結果', '', f'完了状態 {count}/20。未完了seedを除いて成功基準を緩めない。', '',
+        '最終headの旧ラベル整列を、同じnormの4方向へ置き換えた比較。負のΔrが沈降。',
+        '登録判定は全5seed中4以上で「baseが沈み、4対照平均より下向き」。有限Adamの1歩は別の判定として併記する。', '',
+        '| 課題 | 起点 | 入力 | block | 完了seed | 固定計量の成立 | 実Adamの成立 | base−対照の固定計量Δr中央値 |',
+        '|---:|---:|---|---:|---:|---:|---:|---:|']
+    if effects:
+        df = pd.DataFrame(effects)
+        for (task, start, arm, layer), g in df.groupby(['task', 'start', 'dataset', 'layer']):
+            text.append(f'| {task} | {start} | {arm} | {layer} | {len(g)}/5 | {int(g.registered_positive.sum())}/{len(g)} | '
+                        f'{int(g.finite_positive.sum())}/{len(g)} | {g.fixed_difference.median():.6g} |')
+    text += ['', '確率を固定した整列成分loadと、確率も再計算するhead介入は別である。',
+             'unit対応はalignment_overlap.csv、平均・幅・位置および全経路/自fc1の内訳はalignment_channels.csv。', '']
+    (output / 'alignment_partial.md').write_text('\n'.join(text))
+    print(json.dumps(dict(completed_states=count, output=str(output / 'alignment_partial.md'))))
+
+
+if __name__ == '__main__':
+    main()
