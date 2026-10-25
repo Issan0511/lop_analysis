@@ -40,3 +40,7 @@ R0L開始時の実headとVLは0なので、fit/switch/load/remainderのbody勾�
 ## 検算・保存
 
 元tarのcheckpoint SHA256とsource hashesを照合。手動bodyのbaseline CE/精度を元intaskの開始/100/500と照合。load+remainder=switchをparameter勾配と位置への押しで検算。fc1だけの解析微分とJVPを第1・最終層で検算。モデルとoptimizerは更新しない。コード・結果は同名のanalysis/resultsへ、生配列・ログは `~/Projects/obsidian-research-data/vit_phases_1025/` に保存しmanifestをcommitする。
+
+## 追補: 保存Adam分母での照合
+
+SGD版と実際の区間移動を見た後の追加。Adam結果の閲覧前にcommitする。task10/60末にはAdam状態があるので、SL/R0L全5seedの20状態で各parameterの保存二次momentをbias補正し、D=sqrt(v/(1-beta2^step))+epsとして、各信号のgradientをDで割って同じJVPへ運ぶ。分母は全信号で固定するのでload+remainder=switchの線形分解を保つ。運動量を含む実Adam更新ではない。開始/100更新時のAdam状態は保存されていないため、末の分母を前の状態へ流用しない。末状態のswitchは同じ入力を独立再ラベルする反実仮想として明記する。
