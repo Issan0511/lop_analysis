@@ -21,3 +21,10 @@ original 6-block registered judgement labels and per-seed endpoints.
 
 Numerical outputs and figures are reproducible. The Japanese interpretation in
 `results/vit_long_analysis_1025/summary.md` is maintained separately.
+
+`plot_normalized_position.py --source results/vit_long_analysis_1025 --out <dir>`
+plots mean / standard deviation for the LN arms, using the recorded median of
+per-unit ratios. It checks all plotted values against the archived run CSVs,
+then produces final-FFN and all-FFN CLS plots, seed/task/window tables, and a
+source-hash check record. The 2-block selection remains the same interim three
+seeds. It does not reconstruct a ratio from separately aggregated means and SDs.
