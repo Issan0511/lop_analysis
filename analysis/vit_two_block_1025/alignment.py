@@ -127,10 +127,19 @@ def run(args):
     y = old.labels.to('cuda')
     classes = torch.tensor(T.C.loss_classes('SL', seed, task, 10, 25), device='cuda')
     raw = M.probe_fields(model, oldx)
+    if args.gate:
+        with torch.no_grad():
+            for xx in oldx.split(32):
+                h, _, zs = M.body(model, xx, True)
+                logits, blocks = T.C.trace(model, xx)
+                assert torch.equal(model.layers['out'](h), logits)
+                assert torch.equal(logits, model(xx))
+                for j, z in enumerate(zs):
+                    assert torch.equal(z, blocks[j][1][:, 0])
     den = denominators(model, optimizer)
     arrays = {f'initial_L{i + 1}_{name}': value.cpu().numpy()
               for i, entry in enumerate(raw) for name, value in entry.items()}
-    checks, heads_rows, position_rows, finite_rows = {}, [], [], []
+    checks, heads_rows, position_rows, finite_rows = dict(body_forward_bit_equal=args.gate), [], [], []
     cfg = dict(seed=seed, task=task, start=start, gate=args.gate, checkpoint=str(path),
                checkpoint_sha256=T.sha256(path), source_hashes=source_hashes)
     T.atomic_json(out / 'provenance.json', dict(config=cfg, git_hash=head, started=time.time()))
