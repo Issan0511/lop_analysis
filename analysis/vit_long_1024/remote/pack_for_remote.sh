@@ -20,6 +20,9 @@ git archive --format=tar --prefix=lop_analysis/ HEAD \
   results/joudaki_vit_battle_0919/checks_compile.json results/joudaki_vit_battle_0919/dataset.json \
   results/vit_long_1024/checks | tar -x -C "$STAGE"
 git rev-parse HEAD > "$STAGE/lop_analysis/SOURCE_COMMIT"
+# The hash list includes the production file selected by VIT_LONG_PRODUCTION, so pack with the same
+# VIT_LONG_PRODUCTION as the rented run uses; otherwise run.py refuses ("changed since pack", 1025).
+echo "hash list for production file: ${VIT_LONG_PRODUCTION:-production.json}"
 (cd "$STAGE/lop_analysis" && "$PY" -c 'import json; from analysis.vit_long_1024 import common as C; print(json.dumps(C.source_hashes(), indent=1, sort_keys=True))' > SOURCE_HASHES.json)
 cp "$MANIFEST" "$STAGE/tiny-imagenet-200.manifest_1024.sha256"
 tar -czf "$OUT" -C "$STAGE" lop_analysis tiny-imagenet-200.manifest_1024.sha256

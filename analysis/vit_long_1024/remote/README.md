@@ -5,11 +5,12 @@
 ## 1. 送るもの（white-san で作る）
 
 ```bash
-bash /home/issan/Projects/claude/wt/vit_long_1024/analysis/vit_long_1024/remote/pack_for_remote.sh /tmp/vit_long_1024_remote.tar.gz
+VIT_LONG_PRODUCTION=production.json bash /home/issan/Projects/claude/wt/vit_long_1024/analysis/vit_long_1024/remote/pack_for_remote.sh /tmp/vit_long_1024_remote.tar.gz
 rsync -avP -e 'ssh -p PORT' /tmp/vit_long_1024_remote.tar.gz root@HOST:/root/
 ```
 
 - 中身は、このブランチの commit 済みのコード一式（`git archive`、使う分だけ）、`SOURCE_COMMIT`（commit の hash）、`SOURCE_HASHES.json`（ソースの sha256）、white-san の検査の記録（`results/vit_long_1024/checks/`）、ファイルごとの sha256 の一覧 `tiny-imagenet-200.manifest_1024.sha256` である。
+- **`VIT_LONG_PRODUCTION` は、借りた機械で走らせる設定と同じものを付けて pack する。** ソースの hash の一覧はその設定ファイルを含むので、違う設定で包むと本走が「changed since pack」で断られる（1025 の追補 D で起きた）。
 - 送った写しには `.git` が無い。走は `SOURCE_COMMIT` を git の hash として記録し、ソースが `SOURCE_HASHES.json` と一致するときだけ本走を始める。
 - データは送らない。借りた機械が Kaggle の認証なしの URL から取る。
 

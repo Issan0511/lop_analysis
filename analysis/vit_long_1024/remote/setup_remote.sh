@@ -26,9 +26,17 @@ uv pip install --python "$VENV/bin/python" --index-url https://download.pytorch.
   --extra-index-url https://pypi.org/simple --index-strategy unsafe-best-match \
   -r "$REPO/analysis/vit_long_1024/remote/requirements.txt"
 uv pip freeze --python "$VENV/bin/python" > "$WORK/pip_freeze_remote.txt"
-grep -v '^#' "$REPO/analysis/vit_long_1024/remote/requirements.txt" | sed 's/+cu130//' | sort > "$WORK/_want.txt"
-sed 's/+cu130//' "$WORK/pip_freeze_remote.txt" | sort > "$WORK/_have.txt"
-if comm -23 "$WORK/_want.txt" "$WORK/_have.txt" | grep .; then echo "ERROR: pinned versions missing (above)"; exit 1; fi
+# Names are normalised (lower case, runs of - _ . to -): newer uv writes jinja2, markupsafe and
+# typing-extensions where requirements.txt has Jinja2, MarkupSafe and typing_extensions (1025).
+"$VENV/bin/python" - "$REPO/analysis/vit_long_1024/remote/requirements.txt" "$WORK/pip_freeze_remote.txt" << 'PYEOF'
+import re, sys
+norm = lambda line: (re.sub(r'[-_.]+', '-', line.split('==')[0]).lower(), line.split('==')[1].split('+')[0])
+want = {norm(l.strip()) for l in open(sys.argv[1]) if '==' in l and not l.startswith('#')}
+have = {norm(l.strip()) for l in open(sys.argv[2]) if '==' in l}
+missing = sorted(want - have)
+print('pinned', len(want), 'missing', missing)
+sys.exit(1 if missing else 0)
+PYEOF
 echo "== 3. Tiny ImageNet (Kaggle akash2sharma/tiny-imagenet; outer copy only)"
 mkdir -p "$DATA_PARENT"
 ZIP="$DATA_PARENT/tiny-imagenet-200.kaggle_akash2sharma.zip"
