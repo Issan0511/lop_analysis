@@ -14,8 +14,7 @@ M,torch,np,pd,F,ROOT=X.M,X.torch,X.np,X.pd,X.F,X.ROOT
 
 
 def covariance(m,x,y,xp,classes,opt,seed,task,stage,rawdir):
-    checks,rows,comparisons,steps,arrays={},{},[],[],{}
-    rows=[]
+    checks,rows,comparisons,steps,arrays={},[],[],[],{}
     raw=M.probe_fields(m,xp)
     with torch.no_grad():
         h=M.features(m,x).double()
@@ -46,9 +45,10 @@ def covariance(m,x,y,xp,classes,opt,seed,task,stage,rawdir):
                 a=values[i,2][valid]
                 rows.append(dict(metric=metric,signal=name,layer=i+1,rms=float(np.sqrt(np.mean(a*a))),
                                  **M.stats(values[i,2],valid)))
-        scale=max(np.abs(projected['pred_cov']).max(),np.abs(projected['target_cov']).max(),1e-12)
         for key,diff in [('mean_cov',projected['fit']-projected['mean']-projected['covariance']),
                          ('pred_target',projected['covariance']-projected['pred_cov']+projected['target_cov'])]:
+            terms=('fit','mean','covariance') if key=='mean_cov' else ('pred_cov','target_cov','covariance')
+            scale=max(max(np.abs(projected[name]).max() for name in terms),1e-12)
             err=float(np.abs(diff).max()/scale)
             checks[f'{metric}_{key}_error']=err
             assert err<2e-3
