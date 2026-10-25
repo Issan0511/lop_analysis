@@ -13,6 +13,49 @@ POINTS = (0, 1, 5, 20, *range(25, 501, 25))
 COLORS = {1: '#3567a4', 2: '#bf642e'}
 
 
+def component_plot(change, task, output):
+    windows = ((0, 20), (20, 100), (100, 500))
+    fig, axes = plt.subplots(2, 2, figsize=(11, 7), sharex=True)
+    for layer in (1, 2):
+        for column, pop in enumerate(('train', 'validation')):
+            ax = axes[layer - 1, column]
+            source = change[(change.task == task) & (change.layer == layer) & (change.population == pop)]
+            means, widths, totals = [], [], []
+            for index, (a, b) in enumerate(windows):
+                group = source[(source.start == a) & (source.end == b)].sort_values('seed')
+                assert len(group) == 5
+                means.append(group.r_mean_term.mean())
+                widths.append(group.r_width_term.mean())
+                totals.append(group.delta_r.mean())
+                ax.scatter(index + np.linspace(-.07, .07, 5), group.delta_r,
+                           color='#62676c', alpha=.55, s=18, zorder=4,
+                           label='Each seed: total' if index == 0 else None)
+            x = np.arange(len(windows))
+            positive, negative = np.zeros(len(x)), np.zeros(len(x))
+            for values, label, color in ((means, 'Mean contribution', '#3567a4'),
+                                         (widths, 'Width contribution', '#d28c45')):
+                values = np.asarray(values)
+                ax.bar(x, values, bottom=np.where(values >= 0, positive, negative),
+                       color=color, width=.58, label=label, alpha=.88)
+                positive += np.maximum(values, 0)
+                negative += np.minimum(values, 0)
+            ax.scatter(x, totals, color='#151b22', marker='D', s=32, zorder=5, label='Seed mean: total')
+            ax.axhline(0, color='#777777', linewidth=.8)
+            ax.set_title(f'Block {layer} | {pop} images')
+            ax.set_ylabel(r'$\Delta(\mu/\sigma)$')
+            ax.set_xticks(x, [f'{a}-{b}' for a, b in windows])
+            ax.grid(axis='y', alpha=.18)
+            if layer == 2:
+                ax.set_xlabel('Updates within task')
+    handles, labels = axes[0, 0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='lower center', ncol=4, frameon=False, fontsize=9)
+    fig.suptitle(f'Task {task} | Exact endpoint decomposition | Unit mean, then mean of five seeds', fontsize=12)
+    fig.tight_layout(rect=(0, .055, 1, .96))
+    for ext in ('png', 'pdf'):
+        fig.savefig(output / f'baseline_components_task{task}.{ext}', dpi=180, bbox_inches='tight')
+    plt.close(fig)
+
+
 def stats(data, step, pop, layer):
     prefix = f's{step}_{pop}_L{layer}_'
     mu, sd, r, valid, opened = (data[prefix + key] for key in ('mu', 'sd', 'r', 'valid', 'opened'))
@@ -82,6 +125,8 @@ def run(through):
     change.to_csv(output / f'baseline_changes_through{through}.csv', index=False)
     pd.DataFrame(fits).to_csv(output / f'baseline_fit_through{through}.csv', index=False)
     pd.DataFrame(reopening).to_csv(output / f'baseline_reopening_through{through}.csv', index=False)
+    for task in targets:
+        component_plot(change, task, output)
     metrics = [('mu', 'Mean unit $\\mu$'), ('sd', 'Mean unit $\\sigma$'),
                ('r', 'Mean unit $\\mu/\\sigma$'), ('closed', 'Closed unit fraction')]
     for pop in ('train', 'validation'):
@@ -128,6 +173,9 @@ def run(through):
     lines += ['',
               f'![学習画像](baseline_train_through{through}.png)', '',
               f'![固定検証画像](baseline_validation_through{through}.png)', '']
+    for task in targets:
+        lines += [f'平均と幅の寄与。加法性を保つため、この図の棒はseed中央値ではなくseed平均。灰色の点は各seedの合計Δr。', '',
+                  f'![課題{task}の平均と幅の寄与](baseline_components_task{task}.png)', '']
     (output / f'baseline_summary_through{through}.md').write_text('\n'.join(lines))
     print(json.dumps(dict(status='complete', seeds=5, through=through, output=str(output))))
 

@@ -86,8 +86,13 @@ def main():
         with np.load(root / 'measurements.npz') as d:
             for step in cfg['points'][1:]:
                 fields = [d[f's{step}_{name}'] for name in ('total', 'mean_field', 'gate_covariance', 'covariance_half0', 'covariance_half1', 'gate_variance')]
-                rows.append(dict(**{k: cfg[k] for k in ('seed', 'task', 'start', 'layer', 'mode')}, step=step,
-                    directory=str(root), **describe(*fields)))
+                row = dict(**{k: cfg[k] for k in ('seed', 'task', 'start', 'layer', 'mode')}, step=step,
+                    directory=str(root), **describe(*fields))
+                # Disagreement of two distinct, uniformly drawn empirical replicas.
+                replicas = cfg['replicas']
+                assert replicas > 1
+                row['distinct_replica_gate_disagreement'] = float(2 * replicas / (replicas - 1) * fields[-1].mean())
+                rows.append(row)
         consumed.append(dict(path=str(root / 'measurements.npz'), sha256=T.sha256(root / 'measurements.npz')))
     output = T.ROOT / 'results/vit_two_block_1025'
     if rows:
@@ -113,7 +118,8 @@ def main():
                 f"{percent(r['covariance_abs_composition'])} | {percent(r['covariance_down_composition'])} | "
                 f"{percent(r['per_unit_covariance_composition_p99'])} | {r['per_unit_covariance_over_10pct']}/{r['active_units']} | "
                 f"{r['covariance_negative_units']}/{r['covariance_positive_units']}/{r['covariance_zero_units']} |")
-    text += ['', '半分ずつの複製での符号一致もCSVに記録したが、これは分割への安定性であり有意差検定ではない。',
+    text += ['', 'CSVのdistinct_replica_gate_disagreementは、異なる複製2本を選んだとき、同じ画像・token・unitのゲートが食い違う割合。32複製の経験分布で2R/(R−1)×平均[p(1−p)]から正確に算出した。元走の時間上のゲート遷移率ではない。',
+             '半分ずつの複製での符号一致もCSVに記録したが、これは分割への安定性であり有意差検定ではない。',
              'gate_varianceの対象は全token。CLSだけでの閉口率・開口率とは異なる。', '']
     (output / 't5_units_partial.md').write_text('\n'.join(text))
     print(json.dumps(dict(completed_conditions=len(consumed), self_check_passed=True, output=str(output / 't5_units_partial.md'))))
