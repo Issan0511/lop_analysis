@@ -3,6 +3,31 @@ import json
 import pandas as pd
 import common as T
 from global_noise import hashes
+np = T.np
+FINITE_FIELDS = ('mu', 'r', 'r_mean_component', 'r_width_component')
+
+
+def endpoint_components(data, step, layer):
+    """Exact endpoint accounting on the original common-unit mask, per replica."""
+    a, b = f's0_L{layer}', f's{step}_L{layer}'
+    valid = (data[f'{a}_valid'] & data[f'{b}_valid']).all(0)
+    assert valid.any()
+    mu0, mu1 = data[f'{a}_mu'][:, valid], data[f'{b}_mu'][:, valid]
+    q0, q1 = 1 / (data[f'{a}_sd'][:, valid] + 1e-12), 1 / (data[f'{b}_sd'][:, valid] + 1e-12)
+    mean = (mu1 - mu0) * (q0 + q1) / 2
+    width = (mu0 + mu1) * (q1 - q0) / 2
+    delta = (data[f'{b}_r'] - data[f'{a}_r'])[:, valid]
+    error = float(np.abs(mean + width - delta).max())
+    assert error < 1e-11, (step, layer, error)
+    result = dict(common_valid_units=int(valid.sum()), r_endpoint_identity_error=error)
+    arrays = dict(mu=(data[f'{b}_mu'] - data[f'{a}_mu']).mean(1), r=delta.mean(1),
+                  r_mean_component=mean.mean(1), r_width_component=width.mean(1))
+    for field, values in arrays.items():
+        full, reps = values[0], values[1:]
+        result.update({f'{field}_full_delta': float(full), f'{field}_replica_delta': float(reps.mean()),
+            f'{field}_noise_effect': float(reps.mean() - full),
+            f'{field}_noise_effect_se': float(reps.std(ddof=1) / np.sqrt(len(reps)))})
+    return result
 
 
 def main():
@@ -21,7 +46,15 @@ def main():
         with T.np.load(root / 'measurements.npz') as d:
             ce0 = float(d['s0_L1_ce'][0])
             accuracy0 = float(d['s0_L1_accuracy'][0])
+            components = {(step, layer): endpoint_components(d, step, layer)
+                          for step in cfg['points'][1:] for layer in (1, 2)}
         for row in pd.read_csv(root / 'summary.csv').to_dict('records'):
+            added = components[(row['step'], row['layer'])]
+            # Reconstruct every original finite mu/r statistic independently from
+            # the saved arrays before adding the new endpoint components.
+            for key in added.keys() & row.keys():
+                assert abs(added[key] - row[key]) < 1e-12, (root, key)
+            row.update(added)
             row.update({k: cfg[k] for k in ('seed', 'task', 'start', 'replicas')})
             row.update(initial_ce=ce0, initial_accuracy=accuracy0, directory=str(root))
             for field in ('mu', 'r'):
@@ -43,7 +76,7 @@ def main():
                        initial_accuracy_min=float(g.initial_accuracy.min()),
                        initial_accuracy_median=float(g.initial_accuracy.median()),
                        initial_accuracy_max=float(g.initial_accuracy.max()))
-            for field in ('mu', 'r'):
+            for field in FINITE_FIELDS:
                 full, stochastic, effect = (g[f'{field}_{key}'] for key in ('full_delta', 'replica_delta', 'noise_effect'))
                 assert abs(float(stochastic.mean() - full.mean() - effect.mean())) < 1e-12
                 row.update({f'{field}_full_mean': float(full.mean()),
@@ -82,6 +115,20 @@ def main():
         '20更新起点は切替後の学び直しを含み、適合後と同一視しない。',
         'CSVのnoise_signed_ratioは「抽出を加えた総効果/抽出ありの平均変位」。沈降が数値的に小さい場合と4SE以下では欠測にし、T5の割合とは呼ばない。',
         '負の比は雑音が沈降を緩和した場合。100%を超える比はfull-batchが逆向きに動くなど相殺のある場合で、0〜100%へ切り詰めない。', '']
+    text += ['## 雑音による位置の差を平均項と幅項へ分ける', '',
+        '課題60・seed2・20更新起点の差を見た後に追加した探索的解析。全状態・全時点・両blockへ同じ式を適用し、元の集計を置き換えない。',
+        'q=1/(σ+1e−12)としてΔr=Δμ(q₀+q₁)/2+(μ₀+μ₁)Δq/2。前者を平均項、後者を幅項とする。',
+        '全unit・全複製でこの恒等式を検算し、元の共通valid集合とμ/rの全統計を再現した。幅を固定した因果介入ではなく、両項にも端点の重みの変化が含まれる。',
+        '以下は50更新・全5seedが揃った群の、抽出あり−full-batchのseed平均。SEは各項にもCSVで保存し、両項のSEを単純に足さない。', '',
+        '| 課題 | 起点 | block | 雑音効果の平均項 | 雑音効果の幅項 | 雑音効果の合計Δr |',
+        '|---:|---:|---:|---:|---:|---:|']
+    for r in groups:
+        if r['step'] == 50 and r['complete_five_seeds']:
+            for arm in ('full_mean', 'stochastic_mean', 'noise_mean'):
+                assert abs(r[f'r_mean_component_{arm}'] + r[f'r_width_component_{arm}'] - r[f'r_{arm}']) < 1e-11
+            text.append(f"| {r['task']} | {r['start']} | {r['layer']} | {r['r_mean_component_noise_mean']:.6g} | "
+                f"{r['r_width_component_noise_mean']:.6g} | {r['r_noise_mean']:.6g} |")
+    text += ['', '各条件・各時点・両腕の成分と恒等式の最大誤差はglobal_noise_completed_cases.csv、seed間集計はglobal_noise_seed_groups.csv。', '']
     (output / 'global_noise_partial.md').write_text('\n'.join(text))
     print(json.dumps(dict(completed_states=len(cases), output=str(output / 'global_noise_partial.md'))))
 
