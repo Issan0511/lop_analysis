@@ -52,7 +52,10 @@ def kernel(u, probe_mean, metric_w, metric_b):
     assert metric_b.shape == (metric_w.shape[0],)
     assert bool((metric_w > 0).all() and (metric_b > 0).all())
     assert all(bool(torch.isfinite(x).all()) for x in (u, probe_mean, metric_w, metric_b))
-    return torch.einsum('ntd,hd,d->nth', u.double(), metric_w.double(), probe_mean.double()) + metric_b.double()
+    # Contract the metric with the probe first; a three-way einsum can materialize
+    # N x T x H x D (over 9 GiB for one image chunk in the real model).
+    weighted_probe = metric_w.double() * probe_mean.double()
+    return torch.nn.functional.linear(u.double(), weighted_probe, metric_b.double())
 
 
 @torch.no_grad()

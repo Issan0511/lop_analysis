@@ -12,7 +12,7 @@ torch, np, F = T.torch, T.np, T.F
 
 
 def source_hashes():
-    paths = [Path(__file__).with_name(n) for n in ('t5_run.py', 't5_model.py', 't5_ledger.py')]
+    paths = [Path(__file__).with_name(n) for n in ('t5_run.py', 't5_model.py', 't5_ledger.py', 't5_checks.py')]
     paths += [T.ROOT / 'specs/spec_vit_two_block_t5_1025.md']
     return dict(T.own_hashes(), **{str(p.relative_to(T.ROOT)): T.sha256(p) for p in paths})
 
@@ -83,7 +83,7 @@ def evaluate(local, optimizer, metric, y, records, points, out, lr, gate):
                           activation_gate_covariance=selfcov, covariance_half0=halves[0],
                           covariance_half1=halves[1], **ledger)
         arrays.update({f's{step}_{name}': value.detach().cpu().numpy() for name, value in quantities.items()})
-        row = dict(step=step, full_ce=float(ces[0] / n), replica_ce=float(ces[1:].mean() / n),
+        row = dict(full_ce=float(ces[0] / n), replica_ce=float(ces[1:].mean() / n),
                    full_accuracy=float(correct[0] / n), replica_accuracy=float(correct[1:].mean() / n),
                    full_mu=float(mu[0].mean()), replica_mu=float(mu[1:].mean()),
                    full_r=float(rvalues[0][valid[0]].mean()), replica_r=float(rvalues[1:][valid[1:]].mean()),
