@@ -1,0 +1,87 @@
+{
+  "note": "Addendum B of vit_long_1024 (spec 追補 B, Issa 1025 morning: \"1 シードでいいから 100 タスク回して\"): the 2-block, FFN 3072 box of addendum A, seed 0 only, 100 tasks. Exploratory and descriptive; no registered judgement. Run job by job with run.py (not the launcher). Select with VIT_LONG_PRODUCTION=production_2blk_t100.json.",
+  "tag": "2blk_t100",
+  "results_dir": "results/vit_long_1024_2blk_t100",
+  "raw_dir": "~/Projects/obsidian-research-data/vit_long_1024_2blk_t100",
+  "arms": [
+    "R0",
+    "S",
+    "R0L",
+    "SL"
+  ],
+  "fresh_arms": [
+    "fresh",
+    "freshL"
+  ],
+  "n_labels": 10,
+  "images_per_class": 25,
+  "tasks": 100,
+  "steps": 500,
+  "augment": "off",
+  "dropout": 0.0,
+  "depth": 2,
+  "mlp_ratio": 8.0,
+  "seeds": [
+    0
+  ],
+  "fresh_tasks": [
+    25,
+    50,
+    75,
+    100
+  ],
+  "end_tasks": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    20,
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100
+  ],
+  "adam_tasks": [
+    1,
+    10,
+    30,
+    60,
+    100
+  ],
+  "mid_tasks": [
+    1,
+    10,
+    30,
+    60,
+    100
+  ],
+  "mid_fresh": false
+}
