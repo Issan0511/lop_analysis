@@ -196,9 +196,13 @@ def run():
                 assert record['non_fc1_changed']
                 assert record['model'].keys() == state['model'].keys()
                 changed = {k for k, v in record['model'].items()
-                           if '.fc1.' not in k and not torch.equal(v, state['model'][k])}
+                           if isinstance(v, torch.Tensor) and '.fc1.' not in k and not torch.equal(v, state['model'][k])}
                 assert changed == set(record['non_fc1_changed'])
-                assert all(torch.isfinite(v).all() for v in record['model'].values())
+                for key, value in record['model'].items():
+                    if isinstance(value, torch.Tensor):
+                        assert torch.isfinite(value).all()
+                    else:
+                        assert T.digest_tree(value) == T.digest_tree(state['model'][key])
             assert digest == initial
             del record
         del state
