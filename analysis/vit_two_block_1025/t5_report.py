@@ -5,6 +5,7 @@ from pathlib import Path
 import common as T
 from t5_launch import completed
 np = T.np
+FINITE_FIELDS = ('mu', 'r', 'r_mean_component', 'r_width_component')
 
 
 def seed_groups(rows):
@@ -20,7 +21,7 @@ def seed_groups(rows):
         assert set(seeds) <= set(T.SEEDS)
         row = dict(zip(keys, values))
         row.update(seeds=len(seeds), complete_five_seeds=set(seeds) == set(T.SEEDS))
-        for field in ('mu', 'r'):
+        for field in FINITE_FIELDS:
             full, replicas, noise = [np.array([r[f'{field}_{suffix}'] for r in group])
                                     for suffix in ('full_delta', 'replica_delta', 'noise_effect')]
             assert np.max(np.abs(replicas - full - noise)) < 1e-12
@@ -51,13 +52,20 @@ def summarize(path):
     with np.load(path / 'measurements.npz') as d:
         for step in info['points'][1:]:
             valid = (d['s0_valid'] & d[f's{step}_valid']).all(0)
+            assert valid.any()
             row = {k: info[k] for k in ('seed', 'task', 'start', 'layer', 'mode', 'replicas')}
             row.update(step=step, common_valid_units=int(valid.sum()), directory=str(path))
-            for field in ('mu', 'r'):
-                delta = d[f's{step}_{field}'] - d[f's0_{field}']
-                if field == 'r':
-                    delta = delta[:, valid]
-                delta = delta.mean(1)
+            mu0, mu1 = d['s0_mu'][:, valid], d[f's{step}_mu'][:, valid]
+            q0, q1 = 1 / (d['s0_sd'][:, valid] + 1e-12), 1 / (d[f's{step}_sd'][:, valid] + 1e-12)
+            mean_component = (mu1 - mu0) * (q0 + q1) / 2
+            width_component = (mu0 + mu1) * (q1 - q0) / 2
+            r_delta = (d[f's{step}_r'] - d['s0_r'])[:, valid]
+            error = float(np.abs(mean_component + width_component - r_delta).max())
+            assert error < 1e-11, (path, step, error)
+            row['r_endpoint_identity_error'] = error
+            finite = dict(mu=(d[f's{step}_mu'] - d['s0_mu']).mean(1), r=r_delta.mean(1),
+                r_mean_component=mean_component.mean(1), r_width_component=width_component.mean(1))
+            for field, delta in finite.items():
                 full, reps = delta[0], delta[1:]
                 row.update({f'{field}_full_delta': float(full), f'{field}_replica_delta': float(reps.mean()),
                     f'{field}_noise_effect': float(reps.mean() - full),
@@ -124,6 +132,19 @@ def main():
     text += ['', '有限変位についての5seed平均とseed間SEは[t5_seed_groups.csv](t5_seed_groups.csv)。',
         'そのSEはseed別効果の標準偏差/√5であり、固定した1状態での複製間Monte Carlo SEとは区別する。',
         '部分的なseed集合もCSVには残すが、complete_five_seeds=falseの群を5seedの結果に数えない。', '']
+    text += ['## μの押しとμ/σの変位を区別する', '',
+        'q=1/(σ+1e−12)として、各unit・複製の端点でΔr=Δμ(q₀+q₁)/2+(μ₀+μ₁)Δq/2を検算した。',
+        '以下はその平均項と幅項をunit平均→複製平均→5seed平均した値。両項はΔrへ加算できるが、原因別の因果寄与率ではない。',
+        'rは全複製の始点・終点で共通にvalidなunitを使う。生のμの平均は全unitであり、母数の違いもCSVで記録する。', '',
+        '| 課題 | 起点 | block | optimizer | full 平均項 | full 幅項 | 抽出あり 平均項 | 抽出あり 幅項 |',
+        '|---:|---:|---:|---|---:|---:|---:|---:|']
+    for r in groups:
+        if r['step'] == 50 and r['complete_five_seeds']:
+            for arm in ('full', 'replica'):
+                assert abs(r[f'r_mean_component_{arm}_mean'] + r[f'r_width_component_{arm}_mean'] - r[f'r_{arm}_mean']) < 1e-11
+            text.append(f"| {r['task']} | {r['start']} | {r['layer']} | {r['mode']} | "
+                f"{r['r_mean_component_full_mean']:.6g} | {r['r_width_component_full_mean']:.6g} | "
+                f"{r['r_mean_component_replica_mean']:.6g} | {r['r_width_component_replica_mean']:.6g} |")
     text += ['', '全時点とrの変化は[t5_completed_cases.csv](t5_completed_cases.csv)。',
              '解析コード・初期checkpoint・生の複製・検算は各directoryのprovenance.json、manifest.json、complete.jsonから追跡できる。', '']
     (out / 't5_partial.md').write_text('\n'.join(text))
