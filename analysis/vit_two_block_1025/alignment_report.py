@@ -38,6 +38,7 @@ def main():
         context = {k: cfg[k] for k in ('seed', 'task', 'start')}
         position = pd.read_csv(root / 'positions.csv')
         finite = pd.read_csv(root / 'finite.csv')
+        heads = pd.read_csv(root / 'heads.csv')
         channels.extend(dict(**context, **r) for r in position.to_dict('records'))
         with np.load(root / 'arrays.npz') as d:
             for arm in ('old', 'next'):
@@ -45,11 +46,13 @@ def main():
                     pp = position[(position.dataset == arm) & (position.layer == layer) & (position.metric == 'Adam_fixed') & (position.route == 'full') & (position.moment == 'r')].set_index('signal')
                     ff = finite[(finite.dataset == arm) & (finite.layer == layer) & (finite.moment == 'r')].set_index('variant')
                     controls = [f'perm{i}' for i in range(4)]
+                    hh = heads[heads.dataset == arm].set_index('variant')
                     base, perm = float(pp.loc['switch', 'mean']), float(pp.loc[controls, 'mean'].mean())
                     fbase, fperm = float(ff.loc['switch', 'mean']), float(ff.loc[controls, 'mean'].mean())
                     effects.append(dict(**context, dataset=arm, layer=layer, base_fixed_r=base, perm_fixed_r=perm,
                         fixed_difference=base - perm, registered_positive=base < 0 and base < perm,
                         base_finite_r=fbase, perm_finite_r=fperm, finite_difference=fbase - fperm,
+                        base_pmax=float(hh.loc['switch', 'pmax']), perm_pmax=float(hh.loc[controls, 'pmax'].mean()),
                         finite_positive=fbase < 0 and fbase < fperm))
                     valid = d[f'initial_L{layer}_valid']
                     for metric in ('SGD', 'Adam_fixed'):
@@ -88,6 +91,7 @@ def main():
             text.append(f'| {task} | {start} | {arm} | {layer} | {len(g)}/5 | {int(g.registered_positive.sum())}/{len(g)} | '
                         f'{int(g.finite_positive.sum())}/{len(g)} | {g.fixed_difference.median():.6g} |')
     text += ['', '確率を固定した整列成分loadと、確率も再計算するhead介入は別である。',
+             'effects.csvのbase_pmax・perm_pmaxは介入後の平均最大予測確率。headのnormは合わせているが、予測確率や逆伝播方向は同じではない。',
              'unit対応はalignment_overlap.csv、平均・幅・位置および全経路/自fc1の内訳はalignment_channels.csv。',
              'rへの平均・幅の寄与と上流/自fc1の内訳はalignment_terms.csv。平均・幅のseed中央値を別々に取ると、その和はrのseed中央値と一致するとは限らない。', '']
     (output / 'alignment_partial.md').write_text('\n'.join(text))
