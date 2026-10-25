@@ -30,7 +30,7 @@ def derivatives(local):
     rw = q[:, None] * u.mean(0) - (mu * q.square())[:, None] * ds
     rb = q
     gw, gb = torch.autograd.grad((mu * q)[valid].sum(), (w, b))
-    error = max(float((gw[valid] - rw[valid]).abs().max()), float((gb[valid] - rb[valid]).abs().max()))
+    error = max(float((gw[valid] - rw[valid]).detach().abs().max()), float((gb[valid] - rb[valid]).detach().abs().max()))
     assert error < 1e-9, error
     return rw.detach(), rb.detach(), valid.detach(), error
 
