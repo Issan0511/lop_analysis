@@ -17,5 +17,6 @@
 | 10 | 500 | old | 2 | 5/5 | 2/5 | 1/5 | 0.0334498 |
 
 確率を固定した整列成分loadと、確率も再計算するhead介入は別である。
+effects.csvのbase_pmax・perm_pmaxは介入後の平均最大予測確率。headのnormは合わせているが、予測確率や逆伝播方向は同じではない。
 unit対応はalignment_overlap.csv、平均・幅・位置および全経路/自fc1の内訳はalignment_channels.csv。
 rへの平均・幅の寄与と上流/自fc1の内訳はalignment_terms.csv。平均・幅のseed中央値を別々に取ると、その和はrのseed中央値と一致するとは限らない。
