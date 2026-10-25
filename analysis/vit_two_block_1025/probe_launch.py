@@ -1,4 +1,4 @@
-"""Sequential diagnostics on all 20 registered checkpoints as they become ready."""
+"""Sequential diagnostics on all registered checkpoints as they become ready."""
 import argparse
 import fcntl
 import importlib
@@ -23,7 +23,8 @@ def main(kind):
     logs = out / 'logs'
     logs.mkdir(exist_ok=True)
     attempt = str(time.time_ns())
-    pending = [(seed, task, step) for task in (10, 60) for seed in T.SEEDS for step in (100, 500)]
+    steps = getattr(module, 'START_STEPS', (100, 500))
+    pending = [(seed, task, step) for task in (10, 60) for seed in T.SEEDS for step in steps]
     while pending:
         ready = None
         for case in list(pending):
