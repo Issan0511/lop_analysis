@@ -26,7 +26,8 @@ def endpoint_components(data, step, layer):
         full, reps = values[0], values[1:]
         result.update({f'{field}_full_delta': float(full), f'{field}_replica_delta': float(reps.mean()),
             f'{field}_noise_effect': float(reps.mean() - full),
-            f'{field}_noise_effect_se': float(reps.std(ddof=1) / np.sqrt(len(reps)))})
+            f'{field}_noise_effect_se': float(reps.std(ddof=1) / np.sqrt(len(reps))),
+            f'{field}_replica_negative_fraction': float((reps < 0).mean())})
     return result
 
 
