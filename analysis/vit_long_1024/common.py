@@ -109,7 +109,18 @@ def cycle_classes(seed, cycle, n_labels=N_LABELS):
 
 
 def task_plan(seed, task, n_labels=N_LABELS, per_class=PER_CLASS):
+    """Task t's classes and image range. With the production key fixed_images (addendum D) every
+    task uses the classes task classes_of_task would have had and images first.. of each class;
+    only the labels change with the task (task_labels)."""
     per_cycle = 200 // n_labels
+    fixed = _PRODUCTION.get('fixed_images')
+    if fixed:
+        cycle, position = divmod(fixed['classes_of_task'] - 1, per_cycle)
+        first = fixed['first']
+        if first + per_class > 500:
+            raise ValueError(f'fixed images need {first + per_class} images per class, beyond 500')
+        return dict(task=task, cycle=cycle, position=position, n_labels=n_labels, fixed=True,
+                    classes=list(cycle_classes(seed, cycle, n_labels)[position]), first=first, count=per_class)
     cycle, position = divmod(task - 1, per_cycle)
     first = per_class * cycle
     if first + per_class > 500:

@@ -1008,3 +1008,37 @@ touch ~/Projects/obsidian-research-data/vit_long_1024/STOP
 
 ### C.6 置き場
 - コードは `analysis/vit_long_1024/capacity.py`（1 走 = 1 プロセス）。生の出力は `~/Projects/obsidian-research-data/vit_long_1024_2blk_t100/capacity/<状態>_N<N>/`、要約と図は `results/vit_long_1024_2blk_t100/capacity/`。
+
+## 追補 D: 同じ 2,500 枚にラベルを引き直す箱（2026-10-25、Issa の依頼、探索、seed 0）
+
+- Issa「引き直します」「まず 1 seed でやってみよう」。追補 C で、差が出るのは 1 課題 2,500 枚だった（N = 2,500 で R0 は 8,000 更新でも 0.42、SL は新品の 1.8 倍）。Tiny ImageNet は 1 クラス 500 枚なので、毎課題新しい画像で 2,500 枚にすると 40 課題しか作れない。そこで RL-CIFAR と同じ型にする。同じ 2,500 枚に、課題ごとにラベルを引き直す。
+- 1 seed なので判定は登録しない（記述）。
+
+### D.1 箱
+- 網と学習は追補 B と同じ（2 ブロック・FFN 3072・ReLU・拡張なし・dropout 0・Adam 1e−4・batch 128・moment は持ち越す・float32）。
+- 画像: 全課題で同じ 2,500 枚。seed 0 では追補 C の N = 2,500 と同じ画像（課題 101 になるはずだった 10 クラス、各クラスの path の順で 251〜500 番目）。設定は production の `fixed_images`（`classes_of_task` 101、`first` 250）。
+- ラベル: 課題ごとに {0, …, 9} の一様な iid を引き直す。乱数の stream は追補 B と同じ `('randlabel', seed, task)`。
+- batch の順は追補 B と同じ `('batch', seed, task)`。1 epoch は 128 枚 × 19 と 68 枚の 20 batch。
+- 1 課題の更新 U = 5,000。決め方: 追補 C の新品の T90 は N = 2,500 で LN なし 1,275・LN あり 450 なので、U = 5,000 はその 4 倍と 11 倍の余地がある。1 課題の周回は 256 周で、追補 B（500 更新 × 128 枚 ÷ 250 枚）と同じ。
+- 課題数 T = 100、seed 0。腕は R0・S・R0L・SL。新品は課題 25・50・75・100（fresh と freshL）。
+- 損失の行: 全課題で同じ 10 クラスなので、R0 系も S 系も同じ 10 行になる。R0・R0L・新品は課題の始めに head の 200 行を 0 に戻し、S・SL は課題 1 の前にだけ戻す（§4.3 のまま）。
+- 記録は追補 B と同じ（25 更新ごとに 2,500 枚で暗記率、課題末に固定 probe で層ごとの記録）。保存は課題末の重みを課題 1〜10・20・30・…・100、Adam の状態を課題 1・10・30・60・100、課題の 100 更新目の重みを同じ 5 課題。
+- 設定は `analysis/vit_long_1024/production_2blk_rlfix.json`、出力は `~/Projects/obsidian-research-data/vit_long_1024_2blk_rlfix/`、結果は `results/vit_long_1024_2blk_rlfix/`。
+
+### D.2 止める規則（走る前に固定）
+- 課題 2〜5 で R0L が一度でも 0.9 に届かなければ、箱が測れないとみて止めて報告する。それ以外の腕の未到達は結果として書く（T90 = U + 25）。
+
+### D.3 記述すること
+- 4 腕の T90（と T50・T75）を課題ごとに。新品との差を課題 25・50・75・100 で。
+- 課題の始めの暗記損失（切替の押しの大きさ）。
+- 層ごとの死・相対位置 r・幅、head に入る特徴の大きさ ‖h‖（保存状態）。
+
+### D.4 予測（走る前に固定、Claude）
+- D1: R0 は課題 100 までに、どこかの課題で 0.9 に届かなくなる。70%。
+- D2: 課題 81〜100 の SL の T90 の中央値は、課題 100 の新品（LN あり）の T90 より大きい。60%。
+- D3: 課題 81〜100 の R0L の T90 の中央値は、課題 100 の新品（LN あり）の T90 以下。60%。
+- D4: 課題 2 の始めの暗記損失は、S で 15 を超える（毎課題新しい画像のときの 12 より大きい）。70%。
+
+### D.5 コードの変更と注意
+- `common.task_plan` が production の `fixed_images` を読む。この鍵の無い production（production.json・production_2blk.json・production_2blk_t100.json）では、課題の組み方は変わらない（検査で追補 B の provenance の課題表と照合する）。
+- `common.py` の中身が変わるので、一時停止中の追補 A の走（seed 3 の fresh と seed 4）は、このままでは source の不一致で再開を断られる。再開するなら、commit fa9f2189 の source を一時 worktree で使う。
