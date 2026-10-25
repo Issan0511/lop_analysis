@@ -25,7 +25,7 @@ def pair(a, b, valid):
 
 
 def main():
-    effects, overlaps, channels, terms = [], [], [], []
+    effects, overlaps, channels, terms, doses = [], [], [], [], []
     count = 0
     for marker in sorted((T.ARCHIVE / 'alignment').glob('*/complete.json')):
         root = marker.parent
@@ -54,6 +54,12 @@ def main():
                         base_finite_r=fbase, perm_finite_r=fperm, finite_difference=fbase - fperm,
                         base_pmax=float(hh.loc['switch', 'pmax']), perm_pmax=float(hh.loc[controls, 'pmax'].mean()),
                         finite_positive=fbase < 0 and fbase < fperm))
+                    for variant in ('switch', 'half', 'zero', 'norm_unload', *controls):
+                        doses.append(dict(**context, dataset=arm, layer=layer, variant=variant,
+                            fixed_r=float(pp.loc[variant, 'mean']), finite_r=float(ff.loc[variant, 'mean']),
+                            norm_ratio=float(hh.loc[variant, 'norm_ratio']),
+                            alignment_coefficient=float(hh.loc[variant, 'alignment_coefficient']),
+                            pmax=float(hh.loc[variant, 'pmax']), old_ce=float(hh.loc[variant, 'old_ce'])))
                     valid = d[f'initial_L{layer}_valid']
                     for metric in ('SGD', 'Adam_fixed'):
                         for route in ('full', 'local'):
@@ -78,7 +84,8 @@ def main():
         count += 1
     output = T.ROOT / 'results/vit_two_block_1025'
     output.mkdir(exist_ok=True)
-    for name, rows in [('alignment_effects', effects), ('alignment_overlap', overlaps), ('alignment_channels', channels), ('alignment_terms', terms)]:
+    for name, rows in [('alignment_effects', effects), ('alignment_overlap', overlaps),
+                       ('alignment_channels', channels), ('alignment_terms', terms), ('alignment_head_doses', doses)]:
         pd.DataFrame(rows).to_csv(output / f'{name}.csv', index=False)
     text = ['# 2blockの整列介入・途中結果', '', f'完了状態 {count}/20。未完了seedを除いて成功基準を緩めない。', '',
         '最終headの旧ラベル整列を、同じnormの4方向へ置き換えた比較。負のΔrが沈降。',
@@ -94,6 +101,24 @@ def main():
              'effects.csvのbase_pmax・perm_pmaxは介入後の平均最大予測確率。headのnormは合わせているが、予測確率や逆伝播方向は同じではない。',
              'unit対応はalignment_overlap.csv、平均・幅・位置および全経路/自fc1の内訳はalignment_channels.csv。',
              'rへの平均・幅の寄与と上流/自fc1の内訳はalignment_terms.csv。平均・幅のseed中央値を別々に取ると、その和はrのseed中央値と一致するとは限らない。', '']
+    text += ['', '## 整列成分の量とhead normの対照', '',
+        '全5seedが揃った条件の実Adam1歩のΔr。各値はunit平均→seed平均、括弧は沈むseed数。上の登録判定表の中央値とは異なる。',
+        'half/zeroは整列成分Lを半分/ゼロへ変え、norm_unloadは整列を除いた残差Rを元headと同じnormへ拡大する。置換は各seedで4方向を平均してからseed間で集計する。',
+        '全variantで予測確率を計算し直した。これは新しい成功基準ではなく、登録した量の操作とnorm対照の記述。未完了条件もalignment_head_doses.csvには保持する。', '',
+        '| 課題 | 起点 | 入力 | block | base | half | zero | norm_unload | norm一致の置換 |',
+        '|---:|---:|---|---:|---:|---:|---:|---:|---:|']
+    dd = pd.DataFrame(doses)
+    if len(dd):
+        for keys, group in dd.groupby(['task', 'start', 'dataset', 'layer']):
+            if set(group.seed) != set(T.SEEDS):
+                continue
+            task, start, arm, layer = keys
+            assert len(group) == len(T.SEEDS) * 8
+            wide = group.pivot(index='seed', columns='variant', values='finite_r')
+            values = [wide[k] for k in ('switch', 'half', 'zero', 'norm_unload')]
+            values.append(wide[[f'perm{i}' for i in range(4)]].mean(axis=1))
+            cells = [f'{v.mean():.6g} ({int((v < 0).sum())}/5)' for v in values]
+            text.append(f'| {task} | {start} | {arm} | {layer} | ' + ' | '.join(cells) + ' |')
     (output / 'alignment_partial.md').write_text('\n'.join(text))
     print(json.dumps(dict(completed_states=count, output=str(output / 'alignment_partial.md'))))
 
