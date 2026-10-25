@@ -22,6 +22,7 @@ def main():
             path = root / item['path']
             assert path.stat().st_size == item['bytes'] and T.sha256(path) == item['sha256'], path
         context = {k: cfg[k] for k in ('seed', 'task', 'start')}
+        saved_finite = pd.read_csv(root / 'finite.csv')
         inputs.append(dict(path=str(root / 'arrays.npz'), sha256=T.sha256(root / 'arrays.npz')))
         with np.load(root / 'arrays.npz') as d:
             for layer in (1, 2):
@@ -48,12 +49,22 @@ def main():
                         stats = pair(values['r']['target'], values['r']['fit'], valid)
                         stats = {k.replace('load', 'target'): v for k, v in stats.items()}
                         overlaps.append(dict(**context, layer=layer, metric=metric, route=route, **stats))
+                finite_valid = {signal: valid & ((d[f'initial_L{layer}_sd'] + d[f'old_finite_{signal}_L{layer}_sd']) > 1e-8)
+                                for signal in ('switch', 'fit')}
+                paired_valid = finite_valid['switch'] & finite_valid['fit']
+                assert paired_valid.any()
                 for moment in ('mu', 'sd', 'r'):
                     switch = d[f'old_finite_switch_L{layer}_{moment}']
                     fit = d[f'old_finite_fit_L{layer}_{moment}']
+                    for signal, values in [('switch', switch), ('fit', fit)]:
+                        reference = saved_finite[(saved_finite.dataset == 'old') & (saved_finite.variant == signal) &
+                                                 (saved_finite.layer == layer) & (saved_finite.moment == moment)]
+                        assert len(reference) == 1
+                        assert abs(float(values[finite_valid[signal]].mean()) - float(reference['mean'].iloc[0])) < 1e-12
                     finite.append(dict(**context, layer=layer, moment=moment,
-                        switch=float(switch[valid].mean()), fit=float(fit[valid].mean()),
-                        switch_minus_fit=float((switch[valid] - fit[valid]).mean())))
+                        paired_valid_units=int(paired_valid.sum()),
+                        switch=float(switch[paired_valid].mean()), fit=float(fit[paired_valid].mean()),
+                        switch_minus_fit=float((switch[paired_valid] - fit[paired_valid]).mean())))
     output = T.ROOT / 'results/vit_two_block_1025'
     for name, data in [('target_signal_channels', rows), ('target_signal_overlap', overlaps), ('target_signal_finite', finite)]:
         pd.DataFrame(data).to_csv(output / f'{name}.csv', index=False)
@@ -83,6 +94,14 @@ def main():
             task, start, layer = keys
             text.append(f'| {task} | {start} | {layer} | {len(g)}/5 | {g.switch.median():.6g} | {g.fit.median():.6g} | '
                         f'{g.switch_minus_fit.median():.6g} | {int((g.switch_minus_fit < 0).sum())}/{len(g)} |')
+    text += ['', '実Adamの比較では、起点・switch更新後・fit更新後でσ>1e−8を満たす同じunitだけを使う。各腕の値は元のfinite.csvとも照合した。', '',
+             '| 課題 | 起点 | block | 経路 | n seed | targetとfitで逆向きのunit（中央値） | 周辺割合からの超過 |',
+             '|---:|---:|---:|---|---:|---:|---:|']
+    oo = pd.DataFrame(overlaps)
+    if len(oo):
+        for keys, g in oo[oo.metric == 'Adam_fixed'].groupby(['task', 'start', 'layer', 'route']):
+            task, start, layer, route = keys
+            text.append(f'| {task} | {start} | {layer} | {route} | {len(g)}/5 | {g.opposite_fraction.median():.1%} | {g.excess_opposite.median():.1%} |')
     text += ['', '全seed・両計量・μとσの値はtarget_signal_channels.csv、unitごとの対応はtarget_signal_overlap.csv、有限Adamはtarget_signal_finite.csv。',
              'この比較は同じ画像上でのラベル切替の期待値。実際の新しい画像・有限個の新ラベルでの学習全期間を、そのまま置き換えるものではない。', '']
     (output / 'target_signal_partial.md').write_text('\n'.join(text))
