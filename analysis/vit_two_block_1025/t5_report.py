@@ -27,7 +27,8 @@ def summarize(path):
                     f'{field}_noise_effect_se': float(reps.std(ddof=1) / np.sqrt(len(reps))),
                     f'{field}_replica_negative_fraction': float((reps < 0).mean())})
             for field in ('total', 'mean_field', 'gate_covariance', 'covariance_half0', 'covariance_half1',
-                          'gate_variance', 'activation_gate_covariance'):
+                          'gate_variance', 'activation_gate_covariance', 'positive_total', 'positive_mean_field',
+                          'positive_gate_covariance', 'zero_boundary', 'zero_fraction'):
                 row[f'next_fixed_{field}'] = float(d[f's{step}_{field}'].mean())
             total = row['next_fixed_total']
             cov = row['next_fixed_gate_covariance']
@@ -42,6 +43,8 @@ def summarize(path):
 def main():
     rows = []
     for marker in sorted((T.ARCHIVE / 't5').glob('*/complete.json')):
+        if not completed(marker.parent):
+            continue
         rows.extend(summarize(marker.parent))
     out = T.ROOT / 'results/vit_two_block_1025'
     out.mkdir(exist_ok=True)
@@ -56,6 +59,7 @@ def main():
         '入力とfc1以外を固定した局所介入。μ・rはunit平均、標本抽出ありはさらに32複製で平均する。',
         '雑音効果は「複製平均−full-batch」、SEは固定した1初期状態での複製間Monte Carlo標準誤差。seed間の再現性ではない。',
         '次のゲート共分散項は共通固定計量での期待Δμであり、有限50更新の寄与率でも、実Adamの変位分解でもない。', '',
+        '境界微分の訂正版。主台帳は元モデルのclampの微分1[z>=0]を使う。厳密な開口1[z>0]の台帳と、z=0だけの境界項もCSVへ保存した。旧測定は各条件のbefore_clamp_boundary_fix/に保全している。', '',
         '| seed | 課題 | 起点 | block | optimizer | full Δμ | 複製 Δμ | 雑音効果 ± SE | 次の共分散項 | 次の全体 |',
         '|---:|---:|---:|---:|---|---:|---:|---:|---:|---:|']
     for r in rows:

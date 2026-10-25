@@ -81,7 +81,8 @@ def main():
     rows, consumed = [], []
     for marker in sorted((T.ARCHIVE / 't5').glob('*/complete.json')):
         root = marker.parent
-        assert completed(root), root
+        if not completed(root):
+            continue
         cfg = json.loads(marker.read_text())['config']
         with np.load(root / 'measurements.npz') as d:
             for step in cfg['points'][1:]:
@@ -104,6 +105,7 @@ def main():
     text = ['# T5対応項をunit別の大きさで確認', '',
         f'完了済み{len(consumed)}/80条件。初期のunit平均結果を見た後の探索的集計。新しい学習条件は追加していない。', '',
         'C_iをゲート共分散項、M_iを平均場項とする。両者は固定計量での「次の期待Δμ」の加法成分。実Adam条件でも計算する台帳は固定計量のもの。',
+        '境界微分の訂正版。主台帳のgateは元モデルのclampが使う1[z>=0]。開口判定1[z>0]とは区別する。',
         '絶対量の構成比 = Σ|C_i| / Σ(|C_i|+|M_i|)。下向き成分の構成比 = Σ(-C_i)₊ / Σ[(-C_i)₊+(-M_i)₊]。',
         'いずれも有限更新の因果割合やΔ(μ/σ)の割合ではない。絶対量の比は、unit間や成分間で符号が相殺しても小さくならない。',
         'ただし各C_iの内部にある画像・token間の相殺や、誤差の自己成分と他unit由来成分の相殺は、この集計では除けない。箱Aの自己v²項そのものを単離した結果ではない。',

@@ -9,7 +9,8 @@ from t5_ledger import verification
 
 
 def main():
-    gate = T.ARCHIVE / 'gate'
+    gate = T.ARCHIVE / 'gate/t5_clamp_boundary'
+    gate.mkdir(exist_ok=True)
     checks = []
     math = verification()
     for layer in (1, 2):
@@ -37,9 +38,11 @@ def main():
                     assert set(data.files) == set(prior)
                     for name in data.files:
                         assert T.np.array_equal(data[name], prior[name]), name
-    T.atomic_json(gate / 't5.json', dict(status='passed', source_hashes=source_hashes(),
+    result = dict(status='passed', source_hashes=source_hashes(),
         git_hash=T.git_state()[0], math=math, cases=checks,
-        reread_replicas_unchanged=True, reread_measurements_bit_equal=True))
+        reread_replicas_unchanged=True, reread_measurements_bit_equal=True)
+    T.atomic_json(gate / 't5.json', result)
+    T.atomic_json(T.ARCHIVE / 'gate/t5.json', result)
     print('T5 operational gates passed', flush=True)
 
 

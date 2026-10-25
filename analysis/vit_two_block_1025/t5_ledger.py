@@ -12,22 +12,28 @@ class ReplicaMoments:
     def __init__(self):
         self.count = 0
         self.c = self.chi = self.cchi = self.positive = None
+        self.strict_chi = self.strict_cchi = None
 
     @torch.no_grad()
     def add(self, z, c):
         assert z.ndim == 3 and z.shape == c.shape
         assert torch.isfinite(z).all() and torch.isfinite(c).all()
         z, c = z.detach().double(), c.detach().double()
-        chi, positive = (z > 0).double(), z.clamp_min(0)
+        # The frozen model uses clamp_min, whose autograd derivative is 1 at 0.
+        # Retain the strict-positive theoretical gate as a separate ledger.
+        chi, strict_chi, positive = (z >= 0).double(), (z > 0).double(), z.clamp_min(0)
         if self.count == 0:
             self.c, self.chi = c.clone(), chi.clone()
             self.cchi, self.positive = c * chi, positive.clone()
+            self.strict_chi, self.strict_cchi = strict_chi.clone(), c * strict_chi
         else:
             assert z.shape == self.c.shape and z.device == self.c.device
             self.c.add_(c)
             self.chi.add_(chi)
             self.cchi.add_(c * chi)
             self.positive.add_(positive)
+            self.strict_chi.add_(strict_chi)
+            self.strict_cchi.add_(c * strict_chi)
         self.count += 1
 
     @torch.no_grad()
@@ -35,7 +41,11 @@ class ReplicaMoments:
         assert self.count >= 1
         c, p = self.c / self.count, self.chi / self.count
         cchi, positive = self.cchi / self.count, self.positive / self.count
+        strict_p, strict_cchi = self.strict_chi / self.count, self.strict_cchi / self.count
         return dict(c=c, p=p, cchi=cchi, covariance=cchi - c * p,
+                    strict_p=strict_p, strict_cchi=strict_cchi,
+                    strict_covariance=strict_cchi - c * strict_p,
+                    zero_fraction=p - strict_p, zero_c=cchi - strict_cchi,
                     activation_gate_covariance=(1 - p) * positive,
                     gate_variance=p * (1 - p))
 
@@ -73,7 +83,13 @@ def components(moments, k, lr, population_images):
     total = scale * (k * v['cchi']).sum((0, 1))
     mean_field = scale * (k * v['c'] * v['p']).sum((0, 1))
     gate_covariance = scale * (k * v['covariance']).sum((0, 1))
+    positive_total = scale * (k * v['strict_cchi']).sum((0, 1))
+    positive_mean_field = scale * (k * v['c'] * v['strict_p']).sum((0, 1))
+    positive_gate_covariance = scale * (k * v['strict_covariance']).sum((0, 1))
+    zero_boundary = scale * (k * v['zero_c']).sum((0, 1))
     return dict(total=total, mean_field=mean_field, gate_covariance=gate_covariance,
+                positive_total=positive_total, positive_mean_field=positive_mean_field,
+                positive_gate_covariance=positive_gate_covariance, zero_boundary=zero_boundary,
                 identity_error=total - mean_field - gate_covariance)
 
 
@@ -84,16 +100,20 @@ def verification():
     R, N, tokens, width, inputs, outputs = 7, 6, 3, 5, 4, 3
     rand = lambda *s: torch.randn(*s, generator=gen, dtype=dtype)
     u, v = rand(N, tokens, inputs), rand(tokens, width, outputs)
+    u[0, 0] = 0
     probe = u[:, 0].mean(0)
     dw, db = rand(width, inputs).exp(), rand(width).exp()
     y = torch.arange(N) % outputs
     lr = .003
     stats, direct, zs, cs = ReplicaMoments(), [], [], []
     ws, bs = [], []
-    for _ in range(R):
+    for replica in range(R):
         w, b = rand(width, inputs).requires_grad_(), rand(width).requires_grad_()
+        if replica == 0:
+            with torch.no_grad():
+                b[0] = 0
         z = torch.nn.functional.linear(u, w, b)
-        a = z.relu()
+        a = z.clamp_min(0)
         logits = torch.einsum('nth,tho->no', a, v)
         loss = torch.nn.functional.cross_entropy(logits, y, reduction='sum')
         c, gw, gb = torch.autograd.grad(loss, (a, w, b))
@@ -106,10 +126,13 @@ def verification():
     torch.testing.assert_close(result['total'], expected, atol=1e-12, rtol=1e-12)
     torch.testing.assert_close(result['identity_error'], torch.zeros(width, dtype=dtype), atol=1e-12, rtol=0)
     z = torch.stack(zs)
-    chi, a = (z > 0).double(), z.relu()
+    assert bool((z == 0).any())
+    chi, a = (z >= 0).double(), z.clamp_min(0)
     actual_cov = (chi * a).mean(0) - chi.mean(0) * a.mean(0)
     torch.testing.assert_close(stats.values()['activation_gate_covariance'], actual_cov, atol=1e-12, rtol=1e-12)
     assert actual_cov.min() >= -1e-12
+    torch.testing.assert_close(result['total'], result['positive_total'] + result['zero_boundary'], atol=1e-12, rtol=1e-12)
+    assert float(result['zero_boundary'].abs().max()) > 0
     # Identical replicas have zero covariance, even with heterogeneous images.
     same = ReplicaMoments()
     for _ in range(R): same.add(zs[0], cs[0])
@@ -126,6 +149,7 @@ def verification():
                 identity_max_abs_error=float(result['identity_error'].abs().max()),
                 self_covariance_min=float(actual_cov.min()),
                 deterministic_replica_covariance_max_abs=float(same.values()['covariance'].abs().max()),
+                exact_zero_derivative_tested=True, boundary_max_abs=float(result['zero_boundary'].abs().max()),
                 image_chunking_equal=True)
 
 

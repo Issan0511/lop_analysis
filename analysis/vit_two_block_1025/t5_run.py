@@ -8,12 +8,14 @@ from pathlib import Path
 import common as T
 from t5_model import LocalFFN, fixed_metric, update
 from t5_ledger import ReplicaMoments, kernel, components
+from t5_compat import training_compatible, preserve_previous_evaluation
 torch, np, F = T.torch, T.np, T.F
 
 
 def source_hashes():
     paths = [Path(__file__).with_name(n) for n in ('t5_run.py', 't5_model.py', 't5_ledger.py', 't5_checks.py')]
-    paths += [T.ROOT / 'specs/spec_vit_two_block_t5_1025.md']
+    paths += [Path(__file__).with_name(n) for n in ('t5_compat.py', 't5_legacy_sources.json')]
+    paths += [T.ROOT / f'specs/{n}' for n in ('spec_vit_two_block_t5_1025.md', 'spec_vit_two_block_t5_boundary_1025.md')]
     return dict(T.own_hashes(), **{str(p.relative_to(T.ROOT)): T.sha256(p) for p in paths})
 
 
@@ -33,9 +35,11 @@ def evaluate(local, optimizer, metric, y, records, points, out, lr, gate):
         ces = torch.zeros(len(records), dtype=torch.float64, device=y.device)
         correct = torch.zeros_like(ces)
         ledger = {name: torch.zeros(w, dtype=torch.float64, device=y.device)
-                  for name in ('total', 'mean_field', 'gate_covariance', 'identity_error')}
+                  for name in ('total', 'mean_field', 'gate_covariance', 'identity_error',
+                               'positive_total', 'positive_mean_field', 'positive_gate_covariance', 'zero_boundary')}
         direct, gatevar, selfcov = torch.zeros_like(dw[:, 0]), torch.zeros_like(dw[:, 0]), torch.zeros_like(dw[:, 0])
         halves = [torch.zeros_like(direct), torch.zeros_like(direct)]
+        zero_fraction = torch.zeros_like(direct)
         for lo in range(0, n, 32):
             idx = torch.arange(lo, min(n, lo + 32), device=y.device)
             stats = ReplicaMoments()
@@ -63,6 +67,7 @@ def evaluate(local, optimizer, metric, y, records, points, out, lr, gate):
             values = stats.values()
             gatevar.add_(values['gate_variance'].sum((0, 1)) / (n * local.u.shape[1]))
             selfcov.add_(values['activation_gate_covariance'].sum((0, 1)) / (n * local.u.shape[1]))
+            zero_fraction.add_(values['zero_fraction'].sum((0, 1)) / (n * local.u.shape[1]))
             for j, group in enumerate(groups):
                 halves[j].add_(components(group, k, lr, n)['gate_covariance'])
         mu /= n
@@ -79,7 +84,7 @@ def evaluate(local, optimizer, metric, y, records, points, out, lr, gate):
                      identity_max_abs_error=float(ledger['identity_error'].abs().max()))
         checks.append(check)
         quantities = dict(mu=mu, sd=sd, r=rvalues, valid=valid, opened=opened / n, ce=ces / n,
-                          accuracy=correct / n, direct=direct, gate_variance=gatevar,
+                          accuracy=correct / n, direct=direct, gate_variance=gatevar, zero_fraction=zero_fraction,
                           activation_gate_covariance=selfcov, covariance_half0=halves[0],
                           covariance_half1=halves[1], **ledger)
         arrays.update({f's{step}_{name}': value.detach().cpu().numpy() for name, value in quantities.items()})
@@ -89,6 +94,8 @@ def evaluate(local, optimizer, metric, y, records, points, out, lr, gate):
                    full_r=float(rvalues[0][valid[0]].mean()), replica_r=float(rvalues[1:][valid[1:]].mean()),
                    expected_fixed_mu=float(ledger['total'].mean()), mean_field=float(ledger['mean_field'].mean()),
                    gate_covariance=float(ledger['gate_covariance'].mean()),
+                   positive_gate_covariance=float(ledger['positive_gate_covariance'].mean()),
+                   zero_boundary=float(ledger['zero_boundary'].mean()),
                    covariance_half0=float(halves[0].mean()), covariance_half1=float(halves[1].mean()),
                    crossing_fraction=float((gatevar > 0).double().mean()), **check)
         rows.append(row)
@@ -125,6 +132,7 @@ def run(args):
     cfg = dict(seed=seed, task=task, start=start, layer=args.layer, mode=args.mode, replicas=replicas,
                steps=steps, batch=batch, points=list(points), lr=1e-4, gate=args.gate,
                checkpoint=str(checkpoint), checkpoint_sha256=T.sha256(checkpoint), source_hashes=hashes)
+    preserve_previous_evaluation(out, cfg, head)
     if (out / 'provenance.json').exists():
         assert json.loads((out / 'provenance.json').read_text())['config'] == cfg
     else:
@@ -148,7 +156,7 @@ def run(args):
         path = out / ('full.pt' if replica == -1 else f'replica_{replica:03d}.pt')
         if path.exists():
             record = torch.load(path, map_location='cpu', weights_only=False)
-            assert record['config'] == cfg and record['replica'] == replica
+            assert training_compatible(record['config'], cfg) and record['replica'] == replica
             assert T.digest_tree(record['states'][0]) == T.digest_tree(initial)
             assert sorted(record['states']) == list(points)
         else:

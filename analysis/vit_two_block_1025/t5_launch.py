@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 import common as T
 from t5_run import source_hashes
+from t5_compat import legacy_sources
 
 
 def completed(path):
@@ -14,6 +15,8 @@ def completed(path):
         return False
     result = json.loads((path / 'complete.json').read_text())
     assert result['status'] == 'complete'
+    if legacy_sources(result['config']['source_hashes']):
+        return False  # Must be re-evaluated; immutable replica files are reused.
     assert result['config']['source_hashes'] == source_hashes()
     for item in json.loads((path / 'manifest.json').read_text()):
         file = path / item['path']
