@@ -1042,3 +1042,9 @@ touch ~/Projects/obsidian-research-data/vit_long_1024/STOP
 ### D.5 コードの変更と注意
 - `common.task_plan` が production の `fixed_images` を読む。この鍵の無い production（production.json・production_2blk.json・production_2blk_t100.json）では、課題の組み方は変わらない（検査で追補 B の provenance の課題表と照合する）。
 - `common.py` の中身が変わるので、一時停止中の追補 A の走（seed 3 の fresh と seed 4）は、このままでは source の不一致で再開を断られる。再開するなら、commit fa9f2189 の source を一時 worktree で使う。
+
+### D.6 変更（起動の直後、2026-10-25 20:11、Issa「Seed を 10252010」）
+- seed を 0 から 10252010 に替えた。seed 0 の本走は 20:09:59 に起動し、課題 1 の 400 更新目で止めた。途中の出力は `~/Projects/obsidian-research-data/vit_long_1024_2blk_rlfix/_aborted_seed0_1025/` に移し、使わない。
+- 画像は seed 10252010 の課題 101 の 10 クラスの 251〜500 番目で、追補 C（seed 0）の 2,500 枚とは別の画像になる。U = 5,000 の決め方（追補 C の新品の T90 の 4 倍と 11 倍）は、同じ N の別の画像なのでそのまま使う。
+- それ以外（網・U・課題数・腕・止める規則 D.2・予測 D1〜D4）は変えない。検査 T2・T3 は新しい seed で回し直した（T2 は追補 C との一致の代わりに、課題 101 のクラスと 251〜500 番目の画像であることを確かめる）。
+- 4 腕と新品 1 本を white-san で並行に回したときの速さは、4 腕とも 1 更新 約 210 ms（compile と評価込み、最初の 400 更新）だった。1 本だけのとき（約 29 ms）と合計の速さはほぼ同じで、並行にしても速くならない。
