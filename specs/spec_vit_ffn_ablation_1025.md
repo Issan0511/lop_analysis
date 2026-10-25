@@ -26,3 +26,17 @@
 - 元の intask 記録の同じ update の記憶精度が一致し、平均 CE の絶対差が 2e-4 以下であることを確認する。
 - 各介入でモデル parameter の in-place version が変わらないことを確認する。
 - 生の example logits、ラベル、復元した画像のハッシュ、source snapshot は `~/Projects/obsidian-research-data/vit_ffn_ablation_1025/`。コードと集計結果は同名の analysis/ と results/ に保存する。
+
+## 追補: 経路ごとの直接比率（Issa 1025、除去効果を見た後の追加）
+
+Issa の「成績低下ではなく直接的に割合」を受け、勾配経路の計測前にこの追補を commit する。同じ 80 checkpoints と画像を使い、6 個すべての FFN で測る。
+
+各 FFN で `y = r + F(r)`、`g = dL/dy` とし、入力へ戻る勾配を `g_skip = g` と `g_ffn = J_F(r)^T g` に分離する。F は pre-LN と FFN 全体を含む。FFN の出力自体には同じ g が届くので、この比率は「FFN に配られた誤差の割合」ではなく「入力まで戻る経路ごとの勾配の大きさ」である。
+
+- 主指標: 各画像で `||g_ffn|| / (||g_ffn|| + ||g_skip||)`。全 token × feature の Frobenius norm と CLS の norm を別々に計測する。
+- 出力側: `||F(r)|| / (||F(r)|| + ||r||)`。全 token と CLS を別々に計測する。
+- 勾配・出力それぞれで両経路の cosine と、`||a+b||/(||a||+||b||)` を併記し、打ち消しを識別する。合計ゼロは NaN とし、有限例の数を残す。
+- 画像内の比率の中央値を checkpoint の代表値とし、seed 中央値・範囲を出す。合計ノルムを 100% とする記述的比率で、加算後の勾配の分割や学習量の割合とは呼ばない。
+- 補助として、課題全 250 画像の平均 CE の parameter gradient を集計する。各 FFN branch（norm2 + mlp）の squared gradient norm / 全 parameter の squared gradient norm、および parameter 当たり gradient RMS を保存する。これは parameterization に依存する別指標で、経路比率と混同しない。
+- 検算: `g_skip + g_ffn` が autograd で直接得た `dL/dr` と一致すること、再計算した baseline の精度・損失が元ログと一致すること。最終 FFN の patch token の g はゼロであることも確認する。
+- 再学習や optimizer step は行わない。比率だけから絶対勾配が大きい、Adam 更新が大きい、沈降が進むとは結論しない。
