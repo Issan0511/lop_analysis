@@ -21,7 +21,7 @@ def stats(data, step, pop, layer):
 
 
 def run(through):
-    times, changes, fits = [], [], []
+    times, changes, fits, reopening = [], [], [], []
     targets = [10] if through == 10 else [10, 60]
     for seed in T.SEEDS:
         root = T.ARCHIVE / f'runs/seed{seed}'
@@ -45,6 +45,13 @@ def run(through):
                                                  ce=float(recorded['ce']), accuracy=float(recorded['accuracy'])))
                         if task not in targets:
                             continue
+                        closed20 = data[f's20_{pop}_L{layer}_opened'] == 0
+                        opened500 = data[f's500_{pop}_L{layer}_opened'] > 0
+                        count = int(closed20.sum())
+                        revived = int((closed20 & opened500).sum())
+                        reopening.append(dict(seed=seed, task=task, population=pop, layer=layer,
+                            closed_at20=count, reopened_by500=revived,
+                            reopened_fraction=revived / count if count else None))
                         for a, b in ((0, 20), (100, 150), (100, 500)):
                             pa, pb = f's{a}_{pop}_L{layer}_', f's{b}_{pop}_L{layer}_'
                             valid = data[pa + 'valid'] & data[pb + 'valid']
@@ -62,6 +69,7 @@ def run(through):
     df.to_csv(output / f'baseline_times_through{through}.csv', index=False)
     change.to_csv(output / f'baseline_changes_through{through}.csv', index=False)
     pd.DataFrame(fits).to_csv(output / f'baseline_fit_through{through}.csv', index=False)
+    pd.DataFrame(reopening).to_csv(output / f'baseline_reopening_through{through}.csv', index=False)
     metrics = [('mu', 'Mean unit $\\mu$'), ('sd', 'Mean unit $\\sigma$'),
                ('r', 'Mean unit $\\mu/\\sigma$'), ('closed', 'Closed unit fraction')]
     for pop in ('train', 'validation'):
@@ -98,6 +106,13 @@ def run(through):
         lines.append(f'| {task} | {layer} | {start}→{end} | {group.delta_mu.median():.5g} | '
                      f'{group.delta_sd.median():.5g} | {group.delta_r.median():.5g} | {int((group.delta_r < 0).sum())}/5 |')
     lines += ['', '0→20は切替直後、100→500は登録した通常学習の観測窓。起点のCE・精度は数表に残し、100更新を自動的に「適合後」とは呼ばない。', '',
+              '第2blockについて、20更新時に学習250画像で閉じていたunitが、500更新までに同じ画像のいずれかで再び開く本数:', '',
+              '| 課題 | seed | 20更新で閉じた本数 | そのうち500更新までに再開口 |',
+              '|---:|---:|---:|---:|']
+    for r in reopening:
+        if r['layer'] == 2 and r['population'] == 'train':
+            lines.append(f"| {r['task']} | {r['seed']} | {r['closed_at20']} | {r['reopened_by500']} |")
+    lines += ['',
               f'![学習画像](baseline_train_through{through}.png)', '',
               f'![固定検証画像](baseline_validation_through{through}.png)', '']
     (output / f'baseline_summary_through{through}.md').write_text('\n'.join(lines))
