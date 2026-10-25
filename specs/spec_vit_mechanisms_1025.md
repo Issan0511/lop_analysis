@@ -48,3 +48,15 @@
 source/checkpoint SHA、元CE/精度の再現、head norm/直交制約、LS正規方程式、gradient/位置の分解恒等式を検算。float64のhead代数は1e-8、float32逆伝播/JVPは合計スケールに対して2e-3。有限Adam式は実torch.optim.Adamとseed0/task10で照合。前回のbaseline次課題方向を再現。失敗したら結果を解釈せず修正と再実行の記録を残す。
 
 コード/spec/resultsをgit、生配列・ログを `/home/issan/Projects/obsidian-research-data/vit_mechanisms_1025/` へ保存。元データと他の走を変更しない。終了後mainへmerge/pushし、このworktree/branchだけ片付ける。
+
+## 追補D: Issaの「入力データのばらつき」仮説（新結果閲覧前）
+
+Issaの追加発言を受けた検査。A/Bの10状態計算は完了ログだけ確認済みで、数値はまだ未閲覧。元の登録判定は変更しない。
+
+画像ごとに違う入力依存Jacobian J_nと、headから戻る誤差信号e_n=(p_n-q_n)Vcの対応を測る。g_fit=E[J_n^T e_n]、g_mean=E[J_n^T]E[e_n]、g_cov=g_fit-g_mean。同じbody・logits・元の各画像の信号を保ち、backwardの信号だけ全画像平均へ替えることで共分散を除く。4本の画像間permutationも使い、信号の周辺分布を変えず対応を崩す対照にする。乱数は1025425+seed*1000+task*10+番号。これは「入力分散そのもの」の介入ではなく、入力依存の微分経路と誤差の相関への介入である。
+
+SL全5seed、task10/60のupdate100/500、計20状態。SGDは全状態、保存Adam分母と有限Adam stepは末の10状態だけ。押しは全body経路を固定probeのrへ運ぶ。pred_cov=Cov(J,pVc)、target_cov=Cov(J,qVc)も測り、cov=pred_cov-target_covを検算する。大きな二項の差が実勾配になる可能性を残す。
+
+各層・窓でmean/covの平均S、RMS、実fitとの方向一致を記録。記述条件D: fitとcovのunitベクトルの相対L2差<=.2かつBA>=.8のseedが4/5以上なら COVARIANCE_CARRIES_FIT。これは画像依存相関が押しを運ぶという判定で、ばらつきだけが沈降の符号を決める証明ではない。mean信号・4permutation信号を与えた有限1 stepも対にする。通常学習のfitが沈むunitのうち、mean信号へ替えると沈む方向が消える割合を併記する。
+
+さらにCと同じ10起点から、旧ラベルを保った全250画像のfull-batch Adamを50更新する。50minibatch更新と更新回数を揃え、入力を平均画像に潰さずbatch抽選ノイズだけを除く。異なるbatch sizeなので画像提示回数は一致しない。これで沈降が残ればbatch抽選ノイズはその継続区間の必要条件でないが、データ間の違いや過去の学習履歴を否定しない。seedごとの方向と100→500の既存区間を分ける。
