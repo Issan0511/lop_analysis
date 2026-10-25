@@ -1,4 +1,5 @@
 """Summarize only completed T5 cases, preserving replica Monte Carlo uncertainty."""
+import csv
 import json
 from pathlib import Path
 import common as T
@@ -44,7 +45,11 @@ def main():
         rows.extend(summarize(marker.parent))
     out = T.ROOT / 'results/vit_two_block_1025'
     out.mkdir(exist_ok=True)
-    T.write_rows(out / 't5_completed_cases.csv', rows)
+    with (out / 't5_completed_cases.csv').open('w', newline='') as stream:
+        if rows:
+            writer = csv.DictWriter(stream, fieldnames=list(rows[0]), lineterminator='\n')
+            writer.writeheader()
+            writer.writerows(rows)
     case_count = len({r['directory'] for r in rows})
     text = ['# T5複製実験の途中結果', '',
         f'完了した条件のみ: {case_count}/80。各条件32複製とfull-batch。未完了条件を0として集計しない。', '',
