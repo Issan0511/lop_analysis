@@ -98,7 +98,7 @@ def main():
         pivot = group.pivot(index='task', columns='seed', values='delta_r')
         assert pivot.shape == (59, 5) and not pivot.isna().any().any()
         counts = ' / '.join(str(int((pivot[s] < 0).sum())) for s in T.SEEDS)
-        text.append(f'| {pop} | {layer} | {start}→{end} | {counts} | {int((pivot < 0).all(1).sum())} | {int((pivot > 0).all(1).sum())} |')
+        text.append(f'| {pop} | {layer} | {start}→{end} | {counts} | {int((pivot < 0).all(axis=1).sum())} | {int((pivot > 0).all(axis=1).sum())} |')
     text += ['', '## 固定validation上で、長期変位を時間区間へ足し戻す', '',
         '全軌道共通のunit集合を使い、前課題500更新と次課題0更新のμ・σ・r・validがbit一致することを全590境界で検算した。',
         '下表は課題2〜60の合計についての5seed平均。初回の課題1は別途CSVへ残した。三つの窓の和は長期の実変位に一致する。',
@@ -119,7 +119,7 @@ def main():
         for (field, label), color in zip(labels.items(), colors):
             pivot = curves[curves.layer == layer].pivot(index='through_task', columns='seed', values=field)
             ax.plot(pivot.index, pivot, color=color, alpha=.15, linewidth=.7)
-            ax.plot(pivot.index, pivot.mean(1), color=color, linewidth=2, label=label)
+            ax.plot(pivot.index, pivot.mean(axis=1), color=color, linewidth=2, label=label)
         ax.axhline(0, color='#999999', linewidth=.7)
         ax.set(title=f'Block {layer}', xlabel='Task', ylabel=r'Cumulative $\Delta(\mu/\sigma)$')
         ax.grid(alpha=.18)

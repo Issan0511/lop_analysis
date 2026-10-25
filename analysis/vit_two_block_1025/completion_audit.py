@@ -225,6 +225,17 @@ def run():
     for entry in correction['inputs']:
         verify(Path(entry['original_arrays']), entry['original_sha256'])
         verify(Path(entry['corrected_arrays']), entry['corrected_sha256'])
+    windows = read(OUTPUT / 'all_task_inputs.json')
+    assert windows['source_sha256'] == T.sha256(T.ROOT / 'analysis/vit_two_block_1025/all_task_report.py')
+    assert windows['validation_boundaries'] == len(T.SEEDS) * 59 * 2
+    assert windows['all_validation_boundaries_bit_equal']
+    assert windows['endpoint_max_error'] < 1e-11 and windows['telescoping_max_error'] < 1e-10
+    expected_moments = {str(T.ARCHIVE / f'runs/seed{s}/moments/t{t:02d}.npz')
+                        for s in T.SEEDS for t in range(1, 61)}
+    assert {x['path'] for x in windows['inputs']} == expected_moments
+    assert len(windows['inputs']) == len(expected_moments)
+    for entry in windows['inputs']:
+        verify(Path(entry['path']), entry['sha256'])
     # Everything was created in its permanent archive, including old measurements
     # and failed-run diagnostics. Inventory those too, rather than deleting them.
     inventory = []
