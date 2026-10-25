@@ -8,10 +8,11 @@ from pathlib import Path
 import common as T
 from t5_model import LocalFFN, fixed_metric
 from t5_ledger import kernel
+from t5_compat import training_compatible
 torch = T.torch
 
 
-def run(case, steps):
+def run(case, steps, output=None):
     T.init()
     cfg = json.loads((case / 'provenance.json').read_text())['config']
     state = torch.load(cfg['checkpoint'], map_location='cpu', weights_only=False)
@@ -30,11 +31,12 @@ def run(case, steps):
     for replica in range(cfg['replicas']):
         p = case / f'replica_{replica:03d}.pt'
         record = torch.load(p, map_location='cpu', weights_only=False)
-        assert record['config'] == cfg and record['replica'] == replica
+        assert training_compatible(record['config'], cfg) and record['replica'] == replica
         records.append(record)
         sources.append(dict(path=str(p), sha256=T.sha256(p)))
-    out = T.ARCHIVE / 'gate/t5_boundary_audit' / case.name
-    out.mkdir(parents=True, exist_ok=True)
+    out = output or T.ARCHIVE / 'gate/t5_boundary_audit' / case.name
+    assert not out.exists(), f'Preserve the earlier audit; choose a new --output: {out}'
+    out.mkdir(parents=True)
     result, arrays = [], {}
     for step in steps:
         strict = torch.zeros(local.fc1.out_features, device='cuda', dtype=torch.float64)
@@ -81,5 +83,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--case', type=Path, required=True)
     parser.add_argument('--steps', type=int, nargs='+', default=[1])
+    parser.add_argument('--output', type=Path)
     args = parser.parse_args()
-    run(args.case, args.steps)
+    run(args.case, args.steps, args.output)
