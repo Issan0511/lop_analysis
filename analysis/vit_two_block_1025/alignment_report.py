@@ -25,7 +25,7 @@ def pair(a, b, valid):
 
 
 def main():
-    effects, overlaps, channels = [], [], []
+    effects, overlaps, channels, terms = [], [], [], []
     count = 0
     for marker in sorted((T.ARCHIVE / 'alignment').glob('*/complete.json')):
         root = marker.parent
@@ -57,10 +57,25 @@ def main():
                             a = d[f'{arm}_{metric}_{route}_load_r'][layer - 1]
                             b = d[f'old_{metric}_{route}_fit_r'][layer - 1]
                             overlaps.append(dict(**context, dataset=arm, layer=layer, metric=metric, route=route, **pair(a, b, valid)))
+                        for signal in ('switch', 'load') + (('fit',) if arm == 'old' else ()):
+                            mu, sd = d[f'initial_L{layer}_mu'], d[f'initial_L{layer}_sd']
+                            for route in ('full', 'local', 'upstream'):
+                                def field(moment):
+                                    full = d[f'{arm}_{metric}_full_{signal}_{moment}'][layer - 1]
+                                    local = d[f'{arm}_{metric}_local_{signal}_{moment}'][layer - 1]
+                                    return {'full': full, 'local': local, 'upstream': full - local}[route]
+                                dm, ds, dr = field('mu'), field('sd'), field('r')
+                                mean_term = dm / (sd + 1e-12)
+                                width_term = -mu * ds / (sd + 1e-12) ** 2
+                                assert np.max(np.abs(mean_term + width_term - dr)) < 1e-8
+                                terms.append(dict(**context, dataset=arm, layer=layer, metric=metric,
+                                    route=route, signal=signal, raw_mu=float(dm[valid].mean()), raw_sd=float(ds[valid].mean()),
+                                    mean_term=float(mean_term[valid].mean()), width_term=float(width_term[valid].mean()),
+                                    total_r=float(dr[valid].mean())))
         count += 1
     output = T.ROOT / 'results/vit_two_block_1025'
     output.mkdir(exist_ok=True)
-    for name, rows in [('alignment_effects', effects), ('alignment_overlap', overlaps), ('alignment_channels', channels)]:
+    for name, rows in [('alignment_effects', effects), ('alignment_overlap', overlaps), ('alignment_channels', channels), ('alignment_terms', terms)]:
         pd.DataFrame(rows).to_csv(output / f'{name}.csv', index=False)
     text = ['# 2blockの整列介入・途中結果', '', f'完了状態 {count}/20。未完了seedを除いて成功基準を緩めない。', '',
         '最終headの旧ラベル整列を、同じnormの4方向へ置き換えた比較。負のΔrが沈降。',
@@ -73,7 +88,8 @@ def main():
             text.append(f'| {task} | {start} | {arm} | {layer} | {len(g)}/5 | {int(g.registered_positive.sum())}/{len(g)} | '
                         f'{int(g.finite_positive.sum())}/{len(g)} | {g.fixed_difference.median():.6g} |')
     text += ['', '確率を固定した整列成分loadと、確率も再計算するhead介入は別である。',
-             'unit対応はalignment_overlap.csv、平均・幅・位置および全経路/自fc1の内訳はalignment_channels.csv。', '']
+             'unit対応はalignment_overlap.csv、平均・幅・位置および全経路/自fc1の内訳はalignment_channels.csv。',
+             'rへの平均・幅の寄与と上流/自fc1の内訳はalignment_terms.csv。平均・幅のseed中央値を別々に取ると、その和はrのseed中央値と一致するとは限らない。', '']
     (output / 'alignment_partial.md').write_text('\n'.join(text))
     print(json.dumps(dict(completed_states=count, output=str(output / 'alignment_partial.md'))))
 
