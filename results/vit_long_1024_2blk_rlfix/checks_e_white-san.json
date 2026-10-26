@@ -1,0 +1,262 @@
+{
+ "git_hash": "73a879a868aeffcec057c184a01db0137898485a",
+ "E1": {
+  "10252010": {
+   "rms": 5,
+   "layernorm": 0,
+   "gains_one": true,
+   "eps": [
+    1e-05
+   ],
+   "only_ln_keys": [
+    "layers.block_0.layers.norm1.bias",
+    "layers.block_0.layers.norm2.bias",
+    "layers.block_1.layers.norm1.bias",
+    "layers.block_1.layers.norm2.bias",
+    "layers.norm.bias"
+   ],
+   "only_rms_keys": [],
+   "shared_equal": true,
+   "n_params_ln": 6088520,
+   "n_params_rms": 6086600,
+   "forward_finite": true
+  },
+  "10252011": {
+   "rms": 5,
+   "layernorm": 0,
+   "gains_one": true,
+   "eps": [
+    1e-05
+   ],
+   "only_ln_keys": [
+    "layers.block_0.layers.norm1.bias",
+    "layers.block_0.layers.norm2.bias",
+    "layers.block_1.layers.norm1.bias",
+    "layers.block_1.layers.norm2.bias",
+    "layers.norm.bias"
+   ],
+   "only_rms_keys": [],
+   "shared_equal": true,
+   "n_params_ln": 6088520,
+   "n_params_rms": 6086600,
+   "forward_finite": true
+  },
+  "pass": true
+ },
+ "E2": {
+  "SRMS": {
+   "head_zeroed": [
+    1,
+    0
+   ],
+   "loss_rows": [
+    [
+     13,
+     7,
+     61,
+     12,
+     137,
+     91,
+     19,
+     0,
+     198,
+     30
+    ],
+    [
+     13,
+     7,
+     61,
+     12,
+     137,
+     91,
+     19,
+     0,
+     198,
+     30
+    ]
+   ],
+   "mem_loss_start": [
+    2.302585125732422,
+    2.3113082214355467
+   ],
+   "ms_per_update": [
+    47.63,
+    30.5
+   ]
+  },
+  "R0RMS": {
+   "head_zeroed": [
+    1,
+    1
+   ],
+   "loss_rows": [
+    [
+     13,
+     7,
+     61,
+     12,
+     137,
+     91,
+     19,
+     0,
+     198,
+     30
+    ],
+    [
+     13,
+     7,
+     61,
+     12,
+     137,
+     91,
+     19,
+     0,
+     198,
+     30
+    ]
+   ],
+   "mem_loss_start": [
+    2.302585125732422,
+    2.302585125732422
+   ],
+   "ms_per_update": [
+    45.17,
+    30.67
+   ]
+  },
+  "fixed_classes": [
+   13,
+   7,
+   61,
+   12,
+   137,
+   91,
+   19,
+   0,
+   198,
+   30
+  ],
+  "pass": true
+ },
+ "E3": {
+  "S": {
+   "per_task_equal": true,
+   "intask_equal": true
+  },
+  "R0": {
+   "per_task_equal": true,
+   "intask_equal": true
+  },
+  "SL_old_vs_new": {
+   "per_task_equal": true,
+   "intask_equal": true
+  },
+  "pass": true
+ },
+ "E4": {
+  "10252010": {
+   "same_plan": true,
+   "classes": [
+    13,
+    7,
+    61,
+    12,
+    137,
+    91,
+    19,
+    0,
+    198,
+    30
+   ],
+   "classes_task101": true,
+   "paths_251_500": true,
+   "labels_stream": true,
+   "labels_differ": 0.1004
+  },
+  "10252011": {
+   "same_plan": true,
+   "classes": [
+    89,
+    125,
+    8,
+    124,
+    62,
+    175,
+    29,
+    139,
+    140,
+    33
+   ],
+   "classes_task101": true,
+   "paths_251_500": true,
+   "labels_stream": true,
+   "labels_differ": 0.1132
+  },
+  "10252012": {
+   "same_plan": true,
+   "classes": [
+    42,
+    31,
+    16,
+    184,
+    145,
+    13,
+    65,
+    34,
+    37,
+    171
+   ],
+   "classes_task101": true,
+   "paths_251_500": true,
+   "labels_stream": true,
+   "labels_differ": 0.08
+  },
+  "10252013": {
+   "same_plan": true,
+   "classes": [
+    171,
+    48,
+    102,
+    54,
+    158,
+    111,
+    14,
+    109,
+    71,
+    175
+   ],
+   "classes_task101": true,
+   "paths_251_500": true,
+   "labels_stream": true,
+   "labels_differ": 0.0964
+  },
+  "10252014": {
+   "same_plan": true,
+   "classes": [
+    24,
+    60,
+    18,
+    34,
+    128,
+    149,
+    188,
+    6,
+    17,
+    121
+   ],
+   "classes_task101": true,
+   "paths_251_500": true,
+   "labels_stream": true,
+   "labels_differ": 0.1084
+  },
+  "pass": true
+ },
+ "E5": {
+  "clean_before": true,
+  "specs_and_posthoc_ignored": true,
+  "top_level_py_flagged": true,
+  "pass": true
+ },
+ "host": "white-san",
+ "pass_": true
+}
