@@ -123,3 +123,18 @@ spec は specs/spec_vit_long_1024.md の追補 D と追補 E です。判定・�
 - 節目ごとに日本語で短く報告し、最後にギガファイル便の URL と sha256 を報告してください。
 - コードは書き換えず、commit・push もしないでください。
 ```
+
+## 9. AI なしで回す（先生が手で流す場合、2026-10-26 追加）
+
+Claude Code が使えないときは、`analysis/vit_long_1024/remote/byakko.sh` が §1〜§5 を 4 つの命令に畳んである。貼るのは次の順。`<clone>` は .venv のある lop_analysis の clone、`<出力>` と `<データ>` は空きのあるフォルダ（出力 8 GB、データ 1 GB）。
+
+```bash
+cd <clone> && git fetch origin && git worktree add ../lop_vit_rlfix_e origin/claude/vit_long_1024 --detach && cd ../lop_vit_rlfix_e
+bash analysis/vit_long_1024/remote/byakko.sh setup  <clone> <出力> <データ>     # 最後に SETUP_OK と出たら次へ。SETUP_FAILED なら出た文を Issa に送る
+bash analysis/vit_long_1024/remote/byakko.sh start  <clone> <出力> <データ>     # 本走を背景で起動。端末を閉じてよい
+bash analysis/vit_long_1024/remote/byakko.sh status <clone> <出力> <データ>     # 進み具合（1 日 1 回でよい）。「止める規則に当たった」と出たら stop を流して Issa に知らせる
+bash analysis/vit_long_1024/remote/byakko.sh send   <clone> <出力> <データ>     # status に ALL_DONE と出たら。URL と sha256 を Issa に送る
+```
+
+- 機械を再起動したら `start` をもう一度流す（終わった走は飛ばし、途中の走は課題の境から続く）。
+- 止めたいときは `stop`。
