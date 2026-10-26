@@ -72,6 +72,15 @@ def main(args):
                 R = torch.randn(W.shape, generator=g).to(W.device)
                 R = R / R.norm(dim=1, keepdim=True) * W.norm(dim=1, keepdim=True)
                 head.weight[rows_t] = R
+        elif mode == 'headperm':                  # 損失の 10 行（と bias）の割り当てを入れ替える（確信は保ち、どの行がどのクラスかだけ変える）
+            with torch.no_grad():
+                g = torch.Generator(device='cpu').manual_seed(2027)
+                perm = torch.randperm(len(rows_t), generator=g).to(rows_t.device)
+                while bool((perm == torch.arange(len(rows_t), device=rows_t.device)).any()):
+                    perm = torch.randperm(len(rows_t), generator=g).to(rows_t.device)
+                head.weight[rows_t] = head.weight[rows_t][perm]
+                head.bias[rows_t] = head.bias[rows_t][perm]
+                note['perm'] = perm.tolist()
         elif mode.startswith('fc1x'):
             c = float(mode[4:])
             for i in range(2):
