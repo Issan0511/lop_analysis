@@ -13,13 +13,18 @@ import matplotlib.pyplot as plt
 plt.rcParams.update({'font.family': 'Noto Sans CJK JP', 'font.size': 10, 'axes.edgecolor': '#c9c8c3',
                      'axes.labelcolor': '#52514e', 'xtick.color': '#52514e', 'ytick.color': '#52514e',
                      'figure.facecolor': '#fcfcfb', 'axes.facecolor': '#fcfcfb'})
-ARMS = [('R0L', 'R0L（LN あり・戻す）', '#2a78d6'), ('SL', 'SL（LN あり・共有）', '#eb6834'),
-        ('R0', 'R0（LN なし・戻す）', '#1baf7a'), ('S', 'S（LN なし・共有）', '#eda100')]
+GROUPS = {'': [('R0L', 'R0L（LN あり・戻す）', '#2a78d6'), ('SL', 'SL（LN あり・共有）', '#eb6834')],
+          '_noLN': [('R0', 'R0（LN なし・戻す）', '#1baf7a'), ('S', 'S（LN なし・共有）', '#eda100')]}   # 尺度が桁違いなので図を分ける
 TS = (10, 30, 60, 100)
 METRICS = [('r_med', '相対位置 r'), ('mu_med', '前活性の平均'), ('sigma_med', '前活性の幅')]
 
 
 def main(src, out):
+    for suffix, ARMS in GROUPS.items():
+        figure(src, out, suffix, ARMS)
+
+
+def figure(src, out, suffix, ARMS):
     data = {(a, t): json.loads((src / f'{a}_T{t}.json').read_text()) for a, _, _ in ARMS for t in TS
             if (src / f'{a}_T{t}.json').exists()}
     for layer in (1, 2):
@@ -49,15 +54,15 @@ def main(src, out):
                 if i == len(METRICS) - 1:
                     ax.set_xlabel('課題の中の更新（対数、0 を含む）')
         h, l = axes[0][0].get_legend_handles_labels()
-        fig.legend(h, l, loc='upper center', ncol=4, frameon=False, fontsize=9, bbox_to_anchor=(0.5, 0.995))
+        fig.legend(h, l, loc='upper center', ncol=2, frameon=False, fontsize=9, bbox_to_anchor=(0.5, 0.995))
         fig.suptitle(f'{layer} 層目：切替の後の 5,000 更新で、前活性がどう動くか（保存状態から回し直し、固定 probe・unit の中央値）',
                      y=1.03, fontsize=11)
-        fig.text(0.01, -0.01, '点線は 100 更新目。SL は head を残すので切替の直後に大きな誤差が体へ流れる。R0L は head を 0 に戻す。'
+        fig.text(0.01, -0.01, '点線は 100 更新目。共有の腕（SL・S）は head を残すので切替の直後に大きな誤差が体へ流れる。戻す腕（R0L・R0）は head を 0 に戻す。'
                  '元の走は借りた機械で、回し直しは white-san（課題の始めの暗記損失は元の記録と一致）。', fontsize=8, color='#52514e')
         fig.tight_layout(rect=(0, 0, 1, 0.97))
-        fig.savefig(out / f'switch_replay_L{layer}.png', dpi=140, bbox_inches='tight')
+        fig.savefig(out / f'switch_replay_L{layer}{suffix}.png', dpi=140, bbox_inches='tight')
         plt.close(fig)
-        print(out / f'switch_replay_L{layer}.png')
+        print(out / f'switch_replay_L{layer}{suffix}.png')
 
 
 if __name__ == '__main__':
