@@ -11,12 +11,16 @@ E4  The fixed image set of each new seed: task 101's ten classes, images 251-500
 E5  git_state: new files under specs/ or analysis/vit_long_1024/posthoc_2blk/ do not make a run dirty,
     a new top-level .py under analysis/vit_long_1024/ does.
 
-    python -m analysis.vit_long_1024.checks_rlfix_e
+    python -m analysis.vit_long_1024.checks_rlfix_e              # white-san（E1〜E5）
+    python -m analysis.vit_long_1024.checks_rlfix_e --skip-e3     # 他の機械（E3 は white-san の記録と比べるので飛ばす）
+
+The record is results/vit_long_1024_2blk_rlfix/checks_e_<hostname>.json.
 """
 import csv
 import json
 import math
 import os
+import socket
 import subprocess
 import sys
 from pathlib import Path
@@ -25,7 +29,7 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parents[2]
 PY = sys.executable
-RAW = Path.home() / 'Projects/obsidian-research-data/vit_long_1024_2blk_rlfix'
+RAW = Path(os.environ.get('VIT_LONG_RAW', str(Path.home() / 'Projects/obsidian-research-data/vit_long_1024_2blk_rlfix')))
 OUT = REPO / 'results/vit_long_1024_2blk_rlfix'
 OLD_COMMIT = 'de93b02a'
 TIMING = {'train_seconds', 'record_seconds', 'other_seconds', 'seconds'}
@@ -149,21 +153,24 @@ if __name__ == '__main__':
                   and abs(rows['R0RMS']['mem_loss_start'][1] - math.log(10)) < 1e-5
                   and rows['SRMS']['mem_loss_start'][1] > rows['R0RMS']['mem_loss_start'][1])
     report['E2'] = e2
+    skip_e3 = '--skip-e3' in sys.argv
     e3 = {}
-    for arm in ('S', 'R0'):
+    for arm in (() if skip_e3 else ('S', 'R0')):
         new = smoke(arm, 10252010, 'production_2blk_rlfix.json', C_DIR / f'smoke_{arm}_newcode')
         e3[arm] = same_records(new, RAW / '_checks' / f'smoke_{arm}')
-    old_tree = Path('/tmp/claude-1000/-home-issan-Projects-claude/17bddd02-1e83-428c-94a6-1c785e8e100a/scratchpad/old_de93b02a')
-    if old_tree.exists():
-        subprocess.run(['git', 'worktree', 'remove', '--force', str(old_tree)], cwd=REPO, check=False)
-    subprocess.run(['git', 'worktree', 'add', '--detach', str(old_tree), OLD_COMMIT], cwd=REPO, check=True, capture_output=True)
-    try:
-        old = smoke('SL', 10252010, 'production_2blk_rlfix.json', C_DIR / 'smoke_SL_oldcode', repo=old_tree)
-        new = smoke('SL', 10252010, 'production_2blk_rlfix.json', C_DIR / 'smoke_SL_newcode')
-        e3['SL_old_vs_new'] = same_records(new, old)
-    finally:
-        subprocess.run(['git', 'worktree', 'remove', '--force', str(old_tree)], cwd=REPO, check=False)
-    e3['pass'] = all(v['per_task_equal'] and v['intask_equal'] for v in e3.values())
+    old_tree = Path('/tmp') / f'vit_long_1024_old_{OLD_COMMIT}'
+    if not skip_e3:
+        if old_tree.exists():
+            subprocess.run(['git', 'worktree', 'remove', '--force', str(old_tree)], cwd=REPO, check=False)
+        subprocess.run(['git', 'worktree', 'add', '--detach', str(old_tree), OLD_COMMIT], cwd=REPO, check=True,
+                       capture_output=True)
+        try:
+            old = smoke('SL', 10252010, 'production_2blk_rlfix.json', C_DIR / 'smoke_SL_oldcode', repo=old_tree)
+            new = smoke('SL', 10252010, 'production_2blk_rlfix.json', C_DIR / 'smoke_SL_newcode')
+            e3['SL_old_vs_new'] = same_records(new, old)
+        finally:
+            subprocess.run(['git', 'worktree', 'remove', '--force', str(old_tree)], cwd=REPO, check=False)
+    e3['pass'] = 'skipped' if skip_e3 else all(v['per_task_equal'] and v['intask_equal'] for v in e3.values())
     report['E3'] = e3
     e4 = child('production_2blk_rlfix_e.json', E4)
     e4['pass'] = all(v['same_plan'] and v['classes_task101'] and v['paths_251_500'] and v['labels_stream']
@@ -173,7 +180,8 @@ if __name__ == '__main__':
     e5r = e5()
     e5r['pass'] = all(e5r.values())
     report['E5'] = e5r
-    report['pass_'] = all(report[k]['pass'] for k in ('E1', 'E2', 'E3', 'E4', 'E5'))
-    (OUT / 'checks_e.json').write_text(json.dumps(report, ensure_ascii=False, indent=1))
+    report['host'] = socket.gethostname()
+    report['pass_'] = all(report[k]['pass'] in (True, 'skipped') for k in ('E1', 'E2', 'E3', 'E4', 'E5'))
+    (OUT / f'checks_e_{socket.gethostname()}.json').write_text(json.dumps(report, ensure_ascii=False, indent=1))
     print(json.dumps({k: (v['pass'] if isinstance(v, dict) and 'pass' in v else v) for k, v in report.items()}, ensure_ascii=False))
     sys.exit(0 if report['pass_'] else 1)
