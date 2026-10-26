@@ -17,7 +17,7 @@ plt.rcParams.update({'font.family': 'Noto Sans CJK JP', 'font.size': 10, 'axes.e
 ARMS = [('R0L', 'R0L（LN あり・戻す）', '#2a78d6'), ('SL', 'SL（LN あり・共有）', '#eb6834')]
 TS = (10, 60, 100)
 W = 100
-ROWS = [('loss', 'batch の損失（対数）', True), ('coh', '勾配の向きの揃い coh\n= rms(m̂/√v̂)', False),
+ROWS = [('loss', 'batch の損失（対数）', True), ('coh', '勾配の向きの揃い coh\n= Adam の比 m/√v の rms', False),
         ('step', '歩幅 ‖Δw‖² ÷ lr²d', True), ('rad_g', '勾配の w 方向の成分 rad_g\n（正 = 縮める向き）', False),
         ('rad_d', '1 歩の相対ノルム変化 rad_d\n（正 = 伸びる）', False)]
 
@@ -59,7 +59,7 @@ def main(src, out):
         h, l = axes[0][0].get_legend_handles_labels()
         fig.legend(h, l, loc='upper center', ncol=2, frameon=False, fontsize=9, bbox_to_anchor=(0.5, 0.995))
         fig.suptitle(f'{layer + 1} 層目の fc1：課題の胴の回し直し（保存状態＋Adam から 5,000 更新）', y=1.02, fontsize=11)
-        fig.text(0.01, -0.01, 'coh は Adam の比 m̂/√v̂ の rms（勾配の向きが揃うと 1 に近づく）。歩幅は unit ごとの ‖Δw‖² ÷ lr²d の平均。'
+        fig.text(0.01, -0.01, 'coh は Adam の比 m/√v（bias 補正つき）の rms。勾配の向きが揃うと 1 に近づく。歩幅は unit ごとの ‖Δw‖² ÷ lr²d の平均。'
                  'rad_g = Σ g·ŵ ÷ Σ‖g‖、rad_d = mean Δw·w ÷ ‖w‖²。white-san で回し直し（元の走は借りた機械）。',
                  fontsize=8, color='#52514e')
         fig.tight_layout(rect=(0, 0, 1, 0.97))
