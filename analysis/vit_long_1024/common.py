@@ -50,12 +50,19 @@ CONFIG_LN = cell_config(4.0, 'layer')    # the randlabel cell: 13 affine LayerNo
 ACT = 'R'                                # ReLU in the six FFNs
 TASKS, STEPS, SEEDS = 60, 500, (0, 1, 2, 3, 4)
 # 2 x 2 (Issa 1024): head reset (R0) or shared (S), without LN or with LN (suffix L).
-ARMS = ('R0', 'S', 'R0L', 'SL')
-FRESH_ARMS = ('fresh', 'freshL')         # one fresh net per seed and LN condition, R0's protocol
-SHARED_ARMS = ('S', 'SL')
+# Addendum E (Issa 1026): the same two arms with RMSNorm in place of every LayerNorm (suffix RMS).
+ARMS = ('R0', 'S', 'R0L', 'SL', 'R0RMS', 'SRMS')
+FRESH_ARMS = ('fresh', 'freshL', 'freshRMS')   # one fresh net per seed and norm, R0's protocol
+SHARED_ARMS = ('S', 'SL', 'SRMS')
 LN_ARMS = ('R0L', 'SL', 'freshL')
-PAIRS = (('R0', 'S'), ('R0L', 'SL'))
-FRESH_FOR = {'R0': 'fresh', 'S': 'fresh', 'R0L': 'freshL', 'SL': 'freshL'}
+RMS_ARMS = ('R0RMS', 'SRMS', 'freshRMS')
+PAIRS = (('R0', 'S'), ('R0L', 'SL'), ('R0RMS', 'SRMS'))
+FRESH_FOR = {'R0': 'fresh', 'S': 'fresh', 'R0L': 'freshL', 'SL': 'freshL', 'R0RMS': 'freshRMS', 'SRMS': 'freshRMS'}
+
+
+def norm_of(arm):
+    """'layer' (LayerNorm), 'rms' (RMSNorm, addendum E) or 'none' (Identity)."""
+    return 'layer' if arm in LN_ARMS else 'rms' if arm in RMS_ARMS else 'none'
 FRESH_TASKS = (25, 50, 60)
 BATCH, LR = 128, 1e-4
 EVAL_EVERY = 25
@@ -274,7 +281,28 @@ def model_config(dropout=DROPOUT, ln=False, depth=DEPTH, mlp_ratio=MLP_RATIO):
 
 
 def build_model(seed, device, dropout=DROPOUT, ln=False, depth=DEPTH, mlp_ratio=MLP_RATIO):
+    """ln: False (no norm), True (LayerNorm) or 'rms' (addendum E: the LayerNorm model, then every
+    LayerNorm replaced by an RMSNorm with eps 1e-5 and gain 1; building the norms draws no random
+    numbers, so all other initial weights equal the LayerNorm arm's)."""
+    if ln == 'rms':
+        model = make_model(ACT, seed, device, model_config(dropout, True, depth, mlp_ratio))
+        return to_rmsnorm(model)
     return make_model(ACT, seed, device, model_config(dropout, ln, depth, mlp_ratio))
+
+
+def to_rmsnorm(model):
+    for parent in model.modules():
+        if isinstance(parent, torch.nn.ModuleDict):
+            for name, child in list(parent.items()):
+                if isinstance(child, torch.nn.LayerNorm):
+                    rms = torch.nn.RMSNorm(child.normalized_shape, eps=1e-5, elementwise_affine=True)
+                    parent[name] = rms.to(child.weight.device)
+    return model
+
+
+def build_arm_model(arm, seed, device, dropout=DROPOUT, depth=DEPTH, mlp_ratio=MLP_RATIO):
+    norm = norm_of(arm)
+    return build_model(seed, device, dropout, 'rms' if norm == 'rms' else norm == 'layer', depth, mlp_ratio)
 
 
 def n_params_expected(depth, mlp_ratio, ln, embed=384, patch=8, tokens=65, classes=200):
@@ -407,7 +435,12 @@ def git_state():
     SOURCE_HASHES.json written by remote/pack_for_remote.sh, and is clean iff the hashes match."""
     if (REPO / '.git').exists():
         head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip()
-        dirty = subprocess.check_output(['git', 'status', '--porcelain', '--', 'src', 'analysis', 'specs'],
+        # Only the code a run executes (source_files, plus any new top-level .py that would join it).
+        # Specs and post-hoc scripts may change while a long queue runs (1026; addendum C lost five
+        # runs to an unrelated new file under analysis/).
+        files = [str(q.relative_to(REPO)) for q in source_files()]
+        dirty = subprocess.check_output(['git', 'status', '--porcelain', '--', ':(glob)analysis/vit_long_1024/*.py',
+                                         ':(glob)analysis/joudaki_vit_battle_0919/**/*.py', *files],
                                         cwd=REPO, text=True)
         return head, dirty
     head = (REPO / 'SOURCE_COMMIT').read_text().strip()

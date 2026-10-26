@@ -1,0 +1,73 @@
+{
+  "note": "Addendum E of vit_long_1024 (spec 追補 E, Issa 1026: 「RMSノルムも使って回しましょう」「5 seed」): addendum D's box (2 blocks, FFN 3072, one fixed set of 2,500 images per seed, labels redrawn every task, U = 5,000, 100 tasks) with the RMSNorm arms R0RMS/SRMS added and five seeds. Runs are split between white-san and byakko by the job lists jobs_rlfix_e_*.txt. Select with VIT_LONG_PRODUCTION=production_2blk_rlfix_e.json.",
+  "tag": "2blk_rlfix_e",
+  "results_dir": "results/vit_long_1024_2blk_rlfix",
+  "raw_dir": "~/Projects/obsidian-research-data/vit_long_1024_2blk_rlfix",
+  "arms": [
+    "R0",
+    "S",
+    "R0L",
+    "SL",
+    "R0RMS",
+    "SRMS"
+  ],
+  "fresh_arms": [
+    "fresh",
+    "freshL",
+    "freshRMS"
+  ],
+  "n_labels": 10,
+  "images_per_class": 250,
+  "tasks": 100,
+  "steps": 5000,
+  "augment": "off",
+  "dropout": 0.0,
+  "depth": 2,
+  "mlp_ratio": 8.0,
+  "seeds": [
+    10252010,
+    10252011,
+    10252012,
+    10252013,
+    10252014
+  ],
+  "fresh_tasks": [
+    25,
+    50,
+    75,
+    100
+  ],
+  "end_tasks": [
+    1,
+    2,
+    5,
+    10,
+    20,
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "adam_tasks": [
+    1,
+    10,
+    30,
+    60,
+    100
+  ],
+  "mid_tasks": [
+    10,
+    30,
+    60,
+    100
+  ],
+  "mid_fresh": false,
+  "fixed_images": {
+    "classes_of_task": 101,
+    "first": 250
+  }
+}
