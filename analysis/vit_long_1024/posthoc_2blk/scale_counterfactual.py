@@ -12,6 +12,7 @@
         python analysis/vit_long_1024/posthoc_2blk/scale_counterfactual.py SL 100 fc1x0.66 <出力.json> [--max-steps 3000]
 """
 import argparse
+import re
 import json
 import os
 import time
@@ -81,6 +82,22 @@ def main(args):
                 head.weight[rows_t] = head.weight[rows_t][perm]
                 head.bias[rows_t] = head.bias[rows_t][perm]
                 note['perm'] = perm.tolist()
+        elif mode in ('ffn1init', 'ffn2init', 'attn1init', 'attn2init'):   # その部分だけ初期値（model_t00.pt）に戻し、Adam の記憶も消す
+            init = torch.load(d / 'ckpt/model_t00.pt', map_location=device, weights_only=False)
+            i = int(re.search(r'\d', mode).group()) - 1
+            part = 'mlp' if mode.startswith('ffn') else 'attn'
+            prefix = f'layers.block_{i}.layers.{part}.'
+            with torch.no_grad():
+                sd = model.state_dict()
+                for k in sd:
+                    if k.startswith(prefix) and k in init and torch.is_tensor(sd[k]):
+                        sd[k].copy_(init[k])
+            for name, prm in model.named_parameters():
+                if name.startswith(prefix):
+                    optimizer.state.pop(prm, None)
+            note.setdefault('reset', []).append(mode)
+        elif mode == 'adam0':                     # 体と head の Adam の記憶を全部消す（重みはそのまま）
+            optimizer.state.clear()
         elif mode.startswith('fc1x'):
             c = float(mode[4:])
             for i in range(2):
@@ -103,6 +120,22 @@ def main(args):
     note['max_logit_change'] = float((logits_after - logits_before).abs().max())
     note['fc1_row_norm_med'] = [float(model.layers[f'block_{i}'].layers['mlp'].layers['fc1'].weight.norm(dim=1).median()) for i in range(2)]
     note['head_norm'] = float(head.weight[rows_t].norm())
+    @torch.no_grad()
+    def eff_dim():
+        was = model.training; model.eval()
+        L = model.layers; hs = []
+        for s_ in range(0, 2500, 250):
+            hh = L['patch_embed'](x_eval[s_:s_ + 250])
+            hh = torch.cat((model.cls_token.expand(hh.shape[0], -1, -1), hh), 1) + model.pos_embed
+            for i in range(model.depth):
+                b = L[f'block_{i}'].layers
+                hh = hh + b['attn'](b['norm1'](hh)); hh = hh + b['mlp'](b['norm2'](hh))
+            hs.append(L['norm'](hh)[:, 0].double())
+        H = torch.cat(hs); H = H - H.mean(0)
+        e = torch.linalg.svdvals(H) ** 2
+        model.train(was)
+        return float(e.sum() ** 2 / (e ** 2).sum()), float(e[:10].sum() / e.sum())
+    dims = [(0, *eff_dim())] if args.track_dim else []
     forward = train_forward(model, 'compile')
     model.train()
     points = args.max_steps // C.EVAL_EVERY + 1
@@ -121,6 +154,8 @@ def main(args):
         optimizer.step()
         update_adaptive(model)
         losses.append(float(loss))
+        if args.track_dim and step % 50 == 0:
+            dims.append((step, *eff_dim()))
         if step % C.EVAL_EVERY == 0:
             last = step // C.EVAL_EVERY
             rec.take(last)
@@ -135,8 +170,10 @@ def main(args):
                T90=first_reach(r['correct'][:last + 1], n, 90),
                mem_acc=(r['correct'][:last + 1] / n).tolist(), mem_loss=(r['loss'][:last + 1] / n).tolist(),
                loss_100=[sum(losses[i:i + 100]) / len(losses[i:i + 100]) for i in range(0, len(losses), 100)],
-               seconds=round(time.monotonic() - t0, 1))
+               seconds=round(time.monotonic() - t0, 1), eff_dim=dims)
     Path(args.out).write_text(json.dumps(out, indent=1))
+    if dims:
+        print('  有効次元 (更新, 参加比, 上位10の割合):', ' '.join(f'{u}:{d:.1f}/{t:.2f}' for u, d, t in dims[::2]))
     print(f"{args.arm} T{args.t_end}→{task} {args.mode}: T50 {out['T50']} T75 {out['T75']} T90 {out['T90']} ({status}, {out['steps_run']} 更新, {out['seconds']} s)"
           f" | 始めの暗記損失 {out['mem_loss'][0]:.2f} | 関数の変化 {note['max_logit_change']:.1e} | fc1 行ノルム中央値 {note['fc1_row_norm_med']} | head ノルム {note['head_norm']:.2f}")
 
@@ -146,4 +183,5 @@ if __name__ == '__main__':
     p.add_argument('arm'); p.add_argument('t_end', type=int); p.add_argument('mode'); p.add_argument('out')
     p.add_argument('--max-steps', type=int, default=3000)
     p.add_argument('--full', action='store_true', help='0.9 に届いても止めない')
+    p.add_argument('--track-dim', action='store_true', help='50 更新ごとに head が読む特徴の有効次元を記録')
     main(p.parse_args())
