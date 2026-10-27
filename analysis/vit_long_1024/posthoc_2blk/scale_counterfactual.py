@@ -89,10 +89,13 @@ def main(args):
     model = C.build_arm_model(args.arm, SEED, device, 0.0, 2, 8.0)
     model.load_state_dict(torch.load(d / f'ckpt/model_t{args.t_end:02d}.pt', map_location=device, weights_only=False))
     optimizer = C.build_optimizer(model)
-    adam = torch.load(d / f'ckpt/adam_t{args.t_end:02d}.pt', map_location=device, weights_only=False)
-    assert adam['task'] == args.t_end
-    optimizer.load_state_dict(adam['optimizer'])
-    set_rng(adam['rng'])
+    if args.fresh_adam:                           # Adam の保存が無い課題末（t20・40・50・70・80・90）: 記憶を空にして回す（adam0 と同じ扱い）
+        torch.manual_seed(SEED + args.t_end)
+    else:
+        adam = torch.load(d / f'ckpt/adam_t{args.t_end:02d}.pt', map_location=device, weights_only=False)
+        assert adam['task'] == args.t_end
+        optimizer.load_state_dict(adam['optimizer'])
+        set_rng(adam['rng'])
     source = C.image_source('real')
     task = args.t_end + 1
     data, _ = C.task_dataset(source, SEED, task, 10, 250, augment=False)
@@ -252,4 +255,5 @@ if __name__ == '__main__':
     p.add_argument('--max-steps', type=int, default=3000)
     p.add_argument('--full', action='store_true', help='0.9 に届いても止めない')
     p.add_argument('--track-dim', action='store_true', help='50 更新ごとに head が読む特徴の有効次元を記録')
+    p.add_argument('--fresh-adam', action='store_true', help='Adam の保存が無い課題末: 記憶を空にして回す')
     main(p.parse_args())
