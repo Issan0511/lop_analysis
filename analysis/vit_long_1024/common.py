@@ -51,18 +51,30 @@ ACT = 'R'                                # ReLU in the six FFNs
 TASKS, STEPS, SEEDS = 60, 500, (0, 1, 2, 3, 4)
 # 2 x 2 (Issa 1024): head reset (R0) or shared (S), without LN or with LN (suffix L).
 # Addendum E (Issa 1026): the same two arms with RMSNorm in place of every LayerNorm (suffix RMS).
-ARMS = ('R0', 'S', 'R0L', 'SL', 'R0RMS', 'SRMS')
-FRESH_ARMS = ('fresh', 'freshL', 'freshRMS')   # one fresh net per seed and norm, R0's protocol
-SHARED_ARMS = ('S', 'SL', 'SRMS')
+# Addendum F (Issa 1029): S with one norm position changed, SC (the last FFN's input centred) and SN (an RMSNorm
+# without gain on the head's input); freshC and freshN are their fresh nets.
+ARMS = ('R0', 'S', 'R0L', 'SL', 'R0RMS', 'SRMS', 'SC', 'SN')
+FRESH_ARMS = ('fresh', 'freshL', 'freshRMS', 'freshC', 'freshN')   # one fresh net per seed and norm, R0's protocol
+SHARED_ARMS = ('S', 'SL', 'SRMS', 'SC', 'SN')
 LN_ARMS = ('R0L', 'SL', 'freshL')
 RMS_ARMS = ('R0RMS', 'SRMS', 'freshRMS')
+CENTER_ARMS = ('SC', 'freshC')
+FINAL_RMS_ARMS = ('SN', 'freshN')
 PAIRS = (('R0', 'S'), ('R0L', 'SL'), ('R0RMS', 'SRMS'))
-FRESH_FOR = {'R0': 'fresh', 'S': 'fresh', 'R0L': 'freshL', 'SL': 'freshL', 'R0RMS': 'freshRMS', 'SRMS': 'freshRMS'}
+FRESH_FOR = {'R0': 'fresh', 'S': 'fresh', 'R0L': 'freshL', 'SL': 'freshL', 'R0RMS': 'freshRMS', 'SRMS': 'freshRMS',
+             'SC': 'freshC', 'SN': 'freshN'}
 
 
 def norm_of(arm):
-    """'layer' (LayerNorm), 'rms' (RMSNorm, addendum E) or 'none' (Identity)."""
-    return 'layer' if arm in LN_ARMS else 'rms' if arm in RMS_ARMS else 'none'
+    """'layer' (LayerNorm), 'rms' (RMSNorm, addendum E), 'center' or 'final_rms' (one norm position of the
+    no-norm model, addendum F; see one_position_norm) or 'none' (Identity)."""
+    return ('layer' if arm in LN_ARMS else 'rms' if arm in RMS_ARMS else 'center' if arm in CENTER_ARMS
+            else 'final_rms' if arm in FINAL_RMS_ARMS else 'none')
+
+
+def ln_config(arm):
+    """True when the arm's model starts from the LayerNorm config (LayerNorm and RMSNorm arms)."""
+    return norm_of(arm) in ('layer', 'rms')
 FRESH_TASKS = (25, 50, 60)
 BATCH, LR = 128, 1e-4
 EVAL_EVERY = 25
@@ -280,13 +292,52 @@ def model_config(dropout=DROPOUT, ln=False, depth=DEPTH, mlp_ratio=MLP_RATIO):
     return dict(base, dropout_p=dropout, attn_drop_rate=dropout, depth=depth, mlp_ratio=mlp_ratio)
 
 
+class Center(torch.nn.Module):
+    """y - mean(y), the mean over batch and tokens for each feature (addendum F's SC): no parameters, no
+    scaling, and the gradient goes through the mean. An eval-mode call centres with the evaluated batch's mean."""
+
+    def forward(self, y):
+        return y - y.mean(dim=(0, 1), keepdim=True)
+
+
+def norm_positions(depth):
+    """The upstream ViT's norm positions in forward order: each block's norm1 and norm2, then the final norm."""
+    return [f'block_{i}.{name}' for i in range(depth) for name in ('norm1', 'norm2')] + ['norm']
+
+
+def norm_slot(model, position):
+    """(ModuleDict, key) holding the module at a norm position."""
+    block, _, name = position.rpartition('.')
+    return (model.layers[block].layers if block else model.layers), name
+
+
+def one_position_norm(norm, depth):
+    """Addendum F's norm kinds as (position, module); every other position keeps the no-norm model's Identity.
+    'center': the last block's norm2 (block 1 of the 2-block box), whose output goes only to the last FFN, so
+    the residual stream is S's. 'final_rms': the final norm, the head's input, an RMSNorm with eps 1e-5 and
+    no gain. Neither module has parameters or draws random numbers."""
+    if norm == 'center':
+        return f'block_{depth - 1}.norm2', Center()
+    if norm == 'final_rms':
+        return 'norm', torch.nn.RMSNorm(CONFIG['embed_dim'], eps=1e-5, elementwise_affine=False)
+    raise ValueError(f'not a one-position norm: {norm}')
+
+
 def build_model(seed, device, dropout=DROPOUT, ln=False, depth=DEPTH, mlp_ratio=MLP_RATIO):
-    """ln: False (no norm), True (LayerNorm) or 'rms' (addendum E: the LayerNorm model, then every
+    """ln: False (no norm), True (LayerNorm), 'rms' (addendum E: the LayerNorm model, then every
     LayerNorm replaced by an RMSNorm with eps 1e-5 and gain 1; building the norms draws no random
-    numbers, so all other initial weights equal the LayerNorm arm's)."""
+    numbers, so all other initial weights equal the LayerNorm arm's), or 'center' / 'final_rms'
+    (addendum F: the no-norm model with one position replaced, see one_position_norm; every weight
+    equals the no-norm arm's)."""
     if ln == 'rms':
         model = make_model(ACT, seed, device, model_config(dropout, True, depth, mlp_ratio))
         return to_rmsnorm(model)
+    if ln in ('center', 'final_rms'):
+        model = make_model(ACT, seed, device, model_config(dropout, False, depth, mlp_ratio))
+        position, module = one_position_norm(ln, depth)
+        layers, name = norm_slot(model, position)
+        layers[name] = module.to(device)
+        return model
     return make_model(ACT, seed, device, model_config(dropout, ln, depth, mlp_ratio))
 
 
@@ -302,7 +353,7 @@ def to_rmsnorm(model):
 
 def build_arm_model(arm, seed, device, dropout=DROPOUT, depth=DEPTH, mlp_ratio=MLP_RATIO):
     norm = norm_of(arm)
-    return build_model(seed, device, dropout, 'rms' if norm == 'rms' else norm == 'layer', depth, mlp_ratio)
+    return build_model(seed, device, dropout, {'none': False, 'layer': True}.get(norm, norm), depth, mlp_ratio)
 
 
 def n_params_expected(depth, mlp_ratio, ln, embed=384, patch=8, tokens=65, classes=200):

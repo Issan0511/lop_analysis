@@ -153,11 +153,11 @@ def config_of(args):
     return dict(arm=args.arm, seed=args.seed, tasks=args.tasks if not C.is_fresh(args.arm) else 1,
                 fresh_task=args.fresh_task if C.is_fresh(args.arm) else None, steps=args.steps,
                 batch=C.BATCH, lr=C.LR, act=C.ACT, ln=args.arm in C.LN_ARMS, engine=args.engine,
-                **({'norm': 'rms'} if C.norm_of(args.arm) == 'rms' else {}),
+                **({'norm': C.norm_of(args.arm)} if C.norm_of(args.arm) not in ('none', 'layer') else {}),
                 data_kind=args.data_kind, recorders=not args.no_recorders, save_mode=args.save_mode,
                 n_labels=args.n_labels, images_per_class=args.images_per_class, augment=args.augment,
                 dropout=args.dropout, depth=args.depth, mlp_ratio=args.mlp_ratio,
-                model_config=C.model_config(args.dropout, C.norm_of(args.arm) != 'none', args.depth, args.mlp_ratio),
+                model_config=C.model_config(args.dropout, C.ln_config(args.arm), args.depth, args.mlp_ratio),
                 eval_every=C.EVAL_EVERY, end_tasks=list(C.END_TASKS), adam_tasks=list(C.ADAM_TASKS),
                 mid_tasks=list(C.MID_TASKS), mid_fresh=C.MID_FRESH, mid_step=C.MID_STEP, inject_nan=args.inject_nan,
                 no_warmup=args.no_warmup, smoke=args.smoke)

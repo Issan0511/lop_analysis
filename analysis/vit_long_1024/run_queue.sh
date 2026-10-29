@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
-# 追補 E の本走: 仕事の一覧（jobs_rlfix_e_*.txt）を 2 本ずつ並べて回す（奇数行と偶数行を別の列で）。
+# 追補 E・F の本走: 仕事の一覧（jobs_rlfix_e_*.txt・jobs_rlfix_f_*.txt）を 2 本ずつ並べて回す（奇数行と偶数行を別の列で）。
 # 使い方: bash analysis/vit_long_1024/run_queue.sh analysis/vit_long_1024/jobs_rlfix_e_whitesan.txt
 # 止まったら同じ命令をもう一度流す（終わった走は飛ばし、途中の走は課題の境から再開する）。
+# 設定は一覧の名前で決まる: jobs_rlfix_e_*.txt → production_2blk_rlfix_e.json、jobs_rlfix_f_*.txt → production_2blk_rlfix_f.json。
 # PY（python）・VIT_LONG_RAW（出力の置き場）・VIT_LONG_DATA（Tiny ImageNet）は環境変数で変えられる。
 set -uo pipefail
 JOBS=$(readlink -f "$1")
 cd "$(dirname "$0")/../.."
-export PYTHONPATH=$PWD VIT_LONG_PRODUCTION=production_2blk_rlfix_e.json CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONUNBUFFERED=1
+PROD=production_2blk_$(basename "$JOBS" .txt | sed -E 's/^jobs_(rlfix_[a-z]+)_.*$/\1/').json
+[ -f "analysis/vit_long_1024/$PROD" ] || { echo "一覧の名前から設定が決まらない: $(basename "$JOBS") → $PROD" >&2; exit 1; }
+export PYTHONPATH=$PWD VIT_LONG_PRODUCTION=$PROD CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONUNBUFFERED=1
 PY=${PY:-/home/issan/Projects/claude/proj_004_drift/.venv/bin/python}
 R=${VIT_LONG_RAW:-$HOME/Projects/obsidian-research-data/vit_long_1024_2blk_rlfix}
 export VIT_LONG_RAW=$R
@@ -29,7 +32,7 @@ worker() {   # worker <0|1>: 一覧の偶数番目（0）か奇数番目（1）�
     log "end $arm $seed ${task:-} rc=$rc"
   done
 }
-log "queue start $(basename "$JOBS") commit $(git rev-parse --short HEAD 2>/dev/null || cat SOURCE_COMMIT)"
+log "queue start $(basename "$JOBS") $PROD commit $(git rev-parse --short HEAD 2>/dev/null || cat SOURCE_COMMIT)"
 worker 0 &
 worker 1 &
 wait
