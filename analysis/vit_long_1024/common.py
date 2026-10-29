@@ -53,16 +53,19 @@ TASKS, STEPS, SEEDS = 60, 500, (0, 1, 2, 3, 4)
 # Addendum E (Issa 1026): the same two arms with RMSNorm in place of every LayerNorm (suffix RMS).
 # Addendum F (Issa 1029): S with one norm position changed, SC (the last FFN's input centred) and SN (an RMSNorm
 # without gain on the head's input); freshC and freshN are their fresh nets.
-ARMS = ('R0', 'S', 'R0L', 'SL', 'R0RMS', 'SRMS', 'SC', 'SN')
+# Addendum G (Fable 1029): SL with the head's weight norm held, by decoupled weight decay on the head's weight (SLW)
+# or by rescaling every head row to its task-1-end norm after each update (SLP); see HeadHold. Fresh net: freshL.
+ARMS = ('R0', 'S', 'R0L', 'SL', 'R0RMS', 'SRMS', 'SC', 'SN', 'SLW', 'SLP')
 FRESH_ARMS = ('fresh', 'freshL', 'freshRMS', 'freshC', 'freshN')   # one fresh net per seed and norm, R0's protocol
-SHARED_ARMS = ('S', 'SL', 'SRMS', 'SC', 'SN')
-LN_ARMS = ('R0L', 'SL', 'freshL')
+SHARED_ARMS = ('S', 'SL', 'SRMS', 'SC', 'SN', 'SLW', 'SLP')
+LN_ARMS = ('R0L', 'SL', 'freshL', 'SLW', 'SLP')
 RMS_ARMS = ('R0RMS', 'SRMS', 'freshRMS')
 CENTER_ARMS = ('SC', 'freshC')
 FINAL_RMS_ARMS = ('SN', 'freshN')
+HEAD_HOLD_ARMS = ('SLW', 'SLP')
 PAIRS = (('R0', 'S'), ('R0L', 'SL'), ('R0RMS', 'SRMS'))
 FRESH_FOR = {'R0': 'fresh', 'S': 'fresh', 'R0L': 'freshL', 'SL': 'freshL', 'R0RMS': 'freshRMS', 'SRMS': 'freshRMS',
-             'SC': 'freshC', 'SN': 'freshN'}
+             'SC': 'freshC', 'SN': 'freshN', 'SLW': 'freshL', 'SLP': 'freshL'}
 
 
 def norm_of(arm):
@@ -367,6 +370,54 @@ def n_params_expected(depth, mlp_ratio, ln, embed=384, patch=8, tokens=65, class
 def build_optimizer(model):
     return torch.optim.Adam(model.parameters(), lr=LR, betas=(.9, .999), eps=1e-8,
                             weight_decay=0., fused=True)
+
+
+# Addendum G's lambda: the balance g / (2 LR lambda) of ||W||^2 is task 1's end (2.2) for the measured growth
+# g = 0.17 per task (spec 追補 G.3); LR * lambda = 7.7e-6 per update.
+HEAD_WD = 0.077
+
+
+def head_hold_config(arm):
+    """Provenance record of addendum G's step on the head (None for every other arm)."""
+    if arm == 'SLW':
+        return dict(kind='decoupled_weight_decay', weight='out.weight', lam=HEAD_WD, factor=1 - LR * HEAD_WD)
+    if arm == 'SLP':
+        return dict(kind='row_norm_projection', weight='out.weight', target='row norms at the end of task 1',
+                    from_task=2)
+    return None
+
+
+class HeadHold:
+    """Addendum G's in-place step on the head's weight after every Adam step (run.py calls after_step).
+
+    SLW multiplies the weight (not the bias) by 1 - LR * HEAD_WD, AdamW's decoupled weight decay applied after
+    the step. SLP rescales each of the 200 rows to its norm at the end of task 1 (end_task), keeping its
+    direction; rows that are 0 stay 0, and during task 1 (no target yet) the step does nothing. Both act outside
+    the compiled forward on the parameter itself, as the optimizer does.
+    """
+
+    def __init__(self, arm, model):
+        self.arm, self.model, self.target = arm, model, None
+
+    def weight(self):
+        return self.model.layers['out'].weight
+
+    @torch.no_grad()
+    def end_task(self, task):
+        if self.arm == 'SLP' and task == 1:
+            self.target = self.weight().norm(dim=1, keepdim=True)
+
+    @torch.no_grad()
+    def after_step(self):
+        w = self.weight()
+        if self.arm == 'SLW':
+            w.mul_(1 - LR * HEAD_WD)
+        elif self.target is not None:
+            w.mul_(self.target / w.norm(dim=1, keepdim=True).clamp_min(torch.finfo(w.dtype).tiny))
+
+
+def head_hold(arm, model):
+    return HeadHold(arm, model) if arm in HEAD_HOLD_ARMS else None
 
 
 def fc1(model, i):

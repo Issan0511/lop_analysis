@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# 追補 E・F の本走: 仕事の一覧（jobs_rlfix_e_*.txt・jobs_rlfix_f_*.txt）を 2 本ずつ並べて回す（奇数行と偶数行を別の列で）。
+# 追補 E・F・G の本走: 仕事の一覧（jobs_rlfix_e_*.txt・jobs_rlfix_f_*.txt・jobs_rlfix_g_*.txt）を 2 本ずつ並べて回す（奇数行と偶数行を別の列で）。
 # 使い方: bash analysis/vit_long_1024/run_queue.sh analysis/vit_long_1024/jobs_rlfix_e_whitesan.txt
 # 止まったら同じ命令をもう一度流す（終わった走は飛ばし、途中の走は課題の境から再開する）。
-# 設定は一覧の名前で決まる: jobs_rlfix_e_*.txt → production_2blk_rlfix_e.json、jobs_rlfix_f_*.txt → production_2blk_rlfix_f.json。
+# 設定は一覧の名前で決まる: jobs_rlfix_e_*.txt → production_2blk_rlfix_e.json、jobs_rlfix_f_*.txt → production_2blk_rlfix_f.json、jobs_rlfix_g_*.txt → production_2blk_rlfix_g.json。
 # PY（python）・VIT_LONG_RAW（出力の置き場）・VIT_LONG_DATA（Tiny ImageNet）は環境変数で変えられる。
 set -uo pipefail
 JOBS=$(readlink -f "$1")

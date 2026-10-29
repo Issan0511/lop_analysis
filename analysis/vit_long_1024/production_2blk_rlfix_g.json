@@ -1,0 +1,67 @@
+{
+  "note": "Addendum G of vit_long_1024 (spec 追補 G, Fable 1029): addendum D's and E's box (2 blocks, FFN 3072, LN, one fixed set of 2,500 images per seed, labels redrawn every task, U = 5,000, 100 tasks) with SL's head weight norm held. SLW puts decoupled weight decay on the head's weight only (w <- (1 - lr * 0.077) w after every Adam step); SLP rescales every head row to its norm at the end of task 1 after every update from task 2 on. SL, R0L and freshL are addenda D's and E's runs and are not run again. Select with VIT_LONG_PRODUCTION=production_2blk_rlfix_g.json.",
+  "tag": "2blk_rlfix_g",
+  "results_dir": "results/vit_long_1024_2blk_rlfix",
+  "raw_dir": "~/Projects/obsidian-research-data/vit_long_1024_2blk_rlfix",
+  "arms": [
+    "SLW",
+    "SLP"
+  ],
+  "fresh_arms": [
+    "freshL"
+  ],
+  "n_labels": 10,
+  "images_per_class": 250,
+  "tasks": 100,
+  "steps": 5000,
+  "augment": "off",
+  "dropout": 0.0,
+  "depth": 2,
+  "mlp_ratio": 8.0,
+  "seeds": [
+    10252010,
+    10252011,
+    10252012,
+    10252013,
+    10252014
+  ],
+  "fresh_tasks": [
+    25,
+    50,
+    75,
+    100
+  ],
+  "end_tasks": [
+    1,
+    2,
+    5,
+    10,
+    20,
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100
+  ],
+  "adam_tasks": [
+    1,
+    10,
+    30,
+    60,
+    100
+  ],
+  "mid_tasks": [
+    10,
+    30,
+    60,
+    100
+  ],
+  "mid_fresh": false,
+  "fixed_images": {
+    "classes_of_task": 101,
+    "first": 250
+  }
+}

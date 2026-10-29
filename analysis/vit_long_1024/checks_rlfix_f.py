@@ -260,10 +260,9 @@ def f5(root):
     return result
 
 
-if __name__ == '__main__':
-    remote = '--remote' in sys.argv
-    OUT.mkdir(parents=True, exist_ok=True)
-    root = RAW / '_checks_f'
+def main(remote, root):
+    """F1-F6 with the smoke runs under root; returns the report. Addendum G's checks call it with their own root
+    (checks_rlfix_g G6), so that neither this record nor _checks_f/ is rewritten."""
     root.mkdir(parents=True, exist_ok=True)
     git = child(PROD_F, GIT)
     report = dict(git_hash=git['head'], remote=remote)
@@ -293,6 +292,14 @@ if __name__ == '__main__':
     report['host'] = socket.gethostname()
     verdict = {k: report[k]['pass'] for k in ('F1', 'F2', 'F3', 'F4', 'F5', 'F6')}
     report['pass_'] = all(v in (True, 'skipped') for v in verdict.values())
+    return report
+
+
+if __name__ == '__main__':
+    remote = '--remote' in sys.argv
+    OUT.mkdir(parents=True, exist_ok=True)
+    report = main(remote, RAW / '_checks_f')
+    verdict = {k: report[k]['pass'] for k in ('F1', 'F2', 'F3', 'F4', 'F5', 'F6')}
     (OUT / f'checks_f_{socket.gethostname()}.json').write_text(json.dumps(report, ensure_ascii=False, indent=1))
     print(json.dumps(dict(verdict, pass_=report['pass_'], git_hash=report['git_hash']), ensure_ascii=False))
     sys.exit(0 if report['pass_'] else 1)

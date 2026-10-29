@@ -154,6 +154,7 @@ def config_of(args):
                 fresh_task=args.fresh_task if C.is_fresh(args.arm) else None, steps=args.steps,
                 batch=C.BATCH, lr=C.LR, act=C.ACT, ln=args.arm in C.LN_ARMS, engine=args.engine,
                 **({'norm': C.norm_of(args.arm)} if C.norm_of(args.arm) not in ('none', 'layer') else {}),
+                **({'head_hold': C.head_hold_config(args.arm)} if args.arm in C.HEAD_HOLD_ARMS else {}),
                 data_kind=args.data_kind, recorders=not args.no_recorders, save_mode=args.save_mode,
                 n_labels=args.n_labels, images_per_class=args.images_per_class, augment=args.augment,
                 dropout=args.dropout, depth=args.depth, mlp_ratio=args.mlp_ratio,
@@ -194,6 +195,7 @@ def run(args):
     model, optimizer = None, None
     model = C.build_arm_model(args.arm, args.seed, device, args.dropout, args.depth, args.mlp_ratio)
     optimizer = C.build_optimizer(model)
+    hold = C.head_hold(args.arm, model)              # addendum G (SLW, SLP); None for every other arm
     n_params = sum(p.numel() for p in model.parameters())
     forward = train_forward(model, 'compile') if args.engine == 'compile' else model
     probe = None
@@ -209,6 +211,8 @@ def run(args):
             raise ValueError('Checkpoint config/source mismatch; refuse mixed experiment')
         model.load_state_dict(state['model'])
         optimizer.load_state_dict(state['optimizer'])
+        if hold is not None:
+            hold.target = state['head_target']
         rows, layer_rows, intask, manifest = state['rows'], state['layer_rows'], state['intask'], state['manifest']
         done = state['task']
         if args.engine == 'compile' and not args.no_warmup:
@@ -254,7 +258,9 @@ def run(args):
                 print(json.dumps(dict(paused='disk', free=free, need=need)), flush=True)
                 return
             row, layers, record = train_task(args, model, optimizer, forward, source, probe, task, tasks[0],
-                                             inject, out, manifest)
+                                             inject, out, manifest, hold)
+            if hold is not None:
+                hold.end_task(task)
             rows.append(row)
             layer_rows.extend(layers)
             for key, value in record.items():
@@ -263,7 +269,8 @@ def run(args):
             if not fresh:
                 atomic_save(checkpoint, dict(config=cfg, source_hashes=hashes, task=task, model=model.state_dict(),
                                              optimizer=optimizer.state_dict(), rng=get_rng(), rows=rows,
-                                             layer_rows=layer_rows, intask=intask, manifest=manifest))
+                                             layer_rows=layer_rows, intask=intask, manifest=manifest,
+                                             **({'head_target': hold.target} if hold is not None else {})))
             write_outputs(out, rows, layer_rows, intask, manifest)
             atomic_json(out / 'status.json', dict(status='running', task=task, step=args.steps,
                                                   tasks=len(tasks), updated=time.time()))
@@ -285,7 +292,7 @@ def run(args):
         raise
 
 
-def train_task(args, model, optimizer, forward, source, probe, task, first_task, inject, out, manifest):
+def train_task(args, model, optimizer, forward, source, probe, task, first_task, inject, out, manifest, hold=None):
     device = args.device
     recorders = not args.no_recorders
     begin = time.monotonic()
@@ -346,6 +353,8 @@ def train_task(args, model, optimizer, forward, source, probe, task, first_task,
                 raise
             optimizer.step()
             update_adaptive(model)
+            if hold is not None:
+                hold.after_step()
             if recorders and step % C.EVAL_EVERY == 0:
                 torch.cuda.synchronize()
                 r0 = time.monotonic()
