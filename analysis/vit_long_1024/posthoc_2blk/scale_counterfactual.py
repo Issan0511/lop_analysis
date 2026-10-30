@@ -7,6 +7,9 @@
   fc1x<c>     2 ブロックの fc1 の重みと bias を c 倍、fc2 の重みを 1/c 倍（ReLU の正斉次性で関数は不変）。
               Adam の moment も同じ比で換算（m を c 倍・v を c² 倍、fc2 は逆）。変わるのは lr の相対的な大きさだけ。
   headx<c>    head の損失の行の重みと bias を c 倍（向きは保ち、logit の大きさ＝確信だけを変える）。Adam の moment も換算。
+  headlr<k>   head（重みと bias）の学習率だけ k 倍。重み・向き・確信・Adam の記憶はそのまま（1031、Issa「F の後に足す」）。
+              headx<1/k> と「重みに対する歩幅」が同じ組になる。T90 が headx<1/k> に並べば比（直す量 ÷ 歩幅）の説明で足り、
+              そのまま（1,125）の近くに留まれば、softmax が尖ること（関数が変わること）の分が別にある。
   proj<k>     最終 LN の後（head が読む特徴）に固定の射影を挟む: h → μ + P(h − μ) + ε(I − P)(h − μ)。
               μ と P（上位 k 主成分への射影）は課題の始めの 2,500 枚の CLS 特徴から 1 回だけ決め、以後動かさない。
               ε は既定 0。proj<k>e<ε> で ε を指定、proj<k>m<n> で射影後の有効次元（参加比）が n になる ε を選ぶ。
@@ -155,6 +158,19 @@ def main(args):
             rescale(head.weight, optimizer, c)
             rescale(head.bias, optimizer, c)
             note['c_head'] = c
+        elif mode.startswith('headlr'):           # head の学習率だけ k 倍（重み・向き・Adam の記憶はそのまま）
+            k = float(mode[6:])
+            hp = [head.weight, head.bias]
+            ids = {id(p) for p in hp}
+            if len(optimizer.param_groups) == 1:  # 保存した Adam は 1 群。読み込んだ後に head を別の群へ移す（state は param 単位なので残る）
+                g0 = optimizer.param_groups[0]
+                g0['params'] = [p for p in g0['params'] if id(p) not in ids]
+                optimizer.add_param_group({'params': hp, 'lr': g0['lr'] * k})
+            else:
+                optimizer.param_groups[1]['lr'] = optimizer.param_groups[0]['lr'] * k
+            note['head_lr_mult'] = k
+            note['lr'] = [g['lr'] for g in optimizer.param_groups]
+            note['n_params'] = [len(g['params']) for g in optimizer.param_groups]
         elif mode.startswith('proj'):
             m = re.fullmatch(r'proj(\d+)(?:e([\d.]+)|m([\d.]+))?', mode)
             k = int(m.group(1))
