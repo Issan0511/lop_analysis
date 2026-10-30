@@ -1360,3 +1360,23 @@ SL の 2 seed。10252010 は追補 D（借りた機械）、10252011 は追補 E
 - SLP が `CONFIDENCE_GROWS`（ノルムは止めたが確信は伸びる）: 段 2 の「確信 ∝ ‖W‖」を付録で直す（行と特徴の整列か、特徴の大きさが運ぶ）。本文では式の鎖を使わない。
 - J G4 が `BODY_CHANGED` なら、体の変化は付録に記録し、本文には入れない。
 - SLW の結果は付録だけに置く（実務の WD で同じことが起きるかの 1 段落）。
+
+### G.10 登録後の記録（1030）
+
+- 起動の場所: Issa 1030「借りてください」「本走はじめて」、台数は「2 台で G を借りる」。Vast.ai の RTX 5060 Ti を 2 台借りた。
+
+| 機械 | Vast instance | GPU・ドライバ | seed（SLW と SLP） | 起動（JST） |
+| --- | --- | --- | --- | --- |
+| rent1（カリフォルニア） | 58332017 | 16 GB・595.91.07 | 10252010・10252012・10252014 | 10/30 10:40 |
+| rent2（バージニア） | 58332034 | 8 GB 版・580.173.02 | 10252011・10252013 | 10/30 10:38 |
+
+- 同じ seed の SLW と SLP は、同じ機械に並べた（組の中は同じ丸め）。一覧は `jobs_rlfix_g_rent1.txt`・`jobs_rlfix_g_rent2.txt` である。
+- 包みは 2a1a5fd3 で、`VIT_LONG_PRODUCTION=production_2blk_rlfix_g.json` を付けて作った。ソースの hash は d441a0cc と同じである。
+- 1 本の走が使う GPU のメモリは約 1.2 GB で、8 GB 版でも 2 本並ぶ。
+- 対照の機械: どの seed でも、SLW・SLP は対照の SL・freshL と別の機械で回る。Q の分母と J G4 の SL との比較は、全 seed で機械をまたぐ（丸めの差だけ。追補 D.7・E.2 と同じ扱い）。
+- データ: 2 台とも、Tiny ImageNet の archive の sha256 が white-san と同じで、110,203 ファイルが一覧と一致した。torch は white-san と同じ 2.13.0+cu130 である。
+- 借りた機械の検査（`checks_rlfix_g --remote`、2a1a5fd3）: 2 台とも G1〜G4 と G7 が通った。G5 は remote では飛ばす。
+- G6 は、F1〜F4 が通り、F5 は飛ばし、F6 だけが「changed since pack」で False になった。挙がったのは `production_2blk_rlfix_f.json` と `production_2blk_rlfix_g.json` の 2 つだけである。包みのソースの hash の一覧を G の設定で作ったので、F の設定で照合すると設定ファイルの行が合わない。走のコードの違いではないので、通過と同じに扱った。
+- 検査の記録は、white-san の `_checks_g/remote_rent1/` と `_checks_g/remote_rent2/` に引き戻す。
+- 引き戻し: white-san の `_pull_g/pull_g_rented.sh` が、15 分ごとに runs/SLW・SLP（再開用の checkpoint.pt も）・列の記録・検査の記録を引き戻す。
+- 終わったら、最後の引き戻しと manifest の sha256 の照合の後、2 台とも `vastai destroy instance <id> -y` で返す。
