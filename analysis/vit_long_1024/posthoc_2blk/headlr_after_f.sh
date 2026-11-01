@@ -3,7 +3,10 @@
 #   SL seed 10252010 の課題 100 末（重み＋Adam）から、head の学習率だけ ×2・×4・×10 にして課題 101 を回し、T90 を測る。
 #   表 2 の head ×0.5・×0.25・×0.1 と「重みに対する歩幅」が同じ組。T90 が 950・675・575 に並べば比の説明で足り、
 #   1,125 の近くに留まれば softmax が尖ること（関数が変わること）の分が別にある。
-# 使い方: setsid nohup bash analysis/vit_long_1024/posthoc_2blk/headlr_after_f.sh <待つ pid> [<pid> ...] &
+# 使い方: systemd-run --user --unit=headlr_after_f_<MMDD> --collect -p Nice=10 /usr/bin/bash $PWD/analysis/vit_long_1024/posthoc_2blk/headlr_after_f.sh <待つ pid> [<pid> ...]
+#   （1031 の setsid nohup 版は生きていたが、記録した pid が包みの setsid のもので本体と違い、11-01 に「消えた」と誤読して
+#     service に置き直し、setsid 版は止めた。pid は pgrep -af headlr_after_f.sh で本体を確かめる。user の一時 service なら
+#     app の再起動と無関係に生き、unit 名で探せる。生存は 6 時間ごとに log に記す。）
 #   渡した pid（追補 F の列の本体 run_queue.sh と run_queue_after.sh）が全部終わり、かつ analysis.vit_long_1024.run の走が
 #   1 本も残っていなくなってから、1 本ずつ回す（列が別の pid で再起動されても、走が残っている間は待つ）。
 #   始める前に GPU の空きが NEED_MIB 以上になるまで待つ（run_queue_after.sh と同じ既定 1540）。出力が既にあれば飛ばす。
@@ -29,12 +32,14 @@ runs_active() {   # analysis.vit_long_1024.run の python が 1 本でも生き�
   return 1
 }
 
-log "wait start pids $* modes $MODES commit $(git rev-parse --short HEAD 2>/dev/null)${DRY_RUN:+ DRY_RUN=$DRY_RUN}"
+log "wait start pids $* modes $MODES commit $(git rev-parse --short HEAD 2>/dev/null) cgroup $(cut -d: -f3 /proc/self/cgroup 2>/dev/null | head -1)${DRY_RUN:+ DRY_RUN=$DRY_RUN}"
+n=0
 while :; do
   busy=0
   for p in "$@"; do alive "$p" && busy=1; done
   runs_active && busy=1
   [ $busy -eq 0 ] && break
+  n=$((n + 1)); [ $((n % 180)) -eq 0 ] && log "still waiting ($((n / 30)) h)"   # 6 時間ごとに生存を記す（消されたら分かるように）
   sleep 120
 done
 log "F ended (pids $* gone, no run left)"
