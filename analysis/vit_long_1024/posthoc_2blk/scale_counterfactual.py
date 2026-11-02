@@ -14,6 +14,12 @@
               μ と P（上位 k 主成分への射影）は課題の始めの 2,500 枚の CLS 特徴から 1 回だけ決め、以後動かさない。
               ε は既定 0。proj<k>e<ε> で ε を指定、proj<k>m<n> で射影後の有効次元（参加比）が n になる ε を選ぶ。
               最終 LN の出力は head にしか行かないので、これは新しい head の行を上位 k 方向（＋ε 倍の残り）に縛るのと同じ。
+  adam0at<n>  更新 n のあとに Adam の記憶（m・v・step）を全部消す（重みはそのまま。次の更新から bias 補正が最初からになる）。
+  bodyadam0at<n>  同じく head（重みと bias）以外だけ消す。
+  head0at<n>  更新 n のあとに head の 200 行を 0 に戻す（切替の押しで動いたあとの体に新しい head を載せる）。
+  beta2_<v>   Adam の β₂ を v にして回す（保存した v の記憶は時定数 1/(1 − β₂) で薄れる。既定 0.999 → 1,000 更新）。
+  --track-steps N  最初の N 更新について 1 更新ごとに、体と head（損失の 10 行）の変位 ‖Δθ‖・勾配 ‖g‖・√mean(v)・
+              bias 補正した m̂/√v̂ の RMS（1 なら sign の歩幅いっぱい）・学習の損失を記録する（1102、停滞を分ける）。
 
     PYTHONPATH=$PWD VIT_LONG_PRODUCTION=production_2blk_rlfix.json \
         python analysis/vit_long_1024/posthoc_2blk/scale_counterfactual.py SL 100 fc1x0.66 <出力.json> [--max-steps 3000]
@@ -109,6 +115,8 @@ def main(args):
         logits_before = torch.cat([model(x_eval[s:s + 128]) for s in range(0, 2500, 128)])
     # 介入
     head = model.layers['out']
+    head_ids = {id(head.weight), id(head.bias)}
+    events = []                                   # (更新 n, 何をするか): 更新 n のあとに head0 / adam0 / bodyadam0
     note = {}
     for mode in args.mode.split('+'):            # 'head0+fc1x0.3' のように重ねられる
         if mode == 'head0':
@@ -199,6 +207,15 @@ def main(args):
             model.layers['norm'] = torch.nn.Sequential(model.layers['norm'], proj)
             note['proj'] = dict(k=k, eps=eps, pr_before=participation(e), pr_after=projected_pr(e, k, eps),
                                 var_kept=float(torch.cat([e[:k], eps ** 2 * e[k:]]).sum() / e.sum()))
+        elif re.fullmatch(r'(head0|adam0|bodyadam0)at\d+', mode):   # 更新 n のあとに head を 0 に／Adam の記憶を消す（body なら head 以外だけ）
+            what, n_ = mode.split('at')
+            events.append((int(n_), what))
+            note.setdefault('at', []).append(dict(step=int(n_), what=what))
+        elif mode.startswith('beta2_'):           # β₂ を変える（保存した m・v はそのまま）
+            b2 = float(mode[6:])
+            for g in optimizer.param_groups:
+                g['betas'] = (g['betas'][0], b2)
+            note['betas'] = [list(g['betas']) for g in optimizer.param_groups]
         elif mode != 'base':
             raise ValueError(mode)
     if C.zero_head_at(args.arm, task, 1) and args.mode != 'head0':
@@ -226,6 +243,52 @@ def main(args):
     points = args.max_steps // C.EVAL_EVERY + 1
     rec = Recorder(model, x_eval, y_eval, rows_t, points, device)
     rec.take(0)
+    track = args.track_steps
+    trk = None
+    if track:
+        body_params = [p for p in model.parameters() if id(p) not in head_ids]
+        prev_body = [p.detach().clone() for p in body_params]
+        prev_hw, prev_hb = head.weight.detach().clone(), head.bias.detach().clone()
+        trk = dict(step=[], loss=[], d_body=[], d_head=[], g_body=[], g_head=[], v_body=[], s_body=[], v_head=[], s_head=[])
+
+        def group_of(p):
+            return next(g for g in optimizer.param_groups if any(p is q for q in g['params']))
+
+        @torch.no_grad()
+        def adam_stats(params, sel):
+            """√mean(v) と、bias 補正した m̂/√v̂ の RMS（sign の歩幅に対する割合）。sel は見る要素（head の損失の行）。"""
+            vs, ss, n = [], [], 0
+            for p in params:
+                st = optimizer.state.get(p)
+                if not st or 'exp_avg_sq' not in st:
+                    continue
+                b1, b2 = group_of(p)['betas']
+                t = st['step'].float() if torch.is_tensor(st['step']) else torch.tensor(float(st['step']))
+                m, v = st['exp_avg'], st['exp_avg_sq']
+                if sel is not None:
+                    m, v = sel(m), sel(v)
+                mh, vh = m / (1 - b1 ** t), v / (1 - b2 ** t)
+                vs.append(v.sum()); ss.append((mh / (vh.sqrt() + 1e-8)).pow(2).sum()); n += v.numel()
+            nan = torch.tensor(float('nan'), device=device)
+            if n == 0:
+                return nan, nan
+            return (torch.stack(vs).sum() / n).sqrt(), (torch.stack(ss).sum() / n).sqrt()
+
+        @torch.no_grad()
+        def trk_take(step, loss_value):
+            db = torch.stack([(p - q).pow(2).sum() for p, q in zip(body_params, prev_body)]).sum().sqrt()
+            for p, q in zip(body_params, prev_body):
+                q.copy_(p)
+            dh = ((head.weight[rows_t] - prev_hw[rows_t]).pow(2).sum() + (head.bias[rows_t] - prev_hb[rows_t]).pow(2).sum()).sqrt()
+            prev_hw.copy_(head.weight); prev_hb.copy_(head.bias)
+            gb = torch.stack([p.grad.pow(2).sum() for p in body_params if p.grad is not None]).sum().sqrt()
+            gh = (head.weight.grad[rows_t].pow(2).sum() + head.bias.grad[rows_t].pow(2).sum()).sqrt()
+            vb, sb = adam_stats(body_params, None)
+            vh, sh = adam_stats([head.weight, head.bias], lambda z: z[rows_t])
+            vals = torch.stack([db, dh, gb, gh, vb, sb, vh, sh]).tolist()
+            trk['step'].append(step); trk['loss'].append(loss_value)
+            for k_, v_ in zip(('d_body', 'd_head', 'g_body', 'g_head', 'v_body', 's_body', 'v_head', 's_head'), vals):
+                trk[k_].append(v_)
     t0 = time.monotonic()
     losses = []
     last = 0
@@ -239,6 +302,19 @@ def main(args):
         optimizer.step()
         update_adaptive(model)
         losses.append(float(loss))
+        if track and step <= track:
+            trk_take(step, losses[-1])
+        for n_, what in events:
+            if step == n_:                        # 更新 n のあと。Adam を消すと次の更新で state が作り直され step は 0 から
+                if what == 'head0':
+                    reset_head(model)
+                else:
+                    for prm in model.parameters():
+                        if what == 'bodyadam0' and id(prm) in head_ids:
+                            continue
+                        optimizer.state.pop(prm, None)
+                note.setdefault('at_done', []).append(dict(step=step, what=what, n_state=len(optimizer.state),
+                                                           head_norm=float(head.weight[rows_t].norm())))
         if args.track_dim and step % 50 == 0:
             dims.append((step, *eff_dim()))
         if step % C.EVAL_EVERY == 0:
@@ -255,7 +331,7 @@ def main(args):
                T90=first_reach(r['correct'][:last + 1], n, 90),
                mem_acc=(r['correct'][:last + 1] / n).tolist(), mem_loss=(r['loss'][:last + 1] / n).tolist(),
                loss_100=[sum(losses[i:i + 100]) / len(losses[i:i + 100]) for i in range(0, len(losses), 100)],
-               seconds=round(time.monotonic() - t0, 1), eff_dim=dims)
+               seconds=round(time.monotonic() - t0, 1), eff_dim=dims, track=trk)
     Path(args.out).write_text(json.dumps(out, indent=1))
     if dims:
         print('  有効次元 (更新, 参加比/上位10の割合[/射影前の参加比/上位10]):', ' '.join(f'{u}:' + '/'.join(f'{v:.2f}' for v in rest) for u, *rest in dims[::2]))
@@ -272,4 +348,5 @@ if __name__ == '__main__':
     p.add_argument('--full', action='store_true', help='0.9 に届いても止めない')
     p.add_argument('--track-dim', action='store_true', help='50 更新ごとに head が読む特徴の有効次元を記録')
     p.add_argument('--fresh-adam', action='store_true', help='Adam の保存が無い課題末: 記憶を空にして回す')
+    p.add_argument('--track-steps', type=int, default=0, help='最初の N 更新の 1 更新ごとの変位・勾配・Adam の v と m̂/√v̂ を記録')
     main(p.parse_args())
