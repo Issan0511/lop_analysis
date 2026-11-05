@@ -1,0 +1,35 @@
+{
+  "status": "passed",
+  "checks": {
+    "ordinary_drive": {
+      "states": 40,
+      "source_and_checkpoint_hashes_match": true
+    },
+    "ordinary_residual": {
+      "states": 40,
+      "source_and_checkpoint_hashes_match": true
+    },
+    "ordinary_tokens": {
+      "states": 40,
+      "source_and_checkpoint_hashes_match": true
+    },
+    "equal_margin_signal_identity_max_error": 1.0842021724855044e-19,
+    "linear_sign_additivity_max_error": 4.357300971587468e-12
+  },
+  "inputs": [
+    {
+      "path": "/home/issan/Projects/claude/wt/vit_two_block_1025/results/vit_two_block_1025/ordinary_drive_cases.csv",
+      "sha256": "47c4a63d37b118c9847e2b8e16fb02e9eb1dd2e0668c09d9d31f3c238a0bac3c"
+    },
+    {
+      "path": "/home/issan/Projects/claude/wt/vit_two_block_1025/results/vit_two_block_1025/ordinary_residual_cases.csv",
+      "sha256": "e34bf161e183d4224089ea8f6086706885911224f22537d4534b27d608fa955a"
+    },
+    {
+      "path": "/home/issan/Projects/claude/wt/vit_two_block_1025/results/vit_two_block_1025/ordinary_tokens_cases.csv",
+      "sha256": "4794c1b7a22f30b6579b6cc97a1a0a77f157cd8ff6e74ce573a433bf6c17bad7"
+    }
+  ],
+  "report_sha256": "fea50ce05fb39d3b93a4dba5b7c567e1ce21c87842bc5d845d9de58c4283a4ea",
+  "warning": "20 states per layer are repeated observations of five seeds. Finite one-step results do not establish long-run interventions."
+}
