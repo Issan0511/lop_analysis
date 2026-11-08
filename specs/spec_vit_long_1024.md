@@ -1408,3 +1408,94 @@ SL の 2 seed。10252010 は追補 D（借りた機械）、10252011 は追補 E
 - 終わったら、最後の引き戻しと manifest の sha256 の照合の後、2 台とも `vastai destroy instance <id> -y` で返す。
 - 1031: 2 台とも列が ALL_DONE になり、引き戻した全ファイルの sha256 が借りた機械と一致した（rent2 128 ファイル 08:35、rent1 192 ファイル 19:40）後に返した（`_pull_g/finish.log`）。SLW・SLP は 5 seed × 100 課題とも complete。
 - 1108: 対照の seed 10252012〜14 の SL・freshL（byakko の分）は届いていないので、white-san で回す（E.2 の 1108 の記録。一覧 `jobs_rlfix_e_byakko_whitesan.txt`、freshL → SL → R0L → RMSNorm の組 → freshRMS の順）。コードは G の検査を通した d441a0cc から run.py・common.py とも変わっていない（G5 で SL が追補 E の white-san の記録とビット一致）。Q の分母（freshL）と J G4 の SL は white-san、SLW・SLP は借りた機械なので、機械をまたぐ扱いは G.10 のとおり変わらない。
+
+## 追補 H: 課題 60 の枝の切除（1108、V14 の切れ目 2。事後介入、登録）
+
+状態: **登録（予測を固定、走る前。GPU は追補 E の列が終わってから）** / 2026-11-08 / 起案: Claude（Fable 5.1、このセッション）。依頼は Vit実験の振り返りセッション経由の Issa 1108「両方進めて」。V14 の主張の流れ（vault `論文作成/V14主張の流れ_残った網の容量_1108`）の切れ目 2「G4・G5: t60 の担い手が未同定」を繋ぐ。
+実装は `analysis/vit_long_1024/posthoc_2blk/`（`scale_counterfactual.py` の拡張: seed の引数化・枝の切除のモード・初期値から始める選択肢、起動の driver、切除前の診断）。追補 E の列が走っている間は `analysis/vit_long_1024/*.py` の直下と `src/` は触らない。
+
+### H.1 問い
+
+追補 F の t60 の遅れは体の側で、head・最終 FFN 側のどの介入でも救えず、担い手は未同定だった。読み: t60 の S は FFN1 の死 0.89・attention 1 の CLS 溜まり 0.94 で、機能しているのは埋め込み → attn0 → FFN0 → head のほぼ 1 ブロック分に痩せている。「t60 の網は、薄い構造の新品と同じか」を決める。
+
+### H.2 箱と保存状態
+
+- 追補 F の LN なし共有 head の S、seed 10252010〜14（`runs/S/seed*/ckpt/`）。課題 60 の末 `model_t60.pt`（主）、課題 30 の末 `model_t30.pt`（対照）、初期値 `model_t00.pt`（新品）。
+- 課題 61（と 31）を U = 5,000 更新、engine のラベルとミニバッチ順（`scale_counterfactual.py` が `C.task_dataset`・`train_loader` で引くもの）。評価は 25 更新ごと（EVAL_EVERY）、最初の 100 更新は 1 更新ごとの損失も記録（`--track-steps 100`）。
+
+### H.3 腕
+
+出発状態 × 切除 × seed。どの腕も **head の 200 行を 0 にし、Adam を全部新しく作ってから**回す（本体の H0A と同じ約束。F の R5 の head 0 と同じ）。
+
+| 出発状態 | 記号 | 中身 |
+|---|---|---|
+| 課題 60 の末の体 | B60 | `model_t60.pt`、課題 61 を学ぶ |
+| 課題 30 の末の体 | B30 | `model_t30.pt`、課題 31 を学ぶ |
+| 新品 | F61・F31 | `model_t00.pt`（同じ seed の初期値）、課題 61・31 を学ぶ |
+
+| 切除 | 0 にする枝 |
+|---|---|
+| none | — |
+| −FFN1 | block_1 の mlp |
+| −attn1 | block_1 の attn |
+| −FFN0 | block_0 の mlp |
+| −attn0 | block_0 の attn |
+| −FFN0−FFN1 | 両方の mlp（attention と埋め込みだけ） |
+| −all | 4 つの枝全部（埋め込み → head のみ。CLS は cls_token + pos_embed のまま） |
+
+- 切除は、枝の出力に 0 を掛ける（forward hook で `0 * output` を返す）。残差の流れ `x = x + 0` は残し、枝のパラメタは凍結（requires_grad False）。LN なしの箱なので norm は無い。
+- 走の数: (B60 + F61 + B30 + F31) × 7 切除 × 5 seed = 140 走 × 5,000 更新。
+- 順: 診断（CPU、先に）→ B60 の 7 切除 × 5 seed → F61 の 7 × 5 → B30 → F31。GPU は追補 E の列（SL・R0L・SRMS・R0RMS・fresh）が終わってから、2 本並列。
+
+### H.4 切除の前の診断（学び直し無し、CPU で可、記録）
+
+課題 60 の末の体（と課題 30 の末）で、課題 60（30）のラベルのまま:
+- 各枝を 1 つずつ 0 にしたときの訓練精度の落ち（2,500 枚）。
+- 各枝の出力が CLS 位置の残差へ足すベクトルの RMS ノルムと、その位置の残差のノルムとの比。
+- 今どの枝が機能を運んでいるかの表（seed 5 本）。
+
+### H.5 量（走ごと）
+
+| 相 | 量 |
+|---|---|
+| スパイク | 更新 1〜5 の訓練損失の平均（track-steps） |
+| 速さ | T90（訓練精度が初めて 0.9 以上になった更新、届かなければ 5,025）、A1000（更新 1,000 の訓練精度） |
+| 漸近 | A_end = 最後の 500 更新（評価 20 点）の訓練精度の平均 |
+
+### H.6 判定（5 seed）
+
+ばらつきの物差しは新品の seed 間のばらつき: s_T = F61(none) の T90 の 5 seed の SD、s_A = 同じく A_end の SD（B30・F31 の判定には F31(none) の SD）。
+
+| 判定 | 比べるもの | ラベル |
+|---|---|---|
+| J H1 枝ごとの効き（B60） | 切除 c ごとに、seed 対の差 Δ_T(s) = T90[B60, c] − T90[B60, none]、Δ_A(s) 同様 | 4/5 以上の seed で \|Δ_T\| ≤ 2 s_T かつ \|Δ_A\| ≤ 2 s_A → **NO_EFFECT**（その枝は機能を運んでいない）。4/5 以上で Δ_T > 2 s_T または Δ_A < −2 s_A → **DEGRADES**。4/5 以上で逆 → IMPROVES。それ以外 MIXED |
+| J H2 薄い新品と並ぶか（B60 none） | 切除 c ごとの新品 F61(c) の帯 = 中央値 ± 2 SD（T90 と A_end、5 seed）。B60(none) の各 seed がどの帯に入るか | F61(−FFN1−attn1) の帯に 4/5 以上 → **THIN_MATCH_1BLOCK**。F61(none) の帯に 4/5 以上 → FULL_MATCH。どの帯にも 4/5 入らなければ、T90 の順位で BETWEEN（どの 2 つの間か）か BELOW_ALL（−all を除く全ての新品より遅い）か ABOVE_ALL を書く |
+| J H3 課題 30 の対照（B30 none） | 同じ帯の読みを F31 で | F31(none) の帯より速い（T90 が 4/5 以上で中央値 − 2 SD を下回る）→ **ABOVE_FULL**（新品より速い。F の R5 の再現）。帯の中 → FULL_MATCH。遅い → BELOW_FULL |
+| 記録 | B60 の各切除と F61 の各切除の T90・A_end の表、診断の表、B30 の J H1 | — |
+
+### H.7 予測（走る前に固定）
+
+**送り手（Fable 5.1、Vit実験の振り返り、1108）**: t60 で −FFN1・−attn1 は基準の H0A から 2SE 以内（既に機能していない）。−FFN0 は大きく落ちる。全部切ると head は CLS しか見えず偶然のまま。H0A(t60) は fresh(−FFN1 −attn1) の T90・漸近と帯の中で並ぶ。t30 では −FFN1 だけ基準と並び、他は fresh と同じ。
+
+**受け手（Fable 5.1、このセッション、1108 16:0x）**
+
+| 判定 | 予測 | 根拠 |
+|---|---|---|
+| J H1 −FFN1 | NO_EFFECT | FFN1 の死 0.89（F の記録） |
+| J H1 −attn1 | NO_EFFECT | CLS 溜まり 0.94。CLS が自分を読むだけなら情報を運ばない |
+| J H1 −FFN0 | DEGRADES（T90 届かずが過半） | 唯一残った FFN |
+| J H1 −attn0 | DEGRADES（−FFN0 と同程度以上） | attn0 を切ると CLS へ patch の情報が入る経路が attn1 だけになり、attn1 は CLS 溜まり |
+| J H1 −FFN0−FFN1 | DEGRADES。A_end 0.2〜0.6（偶然より上） | attention の softmax は非線形で、少しは覚える |
+| J H1 −all | DEGRADES。A_end ≈ 0.1、T90 届かず 5/5 | CLS が定数 |
+| J H2 | **BETWEEN**（F61(−FFN1−attn1) より遅く、F61(−FFN0−FFN1) より速い）。自信は低い | t60 の block_0 も沈んでいて、1 ブロックの新品（FFN0 の幅 3072 で 2,500 枚を覚えられる）より遅いと見る。送り手の THIN_MATCH_1BLOCK と分かれる点 |
+| J H3 | ABOVE_FULL | F の R5: head 0 で t30 は新品より速い（T90 725〜1,275 対 1,350〜1,525） |
+| B30 の J H1 | −FFN1 NO_EFFECT、−attn1 は MIXED か DEGRADES、−FFN0・−attn0 DEGRADES | t30 では attention 1 がまだ機能している見込み |
+| 診断 | t60 で FFN1 を 0 にしても精度の落ち ≤ 0.05、attn1 も ≤ 0.1、FFN0・attn0 は ≥ 0.5 | 同上 |
+
+**Issa**: 未受領。
+
+### H.8 出力と言わないこと
+
+- `results/vit_long_1024_2blk_rlfix/addendum_h/`: `diag.md`（診断）、`rows_h.csv`、`judge_h.md`・`judge_h.json`、`summary_h.md`、図 1 枚（T90 と A_end を、B60・B30 の切除と F61・F31 の切除で並べる）。生データは `obsidian-research-data/vit_long_1024_2blk_rlfix/posthoc_h/`。
+- vault 結果ノート `可塑性喪失/測定/ViT課題60の枝の切除_薄い新品と並べる_結果_<MMDD>.md`、`V14主張の流れ_残った網の容量_1108` §2 の切れ目 2 の行に 1 行リンク。
+- 言わないこと: 切除を手法として語らない。「残差網では⑤が起きない」と言わない（単位が変わるだけ、G5）。上流の切替と FFN1 の復活の因果（切れ目 3）はこの走では触らない。
