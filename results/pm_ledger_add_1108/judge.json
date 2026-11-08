@@ -1,0 +1,87 @@
+{
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9
+ ],
+ "predictions": {
+  "P5": {
+   "text": "CHB と KKT1 の ‖W1‖²（課題 451〜500）は none の 0.5〜2 倍で M_inv/‖S‖² は 0.40〜0.47",
+   "detail": {
+    "CHB": {
+     "W_ratio_to_none": 1.0358403597722146,
+     "Minv_frac": 0.4396669653328372,
+     "Minv_ratio_to_none": 1.048486239950623,
+     "ok": true
+    },
+    "KKT1": {
+     "W_ratio_to_none": 0.42485858228609197,
+     "Minv_frac": 0.4393004998593317,
+     "Minv_ratio_to_none": 0.4312393606953052,
+     "ok": false
+    }
+   },
+   "grade": "△"
+  },
+  "P6": {
+   "text": "CHB+INV0 の G は CHB の半分以下",
+   "G_CHB": 1.5825000000000025,
+   "G_CHB_INV0": -4.493499999999999,
+   "grade": "○"
+  },
+  "P7": {
+   "text": "CHB+INV0 の G は CHB+ISO より小さい（8/10 以上で平均差 ≥ 0.5）",
+   "n_pos": 1,
+   "n": 10,
+   "mean_diff_ISO_minus_INV0": -0.36999999999999955,
+   "G_CHB_ISO": -4.863499999999998,
+   "grade": "×"
+  },
+  "P8": {
+   "text": "L2I+ADD の G は L2 Init から none との差の半分以上まで上がる",
+   "G_L2I_ADD": -0.927000000000001,
+   "line": 2.202000000000001,
+   "G_none": 8.643,
+   "G_l2init": -4.238999999999999,
+   "frac_of_gap": 0.25710293432696774,
+   "grade": "×"
+  }
+ },
+ "verdict_A": "PARTIAL",
+ "verdict_B": "NORM_OR_NONSPECIFIC",
+ "S_ledger": {
+  "max_res_over_bound": 2.070461937006353e-05,
+  "max_rel_T_row_sum_vs_d": 2.0053981412699325e-15,
+  "max_abs_ero_all_vs_r_minus_1_noSwitchArms": 3.3306690738754696e-16
+ },
+ "S_box2": {
+  "CHB": {
+   "ok": true,
+   "G_mean": 1.5825000000000025,
+   "tol": 0.32823259073646105,
+   "n": 10
+  },
+  "KKT1": {
+   "ok": true,
+   "G_mean": 2.0685000000000016,
+   "tol": 0.32823259073646105,
+   "n": 10
+  }
+ },
+ "arms_seen": [
+  "CHB",
+  "KKT1",
+  "CHB_INV0",
+  "CHB_ISO",
+  "L2I_ADD",
+  "KKT1_INV0",
+  "none_INV0"
+ ]
+}
