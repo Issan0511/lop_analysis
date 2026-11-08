@@ -1068,6 +1068,7 @@ touch ~/Projects/obsidian-research-data/vit_long_1024/STOP
 - 「seed × 正規化の組（2 腕）」ごとに 1 台に置く。組の中の比較は同じ機械の丸めで行う。
 - white-san: (10252010, RMS)・(10252011, LN)・(10252011, RMS)・(10252012, RMS) と、その新品（`jobs_rlfix_e_whitesan.txt`）。
 - byakko（先生の PC、RTX 5070 Ti）: (10252012, LN)・(10252013, LN)・(10252013, RMS)・(10252014, LN)・(10252014, RMS) と、その新品（`jobs_rlfix_e_byakko.txt`）。先生の Claude Code に依頼文で回してもらい、結果はギガファイル便で受け取る。
+  - 1108: byakko の分は受け取らず、同じ 10 本と新品 20 本を white-san で回す（Issa 1108「先生の分もここで回したいです」）。一覧は `jobs_rlfix_e_byakko_whitesan.txt`（中身は同じ、順番だけ追補 G の採点に要る freshL → SL を先に）。これで追補 E の走は seed 10252010 の LN の組（借りた機械）以外すべて white-san になり、組の中の比較は同じ機械のまま。
 - 手順は `analysis/vit_long_1024/run_queue.sh <一覧>`。一覧の奇数行と偶数行を 2 本並べて回す（同じ組の 2 腕が同時に走る）。止まったら同じ命令で再開する。
 - 機械が違う組どうし（例: seed 10252012 の LN 対 RMS）は丸めが違う。
 
@@ -1405,3 +1406,5 @@ SL の 2 seed。10252010 は追補 D（借りた機械）、10252011 は追補 E
 - 検査の記録は、white-san の `_checks_g/remote_rent1/` と `_checks_g/remote_rent2/` に引き戻す。
 - 引き戻し: white-san の `_pull_g/pull_g_rented.sh` が、15 分ごとに runs/SLW・SLP（再開用の checkpoint.pt も）・列の記録・検査の記録を引き戻す。
 - 終わったら、最後の引き戻しと manifest の sha256 の照合の後、2 台とも `vastai destroy instance <id> -y` で返す。
+- 1031: 2 台とも列が ALL_DONE になり、引き戻した全ファイルの sha256 が借りた機械と一致した（rent2 128 ファイル 08:35、rent1 192 ファイル 19:40）後に返した（`_pull_g/finish.log`）。SLW・SLP は 5 seed × 100 課題とも complete。
+- 1108: 対照の seed 10252012〜14 の SL・freshL（byakko の分）は届いていないので、white-san で回す（E.2 の 1108 の記録。一覧 `jobs_rlfix_e_byakko_whitesan.txt`、freshL → SL → R0L → RMSNorm の組 → freshRMS の順）。コードは G の検査を通した d441a0cc から run.py・common.py とも変わっていない（G5 で SL が追補 E の white-san の記録とビット一致）。Q の分母（freshL）と J G4 の SL は white-san、SLW・SLP は借りた機械なので、機械をまたぐ扱いは G.10 のとおり変わらない。
