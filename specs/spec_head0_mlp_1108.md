@@ -1,6 +1,7 @@
 # spec: head0_mlp_1108 — MLP の切替で head だけ 0 に戻す（⑤は体の側か、装填の費用か）
 
-状態: **起案（予測を固定する前）** / 2026-11-08 / 起案: Claude（Fable 5.1。vit_long_1024 の追補 G を測っているセッション）
+状態: **登録（予測を固定、§6 の検査は PASS、本走の前）** / 2026-11-08 / 起案: Claude（Fable 5.1。vit_long_1024 の追補 G を測っているセッション）
+検査の値（1108 14:3x、`results/_smoke/head0_mlp_1108/`）: C1 の課題末 max|差| = 0.0（LR s0 の 4 課題、ELU s1 の 2 課題）、更新 200 の max|差| = 0.0、C2 の変異対照 0.126（LR s0）・0.095（ELU s1）> 0、C3 新品と engine の初期値の差 0.19、C4 H0 の最初の 1 更新の体の勾配 0.0。予測（§7）はこの行より前の commit 6f37fb72・0758a939 で固定済み。
 依頼: Vit実験の振り返りセッション（Fable 5.1）経由、Issa 1108「回す」→「Neokunekune のセッションに送って」。
 前の結果: ViT 箱 `results/vit_long_1024_2blk_rlfix/`（追補 F の J F5 RESPONSE_BYPASSED、R0L は head を戻すと新品より速い）。
 
