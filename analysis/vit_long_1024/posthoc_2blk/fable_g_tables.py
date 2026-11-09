@@ -284,6 +284,22 @@ def main():
         a, b, c = S[('SLW', s)], S[('SLP', s)], S[('SL', s)]
         md(f"| {s} | {fmt(a['norm2_late']) if a else '—'} | {fmt(b['norm2_late']) if b else '—'} | {fmt(c['norm2_late']) if c else '—'} | {fmt(a['norm1'] ** 2) if a else '—'} |")
     md('')
+    md('- ‖W‖² の傾き（/課題、窓ごとの最小二乗。事後の記録、1109）。')
+    md('')
+    md('| 腕 | seed | 課題 10〜40 | 課題 41〜70 | 課題 71〜100 |')
+    md('|---|---|---|---|---|')
+    for arm_ in ('SLW', 'SL'):
+        for seed_ in SEEDS:
+            run_ = runs[(arm_, seed_)]
+            if not run_:
+                md(f'| {arm_} | {seed_} | — | — | — |')
+                continue
+            cells = []
+            for lo, hi in ((10, 40), (41, 70), (71, 100)):
+                tt = np.arange(lo, hi + 1)
+                cells.append(f"{np.polyfit(tt, [run_['norm'][int(i)] ** 2 for i in tt], 1)[0]:+.3f}")
+            md(f"| {arm_} | {seed_} | {' | '.join(cells)} |")
+    md('')
     md('- 最終 LN の利得 γ（head の入力に掛かる尺度）。head のノルムを止めた腕では γ が伸びる（事後の記録、1108。走る前の鎖は γ を一定と置いていた）。')
     md('')
     md('| 腕 | seed | γ の RMS 課題 1 末 → 100 末 | 比 | ‖W‖ の比（J G1） | ‖W‖ × γ の比 | 確信の比（J G2） |')
@@ -328,7 +344,7 @@ def main():
         ax.grid(axis='y', color='#eeeeee', lw=.6)
     h, l = axes[0, 0].get_legend_handles_labels()
     fig.legend(h, l, loc='upper center', ncol=5, frameon=False, fontsize=8, bbox_to_anchor=(0.5, 1.0))
-    fig.text(0.5, 0.005, '点線は同 seed の新品 freshL 4 本（課題 25・50・75・100）の T90 の中央値。SL・freshL の seed 12〜14 は white-san で走行中。',
+    fig.text(0.5, 0.005, '点線は同 seed の新品 freshL 4 本（課題 25・50・75・100）の T90 の中央値。',
              ha='center', fontsize=8, color=INK)
     fig.tight_layout(rect=(0, 0.02, 1, 0.96))
     fig.savefig(OUT / 'g_timeseries.png', dpi=130)
