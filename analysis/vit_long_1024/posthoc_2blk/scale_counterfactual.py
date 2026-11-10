@@ -349,4 +349,7 @@ if __name__ == '__main__':
     p.add_argument('--track-dim', action='store_true', help='50 更新ごとに head が読む特徴の有効次元を記録')
     p.add_argument('--fresh-adam', action='store_true', help='Adam の保存が無い課題末: 記憶を空にして回す')
     p.add_argument('--track-steps', type=int, default=0, help='最初の N 更新の 1 更新ごとの変位・勾配・Adam の v と m̂/√v̂ を記録')
-    main(p.parse_args())
+    p.add_argument('--seed', type=int, default=SEED, help='走の seed（既定 10252010。追補 G.4 の記録で引数にした、1111）')
+    args_ = p.parse_args()
+    SEED = args_.seed                             # main と下の関数はこのモジュール変数を見る
+    main(args_)

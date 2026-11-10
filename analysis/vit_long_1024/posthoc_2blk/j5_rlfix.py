@@ -7,6 +7,8 @@
 さらに Adam の状態がある課題末（1・10・30・60・100）では、課題 t+1 の最初の batch で実際に 1 歩進め、
 unit ごとの自分の重みを通る変化 Δ_own_j = Δw_j·ȳ + Δb_j と、その batch の勾配の射影 G_j = ∇w_j·ȳ + ∇b_j の符号を S_j と比べる。
 CPU float64（押し）、GPU float32 eager（実際の 1 歩）。
+1111（Fable）: 網は腕どおりに作る（C.build_arm_model。LN・LN なしの腕は前と同じ網）。最後の正規化が RMSNorm の腕（追補 E.3 の記録）では、
+q = t/rms・h = γ ⊙ q（平均を引かない）、逆伝播は直通 D = γ ⊙ g / rms と分散微分 R = −q ⟨q, γ ⊙ g⟩ / (d · rms)。
 
     PYTHONPATH=$PWD VIT_LONG_PRODUCTION=production_2blk_rlfix.json \
         python analysis/vit_long_1024/posthoc_2blk/j5_rlfix.py SL <出力.json>
@@ -34,7 +36,7 @@ ADAM_TASKS = (1, 10, 30, 60, 100)
 
 
 def load_model(arm, t, device='cpu', dtype=torch.float64):
-    m = C.build_model(SEED, device, 0.0, arm in C.LN_ARMS, 2, 8.0)
+    m = C.build_arm_model(arm, SEED, device, 0.0, 2, 8.0)
     m.load_state_dict(torch.load(RUNS / arm / f'seed{SEED}' / f'ckpt/model_t{t:02d}.pt', map_location=device,
                                  weights_only=False))
     return m.to(dtype).eval()
@@ -65,6 +67,10 @@ def cls_quantities(model, x):
             sigma = torch.sqrt(var + ln.eps)
             q = (t - mu) / sigma
             h = ln.weight * q + ln.bias
+        elif isinstance(ln, torch.nn.RMSNorm):  # 追補 E: 平均を引かず β も無い
+            sigma = torch.sqrt((t ** 2).mean(1, keepdim=True) + ln.eps)
+            q = t / sigma
+            h = ln.weight * q
         else:                                   # LN なし: h_n = t_n（spec §7.4）
             sigma = torch.ones(t.shape[0], 1, dtype=t.dtype)
             q = t
@@ -76,6 +82,9 @@ def cls_quantities(model, x):
 
 def ln_backprop(model, g, q, sigma):
     """最終 LN を通す逆伝播。直通 D と分散微分 R（spec §7.4）。LN なしは D = g、R = 0。"""
+    if isinstance(model.layers['norm'], torch.nn.RMSNorm):           # 追補 E.3: D = γ⊙g/rms、R = −q⟨q, γ⊙g⟩/(d·rms)
+        b = model.layers['norm'].weight * g
+        return b / sigma[:, None], -q * (q * b).mean(1, keepdim=True) / sigma[:, None]
     if not isinstance(model.layers['norm'], torch.nn.LayerNorm):
         return g, torch.zeros_like(g)
     gamma = model.layers['norm'].weight
@@ -138,7 +147,7 @@ def j5_state(arm, t, x, labels_t):
 def actual_first_step(arm, t, aux, source):
     """課題 t の末（重み＋Adam）から課題 t+1 の最初の batch で 1 歩。unit ごとの Δ_own と勾配の射影。"""
     device = 'cuda'
-    model = C.build_model(SEED, device, 0.0, arm in C.LN_ARMS, 2, 8.0)
+    model = C.build_arm_model(arm, SEED, device, 0.0, 2, 8.0)
     model.load_state_dict(torch.load(RUNS / arm / f'seed{SEED}' / f'ckpt/model_t{t:02d}.pt', map_location=device,
                                      weights_only=False))
     optimizer = C.build_optimizer(model)

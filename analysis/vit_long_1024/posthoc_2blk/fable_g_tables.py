@@ -314,7 +314,54 @@ def main():
             md(f"| {a} | {s} | {fmt(g['01']['gamma'], 3)} → {fmt(g['100']['gamma'], 3)} | {fmt(g['ratio'])} | {fmt(st['norm_ratio'])} | {fmt(g['ratio'] * st['norm_ratio'])} | {fmt(st['conf_ratio'])} |")
     md('')
     md('- 課題ごとの ‖W‖・始めの暗記損失・T90 の時系列は `g_timeseries.png`。')
-    md('- 体の速さ（課題 100 末から head を 0 に戻して課題 101 を回す T90）は未実施。白さんの GPU は E の残り（byakko の分）の列が使っている。')
+    # 記録: 体の速さ（G.4、1111）
+    md('- 体の速さ（G.4 の記録、1111）: 保存した課題 100 末から head を 0 に戻し、保存した Adam のまま課題 101 を回した T90'
+       '（`scale_counterfactual.py` の head0、eager、≤ 5,000 更新。腕の WD・射影は掛けない。道具 `run_g_records.sh`、出力 `<raw>/posthoc_g/`）。'
+       '15 本とも 1111 に white-san の同じ起動の中で回した。比べるのは同じ表の SL とだけ（G.4）。')
+    md('')
+    md('| seed | SL | SLW | SLP | SLW − SL | SLP − SL | 新品の中央値（本走、参考） |')
+    md('|---|---|---|---|---|---|---|')
+    bs = {}
+    for a in ['SL'] + ARMS:
+        for s in SEEDS:
+            p_ = RAW / 'posthoc_g' / f'body_speed_{a}_seed{s}.json'
+            bs[(a, s)] = json.load(open(p_)) if p_.exists() else None
+    t90b = lambda a, s: (float(bs[(a, s)]['T90']) if bs[(a, s)] and bs[(a, s)]['status'] == 'reached90' else
+                         (float(UNR) if bs[(a, s)] else None))
+    for s in SEEDS:
+        a_, w_, p__ = t90b('SL', s), t90b('SLW', s), t90b('SLP', s)
+        fr = fresh[s]
+        md(f"| {s} | {fmt(a_, 0)} | {fmt(w_, 0)} | {fmt(p__, 0)} | {fmt(w_ - a_, 0) if None not in (w_, a_) else '—'} | "
+           f"{fmt(p__ - a_, 0) if None not in (p__, a_) else '—'} | {fmt(St.median(fr.values()), 0) if fr else '—'} |")
+    md('')
+    md('  同じ保存状態・同じコードでも、11/05 の再起動の前（10/27・11/02）は SL の seed 10252010 が 575 で、再起動の後（1111 に 4 回）は 500 だった。'
+       '設定・更新数の上限・保存状態・パッケージは同じで、違うのは再起動で入れ替わった kernel（7.0.0-38 → 42）。原因は特定していない。'
+       '起動をまたいだ回し直しの T90 は比べない。')
+    md('')
+    # 記録: 行と特徴の cos²（G.4、1111）
+    md('- 保存した課題末の行と特徴の cos²（G.4 の記録、1111）: 追補 D の J5 の量（`j5_rlfix.py`）。cos² = ⟨W^c, F_t⟩² / (‖W^c‖² ‖F_t‖²)、'
+       'W^c は損失の 10 行を行平均で中心化した head、F_t = Σ_m (e_{y_m} − 1/K) ⊗ h_m（課題 t の 2,500 枚・そのラベル、CLS 位置の最終 LN の出力）。'
+       '道具 `fable_eg_j5.py`、出力 `<raw>/posthoc_j5/j5_<腕>_seed<seed>.json`。5 seed の中央値（最小〜最大）。')
+    md('')
+    CT = (1, 10, 30, 60, 100)
+    md('| 腕 | ' + ' | '.join(f'課題 {t} 末' for t in CT) + ' | κ > 0 の状態 |')
+    md('|---|' + '---|' * (len(CT) + 1))
+    cos_rec = {}
+    for a in ['SL'] + ARMS:
+        per = {t: [] for t in CT}
+        kpos = [0, 0]
+        for s in SEEDS:
+            p_ = RAW / 'posthoc_j5' / f'j5_{a}_seed{s}.json'
+            if not p_.exists():
+                continue
+            for r in json.load(open(p_))['results']:
+                kpos[0] += r['kappa'] > 0; kpos[1] += 1
+                if r['task'] in per:
+                    per[r['task']].append(r['cos2'])
+        cells = [f"{St.median(v):.2f}（{min(v):.2f}〜{max(v):.2f}）" if v else '—' for v in per.values()]
+        md(f"| {a} | {' | '.join(cells)} | {kpos[0]}/{kpos[1]} |")
+        cos_rec[a] = {t: v for t, v in per.items()}
+    md('')
     md('')
 
     # ---------- figure ----------
@@ -350,7 +397,8 @@ def main():
     fig.savefig(OUT / 'g_timeseries.png', dpi=130)
 
     (OUT / 'judge.md').write_text('\n'.join(L) + '\n', encoding='utf-8')
-    json.dump(dict(stats={f'{a}/{s}': S[(a, s)] for a in ARMS + ['SL'] for s in SEEDS}, judge=J, thresholds=TH, need=NEED, final_ln_gain=gains),
+    json.dump(dict(stats={f'{a}/{s}': S[(a, s)] for a in ARMS + ['SL'] for s in SEEDS}, judge=J, thresholds=TH, need=NEED, final_ln_gain=gains,
+                   body_speed={f'{a}/{s}': t90b(a, s) for a in ['SL'] + ARMS for s in SEEDS}, cos2=cos_rec),
               open(OUT / 'judge.json', 'w'), ensure_ascii=False, indent=1, default=str)
     print('\n'.join(L))
 
