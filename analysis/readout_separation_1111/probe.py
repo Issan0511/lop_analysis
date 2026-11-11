@@ -64,14 +64,14 @@ def assert_close(name, a, b, checks, rtol=2e-5, atol=2e-7):
 
 
 
-def assert_gauge_close(name, actual, reference, checks):
-    """Compare an invariant vector, including all trunk parameters jointly.
+def assert_norm_close(name, actual, reference, checks, context):
+    """Numerical identity for a vector, robust to near-zero coordinates.
 
-    Gauge-rescaled float32 layer-norm outputs accumulate rounding/cancellation
-    through the trunk. Componentwise relative error is ill-conditioned near
-    zero; retain the original 2e-5 tolerance on each vector's relative L2 error,
-    with no added absolute floor. Each parameter is also checked separately.
-    Float64 synthetic identities use 1e-11 relative and max-absolute bounds.
+    Different GEMM batch shapes and gauge-rescaled float32 layer norms can
+    accumulate rounding/cancellation. Retain the original 2e-5 tolerance on
+    relative L2, with no absolute floor. Callers check each relevant sample or
+    parameter separately as well as the global vector. Float64 synthetic
+    identities use 1e-11 relative and max-absolute bounds.
     """
     xs = [actual] if torch.is_tensor(actual) else list(actual)
     ys = [reference] if torch.is_tensor(reference) else list(reference)
@@ -98,8 +98,30 @@ def assert_gauge_close(name, actual, reference, checks):
                         one_minus_cosine_tolerance=cos_tol,
                         absolute_tolerance=1e-11 if is_double else 0.,
                         criterion='relative L2 and cosine per vector; exactly zero reference requires exactly zero alternative',
-                        precision='float64_identity' if is_double else 'float32_numerical_gauge')
+                        precision='float64_identity' if is_double else 'float32_numerical_'+context)
     if not ok: raise AssertionError((name, checks[name]))
+
+
+
+def assert_gauge_close(name, actual, reference, checks):
+    assert_norm_close(name, actual, reference, checks, 'gauge')
+
+
+def assert_feature_consistency(actual, reference, checks):
+    """Compare selected features computed in different batch shapes.
+
+    Full-set chunks end with 48 MLP examples (68 ViT); the fixed probe uses
+    128. Floating-point GEMM reductions can differ across those shapes. This
+    numerical check does not alter either feature tensor or probability bank.
+    Every local Jacobian assay still requires exactly the same selected-128
+    forward output, checked separately with zero relative/absolute tolerance.
+    """
+    if actual.ndim != 2 or actual.shape != reference.shape:
+        raise AssertionError('Selected/full-set feature shape mismatch')
+    name = 'selected_features_fullset_consistency'
+    assert_norm_close(name, actual, reference, checks, 'batch_features')
+    for i, (a,b) in enumerate(zip(actual,reference)):
+        assert_norm_close(name+f'__sample{i}', a, b, checks, 'batch_features')
 
 
 def body_layout(box):
@@ -375,7 +397,7 @@ def assay(box, t_end, output_dir, bank=None):
     idx_cpu, subset_key = subset_indices(len(box.X), model, box.seed)
     idx = idx_cpu.to(box.X.device); x = box.X[idx]; y = box.new[idx]
     with torch.no_grad(): h0 = ops.native_features(box, x).detach()
-    checks = {}; assert_close('selected_features_fullset_consistency', h0.cpu(), hfull[idx_cpu], checks)
+    checks = {}; assert_feature_consistency(h0.cpu(), hfull[idx_cpu], checks)
     fullset, arrays = fullset_stats(hfull, bank['entries'], box.old, box.new,
                                   box.model.layers['norm'].weight if model=='vit' else None,
                                   box.model.layers['norm'].bias if model=='vit' else None)

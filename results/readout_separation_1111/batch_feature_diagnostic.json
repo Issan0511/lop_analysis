@@ -1,0 +1,782 @@
+{
+  "purpose": "CPU-only cached state batch-shape numerical validation; no replay, training, GPU or source writes.",
+  "started_utc": "2026-11-11T10:39:51Z",
+  "ended_utc": "2026-11-11T10:39:54Z",
+  "elapsed_s": 2.467014392022975,
+  "total_cpu_s": 2.4667489999999996,
+  "script_sha256": "7947154d001e26d3ef318ce58d0bb2f07f027f372c0e13cf32532ec1dcc82536",
+  "probe_sha256": "75da39c5f6aa0a81952deed75686dd267444b74ee2fc017b673f66de2546aaee",
+  "initial_failed3_timing": {
+    "started_utc": "2026-11-11T10:37:12Z",
+    "ended_utc": "2026-11-11T10:37:13Z",
+    "elapsed_s": 0.7451559419278055,
+    "total_cpu_s": 0.744261
+  },
+  "timing_scope": "CPU timings cover diagnostic body after imports; measured command wall times were 1.436422626 and 3.199445651 seconds. No GPU or training.",
+  "detailed_results_path": "/home/issan/Projects/claude/wt/readout_separation_1111/results/readout_separation_1111/smoke_probe/batch_features_diagnostic/all10.json",
+  "detailed_results_sha256": "0bd4e8bf6d1464291b634fce377f730cdc38ee5924b9a859fb9cb4bd171b6c50",
+  "criterion": {
+    "criterion": "Existing relative tolerance 2e-5 applied to global and each sample feature-vector L2 error, corresponding cosine bound 8e-10, no absolute floor. Float64 relative/maxabs remains 1e-11.",
+    "shared_probability_requirement": "Feature computations, subset, probability banks and gradients unchanged. Every selected-128 Jacobian forward remains required to match h0 exactly.",
+    "synthetic_cases": "Rounded near-zero component accepted; isolated small sample large relative error rejected despite tiny global error; float64 over-tolerance, shape mismatch and zero-reference mismatch rejected; actual synthetic 1200x784 affine/ELU tail48 vs selected128 validated against float64."
+  },
+  "cause": "All nonzero float32 batch feature differences are in the full-set final48-example chunk; selected probe uses128 examples. All other selected rows match exactly. Near-zero componentwise test rejects one component in each of seeds2,4,7.",
+  "results": [
+    {
+      "seed": 0,
+      "source_path": "/home/issan/Projects/claude/wt/readout_separation_1111/results/readout_separation_1111/logs/attempt_20261111T102805Z_1893530/preserved_outputs/raw/source_mlp_ELU_s0_t10.pt",
+      "source_sha256": "5923ea928aa2c32056af09721a67e06a925adad0216e8f73c3c718335aa016ab",
+      "inputs_sha256": "97aa43062d621a6b06e8559bc69e968422c7a185716547b9705adc10f67e8940",
+      "subset_key": "readout_separation_1111|probe_subset|mlp|0",
+      "new_consistency_checks_passed": true,
+      "new_check_count": 129,
+      "n_full": 1200,
+      "fullset_batch_shapes": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        48
+      ],
+      "selected_batch_shape": 128,
+      "original_elementwise_pass": true,
+      "n_failing_components": 0,
+      "failing_original_indices": [],
+      "n_failing_rows_in_tail": 0,
+      "global_features": {
+        "max_abs": 2.1457672119140625e-06,
+        "error_l2": 3.038850617293836e-06,
+        "reference_l2": 130.4209176535735,
+        "relative_l2": 2.3300331510975014e-08,
+        "cosine": 0.9999999999999977
+      },
+      "global_preact": {
+        "max_abs": 9.5367431640625e-06,
+        "error_l2": 4.486016789264775e-05,
+        "reference_l2": 1340.4334693316732,
+        "relative_l2": 3.346691120374261e-08,
+        "cosine": 0.9999999999999941
+      },
+      "exact_repeated_selected_forward": true,
+      "selected_vs_float64_features": {
+        "max_abs": 3.464174540113163e-06,
+        "error_l2": 1.3976966012652213e-05,
+        "reference_l2": 130.42091752189276,
+        "relative_l2": 1.0716813129539597e-07,
+        "cosine": 0.9999999999999933
+      },
+      "fullset_vs_float64_features": {
+        "max_abs": 3.464174540113163e-06,
+        "error_l2": 1.3923039686001256e-05,
+        "reference_l2": 130.42091752189276,
+        "relative_l2": 1.0675465217198845e-07,
+        "cosine": 0.9999999999999933
+      },
+      "float64_batch_preact": {
+        "max_abs": 7.105427357601002e-15,
+        "error_l2": 2.479752156203879e-14,
+        "reference_l2": 1340.433467668659,
+        "relative_l2": 1.849962878438699e-17,
+        "cosine": 1.0
+      },
+      "float64_batch_features": {
+        "max_abs": 1.1102230246251565e-16,
+        "error_l2": 1.1102230246251565e-16,
+        "reference_l2": 130.42091752189276,
+        "relative_l2": 8.512614737883529e-19,
+        "cosine": 1.0
+      },
+      "float32_preact_max_error_over_dot_bound": 0.004424696889749875,
+      "dot_bound_definition": "gamma_785*(abs(X)@abs(A.T)+abs(b)), u=float32 epsilon/2",
+      "source_unchanged": true,
+      "max_sample_relative_l2": 2.1247546642825287e-07,
+      "max_non_tail_abs_error": 0.0
+    },
+    {
+      "seed": 1,
+      "source_path": "/home/issan/Projects/claude/wt/readout_separation_1111/results/readout_separation_1111/logs/attempt_20261111T102805Z_1893530/preserved_outputs/raw/source_mlp_ELU_s1_t10.pt",
+      "source_sha256": "b6f17e973743a6981c31ce7096e628d016bd2eb4382872a612dd6b2e34b0fcc7",
+      "inputs_sha256": "1e2b3f5bb7bf9d1b43ab2206d335f66272c04ee30bff6d547904c85c0c9fe668",
+      "subset_key": "readout_separation_1111|probe_subset|mlp|1",
+      "new_consistency_checks_passed": true,
+      "new_check_count": 129,
+      "n_full": 1200,
+      "fullset_batch_shapes": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        48
+      ],
+      "selected_batch_shape": 128,
+      "original_elementwise_pass": true,
+      "n_failing_components": 0,
+      "failing_original_indices": [],
+      "n_failing_rows_in_tail": 0,
+      "global_features": {
+        "max_abs": 1.1920928955078125e-06,
+        "error_l2": 3.162172464238618e-06,
+        "reference_l2": 129.02469478649888,
+        "relative_l2": 2.4508273160197447e-08,
+        "cosine": 0.9999999999999967
+      },
+      "global_preact": {
+        "max_abs": 1.1444091796875e-05,
+        "error_l2": 4.394286494521888e-05,
+        "reference_l2": 1342.2018724326747,
+        "relative_l2": 3.273938581651254e-08,
+        "cosine": 0.9999999999999951
+      },
+      "exact_repeated_selected_forward": true,
+      "selected_vs_float64_features": {
+        "max_abs": 3.3321574126610187e-06,
+        "error_l2": 1.5359738425289055e-05,
+        "reference_l2": 129.02469373887587,
+        "relative_l2": 1.1904495163053489e-07,
+        "cosine": 0.9999999999999921
+      },
+      "fullset_vs_float64_features": {
+        "max_abs": 3.3321574126610187e-06,
+        "error_l2": 1.531586573470958e-05,
+        "reference_l2": 129.02469373887587,
+        "relative_l2": 1.1870491834459455e-07,
+        "cosine": 0.9999999999999921
+      },
+      "float64_batch_preact": {
+        "max_abs": 3.552713678800501e-15,
+        "error_l2": 2.203764738388017e-14,
+        "reference_l2": 1342.2018770668767,
+        "relative_l2": 1.6419025900961485e-17,
+        "cosine": 1.0
+      },
+      "float64_batch_features": {
+        "max_abs": 5.551115123125783e-16,
+        "error_l2": 1.1054422416904925e-15,
+        "reference_l2": 129.02469373887587,
+        "relative_l2": 8.567679640671889e-18,
+        "cosine": 1.0
+      },
+      "float32_preact_max_error_over_dot_bound": 0.0039575971767298245,
+      "dot_bound_definition": "gamma_785*(abs(X)@abs(A.T)+abs(b)), u=float32 epsilon/2",
+      "source_unchanged": true,
+      "max_sample_relative_l2": 2.11922318971197e-07,
+      "max_non_tail_abs_error": 0.0
+    },
+    {
+      "seed": 2,
+      "source_path": "/home/issan/Projects/claude/wt/readout_separation_1111/results/readout_separation_1111/logs/attempt_20261111T102805Z_1893530/preserved_outputs/raw/source_mlp_ELU_s2_t10.pt",
+      "source_sha256": "5e23a532578501e9a390c1215f254aa33d1343d27a4d09bc637d09b9581152af",
+      "inputs_sha256": "c34c8380b75a60606db1000429d2093d525e01a03454c00b1f5cd0091453e575",
+      "subset_key": "readout_separation_1111|probe_subset|mlp|2",
+      "new_consistency_checks_passed": true,
+      "new_check_count": 129,
+      "n_full": 1200,
+      "fullset_batch_shapes": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        48
+      ],
+      "selected_batch_shape": 128,
+      "original_elementwise_pass": false,
+      "n_failing_components": 1,
+      "failing_original_indices": [
+        1171
+      ],
+      "n_failing_rows_in_tail": 1,
+      "global_features": {
+        "max_abs": 1.3113021850585938e-06,
+        "error_l2": 3.3671278298538816e-06,
+        "reference_l2": 130.4267096906791,
+        "relative_l2": 2.581624452414222e-08,
+        "cosine": 0.9999999999999974
+      },
+      "global_preact": {
+        "max_abs": 4.76837158203125e-06,
+        "error_l2": 2.3968266492696747e-05,
+        "reference_l2": 1280.2110495951645,
+        "relative_l2": 1.8722121247333498e-08,
+        "cosine": 0.9999999999999961
+      },
+      "exact_repeated_selected_forward": true,
+      "selected_vs_float64_features": {
+        "max_abs": 2.382899875197353e-06,
+        "error_l2": 1.4369360637141268e-05,
+        "reference_l2": 130.42670957058118,
+        "relative_l2": 1.1017191712074286e-07,
+        "cosine": 0.9999999999999929
+      },
+      "fullset_vs_float64_features": {
+        "max_abs": 2.382899875197353e-06,
+        "error_l2": 1.4113671622958681e-05,
+        "reference_l2": 130.42670957058118,
+        "relative_l2": 1.0821151334283247e-07,
+        "cosine": 0.9999999999999931
+      },
+      "float64_batch_preact": {
+        "max_abs": 3.552713678800501e-15,
+        "error_l2": 1.0722133695506618e-14,
+        "reference_l2": 1280.2110443501792,
+        "relative_l2": 8.375286045863675e-18,
+        "cosine": 0.9999999999999993
+      },
+      "float64_batch_features": {
+        "max_abs": 8.881784197001252e-16,
+        "error_l2": 9.930136612989092e-16,
+        "reference_l2": 130.42670957058118,
+        "relative_l2": 7.613575965906999e-18,
+        "cosine": 0.9999999999999998
+      },
+      "float32_preact_max_error_over_dot_bound": 0.004918396524946404,
+      "dot_bound_definition": "gamma_785*(abs(X)@abs(A.T)+abs(b)), u=float32 epsilon/2",
+      "source_unchanged": true,
+      "max_sample_relative_l2": 2.0067086233838592e-07,
+      "max_non_tail_abs_error": 0.0
+    },
+    {
+      "seed": 3,
+      "source_path": "/home/issan/Projects/claude/wt/readout_separation_1111/results/readout_separation_1111/logs/attempt_20261111T102805Z_1893530/preserved_outputs/raw/source_mlp_ELU_s3_t10.pt",
+      "source_sha256": "d8739d5f160c956c07ad00b304ce651147c35978789d7c516a211938e10ac9f0",
+      "inputs_sha256": "01951abd600b5d5c36ca89c96df0511a53e9cea57132af092e51bb1844cd2b1b",
+      "subset_key": "readout_separation_1111|probe_subset|mlp|3",
+      "new_consistency_checks_passed": true,
+      "new_check_count": 129,
+      "n_full": 1200,
+      "fullset_batch_shapes": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        48
+      ],
+      "selected_batch_shape": 128,
+      "original_elementwise_pass": true,
+      "n_failing_components": 0,
+      "failing_original_indices": [],
+      "n_failing_rows_in_tail": 0,
+      "global_features": {
+        "max_abs": 1.3113021850585938e-06,
+        "error_l2": 1.4781471213861996e-06,
+        "reference_l2": 133.59172154999845,
+        "relative_l2": 1.1064661075072558e-08,
+        "cosine": 0.9999999999999961
+      },
+      "global_preact": {
+        "max_abs": 7.62939453125e-06,
+        "error_l2": 1.8476670772173697e-05,
+        "reference_l2": 1303.7191287896362,
+        "relative_l2": 1.4172278648183455e-08,
+        "cosine": 0.9999999999999963
+      },
+      "exact_repeated_selected_forward": true,
+      "selected_vs_float64_features": {
+        "max_abs": 2.203081823193287e-06,
+        "error_l2": 1.531909345626173e-05,
+        "reference_l2": 133.59172157833646,
+        "relative_l2": 1.1467097867496834e-07,
+        "cosine": 0.9999999999999917
+      },
+      "fullset_vs_float64_features": {
+        "max_abs": 2.203081823193287e-06,
+        "error_l2": 1.5314094154506406e-05,
+        "reference_l2": 133.59172157833646,
+        "relative_l2": 1.146335564328095e-07,
+        "cosine": 0.9999999999999917
+      },
+      "float64_batch_preact": {
+        "max_abs": 0.0,
+        "error_l2": 0.0,
+        "reference_l2": 1303.7191302882206,
+        "relative_l2": 0.0,
+        "cosine": 0.9999999999999996
+      },
+      "float64_batch_features": {
+        "max_abs": 0.0,
+        "error_l2": 0.0,
+        "reference_l2": 133.59172157833646,
+        "relative_l2": 0.0,
+        "cosine": 1.0
+      },
+      "float32_preact_max_error_over_dot_bound": 0.0055613982499176885,
+      "dot_bound_definition": "gamma_785*(abs(X)@abs(A.T)+abs(b)), u=float32 epsilon/2",
+      "source_unchanged": true,
+      "max_sample_relative_l2": 1.3321707925645383e-07,
+      "max_non_tail_abs_error": 0.0
+    },
+    {
+      "seed": 4,
+      "source_path": "/home/issan/Projects/claude/wt/readout_separation_1111/results/readout_separation_1111/logs/attempt_20261111T102805Z_1893530/preserved_outputs/raw/source_mlp_ELU_s4_t10.pt",
+      "source_sha256": "900e3d052afb63cbbac59858defc5bb403c93b3111398ffd42d33ca72724dfe7",
+      "inputs_sha256": "07ea901ca2e0b3d7a0ae5dcbf4a9643262315265b246bbcff63051e9b66e6259",
+      "subset_key": "readout_separation_1111|probe_subset|mlp|4",
+      "new_consistency_checks_passed": true,
+      "new_check_count": 129,
+      "n_full": 1200,
+      "fullset_batch_shapes": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        48
+      ],
+      "selected_batch_shape": 128,
+      "original_elementwise_pass": false,
+      "n_failing_components": 1,
+      "failing_original_indices": [
+        1159
+      ],
+      "n_failing_rows_in_tail": 1,
+      "global_features": {
+        "max_abs": 1.1064112186431885e-06,
+        "error_l2": 2.5571153503061533e-06,
+        "reference_l2": 130.96066698340363,
+        "relative_l2": 1.952582717550004e-08,
+        "cosine": 0.9999999999999964
+      },
+      "global_preact": {
+        "max_abs": 1.1444091796875e-05,
+        "error_l2": 5.097844050481511e-05,
+        "reference_l2": 1300.4006626918926,
+        "relative_l2": 3.920210283443509e-08,
+        "cosine": 0.9999999999999942
+      },
+      "exact_repeated_selected_forward": true,
+      "selected_vs_float64_features": {
+        "max_abs": 3.4450531305463272e-06,
+        "error_l2": 1.6988948513576043e-05,
+        "reference_l2": 130.9606674094657,
+        "relative_l2": 1.2972557982205348e-07,
+        "cosine": 0.9999999999999905
+      },
+      "fullset_vs_float64_features": {
+        "max_abs": 3.4450531305463272e-06,
+        "error_l2": 1.6896677164848902e-05,
+        "reference_l2": 130.9606674094657,
+        "relative_l2": 1.2902100683420638e-07,
+        "cosine": 0.9999999999999905
+      },
+      "float64_batch_preact": {
+        "max_abs": 3.552713678800501e-15,
+        "error_l2": 2.026339514137371e-14,
+        "reference_l2": 1300.4006604360002,
+        "relative_l2": 1.5582424523361724e-17,
+        "cosine": 1.0
+      },
+      "float64_batch_features": {
+        "max_abs": 8.881784197001252e-16,
+        "error_l2": 1.5565409952966684e-15,
+        "reference_l2": 130.9606674094657,
+        "relative_l2": 1.1885560955717634e-17,
+        "cosine": 1.0
+      },
+      "float32_preact_max_error_over_dot_bound": 0.0053193400908091324,
+      "dot_bound_definition": "gamma_785*(abs(X)@abs(A.T)+abs(b)), u=float32 epsilon/2",
+      "source_unchanged": true,
+      "max_sample_relative_l2": 1.2602098505450947e-07,
+      "max_non_tail_abs_error": 0.0
+    },
+    {
+      "seed": 5,
+      "source_path": "/home/issan/Projects/claude/wt/readout_separation_1111/results/readout_separation_1111/logs/attempt_20261111T102805Z_1893530/preserved_outputs/raw/source_mlp_ELU_s5_t10.pt",
+      "source_sha256": "adf7894889c977744ff90ae323308864d2b96ba0548dce6c985d11e8eec35e05",
+      "inputs_sha256": "faccad21b1c2e9caf56ea0a9d0dee03b0be82a9dfa1d083ebfbab5b43dacb7a1",
+      "subset_key": "readout_separation_1111|probe_subset|mlp|5",
+      "new_consistency_checks_passed": true,
+      "new_check_count": 129,
+      "n_full": 1200,
+      "fullset_batch_shapes": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        48
+      ],
+      "selected_batch_shape": 128,
+      "original_elementwise_pass": true,
+      "n_failing_components": 0,
+      "failing_original_indices": [],
+      "n_failing_rows_in_tail": 0,
+      "global_features": {
+        "max_abs": 2.86102294921875e-06,
+        "error_l2": 5.071109487138266e-06,
+        "reference_l2": 128.3810516344356,
+        "relative_l2": 3.950045137173533e-08,
+        "cosine": 0.9999999999999964
+      },
+      "global_preact": {
+        "max_abs": 1.1444091796875e-05,
+        "error_l2": 3.570548324382325e-05,
+        "reference_l2": 1286.892198407695,
+        "relative_l2": 2.774551224104285e-08,
+        "cosine": 0.9999999999999958
+      },
+      "exact_repeated_selected_forward": true,
+      "selected_vs_float64_features": {
+        "max_abs": 6.386362253252287e-06,
+        "error_l2": 1.6606957017411637e-05,
+        "reference_l2": 128.3810526540877,
+        "relative_l2": 1.2935676000537034e-07,
+        "cosine": 0.9999999999999903
+      },
+      "fullset_vs_float64_features": {
+        "max_abs": 6.386362253252287e-06,
+        "error_l2": 1.6579533713359716e-05,
+        "reference_l2": 128.3810526540877,
+        "relative_l2": 1.2914315134984848e-07,
+        "cosine": 0.9999999999999901
+      },
+      "float64_batch_preact": {
+        "max_abs": 1.7763568394002505e-15,
+        "error_l2": 6.1479696418058324e-15,
+        "reference_l2": 1286.8921958809676,
+        "relative_l2": 4.77737736034456e-18,
+        "cosine": 1.0
+      },
+      "float64_batch_features": {
+        "max_abs": 4.440892098500626e-16,
+        "error_l2": 6.162737906427329e-16,
+        "reference_l2": 128.3810526540877,
+        "relative_l2": 4.8003484774597726e-18,
+        "cosine": 0.9999999999999998
+      },
+      "float32_preact_max_error_over_dot_bound": 0.005196918346440388,
+      "dot_bound_definition": "gamma_785*(abs(X)@abs(A.T)+abs(b)), u=float32 epsilon/2",
+      "source_unchanged": true,
+      "max_sample_relative_l2": 2.6905996019520765e-07,
+      "max_non_tail_abs_error": 0.0
+    },
+    {
+      "seed": 6,
+      "source_path": "/home/issan/Projects/claude/wt/readout_separation_1111/results/readout_separation_1111/logs/attempt_20261111T102805Z_1893530/preserved_outputs/raw/source_mlp_ELU_s6_t10.pt",
+      "source_sha256": "606b5afcbaffd730c4aaa42cff1ef03b6a5d03220d00660a07fae2ec53b62ec6",
+      "inputs_sha256": "181094f425df0d0ab2e0903113b73b601d3fc405f67def05dfcde28ac241b07b",
+      "subset_key": "readout_separation_1111|probe_subset|mlp|6",
+      "new_consistency_checks_passed": true,
+      "new_check_count": 129,
+      "n_full": 1200,
+      "fullset_batch_shapes": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        48
+      ],
+      "selected_batch_shape": 128,
+      "original_elementwise_pass": true,
+      "n_failing_components": 0,
+      "failing_original_indices": [],
+      "n_failing_rows_in_tail": 0,
+      "global_features": {
+        "max_abs": 1.430511474609375e-06,
+        "error_l2": 4.077503388468435e-06,
+        "reference_l2": 132.91355964126345,
+        "relative_l2": 3.067785859827774e-08,
+        "cosine": 0.9999999999999952
+      },
+      "global_preact": {
+        "max_abs": 3.814697265625e-06,
+        "error_l2": 1.7848083146647624e-05,
+        "reference_l2": 1319.3818564727212,
+        "relative_l2": 1.3527609963019557e-08,
+        "cosine": 0.9999999999999943
+      },
+      "exact_repeated_selected_forward": true,
+      "selected_vs_float64_features": {
+        "max_abs": 3.6512221566198377e-06,
+        "error_l2": 1.6879330657973172e-05,
+        "reference_l2": 132.9135594656059,
+        "relative_l2": 1.2699479816685704e-07,
+        "cosine": 0.9999999999999901
+      },
+      "fullset_vs_float64_features": {
+        "max_abs": 3.6512221566198377e-06,
+        "error_l2": 1.6869264338115782e-05,
+        "reference_l2": 132.9135594656059,
+        "relative_l2": 1.269190623284831e-07,
+        "cosine": 0.9999999999999901
+      },
+      "float64_batch_preact": {
+        "max_abs": 1.7763568394002505e-15,
+        "error_l2": 5.009554625647218e-15,
+        "reference_l2": 1319.3818536286437,
+        "relative_l2": 3.796895198967333e-18,
+        "cosine": 1.0
+      },
+      "float64_batch_features": {
+        "max_abs": 8.881784197001252e-16,
+        "error_l2": 2.0092411726792423e-15,
+        "reference_l2": 132.9135594656059,
+        "relative_l2": 1.511690139634831e-17,
+        "cosine": 1.0
+      },
+      "float32_preact_max_error_over_dot_bound": 0.0050620346734902184,
+      "dot_bound_definition": "gamma_785*(abs(X)@abs(A.T)+abs(b)), u=float32 epsilon/2",
+      "source_unchanged": true,
+      "max_sample_relative_l2": 1.5618170510000797e-07,
+      "max_non_tail_abs_error": 0.0
+    },
+    {
+      "seed": 7,
+      "source_path": "/home/issan/Projects/claude/wt/readout_separation_1111/results/readout_separation_1111/logs/attempt_20261111T102805Z_1893530/preserved_outputs/raw/source_mlp_ELU_s7_t10.pt",
+      "source_sha256": "99027ed418afbae9eb35a37a81142bc644f2aeb95be666425f48b02fab0db4ee",
+      "inputs_sha256": "e05cbf8ef5db961f1f85f91143d7c518bd55c39beb69f1f1e8d6e6a80689a40b",
+      "subset_key": "readout_separation_1111|probe_subset|mlp|7",
+      "new_consistency_checks_passed": true,
+      "new_check_count": 129,
+      "n_full": 1200,
+      "fullset_batch_shapes": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        48
+      ],
+      "selected_batch_shape": 128,
+      "original_elementwise_pass": false,
+      "n_failing_components": 1,
+      "failing_original_indices": [
+        1169
+      ],
+      "n_failing_rows_in_tail": 1,
+      "global_features": {
+        "max_abs": 2.6226043701171875e-06,
+        "error_l2": 4.899667530240201e-06,
+        "reference_l2": 129.52756521119207,
+        "relative_l2": 3.782721864841196e-08,
+        "cosine": 0.9999999999999977
+      },
+      "global_preact": {
+        "max_abs": 9.5367431640625e-06,
+        "error_l2": 4.090638601824513e-05,
+        "reference_l2": 1337.0513346481157,
+        "relative_l2": 3.059447678500007e-08,
+        "cosine": 0.9999999999999941
+      },
+      "exact_repeated_selected_forward": true,
+      "selected_vs_float64_features": {
+        "max_abs": 3.538059695884499e-06,
+        "error_l2": 1.5043793365589257e-05,
+        "reference_l2": 129.52756549006787,
+        "relative_l2": 1.1614356611020231e-07,
+        "cosine": 0.9999999999999929
+      },
+      "fullset_vs_float64_features": {
+        "max_abs": 3.538059695884499e-06,
+        "error_l2": 1.4911406149862497e-05,
+        "reference_l2": 129.52756549006787,
+        "relative_l2": 1.1512148856843834e-07,
+        "cosine": 0.9999999999999929
+      },
+      "float64_batch_preact": {
+        "max_abs": 3.552713678800501e-15,
+        "error_l2": 1.4507858224916633e-14,
+        "reference_l2": 1337.051338141133,
+        "relative_l2": 1.0850636629320848e-17,
+        "cosine": 1.0
+      },
+      "float64_batch_features": {
+        "max_abs": 8.881784197001252e-16,
+        "error_l2": 1.4250433963955312e-15,
+        "reference_l2": 129.52756549006787,
+        "relative_l2": 1.1001854246267008e-17,
+        "cosine": 1.0
+      },
+      "float32_preact_max_error_over_dot_bound": 0.004661341541480003,
+      "dot_bound_definition": "gamma_785*(abs(X)@abs(A.T)+abs(b)), u=float32 epsilon/2",
+      "source_unchanged": true,
+      "max_sample_relative_l2": 2.952528631948797e-07,
+      "max_non_tail_abs_error": 0.0
+    },
+    {
+      "seed": 8,
+      "source_path": "/home/issan/Projects/claude/wt/readout_separation_1111/results/readout_separation_1111/logs/attempt_20261111T102805Z_1893530/preserved_outputs/raw/source_mlp_ELU_s8_t10.pt",
+      "source_sha256": "2c8715c6d00bad360b65756a883e66127ad675b9e913d503e52831ad087b1c4c",
+      "inputs_sha256": "e33ac001ac23323f62066bf2fb9ca6d1f0d62e7c739fd67c57974e82c04268eb",
+      "subset_key": "readout_separation_1111|probe_subset|mlp|8",
+      "new_consistency_checks_passed": true,
+      "new_check_count": 129,
+      "n_full": 1200,
+      "fullset_batch_shapes": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        48
+      ],
+      "selected_batch_shape": 128,
+      "original_elementwise_pass": true,
+      "n_failing_components": 0,
+      "failing_original_indices": [],
+      "n_failing_rows_in_tail": 0,
+      "global_features": {
+        "max_abs": 9.5367431640625e-07,
+        "error_l2": 1.889394377407673e-06,
+        "reference_l2": 131.39342011936833,
+        "relative_l2": 1.4379672708809889e-08,
+        "cosine": 0.9999999999999967
+      },
+      "global_preact": {
+        "max_abs": 7.62939453125e-06,
+        "error_l2": 2.5768894763799285e-05,
+        "reference_l2": 1291.1935880085996,
+        "relative_l2": 1.995742156955914e-08,
+        "cosine": 0.9999999999999961
+      },
+      "exact_repeated_selected_forward": true,
+      "selected_vs_float64_features": {
+        "max_abs": 2.6631579837232966e-06,
+        "error_l2": 1.6529089219328462e-05,
+        "reference_l2": 131.39342062616137,
+        "relative_l2": 1.2579845429518715e-07,
+        "cosine": 0.9999999999999899
+      },
+      "fullset_vs_float64_features": {
+        "max_abs": 2.6631579837232966e-06,
+        "error_l2": 1.6534981697269504e-05,
+        "reference_l2": 131.39342062616137,
+        "relative_l2": 1.2584330036063672e-07,
+        "cosine": 0.9999999999999899
+      },
+      "float64_batch_preact": {
+        "max_abs": 1.7763568394002505e-15,
+        "error_l2": 8.745429089044511e-15,
+        "reference_l2": 1291.1935847973723,
+        "relative_l2": 6.773135486432064e-18,
+        "cosine": 1.0
+      },
+      "float64_batch_features": {
+        "max_abs": 4.440892098500626e-16,
+        "error_l2": 5.578801654593729e-16,
+        "reference_l2": 131.39342062616137,
+        "relative_l2": 4.24587595635131e-18,
+        "cosine": 0.999999999999999
+      },
+      "float32_preact_max_error_over_dot_bound": 0.004579580290083112,
+      "dot_bound_definition": "gamma_785*(abs(X)@abs(A.T)+abs(b)), u=float32 epsilon/2",
+      "source_unchanged": true,
+      "max_sample_relative_l2": 1.2225773333258454e-07,
+      "max_non_tail_abs_error": 0.0
+    },
+    {
+      "seed": 9,
+      "source_path": "/home/issan/Projects/claude/wt/readout_separation_1111/results/readout_separation_1111/logs/attempt_20261111T102805Z_1893530/preserved_outputs/raw/source_mlp_ELU_s9_t10.pt",
+      "source_sha256": "0fcdd9f33bfe45b296c180abe3fd4a461af42fcb8b8d25508ab76ea887ac8292",
+      "inputs_sha256": "d2e5f15a4d01f60366ef291d8533fd8b7b814a946658470f03722684ce165c76",
+      "subset_key": "readout_separation_1111|probe_subset|mlp|9",
+      "new_consistency_checks_passed": true,
+      "new_check_count": 129,
+      "n_full": 1200,
+      "fullset_batch_shapes": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        48
+      ],
+      "selected_batch_shape": 128,
+      "original_elementwise_pass": true,
+      "n_failing_components": 0,
+      "failing_original_indices": [],
+      "n_failing_rows_in_tail": 0,
+      "global_features": {
+        "max_abs": 5.364418029785156e-07,
+        "error_l2": 1.2036781326982015e-06,
+        "reference_l2": 129.96099754981955,
+        "relative_l2": 9.261841286165726e-09,
+        "cosine": 0.9999999999999977
+      },
+      "global_preact": {
+        "max_abs": 6.67572021484375e-06,
+        "error_l2": 1.8166831811966307e-05,
+        "reference_l2": 1285.889858461402,
+        "relative_l2": 1.4127828827970817e-08,
+        "cosine": 0.9999999999999958
+      },
+      "exact_repeated_selected_forward": true,
+      "selected_vs_float64_features": {
+        "max_abs": 3.1044508425059902e-06,
+        "error_l2": 1.4551713083857433e-05,
+        "reference_l2": 129.9609981397865,
+        "relative_l2": 1.1196984704753928e-07,
+        "cosine": 0.9999999999999922
+      },
+      "fullset_vs_float64_features": {
+        "max_abs": 3.1044508425059902e-06,
+        "error_l2": 1.4544248603383693e-05,
+        "reference_l2": 129.9609981397865,
+        "relative_l2": 1.1191241073525649e-07,
+        "cosine": 0.999999999999992
+      },
+      "float64_batch_preact": {
+        "max_abs": 1.7763568394002505e-15,
+        "error_l2": 9.722536868453447e-15,
+        "reference_l2": 1285.8898590342706,
+        "relative_l2": 7.56094062033841e-18,
+        "cosine": 1.0
+      },
+      "float64_batch_features": {
+        "max_abs": 1.3322676295501878e-15,
+        "error_l2": 1.5368671002388288e-15,
+        "reference_l2": 129.9609981397865,
+        "relative_l2": 1.1825602467178415e-17,
+        "cosine": 0.9999999999999987
+      },
+      "float32_preact_max_error_over_dot_bound": 0.004401602998546016,
+      "dot_bound_definition": "gamma_785*(abs(X)@abs(A.T)+abs(b)), u=float32 epsilon/2",
+      "source_unchanged": true,
+      "max_sample_relative_l2": 9.516862187800973e-08,
+      "max_non_tail_abs_error": 0.0
+    }
+  ]
+}

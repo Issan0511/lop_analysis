@@ -330,6 +330,12 @@ def run_source(box,args,t):
             assert existing[key]==prov[key], ('Changed saved source artifact',key)
         if args.with_probe:
             assert existing.get('probe_sha256')==prov['probe_sha256'], 'Changed/missing linked probe'
+    if args.probe_only:
+        assert args.with_probe
+        D.save(outdir/(stem+'_preflight.json'),dict(probe_complete=True,continuations_started=False,
+                elapsed_s=time.monotonic()-start,provenance=prov))
+        print('PREFLIGHT_COMPLETE',args.model,box.seed,flush=True)
+        return
     for arm in plan:
         name=file_name(args.model,act,box.seed,t,arm)
         if name in present:continue
@@ -356,10 +362,11 @@ def main():
     ap=argparse.ArgumentParser();ap.add_argument('--model',choices=['mlp','vit'],default='mlp')
     ap.add_argument('--seeds');ap.add_argument('--engine',choices=['eager','compile'],default='compile')
     ap.add_argument('--out');ap.add_argument('--smoke',action='store_true');ap.add_argument('--limit',type=int,default=0)
+    ap.add_argument('--probe-only',action='store_true',help='Save and validate source state and full frozen assay, then return without continuations')
     ap.add_argument('--probe-out',help='Explicit smoke probe subdirectory; main uses the registered probes directory')
     ap.add_argument('--with-probe',action='store_true',help='Also run the full frozen assay in smoke; always enabled for main')
     args=ap.parse_args()
-    args.with_probe=args.with_probe or not args.smoke
+    args.with_probe=args.with_probe or args.probe_only or not args.smoke
     if not args.smoke and args.probe_out:raise ValueError('--probe-out is smoke-only')
     if not args.smoke and args.limit:raise ValueError('--limit is restricted to --smoke')
     if args.smoke and not 0<=args.limit<=26:raise ValueError('Registered real smoke is at most 26 updates')

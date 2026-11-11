@@ -1,0 +1,51 @@
+{
+  "recorded_utc": "2026-11-11T10:28:05.099738+00:00",
+  "implementation_commit": "c2983a4fff370b50e928bc633c5d47800e6c42e6",
+  "prior_gpu_seconds": 330.0,
+  "prior_mlp_worker_wall_seconds": 50.0,
+  "prior_total_cpu_seconds": 4800.0,
+  "measured_recent": {
+    "vit_v3": {
+      "path": "results/readout_separation_1111/smoke_vit/v3/resources.json",
+      "sha256": "f786ccf021ca25c3e55611cb25311c330053c8031449ab3d3f8067ac14207b52",
+      "user_s": 36.05,
+      "system_s": 2.01,
+      "elapsed_s": 35.59,
+      "exit_status": 1
+    },
+    "baseline_diag": {
+      "path": "results/readout_separation_1111/smoke_vit/baseline_diag/readout_baseline_diag_resources.json",
+      "sha256": "5f3759cd5e6b65fd986411d12c6fc71de481fb16518ef8c6c2f86922fc722e73",
+      "user_s": 10.94,
+      "system_s": 2.48,
+      "elapsed_s": 11.37,
+      "exit_status": 0
+    },
+    "warm_diag": {
+      "path": "results/readout_separation_1111/smoke_vit/warm_diag/readout_warm_diag_resources.json",
+      "sha256": "bc7f00be1979b45b51f0efc0eb2f674a19d8c129dd360409b7d3f9307c8d0321",
+      "user_s": 10.88,
+      "system_s": 1.8,
+      "elapsed_s": 10.67,
+      "exit_status": 0
+    },
+    "vit_v4": {
+      "path": "results/readout_separation_1111/smoke_vit/v4/resources.json",
+      "sha256": "c8b1adcdb1af2a5a2d454bf81b6c8a486420882a7ae005fd8590b316ab0d6a10",
+      "user_s": 109.31,
+      "system_s": 8.08,
+      "elapsed_s": 107.79,
+      "exit_status": 0
+    }
+  },
+  "unmetered_prior": {
+    "gpu_worker_wall_upper_bound_seconds": 160.0,
+    "mlp_worker_wall_upper_bound_seconds": 46.0,
+    "allowed_logical_cpus": 28,
+    "total_cpu_upper_bound_seconds": 4600.0,
+    "basis": "GPU v1 ~5s, v2 ~41s, engine diagnostic charged full102s between adjacent recorded artifacts, gauge diagnostic2.4294s, rounding/headroom. Total CPU upper bound160*28+46+short synthetic allowance rounded4600; not measured CPU usage."
+  },
+  "total_recent_wall_seconds": 165.42000000000002,
+  "total_recent_cpu_seconds": 181.55,
+  "interpretation": "Initial arguments are conservative rounded counters. Future attempts debit independent GNU time user+system. MLP worker-wall is distinct from total CPU. No main outputs existed when this ledger was created."
+}

@@ -184,6 +184,34 @@ def test_gauge_numerics():
     return 7
 
 
+
+def test_batch_feature_consistency():
+    ref = torch.tensor([[1.,0.],[1e-8,0.]], dtype=torch.float32)
+    rounded = ref.clone(); rounded[0,1] = 1e-6
+    checks = {}; P.assert_feature_consistency(rounded, ref, checks)
+    assert len(checks)==3 and all(v['passed'] for v in checks.values())
+    # The tiny second sample must not be hidden by the much larger first one.
+    bad = rounded.clone(); bad[1,1] = 1e-9
+    assert P.norm([bad-ref])/P.norm([ref]) < 2e-5
+    rejected = 0
+    for a,b in ((bad,ref),(rounded.double(),ref.double()),
+                (torch.ones(2,3),ref),(torch.ones(2,2),torch.zeros(2,2))):
+        try: P.assert_feature_consistency(a,b,{})
+        except AssertionError: rejected += 1
+    assert rejected==4
+    # Real float32/float64 GEMM with the experiment's unequal tail batch shape,
+    # independent synthetic parameters and no real checkpoint construction.
+    gen = torch.Generator().manual_seed(34061)
+    x = torch.rand(1200,784,generator=gen); w = torch.randn(100,784,generator=gen)*.1
+    b = torch.randn(100,generator=gen); idx = torch.arange(1072,1200)
+    hfull = torch.cat([D.M.activ(v@w.T+b,'ELU') for v in x.split(128)])
+    selected = D.M.activ(x[idx]@w.T+b,'ELU')
+    P.assert_feature_consistency(selected,hfull[idx],{})
+    h64 = D.M.activ(x[idx].double()@w.double().T+b.double(),'ELU')
+    assert P.norm([selected.double()-h64])/P.norm([h64]) < 2e-5
+    return 6
+
+
 def test_serialized_assay():
     """Exercise the whole scalar/array output contract using synthetic boxes."""
     original = P.source_provenance
@@ -218,7 +246,7 @@ def test_serialized_assay():
 
 def main():
     torch.set_num_threads(1)
-    results = dict(adam=test_adam(), crossed_mlp=test_crossed_mlp(), ln_and_gauge=test_ln_transmission(), guards=test_small_guards(), gauge_numerics=test_gauge_numerics(), serialized_assays=test_serialized_assay())
+    results = dict(adam=test_adam(), crossed_mlp=test_crossed_mlp(), ln_and_gauge=test_ln_transmission(), guards=test_small_guards(), gauge_numerics=test_gauge_numerics(), batch_features=test_batch_feature_consistency(), serialized_assays=test_serialized_assay())
     print(json.dumps(dict(passed=True, tests=results, real_checkpoint_constructors=0), indent=2))
 
 

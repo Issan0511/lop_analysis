@@ -1,6 +1,6 @@
 # Pre-main implementation and validation record
 
-The scientific design was committed as8526f60c, with the recipient-mean/temporal-window clarification inab96ab97 and resource-accounting clarification inff9fc0ca. No full main trajectory was run while changing implementation or validation checks.
+The scientific design was committed as8526f60c, with the recipient-mean/temporal-window clarification inab96ab97 and resource-accounting clarification inff9fc0ca. The checks below preceded the first main attempt; the stopped first attempt and the numerical-only correction are recorded separately below.
 
 ## Corrections made during implementation checks
 
@@ -20,3 +20,13 @@ Operator, crossed-VJP, Adam, exact-forward, release, gauge, source-mutation, ser
 The uniform-label channel is an expected gradient; applying virtual Adam to it is not the expectation of Adam updates. P is a multiset-preserving intervention that also changes geometry and probabilities. Physical shrink, frozen matched-map probes, surrogate200-update policies and body-memory resets are distinct interventions. Altered-Jacobian minus native U is positive for harm; baseline minus shrink/reset U is positive for benefit. No additive mediation shares or claims that LN alone explains the architecture contrast are permitted.
 
 Final smoke status, frozen implementation commit and resource totals are recorded with the completed run artifacts.
+
+## Stopped first attempt and all-source preflight
+
+The first main attempt used commit c2983a4f and was stopped after a feature-batch consistency predicate rejected MLP seeds 2, 4 and 7. Every rejected coordinate belonged to the final 48-example full-set chunk; recomputation as part of the selected 128-example batch used a different GEMM shape. Each seed had one rejected scalar, with maximum absolute differences 1.31e-6, 1.11e-6 and 2.62e-6. The feature-vector differences were tiny and float64 batch-shape differences were at machine precision. Same-128-batch recomputation remained bit-exact.
+
+Only that validation predicate was changed: the existing relative tolerance 2e-5 is evaluated globally and per example as relative L2, with cosine error bound 8e-10 and no absolute floor. Features, probability banks, source sampling, VJP and Adam calculations are unchanged. All ten cached MLP sources passed, with maximum per-example relative L2 2.953e-7; all non-tail rows were bit-identical. Adversarial batch-consistency checks and existing synthetic checks passed. See batch_feature_diagnostic.json and probe_synthetic_checks.json.
+
+All first-attempt outputs are preserved with hashes under its attempt-specific logs directory and excluded from the primary analysis. That attempt completed 126 MLP curves and six ViT physical curves before interruption; none are reused as primary trajectories. The ViT S1 and P1 controls matched all 62 archived KC comparison points bit for bit. Resource accounting includes the stopped attempt and all external smoke/diagnostic/preflight use.
+
+A probe-only execution mode now writes source artifacts and the complete frozen assay, then returns before entering the continuation loop; it cannot write a continuation-completion marker. All fifteen sources must pass this preflight under the next fixed commit. The main rerun reuses those source/probe artifacts under that same commit and runs all 280 continuations afresh. An independent review verified the numerical-only diff and the probe-only/reuse control flow. No scientific contrast, intervention, horizon, seed, sampling rule or registered decision threshold was changed.
