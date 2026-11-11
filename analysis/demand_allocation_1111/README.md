@@ -22,6 +22,7 @@ OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python src/demand_allocation_1111.py \
   --out results/demand_allocation_1111/raw --workers 2
 python analysis/demand_allocation_1111/summarize.py \
   --raw results/demand_allocation_1111/raw --out results/demand_allocation_1111
+python analysis/demand_allocation_1111/extra_tables.py results/demand_allocation_1111
 ```
 
 `--out` のrawディレクトリは新規の場所を使う。既存jobに上書き・途中再開せず、欠損は欠損として扱う。集計は `complete.json` と15全cellを要求する。退避後の既存rawを再集計する場合は、`--raw /home/issan/Projects/obsidian-research-data/demand_allocation_1111/results/demand_allocation_1111/raw` を指定し、`--out` は新しいscratchディレクトリにする。
