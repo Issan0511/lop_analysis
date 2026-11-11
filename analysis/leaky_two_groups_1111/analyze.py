@@ -67,7 +67,7 @@ def main():
         axes[0].scatter(r['mu1'],r['mu2'],c=c,s=38,edgecolors='white',linewidths=.3)
         axes[1].scatter(r['product'],r['T90_sustained'],c=c,s=38,edgecolors='white',linewidths=.3)
     lim=np.geomspace(.0008,.5,100);axes[0].plot(lim,lim,':',c='grey',lw=1)
-    axes[0].set(xscale='log',yscale='log',xlabel="Layer1 mean phi'",ylabel="Layer2 mean phi'",xlim=(.0009,.25),ylim=(.0008,.6),title='Same membership at start and at750\nOpen = start; filled =750; arrows show movement')
+    axes[0].set(xscale='log',yscale='log',xlabel="Layer 1 mean phi'",ylabel="Layer 2 mean phi'",xlim=(.0009,.25),ylim=(.0008,.6),title='Same membership at start and at 750\nOpen = start; filled = 750; arrows show movement')
     legend=[]
     for group,gg in [('L2_smaller',blue),('L1_smaller',red)]:
         f=next(r for r in fits if r['step']==750 and r['group']==group);x=np.geomspace(min(r['product'] for r in gg)*.9,max(r['product'] for r in gg)*1.1,100)
@@ -75,10 +75,10 @@ def main():
         label=f'{group.replace("_"," ")} (n={len(gg)})';legend.append(Line2D([0],[0],marker='o',color=COL[group],lw=0,label=label))
     axes[0].legend(handles=legend,fontsize=9,loc='lower left')
     special=next(r for r in red if r['a']==.001 and r['seed']==4)
-    axes[1].annotate('a=.001, seed4\nL1 smaller despite low product',xy=(special['product'],special['T90_sustained']),xytext=(.000115,51000),fontsize=8,arrowprops=dict(arrowstyle='->',color=COL['L1_smaller']))
-    axes[1].set(xscale='log',yscale='log',xlabel="Product of layer-mean phi' at750",ylabel='Updates to sustained90',ylim=(7000,65000),title='Within L2-smaller group: slope=-0.51, R2=0.88\nWithin L1-smaller group: slope=-0.22, R2=0.32')
+    axes[1].annotate('a=.001, seed 4\nL1 smaller despite low product',xy=(special['product'],special['T90_sustained']),xytext=(.000115,51000),fontsize=8,arrowprops=dict(arrowstyle='->',color=COL['L1_smaller']))
+    axes[1].set(xscale='log',yscale='log',xlabel="Product of layer-mean phi' at 750",ylabel='Updates to sustained 90%',ylim=(7000,65000),title='Within L2-smaller group: slope=-0.51, R2=0.88\nWithin L1-smaller group: slope=-0.22, R2=0.32')
     for ax in axes:ax.grid(alpha=.14)
-    fig.suptitle('Two layer configurations in the same25 runs after6 prior tasks (posthoc)',fontsize=12)
+    fig.suptitle('Two layer configurations in the same 25 runs after 6 prior tasks (posthoc)',fontsize=12)
     fig.savefig(OUT/'two_groups_posthoc.png',dpi=180);fig.savefig(OUT/'two_groups_posthoc.pdf');plt.close(fig)
     lines=['# Two groups at update750 (posthoc)','',
            'Issa observed apparent polarization in the previous750-update plot. Inspect the existing25 source-age6 runs, retaining all five leaks and five paired seeds. This is a descriptive posthoc analysis, not a registered two-component test and not new training.',
