@@ -1,0 +1,60 @@
+{
+  "gradient_checks": [
+    {
+      "act": "R",
+      "gradient_error": 4.440892098500626e-16,
+      "finite_difference_error": 5.953609827358264e-11
+    },
+    {
+      "act": "ELU",
+      "gradient_error": 4.440892098500626e-16,
+      "finite_difference_error": 6.613365410856886e-11
+    },
+    {
+      "act": "SILU",
+      "gradient_error": 4.440892098500626e-16,
+      "finite_difference_error": 4.998851332871368e-11
+    },
+    {
+      "act": "GELU",
+      "gradient_error": 4.440892098500626e-16,
+      "finite_difference_error": 4.774679263075399e-11
+    },
+    {
+      "act": "LR",
+      "gradient_error": 2.636779683484747e-16,
+      "finite_difference_error": 4.5824205541222796e-11
+    }
+  ],
+  "adam_error": 1.8958492595770723e-16,
+  "elu_floor": {
+    "z": [
+      -10.0,
+      -16.0,
+      -17.0,
+      -24.0
+    ],
+    "implemented": [
+      4.5418739318847656e-05,
+      1.1920928955078125e-07,
+      0.0,
+      0.0
+    ],
+    "analytic": [
+      4.5399929762484854e-05,
+      1.1253517471925912e-07,
+      4.139937718785167e-08,
+      3.775134544279098e-11
+    ]
+  },
+  "smoke_rows": {
+    "state": 1,
+    "demand": 14,
+    "step": 3,
+    "source": 45,
+    "response": 14,
+    "allocation": 4,
+    "noise": 1,
+    "instant": 0
+  }
+}
