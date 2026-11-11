@@ -1,0 +1,41 @@
+{
+  "smoke": true,
+  "n_files": 15,
+  "bootstrap_resamples": 10000,
+  "statistic": "seed mean; paired difference or mean seedwise ratio",
+  "numpy": "2.5.1",
+  "pandas": "3.0.5",
+  "matplotlib": "3.11.1",
+  "script_sha256": "21d0eeda3d47ba3af6f7ad67c4974c1953784bff082bb1c434f0514c5f81e653",
+  "spec_sha256": "39d991d39f1c7afb6f79eeed0ae022f5aff863ec6531f8e8b9b4cdfe88ba71f4",
+  "producing_commits": [
+    "6bd8344ae3b0e2604a142f38ecb5d4b1c93302ec"
+  ],
+  "producing_script_hashes": [
+    "4c7a260b3e4d5f3645f9472acd23373e069d483c005e87ef2ca5655554a27388"
+  ],
+  "inputs": {
+    "results/loading_bridge_1111/raw/smoke_dynamic_mlp/mlp_R_s0_t1_G.json": "f22de9a660d415a68b279740ae460caa1defa6c71f152597925647b6c8222b43",
+    "results/loading_bridge_1111/raw/smoke_dynamic_mlp/mlp_R_s0_t1_H0.json": "71dd08bb4f9c88203f1a13d6fc60e10bf253d5ee23fba8ee78596c82eb2b9d81",
+    "results/loading_bridge_1111/raw/smoke_dynamic_mlp/mlp_R_s0_t1_H10.json": "72fc6412b50cbce6e0e0c0f4ca6e17dc7017e08aecc82d191c302c0e4e862e03",
+    "results/loading_bridge_1111/raw/smoke_dynamic_mlp/mlp_R_s0_t1_P.json": "446429add3e2d61858eb54d7068ccd841f9994c29b1cfc7c33087bf1c80e842a",
+    "results/loading_bridge_1111/raw/smoke_dynamic_mlp/mlp_R_s0_t1_Q.json": "69fc66db7e016de1ce4516621025df0604c0e258ed93e716ac8222954b1b7219",
+    "results/loading_bridge_1111/raw/smoke_dynamic_mlp/mlp_R_s0_t1_S.json": "f3fca4dce01619b4bb1a5178b08469b3bdcefc728c034ff4c86e26286652e38e",
+    "results/loading_bridge_1111/raw/smoke_dynamic_mlp/mlp_R_s0_t1_T.json": "efda4bab660180fb8d329ffa5f1a5dcf8e3b45fb4107e36c46f46a7f0b25a13c",
+    "results/loading_bridge_1111/raw/smoke_dynamic_mlp/mlp_R_s0_t1_TG.json": "8e71f2355a18d69b30567b56bd7cb76f26f55cbbc18d7bd9605fddb2909a813a",
+    "results/loading_bridge_1111/raw/smoke_dynamic_vit/vit_SL_s10252010_t100_G.json": "1d8970f0f52d989c3f0638d292683a8e731b47f6bced3c5552e80619f884cda3",
+    "results/loading_bridge_1111/raw/smoke_dynamic_vit/vit_SL_s10252010_t100_H0.json": "c2e0296f8ecd9ef977835e19528d979bca4624b206546ceaf9751af77723a584",
+    "results/loading_bridge_1111/raw/smoke_dynamic_vit/vit_SL_s10252010_t100_H10.json": "f166be3afddc5b1a2e91ad67da3dc9ef20f2014fe66cb2bf94d0c569ba161ccd",
+    "results/loading_bridge_1111/raw/smoke_dynamic_vit/vit_SL_s10252010_t100_P.json": "1fe0bc0eedb6dd5a231b4702ce24ad876cb6b5ebf36b494b7db17e9df269290e",
+    "results/loading_bridge_1111/raw/smoke_dynamic_vit/vit_SL_s10252010_t100_S.json": "80830f152816dd03198e95821b8e8b257600bf005c14024253467f55f35feabf",
+    "results/loading_bridge_1111/raw/smoke_dynamic_vit/vit_SL_s10252010_t100_T.json": "0d17679a1eb724a5502924b14e0df4a4f0008e556b2ff22f5abf414b09c21b45",
+    "results/loading_bridge_1111/raw/smoke_dynamic_vit/vit_SL_s10252010_t100_TG.json": "56ccc78bb705765f169058269761b5f73cbc904eb3d96e2625698703ec883dd0"
+  },
+  "command": [
+    "analysis/loading_bridge_1111/summarize_dynamic.py",
+    "--smoke",
+    "--inputs",
+    "results/loading_bridge_1111/raw/smoke_dynamic_mlp",
+    "results/loading_bridge_1111/raw/smoke_dynamic_vit"
+  ]
+}
