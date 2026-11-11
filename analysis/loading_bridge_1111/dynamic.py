@@ -138,6 +138,10 @@ class MLP:
                                 opening_mean=float(u[2].mean()),dphi_mean=float(u[3].mean()),
                                 upper_max_med=med(z.max(0).values),upper_over_s_med=med(z.max(0).values/s),
                                 upper_q99_med=med(torch.quantile(z,.99,dim=0)),body_weight_norm=float(self.P[0].norm()))]
+            upper=z.max(0).values
+            out['unit_arrays']=dict(m=u[0].tolist(),s=u[1].tolist(),r=r.tolist(),pplus=u[2].tolist(),dphi=u[3].tolist(),
+                                    upper=upper.tolist(),upper_over_s=(upper/s).tolist(),q99=torch.quantile(z,.99,dim=0).tolist(),
+                                    has_positive=(upper>0).tolist())
         return out
 
 class ViT:
