@@ -460,7 +460,7 @@ def summary_text(df, contrasts, validation):
         "ViT histories, including compatibility with retained optimizer memory. Its all-five-LN "
         "history treatment differs from MLP final LN. No architecture-only effect, additive causal "
         "share, or exclusion of ELU saturation follows from these comparisons.",
-        "U_acute covers [0,200], U_late covers [200,end]; interventions persist throughout. "
+        "U_acute covers [0,200], U_late covers [200,end]; Head edits and Adam resets are applied once at the fork; all parameters then learn jointly. Only the chosen activation/LN configuration persists, with no step200 release. "
         "U uses the entire 4000/1500-update horizon, and all endpoints share that horizon. "
         "CE area is the unnormalized integral; ce_auc_mean divides it by the horizon. "
         "T90 is the first saved observation ≥90%; sustained T90 requires all later saved observations "

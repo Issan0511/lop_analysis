@@ -1,0 +1,65 @@
+{
+  "complete": true,
+  "completed_utc": "2026-11-11T19:04:59.949940+00:00",
+  "execution_git_hash": "bf641700ad863f1e65b20b6d46326a410df8aa09",
+  "main_attempt": "20261111T161837Z_1957464",
+  "full_curves": 1260,
+  "study_counts": {
+    "A": 1120,
+    "B": 140
+  },
+  "successful_jobs": 100,
+  "registered_primary_U_contrasts": 16,
+  "analysis_and_source_integrity_passed": true,
+  "independent_scientific_reviews": [
+    "scientific_review_A.md",
+    "study_B_review.md",
+    "synthesis_review.json"
+  ],
+  "archive": {
+    "root": "/home/issan/Projects/obsidian-research-data/elu_specificity_1112",
+    "files": 2101,
+    "bytes": 1190228061,
+    "all_sha256_verified": true,
+    "source_copies_removed": true,
+    "manifest": "backup_manifest.json"
+  },
+  "resource_accounting": {
+    "cumulative_gpu_worker_seconds": 9188.931462943787,
+    "cumulative_cpu_seconds_including_external_allowance": 14326.51,
+    "external_cpu_allowance_seconds": 500,
+    "external_cpu_allowance_is_upper_bound_not_measurement": true,
+    "external_allowance_scope": "preflight and auxiliary analysis, auditing, plotting, archival, reporting; measured auxiliary times are subsets, not additions to this inclusive accounting",
+    "cpu_cap_seconds": 28800,
+    "gpu_cap_seconds": 14400,
+    "raw_byte_cap": 6000000000,
+    "budget_passed": true
+  },
+  "reporting_correction": "One-time head/reset edits; all parameters subsequently learn. Prose only; frozen experiment/spec/statistical calculations unchanged. See analyzer_reporting_change.json.",
+  "archived_reanalysis_identical": "All contrasts, seed contrasts, and arm means byte-identical; raw path columns relocated.",
+  "historical_path_resolution": "Raw records, earlier standalone reviews, and launch manifests retain original execution-time paths. Resolve those through backup_manifest.json.",
+  "limitations": [
+    "No model forward or training is replayed. Intermediate no-LN task2..9 exactness is checked from runner records; only saved task1/task10 tensors are independently compared.",
+    "B image tensor/path hashes are checked across all paired conditions; original JPEG-to-tensor bytes are not reconstructed.",
+    "B canonical fresh-model initialization is not rebuilt; initial/F0 fingerprints are checked across R/ELU and fresh-Adam/zero-head semantics against saved evidence.",
+    "Native/compiled numerical-check success flags are audited, but forward/backward numerical comparisons are not rerun."
+  ],
+  "artifact_sha256": {
+    "summary.md": "7ee59195e3c4117f76bf18b48fbd1c7f979ba73d0944746ce77b03f90b2946d4",
+    "synthesis.md": "bf718001ad5180ad12af4637212c2c5fd0ae5f257b9b9e389f32aacf15a24505",
+    "contrasts.csv": "78656423da0d8cd64772fefb93e30a2d680867484cb72227bd4204eb05a910dc",
+    "seed_contrasts.csv": "76ae476aac7e82d3298723f0d13ae8f9b11ba357e4565cd65f08b183381993a9",
+    "seed_metrics.csv": "9479b0a198f555d006a95cd28a53ba52c758db7040ecbff53a7902246b96d771",
+    "arm_means.csv": "b5a12f36447190e12099348eea6ca53ef522a42529fbe3ded0e744fa07137265",
+    "backup_manifest.json": "457ae5b512496e9c3c725fc276391ef6b7edd658a6da9a651fcfaecdb7b8160b",
+    "integrity_validation.json": "a1ec9deaa4af254d14b48a10a79a4a299e729d4d665648771d0e906fe3300ad8",
+    "validation.json": "c42d685435fe55396268b5084a13fe88cf2a9570408bbf576043852d4968dda2",
+    "study_A_review.md": "67a3e1469938e1247b21bf405a2c906745880b4077a5447dd36fb03e6340287c",
+    "scientific_review_A.md": "5e05c862cab88ecc81196b6f1ce5220efacc0df141f885ac85b04363825e198d",
+    "study_B_review.md": "7be5c443af7e42d18392bd71db89067e7aff1447c266b2927700baea9442535a",
+    "study_B_independent_checks.json": "eaa268e0ef2aa0a03a13adcd6ea811e3e75f70018b5ca29717dbe0aaa19ded58",
+    "synthesis_review.json": "80aa9fb333edc963f880147f9dfcfe89b8e10a4f7d05fa59e9d16c7f2d18aa9a",
+    "archive_reanalysis_consistency.json": "9d2d30cbb19ffb0ccefca7a65d4631ffffc3c9ea288014a01449559c17a88937",
+    "full_A_consistency.json": "0a2596ed0f00cf741dce666bb8e47f07eece1fee7f7bd8f28dfe96bdbcd01936"
+  }
+}
