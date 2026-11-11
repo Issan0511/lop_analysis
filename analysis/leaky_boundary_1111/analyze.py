@@ -200,5 +200,6 @@ def coverage(s,d,p):
 
 def main():
     s,d,p,sp,sel=load();c,n=clocks(s,d,sel);figures(s,d,p,sp,sel,c,n);margins(s,sel);coverage(s,d,p)
-    print(c.to_string(index=False));print(s[s.role.isin(['pre','post'])].groupby(['arm','role'])[['acc_6000','acc_24000','acc_96000','T90','T90_sustained']].mean().to_string())
+    report=c.to_string(index=False)+'\n'+s[s.role.isin(['pre','post'])].groupby(['arm','role'])[['acc_6000','acc_24000','acc_96000','T90','T90_sustained']].mean().to_string()
+    print('\n'.join(line.rstrip() for line in report.splitlines()))
 if __name__=='__main__':main()
