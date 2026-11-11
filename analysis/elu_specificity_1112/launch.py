@@ -58,7 +58,7 @@ def usage(path):
     return None
 
 
-def plan(only, smoke, out):
+def plan(only, smoke, out, vit_engine="eager"):
     jobs=[]
     if only!='vit':
         for seed in ([0] if smoke else range(10)):
@@ -72,7 +72,7 @@ def plan(only, smoke, out):
             for source in ('S','SL'):
                 for act in ('R','ELU'):
                     name=f'vit_{source}_{act}_s{seed}'
-                    args=['--seed',str(seed),'--source-arm',source,'--activation',act,'--out',str(out),'--steps','26' if smoke else '1500','--engine','compile']
+                    args=['--seed',str(seed),'--source-arm',source,'--activation',act,'--out',str(out),'--steps','26' if smoke else '1500','--engine',vit_engine]
                     jobs.append(dict(name=name,device='gpu',module='analysis.elu_specificity_1112.vit',args=args))
     return jobs
 
@@ -84,6 +84,7 @@ def main():
     ap.add_argument('--external-cpu-seconds',type=float,required=True)
     ap.add_argument('--external-gpu-seconds',type=float,required=True)
     ap.add_argument('--cpu-workers',type=int,default=4)
+    ap.add_argument('--vit-engine',choices=['eager','compile'],default='eager')
     a=ap.parse_args()
     assert 1<=a.cpu_workers<=4
     assert all(math.isfinite(v) and v>=0 for v in (a.external_cpu_seconds,a.external_gpu_seconds))
@@ -100,10 +101,10 @@ def main():
     stamp=time.strftime('%Y%m%dT%H%M%SZ',time.gmtime())+'_'+str(os.getpid())
     logs=DEST/'logs'/stamp;logs.mkdir(parents=True,exist_ok=False)
     out=DEST/('smoke' if a.smoke else 'raw')/stamp;out.mkdir(parents=True,exist_ok=False)
-    pending=plan(a.only,a.smoke,out)
+    pending=plan(a.only,a.smoke,out,a.vit_engine)
     manifest=DEST/f'launch_attempt_{stamp}.json'
     record=dict(complete=False,accounting_complete=False,attempt=stamp,smoke=a.smoke,only=a.only,
-        started_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),output_root=str(out),logs=str(logs),
+        vit_engine=a.vit_engine,started_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),output_root=str(out),logs=str(logs),
         execution_git_hash=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
         launcher_sha256=sha(__file__),external_cpu_seconds=a.external_cpu_seconds,external_gpu_seconds=a.external_gpu_seconds,
         prior_cpu_seconds=prior_cpu,prior_gpu_seconds=prior_gpu,cpu_cap_seconds=CPU_CAP,gpu_cap_seconds=GPU_CAP,
