@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "tests": {
+    "adam": 8,
+    "crossed_mlp": 144,
+    "ln_and_gauge": 16,
+    "guards": 5,
+    "gauge_numerics": 7,
+    "serialized_assays": 2
+  },
+  "real_checkpoint_constructors": 0,
+  "validated_sources": {
+    "analysis/readout_separation_1111/probe.py": "2efeeae830eed7e07b1d1773f5c55e481529c490171a590c2b03e65d81864719",
+    "analysis/readout_separation_1111/probe_tests.py": "97207136009614ba6b95001de99c2d24484e0bf812e608eaf1143d67a1821a38"
+  },
+  "backend_validation_note": {
+    "clone_settings": "Source foreach/fused/capturable/differentiable settings retained per parameter group.",
+    "fused_float32_tolerance": "elementwise 5e-10 + 2e-5*abs(delta) + 2*max(ulp(parameter_before),ulp(parameter_after))",
+    "synthetic_backend": "CPU unfused; float32 and float64, multi-group, AMSGrad, weight decay, memory keep/clear, None gradient",
+    "native_fused_validated_by_this_synthetic_run": false,
+    "real_backend_validation": "Each real assay validates keep/clear on cloned full body parameters using the actual saved backend; results stored in real_adam_checks and checks."
+  },
+  "gauge_validation_note": {
+    "float32": "Same relative tolerance 2e-5, applied to each parameter and all trunk parameters jointly; zero absolute floor, exactly zero reference requires zero alternative. Cosine tolerance derived as 2*rtol^2.",
+    "float64": "Strict synthetic identity: relative L2 and max-absolute 1e-11; precision of cosine reduction handled separately.",
+    "malformed_inputs": "Reject 1e-3 scale and directional perturbations, nonzero vector against zero reference, NaN, and float64 1e-6 error; accept float32 near-zero component perturbation with total relative error 1e-6."
+  }
+}

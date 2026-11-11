@@ -1,0 +1,22 @@
+# Pre-main implementation and validation record
+
+The scientific design was committed as8526f60c, with the recipient-mean/temporal-window clarification inab96ab97 and resource-accounting clarification inff9fc0ca. No full main trajectory was run while changing implementation or validation checks.
+
+## Corrections made during implementation checks
+
+1. The real virtual-Adam validation initially forced an unfused clone. It now preserves each source optimizer backend (including native fused ViT), and records backend settings and an elementwise parameter-store-ULP bound. Synthetic CPU float64/float32 checks remain separate.
+2. ViT smoke v1 stopped on a direct comparison between eager features and compiled model outputs (max logit difference8.378e-4). Native eager versus custom eager outputs and all parameter gradients were bit-identical. The compiled-versus-eager difference had relative logit L2=7.892e-6, zero changed predictions among128examples, CE difference1.907e-6, and gradient relative L2=5.206e-5. Same-engine identity and cross-engine numerical tolerances are therefore checked separately. The old compiled KC trajectory agreement criterion was retained.
+3. ViT smoke v2 passed operator/compiled-gradient checks and the216 crossed probe records, then stopped before serialization at a gauge test's near-zero float32 coordinate. The gauge-only diagnostic found whole-trunk VJP relative L2=9.9042e-7, cosine=.9999999999995106, and maximum parameter relative L2=3.0569e-6; maximum absolute difference2.3842e-6. Float64 final-stage verification on the real source gave relative logits/pre-LN errors1.31e-16/2.15e-16. The gauge check now uses the original2e-5 relative tolerance per parameter and globally, with an angular bound and no absolute floor, while float64 synthetic identities retain1e-11 tolerance. Adversarial scale/angle/zero/NaN tests reject real mismatches. Prior smoke outputs and logs are preserved.
+4. ViT smoke v3 passed236operator checks and216frozen records, then the first physical S1 continuation disagreed with archived KC (maximum CE difference.026985 after26updates). A fresh box running the **old** curve runner produced the same mismatch. After that26-update execution and snapshot restoration, both old and new runners matched the archived0/1/25/26points bit for bit. The cause was automatic dynamic-shape compilation history: archived KC followed KK, which had already seen batch sizes128and68. A no-optimizer-step forward/backward warmup in128→68order, followed by full parameter/Adam/RNG restoration, reproduced archived S1 andP1 exactly. Every compiled continuation now receives that same shape warmup; its state and RNG restoration are checked and logged. The legacy numerical agreement threshold was not relaxed.
+5. The launcher preserves attempt-specific logs/manifests, subtracts prior external and main resource use, rejects incomplete accounting/resume, and independently records user+system CPU for each job (including GPU host and reaped compiler children). MLP worker-wall bounds and total CPU usage are distinguished.
+6. Independent aggregation review added the registered direction-by-memory interactions, Adam/norm-matched Adam update angles, per-row source identity checks, nonempty operator checks, pre-release finite-value checks, and probe-versus-continuation provenance/empty-Adam verification.
+
+## Synthetic validation
+
+Operator, crossed-VJP, Adam, exact-forward, release, gauge, source-mutation, serialization/resume and budget-ledger checks passed before main. Known-data metric checks cover280trajectories/539planned metric contrasts and2520frozen records, including seed pairing, sign conventions, temporal partitions, censoring and malformed input rejection. Synthetic plot rendering is a layout check, not an experimental result.
+
+## Interpretation controls
+
+The uniform-label channel is an expected gradient; applying virtual Adam to it is not the expectation of Adam updates. P is a multiset-preserving intervention that also changes geometry and probabilities. Physical shrink, frozen matched-map probes, surrogate200-update policies and body-memory resets are distinct interventions. Altered-Jacobian minus native U is positive for harm; baseline minus shrink/reset U is positive for benefit. No additive mediation shares or claims that LN alone explains the architecture contrast are permitted.
+
+Final smoke status, frozen implementation commit and resource totals are recorded with the completed run artifacts.
