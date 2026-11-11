@@ -6,7 +6,16 @@ from analysis.readout_separation_1111 import summarize as S
 from analysis.readout_separation_1111 import summarize_probe as P
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--root',type=Path,default=S.OUT);a=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--root',type=Path,default=S.OUT)
+    ap.add_argument('--archive-map',type=Path,default=S.OUT/'backup_manifest.json')
+    ap.add_argument('--out',type=Path,default=S.OUT);a=ap.parse_args()
+    mapping={}
+    if a.archive_map.exists():
+        manifest=json.loads(a.archive_map.read_text())
+        mapping={e['source']:e['backup'] for e in manifest['files']}
+    def resolve(path):
+        p=Path(path)
+        return p if p.exists() else Path(mapping.get(str(p),p))
     records=S.load_records(a.root/'raw');S.design_check(records)
     docs=P.read_all(a.root/'probes')
     probes={(d['model'],d['seed']):d for d in docs}
@@ -55,8 +64,8 @@ def main():
             assert np.array_equal(x,y) if r['model']=='mlp' else np.allclose(x,y,rtol=2e-5,atol=2e-5)
         source=(prov['source_state_file'],prov['source_metadata_file'])
         if key not in sources:
-            assert S.sha(source[0])==prov['source_state_sha256']
-            assert S.sha(source[1])==prov['source_metadata_sha256']
+            assert S.sha(resolve(source[0]))==prov['source_state_sha256']
+            assert S.sha(resolve(source[1]))==prov['source_metadata_sha256']
             sources[key]=source;states+=1
     for path,value in list(sources.items()):
         if isinstance(path,str):assert S.sha(path)==value,('Changed archived input',path)
@@ -64,7 +73,8 @@ def main():
     record=dict(complete=True,curves=len(records),frozen_source_states=states,legacy_controls=legacy,
                 all_fork_fingerprints_match=True,runtime_git_hash=next(iter(runtime_git)),execution_code_hashes=codes,
                 code_sha256=S.sha(__file__))
-    (a.root/'integrity_validation.json').write_text(json.dumps(record,indent=2)+'\n')
+    a.out.mkdir(parents=True,exist_ok=True)
+    (a.out/'integrity_validation.json').write_text(json.dumps(record,indent=2)+'\n')
     print(json.dumps(record))
 
 if __name__=='__main__':main()
