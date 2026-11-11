@@ -1,0 +1,43 @@
+{
+  "main_design_complete": true,
+  "primary_metric": "U",
+  "primary_contrast": "KC-ZC",
+  "operational_commonality_verdict": "unresolved",
+  "strata": [
+    {
+      "model": "mlp",
+      "activation": "ELU",
+      "t_end": 10,
+      "history": "S",
+      "source": "P",
+      "tau": 0,
+      "estimate": 0.21866452047927307,
+      "ci_low": 0.2067633189329575,
+      "ci_high": 0.23125197159524308,
+      "supported": true,
+      "practical": true
+    },
+    {
+      "model": "vit",
+      "activation": "SL",
+      "t_end": 100,
+      "history": "S",
+      "source": "P",
+      "tau": 0,
+      "estimate": 0.022890666666666698,
+      "ci_low": -0.017519786666666613,
+      "ci_high": 0.06791690666666671,
+      "supported": false,
+      "practical": false
+    }
+  ],
+  "both_strata_support_operational_head_dependent_delay": false,
+  "both_strata_practical_above_0_01": false,
+  "interpretation": "Operational agreement only; not identity of microscopic mechanism.",
+  "bootstrap": {
+    "replicates": 10000,
+    "interval": "percentile 95%",
+    "unit": "paired seed",
+    "multiplicity_adjusted": false
+  }
+}
