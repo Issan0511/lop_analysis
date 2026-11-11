@@ -8,6 +8,8 @@
 /home/issan/Projects/claude/proj_004_drift/.venv/bin/python /tmp/loading_bridge_existing_audit.py
 ```
 
+恒久保存した再集計コードは `analysis/loading_bridge_1111/existing_audit.py`。上の `/tmp` は監査時の実行パス。
+
 ## 1. 結論と、今回のA/Bの区別
 
 既存のELU結果は「読み出しを小さくしたとき、その後の体が異なる幅・上端・開口状態へ進む」という**後の経路B**の直接の先行データである。これを「切替直後の期待勾配を小さくする経路A」だけで読み替えない。stage1既存rawではA寄りの短期差も、Qallで蓄積した体の差も、両方確認できる。
