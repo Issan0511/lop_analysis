@@ -1,0 +1,20 @@
+{
+  "real_training_started": false,
+  "synthetic_checks": {
+    "mlp": 10,
+    "vit_groups": 6,
+    "analysis": 17,
+    "analysis_e2e_curves": 1260,
+    "launcher_plan_and_accounting": "passed"
+  },
+  "independent_cross_reviews": [
+    "MLP worker reviewed ViT and launch",
+    "ViT worker reviewed MLP and identified/fixed derivative diagnostic",
+    "Root reviewed paired analysis and source/F0/engine handling"
+  ],
+  "external_cpu_seconds_upper_bound": 300,
+  "external_gpu_seconds": 0,
+  "external_usage_note": "Conservative aggregate upper bound for preflight synthetic tests, imports, reviews and E2E (including un-timed earlier retries); NOT a measured total. Known measured subsets: MLP final 3.58 CPU s; ViT latest success+syntax-failure 7.09 CPU s; analyzer tests+E2E+import-failure 19.99 CPU s.",
+  "numerical_implementation_note": "Canonical MLP ELU forward uses expm1(clamp_max); float32 backward becomes exactly zero deep in negative tail. ViT uses F.elu. Training implementations preserved and actual activation derivatives recorded; do not attribute between-study differences solely to architecture.",
+  "group_convention": "body is all non-head trainable parameters; trunk excludes final LN affine; final_gamma/final_beta separately tracked"
+}
