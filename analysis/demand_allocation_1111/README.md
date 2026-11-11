@@ -42,3 +42,9 @@ python analysis/demand_allocation_1111/summarize.py \
 - `backup_manifest.json`: git外ファイルの元パス、退避先、byte数、SHA256。rawとログはこの記録に従って復元できる。
 
 実験単位はseedであり、120,000個の入力×unitや100unitを独立反復としてp値を作らない。プロットの帯は3seedの範囲で信頼区間ではない。今回のQは一度の介入。旧stage1のQallは毎切替の予防、旧vfreezeは課題151–200の長期窓であり、時間尺度を混同しない。
+
+## 初回実行の中断と回復
+
+起動コマンドは終了コード143となり、11セルだけが完了した。原因は特定していない。`recover_interruption.py` は完成済み11セルをhashと375チェックの各部分で検証し、未完了だったGELU seed2、LR seed0/1/2だけを同じコードで最初から再実行した。中断中のGELU seed2・LR seed0の部分出力は `interrupted_attempt/` に保持。予測・seed・腕・時点は変更せず、計算の上限だけ仕様追補 `66f62051` で800課題相当へ変更（時間上限90分は同じ）。`recovery.json` と初回/recoveryログを参照。回復スクリプトはこの一度の欠損配置に固定してあり、完了後に再実行しない。
+
+集約した全行CSVとrawは退避manifestから参照する。Gitには判定・要約表・検算・図とコードを残す。`archive_outputs.py` はレビュー用成果物のcommit後に残った実験出力だけをコピーし、全ファイルのSHA256検証後に元ファイルを削除する。
