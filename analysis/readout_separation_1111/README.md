@@ -33,3 +33,18 @@ The uniform-label channel is the exact expected **gradient** under independent u
 - `verify_summary.py`, `verify_probe_summary.py`, `verify_integrity.py`: metric and provenance validation.
 
 Run these as modules from the repository root with the existing project virtualenv. Full main execution is through the registered launcher after smoke and implementation commit. Archive raw files and attempt logs before removing the experiment worktree; `results/readout_separation_1111/backup_manifest.json` is the durable path map.
+
+## Completed result and archive-based reproduction
+
+All280 curves and2520 local records completed under runtime commit `a079256e9dc153cc029e3f8c01863efeddb4824f`. Read `results/readout_separation_1111/synthesis.md` for the integrated result and interpretation limits. `completion.json` records validation, conservative resource accounting, and the archive. All30 legacy KC controls are bit-exact.
+
+The raw files are now outside the disposable worktree. From the repository root:
+
+```bash
+.venv/bin/python -m analysis.readout_separation_1111.summarize --raw /home/issan/Projects/obsidian-research-data/readout_separation_1111/results/readout_separation_1111/raw
+.venv/bin/python -m analysis.readout_separation_1111.summarize_probe --probes /home/issan/Projects/obsidian-research-data/readout_separation_1111/results/readout_separation_1111/probes
+.venv/bin/python -m analysis.readout_separation_1111.verify_integrity --root /home/issan/Projects/obsidian-research-data/readout_separation_1111/results/readout_separation_1111
+.venv/bin/python -m analysis.readout_separation_1111.plot_probe
+```
+
+The mechanism figure displays full-horizon U; its first200 wording refers to policy duration. The independent Uacute analysis uses pre-release200. Archive paths in manifests preserve the historical source paths and verified new destinations.
