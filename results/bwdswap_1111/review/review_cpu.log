@@ -1,0 +1,94 @@
+{
+ "part_a": {
+  "F.elu": {
+   "n": 24324,
+   "value_bits_differ": 0,
+   "grad_bits_differ_vs_autograd_at_z_plus_d": 0,
+   "grad_values_differ_vs_autograd_at_z_plus_d": 0,
+   "grad_equals_natural_pairs_where_derivs_differ": 0,
+   "pairs_where_phi_prime_shift_differs": 11129,
+   "naive_value_bits_differ": 18,
+   "naive_value_values_differ": 0,
+   "naive_grad_bits_differ": 0
+  },
+  "RM_expm1_elu": {
+   "n": 24324,
+   "value_bits_differ": 0,
+   "grad_bits_differ_vs_autograd_at_z_plus_d": 0,
+   "grad_values_differ_vs_autograd_at_z_plus_d": 0,
+   "grad_equals_natural_pairs_where_derivs_differ": 0,
+   "pairs_where_phi_prime_shift_differs": 11107,
+   "naive_value_bits_differ": 18,
+   "naive_value_values_differ": 0,
+   "naive_grad_bits_differ": 0
+  },
+  "F51_clamp_relu": {
+   "n": 24324,
+   "value_bits_differ": 0,
+   "grad_bits_differ_vs_autograd_at_z_plus_d": 0,
+   "grad_values_differ_vs_autograd_at_z_plus_d": 0,
+   "grad_equals_natural_pairs_where_derivs_differ": 0,
+   "pairs_where_phi_prime_shift_differs": 6235,
+   "naive_value_bits_differ": 18,
+   "naive_value_values_differ": 0,
+   "naive_grad_bits_differ": 0
+  },
+  "nan_field_fail_closed": {
+   "F.elu": true,
+   "RM": true,
+   "F51": true
+  }
+ },
+ "part_b": {
+  "restore": {
+   "B_eq_indep_state": true,
+   "B_eq_indep_ce_bits": true,
+   "B_eq_indep_acc_bits": true,
+   "B_eq_indep_param_values": true,
+   "Bd0_eq_N_state": true,
+   "Bd0_eq_N_ce_bits": true,
+   "B_differs_from_N": true,
+   "B_differs_from_X": true,
+   "X_differs_from_N": true,
+   "run_arm_B_eq_indep_state_k1_k2": [
+    true,
+    true
+   ],
+   "run_arm_B_eq_indep_online_k1_k2": [
+    true,
+    true
+   ],
+   "run_arm_B_monitor": {
+    "expected": 378,
+    "calls": 378,
+    "mismatch": 0
+   },
+   "run_arm_B_branch_logits": true
+  },
+  "reverse": {
+   "B_eq_indep_state": true,
+   "B_eq_indep_ce_bits": true,
+   "B_eq_indep_acc_bits": true,
+   "B_eq_indep_param_values": true,
+   "Bd0_eq_N_state": true,
+   "Bd0_eq_N_ce_bits": true,
+   "B_differs_from_N": true,
+   "B_differs_from_X": true,
+   "X_differs_from_N": true,
+   "run_arm_B_eq_indep_state_k1_k2": [
+    true,
+    true
+   ],
+   "run_arm_B_eq_indep_online_k1_k2": [
+    true,
+    true
+   ],
+   "run_arm_B_monitor": {
+    "expected": 378,
+    "calls": 378,
+    "mismatch": 0
+   },
+   "run_arm_B_branch_logits": true
+  }
+ }
+}
